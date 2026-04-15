@@ -1,0 +1,102 @@
+﻿<Window x:Class="TWChatOverlay.Views.MenuWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:sys="clr-namespace:System;assembly=mscorlib"
+        Title="Menu" Height="430" Width="44" Topmost="True" ResizeMode="NoResize" WindowStyle="None" AllowsTransparency="False" ShowInTaskbar="False">
+    <Window.Resources>
+        <sys:Double x:Key="MenuIconSize">36</sys:Double>
+        <sys:Double x:Key="MenuButtonSize">36</sys:Double>
+    </Window.Resources>
+    <Border Background="{DynamicResource PrimaryBackgroundBrush}" HorizontalAlignment="Center">
+        <Grid Margin="2">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <Grid x:Name="DragArea"
+                  Grid.Row="0"
+                  Height="32"
+                  Background="Transparent"
+                  Cursor="SizeAll"
+                  MouseLeftButtonDown="DragArea_MouseLeftButtonDown"
+                  VerticalAlignment="Top">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="18"/>
+                </Grid.ColumnDefinitions>
+
+                <Canvas Grid.Column="0"
+                        Width="14"
+                        Height="14"
+                        IsHitTestVisible="False"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center">
+                    <Line X1="7" Y1="1" X2="7" Y2="13" Stroke="White" StrokeThickness="1.2"/>
+                    <Line X1="1" Y1="7" X2="13" Y2="7" Stroke="White" StrokeThickness="1.2"/>
+                    <Polygon Points="7,0 5.5,2.5 8.5,2.5" Fill="White"/>
+                    <Polygon Points="7,14 5.5,11.5 8.5,11.5" Fill="White"/>
+                    <Polygon Points="0,7 2.5,5.5 2.5,8.5" Fill="White"/>
+                    <Polygon Points="14,7 11.5,5.5 11.5,8.5" Fill="White"/>
+                </Canvas>
+                <Button Grid.Column="1"
+                        x:Name="BtnMinimize"
+                        Width="16"
+                        Height="16"
+                        Margin="0,6,2,0"
+                        VerticalAlignment="Top"
+                        HorizontalAlignment="Right"
+                        Click="Minimize_Click"
+                        ToolTip="트레이로 최소화"
+                        Background="Transparent"
+                        BorderBrush="Transparent"
+                        Foreground="White"
+                        Cursor="Hand"
+                        FontFamily="Segoe MDL2 Assets"
+                        FontSize="10"
+                        Padding="0"
+                        Focusable="False"
+                        Content="&#xE921;"/>
+            </Grid>
+
+            <UniformGrid Grid.Row="1" Rows="9" Columns="1" HorizontalAlignment="Center" VerticalAlignment="Stretch">
+                <!-- 1: MainWindow ON/OFF -->
+                <Button x:Name="BtnChat" Width="{DynamicResource MenuIconSize}" Height="{DynamicResource MenuIconSize}" Click="OpenChild_Click" ToolTip="Toggle Overlay" Style="{StaticResource CategoryButtonStyle}" Margin="2,2,2,2">
+                    <Image Source="/TWChatOverlay;component/Data/images/MenuIcon/Chat.png" MaxWidth="{DynamicResource MenuIconSize}" MaxHeight="{DynamicResource MenuIconSize}" Stretch="Uniform" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                </Button>
+                <!-- 2: ETA Ranking -->
+                <Button x:Name="BtnEtaRanking" Width="{DynamicResource MenuIconSize}" Height="{DynamicResource MenuIconSize}" Click="OpenChild_Click" ToolTip="ETA 랭킹" Style="{StaticResource CategoryButtonStyle}" Margin="2,2,2,2">
+                    <Image Source="/TWChatOverlay;component/Data/images/MenuIcon/Eta.png" MaxWidth="{DynamicResource MenuIconSize}" MaxHeight="{DynamicResource MenuIconSize}" Stretch="Uniform" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                </Button>
+                <!-- 3: Coefficient Calculator -->
+                <Button x:Name="BtnCoefficient" Width="{DynamicResource MenuIconSize}" Height="{DynamicResource MenuIconSize}" Click="OpenChild_Click" ToolTip="계수 계산기" Style="{StaticResource CategoryButtonStyle}" Margin="2,2,2,2">
+                    <Image Source="/TWChatOverlay;component/Data/images/MenuIcon/Core.png" MaxWidth="{DynamicResource MenuIconSize}" MaxHeight="{DynamicResource MenuIconSize}" Stretch="Uniform" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                </Button>
+                <!-- 4: Equipment DB -->
+                <Button x:Name="BtnEquipmentDb" Width="{DynamicResource MenuIconSize}" Height="{DynamicResource MenuIconSize}" Click="OpenChild_Click" ToolTip="장비 DB" Style="{StaticResource CategoryButtonStyle}" Margin="2,2,2,0">
+                    <Image Source="/TWChatOverlay;component/Data/images/MenuIcon/Equipment.png" MaxWidth="{DynamicResource MenuIconSize}" MaxHeight="{DynamicResource MenuIconSize}" Stretch="Uniform" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                </Button>
+                <!-- 5: Daily/Weekly Content -->
+                <Button x:Name="BtnDailyWeekly" Width="{DynamicResource MenuIconSize}" Height="{DynamicResource MenuIconSize}" Click="OpenChild_Click" ToolTip="DailyWeekly" Style="{StaticResource CategoryButtonStyle}" Margin="2,2,2,2">
+                    <Image Source="/TWChatOverlay;component/Data/images/MenuIcon/DailyWeekly.png" MaxWidth="{DynamicResource MenuIconSize}" MaxHeight="{DynamicResource MenuIconSize}" Stretch="Uniform" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                </Button>
+                <!-- 6: Encrypt Simulator -->
+                <Button x:Name="BtnEncrypt" Width="{DynamicResource MenuIconSize}" Height="{DynamicResource MenuIconSize}" Click="OpenChild_Click" ToolTip="Encrypt" Style="{StaticResource CategoryButtonStyle}" Margin="2,2,2,2">
+                    <Image Source="/TWChatOverlay;component/Data/images/MenuIcon/Encrypt.png" MaxWidth="{DynamicResource MenuIconSize}" MaxHeight="{DynamicResource MenuIconSize}" Stretch="Uniform" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                </Button>
+                <!-- 7: AddonView (추가기능) -->
+                <Button x:Name="BtnAddon" Width="{DynamicResource MenuIconSize}" Height="{DynamicResource MenuIconSize}" Click="OpenChild_Click" ToolTip="추가 기능" Style="{StaticResource CategoryButtonStyle}" Margin="2,2,2,2">
+                    <Image Source="/TWChatOverlay;component/Data/images/MenuIcon/Dungeon.png" MaxWidth="{DynamicResource MenuIconSize}" MaxHeight="{DynamicResource MenuIconSize}" Stretch="Uniform" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                </Button>
+                <!-- 8: Settings -->
+                <Button x:Name="BtnSettings" Width="{DynamicResource MenuIconSize}" Height="{DynamicResource MenuIconSize}" Click="OpenChild_Click" ToolTip="설정" Style="{StaticResource CategoryButtonStyle}" Margin="2,2,2,2" HorizontalAlignment="Center">
+                    <Image Source="/TWChatOverlay;component/Data/images/MenuIcon/Setting.png" MaxWidth="{DynamicResource MenuIconSize}" MaxHeight="{DynamicResource MenuIconSize}" Stretch="Uniform" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                </Button>
+                <!-- 9: Exit -->
+                <Button x:Name="BtnExit" Width="{DynamicResource MenuIconSize}" Height="{DynamicResource MenuIconSize}" Click="OpenChild_Click" ToolTip="Exit" Style="{StaticResource CategoryButtonStyle}" Margin="2,2,2,2">
+                    <Image Source="/TWChatOverlay;component/Data/images/MenuIcon/Exit.png" MaxWidth="{DynamicResource MenuIconSize}" MaxHeight="{DynamicResource MenuIconSize}" Stretch="Uniform" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                </Button>
+            </UniformGrid>
+        </Grid>
+    </Border>
+</Window>
