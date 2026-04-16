@@ -1,4 +1,4 @@
-<Window x:Class="TWChatOverlay.Views.ExperienceAlertWindow"
+﻿<Window x:Class="TWChatOverlay.Views.ExperienceAlertWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Width="460"
@@ -14,7 +14,8 @@
             BorderBrush="#FFF5A623"
             BorderThickness="1.4"
             CornerRadius="10"
-            Padding="14,12">
+            Padding="14,12"
+            MouseLeftButtonDown="RootBorder_MouseLeftButtonDown">
         <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
@@ -27,7 +28,6 @@
 
             <TextBlock Grid.Row="0"
                        Grid.Column="0"
-                       Text="경험치 누적 알림"
                        Foreground="#FFF5C76B"
                        FontSize="15"
                        FontWeight="Bold"

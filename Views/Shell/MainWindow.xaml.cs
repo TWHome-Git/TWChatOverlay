@@ -152,6 +152,7 @@ namespace TWChatOverlay.Views
 
         private void MainWindow_Closed(object? sender, EventArgs e)
         {
+            try { ExperienceAlertWindowService.SaveCurrentPosition(_settings); } catch { }
             try { _buffTrackerService.PropertyChanged -= BuffTrackerService_PropertyChanged; } catch { }
             try { BuffTrackerWindow.Instance?.Close(); } catch { }
             try { BuffTrackerHelperWindow.Instance?.Close(); } catch { }
@@ -1052,6 +1053,20 @@ namespace TWChatOverlay.Views
                 else if (e.PropertyName == nameof(_settings.EnableBuffTrackerAlert))
                 {
                     ApplyBuffTrackerWindowSettings();
+                }
+                else if (e.PropertyName == nameof(_settings.EnableExperienceLimitAlert))
+                {
+                    if (_settings.EnableExperienceLimitAlert && _settings.ShowExperienceLimitAlertWindow)
+                        ExperienceAlertWindowService.ShowPositionPreview(_settings);
+                    else if (!_settings.EnableExperienceLimitAlert && !_settings.ShowExperienceLimitAlertWindow)
+                        ExperienceAlertWindowService.Close();
+                }
+                else if (e.PropertyName == nameof(_settings.ShowExperienceLimitAlertWindow))
+                {
+                    if (_settings.ShowExperienceLimitAlertWindow)
+                        ExperienceAlertWindowService.ShowPositionPreview(_settings);
+                    else
+                        ExperienceAlertWindowService.Close();
                 }
                 else if (e.PropertyName == nameof(_settings.BuffTrackerWindowLeft) ||
                          e.PropertyName == nameof(_settings.BuffTrackerWindowTop))

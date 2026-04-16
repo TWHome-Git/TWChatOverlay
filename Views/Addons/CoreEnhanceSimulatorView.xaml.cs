@@ -314,24 +314,22 @@ namespace TWChatOverlay.Views.Addons
             if (useTicket)
             {
                 SummaryTextBlock.Text =
-                    $"진화권 사용 / {statLabel} / {start.Display} -> {target.Display}\n" +
+                    $"{statLabel} / {start.Display} -> {target.Display} {PieceCount}개 기대값\n" +
                     $"총 진화권 사용 갯수: {FormatExpectedCount(totalTicketCount)}개\n" +
                     $"1진화 강화권 - {FormatExpectedCount(ticketCountsByTier[1])}개\n" +
                     $"2진화 강화권 - {FormatExpectedCount(ticketCountsByTier[2])}개\n" +
                     $"3진화 강화권 - {FormatExpectedCount(ticketCountsByTier[3])}개\n" +
                     $"4진화 강화권 - {FormatExpectedCount(ticketCountsByTier[4])}개\n" +
-                    $"총 기대 비용 : {FormatEokSeed(totalExpectedCost)}";
+                    $"총 기대 비용 - {FormatEok(totalExpectedCost)}억";
             }
             else
             {
-                string mode = hasDust ? "진화권 사용안함 (가루 있음)" : "진화권 사용안함 (가루 없음)";
                 SummaryTextBlock.Text =
-                    $"{mode} / {statLabel} / {start.Display} -> {target.Display}\n" +
-                    $"총 가루 및 결정 사용 갯수\n" +
-                    (hasDust
-                        ? $"가루 - {totalDust:N0}개\n결정 - {totalCrystal:N0}개\n강화 비용 - {FormatEok(totalEnhanceSeed)}억"
-                        : $"가루 - {totalDust:N0}개\n결정 - {totalCrystal:N0}개\n강화 비용 - {FormatEok(totalEnhanceSeed)}억\n가루 분해 비용 - {FormatEok(totalDustCost)}억") + "\n" +
-                    $"총 기대 비용 : {FormatEokSeed(totalExpectedCost)}";
+                    $"{statLabel} / {start.Display} -> {target.Display} {PieceCount}개 기대값\n" +
+                    $"총 가루 갯수 - {totalDust:N0}개 (총 가루 분해 비용 - {FormatEok(totalDustCost)}억)\n" +
+                    $"총 결정 갯수 - {totalCrystal:N0}개\n" +
+                    $"총 강화 비용 - {FormatEok(totalEnhanceSeed)}억\n" +
+                    $"총 기대 비용 - {FormatEok(totalExpectedCost)}억";
             }
         }
 
@@ -459,6 +457,8 @@ namespace TWChatOverlay.Views.Addons
             public double SuccessRate { get; init; }
             public int RatePctInt { get; init; }
             public string Display => $"{Tier}진 {Enhance}강";
+
+            public override string ToString() => Display;
         }
 
         private sealed class ResultRow

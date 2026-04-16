@@ -31,6 +31,8 @@ namespace TWChatOverlay.Models
         private bool _useAlertSound = true;
         private bool _useMagicCircleAlert = true;
         private bool _showExpTracker = false;
+        private bool _enableExperienceLimitAlert = false;
+        private bool _showExperienceLimitAlertWindow = false;
         private bool _showDailyWeeklyContentOverlay = false;
         private bool _showEtosDirectionAlert = true;
         private bool _showItemDropAlert = true;
@@ -64,6 +66,8 @@ namespace TWChatOverlay.Models
         private double? _itemDropWindowTop = 0.0;
         private double? _buffTrackerWindowLeft = 0.0;
         private double? _buffTrackerWindowTop = 0.0;
+        private double? _experienceLimitAlertWindowLeft = null;
+        private double? _experienceLimitAlertWindowTop = null;
 
         private double _fontSize = 17.0;
         private double _lineMargin = 0.0;
@@ -232,6 +236,28 @@ namespace TWChatOverlay.Models
         [JsonPropertyOrder(24)]
         public bool IsExpAlarmEnabled { get; set; } = false;
         [JsonPropertyOrder(25)]
+        public bool EnableExperienceLimitAlert
+        {
+            get => _enableExperienceLimitAlert;
+            set
+            {
+                if (_enableExperienceLimitAlert == value) return;
+                _enableExperienceLimitAlert = value;
+                OnPropertyChanged();
+            }
+        }
+        [JsonPropertyOrder(26)]
+        public bool ShowExperienceLimitAlertWindow
+        {
+            get => _showExperienceLimitAlertWindow;
+            set
+            {
+                if (_showExperienceLimitAlertWindow == value) return;
+                _showExperienceLimitAlertWindow = value;
+                OnPropertyChanged();
+            }
+        }
+        [JsonPropertyOrder(27)]
         public bool ShowDailyWeeklyContentOverlay
         {
             get => _showDailyWeeklyContentOverlay;
@@ -242,11 +268,11 @@ namespace TWChatOverlay.Models
                 OnPropertyChanged();
             }
         }
-        [JsonPropertyOrder(26)]
+        [JsonPropertyOrder(28)]
         public bool AlwaysVisible { get => _alwaysVisible; set { _alwaysVisible = value; OnPropertyChanged(); } }
         [JsonIgnore]
         public bool EnableDebugLogging { get => _enableDebugLogging; set { _enableDebugLogging = value; OnPropertyChanged(); } }
-        [JsonPropertyOrder(27)]
+        [JsonPropertyOrder(29)]
         public bool EnablePerformanceDiagnostics { get => _enablePerformanceDiagnostics; set { _enablePerformanceDiagnostics = value; OnPropertyChanged(); } }
 
         [JsonPropertyOrder(20)]
@@ -516,6 +542,30 @@ namespace TWChatOverlay.Models
             {
                 if (_buffTrackerWindowTop == value) return;
                 _buffTrackerWindowTop = value;
+                OnPropertyChanged();
+            }
+        }
+
+        [JsonPropertyOrder(62)]
+        public double? ExperienceLimitAlertWindowLeft
+        {
+            get => _experienceLimitAlertWindowLeft;
+            set
+            {
+                if (_experienceLimitAlertWindowLeft == value) return;
+                _experienceLimitAlertWindowLeft = value;
+                OnPropertyChanged();
+            }
+        }
+
+        [JsonPropertyOrder(63)]
+        public double? ExperienceLimitAlertWindowTop
+        {
+            get => _experienceLimitAlertWindowTop;
+            set
+            {
+                if (_experienceLimitAlertWindowTop == value) return;
+                _experienceLimitAlertWindowTop = value;
                 OnPropertyChanged();
             }
         }

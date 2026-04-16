@@ -1,15 +1,27 @@
 using System;
 using System.Windows;
 using System.Windows.Interop;
+using System.Windows.Input;
+using TWChatOverlay.Models;
 using TWChatOverlay.Services;
 
 namespace TWChatOverlay.Views
 {
     public partial class ExperienceAlertWindow : Window
     {
-        public ExperienceAlertWindow()
+        private ChatSettings _settings;
+        private bool _isDragging;
+
+        public ExperienceAlertWindow(ChatSettings settings)
         {
+            _settings = settings ?? throw new ArgumentNullException(nameof(settings));
             InitializeComponent();
+            LocationChanged += (_, _) => SyncPositionToSettings(notify: false);
+        }
+
+        public void SetSettings(ChatSettings settings)
+        {
+            _settings = settings ?? throw new ArgumentNullException(nameof(settings));
         }
 
         public void SetMessage(string message)
@@ -29,6 +41,12 @@ namespace TWChatOverlay.Views
             ApplyToolWindowStyle();
         }
 
+        protected override void OnClosed(EventArgs e)
+        {
+            SyncPositionToSettings(notify: true);
+            base.OnClosed(e);
+        }
+
         private void ApplyToolWindowStyle()
         {
             try
@@ -43,6 +61,32 @@ namespace TWChatOverlay.Views
         private void CloseButton_Click(object sender, RoutedEventArgs e)
         {
             Close();
+        }
+
+        private void RootBorder_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            if (!_settings.ShowExperienceLimitAlertWindow || e.ButtonState != MouseButtonState.Pressed)
+                return;
+
+            _isDragging = true;
+            try { DragMove(); } catch { }
+            finally
+            {
+                _isDragging = false;
+                SyncPositionToSettings(notify: true);
+            }
+        }
+
+        private void SyncPositionToSettings(bool notify)
+        {
+            if (_settings == null || !_settings.ShowExperienceLimitAlertWindow || !IsVisible)
+                return;
+
+            _settings.ExperienceLimitAlertWindowLeft = Left;
+            _settings.ExperienceLimitAlertWindowTop = Top;
+
+            if (_isDragging || notify)
+                ConfigService.SaveDeferred(_settings);
         }
     }
 }

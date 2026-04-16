@@ -65,6 +65,23 @@
                                            FontSize="11"
                                            Margin="0,6,0,15"/>
 
+                                <Border Height="1"
+                                        Background="#333"
+                                        Margin="0,4,0,14"/>
+
+                                <CheckBox Content="경험치 누적 알림"
+                                          IsChecked="{Binding EnableExperienceLimitAlert, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                          Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
+
+                                <CheckBox Content="경험치 누적 창 표시"
+                                          IsChecked="{Binding ShowExperienceLimitAlertWindow, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                          Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
+
+                                <TextBlock Text="* 창 표시를 켜면 알림 위치를 드래그로 조정할 수 있습니다."
+                                           Foreground="#888"
+                                           FontSize="11"
+                                           Margin="0,6,0,15"/>
+
                                 <StackPanel Margin="0,0,0,0">
                                     <CheckBox IsChecked="{Binding IsExpAlarmEnabled}"
                                               Content="저효율 알림 활성화"

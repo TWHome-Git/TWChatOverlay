@@ -23,6 +23,8 @@ namespace TWChatOverlay.ViewModels
         private string _keywordInput;
         private bool _showExpTracker;
         private bool _isExpAlarmEnabled;
+        private bool _enableExperienceLimitAlert;
+        private bool _showExperienceLimitAlertWindow;
         private long _expAlarmThresholdMan;
         private bool _showDailyWeeklyContentOverlay;
         private bool _showEtosDirectionAlert;
@@ -73,6 +75,18 @@ namespace TWChatOverlay.ViewModels
         {
             get => _isExpAlarmEnabled;
             set => SetSetting(ref _isExpAlarmEnabled, value, (settings, newValue) => settings.IsExpAlarmEnabled = newValue);
+        }
+
+        public bool EnableExperienceLimitAlert
+        {
+            get => _enableExperienceLimitAlert;
+            set => SetSetting(ref _enableExperienceLimitAlert, value, (settings, newValue) => settings.EnableExperienceLimitAlert = newValue);
+        }
+
+        public bool ShowExperienceLimitAlertWindow
+        {
+            get => _showExperienceLimitAlertWindow;
+            set => SetSetting(ref _showExperienceLimitAlertWindow, value, (settings, newValue) => settings.ShowExperienceLimitAlertWindow = newValue);
         }
 
         public int ExpAlarmThresholdMan
@@ -168,6 +182,8 @@ namespace TWChatOverlay.ViewModels
             _keywordInput = _settings.KeywordInput;
             _showExpTracker = _settings.ShowExpTracker;
             _isExpAlarmEnabled = _settings.IsExpAlarmEnabled;
+            _enableExperienceLimitAlert = _settings.EnableExperienceLimitAlert;
+            _showExperienceLimitAlertWindow = _settings.ShowExperienceLimitAlertWindow;
             _expAlarmThresholdMan = _settings.ExpAlarmThreshold;
             _showDailyWeeklyContentOverlay = _settings.ShowDailyWeeklyContentOverlay;
             _showEtosDirectionAlert = _settings.ShowEtosDirectionAlert;

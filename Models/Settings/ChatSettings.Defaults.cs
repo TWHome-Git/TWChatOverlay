@@ -27,6 +27,8 @@ namespace TWChatOverlay.Models
             _useAlertSound = false;
             _useMagicCircleAlert = false;
             _showExpTracker = false;
+            _enableExperienceLimitAlert = false;
+            _showExperienceLimitAlertWindow = false;
             _showDailyWeeklyContentOverlay = false;
             _showEtosDirectionAlert = false;
             _showItemDropAlert = false;
@@ -60,6 +62,8 @@ namespace TWChatOverlay.Models
             _itemDropWindowTop = 0.0;
             _buffTrackerWindowLeft = 0.0;
             _buffTrackerWindowTop = 0.0;
+            _experienceLimitAlertWindowLeft = null;
+            _experienceLimitAlertWindowTop = null;
             _fontSize = 17.0;
             _lineMargin = 0.0;
             _lineMarginLeft = 0.0;
@@ -73,6 +77,8 @@ namespace TWChatOverlay.Models
             ShowClub = true;
             UseKeywordAlert = false;
             IsExpAlarmEnabled = false;
+            EnableExperienceLimitAlert = false;
+            ShowExperienceLimitAlertWindow = false;
             WindowWidth = 650.0;
             WindowHeight = 250.0;
             DailyWeeklyContentOverlayLeft = 0.0;

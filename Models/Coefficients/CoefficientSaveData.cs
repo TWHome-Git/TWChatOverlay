@@ -8,6 +8,8 @@ namespace TWChatOverlay.Models
     /// </summary>
     public class CoefficientSaveData
     {
+        public string? LastSelectedCharacterName { get; set; }
+        public string? LastSelectedCalculatorType { get; set; }
         public Dictionary<string, CoefficientSlotSnapshot[]> Entries { get; set; } = new();
     }
 

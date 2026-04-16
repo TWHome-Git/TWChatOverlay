@@ -5,6 +5,110 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              mc:Ignorable="d">
     <Grid Background="#161B22" Margin="8">
+        <Grid.Resources>
+            <Style x:Key="CoreComboBoxItemStyle" TargetType="ComboBoxItem">
+                <Setter Property="Background" Value="#0D1625"/>
+                <Setter Property="Foreground" Value="#E6EDF3"/>
+                <Setter Property="Padding" Value="8,5"/>
+                <Setter Property="HorizontalContentAlignment" Value="Center"/>
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="ComboBoxItem">
+                            <Border x:Name="ItemBorder"
+                                    Background="{TemplateBinding Background}"
+                                    Padding="{TemplateBinding Padding}">
+                                <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                                  VerticalAlignment="Center"/>
+                            </Border>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsHighlighted" Value="True">
+                                    <Setter TargetName="ItemBorder" Property="Background" Value="#1F6FEB"/>
+                                    <Setter Property="Foreground" Value="White"/>
+                                </Trigger>
+                                <Trigger Property="IsSelected" Value="True">
+                                    <Setter TargetName="ItemBorder" Property="Background" Value="#214C35"/>
+                                    <Setter Property="Foreground" Value="White"/>
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+
+            <Style x:Key="CoreComboBoxStyle" TargetType="ComboBox">
+                <Setter Property="Background" Value="#0D1625"/>
+                <Setter Property="Foreground" Value="#E6EDF3"/>
+                <Setter Property="BorderBrush" Value="#2E3A4A"/>
+                <Setter Property="BorderThickness" Value="1"/>
+                <Setter Property="Padding" Value="8,0"/>
+                <Setter Property="HorizontalContentAlignment" Value="Center"/>
+                <Setter Property="VerticalContentAlignment" Value="Center"/>
+                <Setter Property="ItemContainerStyle" Value="{StaticResource CoreComboBoxItemStyle}"/>
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="ComboBox">
+                            <Grid>
+                                <ToggleButton x:Name="ToggleButton"
+                                              Focusable="False"
+                                              ClickMode="Press"
+                                              IsChecked="{Binding IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}">
+                                    <ToggleButton.Template>
+                                        <ControlTemplate TargetType="ToggleButton">
+                                            <Border x:Name="ComboBorder"
+                                                    Background="{Binding Background, RelativeSource={RelativeSource AncestorType=ComboBox}}"
+                                                    BorderBrush="{Binding BorderBrush, RelativeSource={RelativeSource AncestorType=ComboBox}}"
+                                                    BorderThickness="{Binding BorderThickness, RelativeSource={RelativeSource AncestorType=ComboBox}}"
+                                                    CornerRadius="4">
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="*"/>
+                                                        <ColumnDefinition Width="28"/>
+                                                    </Grid.ColumnDefinitions>
+                                                    <ContentPresenter Grid.Column="0"
+                                                                      Margin="{Binding Padding, RelativeSource={RelativeSource AncestorType=ComboBox}}"
+                                                                      HorizontalAlignment="{Binding HorizontalContentAlignment, RelativeSource={RelativeSource AncestorType=ComboBox}}"
+                                                                      VerticalAlignment="Center"
+                                                                      TextElement.Foreground="White"
+                                                                      Content="{Binding SelectionBoxItem, RelativeSource={RelativeSource AncestorType=ComboBox}}"
+                                                                      ContentTemplate="{Binding SelectionBoxItemTemplate, RelativeSource={RelativeSource AncestorType=ComboBox}}"/>
+                                                    <TextBlock Grid.Column="1"
+                                                               Text="▼"
+                                                               Foreground="#8B949E"
+                                                               FontSize="9"
+                                                               HorizontalAlignment="Center"
+                                                               VerticalAlignment="Center"/>
+                                                </Grid>
+                                            </Border>
+                                            <ControlTemplate.Triggers>
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter TargetName="ComboBorder" Property="BorderBrush" Value="#58A6FF"/>
+                                                </Trigger>
+                                            </ControlTemplate.Triggers>
+                                        </ControlTemplate>
+                                    </ToggleButton.Template>
+                                </ToggleButton>
+                                <Popup IsOpen="{TemplateBinding IsDropDownOpen}"
+                                       Placement="Bottom"
+                                       PlacementTarget="{Binding RelativeSource={RelativeSource TemplatedParent}}"
+                                       AllowsTransparency="True"
+                                       PopupAnimation="Slide">
+                                    <Border Background="#0D1625"
+                                            BorderBrush="#2E3A4A"
+                                            BorderThickness="1"
+                                            MinWidth="{Binding ActualWidth, RelativeSource={RelativeSource TemplatedParent}}">
+                                        <ScrollViewer MaxHeight="{TemplateBinding MaxDropDownHeight}"
+                                                      VerticalScrollBarVisibility="Auto">
+                                            <ItemsPresenter/>
+                                        </ScrollViewer>
+                                    </Border>
+                                </Popup>
+                            </Grid>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+        </Grid.Resources>
+
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="450" MinWidth="390"/>
             <ColumnDefinition Width="10"/>
@@ -120,9 +224,9 @@
                             <StackPanel>
                                 <TextBlock Text="구간 선택" Foreground="#8B949E" FontSize="12"/>
                                 <TextBlock Text="시작" Foreground="#C9D1D9" Margin="0,6,0,2"/>
-                                <ComboBox x:Name="StartStageComboBox" Height="28"/>
+                                <ComboBox x:Name="StartStageComboBox" Height="28" Style="{StaticResource CoreComboBoxStyle}"/>
                                 <TextBlock Text="목표" Foreground="#C9D1D9" Margin="0,6,0,2"/>
-                                <ComboBox x:Name="TargetStageComboBox" Height="28"/>
+                                <ComboBox x:Name="TargetStageComboBox" Height="28" Style="{StaticResource CoreComboBoxStyle}"/>
                             </StackPanel>
                         </Border>
                     </Grid>
@@ -246,14 +350,14 @@
                         </Style>
                     </DataGrid.Resources>
                     <DataGrid.Columns>
-                        <DataGridTextColumn x:Name="StageColumn" Header="단계" Binding="{Binding StageLabel}" Width="1.0*" ElementStyle="{StaticResource CellTextLeftStyle}"/>
+                        <DataGridTextColumn x:Name="StageColumn" Header="단계" Binding="{Binding StageLabel}" Width="1.0*" ElementStyle="{StaticResource CellTextCenterStyle}"/>
                         <DataGridTextColumn x:Name="MethodColumn" Header="확률" Binding="{Binding MethodText}" Width="0.8*" ElementStyle="{StaticResource CellTextCenterStyle}"/>
                         <DataGridTextColumn x:Name="AttemptsColumn" Header="시도" Binding="{Binding ExpectedAttemptsText}" Width="0.7*" ElementStyle="{StaticResource CellTextCenterStyle}"/>
-                        <DataGridTextColumn x:Name="DustColumn" Header="가루" Binding="{Binding DustText}" Width="1.0*" ElementStyle="{StaticResource CellTextRightStyle}"/>
-                        <DataGridTextColumn x:Name="CrystalColumn" Header="결정" Binding="{Binding CrystalText}" Width="0.8*" ElementStyle="{StaticResource CellTextRightStyle}"/>
-                        <DataGridTextColumn x:Name="SeedColumn" Header="SEED" Binding="{Binding SeedText}" Width="1.3*" ElementStyle="{StaticResource CellTextRightStyle}"/>
-                        <DataGridTextColumn x:Name="TicketColumn" Header="진화권" Binding="{Binding TicketCountText}" Width="0.9*" ElementStyle="{StaticResource CellTextRightStyle}"/>
-                        <DataGridTextColumn x:Name="TotalCostColumn" Header="총 기대비용" Binding="{Binding TotalCostText}" Width="1.5*" ElementStyle="{StaticResource CellTextRightStyle}"/>
+                        <DataGridTextColumn x:Name="DustColumn" Header="가루" Binding="{Binding DustText}" Width="1.0*" ElementStyle="{StaticResource CellTextCenterStyle}"/>
+                        <DataGridTextColumn x:Name="CrystalColumn" Header="결정" Binding="{Binding CrystalText}" Width="0.8*" ElementStyle="{StaticResource CellTextCenterStyle}"/>
+                        <DataGridTextColumn x:Name="SeedColumn" Header="강화 비용" Binding="{Binding SeedText}" Width="1.3*" ElementStyle="{StaticResource CellTextCenterStyle}"/>
+                        <DataGridTextColumn x:Name="TicketColumn" Header="진화권" Binding="{Binding TicketCountText}" Width="0.9*" ElementStyle="{StaticResource CellTextCenterStyle}"/>
+                        <DataGridTextColumn x:Name="TotalCostColumn" Header="총 기대비용" Binding="{Binding TotalCostText}" Width="1.5*" ElementStyle="{StaticResource CellTextCenterStyle}"/>
                     </DataGrid.Columns>
                 </DataGrid>
 

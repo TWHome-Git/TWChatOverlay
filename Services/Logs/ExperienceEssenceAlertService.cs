@@ -11,9 +11,11 @@ namespace TWChatOverlay.Services
     public sealed class ExperienceEssenceAlertService
     {
         public const long ThresholdExp = 10_000_000_000L;
-        private const string ResetMessage = "\uACBD\uD5D8\uCE58\uAC00 10000000000 \uAC10\uC18C\uD588\uC2B5\uB2C8\uB2E4";
         private static readonly Regex LeadingTimestampRegex = new(
             @"^\[[^\]]+\]\s*",
+            RegexOptions.Compiled);
+        private static readonly Regex ResetMessageRegex = new(
+            @"^\uACBD\uD5D8\uCE58\uAC00\s*10,?000,?000,?000\s*\uAC10\uC18C\uD588\uC2B5\uB2C8\uB2E4\.?$",
             RegexOptions.Compiled);
 
         private readonly ChatSettings _settings;
@@ -62,9 +64,9 @@ namespace TWChatOverlay.Services
             if (_trackedExp < ThresholdExp)
                 return;
 
-            if (!_settings.ShowExpTracker)
+            if (!_settings.EnableExperienceLimitAlert)
             {
-                AppLogger.Info($"Experience essence tracker reached threshold but popup skipped because exp tracker is OFF. Total={_trackedExp:N0}");
+                AppLogger.Info($"Experience essence tracker reached threshold but popup skipped. Total={_trackedExp:N0}, LimitAlertOn={_settings.EnableExperienceLimitAlert}");
                 return;
             }
 
@@ -72,7 +74,8 @@ namespace TWChatOverlay.Services
             AppLogger.Info($"Experience essence tracker threshold reached. Showing popup. Total={_trackedExp:N0}");
 
             ExperienceAlertWindowService.Show(
-                $"\uACBD\uD5D8\uCE58 {FormatExpEok(_trackedExp)} \uB204\uC801 \uB2EC\uC131");
+                $"\uACBD\uD5D8\uCE58 {FormatExpEok(_trackedExp)} \uB204\uC801 \uB2EC\uC131",
+                _settings);
         }
 
         public void Reset()
@@ -88,7 +91,7 @@ namespace TWChatOverlay.Services
                 return false;
 
             string body = LeadingTimestampRegex.Replace(text.Trim(), string.Empty);
-            return string.Equals(body, ResetMessage, StringComparison.Ordinal);
+            return ResetMessageRegex.IsMatch(body);
         }
 
         private static string FormatExpEok(long exp)

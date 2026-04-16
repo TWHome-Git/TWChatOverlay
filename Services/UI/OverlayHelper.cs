@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -6,7 +6,7 @@ using System.Text;
 namespace TWChatOverlay.Services
 {
     /// <summary>
-    /// 외부 윈도우(게임 창)의 정보 탐색 및 위치 계산을 위한 클래스
+    /// 외부 윈도우의 정보 탐색 및 위치 계산을 위한 클래스
     /// </summary>
     public static class OverlayHelper
     {

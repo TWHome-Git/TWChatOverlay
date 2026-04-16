@@ -175,6 +175,7 @@ namespace TWChatOverlay.Views.Addons
         {
             Loaded -= OnLoaded;
             await EnsureEquipmentLoadedAsync();
+            await RestoreLastSelectionAsync();
         }
 
         private void InitializeCharacters()
@@ -230,21 +231,53 @@ namespace TWChatOverlay.Views.Addons
             if (sender is not Button btn || btn.Tag is not string charName)
                 return;
 
-            SaveCurrentState();
+            await SelectCharacterAsync(charName, preferredType: null, savePrevious: true);
+        }
+
+        private async System.Threading.Tasks.Task RestoreLastSelectionAsync()
+        {
+            string? characterName = _saveData.LastSelectedCharacterName;
+            if (string.IsNullOrWhiteSpace(characterName))
+                return;
+
+            CoefficientCalculatorType? preferredType = TryParseCalculatorType(_saveData.LastSelectedCalculatorType, out var parsedType)
+                ? parsedType
+                : null;
+
+            await SelectCharacterAsync(characterName, preferredType, savePrevious: false);
+        }
+
+        private async System.Threading.Tasks.Task SelectCharacterAsync(string charName, CoefficientCalculatorType? preferredType, bool savePrevious)
+        {
+            if (savePrevious)
+                SaveCurrentState();
 
             await EnsureEquipmentLoadedAsync();
 
             _selectedCharacterTypes = ResolveCalculatorTypes(charName);
+            if (_selectedCharacterTypes.Count == 0)
+                return;
+
             _selectedCharacterName = charName;
             SelectedCharName.Text = charName;
 
             if (_typeComboBox == null)
                 return;
 
-            _typeComboBox.ItemsSource = _selectedCharacterTypes
+            var typeOptions = _selectedCharacterTypes
                 .Select(x => new CalculatorTypeOption(x, GetCalculatorTypeDisplayName(x)))
                 .ToList();
-            _typeComboBox.SelectedIndex = 0;
+            _typeComboBox.ItemsSource = typeOptions;
+
+            int selectedIndex = 0;
+            if (preferredType.HasValue)
+            {
+                int preferredIndex = typeOptions.FindIndex(x => x.Type == preferredType.Value);
+                if (preferredIndex >= 0)
+                    selectedIndex = preferredIndex;
+            }
+
+            _typeComboBox.SelectedIndex = selectedIndex;
 
             RefreshAllRows();
 
@@ -1095,7 +1128,17 @@ namespace TWChatOverlay.Views.Addons
 
         private void SaveCurrentState()
         {
-            if (string.IsNullOrEmpty(_lastSaveKey)) return;
+            if (!string.IsNullOrWhiteSpace(_selectedCharacterName))
+            {
+                _saveData.LastSelectedCharacterName = _selectedCharacterName;
+                _saveData.LastSelectedCalculatorType = GetSelectedCalculatorType().ToString();
+            }
+
+            if (string.IsNullOrEmpty(_lastSaveKey))
+            {
+                CoefficientDataService.Save(_saveData);
+                return;
+            }
 
             var snapshots = new List<CoefficientSlotSnapshot>();
             foreach (var row in _slotRows)
@@ -1491,6 +1534,18 @@ namespace TWChatOverlay.Views.Addons
                 CoefficientCalculatorType.MagicHack => "마법베기",
                 _ => "찌르기"
             };
+        }
+
+        private static bool TryParseCalculatorType(string? value, out CoefficientCalculatorType calculatorType)
+        {
+            if (!string.IsNullOrWhiteSpace(value) &&
+                Enum.TryParse(value, ignoreCase: true, out calculatorType))
+            {
+                return true;
+            }
+
+            calculatorType = default;
+            return false;
         }
 
         private enum CoefficientCalculatorType
