@@ -1,6 +1,7 @@
 ﻿# TWChatOverlay
 
-<img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/d2dc1992-c15f-47a8-8976-3373b5504917" />
+<img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/2c67a04f-9fc7-4bd7-8fe6-69957d972e4e" />
+
 **테일즈위버 채팅 로그 기반의 보조 프로그램** 실시간 채팅 로그 분석을 통해 인게임에서 놓치기 쉬운 정보들을 오버레이로 제공합니다.
 
 ---
@@ -13,7 +14,7 @@
 * **경험치 추적**: 실시간 획득 경험치 및 시간당 효율 계산
 
 ### 2. 에타 순위표 및 검색
-<img width="640" height="480" alt="image" src="https://github.com/user-attachments/assets/8eab6deb-2d8a-431c-9397-52c78d5f728b" />
+<img width="640" height="480" alt="image" src="https://github.com/user-attachments/assets/6c91d0a9-130e-4bcd-a114-c6a2b1f9a8e9" />
 
 * **데이터 조회**: 캐릭터 검색 및 랭킹 데이터 확인
     * 내부 캐시 검색 방식을 사용하여 공식 홈페이지보다 빠른 조회 가능
@@ -21,37 +22,37 @@
 
 ### 3. 계산기 및 시뮬레이터
 * **계수 계산기**: 캐릭터 장비 스탯 및 장비 강화 스탯 기반의 계수 계산
-<img width="640" height="480" alt="image" src="https://github.com/user-attachments/assets/f65edc02-2bde-4c61-b765-9b4376df0b65" />
-  
+<img width="640" height="480" alt="image" src="https://github.com/user-attachments/assets/e7a787d8-c29a-4962-9bf9-ffe7c4efef1b" />
+
 * **강화 시뮬레이터**:
     * 인크립트 강화 시뮬레이션
-    <img width="640" height="480" alt="image" src="https://github.com/user-attachments/assets/91bf3cfc-ce0c-43dd-8009-d9d7a1fd1f26" />
-      
-    * 코어 강화 기대값 시뮬레이션
-    <img width="640" height="480" alt="image" src="https://github.com/user-attachments/assets/4a214ae2-ed18-4c1f-bd84-baf7751862d8" />
+    <img width="640" height="480" alt="image" src="https://github.com/user-attachments/assets/d000196f-966f-4130-8dc7-df9aa04dfcdb" />
 
+    * 코어 강화 기대값 시뮬레이션
+    <img width="640" height="480" alt="image" src="https://github.com/user-attachments/assets/f2af64bc-cdd2-49ba-b643-4138775f406b" />
 
 
 ### 4. 장비 DB 및 제작 재료 확인
-<img width="640" height="480" alt="image" src="https://github.com/user-attachments/assets/0d521f21-e016-4529-90ac-c045f3c3c6c3" />
+<img width="640" height="480" alt="image" src="https://github.com/user-attachments/assets/7a2536fd-9ce2-48cf-b048-a0412883a1b2" />
 
 * **데이터 조회**: 장비 능력치 및 제작에 필요한 재료 확인
     * *주의: 일본 테일즈위키를 기반으로 업데이트되어 최신 정보 반영이 다소 늦을 수 있음*
 
 ### 5. 컨텐츠 및 특수 알림
 * **컨텐츠 추적**: 일일/주간 숙제 완료 여부 자동 체크리스트
-<img width="350" height="675" alt="image" src="https://github.com/user-attachments/assets/d01198d2-cec0-4561-802b-4cf01517748c" />
-
+<img width="280" height="540" alt="image" src="https://github.com/user-attachments/assets/33a591b7-2f8f-4d5d-b3af-7056d365ef65" />
   
 * **전투 및 필드 알림**:
     * 마법진 경고 및 에토스 방향 알림
     * 필드 보스 알림 (아칸, 스페르첸드, 파멸의 기원, 혼란한 대지, 이벤트 등)
+      
 * **아이템 획득 알림**:
   
   <img width="640" height="480" alt="image" src="https://github.com/user-attachments/assets/221b1e73-0e93-4094-9f7b-edb87683badb" />
   <img width="640" height="200" alt="image" src="https://github.com/user-attachments/assets/f52d5b01-93de-4ef6-9398-68afd92b9620" />
 
     * 레어 획득 시 알림
+      
 * **버프 알림 (참고용)**:
   
   <img width="417" height="66" alt="image" src="https://github.com/user-attachments/assets/b6019683-9ba6-4f55-a911-60cb6749dce8" />
@@ -79,11 +80,11 @@
 
 ### 4. 메뉴 소개
 * 메인메뉴
-  
+
 <table>
   <tr>
     <td valign="top">
-      <img src="https://github.com/user-attachments/assets/9c7febcd-fb40-4651-b632-0567a151a3d6" width="60" height="375" alt="Main Menu">
+      <img src="https://github.com/user-attachments/assets/3fd67dfd-21ec-4059-a031-1dc2959a7dda" width="60" height="375" alt="Main Menu">
     </td>
     <td valign="top">
       <table>
