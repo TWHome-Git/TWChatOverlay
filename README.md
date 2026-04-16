@@ -46,6 +46,16 @@
     * 키워드 알림
     * 경험치 추적 
     * 던전 도우미
+       - 에토스 방향 알림
+         
+         <img width="122" height="167" alt="image" src="https://github.com/user-attachments/assets/a11588b8-2ffd-42b4-bede-5144d1466e23" />
+    
+       - 던전 입장 횟수 (`어밴던로드`, `갈망하는 즐거움`)
+         
+         <img width="364" height="79" alt="image" src="https://github.com/user-attachments/assets/240dc389-b992-420c-8000-52f45897a86b" />
+
+         <img width="360" height="77" alt="image" src="https://github.com/user-attachments/assets/38d59226-5785-4941-a7d0-ac2f618fffd5" />
+
     * 필드 보스 알림
       
 * **아이템 획득 알림**:
