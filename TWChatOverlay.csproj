@@ -9,7 +9,7 @@
 	<UseWindowsForms>true</UseWindowsForms>
 	<CodePage>65001</CodePage>
 	<ApplicationIcon>favicon.ico</ApplicationIcon>
-	<Version>2.1.0</Version>
+	<Version>2.1.1</Version>
 	<AssemblyVersion>$(Version).0</AssemblyVersion>
 	<FileVersion>$(Version).0</FileVersion>
 	<InformationalVersion>$(Version)</InformationalVersion>
@@ -189,11 +189,14 @@
     <None Remove="Data\images\Equipment\프시키의_파편_-_파괴.png" />
     <None Remove="Data\images\Equipment\프시키의_파편_-_형성.png" />
     <None Remove="Data\images\Equipment\핑크_다이아몬드.png" />
-    <None Remove="Data\images\Item\MagicStone1.png" />
-    <None Remove="Data\images\Item\MagicStone2.png" />
-    <None Remove="Data\images\Item\MagicStone3.png" />
-    <None Remove="Data\images\Item\MagicStone4.png" />
-    <None Remove="Data\images\Item\Seed.png" />
+    <None Remove="Data\images\Item\하급마정석.png" />
+    <None Remove="Data\images\Item\중급마정석.png" />
+    <None Remove="Data\images\Item\상급마정석.png" />
+    <None Remove="Data\images\Item\최상급마정석.png" />
+    <None Remove="Data\images\Item\시드.png" />
+    <None Remove="Data\images\Item\응축된신조의가루.png" />
+    <None Remove="Data\images\Item\코어가루.png" />
+    <None Remove="Data\images\Item\코어결정.png" />
   </ItemGroup>
 
   <ItemGroup>
@@ -363,11 +366,14 @@
     <Resource Include="Data\images\Equipment\프시키의_파편_-_파괴.png" />
     <Resource Include="Data\images\Equipment\프시키의_파편_-_형성.png" />
     <Resource Include="Data\images\Equipment\핑크_다이아몬드.png" />
-    <Resource Include="Data\images\Item\MagicStone1.png" />
-    <Resource Include="Data\images\Item\MagicStone2.png" />
-    <Resource Include="Data\images\Item\MagicStone3.png" />
-    <Resource Include="Data\images\Item\MagicStone4.png" />
-    <Resource Include="Data\images\Item\Seed.png" />
+    <Resource Include="Data\images\Item\하급마정석.png" />
+    <Resource Include="Data\images\Item\중급마정석.png" />
+    <Resource Include="Data\images\Item\상급마정석.png" />
+    <Resource Include="Data\images\Item\최상급마정석.png" />
+    <Resource Include="Data\images\Item\시드.png" />
+    <Resource Include="Data\images\Item\응축된신조의가루.png" />
+    <Resource Include="Data\images\Item\코어가루.png" />
+    <Resource Include="Data\images\Item\코어결정.png" />
   </ItemGroup>
 
   <ItemGroup>

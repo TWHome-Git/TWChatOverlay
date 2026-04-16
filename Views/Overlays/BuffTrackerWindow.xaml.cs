@@ -18,6 +18,7 @@ namespace TWChatOverlay.Views
         public BuffTrackerWindow(BuffTrackerService tracker, ChatSettings settings)
         {
             InitializeComponent();
+            WindowFontService.Apply(this);
             Instance = this;
             _tracker = tracker;
             _settings = settings;

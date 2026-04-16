@@ -2,6 +2,7 @@
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
+using TWChatOverlay.Services;
 
 namespace TWChatOverlay.Views
 {
@@ -10,6 +11,7 @@ namespace TWChatOverlay.Views
         public SubMenuWindow()
         {
             InitializeComponent();
+            WindowFontService.Apply(this);
             Loaded += SubMenuWindow_Loaded;
             UseLayoutRounding = true;
             SnapsToDevicePixels = true;
@@ -87,6 +89,7 @@ namespace TWChatOverlay.Views
                 view.HorizontalAlignment = HorizontalAlignment.Stretch;
                 view.VerticalAlignment = VerticalAlignment.Stretch;
                 view.Margin = new Thickness(0);
+                WindowFontService.Apply(view);
 
                 if (view is Control control)
                 {

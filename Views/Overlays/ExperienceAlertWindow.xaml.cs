@@ -16,6 +16,7 @@ namespace TWChatOverlay.Views
         {
             _settings = settings ?? throw new ArgumentNullException(nameof(settings));
             InitializeComponent();
+            WindowFontService.Apply(this);
             LocationChanged += (_, _) => SyncPositionToSettings(notify: false);
         }
 

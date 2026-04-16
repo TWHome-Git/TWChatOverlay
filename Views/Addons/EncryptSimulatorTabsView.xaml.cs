@@ -13,6 +13,7 @@ namespace TWChatOverlay.Views.Addons
     {
         private EncryptSimulatorView? _encryptView;
         private CoreEnhanceSimulatorView? _coreView;
+        private RelicExpectationSimulatorView? _relicView;
 
         public EncryptSimulatorTabsView()
         {
@@ -52,6 +53,7 @@ namespace TWChatOverlay.Views.Addons
                 SimulatorContentHost.Content = key switch
                 {
                     "Core" => _coreView ??= new CoreEnhanceSimulatorView(),
+                    "Relic" => _relicView ??= new RelicExpectationSimulatorView(),
                     "Encrypt" => _encryptView ??= new EncryptSimulatorView(),
                     _ => _encryptView ??= new EncryptSimulatorView()
                 };
