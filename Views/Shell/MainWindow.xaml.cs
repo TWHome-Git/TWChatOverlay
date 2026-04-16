@@ -337,6 +337,8 @@ namespace TWChatOverlay.Views
         {
             if (batch.Count == 0) return;
 
+            bool shouldAutoScroll = ChatDisplay?.IsAutoScrollEnabled == true;
+
             if (LogDisplay != null)
             {
                 LogDisplay.BeginChange();
@@ -357,8 +359,8 @@ namespace TWChatOverlay.Views
                     LogDisplay.InvalidateMeasure();
                     LogDisplay.InvalidateVisual();
                     LogDisplay.UpdateLayout();
-                    if (ChatDisplay?.IsAutoScrollEnabled == true)
-                        LogDisplay.ScrollToEnd();
+                    if (shouldAutoScroll)
+                        ScrollLogDisplayToEndAfterLayout();
                 }
             }
         }
@@ -394,14 +396,15 @@ namespace TWChatOverlay.Views
             foreach (string tabName in analysis.BufferTabs)
                 AddToBuffer(tabName, parseResult);
 
+            LogParser.ParseResult? itemTabLog = null;
             if (analysis.HasTrackedItemDrop)
             {
                 if (analysis.IsRareTrackedItemDrop)
                 {
-                    var itemLog = CreateItemTabLog(parseResult, DateTime.Today.ToString("yyyy-MM-dd"));
-                    AddToBuffer("Item", itemLog);
+                    itemTabLog = CreateItemTabLog(parseResult, DateTime.Today.ToString("yyyy-MM-dd"));
+                    AddToBuffer("Item", itemTabLog);
                     if (isRealTime)
-                        AppendWeeklyItemLog(itemLog, DateTime.Today);
+                        AppendWeeklyItemLog(itemTabLog, DateTime.Today);
                 }
                 if (analysis.ShouldShowItemDropToast)
                 {
@@ -409,8 +412,24 @@ namespace TWChatOverlay.Views
                 }
             }
 
-            if (isRealTime && _logAnalysisService.ShouldRenderToTab(parseResult, _currentTabTag))
-                AddToUI(parseResult, isRealTime: isRealTime, deferScroll: deferUiScroll);
+            if (isRealTime)
+            {
+                if (_currentTabTag == "Item")
+                {
+                    if (itemTabLog != null)
+                    {
+                        AddToUI(itemTabLog, isRealTime: isRealTime, deferScroll: deferUiScroll);
+                    }
+                    else if (parseResult.IsHighlight)
+                    {
+                        AddToUI(parseResult, isRealTime: isRealTime, deferScroll: deferUiScroll);
+                    }
+                }
+                else if (_logAnalysisService.ShouldRenderToTab(parseResult, _currentTabTag))
+                {
+                    AddToUI(parseResult, isRealTime: isRealTime, deferScroll: deferUiScroll);
+                }
+            }
 
             if (analysis.ShouldShowEtosDirection)
             {
@@ -431,6 +450,8 @@ namespace TWChatOverlay.Views
         private void AddToUI(LogParser.ParseResult log, bool isRealTime = false, bool deferScroll = false)
         {
             if (LogDisplay == null) return;
+
+            bool shouldAutoScroll = ChatDisplay?.IsAutoScrollEnabled == true;
 
             bool isBlacklisted = BlacklistService.TryGetReason(log.SenderId, out string blacklistReason);
             Brush foreground = isBlacklisted ? BlacklistService.HighlightBrush : log.Brush;
@@ -482,11 +503,28 @@ namespace TWChatOverlay.Views
             if (blocks.Count > 200) blocks.Remove(blocks.FirstBlock);
             if (!deferScroll)
             {
-                if (ChatDisplay?.IsAutoScrollEnabled == true)
+                if (shouldAutoScroll)
                 {
-                    Dispatcher.BeginInvoke(new Action(LogDisplay.ScrollToEnd), DispatcherPriority.Background);
+                    Dispatcher.BeginInvoke(new Action(ScrollLogDisplayToEndAfterLayout), DispatcherPriority.Background);
                 }
             }
+        }
+
+        private void ScrollLogDisplayToEndAfterLayout()
+        {
+            var logDisplay = LogDisplay;
+            if (logDisplay == null) return;
+
+            logDisplay.ScrollToEnd();
+
+            Dispatcher.BeginInvoke(new Action(() =>
+            {
+                var refreshedLogDisplay = LogDisplay;
+                if (refreshedLogDisplay == null) return;
+
+                refreshedLogDisplay.UpdateLayout();
+                refreshedLogDisplay.ScrollToEnd();
+            }), DispatcherPriority.ContextIdle);
         }
 
         private void RequestRefreshLogDisplay()
@@ -501,6 +539,8 @@ namespace TWChatOverlay.Views
 
                 if (LogDisplay == null)
                     return;
+
+                bool shouldAutoScroll = ChatDisplay?.IsAutoScrollEnabled == true;
 
                 LogDisplay.BeginChange();
                 try
@@ -547,8 +587,8 @@ namespace TWChatOverlay.Views
                     LogDisplay.InvalidateMeasure();
                     LogDisplay.InvalidateVisual();
                     LogDisplay.UpdateLayout();
-                    if (ChatDisplay?.IsAutoScrollEnabled == true)
-                        LogDisplay.ScrollToEnd();
+                    if (shouldAutoScroll)
+                        ScrollLogDisplayToEndAfterLayout();
                 }
             }), DispatcherPriority.Render);
         }

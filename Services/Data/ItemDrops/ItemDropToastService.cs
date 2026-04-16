@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
+using System.Windows.Media;
 using TWChatOverlay.Models;
 using TWChatOverlay.Views;
 
@@ -29,7 +30,7 @@ namespace TWChatOverlay.Services
 
             Application.Current.Dispatcher.BeginInvoke(new Action(() =>
             {
-                var toast = new ItemDropToastWindow(itemName, grade);
+                var toast = new ItemDropToastWindow(itemName, grade, ResolveToastFont());
                 toast.Closed += (_, _) =>
                 {
                     ActiveToasts.Remove(toast);
@@ -83,6 +84,28 @@ namespace TWChatOverlay.Services
 
             var area = SystemParameters.WorkArea;
             return (area.Left + (area.Width - ToastWidth) / 2, DefaultBaseTop);
+        }
+
+        private static FontFamily ResolveToastFont()
+        {
+            try
+            {
+                foreach (Window window in Application.Current.Windows)
+                {
+                    if (window is MainWindow mainWindow)
+                        return mainWindow.CurrentFont;
+                }
+            }
+            catch { }
+
+            try
+            {
+                var settings = ConfigService.Load();
+                return FontService.GetFont(settings.FontFamily);
+            }
+            catch { }
+
+            return new FontFamily("Malgun Gothic");
         }
     }
 }

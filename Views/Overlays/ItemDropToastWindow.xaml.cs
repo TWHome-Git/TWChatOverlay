@@ -12,9 +12,11 @@ namespace TWChatOverlay.Views
     {
         private readonly DispatcherTimer _lifetimeTimer;
 
-        public ItemDropToastWindow(string itemName, ItemDropGrade grade)
+        public ItemDropToastWindow(string itemName, ItemDropGrade grade, FontFamily fontFamily)
         {
             InitializeComponent();
+            FontFamily = fontFamily;
+            ItemNameText.FontFamily = fontFamily;
             ItemNameText.Text = $"[{itemName}] 획득";
             ItemNameText.Foreground = grade switch
             {
