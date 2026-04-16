@@ -50,8 +50,11 @@
   
   <img width="400" height="180" alt="image" src="https://github.com/user-attachments/assets/948eb84e-c20a-40d6-912a-1255ed2d9ddf" />
 
-
     * 레어 획득 시 알림
+
+  <img width="638" height="205" alt="image" src="https://github.com/user-attachments/assets/b25441c1-06f4-4e59-8953-93e5227da729" />
+  
+    * 레어 주간 통계
       
 * **버프 알림 (참고용)**:
   
