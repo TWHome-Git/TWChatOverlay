@@ -29,7 +29,7 @@
     <img width="640" height="480" alt="image" src="https://github.com/user-attachments/assets/d000196f-966f-4130-8dc7-df9aa04dfcdb" />
 
     * 코어 강화 기대값 시뮬레이션
-    <img width="640" height="480" alt="image" src="https://github.com/user-attachments/assets/f2af64bc-cdd2-49ba-b643-4138775f406b" />
+    <img width="640" height="480" alt="image" src="https://github.com/user-attachments/assets/dc17e2a6-2696-4797-86dc-8928c9d723c7" />
 
 
 ### 4. 장비 DB 및 제작 재료 확인
@@ -48,14 +48,14 @@
       
 * **아이템 획득 알림**:
   
-  <img width="640" height="480" alt="image" src="https://github.com/user-attachments/assets/221b1e73-0e93-4094-9f7b-edb87683badb" />
-  <img width="640" height="200" alt="image" src="https://github.com/user-attachments/assets/f52d5b01-93de-4ef6-9398-68afd92b9620" />
+  <img width="400" height="180" alt="image" src="https://github.com/user-attachments/assets/948eb84e-c20a-40d6-912a-1255ed2d9ddf" />
+
 
     * 레어 획득 시 알림
       
 * **버프 알림 (참고용)**:
   
-  <img width="417" height="66" alt="image" src="https://github.com/user-attachments/assets/b6019683-9ba6-4f55-a911-60cb6749dce8" />
+  <img width="416" height="124" alt="image" src="https://github.com/user-attachments/assets/8033e824-a8a7-453b-ac3d-b5ad489cdd63" />
 
     * 로그상의 '시작' 시점만 감지 가능
     * 종료 시점을 확인할 수 없어, 참고용으로만 사용
