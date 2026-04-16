@@ -43,8 +43,10 @@
 <img width="280" height="540" alt="image" src="https://github.com/user-attachments/assets/33a591b7-2f8f-4d5d-b3af-7056d365ef65" />
   
 * **전투 및 필드 알림**:
-    * 마법진 경고 및 에토스 방향 알림
-    * 필드 보스 알림 (아칸, 스페르첸드, 파멸의 기원, 혼란한 대지, 이벤트 등)
+    * 키워드 알림
+    * 경험치 추적 
+    * 던전 도우미
+    * 필드 보스 알림
       
 * **아이템 획득 알림**:
   
@@ -126,7 +128,7 @@
           </tr>
           <tr>
             <td><b>8</b></td>
-            <td><b>프로그램 설정</b>: 앱 설정</td>
+            <td><b>앱 설정</b>: 앱 설정</td>
           </tr>
           <tr>
             <td><b>9</b></td>
@@ -138,6 +140,33 @@
   </tr>
 </table>
 
+### 5. 앱 설정 소개
+* 채팅창 설정
+   - 채팅 필터 및 색상, 폰트 설정 가능
+<img width="640" height="341" alt="image" src="https://github.com/user-attachments/assets/aff84f81-1122-46bb-a0e3-cf23a85ed67b" />
+
+* 프로그램 설정
+   - 채팅창 위치 및 항상 위 속성, 로그 경로 설정
+<img width="640" height="401" alt="image" src="https://github.com/user-attachments/assets/be014c96-69e5-4814-abbd-466170728fbf" />
+
+* 단축키 설정
+   - 각종 단축키 설정
+   - 기존에 윈도우 혹은 다른 프로그램에서 사용하는 단축키는 등록이 제한됨
+<img width="640" height="416" alt="image" src="https://github.com/user-attachments/assets/a0e88728-4d8b-4d43-9eec-5422e79f8e7d" />
+
+
+---
+## Q&A
+
+* Q) 채팅로그가 나타나지 않아요
+   - 앱 설정(`톱니바퀴`) -> 프로그램 설정 -> 로그 경로 설정에 실제 테일즈위버의 로그 폴더로 변경
+
+* Q) 폰트를 바꾸고 싶어요
+   - 원하는 폰트를 실행 파일이 있는 위치의 `Font`폴더에 `UserDefine.ttf`로 이름을 변경하여 이동
+   - 앱 설정(`톱니바퀴`) -> 채팅창 설정 -> 폰트 종류 `사용자 설정`
+
+* Q) 원하는 채팅만 보고 싶어요
+   - 앱 설정(`톱니바퀴`) -> 채팅창 설정 -> 채팅 필터 및 색상에서 원하는 채팅만 체크하면 `일반`탭에 체크한 항목만 표기
 ---
 
 ## 기술 스택
