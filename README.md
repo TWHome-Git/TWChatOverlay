@@ -29,7 +29,10 @@
     <img width="640" height="480" alt="image" src="https://github.com/user-attachments/assets/d000196f-966f-4130-8dc7-df9aa04dfcdb" />
 
     * 코어 강화 기대값 시뮬레이션
-    <img width="640" height="480" alt="image" src="https://github.com/user-attachments/assets/dc17e2a6-2696-4797-86dc-8928c9d723c7" />
+    <img width="640" height="480" alt="image" src="https://github.com/user-attachments/assets/2ba4ce3b-f24a-4051-b690-e16a9a6f0248" />
+
+    * 렐릭 강화 기대값 시뮬레이션**
+    <img width="640" height="480" alt="image" src="https://github.com/user-attachments/assets/9323e4c2-0b24-4dc9-88c8-121d636b5602" />
 
 
 ### 4. 장비 DB 및 제작 재료 확인
