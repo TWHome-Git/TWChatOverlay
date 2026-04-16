@@ -1,0 +1,100 @@
+﻿using System;
+using System.Globalization;
+using System.Text.RegularExpressions;
+using TWChatOverlay.Models;
+
+namespace TWChatOverlay.Services
+{
+    /// <summary>
+    /// 경험의 정수 획득 후 누적 경험치를 추적해 임계치 초과 시 알림을 발생시킵니다.
+    /// </summary>
+    public sealed class ExperienceEssenceAlertService
+    {
+        public const long ThresholdExp = 10_000_000_000L;
+        private const string ResetMessage = "\uACBD\uD5D8\uCE58\uAC00 10000000000 \uAC10\uC18C\uD588\uC2B5\uB2C8\uB2E4";
+        private static readonly Regex LeadingTimestampRegex = new(
+            @"^\[[^\]]+\]\s*",
+            RegexOptions.Compiled);
+
+        private readonly ChatSettings _settings;
+        private bool _isTracking;
+        private long _trackedExp;
+        private bool _hasAlerted;
+
+        public ExperienceEssenceAlertService(ChatSettings settings)
+        {
+            _settings = settings ?? throw new ArgumentNullException(nameof(settings));
+        }
+
+        public void Process(LogAnalysisResult analysis)
+        {
+            if (!analysis.IsSuccess)
+                return;
+
+            string text = analysis.Parsed.FormattedText ?? string.Empty;
+            if (IsExperienceResetLog(text))
+            {
+                Reset();
+                ExperienceAlertWindowService.Close();
+                _isTracking = true;
+                AppLogger.Info($"Experience essence tracker reset detected. Message='{text}'");
+                return;
+            }
+
+            if (analysis.Parsed.GainedExp <= 0)
+                return;
+
+            if (!_isTracking)
+            {
+                AppLogger.Debug($"Experience essence tracker ignored EXP gain before reset point. Gain={analysis.Parsed.GainedExp:N0}, Message='{text}'");
+                return;
+            }
+
+            _trackedExp += analysis.Parsed.GainedExp;
+            AppLogger.Info($"Experience essence tracker accumulated EXP. Gain={analysis.Parsed.GainedExp:N0}, Total={_trackedExp:N0}, Threshold={ThresholdExp:N0}, TrackerOn={_settings.ShowExpTracker}, Alerted={_hasAlerted}");
+
+            if (_hasAlerted)
+            {
+                AppLogger.Debug($"Experience essence tracker already alerted for current cycle. Total={_trackedExp:N0}");
+                return;
+            }
+
+            if (_trackedExp < ThresholdExp)
+                return;
+
+            if (!_settings.ShowExpTracker)
+            {
+                AppLogger.Info($"Experience essence tracker reached threshold but popup skipped because exp tracker is OFF. Total={_trackedExp:N0}");
+                return;
+            }
+
+            _hasAlerted = true;
+            AppLogger.Info($"Experience essence tracker threshold reached. Showing popup. Total={_trackedExp:N0}");
+
+            ExperienceAlertWindowService.Show(
+                $"\uACBD\uD5D8\uCE58 {FormatExpEok(_trackedExp)} \uB204\uC801 \uB2EC\uC131");
+        }
+
+        public void Reset()
+        {
+            _isTracking = false;
+            _trackedExp = 0;
+            _hasAlerted = false;
+        }
+
+        private static bool IsExperienceResetLog(string text)
+        {
+            if (string.IsNullOrWhiteSpace(text))
+                return false;
+
+            string body = LeadingTimestampRegex.Replace(text.Trim(), string.Empty);
+            return string.Equals(body, ResetMessage, StringComparison.Ordinal);
+        }
+
+        private static string FormatExpEok(long exp)
+        {
+            decimal eok = exp / 100_000_000m;
+            return $"{eok.ToString("N0", CultureInfo.InvariantCulture)}\uC5B5";
+        }
+    }
+}
