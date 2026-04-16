@@ -4,12 +4,16 @@ using System.Globalization;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Documents;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
 
 namespace TWChatOverlay.Views.Addons
 {
     public partial class CoreEnhanceSimulatorView : UserControl
     {
         private const int PieceCount = 1;
+        private static readonly Brush SummaryValueBrush = new SolidColorBrush(Color.FromRgb(0xD6, 0xE8, 0xFF));
         private readonly List<CoreStage> _stages = BuildStages();
 
         public CoreEnhanceSimulatorView()
@@ -324,13 +328,81 @@ namespace TWChatOverlay.Views.Addons
             }
             else
             {
-                SummaryTextBlock.Text =
-                    $"{statLabel} / {start.Display} -> {target.Display} {PieceCount}개 기대값\n" +
-                    $"총 가루 갯수 - {totalDust:N0}개 (총 가루 분해 비용 - {FormatEok(totalDustCost)}억)\n" +
-                    $"총 결정 갯수 - {totalCrystal:N0}개\n" +
-                    $"총 강화 비용 - {FormatEok(totalEnhanceSeed)}억\n" +
-                    $"총 기대 비용 - {FormatEok(totalExpectedCost)}억";
+                SetMaterialSummary(
+                    $"| {statLabel} | {start.Display} -> {target.Display} | {PieceCount}개 기대값 |",
+                    totalDust,
+                    totalCrystal,
+                    totalEnhanceSeed,
+                    totalExpectedCost);
             }
+        }
+
+        private void SetMaterialSummary(
+            string title,
+            long totalDust,
+            long totalCrystal,
+            long totalEnhanceSeed,
+            long totalExpectedCost)
+        {
+            if (SummaryTextBlock == null)
+                return;
+
+            SummaryTextBlock.Inlines.Clear();
+            SummaryTextBlock.Inlines.Add(new Run(title)
+            {
+                FontSize = SummaryTextBlock.FontSize + 2,
+                FontWeight = FontWeights.SemiBold
+            });
+            SummaryTextBlock.Inlines.Add(new LineBreak());
+            SummaryTextBlock.Inlines.Add(new LineBreak());
+
+            SummaryTextBlock.Inlines.Add(new InlineUIContainer(BuildMaterialSummaryRow(
+                totalDust,
+                totalCrystal,
+                totalExpectedCost)));
+        }
+
+        private StackPanel BuildMaterialSummaryRow(
+            long totalDust,
+            long totalCrystal,
+            long totalExpectedCost)
+        {
+            return new StackPanel
+            {
+                Orientation = Orientation.Horizontal,
+                Children =
+                {
+                    BuildIconValue("pack://application:,,,/Data/images/Item/코어가루.png", $"{totalDust:N0}개"),
+                    BuildIconValue("pack://application:,,,/Data/images/Item/코어결정.png", $"{totalCrystal:N0}개"),
+                    BuildIconValue("pack://application:,,,/Data/images/Item/시드.png", $"{FormatEok(totalExpectedCost)}억")
+                }
+            };
+        }
+
+        private static StackPanel BuildIconValue(string imageUri, string text)
+        {
+            return new StackPanel
+            {
+                Orientation = Orientation.Horizontal,
+                Margin = new Thickness(0, 0, 24, 0),
+                Children =
+                {
+                    new Image
+                    {
+                        Source = new BitmapImage(new Uri(imageUri, UriKind.Absolute)),
+                        Width = 36,
+                        Height = 36,
+                        Margin = new Thickness(0, 0, 8, 0)
+                    },
+                    new TextBlock
+                    {
+                        Text = text,
+                        Foreground = SummaryValueBrush,
+                        FontSize = 14,
+                        VerticalAlignment = VerticalAlignment.Center
+                    }
+                }
+            };
         }
 
         private bool TryParseTicketPrices(Dictionary<int, long> ticketPrices)

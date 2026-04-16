@@ -19,6 +19,7 @@ namespace TWChatOverlay.Views
         public MenuWindow()
         {
             InitializeComponent();
+            WindowFontService.Apply(this);
             _notifyIcon = CreateNotifyIcon();
             LocationChanged += MenuWindow_LocationChanged;
 
@@ -366,6 +367,8 @@ namespace TWChatOverlay.Views
                     Owner = this,
                     WindowStartupLocation = WindowStartupLocation.CenterOwner
                 };
+                WindowFontService.Apply(window);
+                WindowFontService.Apply(content);
                 window.Show();
             }
         }

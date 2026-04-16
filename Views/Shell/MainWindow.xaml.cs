@@ -76,11 +76,11 @@ namespace TWChatOverlay.Views
             @"<font\b",
             RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
-        private const string SeedIconUri = "pack://application:,,,/Data/images/Item/Seed.png";
-        private const string MagicStone1IconUri = "pack://application:,,,/Data/images/Item/MagicStone1.png";
-        private const string MagicStone2IconUri = "pack://application:,,,/Data/images/Item/MagicStone2.png";
-        private const string MagicStone3IconUri = "pack://application:,,,/Data/images/Item/MagicStone3.png";
-        private const string MagicStone4IconUri = "pack://application:,,,/Data/images/Item/MagicStone4.png";
+        private const string SeedIconUri = "pack://application:,,,/Data/images/Item/시드.png";
+        private const string LowMagicStoneIconUri = "pack://application:,,,/Data/images/Item/하급마정석.png";
+        private const string MiddleMagicStoneIconUri = "pack://application:,,,/Data/images/Item/중급마정석.png";
+        private const string HighMagicStoneIconUri = "pack://application:,,,/Data/images/Item/상급마정석.png";
+        private const string TopMagicStoneIconUri = "pack://application:,,,/Data/images/Item/최상급마정석.png";
         private static readonly string ItemLogDirectoryPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Itemlog");
 
         public static readonly DependencyProperty CurrentFontProperty =
@@ -628,13 +628,13 @@ namespace TWChatOverlay.Views
                 Margin = new Thickness(0, 0, 0, 2)
             };
 
-            p.Inlines.Add(BuildIconInline(MagicStone1IconUri, 16));
+            p.Inlines.Add(BuildIconInline(LowMagicStoneIconUri, 16));
             p.Inlines.Add(new Run($" {FormatSignedCount(summary.Low)}  "));
-            p.Inlines.Add(BuildIconInline(MagicStone2IconUri, 16));
+            p.Inlines.Add(BuildIconInline(MiddleMagicStoneIconUri, 16));
             p.Inlines.Add(new Run($" {FormatSignedCount(summary.Mid)}  "));
-            p.Inlines.Add(BuildIconInline(MagicStone3IconUri, 16));
+            p.Inlines.Add(BuildIconInline(HighMagicStoneIconUri, 16));
             p.Inlines.Add(new Run($" {FormatSignedCount(summary.High)}  "));
-            p.Inlines.Add(BuildIconInline(MagicStone4IconUri, 16));
+            p.Inlines.Add(BuildIconInline(TopMagicStoneIconUri, 16));
             p.Inlines.Add(new Run($" {FormatSignedCount(summary.Top)}"));
 
             box.Document.Blocks.Add(p);
@@ -1136,6 +1136,14 @@ namespace TWChatOverlay.Views
                 LogDisplay.FontSize = _settings.FontSize;
             }
             if (SettingsDisplay != null) SettingsDisplay.FontFamily = nextFont;
+
+            foreach (Window window in Application.Current.Windows)
+            {
+                if (ReferenceEquals(window, this))
+                    continue;
+
+                window.FontFamily = nextFont;
+            }
 
             MainBorder.Background = new SolidColorBrush(Color.FromArgb(255, 30, 30, 30));
         }

@@ -2,6 +2,7 @@
 using System.Windows;
 using System.Windows.Input;
 using TWChatOverlay.Models;
+using TWChatOverlay.Services;
 
 namespace TWChatOverlay.Views
 {
@@ -12,6 +13,7 @@ namespace TWChatOverlay.Views
         public ItemDropHelperWindow()
         {
             InitializeComponent();
+            WindowFontService.Apply(this);
             Instance = this;
             LocationChanged += (_, _) => SyncPositionToSettings();
         }

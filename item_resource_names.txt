@@ -1,5 +1,5 @@
-MagicStone1.png
-MagicStone2.png
-MagicStone3.png
-MagicStone4.png
-Seed.png
+하급마정석.png
+중급마정석.png
+상급마정석.png
+최상급마정석.png
+시드.png

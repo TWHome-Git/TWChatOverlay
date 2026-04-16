@@ -18,6 +18,7 @@ namespace TWChatOverlay.Views
         public SubAddonWindow()
         {
             InitializeComponent();
+            WindowFontService.Apply(this);
             Instance = this;
             LocationChanged += (_, _) => SyncWindowPositionToLiveSettings();
 

@@ -6,6 +6,7 @@ using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
 using TWChatOverlay.Models;
+using TWChatOverlay.Services;
 
 namespace TWChatOverlay.Views.Addons
 {
@@ -20,6 +21,7 @@ namespace TWChatOverlay.Views.Addons
         public EquipmentDetailWindow(EquipmentModel equipment)
         {
             InitializeComponent();
+            WindowFontService.Apply(this);
 
             DataContext = equipment;
             _materials = (equipment.CraftMaterials ?? new List<EquipmentModel.CraftMaterial>())

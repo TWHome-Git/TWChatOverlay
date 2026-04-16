@@ -39,6 +39,7 @@
                     SelectionChanged="SimulatorTabControl_SelectionChanged">
             <TabItem Header="인크립트 시뮬레이터" Tag="Encrypt" Style="{StaticResource SimulatorTabItemStyle}" Margin="0,0,0,0"/>
             <TabItem Header="코어 강화 기대값" Tag="Core" Style="{StaticResource SimulatorTabItemStyle}" Margin="0,0,0,0"/>
+            <TabItem Header="신조 렐릭 기대값" Tag="Relic" Style="{StaticResource SimulatorTabItemStyle}" Margin="0,0,0,0"/>
         </TabControl>
 
         <Border Grid.Row="3"
