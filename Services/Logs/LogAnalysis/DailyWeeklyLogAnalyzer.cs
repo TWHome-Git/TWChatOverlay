@@ -15,7 +15,7 @@ namespace TWChatOverlay.Services.LogAnalysis
         public const string AbyssDepthThreeItemName = "어비스 - 심층Ⅲ";
 
         public const string AbandonRoadKeywordToken = "어밴던로드";
-        public const string CravingPleasureLogKeyword = "현재 남은 에너지는";
+        public const string CravingPleasureLogKeyword = "남은 에너지는";
         public const string CravingPleasureKeywordToken = CravingPleasureLogKeyword;
         public const string AbyssKeywordToken = "어비스 - 심층";
         public const string NestOfShinjoKeywordToken = "이번 주 신조 보상을";
@@ -38,7 +38,7 @@ namespace TWChatOverlay.Services.LogAnalysis
         private const string MercurialRewardSeedToken3 = "획득했습니다";
 
         private static readonly Regex AbaddonCountRegex = new(@"도전 횟수는\s*(\d+)번", RegexOptions.Compiled);
-        private static readonly Regex PleasureEnergyRegex = new(@"남은 에너지는 \[(\d+)\]", RegexOptions.Compiled);
+        private static readonly Regex PleasureEnergyRegex = new(@"남은\s*에너지는\s*\[\s*(\d+)\s*\]", RegexOptions.Compiled);
         private static readonly Regex AbyssFloorRegex = new(@"어비스 - 심층(?<floor>[ⅠⅡⅢ])\(보스전\) 플레이를 이번 주에 7회 중 \d+회째", RegexOptions.Compiled);
         private static readonly Regex AbyssRewardRegex = new(@"이번 주 어비스 던전 보상을\s*(\d+)회 획득하셨습니다", RegexOptions.Compiled);
         private static readonly Regex SinjoRewardRegex = new(@"이번 주 신조 보상을\s*(\d+)회 획득 하셨습니다", RegexOptions.Compiled);

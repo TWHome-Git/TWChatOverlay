@@ -4,8 +4,10 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Runtime.CompilerServices;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -115,7 +117,16 @@ namespace TWChatOverlay.Views
         private const string DimensionalGapLogKeyword = "차원의 틈 봉인에 성공하였";
         private const string AbyssalTreasuryLogKeyword = "심연의 보물창고 밖으로 이동 됩니다";
         private const string LuminousLogKeyword = "금일 [루미너스] 보스 토벌에 성공하였습니다.";
-        private const string CravingPleasureLogKeyword = "현재 남은 에너지는";
+        private const string CravingPleasureLogKeyword = "남은 에너지는";
+
+        private static readonly Regex HtmlTagRegex = new("<[^>]+>", RegexOptions.Compiled);
+        private static readonly Regex WhiteSpaceRegex = new(@"\s+", RegexOptions.Compiled);
+        private static readonly Regex AbaddonRoadCountRegex = new(
+            @"이번\s*주\s*어밴던\s*로드\s*(?<region>필멸의\s*땅|카디프|오를란느)\s*지역의\s*도전\s*횟수는\s*(?<count>\d+)\s*번",
+            RegexOptions.Compiled);
+        private static readonly Regex CravingPleasureEnergyRegex = new(
+            @"남은\s*에너지는\s*\[\s*(?<remain>\d+)\s*\]",
+            RegexOptions.Compiled);
 
         public ObservableCollection<DailyWeeklyContentLog> TrackItems { get; }
 
@@ -519,6 +530,24 @@ namespace TWChatOverlay.Views
                                     specialCounts[DailyWeeklyLogAnalyzer.SinjoSpecialKey] = sinjoValue;
                             }
 
+                            string normalizedLine = NormalizeLogText(line);
+                            if (TryExtractAbaddonRoadCount(normalizedLine, out string abaddonItemName, out int abaddonValue))
+                            {
+                                var abaddonItem = items.FirstOrDefault(i => i.Name == abaddonItemName);
+                                if (abaddonItem != null &&
+                                    (!maxExtractedCounts.TryGetValue(abaddonItem, out int prevAbaddon) || abaddonValue > prevAbaddon))
+                                {
+                                    maxExtractedCounts[abaddonItem] = abaddonValue;
+                                }
+                            }
+
+                            if (TryExtractCravingPleasureCount(normalizedLine, out _))
+                            {
+                                var cravingItem = items.FirstOrDefault(i => i.Name == CravingPleasureItemName);
+                                if (cravingItem != null)
+                                    lastMatchedLines[cravingItem] = normalizedLine;
+                            }
+
                             foreach (var item in items)
                             {
                                 if (item.LogKeyword == null || !line.Contains(item.LogKeyword)) continue;
@@ -595,12 +624,90 @@ namespace TWChatOverlay.Views
             _dailyWeeklyLogAnalyzer.Process(text);
         }
 
+        public bool TryProcessAbaddonOrCravingLog(string rawLog)
+        {
+            string text = NormalizeLogText(rawLog);
+            if (string.IsNullOrWhiteSpace(text))
+                return false;
+
+            return TryProcessAbaddonRoadLog(text) || TryProcessCravingPleasureLog(text);
+        }
+
         public void ProcessLog(LogAnalysisResult analysis)
         {
             if (!analysis.ShouldRunDailyWeeklyContent)
                 return;
 
             _dailyWeeklyLogAnalyzer.Process(analysis);
+        }
+
+        private bool TryProcessAbaddonRoadLog(string text)
+        {
+            if (!TryExtractAbaddonRoadCount(text, out string itemName, out int count))
+                return false;
+
+            DailyWeeklyContentLog? item = TrackItems.FirstOrDefault(i => i.Name == itemName);
+            if (item == null || !item.IsEnabled)
+                return false;
+
+            item.SetCount(count);
+            return true;
+        }
+
+        private bool TryProcessCravingPleasureLog(string text)
+        {
+            if (!TryExtractCravingPleasureCount(text, out int count))
+                return false;
+
+            DailyWeeklyContentLog? item = TrackItems.FirstOrDefault(i => i.Name == CravingPleasureItemName);
+            if (item == null || !item.IsEnabled)
+                return false;
+
+            item.SetCount(count);
+            return true;
+        }
+
+        private static bool TryExtractAbaddonRoadCount(string text, out string itemName, out int count)
+        {
+            itemName = string.Empty;
+            count = 0;
+
+            Match match = AbaddonRoadCountRegex.Match(text);
+            if (!match.Success || !int.TryParse(match.Groups["count"].Value, out count))
+                return false;
+
+            string region = WhiteSpaceRegex.Replace(match.Groups["region"].Value, string.Empty);
+            itemName = region switch
+            {
+                "필멸의땅" => ImmortalLandItemName,
+                "카디프" => CardiffItemName,
+                "오를란느" => OrlanneItemName,
+                _ => string.Empty
+            };
+
+            return !string.IsNullOrEmpty(itemName);
+        }
+
+        private static bool TryExtractCravingPleasureCount(string text, out int count)
+        {
+            count = 0;
+
+            Match match = CravingPleasureEnergyRegex.Match(text);
+            if (!match.Success || !int.TryParse(match.Groups["remain"].Value, out int remain))
+                return false;
+
+            count = 21 - remain;
+            return true;
+        }
+
+        private static string NormalizeLogText(string rawLog)
+        {
+            if (string.IsNullOrWhiteSpace(rawLog))
+                return string.Empty;
+
+            string decoded = WebUtility.HtmlDecode(rawLog).Replace("&nbsp", " ");
+            decoded = HtmlTagRegex.Replace(decoded, " ");
+            return WhiteSpaceRegex.Replace(decoded, " ").Trim();
         }
 
         private async void Settings_Click(object sender, RoutedEventArgs e)

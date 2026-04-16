@@ -35,6 +35,9 @@ namespace TWChatOverlay.Models
         private bool _showExperienceLimitAlertWindow = false;
         private bool _showDailyWeeklyContentOverlay = false;
         private bool _showEtosDirectionAlert = true;
+        private bool _enableAbaddonRoadCountAlert = false;
+        private bool _enableCravingPleasureCountAlert = false;
+        private bool _showDungeonCountDisplayWindow = false;
         private bool _showItemDropAlert = true;
         private bool _showEtosHelperWindow = false;
         private bool _showItemDropHelperWindow = false;
@@ -68,12 +71,15 @@ namespace TWChatOverlay.Models
         private double? _buffTrackerWindowTop = 0.0;
         private double? _experienceLimitAlertWindowLeft = null;
         private double? _experienceLimitAlertWindowTop = null;
+        private double? _dungeonCountDisplayWindowLeft = null;
+        private double? _dungeonCountDisplayWindowTop = null;
 
         private double _fontSize = 17.0;
         private double _lineMargin = 0.0;
         private double _lineMarginLeft = 0.0;
 
         private long _expAlarmThreshold = 10000;
+        private int _abaddonRoadCountAlertDurationSeconds = 30;
         private int _lastSelectedPresetNumber = 1;
 
         private WindowPositionPreset _preset1 = new("프리셋 1 (X: 0, Y: 0)", 110, 840, 0, 0);
@@ -105,6 +111,12 @@ namespace TWChatOverlay.Models
         public bool UseMagicCircleAlert { get => _useMagicCircleAlert; set { _useMagicCircleAlert = value; OnPropertyChanged(); } }
         [JsonPropertyOrder(11)]
         public bool ShowEtosDirectionAlert { get => _showEtosDirectionAlert; set { _showEtosDirectionAlert = value; OnPropertyChanged(); } }
+        [JsonPropertyOrder(12)]
+        public bool EnableAbaddonRoadCountAlert { get => _enableAbaddonRoadCountAlert; set { _enableAbaddonRoadCountAlert = value; OnPropertyChanged(); } }
+        [JsonPropertyOrder(13)]
+        public bool EnableCravingPleasureCountAlert { get => _enableCravingPleasureCountAlert; set { _enableCravingPleasureCountAlert = value; OnPropertyChanged(); } }
+        [JsonPropertyOrder(14)]
+        public bool ShowDungeonCountDisplayWindow { get => _showDungeonCountDisplayWindow; set { _showDungeonCountDisplayWindow = value; OnPropertyChanged(); } }
         [JsonPropertyOrder(12)]
         public bool ShowItemDropAlert { get => _showItemDropAlert; set { _showItemDropAlert = value; OnPropertyChanged(); } }
         [JsonPropertyOrder(13)]
@@ -435,6 +447,18 @@ namespace TWChatOverlay.Models
         [JsonPropertyOrder(46)]
         public long ExpAlarmThreshold { get => _expAlarmThreshold; set { _expAlarmThreshold = value; OnPropertyChanged(); } }
         [JsonPropertyOrder(47)]
+        public int AbaddonRoadCountAlertDurationSeconds
+        {
+            get => _abaddonRoadCountAlertDurationSeconds;
+            set
+            {
+                int clamped = Math.Max(1, Math.Min(300, value));
+                if (_abaddonRoadCountAlertDurationSeconds == clamped) return;
+                _abaddonRoadCountAlertDurationSeconds = clamped;
+                OnPropertyChanged();
+            }
+        }
+        [JsonPropertyOrder(48)]
         public int LastSelectedPresetNumber
         {
             get => _lastSelectedPresetNumber;
@@ -566,6 +590,30 @@ namespace TWChatOverlay.Models
             {
                 if (_experienceLimitAlertWindowTop == value) return;
                 _experienceLimitAlertWindowTop = value;
+                OnPropertyChanged();
+            }
+        }
+
+        [JsonPropertyOrder(64)]
+        public double? DungeonCountDisplayWindowLeft
+        {
+            get => _dungeonCountDisplayWindowLeft;
+            set
+            {
+                if (_dungeonCountDisplayWindowLeft == value) return;
+                _dungeonCountDisplayWindowLeft = value;
+                OnPropertyChanged();
+            }
+        }
+
+        [JsonPropertyOrder(65)]
+        public double? DungeonCountDisplayWindowTop
+        {
+            get => _dungeonCountDisplayWindowTop;
+            set
+            {
+                if (_dungeonCountDisplayWindowTop == value) return;
+                _dungeonCountDisplayWindowTop = value;
                 OnPropertyChanged();
             }
         }

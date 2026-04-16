@@ -31,6 +31,9 @@ namespace TWChatOverlay.Models
             _showExperienceLimitAlertWindow = false;
             _showDailyWeeklyContentOverlay = false;
             _showEtosDirectionAlert = false;
+            _enableAbaddonRoadCountAlert = false;
+            _enableCravingPleasureCountAlert = false;
+            _showDungeonCountDisplayWindow = false;
             _showItemDropAlert = false;
             _showEtosHelperWindow = false;
             _showItemDropHelperWindow = false;
@@ -64,10 +67,13 @@ namespace TWChatOverlay.Models
             _buffTrackerWindowTop = 0.0;
             _experienceLimitAlertWindowLeft = null;
             _experienceLimitAlertWindowTop = null;
+            _dungeonCountDisplayWindowLeft = null;
+            _dungeonCountDisplayWindowTop = null;
             _fontSize = 17.0;
             _lineMargin = 0.0;
             _lineMarginLeft = 0.0;
             _expAlarmThreshold = 10000;
+            _abaddonRoadCountAlertDurationSeconds = 30;
             _lastSelectedPresetNumber = 1;
             ShowNormal = true;
             ShowShout = true;

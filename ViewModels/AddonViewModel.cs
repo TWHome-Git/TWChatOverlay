@@ -29,6 +29,10 @@ namespace TWChatOverlay.ViewModels
         private bool _showDailyWeeklyContentOverlay;
         private bool _showEtosDirectionAlert;
         private bool _showEtosHelperWindow;
+        private bool _enableAbaddonRoadCountAlert;
+        private bool _enableCravingPleasureCountAlert;
+        private bool _showDungeonCountDisplayWindow;
+        private int _abaddonRoadCountAlertDurationSeconds;
         private bool _showItemDropAlert;
         private bool _showItemDropHelperWindow;
         private bool _enableBuffTrackerAlert;
@@ -117,6 +121,30 @@ namespace TWChatOverlay.ViewModels
             set => SetSetting(ref _showEtosHelperWindow, value, (settings, newValue) => settings.ShowEtosHelperWindow = newValue);
         }
 
+        public bool EnableAbaddonRoadCountAlert
+        {
+            get => _enableAbaddonRoadCountAlert;
+            set => SetSetting(ref _enableAbaddonRoadCountAlert, value, (settings, newValue) => settings.EnableAbaddonRoadCountAlert = newValue);
+        }
+
+        public bool EnableCravingPleasureCountAlert
+        {
+            get => _enableCravingPleasureCountAlert;
+            set => SetSetting(ref _enableCravingPleasureCountAlert, value, (settings, newValue) => settings.EnableCravingPleasureCountAlert = newValue);
+        }
+
+        public bool ShowDungeonCountDisplayWindow
+        {
+            get => _showDungeonCountDisplayWindow;
+            set => SetSetting(ref _showDungeonCountDisplayWindow, value, (settings, newValue) => settings.ShowDungeonCountDisplayWindow = newValue);
+        }
+
+        public int AbaddonRoadCountAlertDurationSeconds
+        {
+            get => _abaddonRoadCountAlertDurationSeconds;
+            set => SetSetting(ref _abaddonRoadCountAlertDurationSeconds, value, (settings, newValue) => settings.AbaddonRoadCountAlertDurationSeconds = newValue);
+        }
+
         public bool ShowItemDropAlert
         {
             get => _showItemDropAlert;
@@ -188,6 +216,10 @@ namespace TWChatOverlay.ViewModels
             _showDailyWeeklyContentOverlay = _settings.ShowDailyWeeklyContentOverlay;
             _showEtosDirectionAlert = _settings.ShowEtosDirectionAlert;
             _showEtosHelperWindow = _settings.ShowEtosHelperWindow;
+            _enableAbaddonRoadCountAlert = _settings.EnableAbaddonRoadCountAlert;
+            _enableCravingPleasureCountAlert = _settings.EnableCravingPleasureCountAlert;
+            _showDungeonCountDisplayWindow = _settings.ShowDungeonCountDisplayWindow;
+            _abaddonRoadCountAlertDurationSeconds = _settings.AbaddonRoadCountAlertDurationSeconds;
             _showItemDropAlert = _settings.ShowItemDropAlert;
             _showItemDropHelperWindow = _settings.ShowItemDropHelperWindow;
             _enableBuffTrackerAlert = _settings.EnableBuffTrackerAlert;

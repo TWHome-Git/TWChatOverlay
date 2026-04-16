@@ -35,6 +35,7 @@ namespace TWChatOverlay.Views
         private BossAlarmSchedulerService? _bossAlarmSchedulerService;
         private BuffTrackerService _buffTrackerService;
         private ExperienceEssenceAlertService _experienceEssenceAlertService;
+        private DungeonCountDisplayService _dungeonCountDisplayService;
         private ChatSettings _settings;
         private LogService? _logService;
         private LogAnalysisService _logAnalysisService;
@@ -115,6 +116,7 @@ namespace TWChatOverlay.Views
 
             _expService = new ExperienceService(_settings);
             _experienceEssenceAlertService = new ExperienceEssenceAlertService(_settings);
+            _dungeonCountDisplayService = new DungeonCountDisplayService(_settings);
             _buffTrackerService = new BuffTrackerService(_settings);
             _buffTrackerService.PropertyChanged += BuffTrackerService_PropertyChanged;
             ExpTrackerPanel.DataContext = _expService.SessionState;
@@ -153,6 +155,7 @@ namespace TWChatOverlay.Views
         private void MainWindow_Closed(object? sender, EventArgs e)
         {
             try { ExperienceAlertWindowService.SaveCurrentPosition(_settings); } catch { }
+            try { DungeonCountDisplayWindowService.SaveCurrentPosition(_settings); } catch { }
             try { _buffTrackerService.PropertyChanged -= BuffTrackerService_PropertyChanged; } catch { }
             try { BuffTrackerWindow.Instance?.Close(); } catch { }
             try { BuffTrackerHelperWindow.Instance?.Close(); } catch { }
@@ -370,6 +373,11 @@ namespace TWChatOverlay.Views
         {
             if (string.IsNullOrWhiteSpace(html)) return;
 
+            _dungeonCountDisplayService.ProcessRaw(html, isRealTime);
+            bool handledDailyWeeklyCountLog = isRealTime &&
+                                             _dailyWeeklyContentOverlay?.IsVisible == true &&
+                                             _dailyWeeklyContentOverlay.TryProcessAbaddonOrCravingLog(html);
+
             var analysis = _logAnalysisService.Analyze(html, isRealTime);
             if (!analysis.IsSuccess) return;
             var parseResult = analysis.Parsed;
@@ -390,7 +398,8 @@ namespace TWChatOverlay.Views
             if (analysis.HasExperienceGain) _expService.AddExp(parseResult.GainedExp);
             _experienceEssenceAlertService.Process(analysis);
 
-            if (analysis.ShouldRunDailyWeeklyContent &&
+            if (!handledDailyWeeklyCountLog &&
+                analysis.ShouldRunDailyWeeklyContent &&
                 _dailyWeeklyContentOverlay?.IsVisible == true)
                 _dailyWeeklyContentOverlay.ProcessLog(analysis);
 
@@ -1067,6 +1076,13 @@ namespace TWChatOverlay.Views
                         ExperienceAlertWindowService.ShowPositionPreview(_settings);
                     else
                         ExperienceAlertWindowService.Close();
+                }
+                else if (e.PropertyName == nameof(_settings.ShowDungeonCountDisplayWindow))
+                {
+                    if (_settings.ShowDungeonCountDisplayWindow)
+                        DungeonCountDisplayWindowService.ShowPositionPreview(_settings);
+                    else
+                        DungeonCountDisplayWindowService.ClosePositionPreview(_settings);
                 }
                 else if (e.PropertyName == nameof(_settings.BuffTrackerWindowLeft) ||
                          e.PropertyName == nameof(_settings.BuffTrackerWindowTop))
