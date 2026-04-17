@@ -80,14 +80,18 @@
   <img width="638" height="205" alt="image" src="https://github.com/user-attachments/assets/b25441c1-06f4-4e59-8953-93e5227da729" />
   
     * 레어 주간 통계
+ 
+  <img width="640" height="426" alt="image" src="https://github.com/user-attachments/assets/4e7a5a95-5d96-4f9f-9256-2cf4cfcf4b0d" />
+
+    * 아이템 필터
       
 * **버프 알림 (참고용)**:
   
-  <img width="416" height="124" alt="image" src="https://github.com/user-attachments/assets/8033e824-a8a7-453b-ac3d-b5ad489cdd63" />
+  <img width="412" height="123" alt="image" src="https://github.com/user-attachments/assets/a646e388-6aa1-40d8-a4e2-3af79ba3e709" />
 
     * 로그상의 '시작' 시점만 감지 가능
-    * 종료 시점을 확인할 수 없어, 참고용으로만 사용
-    * 현재 지원되는 버프 목록 : 경험의 심장, 클럽 포인트 스크롤 E1, E2, 경험치 캐시 3종 아이템, 레어의 심장, 클럽 포인트 스크롤 R1, R2, 로토의 부적
+    * '마법의 눈', '심장'을 제외한 나머지 도핑은 종료시점을 확인할 수 없어, 참고용으로만 사용
+    * 현재 지원되는 버프 목록 : '마법의 눈', '경험의 심장', '클럽 포인트 스크롤', '경험치 캐시 3종 아이템', '레어의 심장', '클럽 포인트 스크롤', '로토의 부적'
 
 ---
 
@@ -163,7 +167,9 @@
   </tr>
 </table>
 
-### 5. 앱 설정 소개
+### 5. 앱 기본 설정
+<img width="36" height="37" alt="image" src="https://github.com/user-attachments/assets/e4c17df7-84cf-439f-bd31-409199219bc8" />
+
 * 채팅창 설정
    - 채팅 필터 및 색상, 폰트 설정 가능
 <img width="640" height="341" alt="image" src="https://github.com/user-attachments/assets/aff84f81-1122-46bb-a0e3-cf23a85ed67b" />
@@ -177,6 +183,52 @@
    - 기존에 윈도우 혹은 다른 프로그램에서 사용하는 단축키는 등록이 제한됨
 <img width="640" height="416" alt="image" src="https://github.com/user-attachments/assets/a0e88728-4d8b-4d43-9eec-5422e79f8e7d" />
 
+---
+### 6. 앱 기능 설정
+<img width="36" height="37" alt="image" src="https://github.com/user-attachments/assets/0167fc67-4f0b-452a-83e0-dc4d45fb03c2" />
+
+* 키워드 알림
+   - 색상 강조 : 키워드 확인 시, 오버레이 창의 채팅 하이라이트 ON/OFF
+   - 알림음 재생 : 키워드 확인 시, 알림음 재생 ON/OFF
+   - 알림 키워드 입력 : ex) @단어1 @단어2 등록 시, 단어1, 단어2 채팅창 메세지 확인 시, 알림
+     
+<img width="640" height="337" alt="image" src="https://github.com/user-attachments/assets/38c90595-0667-4a09-ad7d-f9ec7220904d" />
+
+* 경험치 추적
+   - 경험치 추적기능 활성화 : 오버레이 상단에 누적 경험치 및 시간당 획득한 경험치, 현재 획득 경험치 디스플레이
+   - 경험치 누적 알림 : 경험의 정수 교환 후, '100억' 이상의 경험치가 누적되면 알림
+    ** 주의사항 : 퀘스트 경험치는 미적용 될 수도 있음 **
+   - 저효율 알림 활성화 : 기준치 미만의 경험치 획득 시, 알림음 재생 ON/OFF
+
+<img width="640" height="413" alt="image" src="https://github.com/user-attachments/assets/b227edba-5e96-44ad-899b-604f5e243eb4" />
+
+* 던전 도우미
+   - 마법진 경고 : 마법진 발생 시, 알림
+     
+   - 에토스 방향 알림 : 에토스 방향 디스플레이 ON/OFF
+   - 에토스 방향 창 표시 : 방향 알림용 디스플레이의 위치를 설정
+
+   - 던전 카운터
+      - 어밴던로드 횟수 알리미 : 현재 진행한 단계를 보여줌
+      - 갈망하는 즐거움 횟수 알리미 : 보스방 진입 시, 현재 에너지량을 보여줌
+      - 던전 카운터 창 표시 : 던전 카운터 알림용 디스플레이의 위치 설정
+      - 창 지속시간 : 창이 표기된 후, 사라질 때까지의 시간
+ 
+<img width="640" height="493" alt="image" src="https://github.com/user-attachments/assets/38b60437-89cb-4f13-b226-e2a09c8e7cc5" />
+
+* 아이템 획득 알림
+   - 아이템 획득 알림 : 아이템 획득 알림 디스플레이 ON/OFF
+   - 아이템 획득 창 표시 : 아이템 획득 알림용 디스플레이의 위치 설정
+   - 사용자 정의 필터 : 기본 필터에서 사용자가 원하는 아이템 목록을 추가/제거
+      - 적용 버튼 시, 적용되며 저장 및 불러오기 기능은 업데이트 혹은 다른 환경에서 같은 필터를 쉽게 설정할 수 있음
+     
+<img width="640" height="365" alt="image" src="https://github.com/user-attachments/assets/d0fd1e95-2d3a-4bbb-a59d-e27581ab798a" />
+
+ * 버프 추적
+   - 버프 추적 알림 : 버프 추적 디스플레이 ON/OFF
+   - 버프 추적 창 표시 : 버프 추적 디스플레이의 위치 설정
+  
+<img width="640" height="181" alt="image" src="https://github.com/user-attachments/assets/521ed052-ad2e-4f84-bbbb-2247bbee2233" />
 
 ---
 ## Q&A
