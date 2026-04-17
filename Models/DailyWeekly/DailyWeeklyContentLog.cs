@@ -19,6 +19,7 @@ namespace TWChatOverlay.Models
         public string Name { get; init; } = "";
         public bool IsSubItem { get; init; } = false;
         public bool IsWeekly { get; init; } = false;
+        public bool AllowCountOverMax { get; init; } = false;
         public int DefaultMaxCount { get; init; } = 0;
         public int ClearThreshold { get; init; } = 0;
         public string? LogKeyword { get; init; }
@@ -51,7 +52,7 @@ namespace TWChatOverlay.Models
         public void SetCount(int value)
         {
             if (!HasCount) return;
-            int next = Math.Clamp(value, 0, MaxCount);
+            int next = AllowCountOverMax ? Math.Max(0, value) : Math.Clamp(value, 0, MaxCount);
             if (_currentCount == next) return;
             CurrentCount = next;
         }
@@ -164,7 +165,7 @@ namespace TWChatOverlay.Models
         {
             if (HasCount)
             {
-                if (_currentCount < MaxCount)
+                if (AllowCountOverMax || _currentCount < MaxCount)
                     CurrentCount++;
             }
             else if (!HasChildren)
@@ -187,6 +188,7 @@ namespace TWChatOverlay.Models
                 OnPropertyChanged(nameof(IsCleared));
                 OnPropertyChanged(nameof(CurrentCount));
                 OnPropertyChanged(nameof(CountDisplay));
+                OnPropertyChanged(nameof(VisualCountDisplay));
             }
         }
 

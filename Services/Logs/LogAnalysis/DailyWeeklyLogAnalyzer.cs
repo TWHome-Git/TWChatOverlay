@@ -9,6 +9,7 @@ namespace TWChatOverlay.Services.LogAnalysis
     public sealed class DailyWeeklyLogAnalyzer
     {
         public const string MercurialCaveItemName = "머큐리얼 케이브";
+        public const string CatacombsHellModeItemName = "카타콤 지옥";
         public const string NestOfShinjoHardItemName = "신조의 둥지 어려움";
         public const string AbyssDepthOneItemName = "어비스 - 심층Ⅰ";
         public const string AbyssDepthTwoItemName = "어비스 - 심층Ⅱ";
@@ -18,10 +19,12 @@ namespace TWChatOverlay.Services.LogAnalysis
         public const string CravingPleasureLogKeyword = "남은 에너지는";
         public const string CravingPleasureKeywordToken = CravingPleasureLogKeyword;
         public const string AbyssKeywordToken = "어비스 - 심층";
+        public const string CatacombsKeywordToken = "이번 주 사명의 계승자 닉스 보상을";
         public const string NestOfShinjoKeywordToken = "이번 주 신조 보상을";
         public const string SiochanheimKeywordToken = "시오칸하임";
 
         public const string AbyssSpecialKeyPrefix = "Abyss:";
+        public const string CatacombsSpecialKey = "Catacombs";
         public const string SinjoSpecialKey = "Sinjo";
         public const string MercurialCaveSpecialKey = "MercurialCave";
 
@@ -39,13 +42,17 @@ namespace TWChatOverlay.Services.LogAnalysis
 
         private static readonly Regex AbaddonCountRegex = new(@"도전 횟수는\s*(\d+)번", RegexOptions.Compiled);
         private static readonly Regex PleasureEnergyRegex = new(@"남은\s*에너지는\s*\[\s*(\d+)\s*\]", RegexOptions.Compiled);
-        private static readonly Regex AbyssFloorRegex = new(@"어비스 - 심층(?<floor>[ⅠⅡⅢ])\(보스전\) 플레이를 이번 주에 7회 중 \d+회째", RegexOptions.Compiled);
-        private static readonly Regex AbyssRewardRegex = new(@"이번 주 어비스 던전 보상을\s*(\d+)회 획득하셨습니다", RegexOptions.Compiled);
+        private static readonly Regex AbyssEntryRegex = new(@"어비스 - 심층(?<floor>[ⅠⅡⅢ])\(보스전\)에 지옥 난이도로 입장하셨습니다", RegexOptions.Compiled);
+        private static readonly Regex AbyssFloorRegex = new(@"어비스 - 심층(?<floor>[ⅠⅡⅢ])\(보스전\) 플레이를 이번 주에 \d+회 중\s*\d+회째", RegexOptions.Compiled);
+        private static readonly Regex AbyssRewardRegex = new(@"이번 주 어비스 던전 보상을\s*\d+회 획득하셨습니다.*\[\s*(\d+)회\s*/\s*7회\s*\]?", RegexOptions.Compiled);
+        private static readonly Regex CatacombsRewardRegex = new(@"이번 주 사명의 계승자 닉스 보상을\s*(\d+)회 획득\s*하셨습니다", RegexOptions.Compiled);
         private static readonly Regex SinjoRewardRegex = new(@"이번 주 신조 보상을\s*(\d+)회 획득 하셨습니다", RegexOptions.Compiled);
         private static readonly Regex SiokanClearCountRegex = new(@"클리어 횟수 : (\d+) 회", RegexOptions.Compiled);
 
         private readonly IReadOnlyList<DailyWeeklyContentLog> _trackItems;
         private readonly HashSet<DailyWeeklyContentLog> _pendingDoubleKeyword = new();
+        private readonly Dictionary<string, AccumulatedCountState> _countStates = new();
+        private string? _pendingAbyssEntryFloor;
         private string? _pendingAbyssFloor;
         private bool _pendingMercurialSingleEntry;
 
@@ -80,6 +87,14 @@ namespace TWChatOverlay.Services.LogAnalysis
                     if (!text.Contains(item.LogKeyword, StringComparison.Ordinal))
                         continue;
 
+                    if (item.LogKeyword.Contains(SiochanheimKeywordToken, StringComparison.Ordinal) &&
+                        TryExtractDetailValue(item, text, out int siochanheimCount, out var detailKind) &&
+                        detailKind == DailyWeeklyDetailKind.Siochanheim)
+                    {
+                        SetAccumulatedCount(item, siochanheimCount);
+                        break;
+                    }
+
                     if (TryUpdateDetail(item, text, out int? count) && count.HasValue)
                         break;
 
@@ -103,8 +118,14 @@ namespace TWChatOverlay.Services.LogAnalysis
         public void ResetPending()
         {
             _pendingDoubleKeyword.Clear();
+            _pendingAbyssEntryFloor = null;
             _pendingAbyssFloor = null;
             _pendingMercurialSingleEntry = false;
+        }
+
+        public void ResetAccumulatedCounts()
+        {
+            _countStates.Clear();
         }
 
         private bool TryProcessMercurialSingleLog(string text)
@@ -127,10 +148,21 @@ namespace TWChatOverlay.Services.LogAnalysis
 
         private bool TryProcessSpecialWeeklyCountLog(string text)
         {
+            var abyssEntryMatch = AbyssEntryRegex.Match(text);
+            if (abyssEntryMatch.Success)
+            {
+                _pendingAbyssEntryFloor = abyssEntryMatch.Groups["floor"].Value;
+                _pendingAbyssFloor = null;
+                return true;
+            }
+
             var abyssFloorMatch = AbyssFloorRegex.Match(text);
             if (abyssFloorMatch.Success)
             {
-                _pendingAbyssFloor = abyssFloorMatch.Groups["floor"].Value;
+                string floor = abyssFloorMatch.Groups["floor"].Value;
+                if (_pendingAbyssEntryFloor == floor)
+                    _pendingAbyssFloor = floor;
+                _pendingAbyssEntryFloor = null;
                 return true;
             }
 
@@ -139,7 +171,7 @@ namespace TWChatOverlay.Services.LogAnalysis
                 _pendingAbyssFloor != null &&
                 int.TryParse(abyssRewardMatch.Groups[1].Value, out int abyssValue))
             {
-                FindAbyssItemByFloor(_trackItems, _pendingAbyssFloor)?.SetCount(abyssValue);
+                SetAccumulatedCount(FindAbyssItemByFloor(_trackItems, _pendingAbyssFloor), abyssValue);
                 _pendingAbyssFloor = null;
                 return true;
             }
@@ -147,7 +179,14 @@ namespace TWChatOverlay.Services.LogAnalysis
             var sinjoRewardMatch = SinjoRewardRegex.Match(text);
             if (sinjoRewardMatch.Success && int.TryParse(sinjoRewardMatch.Groups[1].Value, out int sinjoValue))
             {
-                _trackItems.FirstOrDefault(static item => item.Name == NestOfShinjoHardItemName)?.SetCount(sinjoValue);
+                SetAccumulatedCount(_trackItems.FirstOrDefault(static item => item.Name == NestOfShinjoHardItemName), sinjoValue);
+                return true;
+            }
+
+            var catacombsRewardMatch = CatacombsRewardRegex.Match(text);
+            if (catacombsRewardMatch.Success && int.TryParse(catacombsRewardMatch.Groups[1].Value, out int catacombsValue))
+            {
+                SetAccumulatedCount(_trackItems.FirstOrDefault(static item => item.Name == CatacombsHellModeItemName), catacombsValue);
                 return true;
             }
 
@@ -185,6 +224,13 @@ namespace TWChatOverlay.Services.LogAnalysis
             return match.Success;
         }
 
+        public static bool TryMatchAbyssEntry(string text, out string floor)
+        {
+            var match = AbyssEntryRegex.Match(text);
+            floor = match.Success ? match.Groups["floor"].Value : string.Empty;
+            return match.Success;
+        }
+
         public static bool TryMatchAbyssReward(string text, out int count)
         {
             var match = AbyssRewardRegex.Match(text);
@@ -194,6 +240,12 @@ namespace TWChatOverlay.Services.LogAnalysis
         public static bool TryMatchSinjoReward(string text, out int count)
         {
             var match = SinjoRewardRegex.Match(text);
+            return TryParseFirstGroup(match, out count);
+        }
+
+        public static bool TryMatchCatacombsReward(string text, out int count)
+        {
+            var match = CatacombsRewardRegex.Match(text);
             return TryParseFirstGroup(match, out count);
         }
 
@@ -265,7 +317,11 @@ namespace TWChatOverlay.Services.LogAnalysis
                     continue;
                 }
 
-                if (kv.Key == SinjoSpecialKey)
+                if (kv.Key == CatacombsSpecialKey)
+                {
+                    items.FirstOrDefault(static item => item.Name == CatacombsHellModeItemName)?.SetCount(kv.Value);
+                }
+                else if (kv.Key == SinjoSpecialKey)
                 {
                     items.FirstOrDefault(static item => item.Name == NestOfShinjoHardItemName)?.SetCount(kv.Value);
                 }
@@ -302,6 +358,30 @@ namespace TWChatOverlay.Services.LogAnalysis
         {
             value = 0;
             return match.Success && int.TryParse(match.Groups[1].Value, out value);
+        }
+
+        private void SetAccumulatedCount(DailyWeeklyContentLog? item, int rawCount)
+        {
+            if (item == null)
+                return;
+
+            if (!_countStates.TryGetValue(item.Name, out var state))
+            {
+                state = new AccumulatedCountState();
+                _countStates[item.Name] = state;
+            }
+
+            if (rawCount < state.LastRawCount)
+                state.Offset += state.LastRawCount;
+
+            state.LastRawCount = rawCount;
+            item.SetCount(state.Offset + rawCount);
+        }
+
+        private sealed class AccumulatedCountState
+        {
+            public int LastRawCount { get; set; }
+            public int Offset { get; set; }
         }
     }
 

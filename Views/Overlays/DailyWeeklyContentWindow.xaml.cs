@@ -29,6 +29,7 @@ namespace TWChatOverlay.Views
         private readonly ObservableCollection<DailyWeeklyContentLog> _weeklyContentItems = new();
         private readonly ObservableCollection<DailyWeeklyContentLog> _completedItems = new();
         private DailyWeeklyLogAnalyzer _dailyWeeklyLogAnalyzer = null!;
+        private readonly Dictionary<string, AccumulatedCountState> _abaddonCountStates = new();
         private bool _suppressSave = false;
         private bool _pendingRescanAfterSettings = false;
         private DispatcherTimer? _resetTimer;
@@ -98,6 +99,7 @@ namespace TWChatOverlay.Views
 
         private const string CleaningPartTimeJobLogKeyword = "청소 아르바이트 보상 조건을 달성하였습니다.";
         private const string PravaDefenseLogKeyword = "프라바 방어전 성공 보상으로 경험치 1000만을 획득";
+        private const string CatacombsHellModeLogKeyword = "이번 주 사명의 계승자 닉스 보상을";
         private const string NestOfShinjoLogKeyword = "이번 주 신조 보상을";
         private const string ApetiriaNormalLogKeyword = "[키시니크의 보관 주머니]";
         private const string ApetiriaHardLogKeyword = "[아페티리아 어려움 보상 상자]";
@@ -251,18 +253,18 @@ namespace TWChatOverlay.Views
 
             var abaddonItems = new DailyWeeklyContentLog[]
             {
-                new() { Name = ImmortalLandItemName, IsSubItem = true, IsWeekly = true, DefaultMaxCount = 10, MaxCount = 10, LogKeyword = ImmortalLandLogKeyword },
-                new() { Name = CardiffItemName, IsSubItem = true, IsWeekly = true, DefaultMaxCount = 10, MaxCount = 10, LogKeyword = CardiffLogKeyword },
-                new() { Name = OrlanneItemName, IsSubItem = true, IsWeekly = true, DefaultMaxCount = 10, MaxCount = 10, LogKeyword = OrlanneLogKeyword }
+                new() { Name = ImmortalLandItemName, IsSubItem = true, IsWeekly = true, AllowCountOverMax = true, DefaultMaxCount = 10, MaxCount = 10, LogKeyword = ImmortalLandLogKeyword },
+                new() { Name = CardiffItemName, IsSubItem = true, IsWeekly = true, AllowCountOverMax = true, DefaultMaxCount = 10, MaxCount = 10, LogKeyword = CardiffLogKeyword },
+                new() { Name = OrlanneItemName, IsSubItem = true, IsWeekly = true, AllowCountOverMax = true, DefaultMaxCount = 10, MaxCount = 10, LogKeyword = OrlanneLogKeyword }
             };
 
             var abaddonGroup = new DailyWeeklyContentLog { Name = AbandonRoadGroupName, Children = abaddonItems, IsWeekly = true };
 
             var abyssItems = new DailyWeeklyContentLog[]
             {
-                new() { Name = AbyssDepthOneItemName, IsSubItem = true, IsWeekly = true, DefaultMaxCount = 7, MaxCount = 7, LogKeyword = AbyssDepthOneLogKeyword },
-                new() { Name = AbyssDepthTwoItemName, IsSubItem = true, IsWeekly = true, DefaultMaxCount = 7, MaxCount = 7, LogKeyword = AbyssDepthTwoLogKeyword },
-                new() { Name = AbyssDepthThreeItemName, IsSubItem = true, IsWeekly = true, DefaultMaxCount = 7, MaxCount = 7, LogKeyword = AbyssDepthThreeLogKeyword }
+                new() { Name = AbyssDepthOneItemName, IsSubItem = true, IsWeekly = true, AllowCountOverMax = true, DefaultMaxCount = 7, MaxCount = 7, LogKeyword = AbyssDepthOneLogKeyword },
+                new() { Name = AbyssDepthTwoItemName, IsSubItem = true, IsWeekly = true, AllowCountOverMax = true, DefaultMaxCount = 7, MaxCount = 7, LogKeyword = AbyssDepthTwoLogKeyword },
+                new() { Name = AbyssDepthThreeItemName, IsSubItem = true, IsWeekly = true, AllowCountOverMax = true, DefaultMaxCount = 7, MaxCount = 7, LogKeyword = AbyssDepthThreeLogKeyword }
             };
 
             var abyssGroup = new DailyWeeklyContentLog { Name = AbyssHellGroupName, Children = abyssItems, IsWeekly = true };
@@ -271,13 +273,13 @@ namespace TWChatOverlay.Views
             {
                 new() { Name = CleaningPartTimeJobItemName, IsWeekly = true, LogKeyword = CleaningPartTimeJobLogKeyword },
                 new() { Name = PravaDefenseItemName, IsWeekly = true, DefaultMaxCount = 5, MaxCount = 5, LogKeyword = PravaDefenseLogKeyword },
-                new() { Name = CatacombsHellModeItemName, IsWeekly = true, DefaultMaxCount = 5, MaxCount = 5 },
+                new() { Name = CatacombsHellModeItemName, IsWeekly = true, AllowCountOverMax = true, DefaultMaxCount = 5, MaxCount = 5, LogKeyword = CatacombsHellModeLogKeyword },
                 abyssGroup,
-                new() { Name = NestOfShinjoHardItemName, IsWeekly = true, DefaultMaxCount = 7, MaxCount = 7, LogKeyword = NestOfShinjoLogKeyword },
+                new() { Name = NestOfShinjoHardItemName, IsWeekly = true, AllowCountOverMax = true, DefaultMaxCount = 7, MaxCount = 7, LogKeyword = NestOfShinjoLogKeyword },
                 new() { Name = ApetiriaNormalItemName, IsWeekly = true, DefaultMaxCount = 7, MaxCount = 7, LogKeyword = ApetiriaNormalLogKeyword  },
                 new() { Name = ApetiriaHardItemName, IsWeekly = true, DefaultMaxCount = 7, MaxCount = 7, LogKeyword = ApetiriaHardLogKeyword  },
-                new() { Name = SiegeOfSiochanheimBossesItemName, IsWeekly = true, DefaultMaxCount = 7, MaxCount = 7, LogKeyword = SiegeOfSiochanheimBossesLogKeyword },
-                new() { Name = SiochanheimOdinAllOutWarItemName, IsWeekly = true, DefaultMaxCount = 7, MaxCount = 7, LogKeyword = SiochanheimOdinAllOutWarLogKeyword },
+                new() { Name = SiegeOfSiochanheimBossesItemName, IsWeekly = true, AllowCountOverMax = true, DefaultMaxCount = 7, MaxCount = 7, LogKeyword = SiegeOfSiochanheimBossesLogKeyword },
+                new() { Name = SiochanheimOdinAllOutWarItemName, IsWeekly = true, AllowCountOverMax = true, DefaultMaxCount = 7, MaxCount = 7, LogKeyword = SiochanheimOdinAllOutWarLogKeyword },
                 abaddonGroup
             };
 
@@ -491,9 +493,26 @@ namespace TWChatOverlay.Views
                 try
                 {
                     var seenPrimary = new HashSet<string>();
+                    var accumulatedLastRawCounts = new Dictionary<string, int>();
+                    var accumulatedOffsets = new Dictionary<string, int>();
+                    string? pendingAbyssEntryFloor = null;
                     string? pendingAbyssFloor = null;
                     bool pendingMercurialEntry = false;
                     int mercurialClearCount = 0;
+
+                    int AccumulateCount(string key, int rawCount)
+                    {
+                        accumulatedLastRawCounts.TryGetValue(key, out int lastRawCount);
+                        accumulatedOffsets.TryGetValue(key, out int offset);
+
+                        if (rawCount < lastRawCount)
+                            offset += lastRawCount;
+
+                        accumulatedLastRawCounts[key] = rawCount;
+                        accumulatedOffsets[key] = offset;
+                        return offset + rawCount;
+                    }
+
                     foreach (var filePath in filePaths)
                     {
                         if (!File.Exists(filePath)) continue;
@@ -513,31 +532,43 @@ namespace TWChatOverlay.Views
                                 pendingMercurialEntry = false;
                             }
 
+                            if (DailyWeeklyLogAnalyzer.TryMatchAbyssEntry(line, out string abyssEntryFloor))
+                            {
+                                pendingAbyssEntryFloor = abyssEntryFloor;
+                                pendingAbyssFloor = null;
+                            }
+
                             if (DailyWeeklyLogAnalyzer.TryMatchAbyssFloor(line, out string abyssFloor))
-                                pendingAbyssFloor = abyssFloor;
+                            {
+                                if (pendingAbyssEntryFloor == abyssFloor)
+                                    pendingAbyssFloor = abyssFloor;
+                                pendingAbyssEntryFloor = null;
+                            }
 
                             if (DailyWeeklyLogAnalyzer.TryMatchAbyssReward(line, out int abyssValue) && pendingAbyssFloor != null)
                             {
                                 string abyssKey = $"{DailyWeeklyLogAnalyzer.AbyssSpecialKeyPrefix}{pendingAbyssFloor}";
-                                if (!specialCounts.TryGetValue(abyssKey, out int prevAbyss) || abyssValue > prevAbyss)
-                                    specialCounts[abyssKey] = abyssValue;
+                                specialCounts[abyssKey] = AccumulateCount(abyssKey, abyssValue);
                                 pendingAbyssFloor = null;
                             }
 
                             if (DailyWeeklyLogAnalyzer.TryMatchSinjoReward(line, out int sinjoValue))
                             {
-                                if (!specialCounts.TryGetValue(DailyWeeklyLogAnalyzer.SinjoSpecialKey, out int prevSinjo) || sinjoValue > prevSinjo)
-                                    specialCounts[DailyWeeklyLogAnalyzer.SinjoSpecialKey] = sinjoValue;
+                                specialCounts[DailyWeeklyLogAnalyzer.SinjoSpecialKey] = AccumulateCount(DailyWeeklyLogAnalyzer.SinjoSpecialKey, sinjoValue);
+                            }
+
+                            if (DailyWeeklyLogAnalyzer.TryMatchCatacombsReward(line, out int catacombsValue))
+                            {
+                                specialCounts[DailyWeeklyLogAnalyzer.CatacombsSpecialKey] = AccumulateCount(DailyWeeklyLogAnalyzer.CatacombsSpecialKey, catacombsValue);
                             }
 
                             string normalizedLine = NormalizeLogText(line);
                             if (TryExtractAbaddonRoadCount(normalizedLine, out string abaddonItemName, out int abaddonValue))
                             {
                                 var abaddonItem = items.FirstOrDefault(i => i.Name == abaddonItemName);
-                                if (abaddonItem != null &&
-                                    (!maxExtractedCounts.TryGetValue(abaddonItem, out int prevAbaddon) || abaddonValue > prevAbaddon))
+                                if (abaddonItem != null)
                                 {
-                                    maxExtractedCounts[abaddonItem] = abaddonValue;
+                                    maxExtractedCounts[abaddonItem] = AccumulateCount(abaddonItem.Name, abaddonValue);
                                 }
                             }
 
@@ -552,10 +583,9 @@ namespace TWChatOverlay.Views
                             {
                                 if (item.LogKeyword == null || !line.Contains(item.LogKeyword)) continue;
                                 if (DailyWeeklyLogAnalyzer.TryExtractDetailValue(item, line, out int v, out var detailKind) &&
-                                    detailKind is DailyWeeklyDetailKind.Siochanheim or DailyWeeklyDetailKind.AbandonRoad)
+                                    detailKind == DailyWeeklyDetailKind.Siochanheim)
                                 {
-                                    if (!maxExtractedCounts.TryGetValue(item, out int prev) || v > prev)
-                                        maxExtractedCounts[item] = v;
+                                    maxExtractedCounts[item] = AccumulateCount(item.Name, v);
                                 }
                                 else if (item.LogKeyword.Contains(DailyWeeklyLogAnalyzer.CravingPleasureKeywordToken, StringComparison.Ordinal))
                                 {
@@ -604,6 +634,7 @@ namespace TWChatOverlay.Views
                 if (item.LogKeyword.Contains(DailyWeeklyLogAnalyzer.AbandonRoadKeywordToken, StringComparison.Ordinal) ||
                     item.LogKeyword.Contains(DailyWeeklyLogAnalyzer.CravingPleasureKeywordToken, StringComparison.Ordinal) ||
                     item.LogKeyword.Contains(DailyWeeklyLogAnalyzer.AbyssKeywordToken, StringComparison.Ordinal) ||
+                    item.LogKeyword.Contains(DailyWeeklyLogAnalyzer.CatacombsKeywordToken, StringComparison.Ordinal) ||
                     item.LogKeyword.Contains(DailyWeeklyLogAnalyzer.NestOfShinjoKeywordToken, StringComparison.Ordinal) ||
                     item.LogKeyword.Contains(DailyWeeklyLogAnalyzer.SiochanheimKeywordToken, StringComparison.Ordinal))
                     continue;
@@ -650,7 +681,7 @@ namespace TWChatOverlay.Views
             if (item == null || !item.IsEnabled)
                 return false;
 
-            item.SetCount(count);
+            SetAccumulatedCount(_abaddonCountStates, item, count);
             return true;
         }
 
@@ -784,6 +815,8 @@ namespace TWChatOverlay.Views
             foreach (var item in TrackItems.Where(i => !i.IsSubItem))
                 item.Reset();
             _dailyWeeklyLogAnalyzer.ResetPending();
+            _dailyWeeklyLogAnalyzer.ResetAccumulatedCounts();
+            _abaddonCountStates.Clear();
         }
 
         private void InitializeResetTimer()
@@ -847,11 +880,37 @@ namespace TWChatOverlay.Views
         {
             foreach (var item in TrackItems.Where(i => !i.IsSubItem && i.IsWeekly && i.Name != AbandonRoadGroupName))
                 item.Reset();
+            _dailyWeeklyLogAnalyzer.ResetAccumulatedCounts();
         }
 
         private void ResetAbaddonItems()
         {
             TrackItems.FirstOrDefault(i => i.Name == AbandonRoadGroupName)?.Reset();
+            _abaddonCountStates.Clear();
+        }
+
+        private static void SetAccumulatedCount(
+            Dictionary<string, AccumulatedCountState> states,
+            DailyWeeklyContentLog item,
+            int rawCount)
+        {
+            if (!states.TryGetValue(item.Name, out var state))
+            {
+                state = new AccumulatedCountState();
+                states[item.Name] = state;
+            }
+
+            if (rawCount < state.LastRawCount)
+                state.Offset += state.LastRawCount;
+
+            state.LastRawCount = rawCount;
+            item.SetCount(state.Offset + rawCount);
+        }
+
+        private sealed class AccumulatedCountState
+        {
+            public int LastRawCount { get; set; }
+            public int Offset { get; set; }
         }
 
         protected override void OnClosing(System.ComponentModel.CancelEventArgs e)

@@ -14,7 +14,9 @@ namespace TWChatOverlay.Views.Addons
     {
         private const int MaxLevel = 20;
         private const string PowderIconUri = "pack://application:,,,/Data/images/Item/응축된신조의가루.png";
-        private const string TemporaryMaterialIconUri = "pack://application:,,,/Data/images/Item/시드.png";
+        private const string EssenceUri = "pack://application:,,,/Data/images/Item/신조의정수.png";
+        private const string MoonPieceUri = "pack://application:,,,/Data/images/Item/달의파편.png";
+        private const string MoonStoneUri = "pack://application:,,,/Data/images/Item/월광석.png";
         private static readonly Brush SummaryValueBrush = new SolidColorBrush(Color.FromRgb(0xD6, 0xE8, 0xFF));
         private static readonly double[,] SuccessRates = CreateSuccessRates();
         private static readonly IReadOnlyList<RelicStepCost> PendantCosts = CreateCosts(isPendant: true);
@@ -131,13 +133,13 @@ namespace TWChatOverlay.Views.Addons
             if (totalPowder > 0 || totalEssence > 0)
             {
                 AddMaterialSummaryItem(PowderIconUri, FormatNumber(totalPowder));
-                AddMaterialSummaryItem(TemporaryMaterialIconUri, FormatNumber(totalEssence));
+                AddMaterialSummaryItem(EssenceUri, FormatNumber(totalEssence));
             }
 
             if (totalMoonPiece > 0 || totalMoonStone > 0)
             {
-                AddMaterialSummaryItem(TemporaryMaterialIconUri, FormatNumber(totalMoonPiece));
-                AddMaterialSummaryItem(TemporaryMaterialIconUri, FormatNumber(totalMoonStone));
+                AddMaterialSummaryItem(MoonPieceUri, FormatNumber(totalMoonPiece));
+                AddMaterialSummaryItem(MoonStoneUri, FormatNumber(totalMoonStone));
             }
         }
 
@@ -158,7 +160,7 @@ namespace TWChatOverlay.Views.Addons
                     },
                     new TextBlock
                     {
-                        Text = $"- {countText}개",
+                        Text = $"{countText}개",
                         Foreground = SummaryValueBrush,
                         FontSize = 14,
                         VerticalAlignment = VerticalAlignment.Center
