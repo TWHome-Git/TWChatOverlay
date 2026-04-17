@@ -67,18 +67,11 @@
                                         </Grid.ColumnDefinitions>
                                         <StackPanel Grid.Column="0" Margin="0,0,10,0">
                                             <TextBlock Text="폰트 종류" Foreground="#888" FontSize="12" Margin="0,0,0,5"/>
-                                            <ComboBox ItemsSource="{Binding AvailableFonts}"
-                                                      SelectedItem="{Binding FontFamily, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                                      Height="30"
-                                                      VerticalContentAlignment="Center"
-                                                      MaxDropDownHeight="240"
-                                                      Style="{StaticResource DarkComboBoxStyle}">
-                                                <ComboBox.ItemTemplate>
-                                                    <DataTemplate>
-                                                        <TextBlock Text="{Binding}" FontFamily="{Binding}" FontSize="14"/>
-                                                    </DataTemplate>
-                                                </ComboBox.ItemTemplate>
-                                            </ComboBox>
+                                            <UniformGrid Columns="3">
+                                                <RadioButton x:Name="NanumFontOption" Content="나눔고딕" Tag="나눔고딕" GroupName="FontFamilyOptions" Height="30" Margin="0,0,4,0" Checked="FontOption_Checked" Style="{StaticResource FontOptionButtonStyle}"/>
+                                                <RadioButton x:Name="GulimFontOption" Content="굴림" Tag="굴림" GroupName="FontFamilyOptions" Height="30" Margin="0,0,4,0" Checked="FontOption_Checked" Style="{StaticResource FontOptionButtonStyle}"/>
+                                                <RadioButton x:Name="CustomFontOption" Content="사용자 설정" Tag="사용자 설정" GroupName="FontFamilyOptions" Height="30" Checked="FontOption_Checked" Style="{StaticResource FontOptionButtonStyle}"/>
+                                            </UniformGrid>
                                         </StackPanel>
                                         <StackPanel Grid.Column="1" Margin="10,0,0,0">
                                             <TextBlock Text="크기" Foreground="#888" FontSize="12" Margin="0,0,0,5"/>

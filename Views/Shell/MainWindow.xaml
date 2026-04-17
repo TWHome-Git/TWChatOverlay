@@ -77,7 +77,7 @@
         <Border x:Name="OuterEdge" Background="Transparent" Padding="5">
             <Border x:Name="MainBorder" TextElement.FontFamily="{Binding CurrentFont, RelativeSource={RelativeSource AncestorType=Window}}"
                     Background="#F51E1E1E" CornerRadius="10" 
-                    BorderThickness="1.5" BorderBrush="#60FFFFFF" ClipToBounds="True">
+                    BorderThickness="1.5" BorderBrush="#60FFFFFF" ClipToBounds="False">
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition x:Name="DragBarRow" Height="0"/>

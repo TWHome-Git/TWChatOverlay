@@ -24,6 +24,8 @@ namespace TWChatOverlay.Views
         {
             InitializeComponent();
             this.PreviewKeyDown += SettingsView_PreviewKeyDown;
+            Loaded += (_, _) => SyncFontOptions();
+            DataContextChanged += (_, _) => SyncFontOptions();
 #if DEBUG
             DebugOptionsBorder.Visibility = Visibility.Visible;
             DebugTestBorder.Visibility = Visibility.Visible;
@@ -80,6 +82,25 @@ namespace TWChatOverlay.Views
 
             Regex regex = new Regex(@"^-?[0-9]*$");
             e.Handled = !regex.IsMatch(fullText);
+        }
+
+        private void FontOption_Checked(object sender, RoutedEventArgs e)
+        {
+            if (sender is RadioButton { Tag: string fontName } &&
+                DataContext is ViewModels.SettingsViewModel viewModel &&
+                viewModel.FontFamily != fontName)
+            {
+                viewModel.FontFamily = fontName;
+            }
+        }
+
+        private void SyncFontOptions()
+        {
+            if (DataContext is not ViewModels.SettingsViewModel viewModel) return;
+
+            NanumFontOption.IsChecked = viewModel.FontFamily == "나눔고딕";
+            GulimFontOption.IsChecked = viewModel.FontFamily == "굴림";
+            CustomFontOption.IsChecked = viewModel.FontFamily == "사용자 설정";
         }
 
         private void OffsetInput_KeyDown(object sender, KeyEventArgs e)

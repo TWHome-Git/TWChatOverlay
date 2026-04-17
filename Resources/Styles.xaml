@@ -460,7 +460,10 @@
                                Focusable="False"
                                IsOpen="{TemplateBinding IsDropDownOpen}"
                                Placement="Bottom"
-                               PopupAnimation="Slide">
+                               PlacementTarget="{Binding RelativeSource={RelativeSource TemplatedParent}}"
+                               PopupAnimation="Slide"
+                               StaysOpen="False"
+                               Panel.ZIndex="10000">
                             <Border x:Name="PopupBorder"
                                     MinWidth="{Binding ActualWidth, RelativeSource={RelativeSource TemplatedParent}}"
                                     MaxHeight="{TemplateBinding MaxDropDownHeight}"
@@ -477,6 +480,40 @@
                     <ControlTemplate.Triggers>
                         <Trigger Property="HasItems" Value="False">
                             <Setter TargetName="PopupBorder" Property="MinHeight" Value="24"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style x:Key="FontOptionButtonStyle" TargetType="RadioButton">
+        <Setter Property="Foreground" Value="#1F1F1F"/>
+        <Setter Property="Background" Value="#E7F1FF"/>
+        <Setter Property="BorderBrush" Value="#6AA9FF"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="FontSize" Value="12"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="HorizontalContentAlignment" Value="Center"/>
+        <Setter Property="VerticalContentAlignment" Value="Center"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="RadioButton">
+                    <Border x:Name="ButtonBorder"
+                            Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            CornerRadius="2">
+                        <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                          VerticalAlignment="{TemplateBinding VerticalContentAlignment}"/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="ButtonBorder" Property="BorderBrush" Value="#8BC0FF"/>
+                        </Trigger>
+                        <Trigger Property="IsChecked" Value="True">
+                            <Setter TargetName="ButtonBorder" Property="Background" Value="#4A78A8"/>
+                            <Setter Property="Foreground" Value="White"/>
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
