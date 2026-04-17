@@ -7,6 +7,7 @@ using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using TWChatOverlay.Models;
 
 namespace TWChatOverlay.Services
 {
@@ -47,17 +48,40 @@ namespace TWChatOverlay.Services
 
         private static readonly SemaphoreSlim LoadLock = new(1, 1);
         private static int _isInitialized;
+        private static ChatSettings? _settings;
 
         private static Dictionary<string, ItemDropGrade> _trackedItems = new(StringComparer.OrdinalIgnoreCase);
         private static List<(string Name, ItemDropGrade Grade)> _trackedItemList = new();
 
-        public static void InitializeAsync()
+        public static void InitializeAsync(ChatSettings? settings = null)
         {
+            if (settings != null)
+                _settings = settings;
+
             if (Interlocked.Exchange(ref _isInitialized, 1) != 0)
                 return;
 
             AppLogger.Info("Initializing tracked item resolver.");
             _ = EnsureLoadedAsync();
+        }
+
+        public static async Task ReloadAsync(ChatSettings? settings = null)
+        {
+            if (settings != null)
+                _settings = settings;
+
+            await LoadLock.WaitAsync().ConfigureAwait(false);
+            try
+            {
+                _trackedItems = new Dictionary<string, ItemDropGrade>(StringComparer.OrdinalIgnoreCase);
+                _trackedItemList = new List<(string Name, ItemDropGrade Grade)>();
+            }
+            finally
+            {
+                LoadLock.Release();
+            }
+
+            await EnsureLoadedAsync().ConfigureAwait(false);
         }
 
         public static bool TryExtractTrackedItem(string message, out string itemName)
@@ -137,6 +161,15 @@ namespace TWChatOverlay.Services
                     return;
                 }
 
+                if (_settings?.UseCustomDropItemFilter == true &&
+                    !string.IsNullOrWhiteSpace(_settings.CustomDropItemJson))
+                {
+                    bool customApplied = TryApplyJson(_settings.CustomDropItemJson);
+                    AppLogger.Info($"Custom tracked item list load {(customApplied ? "succeeded" : "failed")}.");
+                    if (customApplied)
+                        return;
+                }
+
                 string? json = await CacheClient.GetJsonAsync().ConfigureAwait(false);
                 if (!string.IsNullOrWhiteSpace(json))
                 {
@@ -162,21 +195,15 @@ namespace TWChatOverlay.Services
         {
             try
             {
-                var payload = JsonSerializer.Deserialize<DropItemPayload>(json);
-                if (payload == null)
+                if (!TryParseJson(json, out var rows, out _))
                     return false;
 
                 var next = new Dictionary<string, ItemDropGrade>(StringComparer.OrdinalIgnoreCase);
                 var ordered = new List<(string Name, ItemDropGrade Grade)>();
-                foreach (var item in payload.Items)
+                foreach (var item in rows)
                 {
-                    if (string.IsNullOrWhiteSpace(item.Name))
-                        continue;
-
-                    string name = item.Name.Trim();
-                    var grade = ParseGrade(item.Grade);
-                    next[name] = grade;
-                    ordered.Add((name, grade));
+                    next[item.Name] = item.Grade;
+                    ordered.Add((item.Name, item.Grade));
                 }
 
                 _trackedItems = next;
@@ -189,6 +216,73 @@ namespace TWChatOverlay.Services
                 AppLogger.Warn("DropItem JSON apply failed.", ex);
                 return false;
             }
+        }
+
+        public static async Task<IReadOnlyList<(string Name, ItemDropGrade Grade)>> LoadDefaultItemsAsync()
+        {
+            string? json = await CacheClient.GetJsonAsync().ConfigureAwait(false);
+            if (!string.IsNullOrWhiteSpace(json) &&
+                TryParseJson(json, out var rows, out _))
+            {
+                return rows.ConvertAll(row => (row.Name, row.Grade));
+            }
+
+            return Array.Empty<(string Name, ItemDropGrade Grade)>();
+        }
+
+        public static bool TryValidateJson(string json, out string message)
+        {
+            if (string.IsNullOrWhiteSpace(json))
+            {
+                message = "사용자 정의 필터가 비어 있습니다.";
+                return true;
+            }
+
+            try
+            {
+                if (!TryParseJson(json, out var rows, out string parseMessage))
+                {
+                    message = parseMessage;
+                    return false;
+                }
+
+                if (rows.Count == 0)
+                {
+                    message = "items 배열에 name이 있는 항목이 없습니다.";
+                    return false;
+                }
+
+                message = $"{rows.Count:N0}개 항목을 사용할 수 있습니다.";
+                return true;
+            }
+            catch (Exception ex)
+            {
+                message = $"JSON 형식이 올바르지 않습니다: {ex.Message}";
+                return false;
+            }
+        }
+
+        private static bool TryParseJson(string json, out List<DropItemDefinition> rows, out string message)
+        {
+            rows = new List<DropItemDefinition>();
+            message = string.Empty;
+
+            var payload = JsonSerializer.Deserialize<DropItemPayload>(json);
+            if (payload == null)
+            {
+                message = "JSON을 읽을 수 없습니다.";
+                return false;
+            }
+
+            foreach (var item in payload.Items)
+            {
+                if (string.IsNullOrWhiteSpace(item.Name))
+                    continue;
+
+                rows.Add(new DropItemDefinition(item.Name.Trim(), ParseGrade(item.Grade)));
+            }
+
+            return true;
         }
 
         private static ItemDropGrade ParseGrade(string? grade)
@@ -217,5 +311,7 @@ namespace TWChatOverlay.Services
             [JsonPropertyName("grade")]
             public string Grade { get; set; } = "Normal";
         }
+
+        private sealed record DropItemDefinition(string Name, ItemDropGrade Grade);
     }
 }

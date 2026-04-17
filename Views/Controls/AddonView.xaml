@@ -4,6 +4,14 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              mc:Ignorable="d">
+    <UserControl.Resources>
+        <Style x:Key="DropFilterButtonStyle" TargetType="Button" BasedOn="{StaticResource SecondaryButtonStyle}">
+            <Setter Property="Height" Value="28"/>
+            <Setter Property="Padding" Value="8,2"/>
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="MinWidth" Value="34"/>
+        </Style>
+    </UserControl.Resources>
     <ScrollViewer VerticalScrollBarVisibility="Auto" Style="{StaticResource OverlayScrollViewerStyle}">
         <Border Background="#F51E1E1E" Padding="15">
             <TabControl Style="{StaticResource SettingsTabControlStyle}" Margin="0,1,0,0">
@@ -215,9 +223,9 @@
                                                Foreground="White"
                                                FontSize="12"
                                                Margin="0,0,0,6"/>
-                                    <Slider Minimum="1"
-                                            Maximum="10"
-                                            TickFrequency="1"
+                                    <Slider Minimum="0"
+                                            Maximum="100"
+                                            TickFrequency="5"
                                             IsSnapToTickEnabled="True"
                                             Tag="drop_low.mp3"
                                             ValueChanged="PreviewSoundSlider_ValueChanged"
@@ -226,6 +234,132 @@
                                 <CheckBox Content="아이템 획득 창 표시"
                                           IsChecked="{Binding ShowItemDropHelperWindow}"
                                           Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
+
+                                <StackPanel Margin="6,10,0,8">
+                                    <TextBlock Text="사용자 정의 필터"
+                                               Foreground="White"
+                                               FontSize="12"
+                                               FontWeight="SemiBold"
+                                               Margin="0,0,0,4"/>
+                                    <TextBlock Text="기본 목록에서 알림 받을 항목을 사용자 정의 목록으로 옮긴 뒤 적용하세요."
+                                               Style="{StaticResource HintTextStyle}"
+                                               Margin="0,0,0,6"/>
+
+                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                                        <Button Content="기본"
+                                                Command="{Binding SelectDefaultDropFilterCommand}"
+                                                Width="64"
+                                                Margin="0,0,6,0"
+                                                Style="{StaticResource DropFilterButtonStyle}"/>
+                                        <Button Content="사용자 정의"
+                                                Command="{Binding SelectCustomDropFilterCommand}"
+                                                Width="92"
+                                                Style="{StaticResource DropFilterButtonStyle}"/>
+                                    </StackPanel>
+
+                                    <Grid>
+                                        <Grid.Style>
+                                            <Style TargetType="Grid">
+                                                <Setter Property="Visibility" Value="Collapsed"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding UseCustomDropItemFilter}" Value="True">
+                                                        <Setter Property="Visibility" Value="Visible"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Grid.Style>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="42"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="170"/>
+                                        </Grid.RowDefinitions>
+
+                                        <TextBlock Grid.Row="0" Grid.Column="0"
+                                                   Text="기본 목록"
+                                                   Foreground="#C9D1D9"
+                                                   FontSize="11"
+                                                   Margin="0,0,0,4"/>
+                                        <TextBlock Grid.Row="0" Grid.Column="2"
+                                                   Text="사용자 정의 목록"
+                                                   Foreground="#C9D1D9"
+                                                   FontSize="11"
+                                                   Margin="0,0,0,4"/>
+
+                                        <ListBox x:Name="DefaultDropItemsListBox"
+                                                 Grid.Row="1"
+                                                 Grid.Column="0"
+                                                 ItemsSource="{Binding DefaultDropItems}"
+                                                 SelectionMode="Extended"
+                                                 Background="#111820"
+                                                 BorderBrush="#30363D"
+                                                 Foreground="White"
+                                                 ScrollViewer.HorizontalScrollBarVisibility="Auto">
+                                            <ListBox.ItemTemplate>
+                                                <DataTemplate>
+                                                    <TextBlock Text="{Binding Name}"
+                                                               Foreground="{Binding Foreground}"
+                                                               FontSize="11"
+                                                               TextTrimming="CharacterEllipsis"/>
+                                                </DataTemplate>
+                                            </ListBox.ItemTemplate>
+                                        </ListBox>
+
+                                        <StackPanel Grid.Row="1"
+                                                    Grid.Column="1"
+                                                    VerticalAlignment="Center"
+                                                    Margin="5,0">
+                                            <Button Content="&gt;&gt;"
+                                                    Click="MoveDropItemsToCustom_Click"
+                                                    Margin="0,0,0,8"
+                                                    Style="{StaticResource DropFilterButtonStyle}"/>
+                                            <Button Content="&lt;&lt;"
+                                                    Click="MoveDropItemsToDefault_Click"
+                                                    Style="{StaticResource DropFilterButtonStyle}"/>
+                                        </StackPanel>
+
+                                        <ListBox x:Name="CustomDropItemsListBox"
+                                                 Grid.Row="1"
+                                                 Grid.Column="2"
+                                                 ItemsSource="{Binding CustomDropItems}"
+                                                 SelectionMode="Extended"
+                                                 Background="#111820"
+                                                 BorderBrush="#30363D"
+                                                 Foreground="White"
+                                                 ScrollViewer.HorizontalScrollBarVisibility="Auto">
+                                            <ListBox.ItemTemplate>
+                                                <DataTemplate>
+                                                    <TextBlock Text="{Binding Name}"
+                                                               Foreground="{Binding Foreground}"
+                                                               FontSize="11"
+                                                               TextTrimming="CharacterEllipsis"/>
+                                                </DataTemplate>
+                                            </ListBox.ItemTemplate>
+                                        </ListBox>
+                                    </Grid>
+
+                                    <StackPanel Orientation="Horizontal" Margin="0,8,0,4">
+                                        <Button Content="적용"
+                                                Command="{Binding ApplyCustomDropItemFilterCommand}"
+                                                Width="64"
+                                                Margin="0,0,6,0"
+                                                Style="{StaticResource DropFilterButtonStyle}"/>
+                                        <Button Content="불러오기"
+                                                Command="{Binding LoadCustomDropItemFilterCommand}"
+                                                Width="70"
+                                                Margin="0,0,6,0"
+                                                Style="{StaticResource DropFilterButtonStyle}"/>
+                                        <Button Content="저장"
+                                                Command="{Binding SaveCustomDropItemFilterCommand}"
+                                                Width="64"
+                                                Style="{StaticResource DropFilterButtonStyle}"/>
+                                    </StackPanel>
+                                    <TextBlock Text="{Binding CustomDropItemStatus}"
+                                               Style="{StaticResource HintTextStyle}"/>
+                                </StackPanel>
 
                                 <TextBlock Text="* 창 표시를 켜두면 드래그로 알림 위치를 옮길 수 있습니다."
                                            Style="{StaticResource HintTextStyle}"/>

@@ -121,7 +121,7 @@ namespace TWChatOverlay.Views
             _buffTrackerService.PropertyChanged += BuffTrackerService_PropertyChanged;
             ExpTrackerPanel.DataContext = _expService.SessionState;
             _logService = new LogService(_expService, _settings);
-            DropItemResolver.InitializeAsync();
+            DropItemResolver.InitializeAsync(_settings);
             _logService.OnNewLogRead += (html) =>
             {
                 PerformanceDiagnosticsService.RecordIncomingLog();

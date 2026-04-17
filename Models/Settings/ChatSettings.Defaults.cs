@@ -37,6 +37,8 @@ namespace TWChatOverlay.Models
             _showItemDropAlert = false;
             _showEtosHelperWindow = false;
             _showItemDropHelperWindow = false;
+            _useCustomDropItemFilter = false;
+            _customDropItemJson = string.Empty;
             _enableBuffTrackerAlert = false;
             _showBuffTrackerWindow = false;
             _itemDropAlertVolume = 0.1;

@@ -41,6 +41,8 @@ namespace TWChatOverlay.Models
         private bool _showItemDropAlert = true;
         private bool _showEtosHelperWindow = false;
         private bool _showItemDropHelperWindow = false;
+        private bool _useCustomDropItemFilter = false;
+        private string _customDropItemJson = string.Empty;
         private bool _enableBuffTrackerAlert = false;
         private bool _showBuffTrackerWindow = false;
         private double _itemDropAlertVolume = 0.1;
@@ -124,10 +126,14 @@ namespace TWChatOverlay.Models
         [JsonPropertyOrder(14)]
         public bool ShowItemDropHelperWindow { get => _showItemDropHelperWindow; set { _showItemDropHelperWindow = value; OnPropertyChanged(); } }
         [JsonPropertyOrder(15)]
-        public bool EnableBuffTrackerAlert { get => _enableBuffTrackerAlert; set { _enableBuffTrackerAlert = value; OnPropertyChanged(); } }
+        public bool UseCustomDropItemFilter { get => _useCustomDropItemFilter; set { _useCustomDropItemFilter = value; OnPropertyChanged(); } }
         [JsonPropertyOrder(16)]
-        public bool ShowBuffTrackerWindow { get => _showBuffTrackerWindow; set { _showBuffTrackerWindow = value; OnPropertyChanged(); } }
+        public string CustomDropItemJson { get => _customDropItemJson; set { _customDropItemJson = value ?? string.Empty; OnPropertyChanged(); } }
         [JsonPropertyOrder(17)]
+        public bool EnableBuffTrackerAlert { get => _enableBuffTrackerAlert; set { _enableBuffTrackerAlert = value; OnPropertyChanged(); } }
+        [JsonPropertyOrder(18)]
+        public bool ShowBuffTrackerWindow { get => _showBuffTrackerWindow; set { _showBuffTrackerWindow = value; OnPropertyChanged(); } }
+        [JsonPropertyOrder(19)]
         public double ItemDropAlertVolume
         {
             get => _itemDropAlertVolume;
@@ -140,7 +146,7 @@ namespace TWChatOverlay.Models
                 OnPropertyChanged(nameof(ItemDropAlertVolumePercent));
             }
         }
-        [JsonPropertyOrder(16)]
+        [JsonPropertyOrder(19)]
         public double HighlightAlertVolume
         {
             get => _highlightAlertVolume;
@@ -153,7 +159,7 @@ namespace TWChatOverlay.Models
                 OnPropertyChanged(nameof(HighlightAlertVolumePercent));
             }
         }
-        [JsonPropertyOrder(17)]
+        [JsonPropertyOrder(20)]
         public double MagicCircleAlertVolume
         {
             get => _magicCircleAlertVolume;
@@ -166,7 +172,7 @@ namespace TWChatOverlay.Models
                 OnPropertyChanged(nameof(MagicCircleAlertVolumePercent));
             }
         }
-        [JsonPropertyOrder(18)]
+        [JsonPropertyOrder(21)]
         public double ExpBuffAlertVolume
         {
             get => _expBuffAlertVolume;
@@ -179,7 +185,7 @@ namespace TWChatOverlay.Models
                 OnPropertyChanged(nameof(ExpBuffAlertVolumePercent));
             }
         }
-        [JsonPropertyOrder(19)]
+        [JsonPropertyOrder(22)]
         public double BossAlertVolume
         {
             get => _bossAlertVolume;
@@ -192,14 +198,14 @@ namespace TWChatOverlay.Models
                 OnPropertyChanged(nameof(BossAlertVolumePercent));
             }
         }
-        [JsonPropertyOrder(20)]
+        [JsonPropertyOrder(23)]
         [JsonIgnore]
         public double ItemDropAlertVolumePercent
         {
-            get => Math.Round(_itemDropAlertVolume * 100.0, 0);
-            set => ItemDropAlertVolume = Math.Max(1.0, Math.Min(10.0, value)) / 100.0;
+            get => Math.Round(_itemDropAlertVolume * 1000.0, 0);
+            set => ItemDropAlertVolume = Math.Max(0.0, Math.Min(100.0, value)) / 1000.0;
         }
-        [JsonPropertyOrder(21)]
+        [JsonPropertyOrder(24)]
         [JsonIgnore]
         public double HighlightAlertVolumePercent
         {
