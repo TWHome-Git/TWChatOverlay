@@ -368,7 +368,7 @@ namespace TWChatOverlay.Services
             {
                 new("rare-heart", BuffCategory.Rare, "레어의 심장", TimeSpan.FromMinutes(20), "레어의 심장를 사용하였습니다.", "pack://application:,,,/Data/images/Buff/RareHeart.png", 0),
                 new("rare-loto", BuffCategory.Rare, "로토의 부적", TimeSpan.FromMinutes(30), "로토의 부적", "pack://application:,,,/Data/images/Buff/Roto.png", 1, "아이템을 사용하셨습니다"),
-                new(MagicEyeKey, BuffCategory.Rare, "마법의 눈", TimeSpan.Zero, "마법의 눈", "pack://application:,,,/Data/images/Buff/마법의눈.png", 2),
+                new(MagicEyeKey, BuffCategory.Rare, "마법의 눈", TimeSpan.Zero, "마법의 눈", "pack://application:,,,/Data/images/Buff/마법의눈.png", -1),
                 new("rare-r2", BuffCategory.Rare, "클럽 버프 R-2", TimeSpan.FromMinutes(30), "클럽 상점 버프 Type R-2", "pack://application:,,,/Data/images/Buff/Club.png", 99, "아이템을 사용하셨습니다"),
                 new("rare-r1", BuffCategory.Rare, "클럽 버프 R-1", TimeSpan.FromMinutes(30), "클럽 상점 버프 Type R-1", "pack://application:,,,/Data/images/Buff/Club.png", 99, "아이템을 사용하셨습니다"),
 
