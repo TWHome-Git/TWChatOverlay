@@ -1,9 +1,17 @@
 using System;
 using System.Collections.ObjectModel;
 using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Text.Encodings.Web;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Input;
+using System.Windows.Media;
+using Microsoft.Win32;
 using TWChatOverlay.Models;
 using TWChatOverlay.Services;
 
@@ -35,6 +43,9 @@ namespace TWChatOverlay.ViewModels
         private int _abaddonRoadCountAlertDurationSeconds;
         private bool _showItemDropAlert;
         private bool _showItemDropHelperWindow;
+        private bool _useCustomDropItemFilter;
+        private string _customDropItemJson = string.Empty;
+        private string _customDropItemStatus = string.Empty;
         private bool _enableBuffTrackerAlert;
         private bool _showBuffTrackerWindow;
         private double _itemDropAlertVolumePercent;
@@ -44,6 +55,13 @@ namespace TWChatOverlay.ViewModels
         private double _bossAlertVolumePercent;
 
         public ObservableCollection<BossAlarmCardViewModel> BossAlarmCards { get; } = new();
+        public ObservableCollection<DropItemFilterEntry> DefaultDropItems { get; } = new();
+        public ObservableCollection<DropItemFilterEntry> CustomDropItems { get; } = new();
+        public ICommand SelectDefaultDropFilterCommand { get; }
+        public ICommand SelectCustomDropFilterCommand { get; }
+        public ICommand ApplyCustomDropItemFilterCommand { get; }
+        public ICommand LoadCustomDropItemFilterCommand { get; }
+        public ICommand SaveCustomDropItemFilterCommand { get; }
 
         public bool UseAlertColor
         {
@@ -157,6 +175,24 @@ namespace TWChatOverlay.ViewModels
             set => SetSetting(ref _showItemDropHelperWindow, value, (settings, newValue) => settings.ShowItemDropHelperWindow = newValue);
         }
 
+        public bool UseCustomDropItemFilter
+        {
+            get => _useCustomDropItemFilter;
+            private set => SetProperty(ref _useCustomDropItemFilter, value);
+        }
+
+        public string CustomDropItemJson
+        {
+            get => _customDropItemJson;
+            set => SetProperty(ref _customDropItemJson, value ?? string.Empty);
+        }
+
+        public string CustomDropItemStatus
+        {
+            get => _customDropItemStatus;
+            private set => SetProperty(ref _customDropItemStatus, value);
+        }
+
         public bool EnableBuffTrackerAlert
         {
             get => _enableBuffTrackerAlert;
@@ -203,6 +239,11 @@ namespace TWChatOverlay.ViewModels
         {
             _settings = settings ?? throw new ArgumentNullException(nameof(settings));
             _bossAlarmCardProvider = new BossAlarmCardViewModelProvider(_settings);
+            SelectDefaultDropFilterCommand = new RelayCommand(_ => SelectDefaultDropFilter());
+            SelectCustomDropFilterCommand = new RelayCommand(_ => SelectCustomDropFilter());
+            ApplyCustomDropItemFilterCommand = new RelayCommand(async _ => await ApplyCustomDropItemFilterAsync());
+            LoadCustomDropItemFilterCommand = new RelayCommand(_ => LoadCustomDropItemFilter());
+            SaveCustomDropItemFilterCommand = new RelayCommand(_ => SaveCustomDropItemFilter());
 
             _useAlertColor = _settings.UseAlertColor;
             _useAlertSound = _settings.UseAlertSound;
@@ -222,6 +263,11 @@ namespace TWChatOverlay.ViewModels
             _abaddonRoadCountAlertDurationSeconds = _settings.AbaddonRoadCountAlertDurationSeconds;
             _showItemDropAlert = _settings.ShowItemDropAlert;
             _showItemDropHelperWindow = _settings.ShowItemDropHelperWindow;
+            _useCustomDropItemFilter = _settings.UseCustomDropItemFilter;
+            _customDropItemJson = _settings.CustomDropItemJson;
+            _customDropItemStatus = !_useCustomDropItemFilter
+                ? "기본 GitHub 드롭 테이블을 사용 중입니다."
+                : "사용자 정의 필터를 사용 중입니다.";
             _enableBuffTrackerAlert = _settings.EnableBuffTrackerAlert;
             _showBuffTrackerWindow = _settings.ShowBuffTrackerWindow;
             _itemDropAlertVolumePercent = _settings.ItemDropAlertVolumePercent;
@@ -232,6 +278,7 @@ namespace TWChatOverlay.ViewModels
 
             ReplaceBossAlarmCards(_bossAlarmCardProvider.CreateCards());
             _ = InitializeBossAlarmCardsAsync();
+            _ = InitializeDropItemFilterListsAsync();
         }
 
         private void SaveSettings()
@@ -270,6 +317,266 @@ namespace TWChatOverlay.ViewModels
         {
             var cards = await _bossAlarmCardProvider.LoadCardsAsync(forceRefresh);
             Application.Current?.Dispatcher.BeginInvoke(new Action(() => ReplaceBossAlarmCards(cards)));
+        }
+
+        private async Task ApplyCustomDropItemFilterAsync()
+        {
+            string json = SerializeDropItems(CustomDropItems);
+            if (!DropItemResolver.TryValidateJson(json, out string message))
+            {
+                CustomDropItemStatus = message;
+                return;
+            }
+
+            _settings.UseCustomDropItemFilter = true;
+            _settings.CustomDropItemJson = json;
+            UseCustomDropItemFilter = true;
+            CustomDropItemJson = json;
+            SaveSettings();
+            await DropItemResolver.ReloadAsync(_settings);
+            CustomDropItemStatus = $"사용자 정의 필터 적용 완료: {message}";
+        }
+
+        private async void SelectDefaultDropFilter()
+        {
+            _settings.UseCustomDropItemFilter = false;
+            UseCustomDropItemFilter = false;
+            SaveSettings();
+            await DropItemResolver.ReloadAsync(_settings);
+            CustomDropItemStatus = "기본 GitHub 드롭 테이블을 사용 중입니다.";
+        }
+
+        private void SelectCustomDropFilter()
+        {
+            UseCustomDropItemFilter = true;
+            CustomDropItemStatus = "사용자 정의 목록을 편집한 뒤 적용을 누르세요.";
+        }
+
+        public void MoveToCustom(IEnumerable<DropItemFilterEntry> entries)
+        {
+            MoveEntries(entries, DefaultDropItems, CustomDropItems);
+            CustomDropItemStatus = $"{CustomDropItems.Count:N0}개 항목이 사용자 정의 목록에 있습니다.";
+        }
+
+        public void MoveToDefault(IEnumerable<DropItemFilterEntry> entries)
+        {
+            MoveEntries(entries, CustomDropItems, DefaultDropItems);
+            CustomDropItemStatus = $"{CustomDropItems.Count:N0}개 항목이 사용자 정의 목록에 있습니다.";
+        }
+
+        private async Task InitializeDropItemFilterListsAsync()
+        {
+            var defaultItems = await DropItemResolver.LoadDefaultItemsAsync();
+            var customItems = ParseDropItems(_settings.CustomDropItemJson);
+
+            Application.Current?.Dispatcher.BeginInvoke(new Action(() =>
+            {
+                DefaultDropItems.Clear();
+                CustomDropItems.Clear();
+
+                var customNames = new HashSet<string>(customItems.Select(item => item.Name), StringComparer.OrdinalIgnoreCase);
+                foreach (var item in defaultItems)
+                {
+                    var entry = new DropItemFilterEntry(item.Name, item.Grade);
+                    if (customNames.Contains(item.Name))
+                        continue;
+                    DefaultDropItems.Add(entry);
+                }
+
+                foreach (var item in customItems)
+                    CustomDropItems.Add(item);
+
+                CustomDropItemStatus = _settings.UseCustomDropItemFilter
+                    ? $"{CustomDropItems.Count:N0}개 사용자 정의 항목을 사용 중입니다."
+                    : "기본 GitHub 드롭 테이블을 사용 중입니다.";
+            }));
+        }
+
+        private void LoadCustomDropItemFilter()
+        {
+            var dialog = new OpenFileDialog
+            {
+                Title = "사용자 정의 드롭 필터 불러오기",
+                Filter = "JSON files (*.json)|*.json|All files (*.*)|*.*"
+            };
+
+            if (dialog.ShowDialog() != true)
+                return;
+
+            try
+            {
+                string json = File.ReadAllText(dialog.FileName);
+                var loaded = ParseDropItems(json);
+                if (loaded.Count == 0)
+                {
+                    CustomDropItemStatus = "불러온 파일에 사용할 수 있는 항목이 없습니다.";
+                    return;
+                }
+
+                var existingDefault = DefaultDropItems
+                    .Concat(CustomDropItems)
+                    .GroupBy(item => item.Name, StringComparer.OrdinalIgnoreCase)
+                    .ToDictionary(group => group.Key, group => group.First(), StringComparer.OrdinalIgnoreCase);
+
+                DefaultDropItems.Clear();
+                CustomDropItems.Clear();
+                var loadedNames = new HashSet<string>(loaded.Select(item => item.Name), StringComparer.OrdinalIgnoreCase);
+
+                foreach (var item in existingDefault.Values.OrderBy(item => item.Name, StringComparer.CurrentCultureIgnoreCase))
+                {
+                    if (!loadedNames.Contains(item.Name))
+                        DefaultDropItems.Add(item);
+                }
+
+                foreach (var item in loaded)
+                    CustomDropItems.Add(item);
+
+                CustomDropItemStatus = $"{CustomDropItems.Count:N0}개 항목을 불러왔습니다. 적용을 누르면 저장됩니다.";
+            }
+            catch (Exception ex)
+            {
+                CustomDropItemStatus = $"불러오기 실패: {ex.Message}";
+            }
+        }
+
+        private void SaveCustomDropItemFilter()
+        {
+            var dialog = new SaveFileDialog
+            {
+                Title = "사용자 정의 드롭 필터 저장",
+                Filter = "JSON files (*.json)|*.json|All files (*.*)|*.*",
+                FileName = "CustomDropItem.json"
+            };
+
+            if (dialog.ShowDialog() != true)
+                return;
+
+            try
+            {
+                File.WriteAllText(dialog.FileName, SerializeDropItems(CustomDropItems));
+                CustomDropItemStatus = $"{CustomDropItems.Count:N0}개 항목을 저장했습니다.";
+            }
+            catch (Exception ex)
+            {
+                CustomDropItemStatus = $"저장 실패: {ex.Message}";
+            }
+        }
+
+        private static void MoveEntries(
+            IEnumerable<DropItemFilterEntry> entries,
+            ObservableCollection<DropItemFilterEntry> source,
+            ObservableCollection<DropItemFilterEntry> target)
+        {
+            foreach (var entry in entries.ToList())
+            {
+                if (source.Remove(entry) &&
+                    !target.Any(item => item.Name.Equals(entry.Name, StringComparison.OrdinalIgnoreCase)))
+                {
+                    target.Add(entry);
+                }
+            }
+
+            SortEntries(source);
+            SortEntries(target);
+        }
+
+        private static void SortEntries(ObservableCollection<DropItemFilterEntry> entries)
+        {
+            var sorted = entries.OrderBy(item => item.Name, StringComparer.CurrentCultureIgnoreCase).ToList();
+            entries.Clear();
+            foreach (var item in sorted)
+                entries.Add(item);
+        }
+
+        private static string SerializeDropItems(IEnumerable<DropItemFilterEntry> entries)
+        {
+            var payload = new DropItemEditorPayload
+            {
+                Items = entries
+                    .OrderBy(item => item.Name, StringComparer.CurrentCultureIgnoreCase)
+                    .Select(item => new DropItemEditorRow { Name = item.Name, Grade = item.Grade.ToString() })
+                    .ToList()
+            };
+
+            return JsonSerializer.Serialize(payload, new JsonSerializerOptions
+            {
+                WriteIndented = true,
+                Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+            });
+        }
+
+        private static List<DropItemFilterEntry> ParseDropItems(string? json)
+        {
+            var result = new List<DropItemFilterEntry>();
+            if (string.IsNullOrWhiteSpace(json))
+                return result;
+
+            try
+            {
+                var payload = JsonSerializer.Deserialize<DropItemEditorPayload>(json);
+                if (payload?.Items == null)
+                    return result;
+
+                foreach (var item in payload.Items)
+                {
+                    if (string.IsNullOrWhiteSpace(item.Name))
+                        continue;
+
+                    result.Add(new DropItemFilterEntry(item.Name.Trim(), ParseGrade(item.Grade)));
+                }
+            }
+            catch
+            {
+            }
+
+            return result
+                .GroupBy(item => item.Name, StringComparer.OrdinalIgnoreCase)
+                .Select(group => group.First())
+                .OrderBy(item => item.Name, StringComparer.CurrentCultureIgnoreCase)
+                .ToList();
+        }
+
+        private static ItemDropGrade ParseGrade(string? grade)
+        {
+            if (grade?.Equals("Special", StringComparison.OrdinalIgnoreCase) == true)
+                return ItemDropGrade.Special;
+            if (grade?.Equals("Rare", StringComparison.OrdinalIgnoreCase) == true)
+                return ItemDropGrade.Rare;
+            return ItemDropGrade.Normal;
+        }
+
+        private sealed class DropItemEditorPayload
+        {
+            [JsonPropertyName("items")]
+            public List<DropItemEditorRow> Items { get; set; } = new();
+        }
+
+        private sealed class DropItemEditorRow
+        {
+            [JsonPropertyName("name")]
+            public string Name { get; set; } = string.Empty;
+
+            [JsonPropertyName("grade")]
+            public string Grade { get; set; } = "Normal";
+        }
+    }
+
+    public sealed class DropItemFilterEntry
+    {
+        public string Name { get; }
+        public ItemDropGrade Grade { get; }
+        public Brush Foreground { get; }
+
+        public DropItemFilterEntry(string name, ItemDropGrade grade)
+        {
+            Name = name;
+            Grade = grade;
+            Foreground = grade switch
+            {
+                ItemDropGrade.Rare => new SolidColorBrush(Color.FromRgb(0xFF, 0xD8, 0x4A)),
+                ItemDropGrade.Special => new SolidColorBrush(Color.FromRgb(0xFF, 0x7E, 0xDB)),
+                _ => Brushes.White
+            };
         }
     }
 }

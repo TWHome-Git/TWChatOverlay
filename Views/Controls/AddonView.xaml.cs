@@ -74,6 +74,22 @@ namespace TWChatOverlay.Views
             _itemDropPreviewTimer.Start();
         }
 
+        private void MoveDropItemsToCustom_Click(object sender, RoutedEventArgs e)
+        {
+            if (DataContext is AddonViewModel vm)
+            {
+                vm.MoveToCustom(DefaultDropItemsListBox.SelectedItems.Cast<DropItemFilterEntry>().ToList());
+            }
+        }
+
+        private void MoveDropItemsToDefault_Click(object sender, RoutedEventArgs e)
+        {
+            if (DataContext is AddonViewModel vm)
+            {
+                vm.MoveToDefault(CustomDropItemsListBox.SelectedItems.Cast<DropItemFilterEntry>().ToList());
+            }
+        }
+
         private async void DebugRefreshBossTimerButton_Click(object sender, RoutedEventArgs e)
         {
 #if DEBUG
