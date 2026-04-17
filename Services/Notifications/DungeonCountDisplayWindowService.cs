@@ -52,9 +52,9 @@ namespace TWChatOverlay.Services
             }));
         }
 
-        public static void ShowPositionPreview(ChatSettings settings)
+        public static void ShowPositionPreview(ChatSettings settings, bool force = false)
         {
-            if (settings == null || !settings.ShowDungeonCountDisplayWindow)
+            if (settings == null || (!force && !settings.ShowDungeonCountDisplayWindow))
                 return;
 
             Application.Current.Dispatcher.BeginInvoke(new Action(() =>
@@ -117,8 +117,13 @@ namespace TWChatOverlay.Services
 
             Application.Current.Dispatcher.Invoke(() =>
             {
-                if (!settings.ShowDungeonCountDisplayWindow)
+                if (ActiveWindowsByKey.TryGetValue(PositionPreviewKey, out DungeonCountDisplayWindow? preview) &&
+                    preview.IsVisible)
+                {
+                    settings.DungeonCountDisplayWindowLeft = preview.Left;
+                    settings.DungeonCountDisplayWindowTop = preview.Top;
                     return;
+                }
 
                 foreach (DungeonCountDisplayWindow window in ActiveWindows)
                 {

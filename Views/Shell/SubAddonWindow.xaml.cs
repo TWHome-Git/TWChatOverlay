@@ -110,6 +110,27 @@ namespace TWChatOverlay.Views
             Hide();
         }
 
+        public void ApplyPositionPreviewVisibility(bool isPreviewing)
+        {
+            RefreshMousePassthroughStyle(forceInteractive: isPreviewing);
+
+            if (isPreviewing)
+            {
+                _hideTimer.Stop();
+                EnsureEclipseAddonView();
+                if (!IsVisible)
+                {
+                    Show();
+                }
+
+                Visibility = Visibility.Visible;
+                UpdateHintVisibility();
+                return;
+            }
+
+            ApplyPinnedVisibility();
+        }
+
         private void RootBorder_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
             if (e.ButtonState != MouseButtonState.Pressed)
@@ -210,13 +231,13 @@ namespace TWChatOverlay.Views
             catch { }
         }
 
-        private void RefreshMousePassthroughStyle()
+        private void RefreshMousePassthroughStyle(bool forceInteractive = false)
         {
             try
             {
                 IntPtr hwnd = new WindowInteropHelper(this).EnsureHandle();
                 int exStyle = NativeMethods.GetWindowLong(hwnd, NativeMethods.GWL_EXSTYLE);
-                int nextStyle = IsPinnedVisible()
+                int nextStyle = forceInteractive || IsPinnedVisible()
                     ? (exStyle & ~NativeMethods.WS_EX_TRANSPARENT) | NativeMethods.WS_EX_TOOLWINDOW
                     : exStyle | NativeMethods.WS_EX_TRANSPARENT | NativeMethods.WS_EX_TOOLWINDOW;
                 NativeMethods.SetWindowLong(hwnd, NativeMethods.GWL_EXSTYLE, nextStyle);

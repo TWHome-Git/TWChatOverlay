@@ -17,9 +17,9 @@ namespace TWChatOverlay.Services
             ShowWindow(message, settings, requireAlertEnabled: true);
         }
 
-        public static void ShowPositionPreview(ChatSettings settings)
+        public static void ShowPositionPreview(ChatSettings settings, bool force = false)
         {
-            if (settings == null || !settings.ShowExperienceLimitAlertWindow)
+            if (settings == null || (!force && !settings.ShowExperienceLimitAlertWindow))
                 return;
 
             ShowWindow("경험치 누적 알림 위치", settings, requireAlertEnabled: false);
@@ -84,11 +84,8 @@ namespace TWChatOverlay.Services
                 if (_window == null || !_window.IsVisible)
                     return;
 
-                if (settings.ShowExperienceLimitAlertWindow)
-                {
-                    settings.ExperienceLimitAlertWindowLeft = _window.Left;
-                    settings.ExperienceLimitAlertWindowTop = _window.Top;
-                }
+                settings.ExperienceLimitAlertWindowLeft = _window.Left;
+                settings.ExperienceLimitAlertWindowTop = _window.Top;
             });
 
             ConfigService.Save(settings);

@@ -265,6 +265,7 @@ namespace TWChatOverlay.Views
                 SubMenuWindow? existingHost = FindSubMenuHost();
                 if (existingHost != null && existingHost.IsVisible && string.Equals(existingHost.Title, "설정", StringComparison.Ordinal))
                 {
+                    SetMainSettingsPositionMode(false);
                     existingHost.Close();
                     return;
                 }
@@ -295,6 +296,7 @@ namespace TWChatOverlay.Views
 
                 host.Show();
                 host.ShowHostContent(settingsView, "설정");
+                SetMainSettingsPositionMode(true);
 
                 try { if (_activeSubmenuButton != null) SetButtonActive(_activeSubmenuButton, false); } catch { }
                 SetButtonActive(BtnSettings, true);
@@ -394,8 +396,21 @@ namespace TWChatOverlay.Views
 
         private void Host_Closed(object? sender, EventArgs e)
         {
+            try { SetMainSettingsPositionMode(false); } catch { }
             try { if (_activeSubmenuButton != null) SetButtonActive(_activeSubmenuButton, false); } catch { }
             _activeSubmenuButton = null;
+        }
+
+        private static void SetMainSettingsPositionMode(bool isEnabled)
+        {
+            foreach (Window window in Application.Current.Windows)
+            {
+                if (window is MainWindow main)
+                {
+                    main.SetSettingsPositionMode(isEnabled);
+                    return;
+                }
+            }
         }
 
         private void SetButtonActive(Button btn, bool active)

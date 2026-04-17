@@ -11,6 +11,69 @@ namespace TWChatOverlay.Views
             ConfigService.SaveDeferred(_settings);
         }
 
+        public void SetSettingsPositionMode(bool isEnabled)
+        {
+            if (_isSettingsPositionMode == isEnabled)
+                return;
+
+            _isSettingsPositionMode = isEnabled;
+
+            if (isEnabled)
+            {
+                ShowSettingsPositionWindows();
+            }
+            else
+            {
+                HideSettingsPositionWindows();
+            }
+        }
+
+        private void ShowSettingsPositionWindows()
+        {
+            ExperienceAlertWindowService.ShowPositionPreview(_settings, force: true);
+            DungeonCountDisplayWindowService.ShowPositionPreview(_settings, force: true);
+
+            var etosHelper = SubAddonWindow.Instance ?? CreateSubAddonWindow();
+            etosHelper?.ApplyPositionPreviewVisibility(true);
+
+            var itemHelper = ItemDropHelperWindow.Instance ?? CreateItemDropHelperWindow();
+            if (itemHelper != null)
+            {
+                ApplyStoredPosition(itemHelper, _settings.ItemDropWindowLeft, _settings.ItemDropWindowTop);
+                if (!itemHelper.IsVisible)
+                    itemHelper.Show();
+            }
+
+            var buffHelper = BuffTrackerHelperWindow.Instance ?? CreateBuffTrackerHelperWindow();
+            if (buffHelper != null)
+            {
+                ApplyStoredPosition(buffHelper, _settings.BuffTrackerWindowLeft, _settings.BuffTrackerWindowTop);
+                if (!buffHelper.IsVisible)
+                    buffHelper.Show();
+            }
+        }
+
+        private void HideSettingsPositionWindows()
+        {
+            ExperienceAlertWindowService.SaveCurrentPosition(_settings);
+            DungeonCountDisplayWindowService.SaveCurrentPosition(_settings);
+            ExperienceAlertWindowService.Close();
+            DungeonCountDisplayWindowService.ClosePositionPreview(_settings);
+
+            SubAddonWindow.Instance?.ApplyPositionPreviewVisibility(false);
+            ApplyItemDropHelperWindowSettings();
+            ApplyBuffTrackerHelperWindowSettings();
+            PersistSettings();
+        }
+
+        private static void ApplyStoredPosition(Window window, double? left, double? top)
+        {
+            if (left.HasValue)
+                window.Left = left.Value;
+            if (top.HasValue)
+                window.Top = top.Value;
+        }
+
         private void SyncMarginsFromWindowPosition(double windowLeft, double windowTop)
         {
             IntPtr gameHwnd = OverlayHelper.FindTalesWeaverWindow();
@@ -138,7 +201,7 @@ namespace TWChatOverlay.Views
         {
             try
             {
-                if (!_settings.ShowItemDropHelperWindow && ItemDropHelperWindow.Instance == null)
+                if (!_isSettingsPositionMode && !_settings.ShowItemDropHelperWindow && ItemDropHelperWindow.Instance == null)
                     return;
 
                 var helper = ItemDropHelperWindow.Instance ?? CreateItemDropHelperWindow();
@@ -150,7 +213,7 @@ namespace TWChatOverlay.Views
                 if (_settings.ItemDropWindowTop.HasValue)
                     helper.Top = _settings.ItemDropWindowTop.Value;
 
-                if (_settings.ShowItemDropHelperWindow)
+                if (_isSettingsPositionMode || _settings.ShowItemDropHelperWindow)
                 {
                     if (!helper.IsVisible)
                         helper.Show();
@@ -226,7 +289,7 @@ namespace TWChatOverlay.Views
         {
             try
             {
-                if (!_settings.ShowBuffTrackerWindow && BuffTrackerHelperWindow.Instance == null)
+                if (!_isSettingsPositionMode && !_settings.ShowBuffTrackerWindow && BuffTrackerHelperWindow.Instance == null)
                     return;
 
                 var helper = BuffTrackerHelperWindow.Instance ?? CreateBuffTrackerHelperWindow();
@@ -238,7 +301,7 @@ namespace TWChatOverlay.Views
                 if (_settings.BuffTrackerWindowTop.HasValue)
                     helper.Top = _settings.BuffTrackerWindowTop.Value;
 
-                if (_settings.ShowBuffTrackerWindow)
+                if (_isSettingsPositionMode || _settings.ShowBuffTrackerWindow)
                 {
                     if (!helper.IsVisible)
                         helper.Show();

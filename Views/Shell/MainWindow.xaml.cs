@@ -42,6 +42,7 @@ namespace TWChatOverlay.Views
         private SettingsViewModel _settingsViewModel;
         private bool _hasCompletedInitialPresentation;
         private bool _canShowAuxiliaryWindows = true;
+        private bool _isSettingsPositionMode;
 
         private bool _isOverlayVisible = true;
         /// <summary>
@@ -966,6 +967,7 @@ namespace TWChatOverlay.Views
             bool isSettingsTab = displayState.IsSettingsTab;
             DragBar.Visibility = isSettingsTab ? Visibility.Visible : Visibility.Collapsed;
             DragBarRow.Height = isSettingsTab ? new GridLength(25) : new GridLength(0);
+            SetSettingsPositionMode(isSettingsTab);
 
             if (_stickyService != null)
             {
