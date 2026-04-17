@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.IO;
 using System.Linq;
+using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
@@ -14,10 +16,15 @@ namespace TWChatOverlay.Services
     public sealed class BuffTrackerService : ViewModelBase, IDisposable
     {
         private static readonly Regex TimeRegex = new(@"\[(?:\s*(?<h1>\d{1,2})시\s*(?<m1>\d{1,2})분\s*(?<s1>\d{1,2})초|(?<h2>\d{1,2}):(?<m2>\d{2}):(?<s2>\d{2}))\]", RegexOptions.Compiled);
+        private static readonly Regex MagicEyeStartRegex = new(@"마법의 눈을 사용하였습니다\.\s*\[\s*(?:(?<hours>\d+)시간\s*)?(?<minutes>\d+)분\s*(?<seconds>\d+)초\s*\]\s*시간 동안", RegexOptions.Compiled);
+        private static readonly Regex MagicEyeSavedRegex = new(@"마법의 눈 유지시간이 저장되었습니다\.\s*\(보유 시간\s*:\s*\[\s*(?:(?<hours>\d+)시간\s*)?(?<minutes>\d+)분\s*(?<seconds>\d+)초\s*\]\)", RegexOptions.Compiled);
+        private const string MagicEyeKey = "rare-magic-eye";
+        private static readonly string StateFilePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Cache", "buff_tracker_state.json");
 
         private readonly DispatcherTimer _timer;
         private readonly List<BuffDefinition> _definitions;
         private readonly Dictionary<string, DateTime> _activeUntil = new(StringComparer.Ordinal);
+        private readonly Dictionary<string, TimeSpan> _pausedRemaining = new(StringComparer.Ordinal);
         private readonly ChatSettings _settings;
 
         private bool _hasAnyActiveBuffs;
@@ -59,7 +66,9 @@ namespace TWChatOverlay.Services
             _definitions = CreateDefinitions();
             _timer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
             _timer.Tick += (_, _) => RefreshActiveBuffs();
+            LoadState();
             _timer.Start();
+            RefreshActiveBuffs();
         }
 
         public void ProcessLog(string formattedText)
@@ -78,8 +87,16 @@ namespace TWChatOverlay.Services
             }
 
             bool matchedAny = false;
+            if (TryProcessMagicEye(formattedText, occurredAt.Value))
+            {
+                matchedAny = true;
+            }
+
             foreach (var definition in _definitions)
             {
+                if (definition.Key == MagicEyeKey)
+                    continue;
+
                 if (!definition.IsMatch(formattedText))
                     continue;
 
@@ -92,6 +109,7 @@ namespace TWChatOverlay.Services
                 }
 
                 _activeUntil[definition.Key] = expiresAt;
+                _pausedRemaining.Remove(definition.Key);
                 AppLogger.Info($"Buff tracker matched '{definition.Key}'. OccurredAt={occurredAt:HH:mm:ss}, ExpiresAt={expiresAt:HH:mm:ss}");
             }
 
@@ -125,7 +143,23 @@ namespace TWChatOverlay.Services
             foreach (var definition in _definitions)
             {
                 if (!_activeUntil.TryGetValue(definition.Key, out DateTime expiresAt))
+                {
+                    if (!_pausedRemaining.TryGetValue(definition.Key, out TimeSpan pausedRemaining))
+                        continue;
+
+                    var pausedItem = new BuffDisplayItem(
+                        definition.DisplayName,
+                        FormatRemaining(pausedRemaining),
+                        definition.IconSource,
+                        definition.SortOrder);
+
+                    if (definition.Category == BuffCategory.Rare)
+                        rare.Add(pausedItem);
+                    else
+                        exp.Add(pausedItem);
+
                     continue;
+                }
 
                 TimeSpan remaining = expiresAt - now;
                 if (remaining <= TimeSpan.Zero)
@@ -133,7 +167,7 @@ namespace TWChatOverlay.Services
 
                 var item = new BuffDisplayItem(
                     definition.DisplayName,
-                    remaining.ToString(@"mm\:ss"),
+                    FormatRemaining(remaining),
                     definition.IconSource,
                     definition.SortOrder);
 
@@ -146,6 +180,10 @@ namespace TWChatOverlay.Services
             foreach (var expiredKey in _activeUntil.Where(x => x.Value <= now).Select(x => x.Key).ToList())
             {
                 _activeUntil.Remove(expiredKey);
+                if (expiredKey == MagicEyeKey)
+                {
+                    DeleteState();
+                }
             }
 
             rare = rare.OrderBy(x => x.SortOrder).ThenBy(x => x.DisplayName, StringComparer.Ordinal).ToList();
@@ -165,6 +203,132 @@ namespace TWChatOverlay.Services
             foreach (var item in source)
             {
                 target.Add(item);
+            }
+        }
+
+        private bool TryProcessMagicEye(string text, DateTime occurredAt)
+        {
+            var startMatch = MagicEyeStartRegex.Match(text);
+            if (startMatch.Success && TryParseDuration(startMatch, out TimeSpan startDuration))
+            {
+                _pausedRemaining.Remove(MagicEyeKey);
+                _activeUntil[MagicEyeKey] = occurredAt.Add(startDuration);
+                DeleteState();
+                AppLogger.Info($"Buff tracker matched magic eye start. Duration={startDuration}, OccurredAt={occurredAt:HH:mm:ss}");
+                return true;
+            }
+
+            var savedMatch = MagicEyeSavedRegex.Match(text);
+            if (savedMatch.Success && TryParseDuration(savedMatch, out TimeSpan savedDuration))
+            {
+                _activeUntil.Remove(MagicEyeKey);
+                if (savedDuration > TimeSpan.Zero)
+                {
+                    _pausedRemaining[MagicEyeKey] = savedDuration;
+                    SaveState(savedDuration);
+                }
+                else
+                {
+                    _pausedRemaining.Remove(MagicEyeKey);
+                    DeleteState();
+                }
+                AppLogger.Info($"Buff tracker matched magic eye saved. Remaining={savedDuration}");
+                return true;
+            }
+
+            return false;
+        }
+
+        private static bool TryParseDuration(Match match, out TimeSpan duration)
+        {
+            duration = TimeSpan.Zero;
+            int hours = 0;
+
+            if (match.Groups["hours"].Success &&
+                !int.TryParse(match.Groups["hours"].Value, out hours))
+            {
+                return false;
+            }
+
+            if (!int.TryParse(match.Groups["minutes"].Value, out int minutes) ||
+                !int.TryParse(match.Groups["seconds"].Value, out int seconds))
+            {
+                return false;
+            }
+
+            duration = new TimeSpan(hours, minutes, seconds);
+            return duration >= TimeSpan.Zero;
+        }
+
+        private static string FormatRemaining(TimeSpan remaining)
+            => remaining.TotalHours >= 1
+                ? remaining.ToString(@"h\:mm\:ss")
+                : remaining.ToString(@"mm\:ss");
+
+        private void LoadState()
+        {
+            try
+            {
+                if (!File.Exists(StateFilePath))
+                    return;
+
+                string json = File.ReadAllText(StateFilePath);
+                var state = JsonSerializer.Deserialize<BuffTrackerState>(json);
+                if (state?.MagicEyeRemainingSeconds > 0)
+                {
+                    _pausedRemaining[MagicEyeKey] = TimeSpan.FromSeconds(state.MagicEyeRemainingSeconds);
+                    AppLogger.Info($"Buff tracker restored magic eye remaining. Seconds={state.MagicEyeRemainingSeconds}");
+                }
+            }
+            catch (Exception ex)
+            {
+                AppLogger.Warn("Failed to load buff tracker state.", ex);
+            }
+        }
+
+        private static void SaveState(TimeSpan magicEyeRemaining)
+        {
+            try
+            {
+                long seconds = Math.Max(0, (long)Math.Round(magicEyeRemaining.TotalSeconds));
+                if (seconds <= 0)
+                {
+                    DeleteState();
+                    return;
+                }
+
+                string? directory = Path.GetDirectoryName(StateFilePath);
+                if (!string.IsNullOrWhiteSpace(directory))
+                {
+                    Directory.CreateDirectory(directory);
+                }
+
+                var state = new BuffTrackerState
+                {
+                    MagicEyeRemainingSeconds = seconds,
+                    SavedAt = DateTimeOffset.Now
+                };
+
+                File.WriteAllText(StateFilePath, JsonSerializer.Serialize(state));
+            }
+            catch (Exception ex)
+            {
+                AppLogger.Warn("Failed to save buff tracker state.", ex);
+            }
+        }
+
+        private static void DeleteState()
+        {
+            try
+            {
+                if (File.Exists(StateFilePath))
+                {
+                    File.Delete(StateFilePath);
+                }
+            }
+            catch (Exception ex)
+            {
+                AppLogger.Warn("Failed to delete buff tracker state.", ex);
             }
         }
 
@@ -204,6 +368,7 @@ namespace TWChatOverlay.Services
             {
                 new("rare-heart", BuffCategory.Rare, "레어의 심장", TimeSpan.FromMinutes(20), "레어의 심장를 사용하였습니다.", "pack://application:,,,/Data/images/Buff/RareHeart.png", 0),
                 new("rare-loto", BuffCategory.Rare, "로토의 부적", TimeSpan.FromMinutes(30), "로토의 부적", "pack://application:,,,/Data/images/Buff/Roto.png", 1, "아이템을 사용하셨습니다"),
+                new(MagicEyeKey, BuffCategory.Rare, "마법의 눈", TimeSpan.Zero, "마법의 눈", "pack://application:,,,/Data/images/Buff/마법의눈.png", 2),
                 new("rare-r2", BuffCategory.Rare, "클럽 버프 R-2", TimeSpan.FromMinutes(30), "클럽 상점 버프 Type R-2", "pack://application:,,,/Data/images/Buff/Club.png", 99, "아이템을 사용하셨습니다"),
                 new("rare-r1", BuffCategory.Rare, "클럽 버프 R-1", TimeSpan.FromMinutes(30), "클럽 상점 버프 Type R-1", "pack://application:,,,/Data/images/Buff/Club.png", 99, "아이템을 사용하셨습니다"),
 
@@ -262,6 +427,12 @@ namespace TWChatOverlay.Services
 
                 return true;
             }
+        }
+
+        private sealed class BuffTrackerState
+        {
+            public long MagicEyeRemainingSeconds { get; set; }
+            public DateTimeOffset SavedAt { get; set; }
         }
 
         public sealed class BuffDisplayItem
