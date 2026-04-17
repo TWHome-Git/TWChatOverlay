@@ -32,7 +32,8 @@
     <img width="640" height="480" alt="image" src="https://github.com/user-attachments/assets/2ba4ce3b-f24a-4051-b690-e16a9a6f0248" />
 
     * 렐릭 강화 기대값 시뮬레이션**
-    <img width="640" height="480" alt="image" src="https://github.com/user-attachments/assets/9323e4c2-0b24-4dc9-88c8-121d636b5602" />
+    <img width="640" height="480" alt="image" src="https://github.com/user-attachments/assets/713c946f-2048-4f40-99ed-b2459b51b6b3" />
+
 
 
 ### 4. 장비 DB 및 제작 재료 확인
