@@ -422,7 +422,7 @@ namespace TWChatOverlay.ViewModels
                 CustomDropItems.Clear();
                 var loadedNames = new HashSet<string>(loaded.Select(item => item.Name), StringComparer.OrdinalIgnoreCase);
 
-                foreach (var item in existingDefault.Values.OrderBy(item => item.Name, StringComparer.CurrentCultureIgnoreCase))
+                foreach (var item in SortDropItems(existingDefault.Values))
                 {
                     if (!loadedNames.Contains(item.Name))
                         DefaultDropItems.Add(item);
@@ -482,7 +482,7 @@ namespace TWChatOverlay.ViewModels
 
         private static void SortEntries(ObservableCollection<DropItemFilterEntry> entries)
         {
-            var sorted = entries.OrderBy(item => item.Name, StringComparer.CurrentCultureIgnoreCase).ToList();
+            var sorted = SortDropItems(entries);
             entries.Clear();
             foreach (var item in sorted)
                 entries.Add(item);
@@ -493,7 +493,8 @@ namespace TWChatOverlay.ViewModels
             var payload = new DropItemEditorPayload
             {
                 Items = entries
-                    .OrderBy(item => item.Name, StringComparer.CurrentCultureIgnoreCase)
+                    .OrderBy(item => GetGradeSortOrder(item.Grade))
+                    .ThenBy(item => item.Name, StringComparer.CurrentCultureIgnoreCase)
                     .Select(item => new DropItemEditorRow { Name = item.Name, Grade = item.Grade.ToString() })
                     .ToList()
             };
@@ -532,9 +533,25 @@ namespace TWChatOverlay.ViewModels
             return result
                 .GroupBy(item => item.Name, StringComparer.OrdinalIgnoreCase)
                 .Select(group => group.First())
-                .OrderBy(item => item.Name, StringComparer.CurrentCultureIgnoreCase)
+                .OrderBy(item => GetGradeSortOrder(item.Grade))
+                .ThenBy(item => item.Name, StringComparer.CurrentCultureIgnoreCase)
                 .ToList();
         }
+
+        private static List<DropItemFilterEntry> SortDropItems(IEnumerable<DropItemFilterEntry> entries)
+            => entries
+                .OrderBy(item => GetGradeSortOrder(item.Grade))
+                .ThenBy(item => item.Name, StringComparer.CurrentCultureIgnoreCase)
+                .ToList();
+
+        private static int GetGradeSortOrder(ItemDropGrade grade)
+            => grade switch
+            {
+                ItemDropGrade.Normal => 0,
+                ItemDropGrade.Rare => 1,
+                ItemDropGrade.Special => 2,
+                _ => 3
+            };
 
         private static ItemDropGrade ParseGrade(string? grade)
         {

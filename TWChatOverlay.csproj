@@ -9,7 +9,7 @@
 	<UseWindowsForms>true</UseWindowsForms>
 	<CodePage>65001</CodePage>
 	<ApplicationIcon>favicon.ico</ApplicationIcon>
-	<Version>2.1.2</Version>
+	<Version>2.1.3</Version>
 	<AssemblyVersion>$(Version).0</AssemblyVersion>
 	<FileVersion>$(Version).0</FileVersion>
 	<InformationalVersion>$(Version)</InformationalVersion>
@@ -190,6 +190,7 @@
     <None Remove="Data\images\Equipment\프시키의_파편_-_형성.png" />
     <None Remove="Data\images\Equipment\핑크_다이아몬드.png" />
     <None Remove="Data\images\Item\달의파편.png" />
+    <None Remove="Data\images\Item\마법의눈.png" />
     <None Remove="Data\images\Item\신조의정수.png" />
     <None Remove="Data\images\Item\월광석.png" />
     <None Remove="Data\images\Item\하급마정석.png" />
@@ -370,6 +371,7 @@
     <Resource Include="Data\images\Equipment\프시키의_파편_-_형성.png" />
     <Resource Include="Data\images\Equipment\핑크_다이아몬드.png" />
     <Resource Include="Data\images\Item\달의파편.png" />
+    <Resource Include="Data\images\Buff\마법의눈.png" />
     <Resource Include="Data\images\Item\신조의정수.png" />
     <Resource Include="Data\images\Item\월광석.png" />
     <Resource Include="Data\images\Item\하급마정석.png" />
