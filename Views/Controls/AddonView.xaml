@@ -81,11 +81,7 @@
                                           IsChecked="{Binding EnableExperienceLimitAlert, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                           Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
 
-                                <CheckBox Content="경험치 누적 창 표시"
-                                          IsChecked="{Binding ShowExperienceLimitAlertWindow, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                          Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
-
-                                <TextBlock Text="* 창 표시를 켜면 알림 위치를 드래그로 조정할 수 있습니다."
+                                <TextBlock Text="* 설정 창을 열면 알림 위치를 드래그로 조정할 수 있습니다."
                                            Foreground="#888"
                                            FontSize="11"
                                            Margin="0,6,0,15"/>
@@ -166,10 +162,6 @@
                                 <CheckBox Content="에토스 방향 알림"
                                           IsChecked="{Binding ShowEtosDirectionAlert}"
                                           Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
-                                <CheckBox Content="에토스 방향 창 표시"
-                                          IsChecked="{Binding ShowEtosHelperWindow}"
-                                          Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
-
                                 <Border Height="1"
                                         Background="#333"
                                         Margin="0,14,0,14"/>
@@ -181,10 +173,6 @@
                                 <CheckBox Content="갈망하는 즐거움 횟수 알리미"
                                           IsChecked="{Binding EnableCravingPleasureCountAlert, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                           Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
-                                <CheckBox Content="던전 카운터 창 표시"
-                                          IsChecked="{Binding ShowDungeonCountDisplayWindow, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                          Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
-
                                 <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
                                     <TextBlock Text="창 지속시간"
                                                Margin="0,0,8,0"
@@ -231,10 +219,6 @@
                                             ValueChanged="PreviewSoundSlider_ValueChanged"
                                             Value="{Binding ItemDropAlertVolumePercent, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
                                 </StackPanel>
-                                <CheckBox Content="아이템 획득 창 표시"
-                                          IsChecked="{Binding ShowItemDropHelperWindow}"
-                                          Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
-
                                 <StackPanel Margin="6,10,0,8">
                                     <TextBlock Text="사용자 정의 필터"
                                                Foreground="White"
@@ -361,7 +345,7 @@
                                                Style="{StaticResource HintTextStyle}"/>
                                 </StackPanel>
 
-                                <TextBlock Text="* 창 표시를 켜두면 드래그로 알림 위치를 옮길 수 있습니다."
+                                <TextBlock Text="* 설정 창을 열면 드래그로 알림 위치를 옮길 수 있습니다."
                                            Style="{StaticResource HintTextStyle}"/>
                             </StackPanel>
                         </Border>
@@ -378,13 +362,9 @@
                                           IsChecked="{Binding EnableBuffTrackerAlert}"
                                           Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
 
-                                <CheckBox Content="버프 추적 창 표시"
-                                          IsChecked="{Binding ShowBuffTrackerWindow}"
-                                          Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
-
                                 <TextBlock Text="* 버프 추적 알림은 실제 버프 시간 추적을 켜고 끕니다."
                                            Style="{StaticResource HintTextStyle}"/>
-                                <TextBlock Text="* 창 표시는 위치를 옮기기 위한 용도로만 사용됩니다."
+                                <TextBlock Text="* 설정 창을 열면 버프 추적 창 위치를 옮길 수 있습니다."
                                            Style="{StaticResource HintTextStyle}"/>
                             </StackPanel>
                         </Border>
