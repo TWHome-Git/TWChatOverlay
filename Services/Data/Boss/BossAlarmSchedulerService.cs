@@ -44,9 +44,9 @@ namespace TWChatOverlay.Services
                 foreach (var boss in BossTimerService.GetBosses())
                 {
                     BossAlertConfig config = _settings.GetOrCreateBossAlertConfig(boss.Id);
-                    if (CheckAlarm(boss, now, config.Alert3MinutesBefore, 3, "3분 전") ||
-                        CheckAlarm(boss, now, config.Alert1MinuteBefore, 1, "1분 전") ||
-                        CheckAlarm(boss, now, config.AlertAtSpawn, 0, "등장"))
+                    if (CheckAlarm(boss, now, config.Alert3MinutesBefore, TimeSpan.FromMinutes(3), "3분 전") ||
+                        CheckAlarm(boss, now, config.Alert1MinuteBefore, TimeSpan.FromMinutes(1), "1분 전") ||
+                        CheckAlarm(boss, now, config.AlertAtSpawn, TimeSpan.FromSeconds(5), "5초 전"))
                     {
                         triggered = true;
                         break;
@@ -66,7 +66,7 @@ namespace TWChatOverlay.Services
             }
         }
 
-        private bool CheckAlarm(BossTimerService.BossTimerDefinition boss, DateTime now, bool isEnabled, int offsetMinutes, string label)
+        private bool CheckAlarm(BossTimerService.BossTimerDefinition boss, DateTime now, bool isEnabled, TimeSpan offsetBefore, string label)
         {
             if (!isEnabled)
                 return false;
@@ -77,16 +77,16 @@ namespace TWChatOverlay.Services
             {
                 foreach (DateTime occurrence in BossTimerService.GetOccurrences(boss, date))
                 {
-                    DateTime triggerTime = occurrence.AddMinutes(-offsetMinutes);
+                    DateTime triggerTime = occurrence.Subtract(offsetBefore);
                     if (triggerTime != nowSecond)
                         continue;
 
-                    string fireKey = $"{boss.Id}|{occurrence:yyyyMMddHHmmss}|{offsetMinutes}";
+                    string fireKey = $"{boss.Id}|{occurrence:yyyyMMddHHmmss}|{(int)offsetBefore.TotalSeconds}";
                     if (!_firedKeys.Add(fireKey))
                         continue;
 
                     AppLogger.Info($"Boss alarm triggered. Boss='{boss.Name}', Trigger='{label}', Occurrence='{occurrence:yyyy-MM-dd HH:mm:ss}'");
-                    NotificationService.PlayAlert(ResolveSoundFile(boss.Id, offsetMinutes));
+                    NotificationService.PlayAlert(ResolveSoundFile(boss.Id, offsetBefore));
                     return true;
                 }
             }
@@ -94,7 +94,7 @@ namespace TWChatOverlay.Services
             return false;
         }
 
-        private static string ResolveSoundFile(string bossId, int offsetMinutes)
+        private static string ResolveSoundFile(string bossId, TimeSpan offsetBefore)
         {
             string baseName = bossId switch
             {
@@ -111,10 +111,10 @@ namespace TWChatOverlay.Services
                 return "Highlight.wav";
             }
 
-            return offsetMinutes switch
+            return offsetBefore.TotalSeconds switch
             {
-                3 => $"{baseName}_before3.wav",
-                1 => $"{baseName}_before1.wav",
+                180 => $"{baseName}_before3.wav",
+                60 => $"{baseName}_before1.wav",
                 _ => $"{baseName}.wav"
             };
         }
