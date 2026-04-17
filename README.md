@@ -230,6 +230,12 @@
   
 <img width="640" height="181" alt="image" src="https://github.com/user-attachments/assets/521ed052-ad2e-4f84-bbbb-2247bbee2233" />
 
+ * 필드 보스 알림
+   - 필드 보스 알림 ON/OFF
+
+<img width="640" height="496" alt="image" src="https://github.com/user-attachments/assets/b62a000c-6f26-4043-93e0-5cde2aa386dd" />
+
+
 ---
 ## Q&A
 
