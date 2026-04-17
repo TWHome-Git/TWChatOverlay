@@ -459,7 +459,7 @@
                                                                 <ColumnDefinition Width="*"/>
                                                                 <ColumnDefinition Width="Auto"/>
                                                             </Grid.ColumnDefinitions>
-                                                            <TextBlock Text="등장 시"
+                                                            <TextBlock Text="5초 전"
                                                                        Foreground="White"
                                                                        VerticalAlignment="Center"/>
                                                             <CheckBox Grid.Column="1"
