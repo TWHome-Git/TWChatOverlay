@@ -180,6 +180,7 @@
 
 * 채팅창 설정
    - 채팅 필터 및 색상, 폰트 설정 가능
+   - 채팅 필터가 설정된 채팅을 기본 탭에서 보여줌
 <img width="640" height="341" alt="image" src="https://github.com/user-attachments/assets/aff84f81-1122-46bb-a0e3-cf23a85ed67b" />
 
 
