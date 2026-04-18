@@ -172,17 +172,21 @@
 ### 5. 앱 기본 설정
 <img width="36" height="37" alt="image" src="https://github.com/user-attachments/assets/e4c17df7-84cf-439f-bd31-409199219bc8" />
 
+
 * 오버레이 창 위치 설정
    - 설정창을 열었을 때, 각종 오버레이의 창 위치를 드래그해서 변경가능
 <img width="640" height="480" alt="image" src="https://github.com/user-attachments/assets/640e8ca9-0db6-4146-8029-394ec337195e" />
+
 
 * 채팅창 설정
    - 채팅 필터 및 색상, 폰트 설정 가능
 <img width="640" height="341" alt="image" src="https://github.com/user-attachments/assets/aff84f81-1122-46bb-a0e3-cf23a85ed67b" />
 
+
 * 프로그램 설정
    - 채팅창 위치 및 항상 위 속성, 로그 경로 설정
 <img width="640" height="401" alt="image" src="https://github.com/user-attachments/assets/be014c96-69e5-4814-abbd-466170728fbf" />
+
 
 * 단축키 설정
    - 각종 단축키 설정
