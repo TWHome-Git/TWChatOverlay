@@ -51,10 +51,8 @@ namespace TWChatOverlay.Services
                 {
                     _window.Show();
                 }
-                else
-                {
-                    _window.BringToFront();
-                }
+
+                _window.BringToFront();
             }));
         }
 

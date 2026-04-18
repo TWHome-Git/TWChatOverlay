@@ -71,7 +71,7 @@ namespace TWChatOverlay.Views
             @"(?<grade>하급|중급|상급|최상급)\s*마정석\s*(?<count>[\d,]+)\s*개",
             RegexOptions.Compiled);
         private static readonly Regex MagicStoneLossRegex = new(
-            @"하급\s*마정석\s*(?<count>[\d,]+)\s*개",
+            @"(?<grade>하급|중급|상급|최상급)\s*마정석\s*(?<count>[\d,]+)\s*개를\s*빼앗겼습니다",
             RegexOptions.Compiled);
         private static readonly Regex HtmlFontTagRegex = new(
             @"<font\b",
@@ -136,6 +136,7 @@ namespace TWChatOverlay.Views
             {
                 Dispatcher.BeginInvoke(new Action(RequestRefreshLogDisplay), DispatcherPriority.Background);
             };
+            RestoreExperienceEssenceAlertState();
             _logService.Initialize();
             _ = EnsureItemWeekLogsLoadedAsync();
             ApplyInitialSettings();
@@ -179,6 +180,32 @@ namespace TWChatOverlay.Views
 
         public SettingsViewModel SettingsViewModelInstance => _settingsViewModel;
         public bool IsDailyWeeklyVisible => _dailyWeeklyContentOverlay?.IsVisible == true;
+
+        private void RestoreExperienceEssenceAlertState()
+        {
+            try
+            {
+                var logPaths = GetAllChatLogPaths();
+                _experienceEssenceAlertService.RestoreFromRecentLogs(logPaths, _logAnalysisService);
+            }
+            catch (Exception ex)
+            {
+                AppLogger.Warn("Failed to restore experience essence alert state from recent logs.", ex);
+            }
+        }
+
+        private IEnumerable<string> GetAllChatLogPaths()
+        {
+            if (string.IsNullOrWhiteSpace(_settings.ChatLogFolderPath) ||
+                !Directory.Exists(_settings.ChatLogFolderPath))
+                yield break;
+
+            foreach (string path in Directory.EnumerateFiles(_settings.ChatLogFolderPath, "TWChatLog_*.html")
+                         .OrderBy(path => path, StringComparer.OrdinalIgnoreCase))
+            {
+                yield return path;
+            }
+        }
 
         private void BuffTrackerService_PropertyChanged(object? sender, PropertyChangedEventArgs e)
         {
@@ -397,7 +424,8 @@ namespace TWChatOverlay.Views
             }
 
             if (analysis.HasExperienceGain) _expService.AddExp(parseResult.GainedExp);
-            _experienceEssenceAlertService.Process(analysis);
+            if (isRealTime)
+                _experienceEssenceAlertService.Process(analysis);
 
             if (!handledDailyWeeklyCountLog &&
                 analysis.ShouldRunDailyWeeklyContent &&
@@ -791,17 +819,19 @@ namespace TWChatOverlay.Views
                 return true;
             }
 
-            var gainMatch = MagicStoneGainRegex.Match(body);
-            if (gainMatch.Success && TryParseLong(gainMatch.Groups["count"].Value, out long gainCount))
-            {
-                ApplyMagicStoneDelta(ref summary, gainMatch.Groups["grade"].Value, gainCount);
-                return true;
-            }
-
             var lossMatch = MagicStoneLossRegex.Match(body);
             if (lossMatch.Success && TryParseLong(lossMatch.Groups["count"].Value, out long lossCount))
             {
-                summary.Low -= lossCount;
+                ApplyMagicStoneDelta(ref summary, lossMatch.Groups["grade"].Value, -lossCount);
+                return true;
+            }
+
+            var gainMatch = MagicStoneGainRegex.Match(body);
+            if (gainMatch.Success &&
+                body.Contains("획득", StringComparison.Ordinal) &&
+                TryParseLong(gainMatch.Groups["count"].Value, out long gainCount))
+            {
+                ApplyMagicStoneDelta(ref summary, gainMatch.Groups["grade"].Value, gainCount);
                 return true;
             }
 
@@ -934,13 +964,22 @@ namespace TWChatOverlay.Views
 
         private struct AbaddonWeeklySummary
         {
+            private const long LowMagicStoneValueMan = 50;
+            private const long MidMagicStoneValueMan = 500;
+            private const long HighMagicStoneValueMan = 5000;
+            private const long TopMagicStoneValueMan = 50000;
+
             public long TotalEntryFeeMan;
             public long Low;
             public long Mid;
             public long High;
             public long Top;
 
-            public long StoneRevenueMan => (Low + Mid + High + Top) * 50;
+            public long StoneRevenueMan =>
+                (Low * LowMagicStoneValueMan) +
+                (Mid * MidMagicStoneValueMan) +
+                (High * HighMagicStoneValueMan) +
+                (Top * TopMagicStoneValueMan);
             public long NetProfitMan => StoneRevenueMan - TotalEntryFeeMan;
         }
 
