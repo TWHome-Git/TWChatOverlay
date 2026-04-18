@@ -65,6 +65,7 @@ namespace TWChatOverlay.Views
             Left = left;
             Top = top;
             Show();
+            BringToFront();
             BeginAnimation(OpacityProperty, new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(140)));
             if (_closeTimer.Interval > TimeSpan.Zero)
                 _closeTimer.Start();
@@ -133,8 +134,7 @@ namespace TWChatOverlay.Views
 
         private void BringToFront()
         {
-            Topmost = false;
-            Topmost = true;
+            TopmostWindowHelper.BringToTopmost(this);
         }
 
         private void SyncPositionToSettings(bool notify)

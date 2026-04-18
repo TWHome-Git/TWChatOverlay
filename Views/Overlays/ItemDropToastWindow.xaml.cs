@@ -48,6 +48,7 @@ namespace TWChatOverlay.Views
             Top = targetTop - 24;
             Opacity = 0;
             Show();
+            TopmostWindowHelper.BringToTopmost(this);
 
             var topAnim = new DoubleAnimation
             {

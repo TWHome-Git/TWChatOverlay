@@ -32,8 +32,7 @@ namespace TWChatOverlay.Views
 
         public void BringToFront()
         {
-            Topmost = false;
-            Topmost = true;
+            TopmostWindowHelper.BringToTopmost(this);
         }
 
         protected override void OnSourceInitialized(EventArgs e)

@@ -72,6 +72,7 @@ namespace TWChatOverlay.Views
             }
 
             Visibility = Visibility.Visible;
+            TopmostWindowHelper.BringToTopmost(this);
             UpdateHintVisibility();
 
             _hideTimer.Stop();
@@ -124,6 +125,7 @@ namespace TWChatOverlay.Views
                 }
 
                 Visibility = Visibility.Visible;
+                TopmostWindowHelper.BringToTopmost(this);
                 UpdateHintVisibility();
                 return;
             }
@@ -178,6 +180,7 @@ namespace TWChatOverlay.Views
             }
 
             Visibility = Visibility.Visible;
+            TopmostWindowHelper.BringToTopmost(this);
             UpdateHintVisibility();
         }
 
