@@ -175,7 +175,7 @@
 
 * 오버레이 창 위치 설정
    - 설정창을 열었을 때, 각종 오버레이의 창 위치를 드래그해서 변경가능
-<img width="640" height="480" alt="image" src="https://github.com/user-attachments/assets/640e8ca9-0db6-4146-8029-394ec337195e" />
+<img width="640" height="320" alt="image" src="https://github.com/user-attachments/assets/640e8ca9-0db6-4146-8029-394ec337195e" />
 
 
 * 채팅창 설정
@@ -210,7 +210,8 @@
     ** 주의사항 : 퀘스트 경험치는 미적용 될 수도 있음 **
    - 저효율 알림 활성화 : 기준치 미만의 경험치 획득 시, 알림음 재생 ON/OFF
 
-<img width="640" height="413" alt="image" src="https://github.com/user-attachments/assets/b227edba-5e96-44ad-899b-604f5e243eb4" />
+<img width="640" height="480" alt="image" src="https://github.com/user-attachments/assets/9d83989a-e378-486f-a1bd-91da2108a154" />
+
 
 * 던전 도우미
    - 마법진 경고 : 마법진 발생 시, 알림
@@ -222,24 +223,27 @@
       - 갈망하는 즐거움 횟수 알리미 : 보스방 진입 시, 현재 에너지량을 보여줌
       - 창 지속시간 : 창이 표기된 후, 사라질 때까지의 시간
  
-<img width="640" height="493" alt="image" src="https://github.com/user-attachments/assets/38b60437-89cb-4f13-b226-e2a09c8e7cc5" />
+<img width="640" height="365" alt="image" src="https://github.com/user-attachments/assets/d0fd1e95-2d3a-4bbb-a59d-e27581ab798a" />
+
 
 * 아이템 획득 알림
    - 아이템 획득 알림 : 아이템 획득 알림 디스플레이 ON/OFF
    - 사용자 정의 필터 : 기본 필터에서 사용자가 원하는 아이템 목록을 추가/제거
       - 적용 버튼 시, 적용되며 저장 및 불러오기 기능은 업데이트 혹은 다른 환경에서 같은 필터를 쉽게 설정할 수 있음
+      - 
+<img width="640" height="480" alt="image" src="https://github.com/user-attachments/assets/43d4cf83-b361-4304-b0be-21b72a001d79" />
      
-<img width="640" height="365" alt="image" src="https://github.com/user-attachments/assets/d0fd1e95-2d3a-4bbb-a59d-e27581ab798a" />
 
  * 버프 추적
    - 버프 추적 알림 : 버프 추적 디스플레이 ON/OFF
   
-<img width="640" height="181" alt="image" src="https://github.com/user-attachments/assets/521ed052-ad2e-4f84-bbbb-2247bbee2233" />
+<img width="640" height="480" alt="image" src="https://github.com/user-attachments/assets/35665d60-9360-4fd5-b68f-1430a75af2b0" />
 
  * 필드 보스 알림
    - 필드 보스 알림 ON/OFF
 
-<img width="640" height="496" alt="image" src="https://github.com/user-attachments/assets/b62a000c-6f26-4043-93e0-5cde2aa386dd" />
+<img width="640" height="480" alt="image" src="https://github.com/user-attachments/assets/e2330e2f-162c-4d5e-ac70-00ad39e2e50f" />
+
 
 
 ---
