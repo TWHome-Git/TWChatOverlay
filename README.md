@@ -174,7 +174,7 @@
 
 * 오버레이 창 위치 설정
    - 설정창을 열었을 때, 각종 오버레이의 창 위치를 드래그해서 변경가능
-<img width="2395" height="1372" alt="image" src="https://github.com/user-attachments/assets/640e8ca9-0db6-4146-8029-394ec337195e" />
+<img width="640" height="480" alt="image" src="https://github.com/user-attachments/assets/640e8ca9-0db6-4146-8029-394ec337195e" />
 
 * 채팅창 설정
    - 채팅 필터 및 색상, 폰트 설정 가능
