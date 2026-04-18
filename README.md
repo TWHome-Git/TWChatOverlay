@@ -54,7 +54,7 @@
          <img width="218" height="26" alt="image" src="https://github.com/user-attachments/assets/0393cb0b-f3da-4a4f-8236-e03921feea99" />
 
        - 누적 경험치 알림
-          - 경험의 정수 교환 후 누적 경험치 계산 및 100억 획득 시, 알림
+          - '경험의 정수' 교환 후 누적 경험치 100억 획득 시, 알림
           - `이벤트로 얻거나 퀘스트 중 인식되지 않는 경험치가 있을 수 있음`
             
        - 저효율 경험치 획득 알림
