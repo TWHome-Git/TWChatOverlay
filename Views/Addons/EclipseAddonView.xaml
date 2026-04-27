@@ -1,0 +1,22 @@
+﻿<UserControl x:Class="TWChatOverlay.Views.Addons.EclipseAddonView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             MinWidth="96"
+             MinHeight="120">
+    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+        <TextBlock x:Name="ArrowText"
+                   Text="?"
+                   Foreground="#3B82F6"
+                   FontSize="34"
+                   FontWeight="Bold"
+                   HorizontalAlignment="Center"
+                   Margin="0,0,0,8"/>
+
+        <Image x:Name="DirectionImage"
+               Width="72"
+               Height="72"
+               Stretch="Uniform"
+               HorizontalAlignment="Center"
+               Visibility="Collapsed"/>
+    </StackPanel>
+</UserControl>

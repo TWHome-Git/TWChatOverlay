@@ -1,0 +1,501 @@
+﻿<UserControl x:Class="TWChatOverlay.Views.AddonView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             mc:Ignorable="d">
+    <UserControl.Resources>
+        <Style x:Key="DropFilterButtonStyle" TargetType="Button" BasedOn="{StaticResource SecondaryButtonStyle}">
+            <Setter Property="Height" Value="28"/>
+            <Setter Property="Padding" Value="8,2"/>
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="MinWidth" Value="34"/>
+        </Style>
+    </UserControl.Resources>
+    <ScrollViewer VerticalScrollBarVisibility="Auto" Style="{StaticResource OverlayScrollViewerStyle}">
+        <Border Background="#F51E1E1E" Padding="15">
+            <TabControl Style="{StaticResource SettingsTabControlStyle}" Margin="0,1,0,0">
+                <TabItem Header="키워드 알림" Style="{StaticResource SettingsTabItemStyle}" Margin="0,0,0,0">
+                    <StackPanel Margin="8">
+                        <Border Style="{StaticResource SettingsBorderStyle}">
+                            <StackPanel>
+                                <TextBlock Text="키워드 알림 설정" Style="{StaticResource SectionHeaderStyle}"/>
+
+                                <StackPanel Margin="0,0,0,12">
+                                    <CheckBox Content="색상 강조"
+                                              IsChecked="{Binding UseAlertColor}"
+                                              Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
+                                    <CheckBox Content="알림음 재생"
+                                              IsChecked="{Binding UseAlertSound}"
+                                              Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
+                                    <StackPanel Margin="6,6,0,0">
+                                        <TextBlock Text="{Binding HighlightAlertVolumePercent, StringFormat=키워드 알림 볼륨: {0:F0}%}"
+                                                   Foreground="White"
+                                                   FontSize="12"
+                                                   Margin="0,0,0,6"/>
+                                        <Slider Minimum="0"
+                                                Maximum="100"
+                                                TickFrequency="10"
+                                                IsSnapToTickEnabled="True"
+                                                Tag="Highlight.wav"
+                                                ValueChanged="PreviewSoundSlider_ValueChanged"
+                                                Value="{Binding HighlightAlertVolumePercent, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                    </StackPanel>
+                                </StackPanel>
+
+                                <TextBlock Text="알림 키워드 입력 (@단어1 @단어2 형식)"
+                                           Style="{StaticResource InfoTextStyle}"/>
+                                <TextBox x:Name="KeywordBox"
+                                         Text="{Binding KeywordInput, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                         Style="{StaticResource InputTextBoxStyle}"
+                                         AcceptsReturn="True"
+                                         TextWrapping="Wrap"
+                                         Height="80"/>
+                                <TextBlock Text="* 입력 즉시 자동으로 적용됩니다."
+                                           Style="{StaticResource HintTextStyle}"/>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </TabItem>
+
+                <TabItem Header="경험치 추적" Style="{StaticResource SettingsTabItemStyle}" Margin="4,0,-4,0">
+                    <StackPanel Margin="8">
+                        <Border Style="{StaticResource SettingsBorderStyle}">
+                            <StackPanel>
+                                <TextBlock Text="경험치 추적" Style="{StaticResource SectionHeaderStyle}"/>
+
+                                <CheckBox Content="경험치 추적기능 활성화"
+                                          IsChecked="{Binding ShowExpTracker, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                          Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
+
+                                <TextBlock Text="* 활성화하면 상단에 실시간 획득량이 표시됩니다."
+                                           Foreground="#888"
+                                           FontSize="11"
+                                           Margin="0,6,0,15"/>
+
+                                <Border Height="1"
+                                        Background="#333"
+                                        Margin="0,4,0,14"/>
+
+                                <CheckBox Content="경험치 누적 알림"
+                                          IsChecked="{Binding EnableExperienceLimitAlert, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                          Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
+
+                                <TextBlock Text="* 설정 창을 열면 알림 위치를 드래그로 조정할 수 있습니다."
+                                           Foreground="#888"
+                                           FontSize="11"
+                                           Margin="0,6,0,15"/>
+
+                                <Border Height="1"
+                                        Background="#333"
+                                        Margin="0,4,0,14"/>
+
+                                <StackPanel Margin="0,0,0,0">
+                                    <CheckBox IsChecked="{Binding IsExpAlarmEnabled}"
+                                              Content="저효율 알림 활성화"
+                                              Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
+                                    <StackPanel Margin="6,6,0,8">
+                                        <TextBlock Text="{Binding ExpBuffAlertVolumePercent, StringFormat=저효율 알림 볼륨: {0:F0}%}"
+                                                   Foreground="White"
+                                                   FontSize="12"
+                                                   Margin="0,0,0,6"/>
+                                        <Slider Minimum="0"
+                                                Maximum="100"
+                                                TickFrequency="10"
+                                                IsSnapToTickEnabled="True"
+                                                Tag="EXPBuffCheck.wav"
+                                                ValueChanged="PreviewSoundSlider_ValueChanged"
+                                                Value="{Binding ExpBuffAlertVolumePercent, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                    </StackPanel>
+                                    <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
+                                        <TextBlock Text="기준치"
+                                                   Margin="0,0,5,0"
+                                                   VerticalAlignment="Center"
+                                                   Foreground="White"
+                                                   FontSize="13"/>
+                                        <TextBox Text="{Binding ExpAlarmThresholdMan, UpdateSourceTrigger=PropertyChanged}"
+                                                 Width="60"
+                                                 VerticalAlignment="Center"
+                                                 HorizontalContentAlignment="Center"
+                                                 Margin="0,0,5,0"
+                                                 Style="{StaticResource InputTextBoxStyle}"/>
+                                        <TextBlock Text="만 EXP 미만 시"
+                                                   VerticalAlignment="Center"
+                                                   Foreground="White"
+                                                   FontSize="13"/>
+                                    </StackPanel>
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </TabItem>
+
+                <TabItem Header="던전 도우미" Style="{StaticResource SettingsTabItemStyle}" Margin="4,0,-4,0">
+                    <StackPanel Margin="8">
+                        <Border Style="{StaticResource SettingsBorderStyle}">
+                            <StackPanel>
+                                <TextBlock Text="마법진 경고" Style="{StaticResource SectionHeaderStyle}"/>
+
+                                <CheckBox Content="마법진 경고"
+                                          IsChecked="{Binding UseMagicCircleAlert}"
+                                          Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
+                                <StackPanel Margin="6,6,0,8">
+                                    <TextBlock Text="{Binding MagicCircleAlertVolumePercent, StringFormat=마법진 경고 볼륨: {0:F0}%}"
+                                               Foreground="White"
+                                               FontSize="12"
+                                               Margin="0,0,0,6"/>
+                                    <Slider Minimum="0"
+                                            Maximum="100"
+                                            TickFrequency="10"
+                                            IsSnapToTickEnabled="True"
+                                            Tag="MagicCircle.wav"
+                                            ValueChanged="PreviewSoundSlider_ValueChanged"
+                                            Value="{Binding MagicCircleAlertVolumePercent, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                </StackPanel>
+
+                                <Border Height="1"
+                                        Background="#333"
+                                        Margin="0,10,0,14"/>
+
+                                <TextBlock Text="에토스 방향 알림" Style="{StaticResource SectionHeaderStyle}"/>
+
+                                <CheckBox Content="에토스 방향 알림"
+                                          IsChecked="{Binding ShowEtosDirectionAlert}"
+                                          Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
+                                <Border Height="1"
+                                        Background="#333"
+                                        Margin="0,14,0,14"/>
+
+                                <TextBlock Style="{StaticResource SectionHeaderStyle}"><Run Text="던전 카운터"/></TextBlock>
+                                <CheckBox Content="어밴던로드 횟수 알리미"
+                                          IsChecked="{Binding EnableAbaddonRoadCountAlert, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                          Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
+                                <CheckBox Content="갈망하는 즐거움 횟수 알리미"
+                                          IsChecked="{Binding EnableCravingPleasureCountAlert, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                          Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
+                                <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
+                                    <TextBlock Text="창 지속시간"
+                                               Margin="0,0,8,0"
+                                               VerticalAlignment="Center"
+                                               Foreground="White"
+                                               FontSize="13"/>
+                                    <TextBox Text="{Binding AbaddonRoadCountAlertDurationSeconds, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                             Width="60"
+                                             VerticalAlignment="Center"
+                                             HorizontalContentAlignment="Center"
+                                             Margin="0,0,6,0"
+                                             Style="{StaticResource InputTextBoxStyle}"/>
+                                    <TextBlock Text="초"
+                                               VerticalAlignment="Center"
+                                               Foreground="White"
+                                               FontSize="13"/>
+                                </StackPanel>
+                                <TextBlock Text="* 1초부터 300초까지 입력할 수 있습니다."
+                                           Style="{StaticResource HintTextStyle}"/>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </TabItem>
+
+                <TabItem Header="아이템 획득 알림" Style="{StaticResource SettingsTabItemStyle}" Margin="4,0,-4,0">
+                    <StackPanel Margin="8">
+                        <Border Style="{StaticResource SettingsBorderStyle}">
+                            <StackPanel>
+                                <TextBlock Text="아이템 획득 알림" Style="{StaticResource SectionHeaderStyle}"/>
+
+                                <CheckBox Content="아이템 획득 알림"
+                                          IsChecked="{Binding ShowItemDropAlert}"
+                                          Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
+                                <StackPanel Margin="6,6,0,8">
+                                    <TextBlock Text="{Binding ItemDropAlertVolumePercent, StringFormat=아이템 획득 볼륨: {0:F0}%}"
+                                               Foreground="White"
+                                               FontSize="12"
+                                               Margin="0,0,0,6"/>
+                                    <Slider Minimum="0"
+                                            Maximum="100"
+                                            TickFrequency="5"
+                                            IsSnapToTickEnabled="True"
+                                            Tag="drop_low.mp3"
+                                            ValueChanged="PreviewSoundSlider_ValueChanged"
+                                            Value="{Binding ItemDropAlertVolumePercent, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                </StackPanel>
+                                <StackPanel Margin="6,10,0,8">
+                                    <TextBlock Text="사용자 정의 필터"
+                                               Foreground="White"
+                                               FontSize="12"
+                                               FontWeight="SemiBold"
+                                               Margin="0,0,0,4"/>
+                                    <TextBlock Text="기본 목록에서 알림 받을 항목을 사용자 정의 목록으로 옮긴 뒤 적용하세요."
+                                               Style="{StaticResource HintTextStyle}"
+                                               Margin="0,0,0,6"/>
+
+                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                                        <Button Content="기본"
+                                                Command="{Binding SelectDefaultDropFilterCommand}"
+                                                Width="64"
+                                                Margin="0,0,6,0"
+                                                Style="{StaticResource DropFilterButtonStyle}"/>
+                                        <Button Content="사용자 정의"
+                                                Command="{Binding SelectCustomDropFilterCommand}"
+                                                Width="92"
+                                                Style="{StaticResource DropFilterButtonStyle}"/>
+                                    </StackPanel>
+
+                                    <Grid>
+                                        <Grid.Style>
+                                            <Style TargetType="Grid">
+                                                <Setter Property="Visibility" Value="Collapsed"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding UseCustomDropItemFilter}" Value="True">
+                                                        <Setter Property="Visibility" Value="Visible"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Grid.Style>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="42"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="170"/>
+                                        </Grid.RowDefinitions>
+
+                                        <TextBlock Grid.Row="0" Grid.Column="0"
+                                                   Text="기본 목록"
+                                                   Foreground="#C9D1D9"
+                                                   FontSize="11"
+                                                   Margin="0,0,0,4"/>
+                                        <TextBlock Grid.Row="0" Grid.Column="2"
+                                                   Text="사용자 정의 목록"
+                                                   Foreground="#C9D1D9"
+                                                   FontSize="11"
+                                                   Margin="0,0,0,4"/>
+
+                                        <ListBox x:Name="DefaultDropItemsListBox"
+                                                 Grid.Row="1"
+                                                 Grid.Column="0"
+                                                 ItemsSource="{Binding DefaultDropItems}"
+                                                 SelectionMode="Extended"
+                                                 Background="#111820"
+                                                 BorderBrush="#30363D"
+                                                 Foreground="White"
+                                                 ScrollViewer.HorizontalScrollBarVisibility="Auto">
+                                            <ListBox.ItemTemplate>
+                                                <DataTemplate>
+                                                    <TextBlock Text="{Binding Name}"
+                                                               Foreground="{Binding Foreground}"
+                                                               FontSize="11"
+                                                               TextTrimming="CharacterEllipsis"/>
+                                                </DataTemplate>
+                                            </ListBox.ItemTemplate>
+                                        </ListBox>
+
+                                        <StackPanel Grid.Row="1"
+                                                    Grid.Column="1"
+                                                    VerticalAlignment="Center"
+                                                    Margin="5,0">
+                                            <Button Content="&gt;&gt;"
+                                                    Click="MoveDropItemsToCustom_Click"
+                                                    Margin="0,0,0,8"
+                                                    Style="{StaticResource DropFilterButtonStyle}"/>
+                                            <Button Content="&lt;&lt;"
+                                                    Click="MoveDropItemsToDefault_Click"
+                                                    Style="{StaticResource DropFilterButtonStyle}"/>
+                                        </StackPanel>
+
+                                        <ListBox x:Name="CustomDropItemsListBox"
+                                                 Grid.Row="1"
+                                                 Grid.Column="2"
+                                                 ItemsSource="{Binding CustomDropItems}"
+                                                 SelectionMode="Extended"
+                                                 Background="#111820"
+                                                 BorderBrush="#30363D"
+                                                 Foreground="White"
+                                                 ScrollViewer.HorizontalScrollBarVisibility="Auto">
+                                            <ListBox.ItemTemplate>
+                                                <DataTemplate>
+                                                    <TextBlock Text="{Binding Name}"
+                                                               Foreground="{Binding Foreground}"
+                                                               FontSize="11"
+                                                               TextTrimming="CharacterEllipsis"/>
+                                                </DataTemplate>
+                                            </ListBox.ItemTemplate>
+                                        </ListBox>
+                                    </Grid>
+
+                                    <StackPanel Orientation="Horizontal" Margin="0,8,0,4">
+                                        <Button Content="적용"
+                                                Command="{Binding ApplyCustomDropItemFilterCommand}"
+                                                Width="64"
+                                                Margin="0,0,6,0"
+                                                Style="{StaticResource DropFilterButtonStyle}"/>
+                                        <Button Content="불러오기"
+                                                Command="{Binding LoadCustomDropItemFilterCommand}"
+                                                Width="70"
+                                                Margin="0,0,6,0"
+                                                Style="{StaticResource DropFilterButtonStyle}"/>
+                                        <Button Content="저장"
+                                                Command="{Binding SaveCustomDropItemFilterCommand}"
+                                                Width="64"
+                                                Style="{StaticResource DropFilterButtonStyle}"/>
+                                    </StackPanel>
+                                    <TextBlock Text="{Binding CustomDropItemStatus}"
+                                               Style="{StaticResource HintTextStyle}"/>
+                                </StackPanel>
+
+                                <TextBlock Text="* 설정 창을 열면 드래그로 알림 위치를 옮길 수 있습니다."
+                                           Style="{StaticResource HintTextStyle}"/>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </TabItem>
+
+                <TabItem Header="버프 추적" Style="{StaticResource SettingsTabItemStyle}" Margin="4,0,-4,0">
+                    <StackPanel Margin="8">
+                        <Border Style="{StaticResource SettingsBorderStyle}">
+                            <StackPanel>
+                                <TextBlock Text="버프 추적" Style="{StaticResource SectionHeaderStyle}"/>
+
+                                <CheckBox Content="버프 추적 알림"
+                                          IsChecked="{Binding EnableBuffTrackerAlert}"
+                                          Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
+
+                                <CheckBox Content="버프 종료 사운드 알림"
+                                          IsChecked="{Binding EnableBuffTrackerEndSound}"
+                                          IsEnabled="{Binding EnableBuffTrackerAlert}"
+                                          Margin="0,6,0,0"
+                                          Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
+                                <StackPanel Margin="6,6,0,0">
+                                    <TextBlock Text="{Binding BuffTrackerEndSoundVolumePercent, StringFormat=버프 종료 사운드 볼륨: {0:F0}%}"
+                                               Foreground="White"
+                                               FontSize="12"
+                                               Margin="0,0,0,6"/>
+                                    <Slider Minimum="0"
+                                            Maximum="100"
+                                            TickFrequency="10"
+                                            IsSnapToTickEnabled="True"
+                                            IsEnabled="{Binding EnableBuffTrackerAlert}"
+                                            Tag="BuffCheck.wav"
+                                            ValueChanged="PreviewSoundSlider_ValueChanged"
+                                            Value="{Binding BuffTrackerEndSoundVolumePercent, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                </StackPanel>
+
+                                <TextBlock Text="* 버프 추적 알림은 실제 버프 시간 추적을 켜고 끕니다."
+                                           Style="{StaticResource HintTextStyle}"/>
+                                <TextBlock Text="* 버프 종료 시 BuffCheck.wav를 재생합니다. 10초 이내 반복 종료는 묶어서 한 번만 재생됩니다."
+                                           Style="{StaticResource HintTextStyle}"/>
+                                <TextBlock Text="* 설정 창을 열면 버프 추적 창 위치를 옮길 수 있습니다."
+                                           Style="{StaticResource HintTextStyle}"/>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </TabItem>
+
+                <TabItem Header="필드 보스 알림" Style="{StaticResource SettingsTabItemStyle}" Margin="4,0,-4,0">
+                    <StackPanel Margin="8">
+                        <Border Style="{StaticResource SettingsBorderStyle}">
+                            <StackPanel>
+                                <TextBlock Text="필드 보스 알림" Style="{StaticResource SectionHeaderStyle}"/>
+                                <Button x:Name="DebugRefreshBossTimerButton"
+                                        Content="BossTimer 새로고침"
+                                        HorizontalAlignment="Left"
+                                        Margin="0,0,0,12"
+                                        Padding="12,6"
+                                        Visibility="Collapsed"
+                                        Click="DebugRefreshBossTimerButton_Click"/>
+                                <ItemsControl ItemsSource="{Binding BossAlarmCards}">
+                                    <ItemsControl.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <UniformGrid Columns="3"/>
+                                        </ItemsPanelTemplate>
+                                    </ItemsControl.ItemsPanel>
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Grid Margin="0,0,14,14">
+                                                <Border Padding="14"
+                                                        Background="#FF262626"
+                                                        BorderBrush="#404040"
+                                                        BorderThickness="1"
+                                                        CornerRadius="10">
+                                                    <StackPanel>
+                                                        <TextBlock Text="{Binding Name}"
+                                                                   Foreground="White"
+                                                                   FontSize="17"
+                                                                   FontWeight="Bold"/>
+                                                        <TextBlock Text="{Binding ScheduleText}"
+                                                                   Foreground="#9FB0C0"
+                                                                   FontSize="11"
+                                                                   Margin="0,4,0,12"
+                                                                   TextWrapping="Wrap"/>
+
+                                                        <Grid Margin="0,0,0,8">
+                                                            <Grid.ColumnDefinitions>
+                                                                <ColumnDefinition Width="*"/>
+                                                                <ColumnDefinition Width="Auto"/>
+                                                            </Grid.ColumnDefinitions>
+                                                            <TextBlock Text="3분 전"
+                                                                       Foreground="White"
+                                                                       VerticalAlignment="Center"/>
+                                                            <CheckBox Grid.Column="1"
+                                                                      IsChecked="{Binding Alert3MinutesBefore, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                                      Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
+                                                        </Grid>
+
+                                                        <Grid Margin="0,0,0,8">
+                                                            <Grid.ColumnDefinitions>
+                                                                <ColumnDefinition Width="*"/>
+                                                                <ColumnDefinition Width="Auto"/>
+                                                            </Grid.ColumnDefinitions>
+                                                            <TextBlock Text="1분 전"
+                                                                       Foreground="White"
+                                                                       VerticalAlignment="Center"/>
+                                                            <CheckBox Grid.Column="1"
+                                                                      IsChecked="{Binding Alert1MinuteBefore, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                                      Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
+                                                        </Grid>
+
+                                                        <Grid>
+                                                            <Grid.ColumnDefinitions>
+                                                                <ColumnDefinition Width="*"/>
+                                                                <ColumnDefinition Width="Auto"/>
+                                                            </Grid.ColumnDefinitions>
+                                                            <TextBlock Text="5초 전"
+                                                                       Foreground="White"
+                                                                       VerticalAlignment="Center"/>
+                                                            <CheckBox Grid.Column="1"
+                                                                      IsChecked="{Binding AlertAtSpawn, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                                      Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
+                                                        </Grid>
+                                                    </StackPanel>
+                                                </Border>
+                                            </Grid>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+
+                                <Border Height="1"
+                                        Background="#333"
+                                        Margin="0,8,0,8"/>
+                                <StackPanel Margin="6,4,0,0">
+                                    <TextBlock Text="{Binding BossAlertVolumePercent, StringFormat=필드 보스 알림 볼륨: {0:F0}%}"
+                                               Foreground="White"
+                                               FontSize="12"
+                                               Margin="0,0,0,6"/>
+                                    <Slider Minimum="0"
+                                            Maximum="100"
+                                            TickFrequency="10"
+                                            IsSnapToTickEnabled="True"
+                                            Tag="Arkan.wav"
+                                            ValueChanged="PreviewSoundSlider_ValueChanged"
+                                            Value="{Binding BossAlertVolumePercent, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </TabItem>
+            </TabControl>
+        </Border>
+    </ScrollViewer>
+</UserControl>
