@@ -105,11 +105,11 @@
 
                     <UniformGrid Grid.Row="1" Columns="7">
                         <RadioButton Content="기본" Style="{StaticResource TabButtonStyle}" IsChecked="True" Tag="Basic" Click="Tab_Click"/>
+                        <RadioButton Content="일반" Style="{StaticResource TabButtonStyle}" Tag="General" Click="Tab_Click"/>
                         <RadioButton Content="팀" Style="{StaticResource TabButtonStyle}" Tag="Team" Click="Tab_Click"/>
                         <RadioButton Content="클럽" Style="{StaticResource TabButtonStyle}" Tag="Club" Click="Tab_Click"/>
                         <RadioButton Content="외치기" Style="{StaticResource TabButtonStyle}" Tag="Shout" Click="Tab_Click"/>
                         <RadioButton Content="시스템" Style="{StaticResource TabButtonStyle}" Tag="System" Click="Tab_Click"/>
-                        <RadioButton Content="아이템" Style="{StaticResource TabButtonStyle}" Tag="Item" Click="Tab_Click"/>
                         <RadioButton Content="설정" Style="{StaticResource TabButtonStyle}" Tag="Settings" Click="Tab_Click"/>
                     </UniformGrid>
 

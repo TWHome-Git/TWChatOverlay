@@ -4,8 +4,10 @@ using System.ComponentModel;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Text.Json;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -18,6 +20,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Threading;
 using TWChatOverlay.Models;
 using TWChatOverlay.Services;
+using TWChatOverlay.Services.LogAnalysis;
 using TWChatOverlay.ViewModels;
 
 namespace TWChatOverlay.Views
@@ -29,6 +32,8 @@ namespace TWChatOverlay.Views
     {
         #region Fields
         private DailyWeeklyContentWindow? _dailyWeeklyContentOverlay;
+        private ItemCalendarWindow? _itemCalendarWindow;
+        private AbaddonRoadSummaryWindow? _abaddonRoadSummaryWindow;
         private ExperienceService _expService;
         private HotKeyService? _hotKeyService;
         private WindowStickyService? _stickyService;
@@ -55,12 +60,16 @@ namespace TWChatOverlay.Views
         /// </summary>
         public event EventHandler<bool>? OverlayVisibilityChanged;
         public event EventHandler<bool>? DailyWeeklyVisibilityChanged;
+        public event EventHandler<bool>? ItemCalendarVisibilityChanged;
         private string _currentTabTag = "Basic";
         private readonly UiLogBatchDispatcher _uiLogBatchDispatcher;
         private readonly LogTabBufferStore _logTabBufferStore;
         private readonly TabDisplayStateResolver _tabDisplayStateResolver;
-        private DateTime _loadedItemWeekMonday = DateTime.MinValue;
-        private bool _isItemWeekLogsLoading;
+        private DateTime _loadedItemMonthStart = DateTime.MinValue;
+        private DateTime _loadedAbaddonMonthStart = DateTime.MinValue;
+        private bool _isItemMonthLogsLoading;
+        private bool _isHistoricalItemWarmupRunning;
+        private bool _isHistoricalAbaddonWarmupRunning;
         private bool _isRefreshLogDisplayScheduled;
         private AbaddonWeeklySummary _abaddonWeeklySummary = new();
 
@@ -122,10 +131,10 @@ namespace TWChatOverlay.Views
             _buffTrackerService.PropertyChanged += BuffTrackerService_PropertyChanged;
             ExpTrackerPanel.DataContext = _expService.SessionState;
             _logService = new LogService(_expService, _settings);
+            TryLoadTestDropItemJsonForSession();
             DropItemResolver.InitializeAsync(_settings);
             _logService.OnNewLogRead += (html) =>
             {
-                PerformanceDiagnosticsService.RecordIncomingLog();
                 _uiLogBatchDispatcher.Enqueue(html, _expService.IsReady, ProcessUiLogBatch);
             };
             _logService.InitialLogsLoaded += () =>
@@ -136,15 +145,15 @@ namespace TWChatOverlay.Views
             {
                 Dispatcher.BeginInvoke(new Action(RequestRefreshLogDisplay), DispatcherPriority.Background);
             };
-            RestoreExperienceEssenceAlertState();
             _logService.Initialize();
-            _ = EnsureItemWeekLogsLoadedAsync();
+            MonthlyReadableLogExportService.CleanupLegacyArtifacts();
             ApplyInitialSettings();
-            PerformanceDiagnosticsService.SetEnabled(_settings.EnablePerformanceDiagnostics);
             ApplySubAddonWindowSettings();
             ApplyItemDropHelperWindowSettings();
             ApplyBuffTrackerWindowSettings();
             ApplyBuffTrackerHelperWindowSettings();
+            StartHistoricalItemWarmup();
+            StartHistoricalAbaddonWarmup();
 
             Dispatcher.BeginInvoke(new Action(() => InitializeNativeServices()), DispatcherPriority.Loaded);
 
@@ -161,6 +170,7 @@ namespace TWChatOverlay.Views
             try { _buffTrackerService.PropertyChanged -= BuffTrackerService_PropertyChanged; } catch { }
             try { BuffTrackerWindow.Instance?.Close(); } catch { }
             try { BuffTrackerHelperWindow.Instance?.Close(); } catch { }
+            try { _abaddonRoadSummaryWindow?.Close(); } catch { }
             try { _logService?.Dispose(); } catch { }
             try { _expService?.Stop(); } catch { }
             try { _buffTrackerService?.Dispose(); } catch { }
@@ -175,11 +185,11 @@ namespace TWChatOverlay.Views
             try { _stickyService?.Stop(); } catch { }
             try { _bossAlarmSchedulerService?.Stop(); } catch { }
             try { _hotKeyService?.Dispose(); } catch { }
-            try { PerformanceDiagnosticsService.Shutdown(); } catch { }
         }
 
         public SettingsViewModel SettingsViewModelInstance => _settingsViewModel;
         public bool IsDailyWeeklyVisible => _dailyWeeklyContentOverlay?.IsVisible == true;
+        public bool IsItemCalendarVisible => _itemCalendarWindow?.IsVisible == true;
 
         private void RestoreExperienceEssenceAlertState()
         {
@@ -351,6 +361,8 @@ namespace TWChatOverlay.Views
                 Visibility = Visibility.Visible;
                 _stickyService?.UpdatePositionImmediately();
             }
+
+            Task.Run(() => RestoreExperienceEssenceAlertState());
         }
 
         private void StickyService_AuxiliaryWindowVisibilityChanged(bool canShow)
@@ -410,18 +422,7 @@ namespace TWChatOverlay.Views
             if (!analysis.IsSuccess) return;
             var parseResult = analysis.Parsed;
 
-            if (isRealTime && TryEstimateLogDelay(parseResult.FormattedText, DateTime.Now, out double delayMs))
-            {
-                _settingsViewModel.UpdateLogLatency(delayMs);
-            }
-
             _buffTrackerService.ProcessLog(analysis);
-
-            if (isRealTime && TryAccumulateAbaddonWeeklySummary(parseResult.FormattedText, ref _abaddonWeeklySummary))
-            {
-                if (_currentTabTag == "Item")
-                    RequestRefreshLogDisplay();
-            }
 
             if (analysis.HasExperienceGain) _expService.AddExp(parseResult.GainedExp);
             if (isRealTime)
@@ -429,22 +430,15 @@ namespace TWChatOverlay.Views
 
             if (!handledDailyWeeklyCountLog &&
                 analysis.ShouldRunDailyWeeklyContent &&
-                _dailyWeeklyContentOverlay?.IsVisible == true)
+                _dailyWeeklyContentOverlay != null)
                 _dailyWeeklyContentOverlay.ProcessLog(analysis);
 
             foreach (string tabName in analysis.BufferTabs)
                 AddToBuffer(tabName, parseResult);
 
-            LogParser.ParseResult? itemTabLog = null;
             if (analysis.HasTrackedItemDrop)
             {
-                if (analysis.IsRareTrackedItemDrop)
-                {
-                    itemTabLog = CreateItemTabLog(parseResult, DateTime.Today.ToString("yyyy-MM-dd"));
-                    AddToBuffer("Item", itemTabLog);
-                    if (isRealTime)
-                        AppendWeeklyItemLog(itemTabLog, DateTime.Today);
-                }
+                ItemMonthlySnapshotService.AppendMonthlySnapshot(DateTime.Today, parseResult);
                 if (analysis.ShouldShowItemDropToast)
                 {
                     ItemDropToastService.Show(parseResult.TrackedItemName ?? "아이템", parseResult.TrackedItemGrade, withSound: true);
@@ -453,18 +447,19 @@ namespace TWChatOverlay.Views
 
             if (isRealTime)
             {
-                if (_currentTabTag == "Item")
-                {
-                    if (itemTabLog != null)
-                    {
-                        AddToUI(itemTabLog, isRealTime: isRealTime, deferScroll: deferUiScroll);
-                    }
-                    else if (parseResult.IsHighlight)
-                    {
-                        AddToUI(parseResult, isRealTime: isRealTime, deferScroll: deferUiScroll);
-                    }
-                }
-                else if (_logAnalysisService.ShouldRenderToTab(parseResult, _currentTabTag))
+                RecaptureSupplyAlertService.Observe(parseResult.FormattedText);
+            }
+
+            if (isRealTime &&
+                analysis.ShouldRunDailyWeeklyContent &&
+                DailyWeeklyLogAnalyzer.TryMatchAbaddonRoadCount(parseResult.FormattedText, out _))
+            {
+                ShowAbaddonRoadSummaryWindow();
+            }
+
+            if (isRealTime)
+            {
+                if (_logAnalysisService.ShouldRenderToTab(parseResult, _currentTabTag))
                 {
                     AddToUI(parseResult, isRealTime: isRealTime, deferScroll: deferUiScroll);
                 }
@@ -494,10 +489,6 @@ namespace TWChatOverlay.Views
 
             bool isBlacklisted = BlacklistService.TryGetReason(log.SenderId, out string blacklistReason);
             Brush foreground = isBlacklisted ? BlacklistService.HighlightBrush : log.Brush;
-            if (!isBlacklisted && _currentTabTag == "Item" && log.IsTrackedItemDrop)
-            {
-                foreground = GetItemDropForeground(log.TrackedItemGrade);
-            }
             string displayText = isBlacklisted ? $"{log.FormattedText} [ {blacklistReason} ]" : log.FormattedText;
 
             Paragraph p = new Paragraph(new Run(displayText))
@@ -586,34 +577,6 @@ namespace TWChatOverlay.Views
                 {
                     LogDisplay.Document.Blocks.Clear();
 
-                    if (_currentTabTag == "Item")
-                    {
-                        var summaryHeader = new Paragraph(new Run(GetAbaddonWeekHeaderText()))
-                        {
-                            Foreground = new SolidColorBrush(Color.FromRgb(0xA5, 0xD6, 0xFF)),
-                            FontSize = _settings.FontSize,
-                            FontFamily = this.CurrentFont,
-                            FontWeight = FontWeights.Bold,
-                            Margin = new Thickness(0, 0, 0, 6)
-                        };
-                        LogDisplay.Document.Blocks.Add(summaryHeader);
-
-                        AddStoneIconLine(LogDisplay, this.CurrentFont, _settings.FontSize, _abaddonWeeklySummary);
-                        AddMoneyLine(LogDisplay, "총 수익 - ", FormatManAmount(_abaddonWeeklySummary.NetProfitMan), this.CurrentFont, _settings.FontSize, Brushes.LightGreen);
-
-                        LogDisplay.Document.Blocks.Add(new Paragraph(new Run("")) { Margin = new Thickness(0, 0, 0, 2) });
-
-                        var itemHeader = new Paragraph(new Run(GetItemWeekHeaderText()))
-                        {
-                            Foreground = new SolidColorBrush(Color.FromRgb(0xA5, 0xD6, 0xFF)),
-                            FontSize = _settings.FontSize,
-                            FontFamily = this.CurrentFont,
-                            FontWeight = FontWeights.Bold,
-                            Margin = new Thickness(0, 0, 0, 6)
-                        };
-                        LogDisplay.Document.Blocks.Add(itemHeader);
-                    }
-
                     var logs = _logTabBufferStore.GetLogs(_currentTabTag);
                     foreach (var log in logs)
                     {
@@ -685,72 +648,86 @@ namespace TWChatOverlay.Views
 
         private string GetAbaddonWeekHeaderText()
         {
-            DateTime pivot = _loadedItemWeekMonday != DateTime.MinValue
-                ? _loadedItemWeekMonday
+            DateTime pivot = _loadedItemMonthStart != DateTime.MinValue
+                ? _loadedItemMonthStart
                 : DateTime.Today;
 
-            int weekOfMonth = GetWeekOfMonthByMonday(pivot);
-            return $"< {pivot.Year}년 {pivot.Month}월 {weekOfMonth}주차 어밴던로드 수익 로그 >";
+            return $"< {pivot.Year}년 {pivot.Month}월 어밴던로드 수익 로그 >";
         }
 
         private string GetItemWeekHeaderText()
         {
-            DateTime pivot = _loadedItemWeekMonday != DateTime.MinValue
-                ? _loadedItemWeekMonday
+            DateTime pivot = _loadedItemMonthStart != DateTime.MinValue
+                ? _loadedItemMonthStart
                 : DateTime.Today;
 
-            int weekOfMonth = GetWeekOfMonthByMonday(pivot);
-            return $"< {pivot.Year}년 {pivot.Month}월 {weekOfMonth}주차 아이템 획득 로그 >";
+            return $"< {pivot.Year}년 {pivot.Month}월 아이템 획득 로그 >";
         }
 
-        private static int GetWeekOfMonthByMonday(DateTime date)
+        private async Task EnsureItemMonthLogsLoadedAsync()
         {
-            DateTime firstDay = new DateTime(date.Year, date.Month, 1);
-            int firstDayOffset = ((int)firstDay.DayOfWeek + 6) % 7;
-            return ((date.Day + firstDayOffset - 1) / 7) + 1;
-        }
+            if (_isItemMonthLogsLoading) return;
 
-        private async Task EnsureItemWeekLogsLoadedAsync()
-        {
-            if (_isItemWeekLogsLoading) return;
-
-            DateTime monday = GetMonday(DateTime.Today);
-            if (_loadedItemWeekMonday == monday && _logTabBufferStore.GetLogs("Item").Count > 0)
+            DateTime monthStart = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1);
+            if (_loadedItemMonthStart == monthStart && _logTabBufferStore.GetLogs("Item").Count > 0)
                 return;
 
-            _isItemWeekLogsLoading = true;
+            _isItemMonthLogsLoading = true;
             try
             {
-                var paths = GetWeekLogPaths(DateTime.Today).ToList();
-                var (itemLogs, summary) = await Task.Run(() => ParseTrackedItemLogs(paths));
-                _logTabBufferStore.Replace("Item", itemLogs);
-                _abaddonWeeklySummary = summary;
-                _loadedItemWeekMonday = monday;
-                SaveWeeklyItemLogsSnapshot(monday, itemLogs);
-                AppLogger.Info($"Loaded weekly item logs. Count={itemLogs.Count}");
+                var monthlySnapshotLogs = await Task.Run(() => LoadItemTabLogsFromMonthlySnapshot(monthStart)).ConfigureAwait(true);
+                if (monthlySnapshotLogs.Count > 0)
+                {
+                    _logTabBufferStore.Replace("Item", monthlySnapshotLogs);
+                    _loadedItemMonthStart = monthStart;
+                    AppLogger.Info($"Loaded monthly item logs from snapshot. Count={monthlySnapshotLogs.Count}");
+                }
+                else
+                {
+                    AppLogger.Info("No monthly item snapshot found yet.");
+                }
 
                 if (_currentTabTag == "Item")
                     RequestRefreshLogDisplay();
             }
             catch (Exception ex)
             {
-                AppLogger.Warn("Failed to load weekly item logs.", ex);
+                AppLogger.Warn("Failed to load monthly item logs.", ex);
             }
             finally
             {
-                _isItemWeekLogsLoading = false;
+                _isItemMonthLogsLoading = false;
             }
         }
 
-        private IEnumerable<string> GetWeekLogPaths(DateTime today)
+        private List<LogParser.ParseResult> LoadItemTabLogsFromMonthlySnapshot(DateTime monthStart)
         {
-            DateTime monday = GetMonday(today);
-            for (int i = 0; i < 7; i++)
-                yield return GetLogPath(monday.AddDays(i));
-        }
+            var results = new List<LogParser.ParseResult>();
+            foreach (var snapshot in ItemMonthlySnapshotService.LoadOrBuildMonthlySnapshots(monthStart, _settings.ChatLogFolderPath, _logAnalysisService))
+            {
+                string displayName = string.IsNullOrWhiteSpace(snapshot.DisplayName)
+                    ? snapshot.ItemName ?? "아이템"
+                    : snapshot.DisplayName;
 
-        private string GetLogPath(DateTime date)
-            => Path.Combine(_settings.ChatLogFolderPath, $"TWChatLog_{date:yyyy_MM_dd}.html");
+                string dateLabel = snapshot.Date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+                var parsed = new LogParser.ParseResult
+                {
+                    FormattedText = BuildItemTabText(snapshot.FormattedText ?? string.Empty, displayName, snapshot.Count, dateLabel),
+                    Brush = GetItemDropForeground(snapshot.Grade) as SolidColorBrush ?? Brushes.White,
+                    Category = ChatCategory.System,
+                    IsSuccess = true,
+                    IsTrackedItemDrop = true,
+                    TrackedItemName = displayName,
+                    TrackedItemGrade = snapshot.Grade,
+                    TrackedItemCount = snapshot.Count,
+                    SenderId = null
+                };
+
+                results.Add(parsed);
+            }
+
+            return results;
+        }
 
         private (List<LogParser.ParseResult> Logs, AbaddonWeeklySummary Summary) ParseTrackedItemLogs(IEnumerable<string> filePaths)
         {
@@ -838,8 +815,62 @@ namespace TWChatOverlay.Views
             return false;
         }
 
+        private static bool TryAccumulateAbaddonMonthlySummary(string formattedText, AbaddonMonthlySummarySnapshotEntry summary)
+        {
+            if (string.IsNullOrWhiteSpace(formattedText))
+                return false;
+
+            string body = Regex.Replace(formattedText, @"^\[[^\]]+\]\s*", string.Empty);
+            if (body.Contains("주문을 통해", StringComparison.Ordinal))
+                return false;
+
+            var feeMatch = AbaddonEntryFeeRegex.Match(body);
+            if (feeMatch.Success && TryParseLong(feeMatch.Groups["value"].Value, out long feeMan))
+            {
+                summary.TotalEntryFeeMan += feeMan;
+                return true;
+            }
+
+            var lossMatch = MagicStoneLossRegex.Match(body);
+            if (lossMatch.Success && TryParseLong(lossMatch.Groups["count"].Value, out long lossCount))
+            {
+                ApplyMagicStoneDelta(summary, lossMatch.Groups["grade"].Value, -lossCount);
+                return true;
+            }
+
+            var gainMatch = MagicStoneGainRegex.Match(body);
+            if (gainMatch.Success &&
+                body.Contains("획득", StringComparison.Ordinal) &&
+                TryParseLong(gainMatch.Groups["count"].Value, out long gainCount))
+            {
+                ApplyMagicStoneDelta(summary, gainMatch.Groups["grade"].Value, gainCount);
+                return true;
+            }
+
+            return false;
+        }
+
         private static bool TryParseLong(string raw, out long value)
             => long.TryParse(raw.Replace(",", string.Empty).Trim(), out value);
+
+        private static void ApplyMagicStoneDelta(AbaddonMonthlySummarySnapshotEntry summary, string grade, long delta)
+        {
+            switch (grade)
+            {
+                case "하급":
+                    summary.Low += delta;
+                    break;
+                case "중급":
+                    summary.Mid += delta;
+                    break;
+                case "상급":
+                    summary.High += delta;
+                    break;
+                case "최상급":
+                    summary.Top += delta;
+                    break;
+            }
+        }
 
         private static DateTime GetMonday(DateTime date)
         {
@@ -847,42 +878,268 @@ namespace TWChatOverlay.Views
             return date.AddDays(-diff).Date;
         }
 
-        private static string GetWeeklyItemLogPath(DateTime monday)
-            => Path.Combine(ItemLogDirectoryPath, $"ItemLog_{monday:yyyy_MM_dd}.txt");
+        private static string GetMonthlyItemLogPath(DateTime date)
+            => Path.Combine(ItemLogDirectoryPath, $"ItemLog_{date:yyyy_MM}.jsonl");
 
-        private void SaveWeeklyItemLogsSnapshot(DateTime monday, IReadOnlyList<LogParser.ParseResult> itemLogs)
+        private static string GetMonthlyAbaddonSummaryPath(DateTime date)
+            => Path.Combine(ItemLogDirectoryPath, $"AbaddonSummary_{date:yyyy_MM}.json");
+
+        private void SaveMonthlyItemLogsSnapshot(DateTime monthStart, IReadOnlyList<LogParser.ParseResult> itemLogs)
         {
             try
             {
                 Directory.CreateDirectory(ItemLogDirectoryPath);
-                string path = GetWeeklyItemLogPath(monday);
-                var lines = itemLogs
-                    .Select(x => x.FormattedText)
-                    .Where(x => !string.IsNullOrWhiteSpace(x))
-                    .ToArray();
-                File.WriteAllLines(path, lines, Encoding.UTF8);
+                string path = GetMonthlyItemLogPath(monthStart);
+                using var writer = new StreamWriter(path, append: false, Encoding.UTF8);
+                foreach (var itemLog in itemLogs)
+                {
+                    var snapshot = CreateSnapshotFromItemLog(itemLog, ExtractSnapshotDate(itemLog.FormattedText) ?? monthStart.Date);
+                    writer.WriteLine(JsonSerializer.Serialize(snapshot));
+                }
             }
             catch (Exception ex)
             {
-                AppLogger.Warn("Failed to save weekly item log snapshot.", ex);
+                AppLogger.Warn("Failed to save monthly item log snapshot.", ex);
             }
         }
 
-        private void AppendWeeklyItemLog(LogParser.ParseResult itemLog, DateTime date)
+        private void AppendMonthlyItemSnapshot(LogParser.ParseResult itemLog, DateTime date)
+            => ItemMonthlySnapshotService.AppendMonthlySnapshot(date, itemLog);
+
+        private IReadOnlyList<ItemLogSnapshotEntry> LoadMonthlyItemSnapshots(DateTime monthStart)
         {
+            string path = GetMonthlyItemLogPath(monthStart);
+            if (!File.Exists(path))
+                return Array.Empty<ItemLogSnapshotEntry>();
+
+            var snapshots = new List<ItemLogSnapshotEntry>();
             try
             {
-                if (string.IsNullOrWhiteSpace(itemLog.FormattedText))
-                    return;
+                foreach (string line in File.ReadLines(path, Encoding.UTF8))
+                {
+                    if (string.IsNullOrWhiteSpace(line))
+                        continue;
 
-                Directory.CreateDirectory(ItemLogDirectoryPath);
-                string path = GetWeeklyItemLogPath(GetMonday(date));
-                File.AppendAllText(path, itemLog.FormattedText + Environment.NewLine, Encoding.UTF8);
+                    var snapshot = JsonSerializer.Deserialize<ItemLogSnapshotEntry>(line);
+                    if (snapshot == null)
+                        continue;
+
+                    if (snapshot.Date.Year != monthStart.Year || snapshot.Date.Month != monthStart.Month)
+                        continue;
+
+                    snapshots.Add(snapshot);
+                }
             }
             catch (Exception ex)
             {
-                AppLogger.Warn("Failed to append weekly item log.", ex);
+                AppLogger.Warn($"Failed to load monthly item snapshots from '{path}'.", ex);
             }
+
+            return snapshots;
+        }
+
+        private static ItemLogSnapshotEntry CreateSnapshotFromItemLog(LogParser.ParseResult itemLog, DateTime date)
+        {
+            return new ItemLogSnapshotEntry
+            {
+                Date = date.Date,
+                ItemName = itemLog.TrackedItemName,
+                DisplayName = string.IsNullOrWhiteSpace(itemLog.TrackedItemName)
+                    ? "아이템"
+                    : DropItemResolver.GetTrackedItemDisplayName(itemLog.TrackedItemName),
+                Grade = itemLog.TrackedItemGrade,
+                Count = Math.Max(1, itemLog.TrackedItemCount),
+                FormattedText = itemLog.FormattedText
+            };
+        }
+
+        private static DateTime? ExtractSnapshotDate(string? formattedText)
+        {
+            if (string.IsNullOrWhiteSpace(formattedText))
+                return null;
+
+            var match = Regex.Match(formattedText, @"^\[(?<date>\d{4}-\d{2}-\d{2})\]");
+            if (!match.Success)
+                return null;
+
+            if (DateTime.TryParseExact(match.Groups["date"].Value, "yyyy-MM-dd", CultureInfo.InvariantCulture,
+                    DateTimeStyles.None, out DateTime parsed))
+            {
+                return parsed.Date;
+            }
+
+            return null;
+        }
+
+        private void EnsureCurrentAbaddonSummaryLoaded(DateTime date)
+        {
+            DateTime monthStart = new(date.Year, date.Month, 1);
+            _loadedAbaddonMonthStart = monthStart;
+            _abaddonWeeklySummary = LoadOrBuildMonthlyAbaddonSummary(monthStart);
+        }
+
+        private AbaddonWeeklySummary LoadOrBuildMonthlyAbaddonSummary(DateTime monthStart)
+        {
+            MonthlyReadableLogData data = MonthlyReadableLogExportService.LoadOrBuildMonth(
+                monthStart,
+                _settings.ChatLogFolderPath,
+                _logAnalysisService);
+
+            return new AbaddonWeeklySummary
+            {
+                TotalEntryFeeMan = data.AbaddonSummary.TotalEntryFeeMan,
+                Low = data.AbaddonSummary.Low,
+                Mid = data.AbaddonSummary.Mid,
+                High = data.AbaddonSummary.High,
+                Top = data.AbaddonSummary.Top
+            };
+        }
+
+        private IEnumerable<DateTime> EnumerateChatLogMonthStarts()
+        {
+            if (string.IsNullOrWhiteSpace(_settings.ChatLogFolderPath) ||
+                !Directory.Exists(_settings.ChatLogFolderPath))
+            {
+                yield break;
+            }
+
+            foreach (string path in Directory.EnumerateFiles(_settings.ChatLogFolderPath, "TWChatLog_*.html")
+                         .OrderBy(path => path, StringComparer.OrdinalIgnoreCase))
+            {
+                DateTime logDate = ExtractDateFromChatLogPath(path);
+                if (logDate == DateTime.MinValue)
+                    continue;
+
+                yield return new DateTime(logDate.Year, logDate.Month, 1);
+            }
+        }
+
+        private void StartHistoricalItemWarmup()
+        {
+            if (_isHistoricalItemWarmupRunning)
+                return;
+
+            _isHistoricalItemWarmupRunning = true;
+            Task.Run(() =>
+            {
+                try
+                {
+                    BuildHistoricalMonthlyItemSnapshots();
+                }
+                catch (Exception ex)
+                {
+                    AppLogger.Warn("Failed to build historical monthly item snapshots.", ex);
+                }
+                finally
+                {
+                    _isHistoricalItemWarmupRunning = false;
+                    try
+                    {
+                        Dispatcher.BeginInvoke(new Action(() =>
+                        {
+                            if (_currentTabTag == "Item")
+                                _ = EnsureItemMonthLogsLoadedAsync();
+                        }), DispatcherPriority.Background);
+                    }
+                    catch { }
+                }
+            });
+        }
+
+        private void StartHistoricalAbaddonWarmup()
+        {
+            if (_isHistoricalAbaddonWarmupRunning)
+                return;
+
+            _isHistoricalAbaddonWarmupRunning = true;
+            Task.Run(() =>
+            {
+                try
+                {
+                    BuildHistoricalMonthlyAbaddonSummaries();
+                }
+                catch (Exception ex)
+                {
+                    AppLogger.Warn("Failed to build historical monthly Abaddon summaries.", ex);
+                }
+                finally
+                {
+                    _isHistoricalAbaddonWarmupRunning = false;
+                    try
+                    {
+                        Dispatcher.BeginInvoke(new Action(() =>
+                        {
+                            EnsureCurrentAbaddonSummaryLoaded(DateTime.Today);
+                            RefreshAbaddonRoadSummaryWindow();
+                        }), DispatcherPriority.Background);
+                    }
+                    catch { }
+                }
+            });
+        }
+
+        private void BuildHistoricalMonthlyAbaddonSummaries()
+        {
+            if (string.IsNullOrWhiteSpace(_settings.ChatLogFolderPath) ||
+                !Directory.Exists(_settings.ChatLogFolderPath))
+                return;
+
+            Directory.CreateDirectory(ItemLogDirectoryPath);
+            foreach (DateTime monthStart in EnumerateChatLogMonthStarts())
+            {
+                try
+                {
+                    LoadOrBuildMonthlyAbaddonSummary(monthStart);
+                }
+                catch (Exception ex)
+                {
+                    AppLogger.Warn($"Failed to warm up Abaddon summary for '{monthStart:yyyy-MM}'.", ex);
+                }
+            }
+        }
+
+        private void BuildHistoricalMonthlyItemSnapshots()
+        {
+            if (string.IsNullOrWhiteSpace(_settings.ChatLogFolderPath) ||
+                !Directory.Exists(_settings.ChatLogFolderPath))
+                return;
+
+            Directory.CreateDirectory(ItemLogDirectoryPath);
+            var monthStarts = Directory.EnumerateFiles(_settings.ChatLogFolderPath, "TWChatLog_*.html")
+                .Select(ExtractDateFromChatLogPath)
+                .Where(date => date != DateTime.MinValue)
+                .Select(date => new DateTime(date.Year, date.Month, 1))
+                .Distinct()
+                .OrderBy(date => date)
+                .ToList();
+
+            foreach (DateTime monthStart in monthStarts)
+            {
+                try
+                {
+                    ItemMonthlySnapshotService.LoadOrBuildMonthlySnapshots(monthStart, _settings.ChatLogFolderPath, _logAnalysisService);
+                }
+                catch (Exception ex)
+                {
+                    AppLogger.Warn($"Failed to warm up item snapshot for '{monthStart:yyyy-MM}'.", ex);
+                }
+            }
+
+        }
+
+        private static DateTime ExtractDateFromChatLogPath(string filePath)
+        {
+            string fileName = Path.GetFileNameWithoutExtension(filePath);
+            var match = Regex.Match(fileName, @"(?<y>\d{4})_(?<m>\d{2})_(?<d>\d{2})$");
+            if (!match.Success)
+                return DateTime.MinValue;
+
+            if (!int.TryParse(match.Groups["y"].Value, out int year) ||
+                !int.TryParse(match.Groups["m"].Value, out int month) ||
+                !int.TryParse(match.Groups["d"].Value, out int day))
+                return DateTime.MinValue;
+
+            return new DateTime(year, month, day);
         }
 
         private static LogParser.ParseResult CreateItemTabLog(LogParser.ParseResult source, string? dateLabel = null)
@@ -1022,9 +1279,6 @@ namespace TWChatOverlay.Views
             }
 
             if (logDisplay?.Visibility == Visibility.Visible) RequestRefreshLogDisplay();
-
-            if (_currentTabTag == "Item")
-                _ = EnsureItemWeekLogsLoadedAsync();
         }
 
         private void DragBar_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
@@ -1131,10 +1385,6 @@ namespace TWChatOverlay.Views
                     ApplyBuffTrackerWindowSettings();
                     ApplyBuffTrackerHelperWindowSettings();
                 }
-                else if (e.PropertyName == nameof(_settings.EnablePerformanceDiagnostics))
-                {
-                    PerformanceDiagnosticsService.SetEnabled(_settings.EnablePerformanceDiagnostics);
-                }
                 else if (e.PropertyName == nameof(_settings.ExitHotKey) ||
                          e.PropertyName == nameof(_settings.ToggleOverlayHotKey) ||
                          e.PropertyName == nameof(_settings.ToggleAddonHotKey) ||
@@ -1233,178 +1483,215 @@ namespace TWChatOverlay.Views
             _settings.UpdatePositionDisplay(_settings.LineMarginLeft, _settings.LineMargin);
         }
 
-        private static bool TryEstimateLogDelay(string formattedText, DateTime now, out double delayMs)
+        private void TryLoadTestDropItemJsonForSession()
         {
-            delayMs = 0;
-            if (string.IsNullOrWhiteSpace(formattedText))
+            try
             {
-                return false;
-            }
+                string downloads = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Downloads");
+                string[] candidateNames = ["Droptime.json", "DropItem.json", "DropItem.Json"];
 
-            Match match = Regex.Match(formattedText, @"^\[(?<time>[^\]]+)\]");
-            if (!match.Success)
-            {
-                return false;
-            }
-
-            string timeText = match.Groups["time"].Value.Trim();
-            if (!TryParseLogTime(timeText, out TimeSpan logTime))
-            {
-                return false;
-            }
-
-            DateTime candidate = now.Date.Add(logTime);
-            if (candidate > now.AddMinutes(1))
-            {
-                candidate = candidate.AddDays(-1);
-            }
-
-            TimeSpan delta = now - candidate;
-            if (delta < TimeSpan.Zero)
-            {
-                return false;
-            }
-
-            delayMs = delta.TotalMilliseconds;
-            return true;
-        }
-
-        private static bool TryParseLogTime(string timeText, out TimeSpan time)
-        {
-            time = default;
-
-            if (TimeSpan.TryParseExact(timeText, @"hh\:mm\:ss", CultureInfo.InvariantCulture, out time))
-            {
-                return true;
-            }
-
-            Match korean = Regex.Match(timeText, @"^(?<hour>\d{1,2})시\s*(?<minute>\d{1,2})분\s*(?<second>\d{1,2})초$");
-            if (!korean.Success)
-            {
-                return false;
-            }
-
-            if (!int.TryParse(korean.Groups["hour"].Value, out int hour) ||
-                !int.TryParse(korean.Groups["minute"].Value, out int minute) ||
-                !int.TryParse(korean.Groups["second"].Value, out int second))
-            {
-                return false;
-            }
-
-            if (hour is < 0 or > 23 || minute is < 0 or > 59 || second is < 0 or > 59)
-            {
-                return false;
-            }
-
-            time = new TimeSpan(hour, minute, second);
-            return true;
-        }
-
-
-
-        private void ShowDailyWeeklyWindow()
-        {
-            if (_dailyWeeklyContentOverlay == null || !_dailyWeeklyContentOverlay.IsLoaded)
-            {
-                _dailyWeeklyContentOverlay = new DailyWeeklyContentWindow(_settings);
-                _dailyWeeklyContentOverlay.Closed += (s, e) =>
+                foreach (string candidateName in candidateNames)
                 {
-                    if (s is Window window)
-                    {
-                        _settings.DailyWeeklyContentOverlayLeft = window.Left;
-                        _settings.DailyWeeklyContentOverlayTop = window.Top;
-                        PersistSettings();
-                    }
-                    _dailyWeeklyContentOverlay = null;
-                    if (_settings.ShowDailyWeeklyContentOverlay)
-                    {
-                        _settings.ShowDailyWeeklyContentOverlay = false;
-                        PersistSettings();
-                    }
+                    string path = Path.Combine(downloads, candidateName);
+                    if (!File.Exists(path))
+                        continue;
 
-                    try { DailyWeeklyVisibilityChanged?.Invoke(this, false); } catch { }
-                };
-                AppLogger.Info("Created DailyWeekly window instance.");
-
-                if (_settings.DailyWeeklyContentOverlayLeft.HasValue && _settings.DailyWeeklyContentOverlayTop.HasValue)
-                {
-                    _dailyWeeklyContentOverlay.WindowStartupLocation = WindowStartupLocation.Manual;
-                    _dailyWeeklyContentOverlay.Left = _settings.DailyWeeklyContentOverlayLeft.Value;
-                    _dailyWeeklyContentOverlay.Top = _settings.DailyWeeklyContentOverlayTop.Value;
+                    string json = File.ReadAllText(path, Encoding.UTF8);
+                    if (DropItemResolver.TryApplyJsonForSession(json))
+                    {
+                        AppLogger.Info($"Loaded session DropItem JSON from '{path}'.");
+                        return;
+                    }
                 }
             }
-
-            ApplyDailyWeeklyWindowVisibility();
-            try { DailyWeeklyVisibilityChanged?.Invoke(this, _dailyWeeklyContentOverlay.IsVisible); } catch { }
-            AppLogger.Info(_dailyWeeklyContentOverlay.IsVisible ? "Displayed DailyWeekly window." : "DailyWeekly window created but hidden due to game minimized/missing.");
-
-            _ = _dailyWeeklyContentOverlay.ScanHistoricalLogsAsync();
-        }
-
-        private void CloseDailyWeeklyWindow()
-        {
-            _dailyWeeklyContentOverlay?.Close();
-            _dailyWeeklyContentOverlay = null;
-            try { DailyWeeklyVisibilityChanged?.Invoke(this, false); } catch { }
-            AppLogger.Info("Closed DailyWeekly window.");
-        }
-
-        internal void ToggleDailyWeeklyContentWindow()
-        {
-            _settings.ShowDailyWeeklyContentOverlay = !_settings.ShowDailyWeeklyContentOverlay;
-            PersistSettings();
-        }
-
-        internal void ToggleOverlayVisibility()
-        {
-            _isOverlayVisible = !_isOverlayVisible;
-
-            try { OverlayVisibilityChanged?.Invoke(this, _isOverlayVisible); }
-            catch (Exception ex) { AppLogger.Warn("Overlay visibility event dispatch failed.", ex); }
-
-            AppLogger.Info($"Overlay visibility changed: {_isOverlayVisible}.");
-
-            if (_isOverlayVisible)
+            catch (Exception ex)
             {
-                this.Opacity = 0;
-                this.IsHitTestVisible = true;
-                if (!IsVisible)
-                {
-                    Show();
-                }
-                this.Visibility = Visibility.Visible;
-                _stickyService?.SetForceHidden(false);
-                _stickyService?.ResetGameWindow();
-                _stickyService?.Start();
-                _stickyService?.UpdatePositionImmediately();
-                Dispatcher.BeginInvoke(new Action(() =>
-                {
-                    if (_isOverlayVisible && this.Visibility == Visibility.Visible)
-                    {
-                        this.Opacity = 1;
-                    }
-                }), DispatcherPriority.Render);
-            }
-            else
-            {
-                this.Opacity = 0;
-                this.IsHitTestVisible = false;
-                _stickyService?.SetForceHidden(true);
-                this.Visibility = Visibility.Collapsed;
+                AppLogger.Warn("Failed to load session DropItem JSON.", ex);
             }
         }
 
         private void ReleaseMouseForce()
         {
-            NativeMethods.mouse_event(NativeMethods.MOUSEEVENTF_LEFTUP, 0, 0, 0, 0);
+            try
+            {
+                if (Mouse.Captured != null)
+                {
+                    Mouse.Capture(null);
+                }
+            }
+            catch { }
         }
 
         private void ConfirmExit()
         {
-            AppLogger.Warn("Exit requested from main window.");
             Application.Current.Shutdown();
         }
 
+        public void ToggleOverlayVisibility()
+        {
+            _isOverlayVisible = !_isOverlayVisible;
+            OverlayVisibilityChanged?.Invoke(this, _isOverlayVisible);
+
+            if (_stickyService != null)
+            {
+                _stickyService.SetForceHidden(!_isOverlayVisible);
+                if (_isOverlayVisible)
+                {
+                    _stickyService.UpdatePositionImmediately();
+                }
+            }
+
+            if (_isOverlayVisible)
+            {
+                if (!IsVisible)
+                {
+                    Show();
+                }
+
+                Opacity = 1;
+                IsHitTestVisible = true;
+                Visibility = Visibility.Visible;
+                CompleteInitialPresentation();
+            }
+            else
+            {
+                IsHitTestVisible = false;
+                Visibility = Visibility.Collapsed;
+                Opacity = 0;
+            }
+
+            PersistSettings();
+        }
+
+        private void ShowDailyWeeklyWindow()
+        {
+            bool shouldScanHistoricalLogs = false;
+
+            if (_dailyWeeklyContentOverlay == null || !_dailyWeeklyContentOverlay.IsLoaded)
+            {
+                _dailyWeeklyContentOverlay = new DailyWeeklyContentWindow(_settings);
+                shouldScanHistoricalLogs = true;
+                _dailyWeeklyContentOverlay.Closed += (_, _) =>
+                {
+                    _dailyWeeklyContentOverlay = null;
+                    try { DailyWeeklyVisibilityChanged?.Invoke(this, false); } catch { }
+                };
+            }
+
+            if (!_dailyWeeklyContentOverlay.IsVisible)
+            {
+                _dailyWeeklyContentOverlay.Owner = this;
+                ApplyStoredPosition(_dailyWeeklyContentOverlay, _settings.DailyWeeklyContentOverlayLeft, _settings.DailyWeeklyContentOverlayTop);
+                _dailyWeeklyContentOverlay.WindowStartupLocation = WindowStartupLocation.Manual;
+                _dailyWeeklyContentOverlay.Show();
+            }
+
+            _dailyWeeklyContentOverlay.Activate();
+            if (shouldScanHistoricalLogs)
+            {
+                _ = _dailyWeeklyContentOverlay.ScanHistoricalLogsAsync();
+            }
+            try { DailyWeeklyVisibilityChanged?.Invoke(this, true); } catch { }
+        }
+
+        private void CloseDailyWeeklyWindow()
+        {
+            try
+            {
+                _dailyWeeklyContentOverlay?.Close();
+            }
+            catch { }
+            finally
+            {
+                _dailyWeeklyContentOverlay = null;
+                try { DailyWeeklyVisibilityChanged?.Invoke(this, false); } catch { }
+            }
+        }
+
+        public void ToggleDailyWeeklyContentWindow()
+        {
+            _settings.ShowDailyWeeklyContentOverlay = !_settings.ShowDailyWeeklyContentOverlay;
+            PersistSettings();
+        }
+
+        public void ShowItemCalendarWindow()
+        {
+            if (_itemCalendarWindow == null || !_itemCalendarWindow.IsLoaded)
+            {
+                _itemCalendarWindow = new ItemCalendarWindow(_settings, _logAnalysisService);
+                _itemCalendarWindow.Closed += (_, _) =>
+                {
+                    _settings.ItemCalendarWindowLeft = _itemCalendarWindow?.Left;
+                    _settings.ItemCalendarWindowTop = _itemCalendarWindow?.Top;
+                    PersistSettings();
+                    _itemCalendarWindow = null;
+                    try { ItemCalendarVisibilityChanged?.Invoke(this, false); } catch { }
+                };
+                AppLogger.Info("Created item calendar window instance.");
+            }
+
+            if (!_itemCalendarWindow.IsVisible)
+            {
+                _itemCalendarWindow.Owner = this;
+                ApplyStoredPosition(_itemCalendarWindow, _settings.ItemCalendarWindowLeft, _settings.ItemCalendarWindowTop);
+                _itemCalendarWindow.WindowStartupLocation = WindowStartupLocation.Manual;
+                _itemCalendarWindow.Show();
+            }
+
+            _itemCalendarWindow.Activate();
+            _ = _itemCalendarWindow.LoadCurrentMonthAsync();
+            try { ItemCalendarVisibilityChanged?.Invoke(this, true); } catch { }
+        }
+
+        public void ToggleItemCalendarWindow()
+        {
+            if (_itemCalendarWindow?.IsVisible == true)
+            {
+                try
+                {
+                    _itemCalendarWindow.Close();
+                }
+                catch { }
+                return;
+            }
+
+            ShowItemCalendarWindow();
+        }
+
+        public void ShowAbaddonRoadSummaryWindow()
+        {
+            if (_abaddonRoadSummaryWindow == null || !_abaddonRoadSummaryWindow.IsLoaded)
+            {
+                _abaddonRoadSummaryWindow = new AbaddonRoadSummaryWindow(_settings, _logAnalysisService);
+                _abaddonRoadSummaryWindow.Closed += (_, _) =>
+                {
+                    _settings.AbaddonRoadSummaryWindowLeft = _abaddonRoadSummaryWindow?.Left;
+                    _settings.AbaddonRoadSummaryWindowTop = _abaddonRoadSummaryWindow?.Top;
+                    PersistSettings();
+                    _abaddonRoadSummaryWindow = null;
+                };
+                AppLogger.Info("Created AbaddonRoad summary window instance.");
+            }
+
+            if (!_abaddonRoadSummaryWindow.IsVisible)
+            {
+                _abaddonRoadSummaryWindow.Owner = this;
+                ApplyStoredPosition(_abaddonRoadSummaryWindow, _settings.AbaddonRoadSummaryWindowLeft, _settings.AbaddonRoadSummaryWindowTop);
+                _abaddonRoadSummaryWindow.WindowStartupLocation = WindowStartupLocation.Manual;
+                _abaddonRoadSummaryWindow.Show();
+            }
+
+            _abaddonRoadSummaryWindow.Activate();
+            _ = _abaddonRoadSummaryWindow.LoadCurrentWeekAsync();
+        }
+
+        public void RefreshAbaddonRoadSummaryWindow()
+        {
+            if (_abaddonRoadSummaryWindow?.IsVisible != true)
+                return;
+
+            _ = _abaddonRoadSummaryWindow.LoadCurrentWeekAsync();
+        }
         #endregion
 
         #region Resizing
@@ -1453,6 +1740,48 @@ namespace TWChatOverlay.Views
         #endregion
 
         #region Position Helpers
+
+        private sealed class AbaddonMonthlySourceFileInfo
+        {
+            public string FullPath { get; set; } = string.Empty;
+
+            public string FileName { get; set; } = string.Empty;
+
+            public long Length { get; set; }
+
+            public DateTime LastWriteTimeUtc { get; set; }
+        }
+
+        private sealed class AbaddonMonthlySourceSnapshot
+        {
+            public string FileName { get; set; } = string.Empty;
+
+            public long Length { get; set; }
+
+            public DateTime LastWriteTimeUtc { get; set; }
+        }
+
+        private sealed class AbaddonMonthlySyncState
+        {
+            public DateTime MonthStart { get; set; }
+
+            public string SourceSignature { get; set; } = string.Empty;
+
+            public long TotalEntryFeeMan { get; set; }
+
+            public long Low { get; set; }
+
+            public long Mid { get; set; }
+
+            public long High { get; set; }
+
+            public long Top { get; set; }
+
+            public DateTime SyncedUtc { get; set; }
+
+            public List<AbaddonMonthlySourceSnapshot> SourceFiles { get; set; } = new();
+        }
         #endregion
     }
 }
+

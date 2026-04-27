@@ -26,6 +26,7 @@ namespace TWChatOverlay.Services
         private readonly Dictionary<string, DateTime> _activeUntil = new(StringComparer.Ordinal);
         private readonly Dictionary<string, TimeSpan> _pausedRemaining = new(StringComparer.Ordinal);
         private readonly ChatSettings _settings;
+        private DateTime _lastBuffEndSoundAt = DateTime.MinValue;
 
         private bool _hasAnyActiveBuffs;
         private bool _hasRareBuffs;
@@ -139,6 +140,7 @@ namespace TWChatOverlay.Services
             DateTime now = DateTime.Now;
             var rare = new List<BuffDisplayItem>();
             var exp = new List<BuffDisplayItem>();
+            bool expiredBuffFound = false;
 
             foreach (var definition in _definitions)
             {
@@ -180,10 +182,16 @@ namespace TWChatOverlay.Services
             foreach (var expiredKey in _activeUntil.Where(x => x.Value <= now).Select(x => x.Key).ToList())
             {
                 _activeUntil.Remove(expiredKey);
+                expiredBuffFound = true;
                 if (expiredKey == MagicEyeKey)
                 {
                     DeleteState();
                 }
+            }
+
+            if (expiredBuffFound)
+            {
+                TryPlayBuffEndSound(now);
             }
 
             rare = rare.OrderBy(x => x.SortOrder).ThenBy(x => x.DisplayName, StringComparer.Ordinal).ToList();
@@ -195,6 +203,21 @@ namespace TWChatOverlay.Services
             HasRareBuffs = ActiveRareBuffs.Count > 0;
             HasExpBuffs = ActiveExpBuffs.Count > 0;
             HasAnyActiveBuffs = HasRareBuffs || HasExpBuffs;
+        }
+
+        private void TryPlayBuffEndSound(DateTime now)
+        {
+            if (!_settings.EnableBuffTrackerAlert || !_settings.EnableBuffTrackerEndSound)
+                return;
+
+            if (_lastBuffEndSoundAt != DateTime.MinValue &&
+                now - _lastBuffEndSoundAt < TimeSpan.FromSeconds(10))
+            {
+                return;
+            }
+
+            _lastBuffEndSoundAt = now;
+            NotificationService.PlayAlert("BuffCheck.wav");
         }
 
         private static void ReplaceCollection(ObservableCollection<BuffDisplayItem> target, IReadOnlyList<BuffDisplayItem> source)

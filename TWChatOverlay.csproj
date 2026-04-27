@@ -9,7 +9,7 @@
 	<UseWindowsForms>true</UseWindowsForms>
 	<CodePage>65001</CodePage>
 	<ApplicationIcon>favicon.ico</ApplicationIcon>
-	<Version>2.1.5</Version>
+	<Version>2.1.8</Version>
 	<AssemblyVersion>$(Version).0</AssemblyVersion>
 	<FileVersion>$(Version).0</FileVersion>
 	<InformationalVersion>$(Version)</InformationalVersion>
@@ -201,6 +201,8 @@
     <None Remove="Data\images\Item\응축된신조의가루.png" />
     <None Remove="Data\images\Item\코어가루.png" />
     <None Remove="Data\images\Item\코어결정.png" />
+    <None Remove="Data\images\MenuIcon\Calendar.png" />
+    <None Remove="Sound\BuffCheck.wav" />
   </ItemGroup>
 
   <ItemGroup>
@@ -802,6 +804,7 @@
     <Resource Include="Data\images\Etos\SE.jpg" />
     <Resource Include="Data\images\Etos\SW.jpg" />
     <Resource Include="Data\images\Etos\W.jpg" />
+    <Resource Include="Data\images\MenuIcon\Calendar.png" />
     <Resource Include="Data\images\MenuIcon\Chat.png" />
     <Resource Include="Data\images\MenuIcon\Core.png" />
     <Resource Include="Data\images\MenuIcon\DailyWeekly.png" />
@@ -811,6 +814,7 @@
     <Resource Include="Data\images\MenuIcon\Eta.png" />
     <Resource Include="Data\images\MenuIcon\Exit.png" />
     <Resource Include="Data\images\MenuIcon\Setting.png" />
+    <Resource Include="Sound\BuffCheck.wav" />
     <Resource Include="Sound\EXPBuffCheck.wav" />
     <Resource Include="Sound\EXPCheck.wav" />
     <Resource Include="Sound\Highlight.wav" />

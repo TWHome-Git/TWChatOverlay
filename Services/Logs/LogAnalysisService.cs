@@ -66,6 +66,9 @@ namespace TWChatOverlay.Services
         public IReadOnlyList<string> ResolveBufferTabs(LogParser.ParseResult parsed)
         {
             var tabs = new List<string>(2);
+            if (parsed.Category is ChatCategory.NormalSelf or ChatCategory.Normal)
+                tabs.Add("General");
+
             if (LogParser.IsVisible(parsed.Category, _settings))
                 tabs.Add("Basic");
 

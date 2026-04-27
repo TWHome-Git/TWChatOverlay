@@ -43,8 +43,10 @@ namespace TWChatOverlay.Views
                     _subscribedMainWindow = main;
                     try { main.OverlayVisibilityChanged += Main_OverlayVisibilityChanged; } catch { }
                     try { main.DailyWeeklyVisibilityChanged += Main_DailyWeeklyVisibilityChanged; } catch { }
+                    try { main.ItemCalendarVisibilityChanged += Main_ItemCalendarVisibilityChanged; } catch { }
                     try { SetButtonActive(BtnChat, main.IsOverlayVisible); } catch { }
                     try { SetButtonActive(BtnDailyWeekly, main.IsDailyWeeklyVisible); } catch { }
+                    try { SetButtonActive(BtnCalendar, main.IsItemCalendarVisible); } catch { }
                 }
             }
             catch (Exception ex) { AppLogger.Warn("Failed to subscribe menu window to main window state.", ex); }
@@ -74,6 +76,11 @@ namespace TWChatOverlay.Views
             try { SetButtonActive(BtnDailyWeekly, isVisible); } catch { }
         }
 
+        private void Main_ItemCalendarVisibilityChanged(object? sender, bool isVisible)
+        {
+            try { SetButtonActive(BtnCalendar, isVisible); } catch { }
+        }
+
         private void DragArea_MouseLeftButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
         {
             try
@@ -101,6 +108,7 @@ namespace TWChatOverlay.Views
                     {
                         _subscribedMainWindow.OverlayVisibilityChanged -= Main_OverlayVisibilityChanged;
                         _subscribedMainWindow.DailyWeeklyVisibilityChanged -= Main_DailyWeeklyVisibilityChanged;
+                        _subscribedMainWindow.ItemCalendarVisibilityChanged -= Main_ItemCalendarVisibilityChanged;
                     }
                 }
                 catch { }
@@ -173,6 +181,27 @@ namespace TWChatOverlay.Views
                     catch (Exception ex)
                     {
                         try { MessageBox.Show($"DailyWeekly 창을 열 수 없습니다:\n{ex.Message}", "오류", MessageBoxButton.OK, MessageBoxImage.Error); } catch { }
+                    }
+                    break;
+                case "BtnCalendar":
+                    try
+                    {
+                        foreach (Window w in Application.Current.Windows)
+                        {
+                            if (w is MainWindow mainWindow)
+                            {
+                                try
+                                {
+                                    mainWindow.ToggleItemCalendarWindow();
+                                }
+                                catch { }
+                                return;
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        try { MessageBox.Show($"달력 창을 열 수 없습니다:\n{ex.Message}", "오류", MessageBoxButton.OK, MessageBoxImage.Error); } catch { }
                     }
                     break;
                 case "BtnAddon":

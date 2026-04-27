@@ -13,6 +13,7 @@ namespace TWChatOverlay.Services
         private readonly Dictionary<string, List<LogParser.ParseResult>> _buffers = new()
         {
             { "Basic", new List<LogParser.ParseResult>() },
+            { "General", new List<LogParser.ParseResult>() },
             { "Team", new List<LogParser.ParseResult>() },
             { "Club", new List<LogParser.ParseResult>() },
             { "Shout", new List<LogParser.ParseResult>() },

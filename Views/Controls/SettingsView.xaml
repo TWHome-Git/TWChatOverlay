@@ -149,16 +149,6 @@
                                                       Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
                                             <TextBlock Text="디버그 로그를 활성화하면 Debug.log 파일에 로그가 기록됩니다."
                                                        Style="{StaticResource HintTextStyle}"/>
-                                            <TextBlock Text="{Binding LogLatencyDisplay}"
-                                                       Foreground="#9CC8FF"
-                                                       FontSize="12"
-                                                       Margin="0,8,0,0"/>
-                                            <CheckBox Content="성능 점검 모드"
-                                                      IsChecked="{Binding EnablePerformanceDiagnostics}"
-                                                      Margin="0,10,0,0"
-                                                      Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
-                                            <TextBlock Text="활성화 시 15초마다 Performance.log에 처리량/지연/드롭 요약을 기록합니다."
-                                                       Style="{StaticResource HintTextStyle}"/>
                                         </StackPanel>
                                     </Border>
 
