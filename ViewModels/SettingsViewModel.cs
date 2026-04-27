@@ -23,9 +23,6 @@ namespace TWChatOverlay.ViewModels
         private readonly Action? _onSettingsReset;
         private readonly Action? _onHotKeysChanged;
         private int _selectedPresetNumber = 1;
-        private long _logLatencySampleCount;
-        private double _averageLogLatencyMs;
-        private double _lastLogLatencyMs;
 
         public ICommand ColorPickCommand { get; }
         public ICommand InitSettingsCommand { get; }
@@ -79,33 +76,6 @@ namespace TWChatOverlay.ViewModels
                     OnPropertyChanged();
                     SaveSettings();
                 }
-            }
-        }
-
-        public bool EnablePerformanceDiagnostics
-        {
-            get => _settings.EnablePerformanceDiagnostics;
-            set
-            {
-                if (_settings.EnablePerformanceDiagnostics != value)
-                {
-                    _settings.EnablePerformanceDiagnostics = value;
-                    OnPropertyChanged();
-                    SaveSettings();
-                }
-            }
-        }
-
-        public string LogLatencyDisplay
-        {
-            get
-            {
-                if (_logLatencySampleCount <= 0)
-                {
-                    return "실시간 평균 지연: 측정 중...";
-                }
-
-                return $"실시간 평균 지연: {Math.Round(_averageLogLatencyMs):N0}ms (현재 {Math.Round(_lastLogLatencyMs):N0}ms / 샘플 {_logLatencySampleCount:N0}개)";
             }
         }
 
@@ -505,7 +475,6 @@ namespace TWChatOverlay.ViewModels
             OnPropertyChanged(nameof(ShowSystem));
             OnPropertyChanged(nameof(AlwaysVisible));
             OnPropertyChanged(nameof(EnableDebugLogging));
-            OnPropertyChanged(nameof(EnablePerformanceDiagnostics));
             OnPropertyChanged(nameof(NormalColor));
             OnPropertyChanged(nameof(TeamColor));
             OnPropertyChanged(nameof(ClubColor));
@@ -619,28 +588,6 @@ namespace TWChatOverlay.ViewModels
                 try { ConfigService.SaveDeferred(_settings); }
                 catch (Exception ex) { AppLogger.Warn("Fallback settings save failed.", ex); }
             }
-        }
-
-        public void UpdateLogLatency(double delayMs)
-        {
-            if (double.IsNaN(delayMs) || double.IsInfinity(delayMs) || delayMs < 0)
-            {
-                return;
-            }
-
-            _logLatencySampleCount++;
-            _lastLogLatencyMs = delayMs;
-
-            if (_logLatencySampleCount == 1)
-            {
-                _averageLogLatencyMs = delayMs;
-            }
-            else
-            {
-                _averageLogLatencyMs += (delayMs - _averageLogLatencyMs) / _logLatencySampleCount;
-            }
-
-            OnPropertyChanged(nameof(LogLatencyDisplay));
         }
 
         /// <summary>

@@ -1,6 +1,5 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Windows.Threading;
 
 namespace TWChatOverlay.Services
@@ -19,16 +18,14 @@ namespace TWChatOverlay.Services
 
         private readonly struct QueuedLogItem
         {
-            public QueuedLogItem(string html, bool isRealTime, long enqueuedAtTicks)
+            public QueuedLogItem(string html, bool isRealTime)
             {
                 Html = html;
                 IsRealTime = isRealTime;
-                EnqueuedAtTicks = enqueuedAtTicks;
             }
 
             public string Html { get; }
             public bool IsRealTime { get; }
-            public long EnqueuedAtTicks { get; }
         }
 
         /// <summary>
@@ -46,34 +43,24 @@ namespace TWChatOverlay.Services
         /// </summary>
         public void Enqueue(string html, bool isRealTime, Action<IReadOnlyList<(string Html, bool IsRealTime)>> onBatchReady)
         {
-            if (string.IsNullOrWhiteSpace(html) || onBatchReady == null) return;
+            if (string.IsNullOrWhiteSpace(html) || onBatchReady == null)
+                return;
 
             bool shouldSchedule = false;
-            int droppedCount = 0;
-            int queueLength = 0;
             lock (_lockObj)
             {
                 while (_queue.Count >= _maxQueueSize)
                 {
                     _queue.Dequeue();
-                    droppedCount++;
                 }
 
-                _queue.Enqueue(new QueuedLogItem(html, isRealTime, Stopwatch.GetTimestamp()));
-                queueLength = _queue.Count;
+                _queue.Enqueue(new QueuedLogItem(html, isRealTime));
                 if (!_isScheduled)
                 {
                     _isScheduled = true;
                     shouldSchedule = true;
                 }
             }
-
-            if (droppedCount > 0)
-            {
-                PerformanceDiagnosticsService.RecordUiQueueDrop(droppedCount);
-            }
-
-            PerformanceDiagnosticsService.RecordUiQueueLength(queueLength);
 
             if (shouldSchedule)
             {
@@ -84,11 +71,7 @@ namespace TWChatOverlay.Services
         private void Flush(Action<IReadOnlyList<(string Html, bool IsRealTime)>> onBatchReady)
         {
             List<(string Html, bool IsRealTime)> batch = new(_batchSize);
-            long totalDelayTicks = 0;
-            long maxDelayTicks = 0;
             bool hasMore;
-            int queueLengthAfterFlush;
-            long nowTicks = Stopwatch.GetTimestamp();
 
             lock (_lockObj)
             {
@@ -96,34 +79,16 @@ namespace TWChatOverlay.Services
                 {
                     var item = _queue.Dequeue();
                     batch.Add((item.Html, item.IsRealTime));
-
-                    long delayTicks = nowTicks - item.EnqueuedAtTicks;
-                    if (delayTicks < 0)
-                    {
-                        delayTicks = 0;
-                    }
-
-                    totalDelayTicks += delayTicks;
-                    if (delayTicks > maxDelayTicks)
-                    {
-                        maxDelayTicks = delayTicks;
-                    }
                 }
 
                 hasMore = _queue.Count > 0;
-                queueLengthAfterFlush = _queue.Count;
                 _isScheduled = hasMore;
             }
 
             if (batch.Count > 0)
             {
-                double avgDelayMs = totalDelayTicks * 1000.0 / Stopwatch.Frequency / batch.Count;
-                double maxDelayMs = maxDelayTicks * 1000.0 / Stopwatch.Frequency;
-                PerformanceDiagnosticsService.RecordUiBatchProcessed(batch.Count, avgDelayMs, maxDelayMs);
                 onBatchReady(batch);
             }
-
-            PerformanceDiagnosticsService.RecordUiQueueLength(queueLengthAfterFlush);
 
             if (hasMore)
             {

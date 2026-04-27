@@ -54,6 +54,7 @@ namespace TWChatOverlay
             System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
             EtaProfileResolver.InitializeAsync();
             BlacklistService.Initialize();
+            _ = RecaptureSupplyAlertService.PreloadAsync();
             base.OnStartup(e);
             AppLogger.Info("Core services initialized.");
 
@@ -198,6 +199,16 @@ namespace TWChatOverlay
                     {
                         cfg.DailyWeeklyContentOverlayLeft = dw.Left;
                         cfg.DailyWeeklyContentOverlayTop = dw.Top;
+                    }
+                    else if (w is Views.ItemCalendarWindow itemCalendar)
+                    {
+                        cfg.ItemCalendarWindowLeft = itemCalendar.Left;
+                        cfg.ItemCalendarWindowTop = itemCalendar.Top;
+                    }
+                    else if (w is Views.AbaddonRoadSummaryWindow abaddon)
+                    {
+                        cfg.AbaddonRoadSummaryWindowLeft = abaddon.Left;
+                        cfg.AbaddonRoadSummaryWindowTop = abaddon.Top;
                     }
                 }
                 TWChatOverlay.Services.ConfigService.Save(cfg);

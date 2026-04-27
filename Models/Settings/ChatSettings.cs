@@ -44,7 +44,9 @@ namespace TWChatOverlay.Models
         private bool _useCustomDropItemFilter = false;
         private string _customDropItemJson = string.Empty;
         private bool _enableBuffTrackerAlert = false;
+        private bool _enableBuffTrackerEndSound = false;
         private bool _showBuffTrackerWindow = false;
+        private double _buffTrackerEndSoundVolume = 1.0;
         private double _itemDropAlertVolume = 0.1;
         private double _highlightAlertVolume = 1.0;
         private double _magicCircleAlertVolume = 1.0;
@@ -52,7 +54,6 @@ namespace TWChatOverlay.Models
         private double _bossAlertVolume = 1.0;
         private bool _alwaysVisible = false;
         private bool _enableDebugLogging = false;
-        private bool _enablePerformanceDiagnostics = false;
         private string _exitHotKey = "";
         private string _toggleOverlayHotKey = "";
         private string _toggleAddonHotKey = "";
@@ -71,6 +72,12 @@ namespace TWChatOverlay.Models
         private double? _itemDropWindowTop = 0.0;
         private double? _buffTrackerWindowLeft = 0.0;
         private double? _buffTrackerWindowTop = 0.0;
+        private double? _itemCalendarWindowLeft = 0.0;
+        private double? _itemCalendarWindowTop = 0.0;
+        private double? _abaddonRoadSummaryWindowLeft = 0.0;
+        private double? _abaddonRoadSummaryWindowTop = 0.0;
+        private double? _recaptureSupplyWindowLeft = null;
+        private double? _recaptureSupplyWindowTop = null;
         private double? _experienceLimitAlertWindowLeft = null;
         private double? _experienceLimitAlertWindowTop = null;
         private double? _dungeonCountDisplayWindowLeft = null;
@@ -132,8 +139,23 @@ namespace TWChatOverlay.Models
         [JsonPropertyOrder(17)]
         public bool EnableBuffTrackerAlert { get => _enableBuffTrackerAlert; set { _enableBuffTrackerAlert = value; OnPropertyChanged(); } }
         [JsonPropertyOrder(18)]
-        public bool ShowBuffTrackerWindow { get => _showBuffTrackerWindow; set { _showBuffTrackerWindow = value; OnPropertyChanged(); } }
+        public bool EnableBuffTrackerEndSound { get => _enableBuffTrackerEndSound; set { _enableBuffTrackerEndSound = value; OnPropertyChanged(); } }
         [JsonPropertyOrder(19)]
+        public double BuffTrackerEndSoundVolume
+        {
+            get => _buffTrackerEndSoundVolume;
+            set
+            {
+                double clamped = ClampVolume(value);
+                if (Math.Abs(_buffTrackerEndSoundVolume - clamped) < 0.0001) return;
+                _buffTrackerEndSoundVolume = clamped;
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(BuffTrackerEndSoundVolumePercent));
+            }
+        }
+        [JsonPropertyOrder(20)]
+        public bool ShowBuffTrackerWindow { get => _showBuffTrackerWindow; set { _showBuffTrackerWindow = value; OnPropertyChanged(); } }
+        [JsonPropertyOrder(21)]
         public double ItemDropAlertVolume
         {
             get => _itemDropAlertVolume;
@@ -146,7 +168,7 @@ namespace TWChatOverlay.Models
                 OnPropertyChanged(nameof(ItemDropAlertVolumePercent));
             }
         }
-        [JsonPropertyOrder(19)]
+        [JsonPropertyOrder(22)]
         public double HighlightAlertVolume
         {
             get => _highlightAlertVolume;
@@ -159,7 +181,7 @@ namespace TWChatOverlay.Models
                 OnPropertyChanged(nameof(HighlightAlertVolumePercent));
             }
         }
-        [JsonPropertyOrder(20)]
+        [JsonPropertyOrder(23)]
         public double MagicCircleAlertVolume
         {
             get => _magicCircleAlertVolume;
@@ -172,7 +194,7 @@ namespace TWChatOverlay.Models
                 OnPropertyChanged(nameof(MagicCircleAlertVolumePercent));
             }
         }
-        [JsonPropertyOrder(21)]
+        [JsonPropertyOrder(24)]
         public double ExpBuffAlertVolume
         {
             get => _expBuffAlertVolume;
@@ -185,7 +207,7 @@ namespace TWChatOverlay.Models
                 OnPropertyChanged(nameof(ExpBuffAlertVolumePercent));
             }
         }
-        [JsonPropertyOrder(22)]
+        [JsonPropertyOrder(25)]
         public double BossAlertVolume
         {
             get => _bossAlertVolume;
@@ -198,35 +220,42 @@ namespace TWChatOverlay.Models
                 OnPropertyChanged(nameof(BossAlertVolumePercent));
             }
         }
-        [JsonPropertyOrder(23)]
+        [JsonPropertyOrder(26)]
+        [JsonIgnore]
+        public double BuffTrackerEndSoundVolumePercent
+        {
+            get => Math.Round(_buffTrackerEndSoundVolume * 100.0, 0);
+            set => BuffTrackerEndSoundVolume = Math.Max(0.0, Math.Min(100.0, value)) / 100.0;
+        }
+        [JsonPropertyOrder(27)]
         [JsonIgnore]
         public double ItemDropAlertVolumePercent
         {
             get => Math.Round(_itemDropAlertVolume * 1000.0, 0);
             set => ItemDropAlertVolume = Math.Max(0.0, Math.Min(100.0, value)) / 1000.0;
         }
-        [JsonPropertyOrder(24)]
+        [JsonPropertyOrder(28)]
         [JsonIgnore]
         public double HighlightAlertVolumePercent
         {
             get => Math.Round(_highlightAlertVolume * 100.0, 0);
             set => HighlightAlertVolume = Math.Max(0.0, Math.Min(100.0, value)) / 100.0;
         }
-        [JsonPropertyOrder(22)]
+        [JsonPropertyOrder(29)]
         [JsonIgnore]
         public double MagicCircleAlertVolumePercent
         {
             get => Math.Round(_magicCircleAlertVolume * 100.0, 0);
             set => MagicCircleAlertVolume = Math.Max(0.0, Math.Min(100.0, value)) / 100.0;
         }
-        [JsonPropertyOrder(23)]
+        [JsonPropertyOrder(30)]
         [JsonIgnore]
         public double ExpBuffAlertVolumePercent
         {
             get => Math.Round(_expBuffAlertVolume * 100.0, 0);
             set => ExpBuffAlertVolume = Math.Max(0.0, Math.Min(100.0, value)) / 100.0;
         }
-        [JsonPropertyOrder(24)]
+        [JsonPropertyOrder(31)]
         [JsonIgnore]
         public double BossAlertVolumePercent
         {
@@ -290,9 +319,6 @@ namespace TWChatOverlay.Models
         public bool AlwaysVisible { get => _alwaysVisible; set { _alwaysVisible = value; OnPropertyChanged(); } }
         [JsonIgnore]
         public bool EnableDebugLogging { get => _enableDebugLogging; set { _enableDebugLogging = value; OnPropertyChanged(); } }
-        [JsonPropertyOrder(29)]
-        public bool EnablePerformanceDiagnostics { get => _enablePerformanceDiagnostics; set { _enablePerformanceDiagnostics = value; OnPropertyChanged(); } }
-
         [JsonPropertyOrder(20)]
         public string ChatLogFolderPath
         {
@@ -577,6 +603,78 @@ namespace TWChatOverlay.Models
         }
 
         [JsonPropertyOrder(62)]
+        public double? ItemCalendarWindowLeft
+        {
+            get => _itemCalendarWindowLeft;
+            set
+            {
+                if (_itemCalendarWindowLeft == value) return;
+                _itemCalendarWindowLeft = value;
+                OnPropertyChanged();
+            }
+        }
+
+        [JsonPropertyOrder(63)]
+        public double? ItemCalendarWindowTop
+        {
+            get => _itemCalendarWindowTop;
+            set
+            {
+                if (_itemCalendarWindowTop == value) return;
+                _itemCalendarWindowTop = value;
+                OnPropertyChanged();
+            }
+        }
+
+        [JsonPropertyOrder(64)]
+        public double? AbaddonRoadSummaryWindowLeft
+        {
+            get => _abaddonRoadSummaryWindowLeft;
+            set
+            {
+                if (_abaddonRoadSummaryWindowLeft == value) return;
+                _abaddonRoadSummaryWindowLeft = value;
+                OnPropertyChanged();
+            }
+        }
+
+        [JsonPropertyOrder(65)]
+        public double? AbaddonRoadSummaryWindowTop
+        {
+            get => _abaddonRoadSummaryWindowTop;
+            set
+            {
+                if (_abaddonRoadSummaryWindowTop == value) return;
+                _abaddonRoadSummaryWindowTop = value;
+                OnPropertyChanged();
+            }
+        }
+
+        [JsonPropertyOrder(66)]
+        public double? RecaptureSupplyWindowLeft
+        {
+            get => _recaptureSupplyWindowLeft;
+            set
+            {
+                if (_recaptureSupplyWindowLeft == value) return;
+                _recaptureSupplyWindowLeft = value;
+                OnPropertyChanged();
+            }
+        }
+
+        [JsonPropertyOrder(67)]
+        public double? RecaptureSupplyWindowTop
+        {
+            get => _recaptureSupplyWindowTop;
+            set
+            {
+                if (_recaptureSupplyWindowTop == value) return;
+                _recaptureSupplyWindowTop = value;
+                OnPropertyChanged();
+            }
+        }
+
+        [JsonPropertyOrder(68)]
         public double? ExperienceLimitAlertWindowLeft
         {
             get => _experienceLimitAlertWindowLeft;
@@ -588,7 +686,7 @@ namespace TWChatOverlay.Models
             }
         }
 
-        [JsonPropertyOrder(63)]
+        [JsonPropertyOrder(69)]
         public double? ExperienceLimitAlertWindowTop
         {
             get => _experienceLimitAlertWindowTop;
@@ -600,7 +698,7 @@ namespace TWChatOverlay.Models
             }
         }
 
-        [JsonPropertyOrder(64)]
+        [JsonPropertyOrder(70)]
         public double? DungeonCountDisplayWindowLeft
         {
             get => _dungeonCountDisplayWindowLeft;
@@ -612,7 +710,7 @@ namespace TWChatOverlay.Models
             }
         }
 
-        [JsonPropertyOrder(65)]
+        [JsonPropertyOrder(71)]
         public double? DungeonCountDisplayWindowTop
         {
             get => _dungeonCountDisplayWindowTop;
@@ -636,21 +734,21 @@ namespace TWChatOverlay.Models
                 OnPropertyChanged(nameof(BuffTrackerWindowTop));
         }
 
-        [JsonPropertyOrder(62)]
+        [JsonPropertyOrder(70)]
         public WindowPositionPreset Preset1
         {
             get => _preset1;
             set { _preset1 = value; OnPropertyChanged(); }
         }
 
-        [JsonPropertyOrder(63)]
+        [JsonPropertyOrder(71)]
         public WindowPositionPreset Preset2
         {
             get => _preset2;
             set { _preset2 = value; OnPropertyChanged(); }
         }
 
-        [JsonPropertyOrder(64)]
+        [JsonPropertyOrder(72)]
         public WindowPositionPreset Preset3
         {
             get => _preset3;

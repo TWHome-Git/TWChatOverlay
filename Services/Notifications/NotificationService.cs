@@ -99,6 +99,7 @@ namespace TWChatOverlay.Services
                             "magiccircle.wav" => Math.Max(0.0, Math.Min(1.0, settings.MagicCircleAlertVolume)),
                             "expbuffcheck.wav" => Math.Max(0.0, Math.Min(1.0, settings.ExpBuffAlertVolume)),
                             "expcheck.wav" => Math.Max(0.0, Math.Min(1.0, settings.ExpBuffAlertVolume)),
+                            "buffcheck.wav" => Math.Max(0.0, Math.Min(1.0, settings.BuffTrackerEndSoundVolume)),
                             "arkan.wav" => Math.Max(0.0, Math.Min(1.0, settings.BossAlertVolume)),
                             "arkan_before1.wav" => Math.Max(0.0, Math.Min(1.0, settings.BossAlertVolume)),
                             "arkan_before3.wav" => Math.Max(0.0, Math.Min(1.0, settings.BossAlertVolume)),

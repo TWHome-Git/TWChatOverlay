@@ -47,11 +47,13 @@ namespace TWChatOverlay.ViewModels
         private string _customDropItemJson = string.Empty;
         private string _customDropItemStatus = string.Empty;
         private bool _enableBuffTrackerAlert;
+        private bool _enableBuffTrackerEndSound;
         private bool _showBuffTrackerWindow;
         private double _itemDropAlertVolumePercent;
         private double _highlightAlertVolumePercent;
         private double _magicCircleAlertVolumePercent;
         private double _expBuffAlertVolumePercent;
+        private double _buffTrackerEndSoundVolumePercent;
         private double _bossAlertVolumePercent;
 
         public ObservableCollection<BossAlarmCardViewModel> BossAlarmCards { get; } = new();
@@ -199,6 +201,12 @@ namespace TWChatOverlay.ViewModels
             set => SetSetting(ref _enableBuffTrackerAlert, value, (settings, newValue) => settings.EnableBuffTrackerAlert = newValue);
         }
 
+        public bool EnableBuffTrackerEndSound
+        {
+            get => _enableBuffTrackerEndSound;
+            set => SetSetting(ref _enableBuffTrackerEndSound, value, (settings, newValue) => settings.EnableBuffTrackerEndSound = newValue);
+        }
+
         public bool ShowBuffTrackerWindow
         {
             get => _showBuffTrackerWindow;
@@ -227,6 +235,12 @@ namespace TWChatOverlay.ViewModels
         {
             get => _expBuffAlertVolumePercent;
             set => SetSetting(ref _expBuffAlertVolumePercent, value, (settings, newValue) => settings.ExpBuffAlertVolumePercent = newValue);
+        }
+
+        public double BuffTrackerEndSoundVolumePercent
+        {
+            get => _buffTrackerEndSoundVolumePercent;
+            set => SetSetting(ref _buffTrackerEndSoundVolumePercent, value, (settings, newValue) => settings.BuffTrackerEndSoundVolumePercent = newValue);
         }
 
         public double BossAlertVolumePercent
@@ -269,11 +283,13 @@ namespace TWChatOverlay.ViewModels
                 ? "기본 GitHub 드롭 테이블을 사용 중입니다."
                 : "사용자 정의 필터를 사용 중입니다.";
             _enableBuffTrackerAlert = _settings.EnableBuffTrackerAlert;
+            _enableBuffTrackerEndSound = _settings.EnableBuffTrackerEndSound;
             _showBuffTrackerWindow = _settings.ShowBuffTrackerWindow;
             _itemDropAlertVolumePercent = _settings.ItemDropAlertVolumePercent;
             _highlightAlertVolumePercent = _settings.HighlightAlertVolumePercent;
             _magicCircleAlertVolumePercent = _settings.MagicCircleAlertVolumePercent;
             _expBuffAlertVolumePercent = _settings.ExpBuffAlertVolumePercent;
+            _buffTrackerEndSoundVolumePercent = _settings.BuffTrackerEndSoundVolumePercent;
             _bossAlertVolumePercent = _settings.BossAlertVolumePercent;
 
             ReplaceBossAlarmCards(_bossAlarmCardProvider.CreateCards());
@@ -377,7 +393,7 @@ namespace TWChatOverlay.ViewModels
                 var customNames = new HashSet<string>(customItems.Select(item => item.Name), StringComparer.OrdinalIgnoreCase);
                 foreach (var item in defaultItems)
                 {
-                    var entry = new DropItemFilterEntry(item.Name, item.Grade);
+                    var entry = new DropItemFilterEntry(item.Name, item.Grade, item.Abbreviation);
                     if (customNames.Contains(item.Name))
                         continue;
                     DefaultDropItems.Add(entry);
@@ -495,7 +511,7 @@ namespace TWChatOverlay.ViewModels
                 Items = entries
                     .OrderBy(item => GetGradeSortOrder(item.Grade))
                     .ThenBy(item => item.Name, StringComparer.CurrentCultureIgnoreCase)
-                    .Select(item => new DropItemEditorRow { Name = item.Name, Grade = item.Grade.ToString() })
+                    .Select(item => new DropItemEditorRow { Name = item.Name, Grade = item.Grade.ToString(), Abbreviation = item.Abbreviation })
                     .ToList()
             };
 
@@ -523,7 +539,7 @@ namespace TWChatOverlay.ViewModels
                     if (string.IsNullOrWhiteSpace(item.Name))
                         continue;
 
-                    result.Add(new DropItemFilterEntry(item.Name.Trim(), ParseGrade(item.Grade)));
+                    result.Add(new DropItemFilterEntry(item.Name.Trim(), ParseGrade(item.Grade), item.Abbreviation));
                 }
             }
             catch
@@ -575,6 +591,9 @@ namespace TWChatOverlay.ViewModels
 
             [JsonPropertyName("grade")]
             public string Grade { get; set; } = "Normal";
+
+            [JsonPropertyName("abbr")]
+            public string? Abbreviation { get; set; }
         }
     }
 
@@ -582,12 +601,14 @@ namespace TWChatOverlay.ViewModels
     {
         public string Name { get; }
         public ItemDropGrade Grade { get; }
+        public string? Abbreviation { get; }
         public Brush Foreground { get; }
 
-        public DropItemFilterEntry(string name, ItemDropGrade grade)
+        public DropItemFilterEntry(string name, ItemDropGrade grade, string? abbreviation = null)
         {
             Name = name;
             Grade = grade;
+            Abbreviation = string.IsNullOrWhiteSpace(abbreviation) ? null : abbreviation.Trim();
             Foreground = grade switch
             {
                 ItemDropGrade.Rare => new SolidColorBrush(Color.FromRgb(0xFF, 0xD8, 0x4A)),

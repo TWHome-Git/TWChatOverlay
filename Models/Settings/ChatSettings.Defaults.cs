@@ -40,7 +40,9 @@ namespace TWChatOverlay.Models
             _useCustomDropItemFilter = false;
             _customDropItemJson = string.Empty;
             _enableBuffTrackerAlert = false;
+            _enableBuffTrackerEndSound = false;
             _showBuffTrackerWindow = false;
+            _buffTrackerEndSoundVolume = 1.0;
             _itemDropAlertVolume = 0.1;
             _highlightAlertVolume = 1.0;
             _magicCircleAlertVolume = 1.0;
@@ -48,7 +50,6 @@ namespace TWChatOverlay.Models
             _bossAlertVolume = 1.0;
             _alwaysVisible = false;
             _enableDebugLogging = false;
-            _enablePerformanceDiagnostics = false;
             _exitHotKey = "";
             _toggleOverlayHotKey = "";
             _toggleAddonHotKey = "";
@@ -67,6 +68,12 @@ namespace TWChatOverlay.Models
             _itemDropWindowTop = 0.0;
             _buffTrackerWindowLeft = 0.0;
             _buffTrackerWindowTop = 0.0;
+            _itemCalendarWindowLeft = 0.0;
+            _itemCalendarWindowTop = 0.0;
+            _abaddonRoadSummaryWindowLeft = 0.0;
+            _abaddonRoadSummaryWindowTop = 0.0;
+            _recaptureSupplyWindowLeft = null;
+            _recaptureSupplyWindowTop = null;
             _experienceLimitAlertWindowLeft = null;
             _experienceLimitAlertWindowTop = null;
             _dungeonCountDisplayWindowLeft = null;

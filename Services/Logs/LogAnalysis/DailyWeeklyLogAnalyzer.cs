@@ -249,6 +249,12 @@ namespace TWChatOverlay.Services.LogAnalysis
             return TryParseFirstGroup(match, out count);
         }
 
+        public static bool TryMatchAbaddonRoadCount(string text, out int count)
+        {
+            var match = AbaddonCountRegex.Match(text);
+            return TryParseFirstGroup(match, out count);
+        }
+
         public static bool TryUpdateDetail(DailyWeeklyContentLog item, string text, out int? count)
         {
             count = null;
