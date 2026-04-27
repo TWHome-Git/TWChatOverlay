@@ -33,6 +33,48 @@ namespace TWChatOverlay.Services
             }
         }
 
+        public static IReadOnlyList<ItemLogSnapshotEntry> RebuildMonthlySnapshots(
+            DateTime monthStart,
+            string? chatLogFolderPath,
+            LogAnalysisService logAnalysisService)
+        {
+            ArgumentNullException.ThrowIfNull(logAnalysisService);
+
+            lock (SyncRoot)
+            {
+                var data = MonthlyReadableLogExportService.RebuildMonth(monthStart, chatLogFolderPath, logAnalysisService);
+                return data.ItemSnapshots;
+            }
+        }
+
+        public static IReadOnlyList<ItemLogSnapshotEntry> RefreshCurrentMonthFromTodayOnly(
+            DateTime monthStart,
+            string? chatLogFolderPath,
+            LogAnalysisService logAnalysisService)
+        {
+            ArgumentNullException.ThrowIfNull(logAnalysisService);
+
+            lock (SyncRoot)
+            {
+                var data = MonthlyReadableLogExportService.RefreshCurrentMonthFromTodayOnly(monthStart, chatLogFolderPath, logAnalysisService);
+                return data.ItemSnapshots;
+            }
+        }
+
+        public static IReadOnlyList<ItemLogSnapshotEntry> RefreshCurrentMonthIncremental(
+            DateTime monthStart,
+            string? chatLogFolderPath,
+            LogAnalysisService logAnalysisService)
+        {
+            ArgumentNullException.ThrowIfNull(logAnalysisService);
+
+            lock (SyncRoot)
+            {
+                var data = MonthlyReadableLogExportService.RefreshCurrentMonthIncremental(monthStart, chatLogFolderPath, logAnalysisService);
+                return data.ItemSnapshots;
+            }
+        }
+
         public static void AppendMonthlySnapshot(DateTime date, LogParser.ParseResult itemLog)
         {
             if (itemLog == null)
@@ -44,6 +86,17 @@ namespace TWChatOverlay.Services
             lock (SyncRoot)
             {
                 MonthlyReadableLogExportService.AppendItemSnapshot(date, itemLog);
+            }
+        }
+
+        public static void AppendMonthlySnapshots(DateTime monthStart, IReadOnlyList<ItemLogSnapshotEntry> snapshots)
+        {
+            if (snapshots == null || snapshots.Count == 0)
+                return;
+
+            lock (SyncRoot)
+            {
+                MonthlyReadableLogExportService.AppendItemSnapshots(monthStart, snapshots);
             }
         }
 
