@@ -72,6 +72,8 @@ namespace TWChatOverlay.Views
         private bool _isHistoricalAbaddonWarmupRunning;
         private bool _isRefreshLogDisplayScheduled;
         private AbaddonWeeklySummary _abaddonWeeklySummary = new();
+        private readonly object _pendingMonthlyItemSnapshotsLock = new();
+        private readonly List<ItemLogSnapshotEntry> _pendingMonthlyItemSnapshots = new();
 
         private static readonly Regex AbaddonEntryFeeRegex = new(
             @"입장료\s*(?<value>[\d,]+)\s*만\s*Seed",
@@ -152,7 +154,6 @@ namespace TWChatOverlay.Views
             ApplyItemDropHelperWindowSettings();
             ApplyBuffTrackerWindowSettings();
             ApplyBuffTrackerHelperWindowSettings();
-            StartHistoricalItemWarmup();
             StartHistoricalAbaddonWarmup();
 
             Dispatcher.BeginInvoke(new Action(() => InitializeNativeServices()), DispatcherPriority.Loaded);
@@ -171,6 +172,7 @@ namespace TWChatOverlay.Views
             try { BuffTrackerWindow.Instance?.Close(); } catch { }
             try { BuffTrackerHelperWindow.Instance?.Close(); } catch { }
             try { _abaddonRoadSummaryWindow?.Close(); } catch { }
+            try { FlushPendingMonthlyItemSnapshots(); } catch { }
             try { _logService?.Dispose(); } catch { }
             try { _expService?.Stop(); } catch { }
             try { _buffTrackerService?.Dispose(); } catch { }
@@ -363,6 +365,7 @@ namespace TWChatOverlay.Views
             }
 
             Task.Run(() => RestoreExperienceEssenceAlertState());
+            StartHistoricalItemWarmup();
         }
 
         private void StickyService_AuxiliaryWindowVisibilityChanged(bool canShow)
@@ -438,11 +441,12 @@ namespace TWChatOverlay.Views
 
             if (analysis.HasTrackedItemDrop)
             {
-                ItemMonthlySnapshotService.AppendMonthlySnapshot(DateTime.Today, parseResult);
                 if (analysis.ShouldShowItemDropToast)
                 {
                     ItemDropToastService.Show(parseResult.TrackedItemName ?? "아이템", parseResult.TrackedItemGrade, withSound: true);
                 }
+
+                QueuePendingMonthlyItemSnapshot(parseResult, DateTime.Today);
             }
 
             if (isRealTime)
@@ -1113,11 +1117,19 @@ namespace TWChatOverlay.Views
                 .OrderBy(date => date)
                 .ToList();
 
+            DateTime currentMonthStart = new(DateTime.Today.Year, DateTime.Today.Month, 1);
             foreach (DateTime monthStart in monthStarts)
             {
                 try
                 {
-                    ItemMonthlySnapshotService.LoadOrBuildMonthlySnapshots(monthStart, _settings.ChatLogFolderPath, _logAnalysisService);
+                    if (monthStart == currentMonthStart)
+                    {
+                        ItemMonthlySnapshotService.RefreshCurrentMonthIncremental(monthStart, _settings.ChatLogFolderPath, _logAnalysisService);
+                    }
+                    else
+                    {
+                        ItemMonthlySnapshotService.LoadOrBuildMonthlySnapshots(monthStart, _settings.ChatLogFolderPath, _logAnalysisService);
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -1125,6 +1137,51 @@ namespace TWChatOverlay.Views
                 }
             }
 
+        }
+
+        private void QueuePendingMonthlyItemSnapshot(LogParser.ParseResult itemLog, DateTime date)
+        {
+            if (itemLog == null || string.IsNullOrWhiteSpace(itemLog.FormattedText))
+                return;
+
+            var snapshot = new ItemLogSnapshotEntry
+            {
+                Date = date.Date,
+                ItemName = itemLog.TrackedItemName,
+                DisplayName = string.IsNullOrWhiteSpace(itemLog.TrackedItemName)
+                    ? "Item"
+                    : DropItemResolver.GetTrackedItemDisplayName(itemLog.TrackedItemName),
+                Grade = itemLog.TrackedItemGrade,
+                Count = Math.Max(1, itemLog.TrackedItemCount),
+                FormattedText = itemLog.FormattedText
+            };
+
+            lock (_pendingMonthlyItemSnapshotsLock)
+            {
+                _pendingMonthlyItemSnapshots.Add(snapshot);
+            }
+        }
+
+        private void FlushPendingMonthlyItemSnapshots()
+        {
+            List<ItemLogSnapshotEntry> pendingSnapshots;
+            lock (_pendingMonthlyItemSnapshotsLock)
+            {
+                if (_pendingMonthlyItemSnapshots.Count == 0)
+                    return;
+
+                pendingSnapshots = new List<ItemLogSnapshotEntry>(_pendingMonthlyItemSnapshots);
+                _pendingMonthlyItemSnapshots.Clear();
+            }
+
+            var snapshotsByMonth = pendingSnapshots
+                .GroupBy(snapshot => new DateTime(snapshot.Date.Year, snapshot.Date.Month, 1))
+                .ToList();
+
+            foreach (var monthGroup in snapshotsByMonth)
+            {
+                ItemMonthlySnapshotService.AppendMonthlySnapshots(monthGroup.Key, monthGroup.ToList());
+            }
         }
 
         private static DateTime ExtractDateFromChatLogPath(string filePath)

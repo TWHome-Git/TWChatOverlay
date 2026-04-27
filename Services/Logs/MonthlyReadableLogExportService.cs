@@ -74,11 +74,13 @@ namespace TWChatOverlay.Services
 
                 var currentSources = EnumerateMonthChatLogInfos(monthStart, chatLogFolderPath).ToList();
                 string csvPath = GetMonthlyCsvPath(monthStart);
+                bool isCurrentMonth = monthStart.Year == DateTime.Today.Year && monthStart.Month == DateTime.Today.Month;
 
                 if (File.Exists(csvPath))
                 {
                     var loaded = LoadFromCsv(csvPath);
-                    if (loaded != null && (currentSources.Count == 0 || SourcesMatch(loaded.SourceFiles, currentSources)))
+                    if (loaded != null &&
+                        (isCurrentMonth || currentSources.Count == 0 || SourcesMatch(loaded.SourceFiles, currentSources)))
                     {
                         DeleteLegacyArtifacts(monthStart);
                         return loaded;
@@ -89,6 +91,157 @@ namespace TWChatOverlay.Services
                 WriteCsv(csvPath, rebuilt);
                 DeleteLegacyArtifacts(monthStart);
                 return rebuilt;
+            }
+        }
+
+        public static MonthlyReadableLogData RebuildMonth(
+            DateTime monthStart,
+            string? chatLogFolderPath,
+            LogAnalysisService logAnalysisService)
+        {
+            ArgumentNullException.ThrowIfNull(logAnalysisService);
+
+            lock (SyncRoot)
+            {
+                Directory.CreateDirectory(ItemLogDirectoryPath);
+
+                var currentSources = EnumerateMonthChatLogInfos(monthStart, chatLogFolderPath).ToList();
+                var rebuilt = BuildFromChatLogs(monthStart, currentSources, logAnalysisService);
+                WriteCsv(GetMonthlyCsvPath(monthStart), rebuilt);
+                DeleteLegacyArtifacts(monthStart);
+                return rebuilt;
+            }
+        }
+
+        public static MonthlyReadableLogData RefreshCurrentMonthFromTodayOnly(
+            DateTime monthStart,
+            string? chatLogFolderPath,
+            LogAnalysisService logAnalysisService)
+        {
+            ArgumentNullException.ThrowIfNull(logAnalysisService);
+
+            lock (SyncRoot)
+            {
+                Directory.CreateDirectory(ItemLogDirectoryPath);
+
+                DateTime today = DateTime.Today;
+                if (monthStart.Year != today.Year || monthStart.Month != today.Month)
+                {
+                    return LoadOrBuildMonth(monthStart, chatLogFolderPath, logAnalysisService);
+                }
+
+                string csvPath = GetMonthlyCsvPath(monthStart);
+                var existing = LoadFromCsv(csvPath);
+                if (existing == null)
+                {
+                    var rebuilt = BuildFromChatLogs(monthStart, EnumerateMonthChatLogInfos(monthStart, chatLogFolderPath).ToList(), logAnalysisService);
+                    WriteCsv(csvPath, rebuilt);
+                    DeleteLegacyArtifacts(monthStart);
+                    return rebuilt;
+                }
+
+                var currentSources = EnumerateMonthChatLogInfos(monthStart, chatLogFolderPath).ToList();
+                var preservedSnapshots = existing.ItemSnapshots
+                    .Where(snapshot => snapshot.Date.Date < today)
+                    .ToList();
+                var todaySources = currentSources
+                    .Where(source => source.Date.Date == today)
+                    .ToList();
+
+                preservedSnapshots.AddRange(BuildItemSnapshotsFromSources(todaySources, logAnalysisService));
+
+                existing.ItemSnapshots = preservedSnapshots
+                    .OrderBy(snapshot => snapshot.Date)
+                    .ThenBy(snapshot => snapshot.DisplayName ?? snapshot.ItemName ?? string.Empty, StringComparer.OrdinalIgnoreCase)
+                    .ToList();
+                existing.SourceFiles = currentSources
+                    .Select(source => new MonthlyLogSourceSnapshot
+                    {
+                        FileName = source.FileName,
+                        Length = source.Length,
+                        LastWriteTimeUtc = source.LastWriteTimeUtc
+                    })
+                    .ToList();
+                existing.SourceSignature = ComputeSourceSignature(currentSources);
+
+                WriteCsv(csvPath, existing);
+                DeleteLegacyArtifacts(monthStart);
+                return existing;
+            }
+        }
+
+        public static MonthlyReadableLogData RefreshCurrentMonthIncremental(
+            DateTime monthStart,
+            string? chatLogFolderPath,
+            LogAnalysisService logAnalysisService)
+        {
+            ArgumentNullException.ThrowIfNull(logAnalysisService);
+
+            lock (SyncRoot)
+            {
+                Directory.CreateDirectory(ItemLogDirectoryPath);
+
+                DateTime today = DateTime.Today;
+                if (monthStart.Year != today.Year || monthStart.Month != today.Month)
+                {
+                    return LoadOrBuildMonth(monthStart, chatLogFolderPath, logAnalysisService);
+                }
+
+                string csvPath = GetMonthlyCsvPath(monthStart);
+                var currentSources = EnumerateMonthChatLogInfos(monthStart, chatLogFolderPath).ToList();
+                var existing = LoadFromCsv(csvPath);
+                if (existing == null)
+                {
+                    var rebuilt = BuildFromChatLogs(monthStart, currentSources, logAnalysisService);
+                    WriteCsv(csvPath, rebuilt);
+                    DeleteLegacyArtifacts(monthStart);
+                    return rebuilt;
+                }
+
+                var existingSourceMap = existing.SourceFiles.ToDictionary(source => source.FileName, StringComparer.OrdinalIgnoreCase);
+                var refreshedSnapshots = existing.ItemSnapshots
+                    .Where(snapshot => snapshot.Date.Year == monthStart.Year && snapshot.Date.Month == monthStart.Month)
+                    .ToList();
+
+                foreach (var source in currentSources)
+                {
+                    bool isTodayLog = source.Date.Date == today;
+                    bool needsRefresh = isTodayLog;
+
+                    if (!needsRefresh)
+                    {
+                        if (!existingSourceMap.TryGetValue(source.FileName, out var savedSource) ||
+                            savedSource.Length != source.Length ||
+                            savedSource.LastWriteTimeUtc != source.LastWriteTimeUtc)
+                        {
+                            needsRefresh = true;
+                        }
+                    }
+
+                    if (!needsRefresh)
+                        continue;
+
+                    refreshedSnapshots.RemoveAll(snapshot => snapshot.Date.Date == source.Date.Date);
+                    refreshedSnapshots.AddRange(BuildItemSnapshotsFromSources(new[] { source }, logAnalysisService));
+                }
+
+                existing.ItemSnapshots = refreshedSnapshots
+                    .OrderBy(snapshot => snapshot.Date)
+                    .ThenBy(snapshot => snapshot.DisplayName ?? snapshot.ItemName ?? string.Empty, StringComparer.OrdinalIgnoreCase)
+                    .ToList();
+                existing.SourceFiles = currentSources
+                    .Select(source => new MonthlyLogSourceSnapshot
+                    {
+                        FileName = source.FileName,
+                        Length = source.Length,
+                        LastWriteTimeUtc = source.LastWriteTimeUtc
+                    })
+                    .ToList();
+                existing.SourceSignature = ComputeSourceSignature(currentSources);
+
+                WriteCsv(csvPath, existing);
+                DeleteLegacyArtifacts(monthStart);
+                return existing;
             }
         }
 
@@ -122,6 +275,39 @@ namespace TWChatOverlay.Services
                 catch (Exception ex)
                 {
                     AppLogger.Warn("Failed to append monthly item snapshot.", ex);
+                }
+            }
+        }
+
+        public static void AppendItemSnapshots(DateTime monthStart, IReadOnlyList<ItemLogSnapshotEntry> snapshots)
+        {
+            if (snapshots == null || snapshots.Count == 0)
+                return;
+
+            lock (SyncRoot)
+            {
+                try
+                {
+                    Directory.CreateDirectory(ItemLogDirectoryPath);
+                    var data = LoadFromCsv(monthStart) ?? new MonthlyReadableLogData(
+                        monthStart,
+                        new List<ItemLogSnapshotEntry>(),
+                        new AbaddonMonthlySummarySnapshotEntry { MonthStart = monthStart.Date },
+                        string.Empty,
+                        new List<MonthlyLogSourceSnapshot>());
+
+                    data.ItemSnapshots.AddRange(snapshots);
+                    data.ItemSnapshots = data.ItemSnapshots
+                        .OrderBy(snapshot => snapshot.Date)
+                        .ThenBy(snapshot => snapshot.DisplayName ?? snapshot.ItemName ?? string.Empty, StringComparer.OrdinalIgnoreCase)
+                        .ToList();
+
+                    WriteCsv(GetMonthlyCsvPath(monthStart), data);
+                    DeleteLegacyArtifacts(monthStart);
+                }
+                catch (Exception ex)
+                {
+                    AppLogger.Warn("Failed to append monthly item snapshots.", ex);
                 }
             }
         }
@@ -217,6 +403,37 @@ namespace TWChatOverlay.Services
                     Length = sourceFile.Length,
                     LastWriteTimeUtc = sourceFile.LastWriteTimeUtc
                 }).ToList());
+        }
+
+        private static List<ItemLogSnapshotEntry> BuildItemSnapshotsFromSources(
+            IReadOnlyList<MonthlyChatLogSourceInfo> sourceFiles,
+            LogAnalysisService logAnalysisService)
+        {
+            var itemSnapshots = new List<ItemLogSnapshotEntry>();
+
+            foreach (var sourceFile in sourceFiles)
+            {
+                try
+                {
+                    using var stream = new FileStream(sourceFile.FullPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+                    using var reader = new StreamReader(stream, Encoding.GetEncoding(949));
+                    string? line;
+                    while ((line = reader.ReadLine()) != null)
+                    {
+                        var analysis = logAnalysisService.Analyze(line, isRealTime: false);
+                        if (!analysis.IsSuccess || !analysis.HasTrackedItemDrop)
+                            continue;
+
+                        itemSnapshots.Add(CreateSnapshotFromItemLog(analysis.Parsed, sourceFile.Date));
+                    }
+                }
+                catch (Exception ex)
+                {
+                    AppLogger.Warn($"Failed to build item snapshots from '{sourceFile.FullPath}'.", ex);
+                }
+            }
+
+            return itemSnapshots;
         }
 
         private static MonthlyReadableLogData? LoadFromCsv(string csvPath)
