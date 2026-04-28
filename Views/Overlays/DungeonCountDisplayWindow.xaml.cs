@@ -101,15 +101,13 @@ namespace TWChatOverlay.Views
             IntPtr hwnd = new WindowInteropHelper(this).EnsureHandle();
             int exStyle = NativeMethods.GetWindowLong(hwnd, NativeMethods.GWL_EXSTYLE);
             exStyle |= NativeMethods.WS_EX_TOOLWINDOW;
-            exStyle = _settings.ShowDungeonCountDisplayWindow
-                ? exStyle & ~NativeMethods.WS_EX_TRANSPARENT
-                : exStyle | NativeMethods.WS_EX_TRANSPARENT;
+            exStyle &= ~NativeMethods.WS_EX_TRANSPARENT;
             NativeMethods.SetWindowLong(hwnd, NativeMethods.GWL_EXSTYLE, exStyle);
         }
 
         private void RootBorder_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
-            if (!_settings.ShowDungeonCountDisplayWindow || e.ButtonState != MouseButtonState.Pressed)
+            if (e.ButtonState != MouseButtonState.Pressed || !IsVisible)
                 return;
 
             _isDragging = true;
@@ -139,7 +137,7 @@ namespace TWChatOverlay.Views
 
         private void SyncPositionToSettings(bool notify)
         {
-            if (!_settings.ShowDungeonCountDisplayWindow || !IsVisible)
+            if (!IsVisible)
                 return;
 
             _settings.DungeonCountDisplayWindowLeft = Left;

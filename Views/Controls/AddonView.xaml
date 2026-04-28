@@ -192,6 +192,9 @@
                                 </StackPanel>
                                 <TextBlock Text="* 1초부터 300초까지 입력할 수 있습니다."
                                            Style="{StaticResource HintTextStyle}"/>
+
+                                <TextBlock Text="* 설정 창을 열면 드래그로 알림 위치를 옮길 수 있습니다."
+                                           Style="{StaticResource HintTextStyle}"/>
                             </StackPanel>
                         </Border>
                     </StackPanel>
@@ -384,9 +387,7 @@
 
                                 <TextBlock Text="* 버프 추적 알림은 실제 버프 시간 추적을 켜고 끕니다."
                                            Style="{StaticResource HintTextStyle}"/>
-                                <TextBlock Text="* 버프 종료 시 BuffCheck.wav를 재생합니다. 10초 이내 반복 종료는 묶어서 한 번만 재생됩니다."
-                                           Style="{StaticResource HintTextStyle}"/>
-                                <TextBlock Text="* 설정 창을 열면 버프 추적 창 위치를 옮길 수 있습니다."
+                                <TextBlock Text="* 설정 창을 열면 드래그로 알림 위치를 옮길 수 있습니다."
                                            Style="{StaticResource HintTextStyle}"/>
                             </StackPanel>
                         </Border>

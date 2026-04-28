@@ -65,7 +65,7 @@ namespace TWChatOverlay.Views
 
         private void RootBorder_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
-            if (!_settings.ShowExperienceLimitAlertWindow || e.ButtonState != MouseButtonState.Pressed)
+            if (e.ButtonState != MouseButtonState.Pressed || !IsVisible)
                 return;
 
             _isDragging = true;
