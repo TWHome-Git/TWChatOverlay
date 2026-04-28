@@ -1744,7 +1744,9 @@ namespace TWChatOverlay.Views
                 _abaddonRoadSummaryWindow.Show();
             }
 
+            _abaddonRoadSummaryWindow.Topmost = true;
             _abaddonRoadSummaryWindow.Activate();
+            TopmostWindowHelper.BringToTopmost(_abaddonRoadSummaryWindow);
             _ = _abaddonRoadSummaryWindow.LoadCurrentWeekAsync();
         }
 

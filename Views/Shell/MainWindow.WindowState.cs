@@ -32,6 +32,13 @@ namespace TWChatOverlay.Views
         {
             ExperienceAlertWindowService.ShowPositionPreview(_settings, force: true);
             DungeonCountDisplayWindowService.ShowPositionPreview(_settings, force: true);
+            ShowAbaddonRoadSummaryWindow();
+
+            if (_abaddonRoadSummaryWindow != null)
+            {
+                _abaddonRoadSummaryWindow.Topmost = true;
+                _abaddonRoadSummaryWindow.Activate();
+            }
 
             var etosHelper = SubAddonWindow.Instance ?? CreateSubAddonWindow();
             etosHelper?.ApplyPositionPreviewVisibility(true);
@@ -60,7 +67,21 @@ namespace TWChatOverlay.Views
             ExperienceAlertWindowService.Close();
             DungeonCountDisplayWindowService.ClosePositionPreview(_settings);
 
+            if (_abaddonRoadSummaryWindow != null)
+            {
+                try
+                {
+                    _settings.AbaddonRoadSummaryWindowLeft = _abaddonRoadSummaryWindow.Left;
+                    _settings.AbaddonRoadSummaryWindowTop = _abaddonRoadSummaryWindow.Top;
+                }
+                catch { }
+            }
+
             SubAddonWindow.Instance?.ApplyPositionPreviewVisibility(false);
+            if (_abaddonRoadSummaryWindow != null)
+            {
+                _abaddonRoadSummaryWindow.Hide();
+            }
             ApplyItemDropHelperWindowSettings();
             ApplyBuffTrackerHelperWindowSettings();
             PersistSettings();

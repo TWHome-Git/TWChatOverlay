@@ -24,7 +24,8 @@ namespace TWChatOverlay.Views
         {
             InitializeComponent();
             this.PreviewKeyDown += SettingsView_PreviewKeyDown;
-            Loaded += (_, _) => SyncFontOptions();
+            Loaded += SettingsView_Loaded;
+            Unloaded += SettingsView_Unloaded;
             DataContextChanged += (_, _) => SyncFontOptions();
 #if DEBUG
             DebugOptionsBorder.Visibility = Visibility.Visible;
@@ -101,6 +102,32 @@ namespace TWChatOverlay.Views
             NanumFontOption.IsChecked = viewModel.FontFamily == "나눔고딕";
             GulimFontOption.IsChecked = viewModel.FontFamily == "굴림";
             CustomFontOption.IsChecked = viewModel.FontFamily == "사용자 설정";
+        }
+
+        private void SettingsView_Loaded(object sender, RoutedEventArgs e)
+        {
+            SyncFontOptions();
+            UpdateSettingsPositionMode(true);
+        }
+
+        private void SettingsView_Unloaded(object sender, RoutedEventArgs e)
+        {
+            UpdateSettingsPositionMode(false);
+        }
+
+        private void UpdateSettingsPositionMode(bool isEnabled)
+        {
+            if (OnlyChatMode)
+                return;
+
+            foreach (Window window in Application.Current.Windows)
+            {
+                if (window is MainWindow mainWindow)
+                {
+                    mainWindow.SetSettingsPositionMode(isEnabled);
+                    break;
+                }
+            }
         }
 
         private void OffsetInput_KeyDown(object sender, KeyEventArgs e)

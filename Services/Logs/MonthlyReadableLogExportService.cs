@@ -480,11 +480,14 @@ namespace TWChatOverlay.Services
                         if (!DateTime.TryParseExact(columns[1], "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime date))
                             continue;
 
+                        string? itemName = string.IsNullOrWhiteSpace(columns[2]) ? null : columns[2];
                         itemSnapshots.Add(new ItemLogSnapshotEntry
                         {
                             Date = date.Date,
-                            ItemName = string.IsNullOrWhiteSpace(columns[2]) ? null : columns[2],
-                            DisplayName = string.IsNullOrWhiteSpace(columns[3]) ? null : columns[3],
+                            ItemName = itemName,
+                            DisplayName = ResolveDisplayName(
+                                itemName,
+                                string.IsNullOrWhiteSpace(columns[3]) ? null : columns[3]),
                             Grade = Enum.TryParse(columns[4], out ItemDropGrade grade) ? grade : ItemDropGrade.Normal,
                             Count = int.TryParse(columns[5], NumberStyles.Integer, CultureInfo.InvariantCulture, out int count) ? count : 1
                         });
@@ -708,13 +711,20 @@ namespace TWChatOverlay.Services
             {
                 Date = date.Date,
                 ItemName = itemLog.TrackedItemName,
-                DisplayName = string.IsNullOrWhiteSpace(itemLog.TrackedItemName)
-                    ? "Item"
-                    : DropItemResolver.GetTrackedItemDisplayName(itemLog.TrackedItemName),
+                DisplayName = ResolveDisplayName(itemLog.TrackedItemName, "Item"),
                 Grade = itemLog.TrackedItemGrade,
                 Count = Math.Max(1, itemLog.TrackedItemCount),
                 FormattedText = itemLog.FormattedText
             };
+        }
+
+        private static string ResolveDisplayName(string? itemName, string? fallback)
+        {
+            if (string.IsNullOrWhiteSpace(itemName))
+                return fallback ?? string.Empty;
+
+            string resolved = DropItemResolver.GetTrackedItemDisplayName(itemName);
+            return string.IsNullOrWhiteSpace(resolved) ? (fallback ?? itemName) : resolved;
         }
 
         private static void ApplyMagicStoneDelta(AbaddonMonthlySummarySnapshotEntry summary, string grade, long delta)
