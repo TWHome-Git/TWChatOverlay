@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
@@ -39,8 +39,12 @@ namespace TWChatOverlay.Views
         private readonly ObservableCollection<ItemCalendarDayViewModel> _days = new();
         private readonly ObservableCollection<ItemCalendarEntryViewModel> _monthlySummary = new();
         private readonly ObservableCollection<AbaddonMonthlyStoneSummaryEntryViewModel> _monthlyAbaddonSummary = new();
+        private readonly List<ItemLogSnapshotEntry> _currentMonthSnapshots = new();
+        private readonly object _todayLock = new();
+        private readonly List<ItemLogSnapshotEntry> _todaySnapshots = new();
         private DateTime _currentMonthStart;
         private DateTime _loadedAbaddonMonthStart = DateTime.MinValue;
+        private DateTime _loadedTodayDate = DateTime.MinValue;
         private bool _isLoading;
         private string _monthText = string.Empty;
         private string _statusText = string.Empty;
@@ -167,6 +171,12 @@ namespace TWChatOverlay.Views
 
             UpdateMonthlySummary(snapshots);
             UpdateMonthlyAbaddonSummary(abaddonSummary);
+            CacheTodaySnapshots(monthStart, snapshots);
+            lock (_todayLock)
+            {
+                _currentMonthSnapshots.Clear();
+                _currentMonthSnapshots.AddRange(snapshots);
+            }
 
             int totalCount = Days.Sum(day => day.TotalCount);
             string status = totalCount > 0
@@ -217,6 +227,20 @@ namespace TWChatOverlay.Views
                 MonthlySummary.Add(entry);
         }
 
+        private void CacheTodaySnapshots(DateTime monthStart, IReadOnlyList<ItemLogSnapshotEntry> snapshots)
+        {
+            DateTime today = DateTime.Today;
+            if (monthStart.Year != today.Year || monthStart.Month != today.Month)
+                return;
+
+            lock (_todayLock)
+            {
+                _loadedTodayDate = today;
+                _todaySnapshots.Clear();
+                _todaySnapshots.AddRange(snapshots.Where(snapshot => snapshot.Date.Date == today));
+            }
+        }
+
         private void UpdateMonthlyAbaddonSummary(AbaddonMonthlySummarySnapshotEntry summary)
         {
             MonthlyAbaddonSeedText = $"어밴던로드 시드 누적합계: {FormatManAmount(summary.NetProfitMan)}";
@@ -251,6 +275,77 @@ namespace TWChatOverlay.Views
                 .ToList();
 
             return new ItemCalendarDayViewModel(date, isCurrentMonth, entries);
+        }
+
+        public void ApplyRealtimeItemLog(LogParser.ParseResult itemLog, DateTime date)
+        {
+            if (itemLog == null || string.IsNullOrWhiteSpace(itemLog.FormattedText))
+                return;
+
+            date = date.Date;
+            if (date != DateTime.Today)
+                return;
+
+            if (_currentMonthStart.Year != date.Year || _currentMonthStart.Month != date.Month)
+                return;
+
+            var snapshot = new ItemLogSnapshotEntry
+            {
+                Date = date,
+                ItemName = itemLog.TrackedItemName,
+                DisplayName = string.IsNullOrWhiteSpace(itemLog.TrackedItemName)
+                    ? "Item"
+                    : DropItemResolver.GetTrackedItemDisplayName(itemLog.TrackedItemName),
+                Grade = itemLog.TrackedItemGrade,
+                Count = Math.Max(1, itemLog.TrackedItemCount),
+                FormattedText = itemLog.FormattedText
+            };
+
+            lock (_todayLock)
+            {
+                if (_loadedTodayDate != date)
+                {
+                    _todaySnapshots.Clear();
+                    _loadedTodayDate = date;
+                }
+
+                _todaySnapshots.Add(snapshot);
+                _currentMonthSnapshots.Add(snapshot);
+            }
+
+            Dispatcher.BeginInvoke(new Action(() =>
+            {
+                ApplySnapshotToToday(snapshot);
+                List<ItemLogSnapshotEntry> monthSnapshots;
+                lock (_todayLock)
+                {
+                    monthSnapshots = _currentMonthSnapshots.ToList();
+                }
+
+                UpdateMonthlySummary(monthSnapshots);
+                UpdateStatusForToday();
+            }), System.Windows.Threading.DispatcherPriority.Background);
+        }
+
+        private void ApplySnapshotToToday(ItemLogSnapshotEntry snapshot)
+        {
+            var todayCell = Days.FirstOrDefault(day => day.Date.Date == snapshot.Date.Date);
+            if (todayCell == null)
+                return;
+
+            todayCell.AddSnapshot(new ItemCalendarEntryViewModel(
+                string.IsNullOrWhiteSpace(snapshot.DisplayName) ? snapshot.ItemName ?? "아이템" : snapshot.DisplayName!,
+                snapshot.Grade,
+                Math.Max(1, snapshot.Count)));
+        }
+
+        private void UpdateStatusForToday()
+        {
+            int totalCount = Days.Sum(day => day.TotalCount);
+            string status = totalCount > 0
+                ? $"{GetMonthSummaryLabel(_currentMonthStart)} 총 {totalCount:N0}개 획득"
+                : $"{GetMonthSummaryLabel(_currentMonthStart)}에 아이템 기록이 없습니다.";
+            SetLoadingState(false, status);
         }
 
         private AbaddonMonthlySummarySnapshotEntry LoadOrBuildMonthlyAbaddonSummary(DateTime monthStart)

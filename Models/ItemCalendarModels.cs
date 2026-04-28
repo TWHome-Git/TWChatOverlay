@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Globalization;
 using System.Linq;
 using System.Windows.Media;
@@ -8,20 +9,19 @@ using TWChatOverlay.Services;
 
 namespace TWChatOverlay.Models
 {
-    public sealed class ItemCalendarDayViewModel
+    public sealed class ItemCalendarDayViewModel : INotifyPropertyChanged
     {
+        private readonly List<ItemCalendarEntryViewModel> _entries = new();
+        private readonly ObservableCollection<ItemCalendarEntryViewModel> _observableEntries = new();
+        private int _totalCount;
+        private int _distinctCount;
+
         public ItemCalendarDayViewModel(DateTime date, bool isCurrentMonth, IEnumerable<ItemCalendarEntryViewModel> entries)
         {
             Date = date.Date;
             IsCurrentMonth = isCurrentMonth;
-
-            Entries = new ObservableCollection<ItemCalendarEntryViewModel>(
-                entries.OrderByDescending(entry => GetGradeSortOrder(entry.Grade))
-                       .ThenByDescending(entry => entry.Count)
-                       .ThenBy(entry => entry.DisplayName, StringComparer.OrdinalIgnoreCase));
-
-            TotalCount = Entries.Sum(entry => entry.Count);
-            DistinctCount = Entries.Count;
+            PropertyChanged = delegate { };
+            ReplaceEntries(entries);
         }
 
         public DateTime Date { get; }
@@ -32,11 +32,38 @@ namespace TWChatOverlay.Models
 
         public string DateLabel => Date.Day.ToString(CultureInfo.InvariantCulture);
 
-        public ObservableCollection<ItemCalendarEntryViewModel> Entries { get; }
+        public ObservableCollection<ItemCalendarEntryViewModel> Entries => _observableEntries;
 
-        public int TotalCount { get; }
+        public int TotalCount
+        {
+            get => _totalCount;
+            private set
+            {
+                if (_totalCount == value)
+                    return;
 
-        public int DistinctCount { get; }
+                _totalCount = value;
+                OnPropertyChanged(nameof(TotalCount));
+                OnPropertyChanged(nameof(SummaryText));
+                OnPropertyChanged(nameof(IsHighlighted));
+                OnPropertyChanged(nameof(DayAccentBrush));
+                OnPropertyChanged(nameof(DayBadgeBorderBrush));
+                OnPropertyChanged(nameof(DayBadgeForeground));
+            }
+        }
+
+        public int DistinctCount
+        {
+            get => _distinctCount;
+            private set
+            {
+                if (_distinctCount == value)
+                    return;
+
+                _distinctCount = value;
+                OnPropertyChanged(nameof(DistinctCount));
+            }
+        }
 
         public bool IsHighlighted => TotalCount >= 5;
 
@@ -53,6 +80,40 @@ namespace TWChatOverlay.Models
             : new SolidColorBrush(Color.FromRgb(0x45, 0x4E, 0x57));
 
         public Brush DayBadgeForeground => IsHighlighted ? Brushes.White : Brushes.WhiteSmoke;
+
+        public event PropertyChangedEventHandler? PropertyChanged;
+
+        public void AddSnapshot(ItemCalendarEntryViewModel entry)
+        {
+            _entries.Add(entry);
+            RebuildEntries();
+        }
+
+        public void ReplaceEntries(IEnumerable<ItemCalendarEntryViewModel> entries)
+        {
+            _entries.Clear();
+            _entries.AddRange(entries);
+            RebuildEntries();
+        }
+
+        private void RebuildEntries()
+        {
+            var ordered = _entries
+                .OrderByDescending(entry => GetGradeSortOrder(entry.Grade))
+                .ThenByDescending(entry => entry.Count)
+                .ThenBy(entry => entry.DisplayName, StringComparer.OrdinalIgnoreCase)
+                .ToList();
+
+            _observableEntries.Clear();
+            foreach (var entry in ordered)
+                _observableEntries.Add(entry);
+
+            TotalCount = _observableEntries.Sum(entry => entry.Count);
+            DistinctCount = _observableEntries.Count;
+        }
+
+        private void OnPropertyChanged(string propertyName)
+            => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
 
         private static int GetGradeSortOrder(ItemDropGrade grade)
         {

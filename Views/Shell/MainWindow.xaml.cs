@@ -160,6 +160,7 @@ namespace TWChatOverlay.Views
 
             this.Deactivated += (s, e) => ReleaseMouseForce();
             this.Activated += (s, e) => ReleaseMouseForce();
+            this.StateChanged += MainWindow_StateChanged;
             this.Closed += MainWindow_Closed;
             AppLogger.Info("Main window initialized.");
         }
@@ -446,7 +447,9 @@ namespace TWChatOverlay.Views
                     ItemDropToastService.Show(parseResult.TrackedItemName ?? "아이템", parseResult.TrackedItemGrade, withSound: true);
                 }
 
-                QueuePendingMonthlyItemSnapshot(parseResult, DateTime.Today);
+                ItemMonthlySnapshotService.AppendMonthlySnapshot(DateTime.Today, parseResult);
+
+                _itemCalendarWindow?.ApplyRealtimeItemLog(parseResult, DateTime.Today);
             }
 
             if (isRealTime)
@@ -460,6 +463,9 @@ namespace TWChatOverlay.Views
             {
                 ShowAbaddonRoadSummaryWindow();
             }
+
+            if (isRealTime)
+                RefreshAbaddonRoadSummaryWindow();
 
             if (isRealTime)
             {
@@ -1748,6 +1754,32 @@ namespace TWChatOverlay.Views
                 return;
 
             _ = _abaddonRoadSummaryWindow.LoadCurrentWeekAsync();
+        }
+
+        private void MainWindow_StateChanged(object? sender, EventArgs e)
+        {
+            if (WindowState == WindowState.Minimized)
+            {
+                if (_dailyWeeklyContentOverlay?.IsVisible == true)
+                    _dailyWeeklyContentOverlay.Hide();
+                if (_itemCalendarWindow?.IsVisible == true)
+                    _itemCalendarWindow.Hide();
+                if (_abaddonRoadSummaryWindow?.IsVisible == true)
+                    _abaddonRoadSummaryWindow.Hide();
+                return;
+            }
+
+            if (_settings.ShowDailyWeeklyContentOverlay && _canShowAuxiliaryWindows)
+            {
+                if (_dailyWeeklyContentOverlay != null && !_dailyWeeklyContentOverlay.IsVisible)
+                    _dailyWeeklyContentOverlay.Show();
+            }
+
+            if (_itemCalendarWindow != null && !_itemCalendarWindow.IsVisible)
+                _itemCalendarWindow.Show();
+
+            if (_abaddonRoadSummaryWindow != null && !_abaddonRoadSummaryWindow.IsVisible)
+                _abaddonRoadSummaryWindow.Show();
         }
         #endregion
 
