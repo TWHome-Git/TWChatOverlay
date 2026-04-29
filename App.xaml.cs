@@ -147,6 +147,17 @@ namespace TWChatOverlay
                 AppLogger.Warn("Failed to create menu window.", ex);
             }
 
+#if DEBUG
+            try
+            {
+                Views.DebugLogTestWindow.ShowOrActivate();
+            }
+            catch (Exception ex)
+            {
+                AppLogger.Warn("Failed to create debug log test window.", ex);
+            }
+#endif
+
             Task.Run(() => UpdateService.CheckForUpdateAsync()).ContinueWith(t =>
             {
                 if (t.Exception != null)

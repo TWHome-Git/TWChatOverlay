@@ -2,10 +2,11 @@ namespace TWChatOverlay.Services.LogAnalysis
 {
     public sealed class ItemDropLogAnalyzer
     {
-        public void Analyze(LogLineContext context)
+        public void Analyze(LogLineContext context, DropItemResolver.DropItemFilterSnapshot? filterSnapshot = null)
         {
             if (DropItemResolver.TryExtractTrackedItem(
                     context.ChatContent,
+                    filterSnapshot,
                     out string itemName,
                     out ItemDropGrade itemGrade,
                     out int itemCount))

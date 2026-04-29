@@ -5,6 +5,7 @@
 
     <!-- Converters -->
     <local:EqualValueToBoolConverter x:Key="EqualValueToBoolConverter"/>
+    <local:BooleanInverseConverter x:Key="BooleanInverseConverter"/>
     <services:VisibilityConverter x:Key="VisibilityConverter"/>
 
     <!-- Color Definitions -->
@@ -52,6 +53,36 @@
                             <Setter TargetName="BtnBorder" Property="Background" Value="#60FFFFFF"/>
                             <Setter TargetName="BtnBorder" Property="BorderBrush" Value="White"/>
                             <Setter Property="FontWeight" Value="Bold"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style x:Key="TabActionButtonStyle" TargetType="Button">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="Foreground" Value="White"/>
+        <Setter Property="Height" Value="30"/>
+        <Setter Property="Margin" Value="2,4"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border x:Name="BtnBorder"
+                            Background="{TemplateBinding Background}"
+                            CornerRadius="8"
+                            BorderThickness="1"
+                            BorderBrush="Transparent">
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="BtnBorder" Property="Background" Value="#30FFFFFF"/>
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter TargetName="BtnBorder" Property="Background" Value="#60FFFFFF"/>
+                            <Setter TargetName="BtnBorder" Property="BorderBrush" Value="White"/>
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>

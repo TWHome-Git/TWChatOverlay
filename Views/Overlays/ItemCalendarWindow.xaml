@@ -69,6 +69,11 @@
                                    FontSize="12"
                                    Margin="0,0,10,0"
                                    VerticalAlignment="Center"/>
+                        <Button Content="갱신"
+                                Width="54"
+                                Margin="0,0,6,0"
+                                Style="{StaticResource CalendarTitleButtonStyle}"
+                                Click="Refresh_Click"/>
                         <Button Content="닫기"
                                 Width="54"
                                 Style="{StaticResource DangerButtonStyle}"
@@ -176,12 +181,22 @@
                         <Border Background="#AA111317"
                                 CornerRadius="8"
                                 Visibility="{Binding IsLoading, Converter={StaticResource BooleanToVisibilityConverter}}">
-                            <TextBlock Text="아이템 로그를 불러오는 중..."
-                                       Foreground="White"
-                                       FontSize="14"
-                                       FontWeight="SemiBold"
-                                       HorizontalAlignment="Center"
-                                       VerticalAlignment="Center"/>
+                            <StackPanel HorizontalAlignment="Center"
+                                        VerticalAlignment="Center"
+                                        Width="280">
+                                <TextBlock Text="{Binding StatusText}"
+                                           Foreground="White"
+                                           FontSize="14"
+                                           FontWeight="SemiBold"
+                                           HorizontalAlignment="Center"
+                                           TextAlignment="Center"
+                                           TextWrapping="Wrap"
+                                           Margin="0,0,0,10"/>
+                                <ProgressBar Minimum="0"
+                                             Maximum="100"
+                                             Value="{Binding LoadProgressValue}"
+                                             Height="10"/>
+                            </StackPanel>
                         </Border>
                     </Grid>
                 </Border>

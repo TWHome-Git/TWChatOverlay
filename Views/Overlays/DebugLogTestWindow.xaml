@@ -1,0 +1,250 @@
+<Window x:Class="TWChatOverlay.Views.DebugLogTestWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d"
+        Title="디버그 로그 테스트"
+        Width="980"
+        Height="560"
+        MinWidth="860"
+        MinHeight="480"
+        WindowStyle="None"
+        ResizeMode="CanResize"
+        ShowInTaskbar="False"
+        Topmost="True"
+        Background="Transparent"
+        Loaded="Window_Loaded"
+        Closing="Window_Closing">
+    <Window.Resources>
+        <Style x:Key="DebugCategoryRadioStyle" TargetType="RadioButton">
+            <Setter Property="Foreground" Value="#E9EEF6"/>
+            <Setter Property="Background" Value="#1F2430"/>
+            <Setter Property="BorderBrush" Value="#44505D"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="10,6"/>
+            <Setter Property="Margin" Value="0,0,6,6"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="RadioButton">
+                        <Border x:Name="Border"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="8"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center"
+                                              VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="Border" Property="Background" Value="#4A6CF7"/>
+                                <Setter TargetName="Border" Property="BorderBrush" Value="#7EA0FF"/>
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Border" Property="Background" Value="#33415C"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Opacity" Value="0.6"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <DataTemplate x:Key="SampleLogTemplate">
+            <Border x:Name="ItemBorder"
+                    Background="#1F2430"
+                    BorderBrush="#44505D"
+                    BorderThickness="1"
+                    CornerRadius="6"
+                    Padding="8"
+                    Margin="0,0,0,6">
+                <TextBlock Text="{Binding Text}"
+                           TextWrapping="Wrap"
+                           FontSize="12"
+                           Foreground="{Binding Foreground}"/>
+            </Border>
+            <DataTemplate.Triggers>
+                <DataTrigger Binding="{Binding IsHeader}" Value="True">
+                    <Setter TargetName="ItemBorder" Property="Background" Value="#15181D"/>
+                    <Setter TargetName="ItemBorder" Property="BorderBrush" Value="#2F3946"/>
+                    <Setter TargetName="ItemBorder" Property="Margin" Value="0,4,0,8"/>
+                    <Setter TargetName="ItemBorder" Property="Padding" Value="6"/>
+                    <Setter TargetName="ItemBorder" Property="BorderThickness" Value="0"/>
+                    <Setter TargetName="ItemBorder" Property="IsHitTestVisible" Value="False"/>
+                    <Setter TargetName="ItemBorder" Property="Cursor" Value="Arrow"/>
+                </DataTrigger>
+            </DataTemplate.Triggers>
+        </DataTemplate>
+    </Window.Resources>
+
+    <Border Background="#F21D1F23"
+            BorderBrush="#60FFFFFF"
+            BorderThickness="1"
+            CornerRadius="12"
+            Padding="12">
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="2.1*"/>
+                <ColumnDefinition Width="1.2*"/>
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <Border Grid.ColumnSpan="2"
+                    Background="#FF2A2F38"
+                    CornerRadius="10"
+                    Padding="10"
+                    Margin="0,0,0,10"
+                    MouseLeftButtonDown="TitleBar_MouseLeftButtonDown">
+                <DockPanel>
+                    <StackPanel DockPanel.Dock="Left">
+                        <TextBlock Text="디버그 로그 테스트"
+                                   Foreground="White"
+                                   FontSize="16"
+                                   FontWeight="Bold"/>
+                        <TextBlock Text="선택한 분류로 실제 로그처럼 주입합니다."
+                                   Foreground="#C9D1D9"
+                                   FontSize="12"
+                                   Margin="0,2,0,0"/>
+                    </StackPanel>
+                    <Button Content="닫기"
+                            Width="56"
+                            Height="28"
+                            DockPanel.Dock="Right"
+                            Click="Close_Click"
+                            Background="#313844"
+                            Foreground="White"
+                            BorderBrush="#56616F"/>
+                </DockPanel>
+            </Border>
+
+            <Border Grid.Row="1"
+                    Grid.Column="0"
+                    Margin="0,0,10,0"
+                    Background="#FF15181D"
+                    CornerRadius="10"
+                    Padding="10">
+                <StackPanel>
+                    <TextBlock Text="주입 패널"
+                               Foreground="White"
+                               FontSize="14"
+                               FontWeight="SemiBold"
+                               Margin="0,0,0,8"/>
+
+                    <TextBlock Text="분류"
+                               Foreground="#AAB3BD"
+                               FontSize="12"
+                               Margin="0,0,0,4"/>
+                    <WrapPanel Margin="0,0,0,10">
+                        <RadioButton x:Name="NormalRadio"
+                                     Content="일반"
+                                     Tag="Normal"
+                                     GroupName="DebugCategory"
+                                     Style="{StaticResource DebugCategoryRadioStyle}"
+                                     Checked="DebugCategoryRadio_Checked"/>
+                        <RadioButton x:Name="TeamRadio"
+                                     Content="팀"
+                                     Tag="Team"
+                                     GroupName="DebugCategory"
+                                     Style="{StaticResource DebugCategoryRadioStyle}"
+                                     Checked="DebugCategoryRadio_Checked"/>
+                        <RadioButton x:Name="ClubRadio"
+                                     Content="클럽"
+                                     Tag="Club"
+                                     GroupName="DebugCategory"
+                                     Style="{StaticResource DebugCategoryRadioStyle}"
+                                     Checked="DebugCategoryRadio_Checked"/>
+                        <RadioButton x:Name="SystemRadio"
+                                     Content="시스템"
+                                     Tag="System"
+                                     GroupName="DebugCategory"
+                                     Style="{StaticResource DebugCategoryRadioStyle}"
+                                     Checked="DebugCategoryRadio_Checked"/>
+                        <RadioButton x:Name="ShoutRadio"
+                                     Content="외치기"
+                                     Tag="Shout"
+                                     GroupName="DebugCategory"
+                                     Style="{StaticResource DebugCategoryRadioStyle}"
+                                     Checked="DebugCategoryRadio_Checked"/>
+                    </WrapPanel>
+
+                    <TextBlock Text="주입할 로그"
+                               Foreground="#AAB3BD"
+                               FontSize="12"
+                               Margin="0,0,0,4"/>
+                    <TextBox x:Name="DebugLogInputTextBox"
+                             Height="220"
+                             Margin="0,0,0,8"
+                             Background="#2B3038"
+                             Foreground="White"
+                             BorderBrush="#55616F"
+                             BorderThickness="1"
+                             AcceptsReturn="True"
+                             TextWrapping="Wrap"
+                             VerticalScrollBarVisibility="Auto"
+                             HorizontalScrollBarVisibility="Disabled"/>
+
+                    <Button Content="테스트 로그 주입"
+                            Height="34"
+                            Click="InjectDebugLogButton_Click"
+                            Style="{StaticResource SecondaryButtonStyle}"
+                            FontSize="12"/>
+                </StackPanel>
+            </Border>
+
+            <Grid Grid.Row="1" Grid.Column="1">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <Border Grid.Row="0"
+                        Background="#FF15181D"
+                        CornerRadius="10"
+                        Padding="10"
+                        Margin="0,0,0,10">
+                    <DockPanel>
+                        <TextBlock DockPanel.Dock="Top"
+                                   Text="최근 주입 로그"
+                                   Foreground="White"
+                                   FontSize="14"
+                                   FontWeight="SemiBold"
+                                   Margin="0,0,0,8"/>
+                        <ListBox x:Name="RecentLogsListBox"
+                                 Background="#1F2430"
+                                 BorderBrush="#44505D"
+                                 Foreground="#F2F6FA"
+                                 ScrollViewer.VerticalScrollBarVisibility="Auto"
+                                 MouseDoubleClick="RecentLogsListBox_MouseDoubleClick"/>
+                    </DockPanel>
+                </Border>
+
+                <Border Grid.Row="1"
+                        Background="#FF15181D"
+                        CornerRadius="10"
+                        Padding="10">
+                    <DockPanel>
+                        <TextBlock DockPanel.Dock="Top"
+                                   Text="샘플 문구"
+                                   Foreground="White"
+                                   FontSize="14"
+                                   FontWeight="SemiBold"
+                                   Margin="0,0,0,8"/>
+                        <ListBox x:Name="SampleLogsListBox"
+                                 Background="#1F2430"
+                                 BorderBrush="#44505D"
+                                 Foreground="#F2F6FA"
+                                 ItemTemplate="{StaticResource SampleLogTemplate}"
+                                 ScrollViewer.VerticalScrollBarVisibility="Auto"
+                                 MouseDoubleClick="SampleLogsListBox_MouseDoubleClick"/>
+                    </DockPanel>
+                </Border>
+            </Grid>
+        </Grid>
+    </Border>
+</Window>

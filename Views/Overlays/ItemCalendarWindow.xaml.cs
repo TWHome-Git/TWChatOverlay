@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
@@ -43,11 +43,14 @@ namespace TWChatOverlay.Views
         private readonly object _todayLock = new();
         private readonly List<ItemLogSnapshotEntry> _todaySnapshots = new();
         private DateTime _currentMonthStart;
+        private DateTime _loadedMonthStart = DateTime.MinValue;
         private DateTime _loadedAbaddonMonthStart = DateTime.MinValue;
         private DateTime _loadedTodayDate = DateTime.MinValue;
+        private bool _hasLoadedMonth;
         private bool _isLoading;
         private string _monthText = string.Empty;
         private string _statusText = string.Empty;
+        private int _loadProgressValue;
         private string _monthlyAbaddonSeedText = string.Empty;
         private int _loadVersion;
 
@@ -63,7 +66,7 @@ namespace TWChatOverlay.Views
 
             _currentMonthStart = GetMonthStart(DateTime.Today);
             UpdateHeaderText(_currentMonthStart);
-            SetLoadingState(true, "이번달 아이템 로그를 불러오는 중...");
+            SetLoadingState(false, string.Empty);
         }
 
         public ObservableCollection<ItemCalendarDayViewModel> Days => _days;
@@ -111,6 +114,19 @@ namespace TWChatOverlay.Views
             }
         }
 
+        public int LoadProgressValue
+        {
+            get => _loadProgressValue;
+            private set
+            {
+                if (_loadProgressValue == value)
+                    return;
+
+                _loadProgressValue = value;
+                OnPropertyChanged(nameof(LoadProgressValue));
+            }
+        }
+
         public bool IsLoading
         {
             get => _isLoading;
@@ -130,20 +146,39 @@ namespace TWChatOverlay.Views
         public Task LoadCurrentWeekAsync()
             => LoadCurrentMonthAsync();
 
-        private async Task LoadMonthAsync(DateTime monthStart)
+        public Task RefreshCurrentMonthAsync()
+            => LoadMonthAsync(_currentMonthStart, forceRebuild: true);
+
+        public bool IsMonthLoaded(DateTime monthStart)
+            => _hasLoadedMonth && _loadedMonthStart == GetMonthStart(monthStart);
+
+        private async Task LoadMonthAsync(DateTime monthStart, bool forceRebuild = false)
         {
             int version = ++_loadVersion;
             monthStart = GetMonthStart(monthStart);
 
-            SetLoadingState(true, "이번달 아이템 로그를 불러오는 중...");
+            SetLoadingState(true, "아이템 로그를 불러오는 중...");
             UpdateHeaderText(monthStart);
+            var progress = new Progress<MonthlyReadableLogExportService.MonthlyBuildProgress>(report =>
+                Dispatcher.BeginInvoke(new Action(() => UpdateLoadingProgress(report)), System.Windows.Threading.DispatcherPriority.Background));
 
             IReadOnlyList<ItemCalendarDayViewModel> days;
             IReadOnlyList<ItemLogSnapshotEntry> snapshots;
             AbaddonMonthlySummarySnapshotEntry abaddonSummary;
             try
             {
-                var monthlyTask = Task.Run(() => MonthlyReadableLogExportService.LoadOrBuildMonth(monthStart, _settings.ChatLogFolderPath, _logAnalysisService));
+                bool isCurrentMonth = monthStart.Year == DateTime.Today.Year && monthStart.Month == DateTime.Today.Month;
+                var monthlyTask = Task.Run(() =>
+                {
+                    if (forceRebuild)
+                    {
+                        return MonthlyReadableLogExportService.RebuildMonth(monthStart, _settings.ChatLogFolderPath, _logAnalysisService, progress);
+                    }
+
+                    return isCurrentMonth
+                        ? MonthlyReadableLogExportService.RefreshCurrentMonthFromTodayOnly(monthStart, _settings.ChatLogFolderPath, _logAnalysisService, progress)
+                        : MonthlyReadableLogExportService.LoadOrBuildMonth(monthStart, _settings.ChatLogFolderPath, _logAnalysisService, progress);
+                });
 
                 var monthlyData = await monthlyTask.ConfigureAwait(true);
                 snapshots = monthlyData.ItemSnapshots;
@@ -157,7 +192,7 @@ namespace TWChatOverlay.Views
                     return;
 
                 Days.Clear();
-                SetLoadingState(false, "이번달 로그를 불러오지 못했습니다.");
+                SetLoadingState(false, "아이템 로그를 불러오지 못했습니다.");
                 return;
             }
 
@@ -165,6 +200,8 @@ namespace TWChatOverlay.Views
                 return;
 
             _currentMonthStart = monthStart;
+            _loadedMonthStart = monthStart;
+            _hasLoadedMonth = true;
             Days.Clear();
             foreach (var day in days)
                 Days.Add(day);
@@ -181,7 +218,7 @@ namespace TWChatOverlay.Views
             int totalCount = Days.Sum(day => day.TotalCount);
             string status = totalCount > 0
                 ? $"{GetMonthSummaryLabel(monthStart)} 총 {totalCount:N0}개 획득"
-                : $"{GetMonthSummaryLabel(monthStart)}에 아이템 기록이 없습니다.";
+                : $"{GetMonthSummaryLabel(monthStart)} 아이템 기록이 없습니다.";
             SetLoadingState(false, status);
         }
 
@@ -243,7 +280,7 @@ namespace TWChatOverlay.Views
 
         private void UpdateMonthlyAbaddonSummary(AbaddonMonthlySummarySnapshotEntry summary)
         {
-            MonthlyAbaddonSeedText = $"어밴던로드 시드 누적합계: {FormatManAmount(summary.NetProfitMan)}";
+            MonthlyAbaddonSeedText = $"어밴던로드 누적 합계: {FormatManAmount(summary.NetProfitMan)}";
 
             MonthlyAbaddonSummary.Clear();
             MonthlyAbaddonSummary.Add(new AbaddonMonthlyStoneSummaryEntryViewModel("하급 마정석", LowMagicStoneIconUri, summary.Low));
@@ -344,16 +381,16 @@ namespace TWChatOverlay.Views
             int totalCount = Days.Sum(day => day.TotalCount);
             string status = totalCount > 0
                 ? $"{GetMonthSummaryLabel(_currentMonthStart)} 총 {totalCount:N0}개 획득"
-                : $"{GetMonthSummaryLabel(_currentMonthStart)}에 아이템 기록이 없습니다.";
+                : $"{GetMonthSummaryLabel(_currentMonthStart)} 아이템 기록이 없습니다.";
             SetLoadingState(false, status);
         }
 
-        private AbaddonMonthlySummarySnapshotEntry LoadOrBuildMonthlyAbaddonSummary(DateTime monthStart)
+        private AbaddonMonthlySummarySnapshotEntry LoadOrBuildMonthlyAbaddonSummarySnapshot(DateTime monthStart)
         {
             return MonthlyReadableLogExportService.LoadOrBuildMonth(monthStart, _settings.ChatLogFolderPath, _logAnalysisService).AbaddonSummary;
         }
 
-        private bool IsMonthlyAbaddonSummaryStale(string summaryPath, DateTime monthStart)
+        private bool IsMonthlyAbaddonSummarySnapshotStale(string summaryPath, DateTime monthStart)
         {
             if (string.IsNullOrWhiteSpace(_settings.ChatLogFolderPath) ||
                 !Directory.Exists(_settings.ChatLogFolderPath))
@@ -379,7 +416,7 @@ namespace TWChatOverlay.Views
             return false;
         }
 
-        private AbaddonMonthlySummarySnapshotEntry BuildMonthlyAbaddonSummaryFromChatLogs(DateTime monthStart)
+        private AbaddonMonthlySummarySnapshotEntry BuildMonthlyAbaddonSummarySnapshotFromChatLogs(DateTime monthStart)
         {
             var summary = new AbaddonMonthlySummarySnapshotEntry { MonthStart = monthStart.Date };
 
@@ -423,12 +460,12 @@ namespace TWChatOverlay.Views
             return summary;
         }
 
-        private static void SaveMonthlyAbaddonSummary(DateTime monthStart, AbaddonMonthlySummarySnapshotEntry summary)
+        private static void SaveMonthlyAbaddonSummarySnapshot(DateTime monthStart, AbaddonMonthlySummarySnapshotEntry summary)
         {
             try
             {
                 Directory.CreateDirectory(ItemLogDirectoryPath);
-                string path = GetMonthlyAbaddonSummaryPath(monthStart);
+                string path = GetMonthlyAbaddonSummarySnapshotPath(monthStart);
                 File.WriteAllText(path, JsonSerializer.Serialize(summary), Encoding.UTF8);
             }
             catch (Exception ex)
@@ -458,7 +495,7 @@ namespace TWChatOverlay.Views
                 return false;
 
             string body = Regex.Replace(formattedText, @"^\[[^\]]+\]\s*", string.Empty);
-            if (body.Contains("주문을 통해", StringComparison.Ordinal))
+            if (body.Contains("사용하셨습니다", StringComparison.Ordinal))
                 return false;
 
             var feeMatch = AbaddonEntryFeeRegex.Match(body);
@@ -509,8 +546,8 @@ namespace TWChatOverlay.Views
         private static bool TryParseLong(string raw, out long value)
             => long.TryParse(raw.Replace(",", string.Empty).Trim(), out value);
 
-        private static string GetMonthlyAbaddonSummaryPath(DateTime date)
-            => Path.Combine(ItemLogDirectoryPath, $"AbaddonSummary_{date:yyyy_MM}.json");
+        private static string GetMonthlyAbaddonSummarySnapshotPath(DateTime date)
+            => Path.Combine(ItemLogDirectoryPath, $"MonthlyAbaddonSummary_{date:yyyy_MM}.json");
 
         private static DateTime GetMonthStart(DateTime date)
             => new(date.Year, date.Month, 1);
@@ -540,6 +577,16 @@ namespace TWChatOverlay.Views
         {
             IsLoading = isLoading;
             StatusText = statusText;
+            if (!isLoading)
+                LoadProgressValue = 0;
+        }
+
+        private void UpdateLoadingProgress(MonthlyReadableLogExportService.MonthlyBuildProgress progress)
+        {
+            LoadProgressValue = progress.Percent;
+            StatusText = progress.Total <= 0
+                ? "로그를 다시 분석하는 중..."
+                : $"{progress.Processed}/{progress.Total} 파일 처리 중... ({progress.Percent}%) {progress.CurrentFileName}";
         }
 
         private static string FormatManAmount(long totalMan)
@@ -574,6 +621,9 @@ namespace TWChatOverlay.Views
         private void ThisMonth_Click(object sender, RoutedEventArgs e)
             => _ = LoadMonthAsync(DateTime.Today);
 
+        private void Refresh_Click(object sender, RoutedEventArgs e)
+            => _ = RefreshCurrentMonthAsync();
+
         private void Close_Click(object sender, RoutedEventArgs e)
             => Close();
 
@@ -590,3 +640,8 @@ namespace TWChatOverlay.Views
         }
     }
 }
+
+
+
+
+

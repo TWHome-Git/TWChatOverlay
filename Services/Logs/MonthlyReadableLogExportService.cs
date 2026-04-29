@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.Json;
 using System.Text.RegularExpressions;
 using TWChatOverlay.Models;
 
@@ -50,6 +51,7 @@ namespace TWChatOverlay.Services
     {
         private static readonly string ItemLogDirectoryPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Itemlog");
         private static readonly object SyncRoot = new();
+        private static readonly Dictionary<DateTime, MonthlyReadableLogData> MonthlyDataCache = new();
 
         private static readonly Regex AbaddonEntryFeeRegex = new(
             @"입장료\s*(?<value>[\d,]+)\s*만\s*Seed",
@@ -64,31 +66,55 @@ namespace TWChatOverlay.Services
         public static MonthlyReadableLogData LoadOrBuildMonth(
             DateTime monthStart,
             string? chatLogFolderPath,
-            LogAnalysisService logAnalysisService)
+            LogAnalysisService logAnalysisService,
+            IProgress<MonthlyBuildProgress>? progress = null)
         {
             ArgumentNullException.ThrowIfNull(logAnalysisService);
 
             lock (SyncRoot)
             {
                 Directory.CreateDirectory(ItemLogDirectoryPath);
+                CleanupLegacyMonthlySyncFiles();
 
                 var currentSources = EnumerateMonthChatLogInfos(monthStart, chatLogFolderPath).ToList();
                 string csvPath = GetMonthlyCsvPath(monthStart);
-                bool isCurrentMonth = monthStart.Year == DateTime.Today.Year && monthStart.Month == DateTime.Today.Month;
+                string syncPath = GetMonthlySyncStatePath();
+                var syncIndex = LoadMonthlySyncIndex(syncPath);
+                var syncState = syncIndex.EmptyMonths.FirstOrDefault(state => state.MonthStart.Date == monthStart.Date);
+                if (TryGetCachedMonthlyData(monthStart, out var cached))
+                {
+                    if (currentSources.Count == 0 || SourcesMatch(cached.SourceFiles, currentSources))
+                    {
+                        DeleteLegacyArtifacts(monthStart);
+                        return cached;
+                    }
+                }
 
                 if (File.Exists(csvPath))
                 {
                     var loaded = LoadFromCsv(csvPath);
                     if (loaded != null &&
-                        (isCurrentMonth || currentSources.Count == 0 || SourcesMatch(loaded.SourceFiles, currentSources)))
+                        (currentSources.Count == 0 || SourcesMatch(loaded.SourceFiles, currentSources)))
                     {
+                        CacheMonthlyData(loaded);
                         DeleteLegacyArtifacts(monthStart);
                         return loaded;
                     }
                 }
 
-                var rebuilt = BuildFromChatLogs(monthStart, currentSources, logAnalysisService);
+                if (syncState != null &&
+                    (currentSources.Count == 0 || SourcesMatch(syncState.SourceFiles, currentSources)))
+                {
+                    var emptyMonth = CreateEmptyMonth(monthStart, currentSources, syncState.SourceSignature);
+                    CacheMonthlyData(emptyMonth);
+                    DeleteLegacyArtifacts(monthStart);
+                    return emptyMonth;
+                }
+
+                var rebuilt = BuildFromChatLogs(monthStart, currentSources, logAnalysisService, progress);
                 WriteCsv(csvPath, rebuilt);
+                CacheMonthlyData(rebuilt);
+                SaveMonthlySyncState(syncPath, rebuilt);
                 DeleteLegacyArtifacts(monthStart);
                 return rebuilt;
             }
@@ -97,17 +123,21 @@ namespace TWChatOverlay.Services
         public static MonthlyReadableLogData RebuildMonth(
             DateTime monthStart,
             string? chatLogFolderPath,
-            LogAnalysisService logAnalysisService)
+            LogAnalysisService logAnalysisService,
+            IProgress<MonthlyBuildProgress>? progress = null)
         {
             ArgumentNullException.ThrowIfNull(logAnalysisService);
 
             lock (SyncRoot)
             {
                 Directory.CreateDirectory(ItemLogDirectoryPath);
+                CleanupLegacyMonthlySyncFiles();
 
                 var currentSources = EnumerateMonthChatLogInfos(monthStart, chatLogFolderPath).ToList();
-                var rebuilt = BuildFromChatLogs(monthStart, currentSources, logAnalysisService);
+                var rebuilt = BuildFromChatLogs(monthStart, currentSources, logAnalysisService, progress);
                 WriteCsv(GetMonthlyCsvPath(monthStart), rebuilt);
+                CacheMonthlyData(rebuilt);
+                SaveMonthlySyncState(GetMonthlySyncStatePath(), rebuilt);
                 DeleteLegacyArtifacts(monthStart);
                 return rebuilt;
             }
@@ -116,39 +146,58 @@ namespace TWChatOverlay.Services
         public static MonthlyReadableLogData RefreshCurrentMonthFromTodayOnly(
             DateTime monthStart,
             string? chatLogFolderPath,
-            LogAnalysisService logAnalysisService)
+            LogAnalysisService logAnalysisService,
+            IProgress<MonthlyBuildProgress>? progress = null)
         {
             ArgumentNullException.ThrowIfNull(logAnalysisService);
 
             lock (SyncRoot)
             {
                 Directory.CreateDirectory(ItemLogDirectoryPath);
+                CleanupLegacyMonthlySyncFiles();
 
                 DateTime today = DateTime.Today;
                 if (monthStart.Year != today.Year || monthStart.Month != today.Month)
                 {
-                    return LoadOrBuildMonth(monthStart, chatLogFolderPath, logAnalysisService);
+                    return LoadOrBuildMonth(monthStart, chatLogFolderPath, logAnalysisService, progress);
                 }
 
                 string csvPath = GetMonthlyCsvPath(monthStart);
-                var existing = LoadFromCsv(csvPath);
+                var existing = TryGetCachedMonthlyData(monthStart, out var cachedExisting) ? cachedExisting : LoadFromCsv(csvPath);
                 if (existing == null)
                 {
-                    var rebuilt = BuildFromChatLogs(monthStart, EnumerateMonthChatLogInfos(monthStart, chatLogFolderPath).ToList(), logAnalysisService);
+                    var rebuilt = BuildFromChatLogs(monthStart, EnumerateMonthChatLogInfos(monthStart, chatLogFolderPath).ToList(), logAnalysisService, progress);
                     WriteCsv(csvPath, rebuilt);
+                    CacheMonthlyData(rebuilt);
+                    SaveMonthlySyncState(GetMonthlySyncStatePath(), rebuilt);
                     DeleteLegacyArtifacts(monthStart);
                     return rebuilt;
                 }
 
                 var currentSources = EnumerateMonthChatLogInfos(monthStart, chatLogFolderPath).ToList();
+                progress?.Report(new MonthlyBuildProgress(0, 2, "오늘 로그를 다시 분석하는 중..."));
                 var preservedSnapshots = existing.ItemSnapshots
                     .Where(snapshot => snapshot.Date.Date < today)
                     .ToList();
                 var todaySources = currentSources
                     .Where(source => source.Date.Date == today)
                     .ToList();
+                var rebuiltTodaySnapshots = BuildItemSnapshotsFromSources(todaySources, logAnalysisService, progress);
 
-                preservedSnapshots.AddRange(BuildItemSnapshotsFromSources(todaySources, logAnalysisService));
+                preservedSnapshots.AddRange(rebuiltTodaySnapshots);
+                progress?.Report(new MonthlyBuildProgress(1, 2, "어밴던 합계를 다시 계산하는 중..."));
+                var todayAbaddonSummary = BuildAbaddonSummaryFromSources(todaySources, logAnalysisService);
+                string abaddonStatePath = GetMonthlyAbaddonTodayStatePath(monthStart);
+                var abaddonState = LoadMonthlyAbaddonTodayState(abaddonStatePath);
+                if (abaddonState == null)
+                {
+                    existing.AbaddonSummary = BuildAbaddonSummaryFromSources(currentSources, logAnalysisService);
+                }
+                else
+                {
+                    ApplyAbaddonSummaryDelta(existing.AbaddonSummary, abaddonState, -1);
+                    ApplyAbaddonSummaryDelta(existing.AbaddonSummary, todayAbaddonSummary, 1);
+                }
 
                 existing.ItemSnapshots = preservedSnapshots
                     .OrderBy(snapshot => snapshot.Date)
@@ -165,6 +214,10 @@ namespace TWChatOverlay.Services
                 existing.SourceSignature = ComputeSourceSignature(currentSources);
 
                 WriteCsv(csvPath, existing);
+                CacheMonthlyData(existing);
+                SaveMonthlyAbaddonTodayState(abaddonStatePath, today, todayAbaddonSummary);
+                SaveMonthlySyncState(GetMonthlySyncStatePath(), existing);
+                progress?.Report(new MonthlyBuildProgress(2, 2, "달력 데이터를 정리하는 중..."));
                 DeleteLegacyArtifacts(monthStart);
                 return existing;
             }
@@ -180,6 +233,7 @@ namespace TWChatOverlay.Services
             lock (SyncRoot)
             {
                 Directory.CreateDirectory(ItemLogDirectoryPath);
+                CleanupLegacyMonthlySyncFiles();
 
                 DateTime today = DateTime.Today;
                 if (monthStart.Year != today.Year || monthStart.Month != today.Month)
@@ -189,11 +243,13 @@ namespace TWChatOverlay.Services
 
                 string csvPath = GetMonthlyCsvPath(monthStart);
                 var currentSources = EnumerateMonthChatLogInfos(monthStart, chatLogFolderPath).ToList();
-                var existing = LoadFromCsv(csvPath);
+                var existing = TryGetCachedMonthlyData(monthStart, out var cachedExisting) ? cachedExisting : LoadFromCsv(csvPath);
                 if (existing == null)
                 {
                     var rebuilt = BuildFromChatLogs(monthStart, currentSources, logAnalysisService);
                     WriteCsv(csvPath, rebuilt);
+                    CacheMonthlyData(rebuilt);
+                    SaveMonthlySyncState(GetMonthlySyncStatePath(), rebuilt);
                     DeleteLegacyArtifacts(monthStart);
                     return rebuilt;
                 }
@@ -240,13 +296,23 @@ namespace TWChatOverlay.Services
                 existing.SourceSignature = ComputeSourceSignature(currentSources);
 
                 WriteCsv(csvPath, existing);
+                CacheMonthlyData(existing);
+                SaveMonthlySyncState(GetMonthlySyncStatePath(), existing);
                 DeleteLegacyArtifacts(monthStart);
                 return existing;
             }
         }
 
         public static MonthlyReadableLogData? LoadFromCsv(DateTime monthStart)
-            => LoadFromCsv(GetMonthlyCsvPath(monthStart));
+        {
+            lock (SyncRoot)
+            {
+                if (TryGetCachedMonthlyData(monthStart, out var cached))
+                    return cached;
+
+                return LoadFromCsv(GetMonthlyCsvPath(monthStart));
+            }
+        }
 
         public static void AppendItemSnapshot(DateTime date, LogParser.ParseResult itemLog)
         {
@@ -261,7 +327,7 @@ namespace TWChatOverlay.Services
                 try
                 {
                     DateTime monthStart = new(date.Year, date.Month, 1);
-                    var data = LoadFromCsv(monthStart) ?? new MonthlyReadableLogData(
+                    var data = TryGetCachedMonthlyData(monthStart, out var cachedData) ? cachedData : LoadFromCsv(monthStart) ?? new MonthlyReadableLogData(
                         monthStart,
                         new List<ItemLogSnapshotEntry>(),
                         new AbaddonMonthlySummarySnapshotEntry { MonthStart = monthStart.Date },
@@ -270,6 +336,8 @@ namespace TWChatOverlay.Services
 
                     data.ItemSnapshots.Add(CreateSnapshotFromItemLog(itemLog, date.Date));
                     WriteCsv(GetMonthlyCsvPath(monthStart), data);
+                    CacheMonthlyData(data);
+                    SaveMonthlySyncState(GetMonthlySyncStatePath(), data);
                     DeleteLegacyArtifacts(monthStart);
                 }
                 catch (Exception ex)
@@ -289,7 +357,7 @@ namespace TWChatOverlay.Services
                 try
                 {
                     Directory.CreateDirectory(ItemLogDirectoryPath);
-                    var data = LoadFromCsv(monthStart) ?? new MonthlyReadableLogData(
+                    var data = TryGetCachedMonthlyData(monthStart, out var cachedData) ? cachedData : LoadFromCsv(monthStart) ?? new MonthlyReadableLogData(
                         monthStart,
                         new List<ItemLogSnapshotEntry>(),
                         new AbaddonMonthlySummarySnapshotEntry { MonthStart = monthStart.Date },
@@ -303,6 +371,8 @@ namespace TWChatOverlay.Services
                         .ToList();
 
                     WriteCsv(GetMonthlyCsvPath(monthStart), data);
+                    CacheMonthlyData(data);
+                    SaveMonthlySyncState(GetMonthlySyncStatePath(), data);
                     DeleteLegacyArtifacts(monthStart);
                 }
                 catch (Exception ex)
@@ -319,7 +389,7 @@ namespace TWChatOverlay.Services
                 try
                 {
                     Directory.CreateDirectory(ItemLogDirectoryPath);
-                    var data = LoadFromCsv(monthStart) ?? new MonthlyReadableLogData(
+                    var data = TryGetCachedMonthlyData(monthStart, out var cachedData) ? cachedData : LoadFromCsv(monthStart) ?? new MonthlyReadableLogData(
                         monthStart,
                         new List<ItemLogSnapshotEntry>(),
                         new AbaddonMonthlySummarySnapshotEntry { MonthStart = monthStart.Date },
@@ -328,6 +398,8 @@ namespace TWChatOverlay.Services
 
                     data.AbaddonSummary = summary;
                     WriteCsv(GetMonthlyCsvPath(monthStart), data);
+                    CacheMonthlyData(data);
+                    SaveMonthlySyncState(GetMonthlySyncStatePath(), data);
                     DeleteLegacyArtifacts(monthStart);
                 }
                 catch (Exception ex)
@@ -362,10 +434,13 @@ namespace TWChatOverlay.Services
         private static MonthlyReadableLogData BuildFromChatLogs(
             DateTime monthStart,
             IReadOnlyList<MonthlyChatLogSourceInfo> sourceFiles,
-            LogAnalysisService logAnalysisService)
+            LogAnalysisService logAnalysisService,
+            IProgress<MonthlyBuildProgress>? progress = null)
         {
             var itemSnapshots = new List<ItemLogSnapshotEntry>();
             var abaddonSummary = new AbaddonMonthlySummarySnapshotEntry { MonthStart = monthStart.Date };
+            int processed = 0;
+            int total = sourceFiles.Count;
 
             foreach (var sourceFile in sourceFiles)
             {
@@ -390,6 +465,11 @@ namespace TWChatOverlay.Services
                 {
                     AppLogger.Warn($"Failed to build monthly logs from '{sourceFile.FullPath}'.", ex);
                 }
+                finally
+                {
+                    processed++;
+                    progress?.Report(new MonthlyBuildProgress(processed, total, sourceFile.FileName));
+                }
             }
 
             return new MonthlyReadableLogData(
@@ -407,9 +487,12 @@ namespace TWChatOverlay.Services
 
         private static List<ItemLogSnapshotEntry> BuildItemSnapshotsFromSources(
             IReadOnlyList<MonthlyChatLogSourceInfo> sourceFiles,
-            LogAnalysisService logAnalysisService)
+            LogAnalysisService logAnalysisService,
+            IProgress<MonthlyBuildProgress>? progress = null)
         {
             var itemSnapshots = new List<ItemLogSnapshotEntry>();
+            int processed = 0;
+            int total = sourceFiles.Count;
 
             foreach (var sourceFile in sourceFiles)
             {
@@ -431,9 +514,53 @@ namespace TWChatOverlay.Services
                 {
                     AppLogger.Warn($"Failed to build item snapshots from '{sourceFile.FullPath}'.", ex);
                 }
+                finally
+                {
+                    processed++;
+                    progress?.Report(new MonthlyBuildProgress(processed, total, sourceFile.FileName));
+                }
             }
 
             return itemSnapshots;
+        }
+
+        private static AbaddonMonthlySummarySnapshotEntry BuildAbaddonSummaryFromSources(
+            IReadOnlyList<MonthlyChatLogSourceInfo> sourceFiles,
+            LogAnalysisService logAnalysisService,
+            IProgress<MonthlyBuildProgress>? progress = null)
+        {
+            var summary = new AbaddonMonthlySummarySnapshotEntry();
+            int processed = 0;
+            int total = sourceFiles.Count;
+
+            foreach (var sourceFile in sourceFiles)
+            {
+                try
+                {
+                    using var stream = new FileStream(sourceFile.FullPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+                    using var reader = new StreamReader(stream, Encoding.GetEncoding(949));
+                    string? line;
+                    while ((line = reader.ReadLine()) != null)
+                    {
+                        var analysis = logAnalysisService.Analyze(line, isRealTime: false);
+                        if (!analysis.IsSuccess)
+                            continue;
+
+                        TryAccumulateAbaddonSummary(analysis.Parsed.FormattedText, summary);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    AppLogger.Warn($"Failed to build monthly Abaddon summary from '{sourceFile.FullPath}'.", ex);
+                }
+                finally
+                {
+                    processed++;
+                    progress?.Report(new MonthlyBuildProgress(processed, total, sourceFile.FileName));
+                }
+            }
+
+            return summary;
         }
 
         private static MonthlyReadableLogData? LoadFromCsv(string csvPath)
@@ -518,6 +645,12 @@ namespace TWChatOverlay.Services
         {
             try
             {
+                if (!HasAnyData(data))
+                {
+                    TryDelete(csvPath);
+                    return;
+                }
+
                 var sb = new StringBuilder();
                 sb.AppendLine($"# month={data.MonthStart:yyyy-MM}");
                 sb.AppendLine($"# sourceSignature={data.SourceSignature}");
@@ -575,6 +708,186 @@ namespace TWChatOverlay.Services
             {
                 AppLogger.Warn($"Failed to write monthly CSV '{csvPath}'.", ex);
             }
+        }
+
+        private static bool HasAnyData(MonthlyReadableLogData data)
+        {
+            if (data.ItemSnapshots.Count > 0)
+                return true;
+
+            if (data.AbaddonSummary == null)
+                return false;
+
+            return data.AbaddonSummary.TotalEntryFeeMan != 0 ||
+                   data.AbaddonSummary.Low != 0 ||
+                   data.AbaddonSummary.Mid != 0 ||
+                   data.AbaddonSummary.High != 0 ||
+                   data.AbaddonSummary.Top != 0 ||
+                   data.AbaddonSummary.StoneRevenueMan != 0 ||
+                   data.AbaddonSummary.NetProfitMan != 0;
+        }
+
+        private static MonthlyReadableLogData CreateEmptyMonth(
+            DateTime monthStart,
+            IReadOnlyList<MonthlyChatLogSourceInfo> sourceFiles,
+            string sourceSignature)
+        {
+            return new MonthlyReadableLogData(
+                monthStart.Date,
+                new List<ItemLogSnapshotEntry>(),
+                new AbaddonMonthlySummarySnapshotEntry { MonthStart = monthStart.Date },
+                sourceSignature,
+                sourceFiles.Select(sourceFile => new MonthlyLogSourceSnapshot
+                {
+                    FileName = sourceFile.FileName,
+                    Length = sourceFile.Length,
+                    LastWriteTimeUtc = sourceFile.LastWriteTimeUtc
+                }).ToList());
+        }
+
+        private static bool TryGetCachedMonthlyData(DateTime monthStart, out MonthlyReadableLogData data)
+        {
+            return MonthlyDataCache.TryGetValue(monthStart.Date, out data!);
+        }
+
+        private static void CacheMonthlyData(MonthlyReadableLogData data)
+        {
+            MonthlyDataCache[data.MonthStart.Date] = data;
+        }
+
+        private static MonthlySyncIndex LoadMonthlySyncIndex(string syncPath)
+        {
+            if (!File.Exists(syncPath))
+                return new MonthlySyncIndex();
+
+            try
+            {
+                string json = File.ReadAllText(syncPath, Encoding.UTF8);
+                using var document = JsonDocument.Parse(json);
+
+                if (document.RootElement.ValueKind == JsonValueKind.Object &&
+                    (document.RootElement.TryGetProperty(nameof(MonthlySyncIndex.EmptyMonths), out _) ||
+                     document.RootElement.TryGetProperty("emptyMonths", out _)))
+                {
+                    return NormalizeMonthlySyncIndex(JsonSerializer.Deserialize<MonthlySyncIndex>(json) ?? new MonthlySyncIndex());
+                }
+
+                var legacyState = JsonSerializer.Deserialize<MonthlySyncState>(json);
+                if (legacyState == null)
+                    return new MonthlySyncIndex();
+
+                var index = new MonthlySyncIndex();
+                if (!legacyState.HasAnyData)
+                    index.EmptyMonths.Add(legacyState);
+
+                return NormalizeMonthlySyncIndex(index);
+            }
+            catch (Exception ex)
+            {
+                AppLogger.Warn($"Failed to load monthly sync state '{syncPath}'.", ex);
+                return new MonthlySyncIndex();
+            }
+        }
+
+        private static MonthlyAbaddonTodayState? LoadMonthlyAbaddonTodayState(string statePath)
+        {
+            if (!File.Exists(statePath))
+                return null;
+
+            try
+            {
+                return JsonSerializer.Deserialize<MonthlyAbaddonTodayState>(File.ReadAllText(statePath, Encoding.UTF8));
+            }
+            catch (Exception ex)
+            {
+                AppLogger.Warn($"Failed to load monthly Abaddon daily state '{statePath}'.", ex);
+                return null;
+            }
+        }
+
+        private static void SaveMonthlySyncState(string syncPath, MonthlyReadableLogData data)
+        {
+            try
+            {
+                Directory.CreateDirectory(ItemLogDirectoryPath);
+                var index = LoadMonthlySyncIndex(syncPath);
+                DateTime monthStart = data.MonthStart.Date;
+                index.EmptyMonths.RemoveAll(state => state.MonthStart.Date == monthStart);
+
+                if (!HasAnyData(data))
+                {
+                    index.EmptyMonths.Add(new MonthlySyncState
+                    {
+                        MonthStart = monthStart,
+                        SourceSignature = data.SourceSignature,
+                        SourceFiles = data.SourceFiles.ToList()
+                    });
+                }
+
+                index = NormalizeMonthlySyncIndex(index);
+                if (index.EmptyMonths.Count == 0)
+                {
+                    TryDelete(syncPath);
+                    return;
+                }
+
+                File.WriteAllText(syncPath, JsonSerializer.Serialize(index), Encoding.UTF8);
+            }
+            catch (Exception ex)
+            {
+                AppLogger.Warn($"Failed to save monthly sync state '{syncPath}'.", ex);
+            }
+        }
+
+        private static void SaveMonthlyAbaddonTodayState(
+            string statePath,
+            DateTime contributionDate,
+            AbaddonMonthlySummarySnapshotEntry summary)
+        {
+            try
+            {
+                Directory.CreateDirectory(ItemLogDirectoryPath);
+                var state = new MonthlyAbaddonTodayState
+                {
+                    MonthStart = contributionDate.Date,
+                    ContributionDate = contributionDate.Date,
+                    TotalEntryFeeMan = summary.TotalEntryFeeMan,
+                    Low = summary.Low,
+                    Mid = summary.Mid,
+                    High = summary.High,
+                    Top = summary.Top
+                };
+
+                File.WriteAllText(statePath, JsonSerializer.Serialize(state), Encoding.UTF8);
+            }
+            catch (Exception ex)
+            {
+                AppLogger.Warn($"Failed to save monthly Abaddon daily state '{statePath}'.", ex);
+            }
+        }
+
+        private static void ApplyAbaddonSummaryDelta(
+            AbaddonMonthlySummarySnapshotEntry target,
+            MonthlyAbaddonTodayState delta,
+            int sign)
+        {
+            target.TotalEntryFeeMan += delta.TotalEntryFeeMan * sign;
+            target.Low += delta.Low * sign;
+            target.Mid += delta.Mid * sign;
+            target.High += delta.High * sign;
+            target.Top += delta.Top * sign;
+        }
+
+        private static void ApplyAbaddonSummaryDelta(
+            AbaddonMonthlySummarySnapshotEntry target,
+            AbaddonMonthlySummarySnapshotEntry delta,
+            int sign)
+        {
+            target.TotalEntryFeeMan += delta.TotalEntryFeeMan * sign;
+            target.Low += delta.Low * sign;
+            target.Mid += delta.Mid * sign;
+            target.High += delta.High * sign;
+            target.Top += delta.Top * sign;
         }
 
         private static void ParseMetadataLine(
@@ -853,7 +1166,6 @@ namespace TWChatOverlay.Services
         private static void DeleteLegacyArtifacts(DateTime monthStart)
         {
             TryDelete(Path.Combine(ItemLogDirectoryPath, $"ItemLog_{monthStart:yyyy_MM}.jsonl"));
-            TryDelete(Path.Combine(ItemLogDirectoryPath, $"ItemLog_{monthStart:yyyy_MM}.sync.json"));
             TryDelete(Path.Combine(ItemLogDirectoryPath, $"ItemLogSummary_{monthStart:yyyy_MM}.csv"));
             TryDelete(Path.Combine(ItemLogDirectoryPath, $"ItemLogSummary_{monthStart:yyyy_MM}.txt"));
             TryDelete(Path.Combine(ItemLogDirectoryPath, $"AbaddonSummary_{monthStart:yyyy_MM}.json"));
@@ -868,7 +1180,6 @@ namespace TWChatOverlay.Services
             string fileName = Path.GetFileName(path);
             return
                 (fileName.StartsWith("ItemLog_", StringComparison.OrdinalIgnoreCase) && fileName.EndsWith(".jsonl", StringComparison.OrdinalIgnoreCase)) ||
-                (fileName.StartsWith("ItemLog_", StringComparison.OrdinalIgnoreCase) && fileName.EndsWith(".sync.json", StringComparison.OrdinalIgnoreCase)) ||
                 fileName.StartsWith("ItemLogSummary_", StringComparison.OrdinalIgnoreCase) ||
                 fileName.StartsWith("AbaddonSummary_", StringComparison.OrdinalIgnoreCase) ||
                 fileName.StartsWith("AbaddonSummaryView_", StringComparison.OrdinalIgnoreCase) ||
@@ -891,6 +1202,89 @@ namespace TWChatOverlay.Services
         private static string GetMonthlyCsvPath(DateTime date)
             => Path.Combine(ItemLogDirectoryPath, $"ItemLog-{date:yy-MM}.csv");
 
+        private static string GetMonthlySyncStatePath()
+            => Path.Combine(ItemLogDirectoryPath, "ItemLog.sync.json");
+
+        private static string GetMonthlyAbaddonTodayStatePath(DateTime date)
+            => Path.Combine(ItemLogDirectoryPath, $"MonthlyAbaddonSummary_{date:yyyy_MM}.today.json");
+
+        private static void CleanupLegacyMonthlySyncFiles()
+        {
+            try
+            {
+                if (!Directory.Exists(ItemLogDirectoryPath))
+                    return;
+
+                foreach (string path in Directory.EnumerateFiles(ItemLogDirectoryPath, "ItemLog_*.sync.json"))
+                    TryDelete(path);
+            }
+            catch (Exception ex)
+            {
+                AppLogger.Warn("Failed to clean legacy monthly sync files.", ex);
+            }
+        }
+
+        private static MonthlySyncIndex NormalizeMonthlySyncIndex(MonthlySyncIndex index)
+        {
+            var normalized = new MonthlySyncIndex();
+
+            foreach (var state in index.EmptyMonths
+                         .Where(state => state != null)
+                         .GroupBy(state => state.MonthStart.Date)
+                         .Select(group => group.Last())
+                         .OrderBy(state => state.MonthStart))
+            {
+                normalized.EmptyMonths.Add(new MonthlySyncState
+                {
+                    MonthStart = state.MonthStart.Date,
+                    SourceSignature = state.SourceSignature ?? string.Empty,
+                    SourceFiles = state.SourceFiles
+                        .Select(sourceFile => new MonthlyLogSourceSnapshot
+                        {
+                            FileName = sourceFile.FileName,
+                            Length = sourceFile.Length,
+                            LastWriteTimeUtc = sourceFile.LastWriteTimeUtc
+                        })
+                        .ToList()
+                });
+            }
+
+            return normalized;
+        }
+
+        private sealed class MonthlySyncIndex
+        {
+            public List<MonthlySyncState> EmptyMonths { get; set; } = new();
+        }
+
+        private sealed class MonthlySyncState
+        {
+            public DateTime MonthStart { get; set; }
+
+            public string SourceSignature { get; set; } = string.Empty;
+
+            public bool HasAnyData { get; set; }
+
+            public List<MonthlyLogSourceSnapshot> SourceFiles { get; set; } = new();
+        }
+
+        private sealed class MonthlyAbaddonTodayState
+        {
+            public DateTime MonthStart { get; set; }
+
+            public DateTime ContributionDate { get; set; }
+
+            public long TotalEntryFeeMan { get; set; }
+
+            public long Low { get; set; }
+
+            public long Mid { get; set; }
+
+            public long High { get; set; }
+
+            public long Top { get; set; }
+        }
+
         private sealed class MonthlyChatLogSourceInfo
         {
             public string FullPath { get; set; } = string.Empty;
@@ -902,6 +1296,11 @@ namespace TWChatOverlay.Services
             public DateTime LastWriteTimeUtc { get; set; }
 
             public DateTime Date { get; set; }
+        }
+
+        public sealed record MonthlyBuildProgress(int Processed, int Total, string CurrentFileName)
+        {
+            public int Percent => Total <= 0 ? 100 : (int)Math.Round((double)Processed * 100.0 / Total);
         }
     }
 }

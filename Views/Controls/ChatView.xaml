@@ -6,7 +6,7 @@
              mc:Ignorable="d">
     <Grid>
         <RichTextBox x:Name="LogDisplay"
-                     FontSize="{Binding FontSize}"
+                     FontSize="{Binding CurrentFontSize, RelativeSource={RelativeSource AncestorType=Window}}"
                      FontFamily="{Binding CurrentFont, RelativeSource={RelativeSource AncestorType=Window}}"
                      IsReadOnly="True"
                      Background="Transparent"

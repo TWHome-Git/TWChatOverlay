@@ -38,6 +38,7 @@ namespace TWChatOverlay.ViewModels
         private bool _showEtosDirectionAlert;
         private bool _showEtosHelperWindow;
         private bool _enableAbaddonRoadCountAlert;
+        private bool _showAbaddonRoadSummaryWindow;
         private bool _enableCravingPleasureCountAlert;
         private bool _showDungeonCountDisplayWindow;
         private int _abaddonRoadCountAlertDurationSeconds;
@@ -145,6 +146,12 @@ namespace TWChatOverlay.ViewModels
         {
             get => _enableAbaddonRoadCountAlert;
             set => SetSetting(ref _enableAbaddonRoadCountAlert, value, (settings, newValue) => settings.EnableAbaddonRoadCountAlert = newValue);
+        }
+
+        public bool ShowAbaddonRoadSummaryWindow
+        {
+            get => _showAbaddonRoadSummaryWindow;
+            set => SetSetting(ref _showAbaddonRoadSummaryWindow, value, (settings, newValue) => settings.ShowAbaddonRoadSummaryWindow = newValue);
         }
 
         public bool EnableCravingPleasureCountAlert
@@ -272,6 +279,7 @@ namespace TWChatOverlay.ViewModels
             _showEtosDirectionAlert = _settings.ShowEtosDirectionAlert;
             _showEtosHelperWindow = _settings.ShowEtosHelperWindow;
             _enableAbaddonRoadCountAlert = _settings.EnableAbaddonRoadCountAlert;
+            _showAbaddonRoadSummaryWindow = _settings.ShowAbaddonRoadSummaryWindow;
             _enableCravingPleasureCountAlert = _settings.EnableCravingPleasureCountAlert;
             _showDungeonCountDisplayWindow = _settings.ShowDungeonCountDisplayWindow;
             _abaddonRoadCountAlertDurationSeconds = _settings.AbaddonRoadCountAlertDurationSeconds;
