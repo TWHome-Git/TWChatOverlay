@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Net.Http;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -54,6 +55,39 @@ namespace TWChatOverlay.Services
         private static Dictionary<string, string> _trackedItemDisplayNames = new(StringComparer.OrdinalIgnoreCase);
         private static List<(string Name, ItemDropGrade Grade, string? Abbreviation)> _trackedItemList = new();
 
+        public sealed class DropItemFilterSnapshot
+        {
+            public DropItemFilterSnapshot(
+                IReadOnlyDictionary<string, ItemDropGrade> items,
+                IReadOnlyDictionary<string, string> displayNames)
+            {
+                Items = items ?? throw new ArgumentNullException(nameof(items));
+                DisplayNames = displayNames ?? throw new ArgumentNullException(nameof(displayNames));
+            }
+
+            public static DropItemFilterSnapshot Empty { get; } = new(
+                new Dictionary<string, ItemDropGrade>(StringComparer.OrdinalIgnoreCase),
+                new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase));
+
+            public IReadOnlyDictionary<string, ItemDropGrade> Items { get; }
+
+            public IReadOnlyDictionary<string, string> DisplayNames { get; }
+
+            public bool TryGetGrade(string itemName, out ItemDropGrade grade)
+                => Items.TryGetValue(itemName, out grade);
+
+            public string ResolveDisplayName(string itemName)
+            {
+                if (string.IsNullOrWhiteSpace(itemName))
+                    return string.Empty;
+
+                return DisplayNames.TryGetValue(itemName, out string? displayName) &&
+                       !string.IsNullOrWhiteSpace(displayName)
+                    ? displayName
+                    : itemName;
+            }
+        }
+
         public static void InitializeAsync(ChatSettings? settings = null)
         {
             if (settings != null)
@@ -94,6 +128,20 @@ namespace TWChatOverlay.Services
             return TryApplyJson(json);
         }
 
+        public static bool TryCreateFilterSnapshot(string json, out DropItemFilterSnapshot snapshot)
+        {
+            snapshot = DropItemFilterSnapshot.Empty;
+
+            if (string.IsNullOrWhiteSpace(json))
+                return false;
+
+            if (!TryParseJson(json, out var rows, out _))
+                return false;
+
+            snapshot = BuildSnapshot(rows.Select(item => (item.Name, item.Grade, item.Abbreviation)));
+            return true;
+        }
+
         public static bool TryExtractTrackedItem(string message, out string itemName)
         {
             int ignoredCount;
@@ -106,10 +154,25 @@ namespace TWChatOverlay.Services
         public static IReadOnlyList<(string Name, ItemDropGrade Grade, string? Abbreviation)> GetTrackedItemsSnapshot()
             => _trackedItemList;
 
+        public static DropItemFilterSnapshot GetSessionFilterSnapshot()
+            => new(_trackedItems, _trackedItemDisplayNames);
+
+        public static async Task<DropItemFilterSnapshot> LoadDefaultFilterSnapshotAsync()
+        {
+            var items = await LoadDefaultItemsAsync().ConfigureAwait(false);
+            return BuildSnapshot(items);
+        }
+
         public static string GetTrackedItemDisplayName(string itemName)
+            => GetTrackedItemDisplayName(itemName, null);
+
+        public static string GetTrackedItemDisplayName(string itemName, DropItemFilterSnapshot? filterSnapshot)
         {
             if (string.IsNullOrWhiteSpace(itemName))
                 return string.Empty;
+
+            if (filterSnapshot != null)
+                return filterSnapshot.ResolveDisplayName(itemName);
 
             return _trackedItemDisplayNames.TryGetValue(itemName, out string? displayName) &&
                    !string.IsNullOrWhiteSpace(displayName)
@@ -121,6 +184,14 @@ namespace TWChatOverlay.Services
             => TryExtractTrackedItem(message, out itemName, out grade, out _);
 
         public static bool TryExtractTrackedItem(string message, out string itemName, out ItemDropGrade grade, out int count)
+            => TryExtractTrackedItem(message, null, out itemName, out grade, out count);
+
+        public static bool TryExtractTrackedItem(
+            string message,
+            DropItemFilterSnapshot? filterSnapshot,
+            out string itemName,
+            out ItemDropGrade grade,
+            out int count)
         {
             itemName = string.Empty;
             grade = ItemDropGrade.Normal;
@@ -133,7 +204,8 @@ namespace TWChatOverlay.Services
             if (!looksLikeItemAcquire)
                 return false;
 
-            if (_trackedItems.Count == 0)
+            var trackedItems = filterSnapshot?.Items ?? _trackedItems;
+            if (trackedItems.Count == 0)
             {
                 return false;
             }
@@ -161,7 +233,7 @@ namespace TWChatOverlay.Services
                 count = parsedCount;
             }
 
-            if (_trackedItems.TryGetValue(itemName, out var mappedGrade))
+            if (trackedItems.TryGetValue(itemName, out var mappedGrade))
             {
                 grade = mappedGrade;
                 AppLogger.Info($"Tracked item drop detected. Item='{itemName}', Count='{count}', Grade='{grade}', Message='{message}'");
@@ -180,15 +252,6 @@ namespace TWChatOverlay.Services
                 {
                     AppLogger.Debug($"Tracked item list already loaded. Count={_trackedItems.Count}");
                     return;
-                }
-
-                if (_settings?.UseCustomDropItemFilter == true &&
-                    !string.IsNullOrWhiteSpace(_settings.CustomDropItemJson))
-                {
-                    bool customApplied = TryApplyJson(_settings.CustomDropItemJson);
-                    AppLogger.Info($"Custom tracked item list load {(customApplied ? "succeeded" : "failed")}.");
-                    if (customApplied)
-                        return;
                 }
 
                 string? json = await CacheClient.GetJsonAsync().ConfigureAwait(false);
@@ -219,20 +282,11 @@ namespace TWChatOverlay.Services
                 if (!TryParseJson(json, out var rows, out _))
                     return false;
 
-                var next = new Dictionary<string, ItemDropGrade>(StringComparer.OrdinalIgnoreCase);
-                var displayNames = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-                var ordered = new List<(string Name, ItemDropGrade Grade, string? Abbreviation)>();
-                foreach (var item in rows)
-                {
-                    next[item.Name] = item.Grade;
-                    if (!string.IsNullOrWhiteSpace(item.Abbreviation))
-                        displayNames[item.Name] = item.Abbreviation.Trim();
-                    ordered.Add((item.Name, item.Grade, item.Abbreviation));
-                }
+                var snapshot = BuildSnapshot(rows.Select(item => (item.Name, item.Grade, item.Abbreviation)));
 
-                _trackedItems = next;
-                _trackedItemDisplayNames = displayNames;
-                _trackedItemList = ordered;
+                _trackedItems = new Dictionary<string, ItemDropGrade>(snapshot.Items, StringComparer.OrdinalIgnoreCase);
+                _trackedItemDisplayNames = new Dictionary<string, string>(snapshot.DisplayNames, StringComparer.OrdinalIgnoreCase);
+                _trackedItemList = rows.Select(item => (item.Name, item.Grade, item.Abbreviation)).ToList();
                 AppLogger.Info($"Tracked item list applied. Count={_trackedItems.Count}");
                 return true;
             }
@@ -253,6 +307,21 @@ namespace TWChatOverlay.Services
             }
 
             return Array.Empty<(string Name, ItemDropGrade Grade, string? Abbreviation)>();
+        }
+
+        private static DropItemFilterSnapshot BuildSnapshot(IEnumerable<(string Name, ItemDropGrade Grade, string? Abbreviation)> items)
+        {
+            var trackedItems = new Dictionary<string, ItemDropGrade>(StringComparer.OrdinalIgnoreCase);
+            var displayNames = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+
+            foreach (var item in items)
+            {
+                trackedItems[item.Name] = item.Grade;
+                if (!string.IsNullOrWhiteSpace(item.Abbreviation))
+                    displayNames[item.Name] = item.Abbreviation.Trim();
+            }
+
+            return new DropItemFilterSnapshot(trackedItems, displayNames);
         }
 
         public static bool TryValidateJson(string json, out string message)

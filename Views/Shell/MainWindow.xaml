@@ -103,7 +103,7 @@
                     <!-- Tab Header -->
                     <Border Grid.Row="1" Background="#FF332255" CornerRadius="3,3,0,0"/>
 
-                    <UniformGrid Grid.Row="1" Columns="7">
+                    <UniformGrid Grid.Row="1" Columns="8">
                         <RadioButton Content="기본" Style="{StaticResource TabButtonStyle}" IsChecked="True" Tag="Basic" Click="Tab_Click"/>
                         <RadioButton Content="일반" Style="{StaticResource TabButtonStyle}" Tag="General" Click="Tab_Click"/>
                         <RadioButton Content="팀" Style="{StaticResource TabButtonStyle}" Tag="Team" Click="Tab_Click"/>
@@ -111,6 +111,7 @@
                         <RadioButton Content="외치기" Style="{StaticResource TabButtonStyle}" Tag="Shout" Click="Tab_Click"/>
                         <RadioButton Content="시스템" Style="{StaticResource TabButtonStyle}" Tag="System" Click="Tab_Click"/>
                         <RadioButton Content="설정" Style="{StaticResource TabButtonStyle}" Tag="Settings" Click="Tab_Click"/>
+                        <Button Content="+" Style="{StaticResource TabActionButtonStyle}" Click="AddChatWindow_Click"/>
                     </UniformGrid>
 
                     <!-- Chat View -->

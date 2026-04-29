@@ -81,6 +81,22 @@
                                             </DockPanel>
                                         </StackPanel>
                                     </Grid>
+                                    <Border Height="1" Background="#2E3640" Margin="0,12,0,12"/>
+                                    <StackPanel>
+                                        <TextBlock Text="외치기 설정" Style="{StaticResource SubsectionHeaderStyle}" Margin="0,0,0,8"/>
+                                        <CheckBox Content="외치기 팝업"
+                                                  IsChecked="{Binding ShowShoutToastPopup}"
+                                                  Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
+                                        <TextBlock Text="외치기 로그가 들어오면 토스트 팝업을 표시합니다."
+                                                   Style="{StaticResource HintTextStyle}"
+                                                   Margin="26,0,0,8"/>
+                                        <CheckBox Content="외치기 닉네임 자동복사"
+                                                  IsChecked="{Binding AutoCopyShoutNickname}"
+                                                  Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
+                                        <TextBlock Text="외치기 로그 끝의 [닉네임]을 자동으로 클립보드에 복사합니다."
+                                                   Style="{StaticResource HintTextStyle}"
+                                                   Margin="26,0,0,0"/>
+                                    </StackPanel>
                                 </StackPanel>
                             </Border>
                             </Grid>
@@ -149,28 +165,6 @@
                                                       Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
                                             <TextBlock Text="디버그 로그를 활성화하면 Debug.log 파일에 로그가 기록됩니다."
                                                        Style="{StaticResource HintTextStyle}"/>
-                                        </StackPanel>
-                                    </Border>
-
-                                    <Border x:Name="DebugTestBorder" Style="{StaticResource SettingsBorderStyle}" Margin="0,0,0,12" Visibility="Collapsed">
-                                        <StackPanel>
-                                            <TextBlock Text="디버그 테스트 모드" Style="{StaticResource SubsectionHeaderStyle}"/>
-                                            <TextBlock Text="입력한 텍스트를 로그처럼 주입합니다. 일반 텍스트는 시스템 로그 형식으로 자동 변환됩니다."
-                                                       Style="{StaticResource HintTextStyle}"/>
-                                            <TextBox x:Name="DebugLogInputTextBox"
-                                                     Height="100"
-                                                     Margin="0,8,0,8"
-                                                     Background="#333"
-                                                     Foreground="White"
-                                                     BorderBrush="#555"
-                                                     AcceptsReturn="True"
-                                                     TextWrapping="Wrap"
-                                                     VerticalScrollBarVisibility="Auto"/>
-                                            <Button Content="테스트 로그 주입"
-                                                    Height="32"
-                                                    Click="InjectDebugLogButton_Click"
-                                                    Style="{StaticResource SecondaryButtonStyle}"
-                                                    FontSize="12"/>
                                         </StackPanel>
                                     </Border>
 

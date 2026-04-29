@@ -29,7 +29,6 @@ namespace TWChatOverlay.Views
             DataContextChanged += (_, _) => SyncFontOptions();
 #if DEBUG
             DebugOptionsBorder.Visibility = Visibility.Visible;
-            DebugTestBorder.Visibility = Visibility.Visible;
 #endif
         }
 
@@ -209,28 +208,5 @@ namespace TWChatOverlay.Views
             }
         }
 
-        private void InjectDebugLogButton_Click(object sender, RoutedEventArgs e)
-        {
-#if DEBUG
-            string rawText = DebugLogInputTextBox?.Text?.Trim() ?? string.Empty;
-            if (string.IsNullOrWhiteSpace(rawText))
-            {
-                MessageBox.Show("테스트할 로그 텍스트를 입력해주세요.", "입력 필요", MessageBoxButton.OK, MessageBoxImage.Information);
-                return;
-            }
-
-            foreach (Window window in Application.Current.Windows)
-            {
-                if (window is MainWindow mainWindow)
-                {
-                    mainWindow.InjectDebugLogText(rawText);
-                    DebugLogInputTextBox?.Clear();
-                    return;
-                }
-            }
-
-            MessageBox.Show("메인 윈도우를 찾을 수 없어 테스트 로그를 주입하지 못했습니다.", "주입 실패", MessageBoxButton.OK, MessageBoxImage.Warning);
-#endif
-        }
     }
 }

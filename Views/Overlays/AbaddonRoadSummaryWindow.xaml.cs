@@ -11,6 +11,7 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
+using System.Windows.Threading;
 using TWChatOverlay.Models;
 using TWChatOverlay.Services;
 using TWChatOverlay.Services.LogAnalysis;
@@ -38,10 +39,13 @@ namespace TWChatOverlay.Views
         private readonly ChatSettings _settings;
         private readonly LogAnalysisService _logAnalysisService;
         private readonly ObservableCollection<AbaddonMonthlyStoneSummaryEntryViewModel> _stoneEntries = new();
+        private readonly DispatcherTimer _autoCloseTimer;
         private string _weekText = string.Empty;
         private string _summaryText = string.Empty;
         private bool _isLoading;
         private int _loadVersion;
+        private bool _isPreviewMode;
+        private DateTime _autoCloseAtUtc = DateTime.MinValue;
 
         public event PropertyChangedEventHandler? PropertyChanged;
 
@@ -52,6 +56,8 @@ namespace TWChatOverlay.Views
 
             InitializeComponent();
             DataContext = this;
+            _autoCloseTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(250) };
+            _autoCloseTimer.Tick += AutoCloseTimer_Tick;
             UpdateHeaderText(GetCurrentWeekRange());
         }
 
@@ -98,6 +104,35 @@ namespace TWChatOverlay.Views
 
         public Task LoadCurrentWeekAsync()
             => LoadWeekAsync(DateTime.Today);
+
+        public void SetPreviewMode(bool isPreview)
+        {
+            _isPreviewMode = isPreview;
+            if (isPreview)
+            {
+                _autoCloseTimer.Stop();
+                _autoCloseAtUtc = DateTime.MinValue;
+            }
+        }
+
+        public void StartAutoClose(int durationSeconds)
+        {
+            _isPreviewMode = false;
+
+            if (durationSeconds <= 0)
+            {
+                _autoCloseTimer.Stop();
+                _autoCloseAtUtc = DateTime.UtcNow;
+                Close();
+                return;
+            }
+
+            int clampedSeconds = Math.Max(1, Math.Min(300, durationSeconds));
+            _autoCloseAtUtc = DateTime.UtcNow.AddSeconds(clampedSeconds);
+            _autoCloseTimer.Start();
+        }
+
+        public bool IsAutoClosePending => !_isPreviewMode && _autoCloseTimer.IsEnabled && _autoCloseAtUtc > DateTime.UtcNow;
 
         private async Task LoadWeekAsync(DateTime today)
         {
@@ -270,6 +305,27 @@ namespace TWChatOverlay.Views
 
         private void Close_Click(object sender, RoutedEventArgs e)
         {
+            Close();
+        }
+
+        protected override void OnClosed(EventArgs e)
+        {
+            _autoCloseTimer.Stop();
+            base.OnClosed(e);
+        }
+
+        private void AutoCloseTimer_Tick(object? sender, EventArgs e)
+        {
+            if (_isPreviewMode)
+                return;
+
+            if (_autoCloseAtUtc == DateTime.MinValue)
+                return;
+
+            if (DateTime.UtcNow < _autoCloseAtUtc)
+                return;
+
+            _autoCloseTimer.Stop();
             Close();
         }
 

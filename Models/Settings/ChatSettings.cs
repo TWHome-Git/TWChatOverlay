@@ -24,6 +24,8 @@ namespace TWChatOverlay.Models
         private string _clubColor = "#00FF00";
         private string _systemColor = "#FFFF00";
         private string _shoutColor = "#FF8000";
+        private bool _showShoutToastPopup = true;
+        private bool _autoCopyShoutNickname = false;
         private string _chatLogFolderPath = @"C:\Nexon\TalesWeaver\ChatLog";
         private string _keywordInput = "";
         private string _fontFamily = "사용자 설정";
@@ -36,6 +38,7 @@ namespace TWChatOverlay.Models
         private bool _showDailyWeeklyContentOverlay = false;
         private bool _showEtosDirectionAlert = true;
         private bool _enableAbaddonRoadCountAlert = false;
+        private bool _showAbaddonRoadSummaryWindow = false;
         private bool _enableCravingPleasureCountAlert = false;
         private bool _showDungeonCountDisplayWindow = false;
         private bool _showItemDropAlert = true;
@@ -76,12 +79,24 @@ namespace TWChatOverlay.Models
         private double? _itemCalendarWindowTop = 0.0;
         private double? _abaddonRoadSummaryWindowLeft = 0.0;
         private double? _abaddonRoadSummaryWindowTop = 0.0;
+        private double? _shoutToastWindowLeft = null;
+        private double? _shoutToastWindowTop = null;
         private double? _recaptureSupplyWindowLeft = null;
         private double? _recaptureSupplyWindowTop = null;
         private double? _experienceLimitAlertWindowLeft = null;
         private double? _experienceLimitAlertWindowTop = null;
         private double? _dungeonCountDisplayWindowLeft = null;
         private double? _dungeonCountDisplayWindowTop = null;
+        private double? _chatCloneWindow1Left = null;
+        private double? _chatCloneWindow1Top = null;
+        private double? _chatCloneWindow2Left = null;
+        private double? _chatCloneWindow2Top = null;
+        private bool _chatCloneWindow1FollowMainFont = true;
+        private string _chatCloneWindow1FontFamily = string.Empty;
+        private double? _chatCloneWindow1FontSize = null;
+        private bool _chatCloneWindow2FollowMainFont = true;
+        private string _chatCloneWindow2FontFamily = string.Empty;
+        private double? _chatCloneWindow2FontSize = null;
 
         private double _fontSize = 17.0;
         private double _lineMargin = 0.0;
@@ -102,6 +117,10 @@ namespace TWChatOverlay.Models
         public bool ShowNormal { get; set; } = false;
         [JsonPropertyOrder(2)]
         public bool ShowShout { get; set; } = true;
+        [JsonPropertyOrder(38)]
+        public bool ShowShoutToastPopup { get => _showShoutToastPopup; set { _showShoutToastPopup = value; OnPropertyChanged(); } }
+        [JsonPropertyOrder(39)]
+        public bool AutoCopyShoutNickname { get => _autoCopyShoutNickname; set { _autoCopyShoutNickname = value; OnPropertyChanged(); } }
         [JsonPropertyOrder(3)]
         public bool ShowTeam { get; set; } = true;
         [JsonPropertyOrder(4)]
@@ -123,24 +142,26 @@ namespace TWChatOverlay.Models
         [JsonPropertyOrder(12)]
         public bool EnableAbaddonRoadCountAlert { get => _enableAbaddonRoadCountAlert; set { _enableAbaddonRoadCountAlert = value; OnPropertyChanged(); } }
         [JsonPropertyOrder(13)]
+        public bool ShowAbaddonRoadSummaryWindow { get => _showAbaddonRoadSummaryWindow; set { _showAbaddonRoadSummaryWindow = value; OnPropertyChanged(); } }
+        [JsonPropertyOrder(14)]
         public bool EnableCravingPleasureCountAlert { get => _enableCravingPleasureCountAlert; set { _enableCravingPleasureCountAlert = value; OnPropertyChanged(); } }
-        [JsonPropertyOrder(14)]
-        public bool ShowDungeonCountDisplayWindow { get => _showDungeonCountDisplayWindow; set { _showDungeonCountDisplayWindow = value; OnPropertyChanged(); } }
-        [JsonPropertyOrder(12)]
-        public bool ShowItemDropAlert { get => _showItemDropAlert; set { _showItemDropAlert = value; OnPropertyChanged(); } }
-        [JsonPropertyOrder(13)]
-        public bool ShowEtosHelperWindow { get => _showEtosHelperWindow; set { _showEtosHelperWindow = value; OnPropertyChanged(); } }
-        [JsonPropertyOrder(14)]
-        public bool ShowItemDropHelperWindow { get => _showItemDropHelperWindow; set { _showItemDropHelperWindow = value; OnPropertyChanged(); } }
         [JsonPropertyOrder(15)]
-        public bool UseCustomDropItemFilter { get => _useCustomDropItemFilter; set { _useCustomDropItemFilter = value; OnPropertyChanged(); } }
+        public bool ShowDungeonCountDisplayWindow { get => _showDungeonCountDisplayWindow; set { _showDungeonCountDisplayWindow = value; OnPropertyChanged(); } }
         [JsonPropertyOrder(16)]
-        public string CustomDropItemJson { get => _customDropItemJson; set { _customDropItemJson = value ?? string.Empty; OnPropertyChanged(); } }
+        public bool ShowItemDropAlert { get => _showItemDropAlert; set { _showItemDropAlert = value; OnPropertyChanged(); } }
         [JsonPropertyOrder(17)]
-        public bool EnableBuffTrackerAlert { get => _enableBuffTrackerAlert; set { _enableBuffTrackerAlert = value; OnPropertyChanged(); } }
+        public bool ShowEtosHelperWindow { get => _showEtosHelperWindow; set { _showEtosHelperWindow = value; OnPropertyChanged(); } }
         [JsonPropertyOrder(18)]
-        public bool EnableBuffTrackerEndSound { get => _enableBuffTrackerEndSound; set { _enableBuffTrackerEndSound = value; OnPropertyChanged(); } }
+        public bool ShowItemDropHelperWindow { get => _showItemDropHelperWindow; set { _showItemDropHelperWindow = value; OnPropertyChanged(); } }
         [JsonPropertyOrder(19)]
+        public bool UseCustomDropItemFilter { get => _useCustomDropItemFilter; set { _useCustomDropItemFilter = value; OnPropertyChanged(); } }
+        [JsonPropertyOrder(20)]
+        public string CustomDropItemJson { get => _customDropItemJson; set { _customDropItemJson = value ?? string.Empty; OnPropertyChanged(); } }
+        [JsonPropertyOrder(21)]
+        public bool EnableBuffTrackerAlert { get => _enableBuffTrackerAlert; set { _enableBuffTrackerAlert = value; OnPropertyChanged(); } }
+        [JsonPropertyOrder(22)]
+        public bool EnableBuffTrackerEndSound { get => _enableBuffTrackerEndSound; set { _enableBuffTrackerEndSound = value; OnPropertyChanged(); } }
+        [JsonPropertyOrder(23)]
         public double BuffTrackerEndSoundVolume
         {
             get => _buffTrackerEndSoundVolume;
@@ -153,9 +174,9 @@ namespace TWChatOverlay.Models
                 OnPropertyChanged(nameof(BuffTrackerEndSoundVolumePercent));
             }
         }
-        [JsonPropertyOrder(20)]
+        [JsonPropertyOrder(24)]
         public bool ShowBuffTrackerWindow { get => _showBuffTrackerWindow; set { _showBuffTrackerWindow = value; OnPropertyChanged(); } }
-        [JsonPropertyOrder(21)]
+        [JsonPropertyOrder(25)]
         public double ItemDropAlertVolume
         {
             get => _itemDropAlertVolume;
@@ -168,7 +189,7 @@ namespace TWChatOverlay.Models
                 OnPropertyChanged(nameof(ItemDropAlertVolumePercent));
             }
         }
-        [JsonPropertyOrder(22)]
+        [JsonPropertyOrder(26)]
         public double HighlightAlertVolume
         {
             get => _highlightAlertVolume;
@@ -181,7 +202,7 @@ namespace TWChatOverlay.Models
                 OnPropertyChanged(nameof(HighlightAlertVolumePercent));
             }
         }
-        [JsonPropertyOrder(23)]
+        [JsonPropertyOrder(27)]
         public double MagicCircleAlertVolume
         {
             get => _magicCircleAlertVolume;
@@ -194,7 +215,7 @@ namespace TWChatOverlay.Models
                 OnPropertyChanged(nameof(MagicCircleAlertVolumePercent));
             }
         }
-        [JsonPropertyOrder(24)]
+        [JsonPropertyOrder(28)]
         public double ExpBuffAlertVolume
         {
             get => _expBuffAlertVolume;
@@ -207,7 +228,7 @@ namespace TWChatOverlay.Models
                 OnPropertyChanged(nameof(ExpBuffAlertVolumePercent));
             }
         }
-        [JsonPropertyOrder(25)]
+        [JsonPropertyOrder(29)]
         public double BossAlertVolume
         {
             get => _bossAlertVolume;
@@ -718,6 +739,152 @@ namespace TWChatOverlay.Models
             {
                 if (_dungeonCountDisplayWindowTop == value) return;
                 _dungeonCountDisplayWindowTop = value;
+                OnPropertyChanged();
+            }
+        }
+
+        [JsonPropertyOrder(73)]
+        public double? ShoutToastWindowLeft
+        {
+            get => _shoutToastWindowLeft;
+            set
+            {
+                if (_shoutToastWindowLeft == value) return;
+                _shoutToastWindowLeft = value;
+                OnPropertyChanged();
+            }
+        }
+
+        [JsonPropertyOrder(74)]
+        public double? ShoutToastWindowTop
+        {
+            get => _shoutToastWindowTop;
+            set
+            {
+                if (_shoutToastWindowTop == value) return;
+                _shoutToastWindowTop = value;
+                OnPropertyChanged();
+            }
+        }
+
+        [JsonPropertyOrder(75)]
+        public double? ChatCloneWindow1Left
+        {
+            get => _chatCloneWindow1Left;
+            set
+            {
+                if (_chatCloneWindow1Left == value) return;
+                _chatCloneWindow1Left = value;
+                OnPropertyChanged();
+            }
+        }
+
+        [JsonPropertyOrder(76)]
+        public double? ChatCloneWindow1Top
+        {
+            get => _chatCloneWindow1Top;
+            set
+            {
+                if (_chatCloneWindow1Top == value) return;
+                _chatCloneWindow1Top = value;
+                OnPropertyChanged();
+            }
+        }
+
+        [JsonPropertyOrder(77)]
+        public double? ChatCloneWindow2Left
+        {
+            get => _chatCloneWindow2Left;
+            set
+            {
+                if (_chatCloneWindow2Left == value) return;
+                _chatCloneWindow2Left = value;
+                OnPropertyChanged();
+            }
+        }
+
+        [JsonPropertyOrder(78)]
+        public double? ChatCloneWindow2Top
+        {
+            get => _chatCloneWindow2Top;
+            set
+            {
+                if (_chatCloneWindow2Top == value) return;
+                _chatCloneWindow2Top = value;
+                OnPropertyChanged();
+            }
+        }
+
+        [JsonPropertyOrder(79)]
+        public bool ChatCloneWindow1FollowMainFont
+        {
+            get => _chatCloneWindow1FollowMainFont;
+            set
+            {
+                if (_chatCloneWindow1FollowMainFont == value) return;
+                _chatCloneWindow1FollowMainFont = value;
+                OnPropertyChanged();
+            }
+        }
+
+        [JsonPropertyOrder(80)]
+        public string ChatCloneWindow1FontFamily
+        {
+            get => _chatCloneWindow1FontFamily;
+            set
+            {
+                value ??= string.Empty;
+                if (_chatCloneWindow1FontFamily == value) return;
+                _chatCloneWindow1FontFamily = value;
+                OnPropertyChanged();
+            }
+        }
+
+        [JsonPropertyOrder(81)]
+        public double? ChatCloneWindow1FontSize
+        {
+            get => _chatCloneWindow1FontSize;
+            set
+            {
+                if (_chatCloneWindow1FontSize == value) return;
+                _chatCloneWindow1FontSize = value;
+                OnPropertyChanged();
+            }
+        }
+
+        [JsonPropertyOrder(82)]
+        public bool ChatCloneWindow2FollowMainFont
+        {
+            get => _chatCloneWindow2FollowMainFont;
+            set
+            {
+                if (_chatCloneWindow2FollowMainFont == value) return;
+                _chatCloneWindow2FollowMainFont = value;
+                OnPropertyChanged();
+            }
+        }
+
+        [JsonPropertyOrder(83)]
+        public string ChatCloneWindow2FontFamily
+        {
+            get => _chatCloneWindow2FontFamily;
+            set
+            {
+                value ??= string.Empty;
+                if (_chatCloneWindow2FontFamily == value) return;
+                _chatCloneWindow2FontFamily = value;
+                OnPropertyChanged();
+            }
+        }
+
+        [JsonPropertyOrder(84)]
+        public double? ChatCloneWindow2FontSize
+        {
+            get => _chatCloneWindow2FontSize;
+            set
+            {
+                if (_chatCloneWindow2FontSize == value) return;
+                _chatCloneWindow2FontSize = value;
                 OnPropertyChanged();
             }
         }

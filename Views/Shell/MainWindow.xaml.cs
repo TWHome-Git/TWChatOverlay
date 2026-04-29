@@ -74,6 +74,7 @@ namespace TWChatOverlay.Views
         private AbaddonWeeklySummary _abaddonWeeklySummary = new();
         private readonly object _pendingMonthlyItemSnapshotsLock = new();
         private readonly List<ItemLogSnapshotEntry> _pendingMonthlyItemSnapshots = new();
+        private DropItemResolver.DropItemFilterSnapshot? _defaultDropItemFilterSnapshot;
 
         private static readonly Regex AbaddonEntryFeeRegex = new(
             @"입장료\s*(?<value>[\d,]+)\s*만\s*Seed",
@@ -104,6 +105,15 @@ namespace TWChatOverlay.Views
             set => SetValue(CurrentFontProperty, value);
         }
 
+        public static readonly DependencyProperty CurrentFontSizeProperty =
+            DependencyProperty.Register("CurrentFontSize", typeof(double), typeof(MainWindow));
+
+        public double CurrentFontSize
+        {
+            get => (double)GetValue(CurrentFontSizeProperty);
+            set => SetValue(CurrentFontSizeProperty, value);
+        }
+
         private RichTextBox? LogDisplay => ChatDisplay?.LogDisplayControl;
         #endregion
 
@@ -114,7 +124,7 @@ namespace TWChatOverlay.Views
             IsHitTestVisible = false;
             Topmost = false;
             _uiLogBatchDispatcher = new UiLogBatchDispatcher(Dispatcher, 60);
-            _logTabBufferStore = new LogTabBufferStore(200);
+            _logTabBufferStore = ChatWindowHub.SharedLogBuffers;
             _tabDisplayStateResolver = new TabDisplayStateResolver();
 
             _settings = ConfigService.Load();
@@ -148,6 +158,7 @@ namespace TWChatOverlay.Views
                 Dispatcher.BeginInvoke(new Action(RequestRefreshLogDisplay), DispatcherPriority.Background);
             };
             _logService.Initialize();
+            _ = Task.Run(() => WarmUpDefaultDropItemFilterSnapshot());
             MonthlyReadableLogExportService.CleanupLegacyArtifacts();
             ApplyInitialSettings();
             ApplySubAddonWindowSettings();
@@ -172,6 +183,14 @@ namespace TWChatOverlay.Views
             try { _buffTrackerService.PropertyChanged -= BuffTrackerService_PropertyChanged; } catch { }
             try { BuffTrackerWindow.Instance?.Close(); } catch { }
             try { BuffTrackerHelperWindow.Instance?.Close(); } catch { }
+            try
+            {
+                foreach (Window window in Application.Current.Windows.OfType<ChatCloneWindow>().ToList())
+                {
+                    try { window.Close(); } catch { }
+                }
+            }
+            catch { }
             try { _abaddonRoadSummaryWindow?.Close(); } catch { }
             try { FlushPendingMonthlyItemSnapshots(); } catch { }
             try { _logService?.Dispose(); } catch { }
@@ -231,6 +250,7 @@ namespace TWChatOverlay.Views
         private void OnColorsUpdatedFromSettings(string _)
         {
             _logTabBufferStore.UpdateAllBrushes(category => ChatBrushResolver.Resolve(_settings, category));
+            ChatWindowHub.NotifyBuffersChanged();
 
             RequestRefreshLogDisplay();
         }
@@ -440,17 +460,56 @@ namespace TWChatOverlay.Views
             foreach (string tabName in analysis.BufferTabs)
                 AddToBuffer(tabName, parseResult);
 
-            if (analysis.HasTrackedItemDrop)
+            LogAnalysisResult? defaultItemDropAnalysis = null;
+            if (isRealTime)
             {
-                if (analysis.ShouldShowItemDropToast)
+                var defaultFilterSnapshot = GetDefaultDropItemFilterSnapshot();
+                defaultItemDropAnalysis = _logAnalysisService.Analyze(html, isRealTime, defaultFilterSnapshot);
+
+                var toastAnalysis = defaultItemDropAnalysis;
+                if (_settings.UseCustomDropItemFilter &&
+                    !string.IsNullOrWhiteSpace(_settings.CustomDropItemJson) &&
+                    DropItemResolver.TryCreateFilterSnapshot(_settings.CustomDropItemJson, out var customFilterSnapshot))
                 {
-                    ItemDropToastService.Show(parseResult.TrackedItemName ?? "아이템", parseResult.TrackedItemGrade, withSound: true);
+                    toastAnalysis = _logAnalysisService.Analyze(html, isRealTime, customFilterSnapshot);
                 }
 
-                ItemMonthlySnapshotService.AppendMonthlySnapshot(DateTime.Today, parseResult);
+                if (toastAnalysis.HasTrackedItemDrop && toastAnalysis.ShouldShowItemDropToast)
+                {
+                    ItemDropToastService.Show(
+                        toastAnalysis.Parsed.TrackedItemName ?? "아이템",
+                        toastAnalysis.Parsed.TrackedItemGrade,
+                        withSound: true);
+                }
 
-                _itemCalendarWindow?.ApplyRealtimeItemLog(parseResult, DateTime.Today);
+                if (parseResult.Category == ChatCategory.Shout)
+                {
+                    if (_settings.AutoCopyShoutNickname)
+                    {
+                        string? shoutNickname = GetShoutNicknameForClipboard(parseResult);
+                        if (!string.IsNullOrWhiteSpace(shoutNickname))
+                        {
+                            TrySetClipboardText(shoutNickname);
+                        }
+                    }
+
+                    if (_settings.ShowShoutToastPopup)
+                        ShoutToastService.Show(parseResult.FormattedText, _settings);
+                }
             }
+
+            if ((defaultItemDropAnalysis?.HasTrackedItemDrop ?? analysis.HasTrackedItemDrop) &&
+                (defaultItemDropAnalysis?.Parsed is { } itemDropParseResult))
+            {
+                ItemMonthlySnapshotService.AppendMonthlySnapshot(DateTime.Today, itemDropParseResult);
+            }
+            else if (analysis.HasTrackedItemDrop)
+            {
+                ItemMonthlySnapshotService.AppendMonthlySnapshot(DateTime.Today, parseResult);
+            }
+
+            if (isRealTime)
+                _itemCalendarWindow?.ApplyRealtimeItemLog(parseResult, DateTime.Today);
 
             if (isRealTime)
             {
@@ -461,7 +520,8 @@ namespace TWChatOverlay.Views
                 analysis.ShouldRunDailyWeeklyContent &&
                 DailyWeeklyLogAnalyzer.TryMatchAbaddonRoadCount(parseResult.FormattedText, out _))
             {
-                ShowAbaddonRoadSummaryWindow();
+                if (_settings.ShowAbaddonRoadSummaryWindow)
+                    ShowAbaddonRoadSummaryWindow(previewMode: _isSettingsPositionMode);
             }
 
             if (isRealTime)
@@ -489,6 +549,7 @@ namespace TWChatOverlay.Views
         private void AddToBuffer(string tabName, LogParser.ParseResult log)
         {
             _logTabBufferStore.Add(tabName, log);
+            ChatWindowHub.NotifyBuffersChanged();
         }
 
         private void AddToUI(LogParser.ParseResult log, bool isRealTime = false, bool deferScroll = false)
@@ -891,9 +952,6 @@ namespace TWChatOverlay.Views
         private static string GetMonthlyItemLogPath(DateTime date)
             => Path.Combine(ItemLogDirectoryPath, $"ItemLog_{date:yyyy_MM}.jsonl");
 
-        private static string GetMonthlyAbaddonSummaryPath(DateTime date)
-            => Path.Combine(ItemLogDirectoryPath, $"AbaddonSummary_{date:yyyy_MM}.json");
-
         private void SaveMonthlyItemLogsSnapshot(DateTime monthStart, IReadOnlyList<LogParser.ParseResult> itemLogs)
         {
             try
@@ -981,19 +1039,31 @@ namespace TWChatOverlay.Views
             return null;
         }
 
-        private void EnsureCurrentAbaddonSummaryLoaded(DateTime date)
+        private void EnsureCurrentAbaddonWeeklySummaryLoaded(DateTime date)
         {
             DateTime monthStart = new(date.Year, date.Month, 1);
             _loadedAbaddonMonthStart = monthStart;
-            _abaddonWeeklySummary = LoadOrBuildMonthlyAbaddonSummary(monthStart);
+            _abaddonWeeklySummary = LoadCurrentAbaddonWeeklySummary(monthStart);
         }
 
-        private AbaddonWeeklySummary LoadOrBuildMonthlyAbaddonSummary(DateTime monthStart)
+        private AbaddonWeeklySummary LoadCurrentAbaddonWeeklySummary(DateTime monthStart)
         {
-            MonthlyReadableLogData data = MonthlyReadableLogExportService.LoadOrBuildMonth(
-                monthStart,
-                _settings.ChatLogFolderPath,
-                _logAnalysisService);
+            MonthlyReadableLogData data;
+            DateTime today = DateTime.Today;
+            if (monthStart.Year == today.Year && monthStart.Month == today.Month)
+            {
+                data = MonthlyReadableLogExportService.RefreshCurrentMonthFromTodayOnly(
+                    monthStart,
+                    _settings.ChatLogFolderPath,
+                    _logAnalysisService);
+            }
+            else
+            {
+                data = MonthlyReadableLogExportService.LoadOrBuildMonth(
+                    monthStart,
+                    _settings.ChatLogFolderPath,
+                    _logAnalysisService);
+            }
 
             return new AbaddonWeeklySummary
             {
@@ -1079,7 +1149,7 @@ namespace TWChatOverlay.Views
                     {
                         Dispatcher.BeginInvoke(new Action(() =>
                         {
-                            EnsureCurrentAbaddonSummaryLoaded(DateTime.Today);
+                            EnsureCurrentAbaddonWeeklySummaryLoaded(DateTime.Today);
                             RefreshAbaddonRoadSummaryWindow();
                         }), DispatcherPriority.Background);
                     }
@@ -1099,7 +1169,7 @@ namespace TWChatOverlay.Views
             {
                 try
                 {
-                    LoadOrBuildMonthlyAbaddonSummary(monthStart);
+                    LoadCurrentAbaddonWeeklySummary(monthStart);
                 }
                 catch (Exception ex)
                 {
@@ -1344,6 +1414,14 @@ namespace TWChatOverlay.Views
             if (logDisplay?.Visibility == Visibility.Visible) RequestRefreshLogDisplay();
         }
 
+        private void AddChatWindow_Click(object sender, RoutedEventArgs e)
+        {
+            if (ChatCloneWindow.TryOpen(_settings))
+                return;
+
+            MessageBox.Show("채팅창은 최대 3개까지 열 수 있습니다.", "채팅창 제한", MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+
         private void DragBar_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
             if (e.ButtonState == MouseButtonState.Pressed)
@@ -1351,6 +1429,7 @@ namespace TWChatOverlay.Views
                 DragMove();
                 SyncMarginsFromWindowPosition(this.Left, this.Top);
                 _settings.UpdatePositionDisplay(_settings.LineMarginLeft, _settings.LineMargin);
+                ChatWindowHub.TryApplyMagneticSnap(this);
                 PersistSettings();
             }
         }
@@ -1442,6 +1521,15 @@ namespace TWChatOverlay.Views
                     else
                         DungeonCountDisplayWindowService.ClosePositionPreview(_settings);
                 }
+                else if (e.PropertyName == nameof(_settings.ShowAbaddonRoadSummaryWindow))
+                {
+                    if (_settings.ShowAbaddonRoadSummaryWindow)
+                        ShowAbaddonRoadSummaryWindow(previewMode: _isSettingsPositionMode);
+                    else if (_abaddonRoadSummaryWindow != null)
+                    {
+                        try { _abaddonRoadSummaryWindow.Close(); } catch { }
+                    }
+                }
                 else if (e.PropertyName == nameof(_settings.BuffTrackerWindowLeft) ||
                          e.PropertyName == nameof(_settings.BuffTrackerWindowTop))
                 {
@@ -1483,6 +1571,7 @@ namespace TWChatOverlay.Views
 
             FontFamily nextFont = FontService.GetFont(_settings.FontFamily);
             this.CurrentFont = nextFont;
+            this.CurrentFontSize = _settings.FontSize;
 
             if (LogDisplay != null)
             {
@@ -1503,6 +1592,12 @@ namespace TWChatOverlay.Views
         }
 
         public void InjectDebugLogText(string rawText)
+            => InjectDebugLogText(rawText, DebugLogCategory.System);
+
+        public void InjectDebugLogText(string rawText, DebugLogCategory category)
+            => InjectDebugLogText(rawText, category, forceRealTime: true);
+
+        public void InjectDebugLogText(string rawText, DebugLogCategory category, bool forceRealTime)
         {
             if (string.IsNullOrWhiteSpace(rawText))
                 return;
@@ -1513,23 +1608,78 @@ namespace TWChatOverlay.Views
                 return;
             }
 
-            string payload = BuildDebugLogPayload(rawText);
+            string payload = BuildDebugLogPayload(rawText, category);
+
+            if (forceRealTime)
+            {
+                _uiLogBatchDispatcher.Enqueue(payload, true, ProcessUiLogBatch);
+                return;
+            }
+
             _logService.InjectTestContent(payload);
         }
 
-        private static string BuildDebugLogPayload(string rawText)
+        private static string BuildDebugLogPayload(string rawText, DebugLogCategory category)
         {
             if (HtmlFontTagRegex.IsMatch(rawText))
                 return rawText;
 
             string timestamp = DateTime.Now.ToString("HH:mm:ss");
+            string contentColor = category switch
+            {
+                DebugLogCategory.Normal => "ffffff",
+                DebugLogCategory.Team => "f7b73c",
+                DebugLogCategory.Club => "94ddfa",
+                DebugLogCategory.System => "ff64ff",
+                DebugLogCategory.Shout => "c896c8",
+                _ => "ffffff"
+            };
+
             var lines = rawText
                 .Replace("\r\n", "\n", StringComparison.Ordinal)
                 .Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
                 .Where(x => !string.IsNullOrWhiteSpace(x))
-                .Select(x => $@"<font color=""ffffff"">[{timestamp}]</font><font color=""ff64ff"">{System.Net.WebUtility.HtmlEncode(x)}</font>");
+                .Select(x => $@"<font color=""ffffff"">[{timestamp}]</font><font color=""{contentColor}"">{System.Net.WebUtility.HtmlEncode(x)}</font>");
 
             return string.Join("<br>", lines);
+        }
+
+        private static string? GetShoutNicknameForClipboard(LogParser.ParseResult parseResult)
+        {
+            if (parseResult == null)
+                return null;
+
+            if (!string.IsNullOrWhiteSpace(parseResult.SenderId))
+                return parseResult.SenderId.Trim();
+
+            string formattedText = parseResult.FormattedText ?? string.Empty;
+            var match = Regex.Match(formattedText, @"\[(?<nickname>[^\[\]]+)\]\s*$");
+            if (match.Success)
+                return match.Groups["nickname"].Value.Trim();
+
+            return null;
+        }
+
+        private static void TrySetClipboardText(string text)
+        {
+            if (string.IsNullOrWhiteSpace(text))
+                return;
+
+            string normalized = text.Trim();
+            for (int attempt = 0; attempt < 3; attempt++)
+            {
+                try
+                {
+                    var dataObject = new DataObject();
+                    dataObject.SetText(normalized, TextDataFormat.UnicodeText);
+                    Clipboard.SetDataObject(dataObject, true);
+                    return;
+                }
+                catch
+                {
+                    System.Threading.Thread.Sleep(20);
+                }
+            }
         }
 
         private void ApplyStartupPreset()
@@ -1546,6 +1696,31 @@ namespace TWChatOverlay.Views
             _settings.UpdatePositionDisplay(_settings.LineMarginLeft, _settings.LineMargin);
         }
 
+        private void WarmUpDefaultDropItemFilterSnapshot()
+        {
+            try
+            {
+                _ = GetDefaultDropItemFilterSnapshot();
+            }
+            catch (Exception ex)
+            {
+                AppLogger.Warn("Failed to warm up default drop item filter snapshot.", ex);
+            }
+        }
+
+        private DropItemResolver.DropItemFilterSnapshot GetDefaultDropItemFilterSnapshot()
+        {
+            if (_defaultDropItemFilterSnapshot != null)
+                return _defaultDropItemFilterSnapshot;
+
+            var snapshot = DropItemResolver.LoadDefaultFilterSnapshotAsync().GetAwaiter().GetResult();
+            lock (_pendingMonthlyItemSnapshotsLock)
+            {
+                _defaultDropItemFilterSnapshot ??= snapshot;
+                return _defaultDropItemFilterSnapshot;
+            }
+        }
+
         private void TryLoadTestDropItemJsonForSession()
         {
             try
@@ -1560,8 +1735,10 @@ namespace TWChatOverlay.Views
                         continue;
 
                     string json = File.ReadAllText(path, Encoding.UTF8);
-                    if (DropItemResolver.TryApplyJsonForSession(json))
+                    if (DropItemResolver.TryCreateFilterSnapshot(json, out _))
                     {
+                        _settings.UseCustomDropItemFilter = true;
+                        _settings.CustomDropItemJson = json;
                         AppLogger.Info($"Loaded session DropItem JSON from '{path}'.");
                         return;
                     }
@@ -1702,7 +1879,8 @@ namespace TWChatOverlay.Views
             }
 
             _itemCalendarWindow.Activate();
-            _ = _itemCalendarWindow.LoadCurrentMonthAsync();
+            if (!_itemCalendarWindow.IsMonthLoaded(DateTime.Today))
+                _ = _itemCalendarWindow.LoadCurrentMonthAsync();
             try { ItemCalendarVisibilityChanged?.Invoke(this, true); } catch { }
         }
 
@@ -1721,8 +1899,17 @@ namespace TWChatOverlay.Views
             ShowItemCalendarWindow();
         }
 
-        public void ShowAbaddonRoadSummaryWindow()
+        public void ShowAbaddonRoadSummaryWindow(bool previewMode = false, bool restartLifetime = true)
         {
+            if (!_settings.ShowAbaddonRoadSummaryWindow)
+            {
+                if (_abaddonRoadSummaryWindow != null)
+                {
+                    try { _abaddonRoadSummaryWindow.Close(); } catch { }
+                }
+                return;
+            }
+
             if (_abaddonRoadSummaryWindow == null || !_abaddonRoadSummaryWindow.IsLoaded)
             {
                 _abaddonRoadSummaryWindow = new AbaddonRoadSummaryWindow(_settings, _logAnalysisService);
@@ -1744,6 +1931,12 @@ namespace TWChatOverlay.Views
                 _abaddonRoadSummaryWindow.Show();
             }
 
+            _abaddonRoadSummaryWindow.SetPreviewMode(previewMode);
+            if (!previewMode && restartLifetime)
+            {
+                _abaddonRoadSummaryWindow.StartAutoClose(_settings.AbaddonRoadCountAlertDurationSeconds);
+            }
+
             _abaddonRoadSummaryWindow.Topmost = true;
             _abaddonRoadSummaryWindow.Activate();
             TopmostWindowHelper.BringToTopmost(_abaddonRoadSummaryWindow);
@@ -1752,6 +1945,9 @@ namespace TWChatOverlay.Views
 
         public void RefreshAbaddonRoadSummaryWindow()
         {
+            if (!_settings.ShowAbaddonRoadSummaryWindow)
+                return;
+
             if (_abaddonRoadSummaryWindow?.IsVisible != true)
                 return;
 
@@ -1780,8 +1976,19 @@ namespace TWChatOverlay.Views
             if (_itemCalendarWindow != null && !_itemCalendarWindow.IsVisible)
                 _itemCalendarWindow.Show();
 
-            if (_abaddonRoadSummaryWindow != null && !_abaddonRoadSummaryWindow.IsVisible)
-                _abaddonRoadSummaryWindow.Show();
+            if (_settings.ShowAbaddonRoadSummaryWindow &&
+                _abaddonRoadSummaryWindow != null &&
+                !_abaddonRoadSummaryWindow.IsVisible)
+            {
+                if (_isSettingsPositionMode)
+                {
+                    ShowAbaddonRoadSummaryWindow(previewMode: true, restartLifetime: false);
+                }
+                else if (_abaddonRoadSummaryWindow.IsAutoClosePending)
+                {
+                    ShowAbaddonRoadSummaryWindow(previewMode: false, restartLifetime: false);
+                }
+            }
         }
         #endregion
 
@@ -1798,6 +2005,7 @@ namespace TWChatOverlay.Views
             }
             SyncMarginsFromWindowPosition(this.Left, this.Top);
             _settings.UpdatePositionDisplay(_settings.LineMarginLeft, _settings.LineMargin);
+            ChatWindowHub.TryApplyMagneticSnap(this);
             PersistSettings();
         }
 
@@ -1812,6 +2020,7 @@ namespace TWChatOverlay.Views
             }
             SyncMarginsFromWindowPosition(this.Left, this.Top);
             _settings.UpdatePositionDisplay(_settings.LineMarginLeft, _settings.LineMargin);
+            ChatWindowHub.TryApplyMagneticSnap(this);
             PersistSettings();
         }
 
@@ -1825,6 +2034,7 @@ namespace TWChatOverlay.Views
             }
             SyncMarginsFromWindowPosition(this.Left, this.Top);
             _settings.UpdatePositionDisplay(_settings.LineMarginLeft, _settings.LineMargin);
+            ChatWindowHub.TryApplyMagneticSnap(this);
             PersistSettings();
         }
 

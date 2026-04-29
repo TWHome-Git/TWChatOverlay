@@ -121,6 +121,34 @@ namespace TWChatOverlay.ViewModels
             }
         }
 
+        public bool ShowShoutToastPopup
+        {
+            get => _settings.ShowShoutToastPopup;
+            set
+            {
+                if (_settings.ShowShoutToastPopup != value)
+                {
+                    _settings.ShowShoutToastPopup = value;
+                    OnPropertyChanged();
+                    SaveSettings();
+                }
+            }
+        }
+
+        public bool AutoCopyShoutNickname
+        {
+            get => _settings.AutoCopyShoutNickname;
+            set
+            {
+                if (_settings.AutoCopyShoutNickname != value)
+                {
+                    _settings.AutoCopyShoutNickname = value;
+                    OnPropertyChanged();
+                    SaveSettings();
+                }
+            }
+        }
+
         public bool ShowSystem
         {
             get => _settings.ShowSystem;

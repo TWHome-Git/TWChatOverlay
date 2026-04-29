@@ -170,6 +170,9 @@
                                 <CheckBox Content="어밴던로드 횟수 알리미"
                                           IsChecked="{Binding EnableAbaddonRoadCountAlert, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                           Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
+                                <CheckBox Content="어밴던로드 누적 금액 알리미"
+                                          IsChecked="{Binding ShowAbaddonRoadSummaryWindow, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                          Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
                                 <CheckBox Content="갈망하는 즐거움 횟수 알리미"
                                           IsChecked="{Binding EnableCravingPleasureCountAlert, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                           Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>

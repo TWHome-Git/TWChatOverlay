@@ -19,7 +19,10 @@ namespace TWChatOverlay.Services
             _settings = settings ?? throw new ArgumentNullException(nameof(settings));
         }
 
-        public LogAnalysisResult Analyze(string html, bool isRealTime)
+        public LogAnalysisResult Analyze(
+            string html,
+            bool isRealTime,
+            DropItemResolver.DropItemFilterSnapshot? itemFilterSnapshot = null)
         {
             if (string.IsNullOrWhiteSpace(html))
                 return LogAnalysisResult.Empty(html, isRealTime);
@@ -29,7 +32,7 @@ namespace TWChatOverlay.Services
             if (!context.IsSuccess)
                 return LogAnalysisResult.Empty(html, isRealTime);
 
-            _itemDropLogAnalyzer.Analyze(context);
+            _itemDropLogAnalyzer.Analyze(context, itemFilterSnapshot);
             _experienceLogAnalyzer.Analyze(context);
             _etosDirectionLogAnalyzer.Analyze(context);
             _alertLogAnalyzer.Analyze(context);
