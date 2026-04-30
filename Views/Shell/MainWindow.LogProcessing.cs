@@ -65,10 +65,15 @@ namespace TWChatOverlay.Views
         {
             if (string.IsNullOrWhiteSpace(html)) return;
 
+            if (_settings.EnableCharacterProfiles)
+            {
+                _activeCharacterProfileSlot = CharacterProfileLogRouter.GetNextProfileSlot(_activeCharacterProfileSlot, html, _settings);
+            }
+
             _dungeonCountDisplayService.ProcessRaw(html, isRealTime);
             bool handledDailyWeeklyCountLog = isRealTime &&
                                              _dailyWeeklyContentOverlay?.IsVisible == true &&
-                                             _dailyWeeklyContentOverlay.TryProcessAbaddonOrCravingLog(html);
+                                             _dailyWeeklyContentOverlay.TryProcessAbaddonOrCravingLog(html, _settings.EnableCharacterProfiles ? _activeCharacterProfileSlot : 0, _settings.EnableCharacterProfiles);
 
             var pipelineAnalysis = _logPipelineCoordinator.Analyze(html, isRealTime);
             var analysis = pipelineAnalysis.Primary;
@@ -76,15 +81,26 @@ namespace TWChatOverlay.Views
             var parseResult = analysis.Parsed;
 
             _buffTrackerService.ProcessLog(analysis);
+            if (_settings.EnableCharacterProfiles &&
+                _profileBuffTrackerServices.TryGetValue(_activeCharacterProfileSlot, out var profileBuffTracker))
+            {
+                profileBuffTracker.ProcessLog(analysis);
+            }
 
             if (analysis.HasExperienceGain) _expService.AddExp(parseResult.GainedExp);
+            if (_settings.EnableCharacterProfiles &&
+                analysis.HasExperienceGain &&
+                _profileExpServices.TryGetValue(_activeCharacterProfileSlot, out var profileExpService))
+            {
+                profileExpService.AddExp(parseResult.GainedExp);
+            }
             if (isRealTime)
                 _experienceEssenceAlertService.Process(analysis);
 
             if (!handledDailyWeeklyCountLog &&
                 analysis.ShouldRunDailyWeeklyContent &&
                 _dailyWeeklyContentOverlay != null)
-                _dailyWeeklyContentOverlay.ProcessLog(analysis);
+                _dailyWeeklyContentOverlay.ProcessLog(analysis, _settings.EnableCharacterProfiles ? _activeCharacterProfileSlot : 0, _settings.EnableCharacterProfiles);
 
             foreach (string tabName in analysis.BufferTabs)
                 AddToBuffer(tabName, parseResult);
@@ -122,15 +138,15 @@ namespace TWChatOverlay.Views
             if ((pipelineAnalysis.DefaultItemDrop?.HasTrackedItemDrop ?? analysis.HasTrackedItemDrop) &&
                 (pipelineAnalysis.DefaultItemDrop?.Parsed is { } itemDropParseResult))
             {
-                ItemMonthlySnapshotService.AppendMonthlySnapshot(DateTime.Today, itemDropParseResult);
+                ItemMonthlySnapshotService.AppendMonthlySnapshot(DateTime.Today, itemDropParseResult, _settings.EnableCharacterProfiles ? _activeCharacterProfileSlot : 0);
             }
             else if (analysis.HasTrackedItemDrop)
             {
-                ItemMonthlySnapshotService.AppendMonthlySnapshot(DateTime.Today, parseResult);
+                ItemMonthlySnapshotService.AppendMonthlySnapshot(DateTime.Today, parseResult, _settings.EnableCharacterProfiles ? _activeCharacterProfileSlot : 0);
             }
 
             if (isRealTime)
-                _itemCalendarWindow?.ApplyRealtimeItemLog(parseResult, DateTime.Today);
+                _itemCalendarWindow?.ApplyRealtimeItemLog(parseResult, DateTime.Today, _settings.EnableCharacterProfiles ? _activeCharacterProfileSlot : 0, _settings.EnableCharacterProfiles);
 
             if (isRealTime)
             {

@@ -75,7 +75,7 @@ namespace TWChatOverlay.Services
             }
         }
 
-        public static void AppendMonthlySnapshot(DateTime date, LogParser.ParseResult itemLog)
+        public static void AppendMonthlySnapshot(DateTime date, LogParser.ParseResult itemLog, int profileSlot = 0)
         {
             if (itemLog == null)
                 throw new ArgumentNullException(nameof(itemLog));
@@ -85,7 +85,7 @@ namespace TWChatOverlay.Services
 
             lock (SyncRoot)
             {
-                MonthlyReadableLogExportService.AppendItemSnapshot(date, itemLog);
+                MonthlyReadableLogExportService.AppendItemSnapshot(date, itemLog, profileSlot);
             }
         }
 

@@ -15,15 +15,17 @@ namespace TWChatOverlay.Services
         private DateTime _lastAlarmTime = DateTime.MinValue;
         private readonly DateTime _startTime = DateTime.Now;
         private bool _isReady = false;
+        private readonly bool _suppressAlert;
         public ExpSessionState SessionState { get; } = new();
         public bool IsReady => _isReady;
 
         /// <summary>
         /// 경험치 추적 서비스 인스턴스를 생성합니다.
         /// </summary>
-        public ExperienceService(ChatSettings settings)
+        public ExperienceService(ChatSettings settings, bool suppressAlert = false)
         {
             _settings = settings;
+            _suppressAlert = suppressAlert;
             _expTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(3000) };
             _expTimer.Tick += (s, e) => SessionState.RefreshDisplay();
         }
@@ -46,7 +48,7 @@ namespace TWChatOverlay.Services
                 return;
             }
 
-            if (_isReady && _settings.IsExpAlarmEnabled && gained < _settings.ExpAlarmThreshold)
+            if (!_suppressAlert && _isReady && _settings.IsExpAlarmEnabled && gained < _settings.ExpAlarmThreshold)
             {
                 if ((DateTime.Now - _lastAlarmTime).TotalSeconds >= 3)
                 {

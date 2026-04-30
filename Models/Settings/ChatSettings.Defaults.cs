@@ -49,6 +49,11 @@ namespace TWChatOverlay.Models
             _enableBuffTrackerAlert = false;
             _enableBuffTrackerEndSound = false;
             _showBuffTrackerWindow = false;
+            _enableCharacterProfiles = false;
+            _profile1DisplayName = "프로필1";
+            _profile2DisplayName = "프로필2";
+            _profile1SwitchLog = "[이클립스 코어] 진화 4단계-3세트 효과가 발동되었습니다.";
+            _profile2SwitchLog = "[이클립스 코어] 진화 2단계-6세트 효과가 발동되었습니다.";
             _buffTrackerEndSoundVolume = 1.0;
             _itemDropAlertVolume = 0.1;
             _highlightAlertVolume = 1.0;
