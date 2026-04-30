@@ -32,7 +32,6 @@ namespace TWChatOverlay.Views
             ApplyToastSettings();
             ToastText.Text = NormalizeMessage(message);
             ApplyLayoutConstraints();
-            LocationChanged += (_, _) => SyncPositionToSettings();
 
             _lifetimeTimer = new DispatcherTimer
             {
@@ -98,6 +97,8 @@ namespace TWChatOverlay.Views
         {
             _isPreviewMode = true;
             RefreshMousePassthroughStyle(forceInteractive: true);
+            BeginAnimation(TopProperty, null);
+            BeginAnimation(LeftProperty, null);
 
             Left = targetLeft;
             Top = targetTop;
@@ -113,6 +114,13 @@ namespace TWChatOverlay.Views
 
         public void MoveTo(double targetTop)
         {
+            if (_isPreviewMode)
+            {
+                BeginAnimation(TopProperty, null);
+                Top = targetTop;
+                return;
+            }
+
             BeginAnimation(TopProperty, new DoubleAnimation
             {
                 To = targetTop,
@@ -130,7 +138,7 @@ namespace TWChatOverlay.Views
         protected override void OnClosed(EventArgs e)
         {
             _lifetimeTimer.Stop();
-            SyncPositionToSettings();
+            SyncPositionToSettings(saveImmediately: true);
             base.OnClosed(e);
         }
 
@@ -141,12 +149,14 @@ namespace TWChatOverlay.Views
 
             try
             {
+                BeginAnimation(TopProperty, null);
+                BeginAnimation(LeftProperty, null);
                 DragMove();
             }
             catch { }
             finally
             {
-                SyncPositionToSettings();
+                SyncPositionToSettings(saveImmediately: true);
             }
         }
 
@@ -166,7 +176,12 @@ namespace TWChatOverlay.Views
             BeginAnimation(OpacityProperty, fade);
         }
 
-        private void SyncPositionToSettings()
+        public void SaveCurrentPosition()
+        {
+            SyncPositionToSettings(saveImmediately: true);
+        }
+
+        private void SyncPositionToSettings(bool saveImmediately)
         {
             if (!_isPreviewMode)
                 return;
@@ -175,7 +190,11 @@ namespace TWChatOverlay.Views
             {
                 _settings.ShoutToastWindowLeft = Left;
                 _settings.ShoutToastWindowTop = Top;
-                ConfigService.SaveDeferred(_settings);
+                if (saveImmediately)
+                    ConfigService.Save(_settings);
+                else
+                    ConfigService.SaveDeferred(_settings);
+
                 ShoutToastService.NotifyPreviewPositionChanged();
             }
             catch { }

@@ -30,6 +30,7 @@ namespace TWChatOverlay.Services
         private readonly Encoding _logEncoding;
         private readonly Decoder _logDecoder;
         private string _pendingRawContent = string.Empty;
+        private const int InitialLogTailBytes = 2 * 1024 * 1024;
 
         public event Action<string>? OnNewLogRead;
         public event Action? InitialLogsLoaded;
@@ -250,43 +251,25 @@ namespace TWChatOverlay.Services
                     return;
                 }
 
-                long position = stream.Length - 1;
-                int count = 0;
-                List<byte> lineBuffer = new List<byte>();
-                List<string> foundLines = new List<string>();
+                int bytesToRead = (int)Math.Min(stream.Length, InitialLogTailBytes);
+                stream.Seek(-bytesToRead, SeekOrigin.End);
 
-                while (position >= 0 && count < lineCount)
+                byte[] buffer = new byte[bytesToRead];
+                int totalRead = 0;
+                while (totalRead < buffer.Length)
                 {
-                    stream.Seek(position, SeekOrigin.Begin);
-                    int b = stream.ReadByte();
+                    int read = stream.Read(buffer, totalRead, buffer.Length - totalRead);
+                    if (read <= 0)
+                        break;
 
-                    if (b == 10)
-                    {
-                        if (lineBuffer.Count > 0)
-                        {
-                            lineBuffer.Reverse();
-                            string line = _logEncoding.GetString(lineBuffer.ToArray());
-                            foundLines.Add(line);
-                            lineBuffer.Clear();
-                            count++;
-                        }
-                    }
-                    else if (b != 13)
-                    {
-                        lineBuffer.Add((byte)b);
-                    }
-                    position--;
+                    totalRead += read;
                 }
 
-                if (lineBuffer.Count > 0 && count < lineCount)
+                if (totalRead > 0)
                 {
-                    lineBuffer.Reverse();
-                    foundLines.Add(_logEncoding.GetString(lineBuffer.ToArray()));
+                    string tailContent = _logEncoding.GetString(buffer, 0, totalRead);
+                    ProcessRawContent(tailContent, lineCount);
                 }
-
-                foundLines.Reverse();
-
-                ProcessRawContent(string.Join(Environment.NewLine, foundLines), lineCount);
 
                 InitialLogsLoaded?.Invoke();
 

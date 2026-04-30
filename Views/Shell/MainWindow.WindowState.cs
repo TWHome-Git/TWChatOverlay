@@ -65,6 +65,7 @@ namespace TWChatOverlay.Views
         {
             ExperienceAlertWindowService.SaveCurrentPosition(_settings);
             DungeonCountDisplayWindowService.SaveCurrentPosition(_settings);
+            ShoutToastService.SaveCurrentPosition(_settings);
             ExperienceAlertWindowService.Close();
             DungeonCountDisplayWindowService.ClosePositionPreview(_settings);
             ShoutToastService.ClosePositionPreview(_settings);

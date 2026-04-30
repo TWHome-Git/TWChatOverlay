@@ -50,6 +50,8 @@ namespace TWChatOverlay.Views
         private bool _canShowAuxiliaryWindows = true;
         private bool _isSettingsPositionMode;
         private readonly DispatcherTimer _mainTabAutoHideTimer;
+        private bool _isLogServiceInitialized;
+        private bool _startLogServiceWhenInitialized;
 
         private bool _isOverlayVisible = true;
         /// <summary>
@@ -128,7 +130,7 @@ namespace TWChatOverlay.Views
             _uiLogBatchDispatcher = new UiLogBatchDispatcher(Dispatcher, 60);
             _logTabBufferStore = ChatWindowHub.SharedLogBuffers;
             _tabDisplayStateResolver = new TabDisplayStateResolver();
-            _mainTabAutoHideTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(5) };
+            _mainTabAutoHideTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(3) };
             _mainTabAutoHideTimer.Tick += (_, _) => HideMainTabs();
 
             _settings = ConfigService.Load();
@@ -162,7 +164,7 @@ namespace TWChatOverlay.Views
             {
                 Dispatcher.BeginInvoke(new Action(RequestRefreshLogDisplay), DispatcherPriority.Background);
             };
-            _logService.Initialize();
+            _ = InitializeLogServiceAfterEtaProfilesAsync();
             MonthlyReadableLogExportService.CleanupLegacyArtifacts();
             ApplyInitialSettings();
             ApplySubAddonWindowSettings();
@@ -337,7 +339,7 @@ namespace TWChatOverlay.Views
                 _bossAlarmSchedulerService = new BossAlarmSchedulerService(_settings);
                 _bossAlarmSchedulerService.Start();
                 _expService.Start();
-                _logService?.Start();
+                StartLogServiceWhenReady();
 
                 _settings.PropertyChanged += OnSettingsPropertyChanged;
 
@@ -402,6 +404,47 @@ namespace TWChatOverlay.Views
                 ApplyBuffTrackerWindowSettings();
                 ApplyDailyWeeklyWindowVisibility();
             }), DispatcherPriority.Background);
+        }
+
+        private async Task InitializeLogServiceAfterEtaProfilesAsync()
+        {
+            try
+            {
+                await EtaProfileResolver.EnsureLoadedAsync().ConfigureAwait(false);
+            }
+            catch (Exception ex)
+            {
+                AppLogger.Warn("ETA profile load failed before log initialization. Logs will still be initialized.", ex);
+            }
+
+            await Dispatcher.InvokeAsync(() =>
+            {
+                if (_logService == null || _isLogServiceInitialized)
+                    return;
+
+                _logService.Initialize();
+                _isLogServiceInitialized = true;
+
+                if (_startLogServiceWhenInitialized)
+                {
+                    _logService.Start();
+                    _startLogServiceWhenInitialized = false;
+                }
+            }, DispatcherPriority.Loaded);
+        }
+
+        private void StartLogServiceWhenReady()
+        {
+            if (_logService == null)
+                return;
+
+            if (_isLogServiceInitialized)
+            {
+                _logService.Start();
+                return;
+            }
+
+            _startLogServiceWhenInitialized = true;
         }
 
 

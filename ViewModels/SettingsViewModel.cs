@@ -121,6 +121,34 @@ namespace TWChatOverlay.ViewModels
             }
         }
 
+        public bool ShowEtaLevel
+        {
+            get => _settings.ShowEtaLevel;
+            set
+            {
+                if (_settings.ShowEtaLevel != value)
+                {
+                    _settings.ShowEtaLevel = value;
+                    OnPropertyChanged();
+                    SaveSettings();
+                }
+            }
+        }
+
+        public bool ShowEtaCharacter
+        {
+            get => _settings.ShowEtaCharacter;
+            set
+            {
+                if (_settings.ShowEtaCharacter != value)
+                {
+                    _settings.ShowEtaCharacter = value;
+                    OnPropertyChanged();
+                    SaveSettings();
+                }
+            }
+        }
+
         public bool ShowShoutToastPopup
         {
             get => _settings.ShowShoutToastPopup;
@@ -529,6 +557,8 @@ namespace TWChatOverlay.ViewModels
             OnPropertyChanged(nameof(ShowClub));
             OnPropertyChanged(nameof(ShowShout));
             OnPropertyChanged(nameof(ShowSystem));
+            OnPropertyChanged(nameof(ShowEtaLevel));
+            OnPropertyChanged(nameof(ShowEtaCharacter));
             OnPropertyChanged(nameof(ShowShoutToastPopup));
             OnPropertyChanged(nameof(AutoCopyShoutNickname));
             OnPropertyChanged(nameof(ShoutToastDurationSeconds));

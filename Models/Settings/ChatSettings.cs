@@ -24,6 +24,8 @@ namespace TWChatOverlay.Models
         private string _clubColor = "#00FF00";
         private string _systemColor = "#FFFF00";
         private string _shoutColor = "#FF8000";
+        private bool _showEtaLevel = true;
+        private bool _showEtaCharacter = true;
         private bool _showShoutToastPopup = true;
         private bool _autoCopyShoutNickname = false;
         private int _shoutToastDurationSeconds = 5;
@@ -119,6 +121,10 @@ namespace TWChatOverlay.Models
         public bool ShowNormal { get; set; } = false;
         [JsonPropertyOrder(2)]
         public bool ShowShout { get; set; } = true;
+        [JsonPropertyOrder(36)]
+        public bool ShowEtaLevel { get => _showEtaLevel; set { _showEtaLevel = value; OnPropertyChanged(); } }
+        [JsonPropertyOrder(37)]
+        public bool ShowEtaCharacter { get => _showEtaCharacter; set { _showEtaCharacter = value; OnPropertyChanged(); } }
         [JsonPropertyOrder(38)]
         public bool ShowShoutToastPopup { get => _showShoutToastPopup; set { _showShoutToastPopup = value; OnPropertyChanged(); } }
         [JsonPropertyOrder(39)]

@@ -54,6 +54,10 @@
                                             <Button Width="35" Height="18" HorizontalAlignment="Right" Background="{Binding SystemColor}" Command="{Binding ColorPickCommand}" CommandParameter="System" Style="{StaticResource ColorPickerButtonStyle}"/>
                                         </Grid>
                                     </UniformGrid>
+                                    <UniformGrid Columns="2" Margin="5,8,0,0">
+                                        <CheckBox Content="에타 레벨" IsChecked="{Binding ShowEtaLevel}" Foreground="White" VerticalAlignment="Center" HorizontalAlignment="Left" Margin="0,5,15,5"/>
+                                        <CheckBox Content="캐릭터" IsChecked="{Binding ShowEtaCharacter}" Foreground="White" VerticalAlignment="Center" HorizontalAlignment="Left" Margin="15,5,0,5"/>
+                                    </UniformGrid>
                                 </StackPanel>
                             </Border>
 

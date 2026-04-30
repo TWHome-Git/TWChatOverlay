@@ -82,7 +82,10 @@ namespace TWChatOverlay.Services
                 try
                 {
                     if (_previewToast.IsVisible)
+                    {
+                        _previewToast.SaveCurrentPosition();
                         _previewToast.Close();
+                    }
                 }
                 catch { }
                 finally
@@ -91,6 +94,33 @@ namespace TWChatOverlay.Services
                     RearrangeToasts();
                 }
             }));
+        }
+
+        public static void SaveCurrentPosition(ChatSettings settings)
+        {
+            if (settings == null)
+                return;
+
+            void Save()
+            {
+                if (_previewToast?.IsVisible == true)
+                {
+                    _previewToast.SaveCurrentPosition();
+                }
+                else if (settings.ShoutToastWindowLeft.HasValue && settings.ShoutToastWindowTop.HasValue)
+                {
+                    ConfigService.Save(settings);
+                }
+            }
+
+            if (Application.Current?.Dispatcher?.CheckAccess() == true)
+            {
+                Save();
+            }
+            else
+            {
+                Application.Current?.Dispatcher?.Invoke(new Action(Save));
+            }
         }
 
         public static void NotifyPreviewPositionChanged()
