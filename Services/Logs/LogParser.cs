@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Windows.Media;
 using TWChatOverlay.Models;
 using TWChatOverlay.Services;

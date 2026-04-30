@@ -27,6 +27,9 @@ namespace TWChatOverlay.Services
         private bool _disposed;
         private readonly ExperienceService _experienceService;
         private readonly ChatSettings _settings;
+        private readonly Encoding _logEncoding;
+        private readonly Decoder _logDecoder;
+        private string _pendingRawContent = string.Empty;
 
         public event Action<string>? OnNewLogRead;
         public event Action? InitialLogsLoaded;
@@ -39,6 +42,8 @@ namespace TWChatOverlay.Services
         public LogService(ExperienceService experienceService, ChatSettings settings)
         {
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+            _logEncoding = Encoding.GetEncoding(949);
+            _logDecoder = _logEncoding.GetDecoder();
             _experienceService = experienceService;
             _settings = settings;
 
@@ -118,6 +123,8 @@ namespace TWChatOverlay.Services
 
             if (File.Exists(_logPath))
             {
+                _pendingRawContent = string.Empty;
+                _logDecoder.Reset();
                 LoadInitialLogs(1000);
                 var fileInfo = new FileInfo(_logPath);
                 _lastPosition = fileInfo.Length;
@@ -126,6 +133,8 @@ namespace TWChatOverlay.Services
             else
             {
                 _lastPosition = 0;
+                _pendingRawContent = string.Empty;
+                _logDecoder.Reset();
                 AppLogger.Warn($"Log file not found: {_logPath}.");
             }
         }
@@ -256,7 +265,7 @@ namespace TWChatOverlay.Services
                         if (lineBuffer.Count > 0)
                         {
                             lineBuffer.Reverse();
-                            string line = Encoding.GetEncoding(949).GetString(lineBuffer.ToArray());
+                            string line = _logEncoding.GetString(lineBuffer.ToArray());
                             foundLines.Add(line);
                             lineBuffer.Clear();
                             count++;
@@ -272,15 +281,12 @@ namespace TWChatOverlay.Services
                 if (lineBuffer.Count > 0 && count < lineCount)
                 {
                     lineBuffer.Reverse();
-                    foundLines.Add(Encoding.GetEncoding(949).GetString(lineBuffer.ToArray()));
+                    foundLines.Add(_logEncoding.GetString(lineBuffer.ToArray()));
                 }
 
                 foundLines.Reverse();
 
-                foreach (var line in foundLines)
-                {
-                    OnNewLogRead?.Invoke(line.Trim());
-                }
+                ProcessRawContent(string.Join(Environment.NewLine, foundLines), lineCount);
 
                 InitialLogsLoaded?.Invoke();
 
@@ -307,14 +313,42 @@ namespace TWChatOverlay.Services
                     if (!File.Exists(_logPath)) return;
 
                     using var stream = new FileStream(_logPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
-                    if (stream.Length < _lastPosition) _lastPosition = 0;
+                    if (stream.Length < _lastPosition)
+                    {
+                        _lastPosition = 0;
+                        _pendingRawContent = string.Empty;
+                        _logDecoder.Reset();
+                    }
                     if (stream.Length <= _lastPosition) return;
-                    stream.Seek(_lastPosition, SeekOrigin.Begin);
-                    using var reader = new StreamReader(stream, Encoding.GetEncoding(949));
-                    string newContent = reader.ReadToEnd();
-                    _lastPosition = stream.Position;
 
-                    ProcessRawContent(newContent);
+                    long bytesToRead = stream.Length - _lastPosition;
+                    if (bytesToRead > int.MaxValue)
+                    {
+                        AppLogger.Warn($"Incremental log read is too large ({bytesToRead:N0} bytes). Resetting read position to file end.");
+                        _lastPosition = stream.Length;
+                        _pendingRawContent = string.Empty;
+                        _logDecoder.Reset();
+                        return;
+                    }
+
+                    stream.Seek(_lastPosition, SeekOrigin.Begin);
+                    byte[] buffer = new byte[(int)bytesToRead];
+                    int totalRead = 0;
+                    while (totalRead < buffer.Length)
+                    {
+                        int read = stream.Read(buffer, totalRead, buffer.Length - totalRead);
+                        if (read <= 0)
+                            break;
+
+                        totalRead += read;
+                    }
+
+                    _lastPosition = stream.Position;
+                    if (totalRead == 0)
+                        return;
+
+                    string newContent = DecodeIncrementalBytes(buffer, totalRead);
+                    ProcessIncrementalContent(newContent);
                 }
                 catch (Exception ex)
                 {
@@ -355,6 +389,70 @@ namespace TWChatOverlay.Services
             {
                 OnNewLogRead?.Invoke(line.Trim());
             }
+        }
+
+        private string DecodeIncrementalBytes(byte[] buffer, int byteCount)
+        {
+            if (byteCount <= 0)
+                return string.Empty;
+
+            char[] chars = new char[_logEncoding.GetMaxCharCount(byteCount)];
+            _logDecoder.Convert(
+                buffer,
+                0,
+                byteCount,
+                chars,
+                0,
+                chars.Length,
+                flush: false,
+                out _,
+                out int charsUsed,
+                out _);
+
+            return charsUsed <= 0 ? string.Empty : new string(chars, 0, charsUsed);
+        }
+
+        private void ProcessIncrementalContent(string content)
+        {
+            if (string.IsNullOrEmpty(content))
+                return;
+
+            string combined = _pendingRawContent + content;
+            int completeEnd = FindLastCompleteLogBoundary(combined);
+            if (completeEnd < 0)
+            {
+                _pendingRawContent = combined;
+                return;
+            }
+
+            string readyContent = combined.Substring(0, completeEnd);
+            _pendingRawContent = completeEnd < combined.Length ? combined.Substring(completeEnd) : string.Empty;
+            ProcessRawContent(readyContent);
+        }
+
+        private static int FindLastCompleteLogBoundary(string content)
+        {
+            for (int i = content.Length - 1; i >= 0; i--)
+            {
+                char ch = content[i];
+                if (ch == '\n')
+                    return i + 1;
+
+                if (ch != '>' || i < 3)
+                    continue;
+
+                int tagStart = content.LastIndexOf('<', i);
+                if (tagStart < 0)
+                    break;
+
+                string tag = content.Substring(tagStart, i - tagStart + 1);
+                if (Regex.IsMatch(tag, @"^</?br\s*/?>$", RegexOptions.IgnoreCase))
+                    return i + 1;
+
+                i = tagStart;
+            }
+
+            return -1;
         }
 
         #endregion

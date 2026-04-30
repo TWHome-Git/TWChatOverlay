@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using TWChatOverlay.Models;
 using TWChatOverlay.Services.LogAnalysis;

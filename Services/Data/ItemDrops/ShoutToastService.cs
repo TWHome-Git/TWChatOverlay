@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
@@ -36,7 +36,7 @@ namespace TWChatOverlay.Services
                 var (left, topBase) = ResolveBasePosition(settings);
                 int previewOffset = _previewToast?.IsVisible == true ? 1 : 0;
                 double top = topBase + ((ToastHeight + Gap) * (ActiveToasts.Count - 1 + previewOffset));
-                toast.ShowAnimated(left, top);
+                toast.ShowAnimated(left, top, settings.ShoutToastDurationSeconds);
             }));
         }
 

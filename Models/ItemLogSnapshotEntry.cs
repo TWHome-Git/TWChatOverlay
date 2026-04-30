@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using TWChatOverlay.Services;
 
 namespace TWChatOverlay.Models

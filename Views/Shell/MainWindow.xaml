@@ -77,11 +77,13 @@
         <Border x:Name="OuterEdge" Background="Transparent" Padding="5">
             <Border x:Name="MainBorder" TextElement.FontFamily="{Binding CurrentFont, RelativeSource={RelativeSource AncestorType=Window}}"
                     Background="#F51E1E1E" CornerRadius="10" 
-                    BorderThickness="1.5" BorderBrush="#60FFFFFF" ClipToBounds="False">
+                    BorderThickness="1.5" BorderBrush="#60FFFFFF" ClipToBounds="False"
+                    MouseEnter="MainBorder_MouseEnter"
+                    MouseMove="MainBorder_MouseMove">
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition x:Name="DragBarRow" Height="0"/>
-                        <RowDefinition Height="42"/>
+                        <RowDefinition x:Name="MainTabRow" Height="0"/>
                         <RowDefinition Height="*"/>
                     </Grid.RowDefinitions>
 
@@ -101,9 +103,22 @@
                     </Border>
 
                     <!-- Tab Header -->
-                    <Border Grid.Row="1" Background="#FF332255" CornerRadius="3,3,0,0"/>
+                    <Border x:Name="MainTabBackground"
+                            Grid.Row="2"
+                            Height="42"
+                            VerticalAlignment="Top"
+                            Background="#FF332255"
+                            CornerRadius="3,3,0,0"
+                            Visibility="Collapsed"
+                            Panel.ZIndex="20"/>
 
-                    <UniformGrid Grid.Row="1" Columns="8">
+                    <UniformGrid x:Name="MainTabPanel"
+                                 Grid.Row="2"
+                                 Height="42"
+                                 VerticalAlignment="Top"
+                                 Columns="8"
+                                 Visibility="Collapsed"
+                                 Panel.ZIndex="21">
                         <RadioButton Content="기본" Style="{StaticResource TabButtonStyle}" IsChecked="True" Tag="Basic" Click="Tab_Click"/>
                         <RadioButton Content="일반" Style="{StaticResource TabButtonStyle}" Tag="General" Click="Tab_Click"/>
                         <RadioButton Content="팀" Style="{StaticResource TabButtonStyle}" Tag="Team" Click="Tab_Click"/>

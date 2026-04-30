@@ -26,6 +26,8 @@ namespace TWChatOverlay.Models
         private string _shoutColor = "#FF8000";
         private bool _showShoutToastPopup = true;
         private bool _autoCopyShoutNickname = false;
+        private int _shoutToastDurationSeconds = 5;
+        private double _shoutToastFontSize = 15.0;
         private string _chatLogFolderPath = @"C:\Nexon\TalesWeaver\ChatLog";
         private string _keywordInput = "";
         private string _fontFamily = "사용자 설정";
@@ -121,6 +123,30 @@ namespace TWChatOverlay.Models
         public bool ShowShoutToastPopup { get => _showShoutToastPopup; set { _showShoutToastPopup = value; OnPropertyChanged(); } }
         [JsonPropertyOrder(39)]
         public bool AutoCopyShoutNickname { get => _autoCopyShoutNickname; set { _autoCopyShoutNickname = value; OnPropertyChanged(); } }
+        [JsonPropertyOrder(40)]
+        public int ShoutToastDurationSeconds
+        {
+            get => _shoutToastDurationSeconds;
+            set
+            {
+                int clamped = Math.Max(1, Math.Min(300, value));
+                if (_shoutToastDurationSeconds == clamped) return;
+                _shoutToastDurationSeconds = clamped;
+                OnPropertyChanged();
+            }
+        }
+        [JsonPropertyOrder(41)]
+        public double ShoutToastFontSize
+        {
+            get => _shoutToastFontSize;
+            set
+            {
+                double clamped = Math.Max(10.0, Math.Min(40.0, value));
+                if (Math.Abs(_shoutToastFontSize - clamped) < 0.0001) return;
+                _shoutToastFontSize = clamped;
+                OnPropertyChanged();
+            }
+        }
         [JsonPropertyOrder(3)]
         public bool ShowTeam { get; set; } = true;
         [JsonPropertyOrder(4)]
