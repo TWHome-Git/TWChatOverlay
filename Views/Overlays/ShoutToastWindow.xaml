@@ -9,7 +9,7 @@
         Background="Transparent"
         ResizeMode="NoResize"
         ShowInTaskbar="False"
-        Topmost="True"
+        Topmost="False"
         ShowActivated="False">
     <Border x:Name="RootBorder"
             Background="#F5211C21"
