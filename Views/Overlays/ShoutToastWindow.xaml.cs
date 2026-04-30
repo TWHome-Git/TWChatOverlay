@@ -18,9 +18,11 @@ namespace TWChatOverlay.Views
         private static readonly Regex ShoutPrefixRegex = new(@"^\[\d{2}:\d{2}:\d{2}\]\s*[^:]+?\s*:\s*", RegexOptions.Compiled);
         private const double ScreenEdgePadding = 16;
         private readonly DispatcherTimer _lifetimeTimer;
+        private readonly DispatcherTimer _foregroundTimer;
         private ChatSettings _settings;
         private bool _isClosing;
         private bool _isPreviewMode;
+        private bool? _lastAppliedTopmostState;
 
         public ShoutToastWindow(string message, FontFamily fontFamily, ChatSettings settings)
         {
@@ -42,6 +44,12 @@ namespace TWChatOverlay.Views
                 _lifetimeTimer.Stop();
                 StartCloseAnimation();
             };
+
+            _foregroundTimer = new DispatcherTimer
+            {
+                Interval = TimeSpan.FromMilliseconds(120)
+            };
+            _foregroundTimer.Tick += (_, _) => ApplyForegroundTopmostState();
         }
 
         public void SetSettings(ChatSettings settings)
@@ -54,6 +62,16 @@ namespace TWChatOverlay.Views
         {
             _isPreviewMode = isPreview;
             RefreshMousePassthroughStyle(forceInteractive: isPreview);
+            if (isPreview)
+            {
+                _foregroundTimer.Stop();
+                ApplyTopmostState(true);
+            }
+            else if (IsVisible)
+            {
+                ApplyForegroundTopmostState();
+                _foregroundTimer.Start();
+            }
         }
 
         public void SetMessage(string message)
@@ -73,7 +91,7 @@ namespace TWChatOverlay.Views
             Show();
             UpdateLayout();
             Left = ClampLeftToWorkArea(targetLeft);
-            TopmostWindowHelper.BringToTopmost(this);
+            ApplyForegroundTopmostState();
 
             BeginAnimation(TopProperty, new DoubleAnimation
             {
@@ -91,6 +109,7 @@ namespace TWChatOverlay.Views
             _lifetimeTimer.Stop();
             _lifetimeTimer.Interval = TimeSpan.FromSeconds(Math.Max(1, Math.Min(300, durationSeconds)));
             _lifetimeTimer.Start();
+            _foregroundTimer.Start();
         }
 
         public void ShowPreview(double targetLeft, double targetTop)
@@ -109,7 +128,7 @@ namespace TWChatOverlay.Views
             Visibility = Visibility.Visible;
             UpdateLayout();
             Left = ClampLeftToWorkArea(targetLeft);
-            TopmostWindowHelper.BringToTopmost(this);
+            ApplyTopmostState(true);
         }
 
         public void MoveTo(double targetTop)
@@ -138,6 +157,7 @@ namespace TWChatOverlay.Views
         protected override void OnClosed(EventArgs e)
         {
             _lifetimeTimer.Stop();
+            _foregroundTimer.Stop();
             SyncPositionToSettings(saveImmediately: true);
             base.OnClosed(e);
         }
@@ -218,6 +238,43 @@ namespace TWChatOverlay.Views
         {
             ToastText.FontSize = _settings.ShoutToastFontSize;
             ApplyLayoutConstraints();
+        }
+
+        private void ApplyForegroundTopmostState()
+        {
+            if (_isPreviewMode)
+            {
+                ApplyTopmostState(true);
+                return;
+            }
+
+            ApplyTopmostState(OverlayHelper.IsForegroundAllowedOverlayWindow());
+        }
+
+        private void ApplyTopmostState(bool shouldTopmost)
+        {
+            if (_lastAppliedTopmostState == shouldTopmost)
+                return;
+
+            _lastAppliedTopmostState = shouldTopmost;
+
+            try
+            {
+                Topmost = shouldTopmost;
+                IntPtr hwnd = new WindowInteropHelper(this).EnsureHandle();
+                NativeMethods.SetWindowPos(
+                    hwnd,
+                    shouldTopmost ? NativeMethods.HWND_TOPMOST : NativeMethods.HWND_NOTOPMOST,
+                    0,
+                    0,
+                    0,
+                    0,
+                    NativeMethods.SWP_NOMOVE |
+                    NativeMethods.SWP_NOSIZE |
+                    NativeMethods.SWP_NOACTIVATE |
+                    NativeMethods.SWP_NOOWNERZORDER);
+            }
+            catch { }
         }
 
         private void ApplyLayoutConstraints()
