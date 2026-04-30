@@ -22,6 +22,7 @@ namespace TWChatOverlay.Services
         };
 
         private readonly int _maxCountPerTab;
+        private readonly int _trimThresholdPerTab;
 
         /// <summary>
         /// 탭 버퍼 저장소를 생성합니다.
@@ -29,6 +30,7 @@ namespace TWChatOverlay.Services
         public LogTabBufferStore(int maxCountPerTab = 50000)
         {
             _maxCountPerTab = maxCountPerTab > 0 ? maxCountPerTab : 50000;
+            _trimThresholdPerTab = _maxCountPerTab + Math.Max(1, (int)Math.Ceiling(_maxCountPerTab * 0.2));
         }
 
         public void Add(string tabName, LogParser.ParseResult log)
@@ -36,10 +38,7 @@ namespace TWChatOverlay.Services
             if (!_buffers.TryGetValue(tabName, out var buffer)) return;
 
             buffer.Add(log);
-            if (buffer.Count > _maxCountPerTab)
-            {
-                buffer.RemoveAt(0);
-            }
+            TrimIfNeeded(buffer);
         }
 
         public IReadOnlyList<LogParser.ParseResult> GetLogs(string tabName)
@@ -60,11 +59,15 @@ namespace TWChatOverlay.Services
             foreach (var log in logs)
             {
                 buffer.Add(log);
-                if (buffer.Count > _maxCountPerTab)
-                {
-                    buffer.RemoveAt(0);
-                }
+                TrimIfNeeded(buffer);
             }
+        }
+
+        private void TrimIfNeeded(List<LogParser.ParseResult> buffer)
+        {
+            if (buffer.Count <= _trimThresholdPerTab) return;
+
+            buffer.RemoveRange(0, buffer.Count - _maxCountPerTab);
         }
 
         public void UpdateAllBrushes(Func<ChatCategory, SolidColorBrush> brushFactory)

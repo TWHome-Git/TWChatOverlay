@@ -1,7 +1,8 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
+using System.Windows.Threading;
 using TWChatOverlay.Views;
 
 namespace TWChatOverlay.Services
@@ -16,6 +17,9 @@ namespace TWChatOverlay.Services
         public static event EventHandler? BuffersChanged;
 
         private static readonly HashSet<int> OpenSlots = new();
+        private static readonly object NotificationLock = new();
+        private static DispatcherTimer? _bufferNotificationTimer;
+        private static bool _isBufferNotificationPending;
 
         public static bool CanOpenClone => OpenSlots.Count < 2;
         public static IReadOnlyCollection<int> OpenCloneSlots => OpenSlots.ToList().AsReadOnly();
@@ -38,6 +42,63 @@ namespace TWChatOverlay.Services
 
         public static void NotifyBuffersChanged()
         {
+            var dispatcher = Application.Current?.Dispatcher;
+            if (dispatcher == null || dispatcher.HasShutdownStarted || dispatcher.HasShutdownFinished)
+            {
+                BuffersChanged?.Invoke(null, EventArgs.Empty);
+                return;
+            }
+
+            if (!dispatcher.CheckAccess())
+            {
+                dispatcher.BeginInvoke(new Action(NotifyBuffersChanged), DispatcherPriority.Background);
+                return;
+            }
+
+            lock (NotificationLock)
+            {
+                _isBufferNotificationPending = true;
+                _bufferNotificationTimer ??= CreateBufferNotificationTimer(dispatcher);
+                if (!_bufferNotificationTimer.IsEnabled)
+                    _bufferNotificationTimer.Start();
+            }
+        }
+
+        private static DispatcherTimer CreateBufferNotificationTimer(Dispatcher dispatcher)
+        {
+            var timer = new DispatcherTimer(DispatcherPriority.Background, dispatcher)
+            {
+                Interval = TimeSpan.FromMilliseconds(50)
+            };
+
+            timer.Tick += (_, _) =>
+            {
+                lock (NotificationLock)
+                {
+                    timer.Stop();
+                    if (!_isBufferNotificationPending)
+                        return;
+
+                    _isBufferNotificationPending = false;
+                }
+
+                BuffersChanged?.Invoke(null, EventArgs.Empty);
+            };
+
+            return timer;
+        }
+
+        public static void FlushBufferNotifications()
+        {
+            lock (NotificationLock)
+            {
+                if (!_isBufferNotificationPending)
+                    return;
+
+                _isBufferNotificationPending = false;
+                _bufferNotificationTimer?.Stop();
+            }
+
             BuffersChanged?.Invoke(null, EventArgs.Empty);
         }
 

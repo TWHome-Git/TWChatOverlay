@@ -1,4 +1,4 @@
-namespace TWChatOverlay.Models
+﻿namespace TWChatOverlay.Models
 {
     public partial class ChatSettings
     {

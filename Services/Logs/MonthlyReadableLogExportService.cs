@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -987,36 +987,7 @@ namespace TWChatOverlay.Services
         }
 
         private static void TryAccumulateAbaddonSummary(string formattedText, AbaddonMonthlySummarySnapshotEntry summary)
-        {
-            if (string.IsNullOrWhiteSpace(formattedText))
-                return;
-
-            string body = Regex.Replace(formattedText, @"^\[[^\]]+\]\s*", string.Empty);
-            if (body.Contains("주문을 통해", StringComparison.Ordinal))
-                return;
-
-            var feeMatch = AbaddonEntryFeeRegex.Match(body);
-            if (feeMatch.Success && TryParseLong(feeMatch.Groups["value"].Value, out long feeMan))
-            {
-                summary.TotalEntryFeeMan += feeMan;
-                return;
-            }
-
-            var lossMatch = MagicStoneLossRegex.Match(body);
-            if (lossMatch.Success && TryParseLong(lossMatch.Groups["count"].Value, out long lossCount))
-            {
-                ApplyMagicStoneDelta(summary, lossMatch.Groups["grade"].Value, -lossCount);
-                return;
-            }
-
-            var gainMatch = MagicStoneGainRegex.Match(body);
-            if (gainMatch.Success &&
-                body.Contains("획득", StringComparison.Ordinal) &&
-                TryParseLong(gainMatch.Groups["count"].Value, out long gainCount))
-            {
-                ApplyMagicStoneDelta(summary, gainMatch.Groups["grade"].Value, gainCount);
-            }
-        }
+            => AbaddonSummaryCalculator.TryAccumulate(formattedText, summary);
 
         private static ItemLogSnapshotEntry CreateSnapshotFromItemLog(LogParser.ParseResult itemLog, DateTime date)
         {

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 
 namespace TWChatOverlay.Models
@@ -22,6 +22,8 @@ namespace TWChatOverlay.Models
             _shoutColor = "#FF8000";
             _showShoutToastPopup = true;
             _autoCopyShoutNickname = false;
+            _shoutToastDurationSeconds = 5;
+            _shoutToastFontSize = 15.0;
             _chatLogFolderPath = @"C:\Nexon\TalesWeaver\ChatLog";
             _keywordInput = "";
             _fontFamily = "사용자 설정";

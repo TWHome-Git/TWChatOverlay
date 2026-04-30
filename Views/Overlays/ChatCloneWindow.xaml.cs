@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
@@ -451,13 +451,18 @@ namespace TWChatOverlay.Views
                 return;
 
             Window ownerWindow = Application.Current.Windows.OfType<MainWindow>().FirstOrDefault() ?? Application.Current.MainWindow ?? this;
-            double left = ownerWindow.Left + ownerWindow.Width + 8;
-            double top = ownerWindow.Top;
+            const double gap = 8.0;
+            Rect workArea = SystemParameters.WorkArea;
+            double cloneHeight = Height > 0 ? Height : ownerWindow.Height;
+            double left = Math.Max(workArea.Left, Math.Min(ownerWindow.Left, workArea.Right - Width));
+            double top = ownerWindow.Top - cloneHeight - gap;
 
             if (_slot == 2 && ChatWindowHub.OpenCloneSlots.Any(slot => slot == 1))
             {
-                left += ownerWindow.Width + 8;
+                top -= cloneHeight + gap;
             }
+
+            top = Math.Max(workArea.Top, top);
 
             Left = left;
             Top = top;

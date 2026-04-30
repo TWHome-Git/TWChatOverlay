@@ -1,4 +1,4 @@
-namespace TWChatOverlay.Views
+﻿namespace TWChatOverlay.Views
 {
     public enum DebugLogCategory
     {

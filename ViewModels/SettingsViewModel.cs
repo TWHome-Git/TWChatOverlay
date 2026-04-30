@@ -149,6 +149,34 @@ namespace TWChatOverlay.ViewModels
             }
         }
 
+        public int ShoutToastDurationSeconds
+        {
+            get => _settings.ShoutToastDurationSeconds;
+            set
+            {
+                if (_settings.ShoutToastDurationSeconds != value)
+                {
+                    _settings.ShoutToastDurationSeconds = value;
+                    OnPropertyChanged();
+                    SaveSettings();
+                }
+            }
+        }
+
+        public double ShoutToastFontSize
+        {
+            get => _settings.ShoutToastFontSize;
+            set
+            {
+                if (!_settings.ShoutToastFontSize.Equals(value))
+                {
+                    _settings.ShoutToastFontSize = value;
+                    OnPropertyChanged();
+                    SaveSettings();
+                }
+            }
+        }
+
         public bool ShowSystem
         {
             get => _settings.ShowSystem;
@@ -501,6 +529,10 @@ namespace TWChatOverlay.ViewModels
             OnPropertyChanged(nameof(ShowClub));
             OnPropertyChanged(nameof(ShowShout));
             OnPropertyChanged(nameof(ShowSystem));
+            OnPropertyChanged(nameof(ShowShoutToastPopup));
+            OnPropertyChanged(nameof(AutoCopyShoutNickname));
+            OnPropertyChanged(nameof(ShoutToastDurationSeconds));
+            OnPropertyChanged(nameof(ShoutToastFontSize));
             OnPropertyChanged(nameof(AlwaysVisible));
             OnPropertyChanged(nameof(EnableDebugLogging));
             OnPropertyChanged(nameof(NormalColor));

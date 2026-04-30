@@ -1,4 +1,4 @@
-namespace TWChatOverlay.Services.LogAnalysis
+﻿namespace TWChatOverlay.Services.LogAnalysis
 {
     public sealed class ItemDropLogAnalyzer
     {

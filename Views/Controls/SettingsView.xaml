@@ -95,7 +95,32 @@
                                                   Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
                                         <TextBlock Text="외치기 로그 끝의 [닉네임]을 자동으로 클립보드에 복사합니다."
                                                    Style="{StaticResource HintTextStyle}"
-                                                   Margin="26,0,0,0"/>
+                                                   Margin="26,0,0,10"/>
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="160"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+                                            <StackPanel Grid.Column="0" Margin="0,0,12,0">
+                                                <TextBlock Text="메시지 유지 시간(초)" Foreground="#888" FontSize="12" Margin="0,0,0,5"/>
+                                                <TextBox Text="{Binding ShoutToastDurationSeconds, UpdateSourceTrigger=LostFocus}"
+                                                         Height="28"
+                                                         Background="#333"
+                                                         Foreground="White"
+                                                         BorderBrush="#555"
+                                                         VerticalContentAlignment="Center"
+                                                         TextAlignment="Center"
+                                                         PreviewTextInput="NumberOnly_PreviewTextInput"
+                                                         KeyDown="OffsetInput_KeyDown"/>
+                                            </StackPanel>
+                                            <StackPanel Grid.Column="1">
+                                                <TextBlock Text="외치기 토스트 메시지 크기" Foreground="#888" FontSize="12" Margin="0,0,0,5"/>
+                                                <DockPanel>
+                                                    <TextBlock Text="{Binding ShoutToastFontSize, StringFormat={}{0:F0}}" Foreground="White" Width="25" DockPanel.Dock="Right" TextAlignment="Right" VerticalAlignment="Center"/>
+                                                    <Slider Minimum="10" Maximum="40" Value="{Binding ShoutToastFontSize}" TickFrequency="1" IsSnapToTickEnabled="True" VerticalAlignment="Center"/>
+                                                </DockPanel>
+                                            </StackPanel>
+                                        </Grid>
                                     </StackPanel>
                                 </StackPanel>
                             </Border>

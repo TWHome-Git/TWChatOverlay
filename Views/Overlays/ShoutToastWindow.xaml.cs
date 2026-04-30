@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Net;
 using System.Text.RegularExpressions;
 using System.Windows;
@@ -15,6 +15,8 @@ namespace TWChatOverlay.Views
     public partial class ShoutToastWindow : Window
     {
         private static readonly Regex HtmlTagRegex = new("<[^>]+>", RegexOptions.Compiled);
+        private static readonly Regex ShoutPrefixRegex = new(@"^\[\d{2}:\d{2}:\d{2}\]\s*[^:]+?\s*:\s*", RegexOptions.Compiled);
+        private const double ScreenEdgePadding = 16;
         private readonly DispatcherTimer _lifetimeTimer;
         private ChatSettings _settings;
         private bool _isClosing;
@@ -27,7 +29,9 @@ namespace TWChatOverlay.Views
             InitializeComponent();
             FontFamily = fontFamily;
             ToastText.FontFamily = fontFamily;
+            ApplyToastSettings();
             ToastText.Text = NormalizeMessage(message);
+            ApplyLayoutConstraints();
             LocationChanged += (_, _) => SyncPositionToSettings();
 
             _lifetimeTimer = new DispatcherTimer
@@ -44,6 +48,7 @@ namespace TWChatOverlay.Views
         public void SetSettings(ChatSettings settings)
         {
             _settings = settings ?? throw new ArgumentNullException(nameof(settings));
+            ApplyToastSettings();
         }
 
         public void SetPreviewMode(bool isPreview)
@@ -55,6 +60,7 @@ namespace TWChatOverlay.Views
         public void SetMessage(string message)
         {
             ToastText.Text = NormalizeMessage(message);
+            ApplyLayoutConstraints();
         }
 
         public void ShowAnimated(double targetLeft, double targetTop, int durationSeconds = 5)
@@ -66,6 +72,8 @@ namespace TWChatOverlay.Views
             Top = targetTop - 18;
             Opacity = 0;
             Show();
+            UpdateLayout();
+            Left = ClampLeftToWorkArea(targetLeft);
             TopmostWindowHelper.BringToTopmost(this);
 
             BeginAnimation(TopProperty, new DoubleAnimation
@@ -82,7 +90,7 @@ namespace TWChatOverlay.Views
             });
 
             _lifetimeTimer.Stop();
-            _lifetimeTimer.Interval = TimeSpan.FromSeconds(Math.Max(1, Math.Min(5, durationSeconds)));
+            _lifetimeTimer.Interval = TimeSpan.FromSeconds(Math.Max(1, Math.Min(300, durationSeconds)));
             _lifetimeTimer.Start();
         }
 
@@ -98,6 +106,8 @@ namespace TWChatOverlay.Views
                 Show();
 
             Visibility = Visibility.Visible;
+            UpdateLayout();
+            Left = ClampLeftToWorkArea(targetLeft);
             TopmostWindowHelper.BringToTopmost(this);
         }
 
@@ -185,6 +195,31 @@ namespace TWChatOverlay.Views
             catch { }
         }
 
+        private void ApplyToastSettings()
+        {
+            ToastText.FontSize = _settings.ShoutToastFontSize;
+            ApplyLayoutConstraints();
+        }
+
+        private void ApplyLayoutConstraints()
+        {
+            var area = SystemParameters.WorkArea;
+            MaxWidth = Math.Max(MinWidth, area.Width - (ScreenEdgePadding * 2));
+            ToastText.MaxWidth = Math.Max(100, MaxWidth - 52);
+        }
+
+        private double ClampLeftToWorkArea(double requestedLeft)
+        {
+            var area = SystemParameters.WorkArea;
+            double width = ActualWidth > 0 ? ActualWidth : MinWidth;
+            double minLeft = area.Left + ScreenEdgePadding;
+            double maxLeft = area.Right - width - ScreenEdgePadding;
+            if (maxLeft < minLeft)
+                return minLeft;
+
+            return Math.Max(minLeft, Math.Min(maxLeft, requestedLeft));
+        }
+
         private static string NormalizeMessage(string? text)
         {
             if (string.IsNullOrWhiteSpace(text))
@@ -193,6 +228,7 @@ namespace TWChatOverlay.Views
             string decoded = WebUtility.HtmlDecode(text).Replace("&nbsp;", " ");
             decoded = HtmlTagRegex.Replace(decoded, " ");
             decoded = Regex.Replace(decoded, @"\s+", " ").Trim();
+            decoded = ShoutPrefixRegex.Replace(decoded, string.Empty).Trim();
             return decoded;
         }
     }
