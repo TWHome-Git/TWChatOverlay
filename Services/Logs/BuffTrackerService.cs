@@ -26,6 +26,7 @@ namespace TWChatOverlay.Services
         private readonly Dictionary<string, DateTime> _activeUntil = new(StringComparer.Ordinal);
         private readonly Dictionary<string, TimeSpan> _pausedRemaining = new(StringComparer.Ordinal);
         private readonly ChatSettings _settings;
+        private readonly bool _suppressEndSound;
         private DateTime _lastBuffEndSoundAt = DateTime.MinValue;
 
         private bool _hasAnyActiveBuffs;
@@ -61,9 +62,10 @@ namespace TWChatOverlay.Services
             private set => SetProperty(ref _hasExpBuffs, value);
         }
 
-        public BuffTrackerService(ChatSettings settings)
+        public BuffTrackerService(ChatSettings settings, bool suppressEndSound = false)
         {
             _settings = settings;
+            _suppressEndSound = suppressEndSound;
             _definitions = CreateDefinitions();
             _timer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
             _timer.Tick += (_, _) => RefreshActiveBuffs();
@@ -207,6 +209,9 @@ namespace TWChatOverlay.Services
 
         private void TryPlayBuffEndSound(DateTime now)
         {
+            if (_suppressEndSound)
+                return;
+
             if (!_settings.EnableBuffTrackerAlert || !_settings.EnableBuffTrackerEndSound)
                 return;
 

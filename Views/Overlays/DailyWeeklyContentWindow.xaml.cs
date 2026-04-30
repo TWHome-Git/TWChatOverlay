@@ -12,6 +12,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Media;
 using System.Windows.Threading;
 using TWChatOverlay.Models;
 using TWChatOverlay.Services;
@@ -36,6 +37,7 @@ namespace TWChatOverlay.Views
         private DateTime _lastDailyResetDate;
         private DateTime _lastWeeklyResetKey;
         private DateTime _lastAbaddonResetKey;
+        private int _selectedProfileTab;
         private const string DailyContentsGroupName = "일일 컨텐츠";
         private const string WeeklyContentsGroupName = "주간 컨텐츠";
 
@@ -139,6 +141,19 @@ namespace TWChatOverlay.Views
         public ObservableCollection<DailyWeeklyContentLog> CompletedItems => _completedItems;
 
         public bool HasCompletedItems => _completedItems.Count > 0;
+        public bool IsProfileTabsVisible => _settings.EnableCharacterProfiles;
+        public string Profile1DisplayName => string.IsNullOrWhiteSpace(_settings.Profile1DisplayName) ? "프로필1" : _settings.Profile1DisplayName;
+        public string Profile2DisplayName => string.IsNullOrWhiteSpace(_settings.Profile2DisplayName) ? "프로필2" : _settings.Profile2DisplayName;
+        public int SelectedProfileTab
+        {
+            get => _selectedProfileTab;
+            private set
+            {
+                if (_selectedProfileTab == value) return;
+                _selectedProfileTab = value;
+                OnPropertyChanged();
+            }
+        }
 
         public string ProgressDisplay =>
             $"{TrackItems.Count(i => !i.IsSubItem && i.IsEnabled && i.IsCleared)} / {TrackItems.Count(i => !i.IsSubItem && i.IsEnabled)} 완료";
@@ -179,6 +194,8 @@ namespace TWChatOverlay.Views
             InitializeComponent();
             DataContext = this;
             this.FontFamily = FontService.GetFont(_settings.FontFamily);
+            SelectedProfileTab = 0;
+            UpdateProfileTabHighlight();
 
             foreach (var item in TrackItems)
                 item.PropertyChanged += (_, e) =>
@@ -383,7 +400,7 @@ namespace TWChatOverlay.Views
         {
             foreach (var item in TrackItems)
             {
-                if (!_settings.DungeonItemConfigs.TryGetValue(item.Name, out var config)) continue;
+                if (!TryGetCurrentProfileConfig(item.Name, out var config)) continue;
                 item.IsEnabled = config.IsEnabled;
                 if (config.RequiredCount > 0)
                     item.MaxCount = config.RequiredCount;
@@ -393,14 +410,15 @@ namespace TWChatOverlay.Views
         private void SaveItemConfig(DailyWeeklyContentLog item)
         {
             if (_suppressSave) return;
-            if (!_settings.DungeonItemConfigs.TryGetValue(item.Name, out var config))
+            string key = GetCurrentProfileConfigKey(item.Name);
+            if (!_settings.DungeonItemConfigs.TryGetValue(key, out var config))
                 config = new DungeonItemConfig();
             config.IsEnabled = item.IsEnabled;
             config.RequiredCount = (item.MaxCount == item.DefaultMaxCount) ? 0 : item.MaxCount;
             config.CurrentCount = 0;
             config.IsCleared = false;
             config.SavedAt = DateTime.MinValue;
-            _settings.DungeonItemConfigs[item.Name] = config;
+            _settings.DungeonItemConfigs[key] = config;
             ConfigService.SaveDeferred(_settings);
         }
 
@@ -408,16 +426,37 @@ namespace TWChatOverlay.Views
         {
             foreach (var item in TrackItems.Where(i => !i.HasChildren))
             {
-                if (!_settings.DungeonItemConfigs.TryGetValue(item.Name, out var config))
+                string key = GetCurrentProfileConfigKey(item.Name);
+                if (!_settings.DungeonItemConfigs.TryGetValue(key, out var config))
                     config = new DungeonItemConfig();
                 config.IsEnabled = item.IsEnabled;
                 config.RequiredCount = (item.MaxCount == item.DefaultMaxCount) ? 0 : item.MaxCount;
                 config.CurrentCount = 0;
                 config.IsCleared = false;
                 config.SavedAt = DateTime.MinValue;
-                _settings.DungeonItemConfigs[item.Name] = config;
+                _settings.DungeonItemConfigs[key] = config;
             }
             ConfigService.SaveDeferred(_settings);
+        }
+
+        private string GetCurrentProfileConfigKey(string itemName)
+        {
+            if (!_settings.EnableCharacterProfiles || SelectedProfileTab == 0)
+                return itemName;
+
+            return SelectedProfileTab == 1
+                ? $"{itemName}__PROFILE1"
+                : $"{itemName}__PROFILE2";
+        }
+
+        private bool TryGetCurrentProfileConfig(string itemName, out DungeonItemConfig config)
+        {
+            string key = GetCurrentProfileConfigKey(itemName);
+            if (_settings.DungeonItemConfigs.TryGetValue(key, out config!))
+                return true;
+
+            // 기본 프로필 설정을 초기값 fallback으로 사용
+            return _settings.DungeonItemConfigs.TryGetValue(itemName, out config!);
         }
 
         /// <summary>
@@ -437,8 +476,8 @@ namespace TWChatOverlay.Views
             {
                 ResetScannedItems(dailyItems);
                 ResetScannedItems(weeklyItems);
-                await ScanAndApplyAsync(dailyItems, new[] { GetLogPath(today) });
-                await ScanAndApplyAsync(weeklyItems, GetWeekLogPaths(today));
+                await ScanAndApplyAsync(dailyItems, new[] { GetLogPath(today) }, SelectedProfileTab, _settings.EnableCharacterProfiles);
+                await ScanAndApplyAsync(weeklyItems, GetWeekLogPaths(today), SelectedProfileTab, _settings.EnableCharacterProfiles);
             }
             finally
             {
@@ -472,7 +511,7 @@ namespace TWChatOverlay.Views
         private string GetLogPath(DateTime date)
             => Path.Combine(_settings.ChatLogFolderPath, $"TWChatLog_{date:yyyy_MM_dd}.html");
 
-        private async Task ScanAndApplyAsync(IReadOnlyList<DailyWeeklyContentLog> items, IEnumerable<string> filePaths)
+        private async Task ScanAndApplyAsync(IReadOnlyList<DailyWeeklyContentLog> items, IEnumerable<string> filePaths, int targetProfileSlot, bool profileEnabled)
         {
             if (items.Count == 0) return;
 
@@ -515,6 +554,7 @@ namespace TWChatOverlay.Views
 
                     foreach (var filePath in filePaths)
                     {
+                        int profileSlot = 1;
                         if (!File.Exists(filePath)) continue;
 
                         using var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
@@ -522,6 +562,12 @@ namespace TWChatOverlay.Views
                         string? line;
                         while ((line = reader.ReadLine()) != null)
                         {
+                            if (profileEnabled)
+                                profileSlot = CharacterProfileLogRouter.GetNextProfileSlot(profileSlot, line, _settings);
+
+                            if (profileEnabled && targetProfileSlot is 1 or 2 && profileSlot != targetProfileSlot)
+                                continue;
+
                             if (DailyWeeklyLogAnalyzer.IsMercurialEntryMessage(line))
                             {
                                 pendingMercurialEntry = true;
@@ -655,8 +701,11 @@ namespace TWChatOverlay.Views
             _dailyWeeklyLogAnalyzer.Process(text);
         }
 
-        public bool TryProcessAbaddonOrCravingLog(string rawLog)
+        public bool TryProcessAbaddonOrCravingLog(string rawLog, int profileSlot = 0, bool profileEnabled = false)
         {
+            if (profileEnabled && SelectedProfileTab is 1 or 2 && profileSlot != SelectedProfileTab)
+                return false;
+
             string text = NormalizeLogText(rawLog);
             if (string.IsNullOrWhiteSpace(text))
                 return false;
@@ -664,12 +713,73 @@ namespace TWChatOverlay.Views
             return TryProcessAbaddonRoadLog(text) || TryProcessCravingPleasureLog(text);
         }
 
-        public void ProcessLog(LogAnalysisResult analysis)
+        public void ProcessLog(LogAnalysisResult analysis, int profileSlot = 0, bool profileEnabled = false)
         {
             if (!analysis.ShouldRunDailyWeeklyContent)
                 return;
 
+            if (profileEnabled && SelectedProfileTab is 1 or 2 && profileSlot != SelectedProfileTab)
+                return;
+
             _dailyWeeklyLogAnalyzer.Process(analysis);
+        }
+
+        private async void ProfileBasic_Click(object sender, RoutedEventArgs e)
+        {
+            SelectedProfileTab = 0;
+            UpdateProfileTabHighlight();
+            ApplySettings();
+            await ScanHistoricalLogsAsync();
+        }
+
+        private async void Profile1_Click(object sender, RoutedEventArgs e)
+        {
+            SelectedProfileTab = 1;
+            UpdateProfileTabHighlight();
+            ApplySettings();
+            await ScanHistoricalLogsAsync();
+        }
+
+        private async void Profile2_Click(object sender, RoutedEventArgs e)
+        {
+            SelectedProfileTab = 2;
+            UpdateProfileTabHighlight();
+            ApplySettings();
+            await ScanHistoricalLogsAsync();
+        }
+
+        private void UpdateProfileTabHighlight()
+        {
+            if (ProfileBasicButton == null || Profile1Button == null || Profile2Button == null)
+                return;
+
+            var normalBackground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#21262D"));
+            var normalForeground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FFCC00"));
+            var selectedBackground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#00BCD4"));
+            var selectedForeground = Brushes.Black;
+
+            ProfileBasicButton.Background = normalBackground;
+            ProfileBasicButton.Foreground = normalForeground;
+            Profile1Button.Background = normalBackground;
+            Profile1Button.Foreground = normalForeground;
+            Profile2Button.Background = normalBackground;
+            Profile2Button.Foreground = normalForeground;
+
+            if (SelectedProfileTab == 0)
+            {
+                ProfileBasicButton.Background = selectedBackground;
+                ProfileBasicButton.Foreground = selectedForeground;
+            }
+            else if (SelectedProfileTab == 1)
+            {
+                Profile1Button.Background = selectedBackground;
+                Profile1Button.Foreground = selectedForeground;
+            }
+            else
+            {
+                Profile2Button.Background = selectedBackground;
+                Profile2Button.Foreground = selectedForeground;
+            }
         }
 
         private bool TryProcessAbaddonRoadLog(string text)

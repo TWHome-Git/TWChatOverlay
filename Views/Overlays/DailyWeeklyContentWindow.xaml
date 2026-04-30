@@ -149,6 +149,13 @@
                     </Style>
                 </ScrollViewer.Style>
                 <StackPanel>
+                    <StackPanel Orientation="Horizontal"
+                                Margin="0,2,0,8"
+                                Visibility="{Binding IsProfileTabsVisible, Converter={StaticResource BoolToVis}}">
+                        <Button x:Name="ProfileBasicButton" Content="기본" Width="56" Height="24" Margin="0,0,4,0" Click="ProfileBasic_Click" Style="{StaticResource IncrementButtonStyle}"/>
+                        <Button x:Name="Profile1Button" Content="{Binding Profile1DisplayName}" Width="88" Height="24" Margin="0,0,4,0" Click="Profile1_Click" Style="{StaticResource IncrementButtonStyle}"/>
+                        <Button x:Name="Profile2Button" Content="{Binding Profile2DisplayName}" Width="88" Height="24" Click="Profile2_Click" Style="{StaticResource IncrementButtonStyle}"/>
+                    </StackPanel>
                     <DockPanel Margin="0,2,4,6" LastChildFill="False">
                         <Border DockPanel.Dock="Left" Width="3" Background="Cyan" CornerRadius="1" Margin="0,0,6,0"/>
                         <TextBlock DockPanel.Dock="Left" Text="일일 컨텐츠" Foreground="#C9D1D9" FontSize="13" FontWeight="SemiBold" VerticalAlignment="Center"/>

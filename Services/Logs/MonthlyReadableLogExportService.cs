@@ -314,7 +314,7 @@ namespace TWChatOverlay.Services
             }
         }
 
-        public static void AppendItemSnapshot(DateTime date, LogParser.ParseResult itemLog)
+        public static void AppendItemSnapshot(DateTime date, LogParser.ParseResult itemLog, int profileSlot = 0)
         {
             if (itemLog == null)
                 throw new ArgumentNullException(nameof(itemLog));
@@ -334,7 +334,7 @@ namespace TWChatOverlay.Services
                         string.Empty,
                         new List<MonthlyLogSourceSnapshot>());
 
-                    data.ItemSnapshots.Add(CreateSnapshotFromItemLog(itemLog, date.Date));
+                    data.ItemSnapshots.Add(CreateSnapshotFromItemLog(itemLog, date.Date, profileSlot));
                     WriteCsv(GetMonthlyCsvPath(monthStart), data);
                     CacheMonthlyData(data);
                     SaveMonthlySyncState(GetMonthlySyncStatePath(), data);
@@ -441,9 +441,12 @@ namespace TWChatOverlay.Services
             var abaddonSummary = new AbaddonMonthlySummarySnapshotEntry { MonthStart = monthStart.Date };
             int processed = 0;
             int total = sourceFiles.Count;
+            var profileSettings = ConfigService.Load();
+            bool profileEnabled = profileSettings.EnableCharacterProfiles;
 
             foreach (var sourceFile in sourceFiles)
             {
+                int profileSlot = 1;
                 try
                 {
                     using var stream = new FileStream(sourceFile.FullPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
@@ -451,6 +454,11 @@ namespace TWChatOverlay.Services
                     string? line;
                     while ((line = reader.ReadLine()) != null)
                     {
+                        if (profileEnabled)
+                        {
+                            profileSlot = CharacterProfileLogRouter.GetNextProfileSlot(profileSlot, line, profileSettings);
+                        }
+
                         var analysis = logAnalysisService.Analyze(line, isRealTime: false);
                         if (!analysis.IsSuccess)
                             continue;
@@ -458,7 +466,7 @@ namespace TWChatOverlay.Services
                         TryAccumulateAbaddonSummary(analysis.Parsed.FormattedText, abaddonSummary);
 
                         if (analysis.HasTrackedItemDrop)
-                            itemSnapshots.Add(CreateSnapshotFromItemLog(analysis.Parsed, sourceFile.Date));
+                            itemSnapshots.Add(CreateSnapshotFromItemLog(analysis.Parsed, sourceFile.Date, profileEnabled ? profileSlot : 0));
                     }
                 }
                 catch (Exception ex)
@@ -493,9 +501,12 @@ namespace TWChatOverlay.Services
             var itemSnapshots = new List<ItemLogSnapshotEntry>();
             int processed = 0;
             int total = sourceFiles.Count;
+            var profileSettings = ConfigService.Load();
+            bool profileEnabled = profileSettings.EnableCharacterProfiles;
 
             foreach (var sourceFile in sourceFiles)
             {
+                int profileSlot = 1;
                 try
                 {
                     using var stream = new FileStream(sourceFile.FullPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
@@ -503,11 +514,16 @@ namespace TWChatOverlay.Services
                     string? line;
                     while ((line = reader.ReadLine()) != null)
                     {
+                        if (profileEnabled)
+                        {
+                            profileSlot = CharacterProfileLogRouter.GetNextProfileSlot(profileSlot, line, profileSettings);
+                        }
+
                         var analysis = logAnalysisService.Analyze(line, isRealTime: false);
                         if (!analysis.IsSuccess || !analysis.HasTrackedItemDrop)
                             continue;
 
-                        itemSnapshots.Add(CreateSnapshotFromItemLog(analysis.Parsed, sourceFile.Date));
+                        itemSnapshots.Add(CreateSnapshotFromItemLog(analysis.Parsed, sourceFile.Date, profileEnabled ? profileSlot : 0));
                     }
                 }
                 catch (Exception ex)
@@ -594,7 +610,8 @@ namespace TWChatOverlay.Services
 
                     if (!sawHeader)
                     {
-                        sawHeader = rawLine.StartsWith("Kind,Date,Name,DisplayName,Grade,Count,EntryFeeMan,Low,Mid,High,Top,StoneRevenueMan,NetProfitMan", StringComparison.OrdinalIgnoreCase);
+                        sawHeader = rawLine.StartsWith("Kind,Date,Name,DisplayName,Grade,Count,ProfileSlot,EntryFeeMan,Low,Mid,High,Top,StoneRevenueMan,NetProfitMan", StringComparison.OrdinalIgnoreCase) ||
+                                    rawLine.StartsWith("Kind,Date,Name,DisplayName,Grade,Count,EntryFeeMan,Low,Mid,High,Top,StoneRevenueMan,NetProfitMan", StringComparison.OrdinalIgnoreCase);
                         continue;
                     }
 
@@ -608,6 +625,7 @@ namespace TWChatOverlay.Services
                             continue;
 
                         string? itemName = string.IsNullOrWhiteSpace(columns[2]) ? null : columns[2];
+                        bool hasProfileColumn = columns.Count >= 14;
                         itemSnapshots.Add(new ItemLogSnapshotEntry
                         {
                             Date = date.Date,
@@ -616,19 +634,23 @@ namespace TWChatOverlay.Services
                                 itemName,
                                 string.IsNullOrWhiteSpace(columns[3]) ? null : columns[3]),
                             Grade = Enum.TryParse(columns[4], out ItemDropGrade grade) ? grade : ItemDropGrade.Normal,
-                            Count = int.TryParse(columns[5], NumberStyles.Integer, CultureInfo.InvariantCulture, out int count) ? count : 1
+                            Count = int.TryParse(columns[5], NumberStyles.Integer, CultureInfo.InvariantCulture, out int count) ? count : 1,
+                            ProfileSlot = hasProfileColumn && int.TryParse(columns[6], NumberStyles.Integer, CultureInfo.InvariantCulture, out int profileSlot)
+                                ? profileSlot
+                                : 0
                         });
                     }
                     else if (columns[0].Equals("abaddon", StringComparison.OrdinalIgnoreCase))
                     {
+                        int offset = columns.Count >= 14 ? 1 : 0;
                         if (DateTime.TryParseExact(columns[1], "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime abaddonMonth))
                             abaddonSummary.MonthStart = abaddonMonth.Date;
 
-                        abaddonSummary.TotalEntryFeeMan = TryParseLong(columns[6], out long totalEntryFeeMan) ? totalEntryFeeMan : 0;
-                        abaddonSummary.Low = TryParseLong(columns[7], out long low) ? low : 0;
-                        abaddonSummary.Mid = TryParseLong(columns[8], out long mid) ? mid : 0;
-                        abaddonSummary.High = TryParseLong(columns[9], out long high) ? high : 0;
-                        abaddonSummary.Top = TryParseLong(columns[10], out long top) ? top : 0;
+                        abaddonSummary.TotalEntryFeeMan = TryParseLong(columns[6 + offset], out long totalEntryFeeMan) ? totalEntryFeeMan : 0;
+                        abaddonSummary.Low = TryParseLong(columns[7 + offset], out long low) ? low : 0;
+                        abaddonSummary.Mid = TryParseLong(columns[8 + offset], out long mid) ? mid : 0;
+                        abaddonSummary.High = TryParseLong(columns[9 + offset], out long high) ? high : 0;
+                        abaddonSummary.Top = TryParseLong(columns[10 + offset], out long top) ? top : 0;
                     }
                 }
 
@@ -659,7 +681,7 @@ namespace TWChatOverlay.Services
                     sb.AppendLine($"# sourceFile={sourceFile.FileName}|{sourceFile.Length}|{sourceFile.LastWriteTimeUtc.Ticks}");
                 }
 
-                sb.AppendLine("Kind,Date,Name,DisplayName,Grade,Count,EntryFeeMan,Low,Mid,High,Top,StoneRevenueMan,NetProfitMan");
+                sb.AppendLine("Kind,Date,Name,DisplayName,Grade,Count,ProfileSlot,EntryFeeMan,Low,Mid,High,Top,StoneRevenueMan,NetProfitMan");
 
                 foreach (var snapshot in data.ItemSnapshots
                              .OrderBy(snapshot => snapshot.Date)
@@ -675,6 +697,8 @@ namespace TWChatOverlay.Services
                     sb.Append(EscapeCsv(snapshot.Grade.ToString()));
                     sb.Append(',');
                     sb.Append(snapshot.Count);
+                    sb.Append(',');
+                    sb.Append(snapshot.ProfileSlot);
                     sb.AppendLine(",,,,,,,");
                 }
 
@@ -687,6 +711,7 @@ namespace TWChatOverlay.Services
                     sb.Append(',');
                     sb.Append(EscapeCsv("어밴던로드"));
                     sb.Append(",,,");
+                    sb.Append("0,");
                     sb.Append(data.AbaddonSummary.TotalEntryFeeMan);
                     sb.Append(',');
                     sb.Append(data.AbaddonSummary.Low);
@@ -989,7 +1014,7 @@ namespace TWChatOverlay.Services
         private static void TryAccumulateAbaddonSummary(string formattedText, AbaddonMonthlySummarySnapshotEntry summary)
             => AbaddonSummaryCalculator.TryAccumulate(formattedText, summary);
 
-        private static ItemLogSnapshotEntry CreateSnapshotFromItemLog(LogParser.ParseResult itemLog, DateTime date)
+        private static ItemLogSnapshotEntry CreateSnapshotFromItemLog(LogParser.ParseResult itemLog, DateTime date, int profileSlot = 0)
         {
             return new ItemLogSnapshotEntry
             {
@@ -998,7 +1023,8 @@ namespace TWChatOverlay.Services
                 DisplayName = ResolveDisplayName(itemLog.TrackedItemName, "Item"),
                 Grade = itemLog.TrackedItemGrade,
                 Count = Math.Max(1, itemLog.TrackedItemCount),
-                FormattedText = itemLog.FormattedText
+                FormattedText = itemLog.FormattedText,
+                ProfileSlot = profileSlot
             };
         }
 

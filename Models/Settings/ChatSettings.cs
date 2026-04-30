@@ -53,6 +53,11 @@ namespace TWChatOverlay.Models
         private bool _enableBuffTrackerAlert = false;
         private bool _enableBuffTrackerEndSound = false;
         private bool _showBuffTrackerWindow = false;
+        private bool _enableCharacterProfiles = false;
+        private string _profile1DisplayName = "프로필1";
+        private string _profile2DisplayName = "프로필2";
+        private string _profile1SwitchLog = "[이클립스 코어] 진화 4단계-3세트 효과가 발동되었습니다.";
+        private string _profile2SwitchLog = "[이클립스 코어] 진화 2단계-6세트 효과가 발동되었습니다.";
         private double _buffTrackerEndSoundVolume = 1.0;
         private double _itemDropAlertVolume = 0.1;
         private double _highlightAlertVolume = 1.0;
@@ -208,6 +213,16 @@ namespace TWChatOverlay.Models
         }
         [JsonPropertyOrder(24)]
         public bool ShowBuffTrackerWindow { get => _showBuffTrackerWindow; set { _showBuffTrackerWindow = value; OnPropertyChanged(); } }
+        [JsonPropertyOrder(241)]
+        public bool EnableCharacterProfiles { get => _enableCharacterProfiles; set { _enableCharacterProfiles = value; OnPropertyChanged(); } }
+        [JsonPropertyOrder(242)]
+        public string Profile1DisplayName { get => _profile1DisplayName; set { _profile1DisplayName = value ?? "프로필1"; OnPropertyChanged(); } }
+        [JsonPropertyOrder(243)]
+        public string Profile2DisplayName { get => _profile2DisplayName; set { _profile2DisplayName = value ?? "프로필2"; OnPropertyChanged(); } }
+        [JsonPropertyOrder(244)]
+        public string Profile1SwitchLog { get => _profile1SwitchLog; set { _profile1SwitchLog = value ?? string.Empty; OnPropertyChanged(); } }
+        [JsonPropertyOrder(245)]
+        public string Profile2SwitchLog { get => _profile2SwitchLog; set { _profile2SwitchLog = value ?? string.Empty; OnPropertyChanged(); } }
         [JsonPropertyOrder(25)]
         public double ItemDropAlertVolume
         {

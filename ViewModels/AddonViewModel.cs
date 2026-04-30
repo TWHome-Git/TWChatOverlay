@@ -50,6 +50,11 @@ namespace TWChatOverlay.ViewModels
         private bool _enableBuffTrackerAlert;
         private bool _enableBuffTrackerEndSound;
         private bool _showBuffTrackerWindow;
+        private bool _enableCharacterProfiles;
+        private string _profile1DisplayName = "프로필1";
+        private string _profile2DisplayName = "프로필2";
+        private string _profile1SwitchLog = string.Empty;
+        private string _profile2SwitchLog = string.Empty;
         private double _itemDropAlertVolumePercent;
         private double _highlightAlertVolumePercent;
         private double _magicCircleAlertVolumePercent;
@@ -220,6 +225,36 @@ namespace TWChatOverlay.ViewModels
             set => SetSetting(ref _showBuffTrackerWindow, value, (settings, newValue) => settings.ShowBuffTrackerWindow = newValue);
         }
 
+        public bool EnableCharacterProfiles
+        {
+            get => _enableCharacterProfiles;
+            set => SetSetting(ref _enableCharacterProfiles, value, (settings, newValue) => settings.EnableCharacterProfiles = newValue);
+        }
+
+        public string Profile1DisplayName
+        {
+            get => _profile1DisplayName;
+            set => SetSetting(ref _profile1DisplayName, value ?? "프로필1", (settings, newValue) => settings.Profile1DisplayName = newValue);
+        }
+
+        public string Profile2DisplayName
+        {
+            get => _profile2DisplayName;
+            set => SetSetting(ref _profile2DisplayName, value ?? "프로필2", (settings, newValue) => settings.Profile2DisplayName = newValue);
+        }
+
+        public string Profile1SwitchLog
+        {
+            get => _profile1SwitchLog;
+            set => SetSetting(ref _profile1SwitchLog, value ?? string.Empty, (settings, newValue) => settings.Profile1SwitchLog = newValue);
+        }
+
+        public string Profile2SwitchLog
+        {
+            get => _profile2SwitchLog;
+            set => SetSetting(ref _profile2SwitchLog, value ?? string.Empty, (settings, newValue) => settings.Profile2SwitchLog = newValue);
+        }
+
         public double ItemDropAlertVolumePercent
         {
             get => _itemDropAlertVolumePercent;
@@ -293,6 +328,11 @@ namespace TWChatOverlay.ViewModels
             _enableBuffTrackerAlert = _settings.EnableBuffTrackerAlert;
             _enableBuffTrackerEndSound = _settings.EnableBuffTrackerEndSound;
             _showBuffTrackerWindow = _settings.ShowBuffTrackerWindow;
+            _enableCharacterProfiles = _settings.EnableCharacterProfiles;
+            _profile1DisplayName = _settings.Profile1DisplayName;
+            _profile2DisplayName = _settings.Profile2DisplayName;
+            _profile1SwitchLog = _settings.Profile1SwitchLog;
+            _profile2SwitchLog = _settings.Profile2SwitchLog;
             _itemDropAlertVolumePercent = _settings.ItemDropAlertVolumePercent;
             _highlightAlertVolumePercent = _settings.HighlightAlertVolumePercent;
             _magicCircleAlertVolumePercent = _settings.MagicCircleAlertVolumePercent;

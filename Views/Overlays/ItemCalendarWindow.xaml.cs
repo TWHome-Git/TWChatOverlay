@@ -11,6 +11,7 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
+using System.Windows.Media;
 using TWChatOverlay.Models;
 using TWChatOverlay.Services;
 
@@ -53,6 +54,7 @@ namespace TWChatOverlay.Views
         private int _loadProgressValue;
         private string _monthlyAbaddonSeedText = string.Empty;
         private int _loadVersion;
+        private int _selectedProfileTab;
 
         public event PropertyChangedEventHandler? PropertyChanged;
 
@@ -67,6 +69,8 @@ namespace TWChatOverlay.Views
             _currentMonthStart = GetMonthStart(DateTime.Today);
             UpdateHeaderText(_currentMonthStart);
             SetLoadingState(false, string.Empty);
+            SelectedProfileTab = 0;
+            UpdateProfileTabHighlight();
         }
 
         public ObservableCollection<ItemCalendarDayViewModel> Days => _days;
@@ -74,6 +78,23 @@ namespace TWChatOverlay.Views
         public ObservableCollection<ItemCalendarEntryViewModel> MonthlySummary => _monthlySummary;
 
         public ObservableCollection<AbaddonMonthlyStoneSummaryEntryViewModel> MonthlyAbaddonSummary => _monthlyAbaddonSummary;
+
+        public bool IsProfileTabsVisible => _settings.EnableCharacterProfiles;
+        public string Profile1DisplayName => string.IsNullOrWhiteSpace(_settings.Profile1DisplayName) ? "프로필1" : _settings.Profile1DisplayName;
+        public string Profile2DisplayName => string.IsNullOrWhiteSpace(_settings.Profile2DisplayName) ? "프로필2" : _settings.Profile2DisplayName;
+
+        public int SelectedProfileTab
+        {
+            get => _selectedProfileTab;
+            private set
+            {
+                if (_selectedProfileTab == value)
+                    return;
+
+                _selectedProfileTab = value;
+                OnPropertyChanged(nameof(SelectedProfileTab));
+            }
+        }
 
         public string MonthlyAbaddonSeedText
         {
@@ -162,7 +183,6 @@ namespace TWChatOverlay.Views
             var progress = new Progress<MonthlyReadableLogExportService.MonthlyBuildProgress>(report =>
                 Dispatcher.BeginInvoke(new Action(() => UpdateLoadingProgress(report)), System.Windows.Threading.DispatcherPriority.Background));
 
-            IReadOnlyList<ItemCalendarDayViewModel> days;
             IReadOnlyList<ItemLogSnapshotEntry> snapshots;
             AbaddonMonthlySummarySnapshotEntry abaddonSummary;
             try
@@ -183,7 +203,6 @@ namespace TWChatOverlay.Views
                 var monthlyData = await monthlyTask.ConfigureAwait(true);
                 snapshots = monthlyData.ItemSnapshots;
                 abaddonSummary = monthlyData.AbaddonSummary;
-                days = await Task.Run(() => BuildMonthDays(monthStart, snapshots)).ConfigureAwait(true);
             }
             catch (Exception ex)
             {
@@ -202,24 +221,41 @@ namespace TWChatOverlay.Views
             _currentMonthStart = monthStart;
             _loadedMonthStart = monthStart;
             _hasLoadedMonth = true;
-            Days.Clear();
-            foreach (var day in days)
-                Days.Add(day);
-
-            UpdateMonthlySummary(snapshots);
-            UpdateMonthlyAbaddonSummary(abaddonSummary);
-            CacheTodaySnapshots(monthStart, snapshots);
             lock (_todayLock)
             {
                 _currentMonthSnapshots.Clear();
                 _currentMonthSnapshots.AddRange(snapshots);
             }
+            ApplyProfileFilteredMonthView(monthStart);
+            UpdateMonthlyAbaddonSummary(abaddonSummary);
+            CacheTodaySnapshots(monthStart, snapshots);
+            UpdateStatusForToday();
+        }
 
-            int totalCount = Days.Sum(day => day.TotalCount);
-            string status = totalCount > 0
-                ? $"{GetMonthSummaryLabel(monthStart)} 총 {totalCount:N0}개 획득"
-                : $"{GetMonthSummaryLabel(monthStart)} 아이템 기록이 없습니다.";
-            SetLoadingState(false, status);
+        private void ApplyProfileFilteredMonthView(DateTime monthStart)
+        {
+            List<ItemLogSnapshotEntry> allSnapshots;
+            lock (_todayLock)
+            {
+                allSnapshots = _currentMonthSnapshots.ToList();
+            }
+
+            var filtered = FilterSnapshotsForSelectedProfile(allSnapshots);
+            var days = BuildMonthDays(monthStart, filtered);
+
+            Days.Clear();
+            foreach (var day in days)
+                Days.Add(day);
+
+            UpdateMonthlySummary(filtered);
+        }
+
+        private List<ItemLogSnapshotEntry> FilterSnapshotsForSelectedProfile(IEnumerable<ItemLogSnapshotEntry> snapshots)
+        {
+            if (!_settings.EnableCharacterProfiles || SelectedProfileTab == 0)
+                return snapshots.ToList();
+
+            return snapshots.Where(snapshot => snapshot.ProfileSlot == SelectedProfileTab).ToList();
         }
 
         private IReadOnlyList<ItemCalendarDayViewModel> BuildMonthDays(DateTime monthStart, IReadOnlyList<ItemLogSnapshotEntry> snapshots)
@@ -314,7 +350,7 @@ namespace TWChatOverlay.Views
             return new ItemCalendarDayViewModel(date, isCurrentMonth, entries);
         }
 
-        public void ApplyRealtimeItemLog(LogParser.ParseResult itemLog, DateTime date)
+        public void ApplyRealtimeItemLog(LogParser.ParseResult itemLog, DateTime date, int profileSlot = 0, bool profileEnabled = false)
         {
             if (itemLog == null || string.IsNullOrWhiteSpace(itemLog.FormattedText))
                 return;
@@ -335,7 +371,8 @@ namespace TWChatOverlay.Views
                     : DropItemResolver.GetTrackedItemDisplayName(itemLog.TrackedItemName),
                 Grade = itemLog.TrackedItemGrade,
                 Count = Math.Max(1, itemLog.TrackedItemCount),
-                FormattedText = itemLog.FormattedText
+                FormattedText = itemLog.FormattedText,
+                ProfileSlot = profileEnabled ? profileSlot : 0
             };
 
             lock (_todayLock)
@@ -352,14 +389,15 @@ namespace TWChatOverlay.Views
 
             Dispatcher.BeginInvoke(new Action(() =>
             {
-                ApplySnapshotToToday(snapshot);
+                if (!_settings.EnableCharacterProfiles || SelectedProfileTab == 0 || snapshot.ProfileSlot == SelectedProfileTab)
+                    ApplySnapshotToToday(snapshot);
                 List<ItemLogSnapshotEntry> monthSnapshots;
                 lock (_todayLock)
                 {
                     monthSnapshots = _currentMonthSnapshots.ToList();
                 }
 
-                UpdateMonthlySummary(monthSnapshots);
+                UpdateMonthlySummary(FilterSnapshotsForSelectedProfile(monthSnapshots));
                 UpdateStatusForToday();
             }), System.Windows.Threading.DispatcherPriority.Background);
         }
@@ -624,6 +662,64 @@ namespace TWChatOverlay.Views
         private void Refresh_Click(object sender, RoutedEventArgs e)
             => _ = RefreshCurrentMonthAsync();
 
+        private void ProfileBasic_Click(object sender, RoutedEventArgs e)
+        {
+            SelectedProfileTab = 0;
+            UpdateProfileTabHighlight();
+            ApplyProfileFilteredMonthView(_currentMonthStart);
+            UpdateStatusForToday();
+        }
+
+        private void Profile1_Click(object sender, RoutedEventArgs e)
+        {
+            SelectedProfileTab = 1;
+            UpdateProfileTabHighlight();
+            ApplyProfileFilteredMonthView(_currentMonthStart);
+            UpdateStatusForToday();
+        }
+
+        private void Profile2_Click(object sender, RoutedEventArgs e)
+        {
+            SelectedProfileTab = 2;
+            UpdateProfileTabHighlight();
+            ApplyProfileFilteredMonthView(_currentMonthStart);
+            UpdateStatusForToday();
+        }
+
+        private void UpdateProfileTabHighlight()
+        {
+            if (ProfileBasicButton == null || Profile1Button == null || Profile2Button == null)
+                return;
+
+            var normalBackground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#49505B"));
+            var normalForeground = Brushes.White;
+            var selectedBackground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#00BCD4"));
+            var selectedForeground = Brushes.Black;
+
+            ProfileBasicButton.Background = normalBackground;
+            ProfileBasicButton.Foreground = normalForeground;
+            Profile1Button.Background = normalBackground;
+            Profile1Button.Foreground = normalForeground;
+            Profile2Button.Background = normalBackground;
+            Profile2Button.Foreground = normalForeground;
+
+            if (SelectedProfileTab == 0)
+            {
+                ProfileBasicButton.Background = selectedBackground;
+                ProfileBasicButton.Foreground = selectedForeground;
+            }
+            else if (SelectedProfileTab == 1)
+            {
+                Profile1Button.Background = selectedBackground;
+                Profile1Button.Foreground = selectedForeground;
+            }
+            else
+            {
+                Profile2Button.Background = selectedBackground;
+                Profile2Button.Foreground = selectedForeground;
+            }
+        }
+
         private void Close_Click(object sender, RoutedEventArgs e)
             => Close();
 
@@ -640,8 +736,3 @@ namespace TWChatOverlay.Views
         }
     }
 }
-
-
-
-
-
