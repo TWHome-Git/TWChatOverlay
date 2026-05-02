@@ -168,6 +168,8 @@ namespace TWChatOverlay.Views
                         ExperienceAlertWindowService.ShowPositionPreview(_settings);
                     else if (!_settings.EnableExperienceLimitAlert && !_settings.ShowExperienceLimitAlertWindow)
                         ExperienceAlertWindowService.Close();
+
+                    ExperienceAlertWindowService.RefreshState(_settings);
                 }
                 else if (e.PropertyName == nameof(_settings.ShowExperienceLimitAlertWindow))
                 {
@@ -175,6 +177,12 @@ namespace TWChatOverlay.Views
                         ExperienceAlertWindowService.ShowPositionPreview(_settings);
                     else
                         ExperienceAlertWindowService.Close();
+                }
+                else if (e.PropertyName == nameof(_settings.EnableCharacterProfiles) ||
+                         e.PropertyName == nameof(_settings.Profile1DisplayName) ||
+                         e.PropertyName == nameof(_settings.Profile2DisplayName))
+                {
+                    ExperienceAlertWindowService.RefreshState(_settings);
                 }
                 else if (e.PropertyName == nameof(_settings.ShowDungeonCountDisplayWindow))
                 {

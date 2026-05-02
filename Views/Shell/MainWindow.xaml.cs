@@ -79,9 +79,7 @@ namespace TWChatOverlay.Views
         private readonly object _pendingMonthlyItemSnapshotsLock = new();
         private readonly List<ItemLogSnapshotEntry> _pendingMonthlyItemSnapshots = new();
         private DropItemResolver.DropItemFilterSnapshot? _defaultDropItemFilterSnapshot;
-        private int _activeCharacterProfileSlot = 1;
-        private readonly Dictionary<int, ExperienceService> _profileExpServices = new();
-        private readonly Dictionary<int, BuffTrackerService> _profileBuffTrackerServices = new();
+        private CharacterProfilePipelineState _characterProfileState;
 
         private static readonly Regex AbaddonEntryFeeRegex = new(
             @"입장료\s*(?<value>[\d,]+)\s*만\s*Seed",
@@ -148,12 +146,12 @@ namespace TWChatOverlay.Views
 
             _expService = new ExperienceService(_settings);
             _experienceEssenceAlertService = new ExperienceEssenceAlertService(_settings);
+            ExperienceAlertWindowService.ConfigureStateBridge(
+                () => _experienceEssenceAlertService.GetStateSnapshot(),
+                snapshot => _experienceEssenceAlertService.ApplyStateSnapshot(snapshot));
             _dungeonCountDisplayService = new DungeonCountDisplayService(_settings);
             _buffTrackerService = new BuffTrackerService(_settings);
-            _profileExpServices[1] = new ExperienceService(_settings, suppressAlert: true);
-            _profileExpServices[2] = new ExperienceService(_settings, suppressAlert: true);
-            _profileBuffTrackerServices[1] = new BuffTrackerService(_settings, suppressEndSound: true);
-            _profileBuffTrackerServices[2] = new BuffTrackerService(_settings, suppressEndSound: true);
+            _characterProfileState = new CharacterProfilePipelineState(_settings);
             _buffTrackerService.PropertyChanged += BuffTrackerService_PropertyChanged;
             ExpTrackerPanel.DataContext = _expService.SessionState;
             _logService = new LogService(_expService, _settings);
@@ -210,8 +208,8 @@ namespace TWChatOverlay.Views
             try { _logService?.Dispose(); } catch { }
             try { _expService?.Stop(); } catch { }
             try { _buffTrackerService?.Dispose(); } catch { }
-            try { foreach (var profileExp in _profileExpServices.Values) profileExp.Stop(); } catch { }
-            try { foreach (var profileBuff in _profileBuffTrackerServices.Values) profileBuff.Dispose(); } catch { }
+            try { _characterProfileState.StopExperienceTrackers(); } catch { }
+            try { _characterProfileState.Dispose(); } catch { }
             try
             {
                 if (_stickyService != null)
@@ -233,6 +231,12 @@ namespace TWChatOverlay.Views
         {
             try
             {
+                if (HasSavedExperienceLimitState())
+                {
+                    AppLogger.Info("Skipped experience essence log restore because saved state already exists.");
+                    return;
+                }
+
                 var logPaths = GetAllChatLogPaths();
                 _experienceEssenceAlertService.RestoreFromRecentLogs(logPaths, _logAnalysisService);
             }
@@ -241,6 +245,9 @@ namespace TWChatOverlay.Views
                 AppLogger.Warn("Failed to restore experience essence alert state from recent logs.", ex);
             }
         }
+
+        private bool HasSavedExperienceLimitState()
+            => _settings.ExperienceLimitStateInitialized;
 
         private IEnumerable<string> GetAllChatLogPaths()
         {
@@ -348,8 +355,7 @@ namespace TWChatOverlay.Views
                 _bossAlarmSchedulerService = new BossAlarmSchedulerService(_settings);
                 _bossAlarmSchedulerService.Start();
                 _expService.Start();
-                foreach (var profileExp in _profileExpServices.Values)
-                    profileExp.Start();
+                _characterProfileState.StartExperienceTrackers();
                 StartLogServiceWhenReady();
 
                 _settings.PropertyChanged += OnSettingsPropertyChanged;

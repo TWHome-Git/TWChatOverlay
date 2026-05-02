@@ -204,7 +204,7 @@ namespace TWChatOverlay.Services
                 Date = date.Date,
                 ItemName = itemLog.TrackedItemName,
                 DisplayName = string.IsNullOrWhiteSpace(itemLog.TrackedItemName)
-                    ? "Item"
+                    ? "아이템"
                     : DropItemResolver.GetTrackedItemDisplayName(itemLog.TrackedItemName),
                 Grade = itemLog.TrackedItemGrade,
                 Count = Math.Max(1, itemLog.TrackedItemCount),

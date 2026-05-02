@@ -32,7 +32,11 @@ namespace TWChatOverlay.Services
             if (!context.IsSuccess)
                 return LogAnalysisResult.Empty(html, isRealTime);
 
-            _itemDropLogAnalyzer.Analyze(context, itemFilterSnapshot);
+            bool isSystemLog = context.Result.Category is ChatCategory.System or ChatCategory.System2 or ChatCategory.System3;
+            if (isSystemLog)
+            {
+                _itemDropLogAnalyzer.Analyze(context, itemFilterSnapshot);
+            }
             _experienceLogAnalyzer.Analyze(context);
             _etosDirectionLogAnalyzer.Analyze(context);
             _alertLogAnalyzer.Analyze(context);
@@ -40,7 +44,6 @@ namespace TWChatOverlay.Services
             var parsed = context.Result;
             parsed.Brush = ChatBrushResolver.Resolve(_settings, parsed.Category);
 
-            bool isSystemLog = parsed.Category is ChatCategory.System or ChatCategory.System2 or ChatCategory.System3;
             bool isRareTrackedItem = parsed.IsTrackedItemDrop &&
                                      (parsed.TrackedItemGrade == ItemDropGrade.Rare ||
                                       parsed.TrackedItemGrade == ItemDropGrade.Special);

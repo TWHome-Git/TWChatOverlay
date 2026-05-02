@@ -314,6 +314,30 @@ namespace TWChatOverlay.Services
             }
         }
 
+        public static void PersistCachedMonthlyData()
+        {
+            lock (SyncRoot)
+            {
+                if (MonthlyDataCache.Count == 0)
+                    return;
+
+                Directory.CreateDirectory(ItemLogDirectoryPath);
+                foreach (var data in MonthlyDataCache.Values.OrderBy(data => data.MonthStart))
+                {
+                    try
+                    {
+                        WriteCsv(GetMonthlyCsvPath(data.MonthStart), data);
+                        SaveMonthlySyncState(GetMonthlySyncStatePath(), data);
+                        DeleteLegacyArtifacts(data.MonthStart);
+                    }
+                    catch (Exception ex)
+                    {
+                        AppLogger.Warn($"Failed to persist cached monthly data for '{data.MonthStart:yyyy-MM}'.", ex);
+                    }
+                }
+            }
+        }
+
         public static void AppendItemSnapshot(DateTime date, LogParser.ParseResult itemLog, int profileSlot = 0)
         {
             if (itemLog == null)
@@ -1020,7 +1044,7 @@ namespace TWChatOverlay.Services
             {
                 Date = date.Date,
                 ItemName = itemLog.TrackedItemName,
-                DisplayName = ResolveDisplayName(itemLog.TrackedItemName, "Item"),
+                DisplayName = ResolveDisplayName(itemLog.TrackedItemName, "아이템"),
                 Grade = itemLog.TrackedItemGrade,
                 Count = Math.Max(1, itemLog.TrackedItemCount),
                 FormattedText = itemLog.FormattedText,

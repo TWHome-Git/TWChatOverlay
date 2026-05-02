@@ -12,6 +12,8 @@ namespace TWChatOverlay.Models
         private long _lastGainedExp;
         private long _totalExp;
         private DateTime _startTime = DateTime.Now;
+        private bool _isFrozen;
+        private string _frozenTotalExpDisplay = string.Empty;
 
         public string LastGainedExpDisplay => _lastGainedExp > 0 ? $"+{FormatExp(_lastGainedExp)}" : string.Empty;
 
@@ -46,6 +48,11 @@ namespace TWChatOverlay.Models
         {
             get
             {
+                if (_isFrozen)
+                {
+                    return _frozenTotalExpDisplay;
+                }
+
                 string currentExp = FormatExp(_totalExp);
                 TimeSpan elapsed = DateTime.Now - _startTime;
                 double hours = elapsed.TotalHours;
@@ -62,14 +69,50 @@ namespace TWChatOverlay.Models
 
         public void ResetStartTime() => _startTime = DateTime.Now;
 
+        public void FreezeTotalExpDisplay()
+        {
+            if (_isFrozen)
+                return;
+
+            _frozenTotalExpDisplay = BuildTotalExpDisplay();
+            _isFrozen = true;
+            OnPropertyChanged(nameof(TotalExpDisplay));
+        }
+
+        public void UnfreezeTotalExpDisplay()
+        {
+            if (!_isFrozen)
+                return;
+
+            _isFrozen = false;
+            _frozenTotalExpDisplay = string.Empty;
+            OnPropertyChanged(nameof(TotalExpDisplay));
+        }
+
         public void Reset()
         {
+            UnfreezeTotalExpDisplay();
             LastGainedExp = 0;
             TotalExp = 0;
             ResetStartTime();
         }
 
         public void RefreshDisplay() => OnPropertyChanged(nameof(TotalExpDisplay));
+
+        private string BuildTotalExpDisplay()
+        {
+            string currentExp = FormatExp(_totalExp);
+            TimeSpan elapsed = DateTime.Now - _startTime;
+            double hours = elapsed.TotalHours;
+
+            if (_totalExp == 0 || elapsed.TotalSeconds < 30)
+            {
+                return "   측정 대기 중...   ";
+            }
+
+            long expPerHour = (long)(_totalExp / hours);
+            return $"{currentExp} | {FormatExp(expPerHour)}/h";
+        }
 
         private static string FormatExp(long value)
         {

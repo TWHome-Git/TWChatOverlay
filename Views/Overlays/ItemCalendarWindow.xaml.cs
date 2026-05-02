@@ -9,6 +9,7 @@ using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using System.Windows.Threading;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
@@ -55,6 +56,7 @@ namespace TWChatOverlay.Views
         private string _monthlyAbaddonSeedText = string.Empty;
         private int _loadVersion;
         private int _selectedProfileTab;
+        private DispatcherTimer? _midnightTimer;
 
         public event PropertyChangedEventHandler? PropertyChanged;
 
@@ -71,6 +73,7 @@ namespace TWChatOverlay.Views
             SetLoadingState(false, string.Empty);
             SelectedProfileTab = 0;
             UpdateProfileTabHighlight();
+            SetupMidnightTimer();
         }
 
         public ObservableCollection<ItemCalendarDayViewModel> Days => _days;
@@ -177,9 +180,32 @@ namespace TWChatOverlay.Views
         {
             int version = ++_loadVersion;
             monthStart = GetMonthStart(monthStart);
+            bool isCurrentMonth = monthStart.Year == DateTime.Today.Year && monthStart.Month == DateTime.Today.Month;
 
-            SetLoadingState(true, "아이템 로그를 불러오는 중...");
             UpdateHeaderText(monthStart);
+
+            if (!forceRebuild && isCurrentMonth)
+            {
+                var cachedData = await Task.Run(() => MonthlyReadableLogExportService.LoadFromCsv(monthStart)).ConfigureAwait(true);
+                if (version != _loadVersion)
+                    return;
+
+                if (cachedData != null)
+                {
+                    ApplyLoadedMonth(monthStart, cachedData);
+                    SetLoadingState(false, string.Empty);
+
+                    _ = RefreshCurrentMonthInBackgroundAsync(monthStart, version);
+                    return;
+                }
+
+                SetLoadingState(true, "아이템 로그를 불러오는 중...");
+            }
+            else
+            {
+                SetLoadingState(true, "아이템 로그를 불러오는 중...");
+            }
+
             var progress = new Progress<MonthlyReadableLogExportService.MonthlyBuildProgress>(report =>
                 Dispatcher.BeginInvoke(new Action(() => UpdateLoadingProgress(report)), System.Windows.Threading.DispatcherPriority.Background));
 
@@ -187,7 +213,6 @@ namespace TWChatOverlay.Views
             AbaddonMonthlySummarySnapshotEntry abaddonSummary;
             try
             {
-                bool isCurrentMonth = monthStart.Year == DateTime.Today.Year && monthStart.Month == DateTime.Today.Month;
                 var monthlyTask = Task.Run(() =>
                 {
                     if (forceRebuild)
@@ -196,7 +221,7 @@ namespace TWChatOverlay.Views
                     }
 
                     return isCurrentMonth
-                        ? MonthlyReadableLogExportService.RefreshCurrentMonthFromTodayOnly(monthStart, _settings.ChatLogFolderPath, _logAnalysisService, progress)
+                        ? MonthlyReadableLogExportService.RefreshCurrentMonthIncremental(monthStart, _settings.ChatLogFolderPath, _logAnalysisService)
                         : MonthlyReadableLogExportService.LoadOrBuildMonth(monthStart, _settings.ChatLogFolderPath, _logAnalysisService, progress);
                 });
 
@@ -218,18 +243,82 @@ namespace TWChatOverlay.Views
             if (version != _loadVersion)
                 return;
 
+            ApplyLoadedMonth(monthStart, new MonthlyReadableLogData(
+                monthStart,
+                snapshots,
+                abaddonSummary,
+                string.Empty,
+                new List<MonthlyLogSourceSnapshot>()));
+            SetLoadingState(false, string.Empty);
+        }
+
+        private async Task RefreshCurrentMonthInBackgroundAsync(DateTime monthStart, int version)
+        {
+            try
+            {
+                var progress = new Progress<MonthlyReadableLogExportService.MonthlyBuildProgress>(report =>
+                    Dispatcher.BeginInvoke(new Action(() => UpdateLoadingProgress(report)), System.Windows.Threading.DispatcherPriority.Background));
+
+                var refreshed = await Task.Run(() =>
+                    MonthlyReadableLogExportService.RefreshCurrentMonthIncremental(monthStart, _settings.ChatLogFolderPath, _logAnalysisService))
+                    .ConfigureAwait(true);
+
+                if (version != _loadVersion)
+                    return;
+
+                ApplyLoadedMonth(monthStart, refreshed);
+                SetLoadingState(false, string.Empty);
+            }
+            catch (Exception ex)
+            {
+                AppLogger.Warn("Failed to refresh current month in background.", ex);
+            }
+        }
+
+        private void ApplyLoadedMonth(DateTime monthStart, MonthlyReadableLogData monthlyData)
+        {
             _currentMonthStart = monthStart;
             _loadedMonthStart = monthStart;
             _hasLoadedMonth = true;
             lock (_todayLock)
             {
                 _currentMonthSnapshots.Clear();
-                _currentMonthSnapshots.AddRange(snapshots);
+                _currentMonthSnapshots.AddRange(monthlyData.ItemSnapshots);
             }
             ApplyProfileFilteredMonthView(monthStart);
-            UpdateMonthlyAbaddonSummary(abaddonSummary);
-            CacheTodaySnapshots(monthStart, snapshots);
+            UpdateMonthlyAbaddonSummary(monthlyData.AbaddonSummary);
+            CacheTodaySnapshots(monthStart, monthlyData.ItemSnapshots);
             UpdateStatusForToday();
+        }
+
+        private void SetupMidnightTimer()
+        {
+            _midnightTimer = new DispatcherTimer(DispatcherPriority.Background, Dispatcher)
+            {
+                Interval = GetTimeUntilNextMidnight()
+            };
+            _midnightTimer.Tick += MidnightTimer_Tick;
+            _midnightTimer.Start();
+        }
+
+        private TimeSpan GetTimeUntilNextMidnight()
+        {
+            DateTime now = DateTime.Now;
+            DateTime nextMidnight = now.Date.AddDays(1);
+            TimeSpan remaining = nextMidnight - now;
+            return remaining <= TimeSpan.Zero ? TimeSpan.FromSeconds(1) : remaining;
+        }
+
+        private void MidnightTimer_Tick(object? sender, EventArgs e)
+        {
+            if (_midnightTimer == null)
+                return;
+
+            _midnightTimer.Interval = GetTimeUntilNextMidnight();
+            if (_currentMonthStart.Year == DateTime.Today.Year && _currentMonthStart.Month == DateTime.Today.Month)
+            {
+                _ = LoadCurrentMonthAsync();
+            }
         }
 
         private void ApplyProfileFilteredMonthView(DateTime monthStart)
@@ -352,7 +441,7 @@ namespace TWChatOverlay.Views
 
         public void ApplyRealtimeItemLog(LogParser.ParseResult itemLog, DateTime date, int profileSlot = 0, bool profileEnabled = false)
         {
-            if (itemLog == null || string.IsNullOrWhiteSpace(itemLog.FormattedText))
+            if (itemLog == null || !itemLog.IsTrackedItemDrop || string.IsNullOrWhiteSpace(itemLog.FormattedText))
                 return;
 
             date = date.Date;
@@ -367,7 +456,7 @@ namespace TWChatOverlay.Views
                 Date = date,
                 ItemName = itemLog.TrackedItemName,
                 DisplayName = string.IsNullOrWhiteSpace(itemLog.TrackedItemName)
-                    ? "Item"
+                    ? "아이템"
                     : DropItemResolver.GetTrackedItemDisplayName(itemLog.TrackedItemName),
                 Grade = itemLog.TrackedItemGrade,
                 Count = Math.Max(1, itemLog.TrackedItemCount),

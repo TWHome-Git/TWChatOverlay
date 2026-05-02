@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Globalization;
 using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -61,6 +62,9 @@ namespace TWChatOverlay.ViewModels
         private double _expBuffAlertVolumePercent;
         private double _buffTrackerEndSoundVolumePercent;
         private double _bossAlertVolumePercent;
+        private string _experienceLimitTotalExp = "0";
+        private string _experienceLimitProfile1Exp = "0";
+        private string _experienceLimitProfile2Exp = "0";
 
         public ObservableCollection<BossAlarmCardViewModel> BossAlarmCards { get; } = new();
         public ObservableCollection<DropItemFilterEntry> DefaultDropItems { get; } = new();
@@ -70,6 +74,8 @@ namespace TWChatOverlay.ViewModels
         public ICommand ApplyCustomDropItemFilterCommand { get; }
         public ICommand LoadCustomDropItemFilterCommand { get; }
         public ICommand SaveCustomDropItemFilterCommand { get; }
+        public ICommand RefreshExperienceLimitStateCommand { get; }
+        public ICommand ApplyExperienceLimitStateCommand { get; }
 
         public bool UseAlertColor
         {
@@ -110,13 +116,43 @@ namespace TWChatOverlay.ViewModels
         public bool EnableExperienceLimitAlert
         {
             get => _enableExperienceLimitAlert;
-            set => SetSetting(ref _enableExperienceLimitAlert, value, (settings, newValue) => settings.EnableExperienceLimitAlert = newValue);
+            set
+            {
+                if (SetSetting(ref _enableExperienceLimitAlert, value, (settings, newValue) => settings.EnableExperienceLimitAlert = newValue))
+                {
+                    RefreshExperienceLimitState();
+                }
+            }
         }
 
         public bool ShowExperienceLimitAlertWindow
         {
             get => _showExperienceLimitAlertWindow;
             set => SetSetting(ref _showExperienceLimitAlertWindow, value, (settings, newValue) => settings.ShowExperienceLimitAlertWindow = newValue);
+        }
+
+        public bool IsExperienceLimitProfileMode => _enableCharacterProfiles;
+
+        public string ExperienceLimitProfile1Label => string.IsNullOrWhiteSpace(_profile1DisplayName) ? "프로필1" : _profile1DisplayName;
+
+        public string ExperienceLimitProfile2Label => string.IsNullOrWhiteSpace(_profile2DisplayName) ? "프로필2" : _profile2DisplayName;
+
+        public string ExperienceLimitTotalExp
+        {
+            get => _experienceLimitTotalExp;
+            set => SetProperty(ref _experienceLimitTotalExp, value ?? "0");
+        }
+
+        public string ExperienceLimitProfile1Exp
+        {
+            get => _experienceLimitProfile1Exp;
+            set => SetProperty(ref _experienceLimitProfile1Exp, value ?? "0");
+        }
+
+        public string ExperienceLimitProfile2Exp
+        {
+            get => _experienceLimitProfile2Exp;
+            set => SetProperty(ref _experienceLimitProfile2Exp, value ?? "0");
         }
 
         public int ExpAlarmThresholdMan
@@ -228,19 +264,38 @@ namespace TWChatOverlay.ViewModels
         public bool EnableCharacterProfiles
         {
             get => _enableCharacterProfiles;
-            set => SetSetting(ref _enableCharacterProfiles, value, (settings, newValue) => settings.EnableCharacterProfiles = newValue);
+            set
+            {
+                if (SetSetting(ref _enableCharacterProfiles, value, (settings, newValue) => settings.EnableCharacterProfiles = newValue))
+                {
+                    OnPropertyChanged(nameof(IsExperienceLimitProfileMode));
+                    RefreshExperienceLimitState();
+                }
+            }
         }
 
         public string Profile1DisplayName
         {
             get => _profile1DisplayName;
-            set => SetSetting(ref _profile1DisplayName, value ?? "프로필1", (settings, newValue) => settings.Profile1DisplayName = newValue);
+            set
+            {
+                if (SetSetting(ref _profile1DisplayName, value ?? "프로필1", (settings, newValue) => settings.Profile1DisplayName = newValue))
+                {
+                    OnPropertyChanged(nameof(ExperienceLimitProfile1Label));
+                }
+            }
         }
 
         public string Profile2DisplayName
         {
             get => _profile2DisplayName;
-            set => SetSetting(ref _profile2DisplayName, value ?? "프로필2", (settings, newValue) => settings.Profile2DisplayName = newValue);
+            set
+            {
+                if (SetSetting(ref _profile2DisplayName, value ?? "프로필2", (settings, newValue) => settings.Profile2DisplayName = newValue))
+                {
+                    OnPropertyChanged(nameof(ExperienceLimitProfile2Label));
+                }
+            }
         }
 
         public string Profile1SwitchLog
@@ -300,6 +355,8 @@ namespace TWChatOverlay.ViewModels
             ApplyCustomDropItemFilterCommand = new RelayCommand(async _ => await ApplyCustomDropItemFilterAsync());
             LoadCustomDropItemFilterCommand = new RelayCommand(_ => LoadCustomDropItemFilter());
             SaveCustomDropItemFilterCommand = new RelayCommand(_ => SaveCustomDropItemFilter());
+            RefreshExperienceLimitStateCommand = new RelayCommand(_ => RefreshExperienceLimitState());
+            ApplyExperienceLimitStateCommand = new RelayCommand(_ => ApplyExperienceLimitState());
 
             _useAlertColor = _settings.UseAlertColor;
             _useAlertSound = _settings.UseAlertSound;
@@ -343,12 +400,95 @@ namespace TWChatOverlay.ViewModels
             ReplaceBossAlarmCards(_bossAlarmCardProvider.CreateCards());
             _ = InitializeBossAlarmCardsAsync();
             _ = InitializeDropItemFilterListsAsync();
+            RefreshExperienceLimitState();
         }
 
         private void SaveSettings()
         {
             ConfigService.SaveDeferred(_settings);
         }
+
+        private void RefreshExperienceLimitState()
+        {
+            if (!ExperienceAlertWindowService.TryGetStateSnapshot(_settings, out var snapshot))
+                return;
+
+            ExperienceLimitTotalExp = FormatExpValue(snapshot.TotalExp);
+            ExperienceLimitProfile1Exp = FormatExpValue(snapshot.Profile1Exp);
+            ExperienceLimitProfile2Exp = FormatExpValue(snapshot.Profile2Exp);
+        }
+
+        private void ApplyExperienceLimitState()
+        {
+            if (_enableCharacterProfiles)
+            {
+                if (!TryParseExpValue(_experienceLimitProfile1Exp, out long profile1Exp) ||
+                    !TryParseExpValue(_experienceLimitProfile2Exp, out long profile2Exp))
+                {
+                    return;
+                }
+
+                _settings.ExperienceLimitProfile1Exp = profile1Exp;
+                _settings.ExperienceLimitProfile2Exp = profile2Exp;
+                if (!TryParseExpValue(_experienceLimitTotalExp, out long totalExp))
+                {
+                    return;
+                }
+
+                _settings.ExperienceLimitTotalExp = totalExp;
+                _settings.ExperienceLimitStateInitialized = true;
+                SaveSettings();
+                _ = ExperienceAlertWindowService.ApplyStateSnapshot(new ExperienceAlertStateSnapshot
+                {
+                    IsProfileMode = true,
+                    Profile1Exp = profile1Exp,
+                    Profile2Exp = profile2Exp,
+                    TotalExp = totalExp,
+                    Profile1Label = ExperienceLimitProfile1Label,
+                    Profile2Label = ExperienceLimitProfile2Label
+                });
+            }
+            else
+            {
+                if (!TryParseExpValue(_experienceLimitTotalExp, out long totalExp))
+                {
+                    return;
+                }
+
+                _settings.ExperienceLimitTotalExp = totalExp;
+                _settings.ExperienceLimitStateInitialized = true;
+                SaveSettings();
+                _ = ExperienceAlertWindowService.ApplyStateSnapshot(new ExperienceAlertStateSnapshot
+                {
+                    IsProfileMode = false,
+                    TotalExp = totalExp
+                });
+            }
+
+            RefreshExperienceLimitState();
+        }
+
+        private static bool TryParseExpValue(string? text, out long value)
+        {
+            value = 0;
+            if (string.IsNullOrWhiteSpace(text))
+                return true;
+
+            string normalized = text.Replace(",", string.Empty).Trim();
+            if (string.IsNullOrWhiteSpace(normalized))
+                return true;
+
+            if (!long.TryParse(normalized, NumberStyles.Integer, CultureInfo.InvariantCulture, out value))
+                return false;
+
+            if (value < 0)
+                value = 0;
+
+            return true;
+        }
+
+        private static string FormatExpValue(long value)
+            => Math.Max(0, value).ToString("N0", CultureInfo.InvariantCulture);
 
         private bool SetSetting<T>(ref T field, T value, Action<ChatSettings, T> apply, [CallerMemberName] string? propertyName = null)
         {
