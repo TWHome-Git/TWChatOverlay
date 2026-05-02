@@ -54,6 +54,10 @@ namespace TWChatOverlay.Models
             _profile2DisplayName = "프로필2";
             _profile1SwitchLog = "[이클립스 코어] 진화 4단계-3세트 효과가 발동되었습니다.";
             _profile2SwitchLog = "[이클립스 코어] 진화 2단계-6세트 효과가 발동되었습니다.";
+            _experienceLimitTotalExp = 0;
+            _experienceLimitProfile1Exp = 0;
+            _experienceLimitProfile2Exp = 0;
+            _experienceLimitStateInitialized = false;
             _buffTrackerEndSoundVolume = 1.0;
             _itemDropAlertVolume = 0.1;
             _highlightAlertVolume = 1.0;

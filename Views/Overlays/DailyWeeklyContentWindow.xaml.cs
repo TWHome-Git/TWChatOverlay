@@ -31,8 +31,11 @@ namespace TWChatOverlay.Views
         private readonly ObservableCollection<DailyWeeklyContentLog> _completedItems = new();
         private DailyWeeklyLogAnalyzer _dailyWeeklyLogAnalyzer = null!;
         private readonly Dictionary<string, AccumulatedCountState> _abaddonCountStates = new();
+        private readonly Dictionary<int, ProfileScanCache> _profileScanCaches = new();
         private bool _suppressSave = false;
         private bool _pendingRescanAfterSettings = false;
+        private bool _isProfileViewRefreshing;
+        private bool _isLoading;
         private DispatcherTimer? _resetTimer;
         private DateTime _lastDailyResetDate;
         private DateTime _lastWeeklyResetKey;
@@ -40,6 +43,8 @@ namespace TWChatOverlay.Views
         private int _selectedProfileTab;
         private const string DailyContentsGroupName = "일일 컨텐츠";
         private const string WeeklyContentsGroupName = "주간 컨텐츠";
+        private const int NonProfileCacheKey = -1;
+        private const int CombinedProfileCacheKey = 0;
 
         private const string MercurialCaveItemName = "머큐리얼 케이브";
         private const int MercurialCaveDefaultMaxCount = 4;
@@ -132,6 +137,32 @@ namespace TWChatOverlay.Views
             @"남은\s*에너지는\s*\[\s*(?<remain>\d+)\s*\]",
             RegexOptions.Compiled);
 
+        private sealed class ItemStateSnapshot
+        {
+            public bool IsEnabled { get; init; }
+            public int MaxCount { get; init; }
+            public int CurrentCount { get; init; }
+            public bool IsCleared { get; init; }
+            public string? Detail { get; init; }
+        }
+
+        private sealed class ProfileScanCache
+        {
+            public ItemStateSnapshotMap? Snapshot { get; set; }
+            public bool IsDirty { get; set; } = true;
+            public DateTime DailyResetDate { get; set; } = DateTime.MinValue;
+            public DateTime WeeklyResetKey { get; set; } = DateTime.MinValue;
+            public DateTime AbaddonResetKey { get; set; } = DateTime.MinValue;
+        }
+
+        private sealed class ItemStateSnapshotMap : Dictionary<string, ItemStateSnapshot>
+        {
+            public ItemStateSnapshotMap()
+                : base(StringComparer.Ordinal)
+            {
+            }
+        }
+
         public ObservableCollection<DailyWeeklyContentLog> TrackItems { get; }
 
         public ObservableCollection<DailyWeeklyContentLog> DailyContentItems => _dailyContentItems;
@@ -165,6 +196,17 @@ namespace TWChatOverlay.Views
             $"{WeeklyContentItems.Count(i => !i.IsSubItem && i.IsEnabled && i.IsCleared)} / {WeeklyContentItems.Count(i => !i.IsSubItem && i.IsEnabled)} 완료";
 
         private bool _isSettingsOpen;
+        public bool IsLoading
+        {
+            get => _isLoading;
+            private set
+            {
+                if (_isLoading == value) return;
+                _isLoading = value;
+                OnPropertyChanged();
+            }
+        }
+
         public bool IsSettingsOpen
         {
             get => _isSettingsOpen;
@@ -196,6 +238,7 @@ namespace TWChatOverlay.Views
             this.FontFamily = FontService.GetFont(_settings.FontFamily);
             SelectedProfileTab = 0;
             UpdateProfileTabHighlight();
+            InitializeProfileScanCaches();
 
             foreach (var item in TrackItems)
                 item.PropertyChanged += (_, e) =>
@@ -209,19 +252,22 @@ namespace TWChatOverlay.Views
                         if (e.PropertyName == nameof(DailyWeeklyContentLog.IsCleared))
                         {
                             ReorderItems();
-                            if (!item.HasCount)
-                                SaveItemConfig(item);
                         }
-                    }
-                    else if (e.PropertyName == nameof(DailyWeeklyContentLog.CurrentCount))
-                    {
-                        SaveItemConfig(item);
                     }
                 };
 
             ReorderItems();
             InitializeResetTimer();
             LocationChanged += DailyWeeklyContentWindow_LocationChanged;
+        }
+
+        private void InitializeProfileScanCaches()
+        {
+            _profileScanCaches.Clear();
+            _profileScanCaches[NonProfileCacheKey] = new ProfileScanCache();
+            _profileScanCaches[CombinedProfileCacheKey] = new ProfileScanCache();
+            _profileScanCaches[1] = new ProfileScanCache();
+            _profileScanCaches[2] = new ProfileScanCache();
         }
 
         private void DailyWeeklyContentWindow_LocationChanged(object? sender, EventArgs e)
@@ -397,36 +443,34 @@ namespace TWChatOverlay.Views
         }
 
         private void ApplySettings()
+            => ApplySettingsForProfileTab(SelectedProfileTab);
+
+        private void ApplySettingsForProfileTab(int profileTab)
         {
             foreach (var item in TrackItems)
             {
-                if (!TryGetCurrentProfileConfig(item.Name, out var config)) continue;
+                if (_settings.EnableCharacterProfiles && profileTab == 0)
+                {
+                    var profile1Config = GetProfileConfig(item.Name, 1);
+                    var profile2Config = GetProfileConfig(item.Name, 2);
+                    item.IsEnabled = profile1Config.IsEnabled && profile2Config.IsEnabled;
+                    continue;
+                }
+
+                if (!TryGetProfileConfig(item.Name, profileTab, out var config))
+                    continue;
+
                 item.IsEnabled = config.IsEnabled;
-                if (config.RequiredCount > 0)
-                    item.MaxCount = config.RequiredCount;
+                item.MaxCount = config.RequiredCount > 0 ? config.RequiredCount : item.DefaultMaxCount;
             }
         }
 
         private void SaveItemConfig(DailyWeeklyContentLog item)
         {
             if (_suppressSave) return;
-            string key = GetCurrentProfileConfigKey(item.Name);
-            if (!_settings.DungeonItemConfigs.TryGetValue(key, out var config))
-                config = new DungeonItemConfig();
-            config.IsEnabled = item.IsEnabled;
-            config.RequiredCount = (item.MaxCount == item.DefaultMaxCount) ? 0 : item.MaxCount;
-            config.CurrentCount = 0;
-            config.IsCleared = false;
-            config.SavedAt = DateTime.MinValue;
-            _settings.DungeonItemConfigs[key] = config;
-            ConfigService.SaveDeferred(_settings);
-        }
-
-        private void SaveAllConfigs()
-        {
-            foreach (var item in TrackItems.Where(i => !i.HasChildren))
+            if (!CanEditCurrentProfileSettings()) return;
+            foreach (string key in GetCurrentProfileConfigKeys(item.Name))
             {
-                string key = GetCurrentProfileConfigKey(item.Name);
                 if (!_settings.DungeonItemConfigs.TryGetValue(key, out var config))
                     config = new DungeonItemConfig();
                 config.IsEnabled = item.IsEnabled;
@@ -437,6 +481,36 @@ namespace TWChatOverlay.Views
                 _settings.DungeonItemConfigs[key] = config;
             }
             ConfigService.SaveDeferred(_settings);
+            MarkAllProfileCachesDirty();
+        }
+
+        private void SaveAllConfigs()
+        {
+            if (!CanEditCurrentProfileSettings()) return;
+            foreach (var item in TrackItems.Where(i => !i.HasChildren))
+            {
+                foreach (string key in GetCurrentProfileConfigKeys(item.Name))
+                {
+                    if (!_settings.DungeonItemConfigs.TryGetValue(key, out var config))
+                        config = new DungeonItemConfig();
+                    config.IsEnabled = item.IsEnabled;
+                    config.RequiredCount = (item.MaxCount == item.DefaultMaxCount) ? 0 : item.MaxCount;
+                    config.CurrentCount = 0;
+                    config.IsCleared = false;
+                    config.SavedAt = DateTime.MinValue;
+                    _settings.DungeonItemConfigs[key] = config;
+                }
+            }
+            ConfigService.SaveDeferred(_settings);
+            MarkAllProfileCachesDirty();
+        }
+
+        private bool CanEditCurrentProfileSettings()
+        {
+            if (!_settings.EnableCharacterProfiles)
+                return true;
+
+            return SelectedProfileTab is 1 or 2;
         }
 
         private string GetCurrentProfileConfigKey(string itemName)
@@ -449,14 +523,62 @@ namespace TWChatOverlay.Views
                 : $"{itemName}__PROFILE2";
         }
 
-        private bool TryGetCurrentProfileConfig(string itemName, out DungeonItemConfig config)
+        private IEnumerable<string> GetCurrentProfileConfigKeys(string itemName)
         {
-            string key = GetCurrentProfileConfigKey(itemName);
+            if (!_settings.EnableCharacterProfiles)
+            {
+                yield return itemName;
+                yield break;
+            }
+
+            if (SelectedProfileTab == 1)
+            {
+                yield return $"{itemName}__PROFILE1";
+                yield break;
+            }
+
+            if (SelectedProfileTab == 2)
+            {
+                yield return $"{itemName}__PROFILE2";
+                yield break;
+            }
+
+            yield return $"{itemName}__PROFILE1";
+            yield return $"{itemName}__PROFILE2";
+        }
+
+        private DungeonItemConfig GetProfileConfig(string itemName, int profileSlot)
+        {
+            string key = profileSlot == 1 ? $"{itemName}__PROFILE1" : $"{itemName}__PROFILE2";
+            if (_settings.DungeonItemConfigs.TryGetValue(key, out var profileConfig))
+                return profileConfig;
+
+            if (_settings.DungeonItemConfigs.TryGetValue(itemName, out var defaultConfig))
+                return defaultConfig;
+
+            return new DungeonItemConfig();
+        }
+
+        private bool TryGetCurrentProfileConfig(string itemName, out DungeonItemConfig config)
+            => TryGetProfileConfig(itemName, SelectedProfileTab, out config);
+
+        private bool TryGetProfileConfig(string itemName, int profileTab, out DungeonItemConfig config)
+        {
+            string key = GetProfileConfigKey(itemName, profileTab);
             if (_settings.DungeonItemConfigs.TryGetValue(key, out config!))
                 return true;
 
-            // 기본 프로필 설정을 초기값 fallback으로 사용
             return _settings.DungeonItemConfigs.TryGetValue(itemName, out config!);
+        }
+
+        private string GetProfileConfigKey(string itemName, int profileTab)
+        {
+            if (!_settings.EnableCharacterProfiles || profileTab == 0)
+                return itemName;
+
+            return profileTab == 1
+                ? $"{itemName}__PROFILE1"
+                : $"{itemName}__PROFILE2";
         }
 
         /// <summary>
@@ -464,7 +586,191 @@ namespace TWChatOverlay.Views
         /// </summary>
         public async Task ScanHistoricalLogsAsync()
         {
+            await EnsureInitialTabsLoadedAsync();
+            await EnsureSelectedProfileViewAsync(forceRescan: false);
+        }
+
+        public async Task EnsureInitialTabsLoadedAsync()
+        {
+            if (!_settings.EnableCharacterProfiles)
+            {
+                if (_profileScanCaches.TryGetValue(NonProfileCacheKey, out var single) && single.Snapshot != null)
+                    return;
+
+                IsLoading = true;
+                try
+                {
+                    await EnsureProfileCacheAsync(NonProfileCacheKey, forceRescan: false);
+                }
+                finally
+                {
+                    IsLoading = false;
+                }
+                return;
+            }
+
+            bool hasProfile1 = _profileScanCaches.TryGetValue(1, out var profile1Cache) && profile1Cache.Snapshot != null;
+            bool hasProfile2 = _profileScanCaches.TryGetValue(2, out var profile2Cache) && profile2Cache.Snapshot != null;
+            bool hasCombined = _profileScanCaches.TryGetValue(CombinedProfileCacheKey, out var combinedCache) && combinedCache.Snapshot != null;
+            if (hasProfile1 && hasProfile2 && hasCombined)
+                return;
+
+            IsLoading = true;
+            try
+            {
+                var profile1 = await EnsureProfileCacheAsync(1, forceRescan: false);
+                var profile2 = await EnsureProfileCacheAsync(2, forceRescan: false);
+                var combined = BuildCombinedSnapshot(profile1, profile2);
+                _profileScanCaches[CombinedProfileCacheKey].Snapshot = combined;
+                _profileScanCaches[CombinedProfileCacheKey].IsDirty = false;
+                _profileScanCaches[CombinedProfileCacheKey].DailyResetDate = _lastDailyResetDate;
+                _profileScanCaches[CombinedProfileCacheKey].WeeklyResetKey = _lastWeeklyResetKey;
+                _profileScanCaches[CombinedProfileCacheKey].AbaddonResetKey = _lastAbaddonResetKey;
+            }
+            finally
+            {
+                IsLoading = false;
+            }
+        }
+
+        private void MarkAllProfileCachesDirty()
+        {
+            foreach (var cache in _profileScanCaches.Values)
+            {
+                cache.IsDirty = true;
+            }
+        }
+
+        private void MarkProfileCacheDirty(int profileSlot)
+        {
+            if (_profileScanCaches.TryGetValue(profileSlot, out var cache))
+            {
+                cache.IsDirty = true;
+            }
+        }
+
+        private bool TryApplyCachedSnapshotForCurrentSelection()
+        {
+            if (!_settings.EnableCharacterProfiles)
+            {
+                if (_profileScanCaches.TryGetValue(NonProfileCacheKey, out var nonProfile) && nonProfile.Snapshot != null)
+                {
+                    ApplySnapshot(nonProfile.Snapshot);
+                    return true;
+                }
+
+                return false;
+            }
+
+            if (SelectedProfileTab is 1 or 2)
+            {
+                if (_profileScanCaches.TryGetValue(SelectedProfileTab, out var profile) && profile.Snapshot != null)
+                {
+                    ApplySnapshot(profile.Snapshot);
+                    return true;
+                }
+
+                return false;
+            }
+
+            if (_profileScanCaches.TryGetValue(CombinedProfileCacheKey, out var combined) && combined.Snapshot != null)
+            {
+                ApplySnapshot(combined.Snapshot);
+                return true;
+            }
+
+            return false;
+        }
+
+        private async Task EnsureSelectedProfileViewAsync(bool forceRescan)
+        {
+            if (_isProfileViewRefreshing)
+                return;
+
+            bool needsLoadingOverlay = false;
+            if (!_settings.EnableCharacterProfiles)
+            {
+                needsLoadingOverlay = !_profileScanCaches.TryGetValue(NonProfileCacheKey, out var c) || c.Snapshot == null;
+            }
+            else if (SelectedProfileTab is 1 or 2)
+            {
+                needsLoadingOverlay = !_profileScanCaches.TryGetValue(SelectedProfileTab, out var c) || c.Snapshot == null;
+            }
+            else
+            {
+                bool hasCombined = _profileScanCaches.TryGetValue(CombinedProfileCacheKey, out var cc) && cc.Snapshot != null;
+                bool has1 = _profileScanCaches.TryGetValue(1, out var c1) && c1.Snapshot != null;
+                bool has2 = _profileScanCaches.TryGetValue(2, out var c2) && c2.Snapshot != null;
+                needsLoadingOverlay = !(hasCombined && has1 && has2);
+            }
+
+            if (needsLoadingOverlay)
+                IsLoading = true;
+
+            _isProfileViewRefreshing = true;
+            try
+            {
+                if (!_settings.EnableCharacterProfiles)
+                {
+                    var snapshot = await EnsureProfileCacheAsync(NonProfileCacheKey, forceRescan);
+                    ApplySnapshot(snapshot);
+                    return;
+                }
+
+                if (SelectedProfileTab is 1 or 2)
+                {
+                    var snapshot = await EnsureProfileCacheAsync(SelectedProfileTab, forceRescan);
+                    ApplySnapshot(snapshot);
+                    return;
+                }
+
+                var profile1Snapshot = await EnsureProfileCacheAsync(1, forceRescan);
+                var profile2Snapshot = await EnsureProfileCacheAsync(2, forceRescan);
+                var combined = BuildCombinedSnapshot(profile1Snapshot, profile2Snapshot);
+                ApplySnapshot(combined);
+                _profileScanCaches[CombinedProfileCacheKey].Snapshot = combined;
+                _profileScanCaches[CombinedProfileCacheKey].IsDirty = false;
+                _profileScanCaches[CombinedProfileCacheKey].DailyResetDate = _lastDailyResetDate;
+                _profileScanCaches[CombinedProfileCacheKey].WeeklyResetKey = _lastWeeklyResetKey;
+                _profileScanCaches[CombinedProfileCacheKey].AbaddonResetKey = _lastAbaddonResetKey;
+            }
+            finally
+            {
+                _isProfileViewRefreshing = false;
+                IsLoading = false;
+            }
+        }
+
+        private async Task<ItemStateSnapshotMap> EnsureProfileCacheAsync(int profileSlot, bool forceRescan)
+        {
+            if (!_profileScanCaches.TryGetValue(profileSlot, out var cache))
+            {
+                cache = new ProfileScanCache();
+                _profileScanCaches[profileSlot] = cache;
+            }
+
+            bool resetBoundaryChanged =
+                cache.DailyResetDate != _lastDailyResetDate ||
+                cache.WeeklyResetKey != _lastWeeklyResetKey ||
+                cache.AbaddonResetKey != _lastAbaddonResetKey;
+
+            if (forceRescan || resetBoundaryChanged || cache.Snapshot == null)
+            {
+                await ScanHistoricalLogsCoreAsync(profileSlot);
+                cache.Snapshot = CaptureSnapshot();
+                cache.IsDirty = false;
+                cache.DailyResetDate = _lastDailyResetDate;
+                cache.WeeklyResetKey = _lastWeeklyResetKey;
+                cache.AbaddonResetKey = _lastAbaddonResetKey;
+            }
+
+            return cache.Snapshot;
+        }
+
+        private async Task ScanHistoricalLogsCoreAsync(int targetProfileSlot)
+        {
             DateTime today = DateTime.Today;
+            bool profileEnabledForScan = _settings.EnableCharacterProfiles && targetProfileSlot is 1 or 2;
 
             var dailyItems = TrackItems
                 .Where(i => (!i.IsWeekly) && (i.LogKeyword != null || i.Name == MercurialCaveItemName))
@@ -474,16 +780,119 @@ namespace TWChatOverlay.Views
             _suppressSave = true;
             try
             {
+                ApplySettingsForProfileTab(profileEnabledForScan ? targetProfileSlot : 0);
                 ResetScannedItems(dailyItems);
                 ResetScannedItems(weeklyItems);
-                await ScanAndApplyAsync(dailyItems, new[] { GetLogPath(today) }, SelectedProfileTab, _settings.EnableCharacterProfiles);
-                await ScanAndApplyAsync(weeklyItems, GetWeekLogPaths(today), SelectedProfileTab, _settings.EnableCharacterProfiles);
+                _dailyWeeklyLogAnalyzer.ResetPending();
+                _dailyWeeklyLogAnalyzer.ResetAccumulatedCounts();
+                _abaddonCountStates.Clear();
+
+                await ScanAndApplyAsync(dailyItems, new[] { GetLogPath(today) }, targetProfileSlot, profileEnabledForScan);
+                await ScanAndApplyAsync(weeklyItems, GetWeekLogPaths(today), targetProfileSlot, profileEnabledForScan);
             }
             finally
             {
                 _suppressSave = false;
-                SaveAllConfigs();
             }
+        }
+
+        private ItemStateSnapshotMap CaptureSnapshot()
+        {
+            var snapshot = new ItemStateSnapshotMap();
+            foreach (var item in TrackItems)
+            {
+                int currentCount = item.HasCount ? item.CurrentCount : (item.IsCleared ? 1 : 0);
+                snapshot[item.Name] = new ItemStateSnapshot
+                {
+                    IsEnabled = item.IsEnabled,
+                    MaxCount = item.MaxCount,
+                    CurrentCount = currentCount,
+                    IsCleared = item.IsCleared,
+                    Detail = item.Detail
+                };
+            }
+
+            return snapshot;
+        }
+
+        private void ApplySnapshot(ItemStateSnapshotMap snapshot)
+        {
+            _suppressSave = true;
+            try
+            {
+                foreach (var item in TrackItems)
+                {
+                    if (!snapshot.TryGetValue(item.Name, out var state))
+                        continue;
+
+                    item.IsEnabled = state.IsEnabled;
+                    item.MaxCount = state.MaxCount;
+                    item.Detail = state.Detail;
+
+                    if (item.HasChildren)
+                        continue;
+
+                    if (item.MaxCount > 0)
+                    {
+                        item.SetCount(state.CurrentCount);
+                    }
+                    else
+                    {
+                        item.IsCleared = state.IsCleared;
+                    }
+                }
+            }
+            finally
+            {
+                _suppressSave = false;
+            }
+
+            ReorderItems();
+            OnPropertyChanged(nameof(ProgressDisplay));
+            OnPropertyChanged(nameof(DailyProgressDisplay));
+            OnPropertyChanged(nameof(WeeklyProgressDisplay));
+        }
+
+        private ItemStateSnapshotMap BuildCombinedSnapshot(ItemStateSnapshotMap profile1, ItemStateSnapshotMap profile2)
+        {
+            var combined = new ItemStateSnapshotMap();
+
+            foreach (var item in TrackItems)
+            {
+                profile1.TryGetValue(item.Name, out var first);
+                profile2.TryGetValue(item.Name, out var second);
+                first ??= new ItemStateSnapshot();
+                second ??= new ItemStateSnapshot();
+
+                if (item.HasChildren)
+                {
+                    combined[item.Name] = new ItemStateSnapshot
+                    {
+                        IsEnabled = first.IsEnabled && second.IsEnabled,
+                        MaxCount = 0,
+                        CurrentCount = 0,
+                        IsCleared = false,
+                        Detail = null
+                    };
+                    continue;
+                }
+
+                int required1 = first.MaxCount > 0 ? first.MaxCount : 1;
+                int required2 = second.MaxCount > 0 ? second.MaxCount : 1;
+                int current1 = first.MaxCount > 0 ? first.CurrentCount : (first.IsCleared ? 1 : 0);
+                int current2 = second.MaxCount > 0 ? second.CurrentCount : (second.IsCleared ? 1 : 0);
+
+                combined[item.Name] = new ItemStateSnapshot
+                {
+                    IsEnabled = first.IsEnabled && second.IsEnabled,
+                    MaxCount = required1 + required2,
+                    CurrentCount = current1 + current2,
+                    IsCleared = false,
+                    Detail = first.Detail ?? second.Detail
+                };
+            }
+
+            return combined;
         }
 
         private static void ResetScannedItems(IEnumerable<DailyWeeklyContentLog> items)
@@ -699,18 +1108,26 @@ namespace TWChatOverlay.Views
         public void ProcessLog(string text)
         {
             _dailyWeeklyLogAnalyzer.Process(text);
+            UpdateCacheAfterRealtimeProcess(profileSlot: 0, profileEnabled: false, wasAppliedToCurrentView: true);
         }
 
         public bool TryProcessAbaddonOrCravingLog(string rawLog, int profileSlot = 0, bool profileEnabled = false)
         {
-            if (profileEnabled && SelectedProfileTab is 1 or 2 && profileSlot != SelectedProfileTab)
+            if (profileEnabled && profileSlot is 1 or 2 && SelectedProfileTab is 1 or 2 && profileSlot != SelectedProfileTab)
+            {
+                MarkProfileCacheDirty(profileSlot);
                 return false;
+            }
 
             string text = NormalizeLogText(rawLog);
             if (string.IsNullOrWhiteSpace(text))
                 return false;
 
-            return TryProcessAbaddonRoadLog(text) || TryProcessCravingPleasureLog(text);
+            bool handled = TryProcessAbaddonRoadLog(text) || TryProcessCravingPleasureLog(text);
+            if (handled)
+                UpdateCacheAfterRealtimeProcess(profileSlot, profileEnabled, wasAppliedToCurrentView: true);
+
+            return handled;
         }
 
         public void ProcessLog(LogAnalysisResult analysis, int profileSlot = 0, bool profileEnabled = false)
@@ -718,10 +1135,67 @@ namespace TWChatOverlay.Views
             if (!analysis.ShouldRunDailyWeeklyContent)
                 return;
 
-            if (profileEnabled && SelectedProfileTab is 1 or 2 && profileSlot != SelectedProfileTab)
+            if (profileEnabled && profileSlot is 1 or 2 && SelectedProfileTab is 1 or 2 && profileSlot != SelectedProfileTab)
+            {
+                MarkProfileCacheDirty(profileSlot);
                 return;
+            }
 
             _dailyWeeklyLogAnalyzer.Process(analysis);
+            UpdateCacheAfterRealtimeProcess(profileSlot, profileEnabled, wasAppliedToCurrentView: true);
+        }
+
+        private void UpdateCacheAfterRealtimeProcess(int profileSlot, bool profileEnabled, bool wasAppliedToCurrentView)
+        {
+            if (!wasAppliedToCurrentView)
+                return;
+
+            if (!profileEnabled || !_settings.EnableCharacterProfiles)
+            {
+                if (_profileScanCaches.TryGetValue(NonProfileCacheKey, out var defaultCache))
+                {
+                    defaultCache.Snapshot = CaptureSnapshot();
+                    defaultCache.IsDirty = false;
+                    defaultCache.DailyResetDate = _lastDailyResetDate;
+                    defaultCache.WeeklyResetKey = _lastWeeklyResetKey;
+                    defaultCache.AbaddonResetKey = _lastAbaddonResetKey;
+                }
+                return;
+            }
+
+            if (profileSlot is not 1 and not 2)
+            {
+                MarkAllProfileCachesDirty();
+                return;
+            }
+
+            if (SelectedProfileTab == profileSlot)
+            {
+                if (_profileScanCaches.TryGetValue(profileSlot, out var selectedCache))
+                {
+                    selectedCache.Snapshot = CaptureSnapshot();
+                    selectedCache.IsDirty = false;
+                    selectedCache.DailyResetDate = _lastDailyResetDate;
+                    selectedCache.WeeklyResetKey = _lastWeeklyResetKey;
+                    selectedCache.AbaddonResetKey = _lastAbaddonResetKey;
+                }
+                MarkProfileCacheDirty(CombinedProfileCacheKey);
+                return;
+            }
+
+            if (SelectedProfileTab == CombinedProfileCacheKey)
+            {
+                if (_profileScanCaches.TryGetValue(CombinedProfileCacheKey, out var combinedCache))
+                {
+                    combinedCache.Snapshot = CaptureSnapshot();
+                    combinedCache.IsDirty = false;
+                    combinedCache.DailyResetDate = _lastDailyResetDate;
+                    combinedCache.WeeklyResetKey = _lastWeeklyResetKey;
+                    combinedCache.AbaddonResetKey = _lastAbaddonResetKey;
+                }
+            }
+
+            MarkProfileCacheDirty(profileSlot);
         }
 
         private async void ProfileBasic_Click(object sender, RoutedEventArgs e)
@@ -729,7 +1203,9 @@ namespace TWChatOverlay.Views
             SelectedProfileTab = 0;
             UpdateProfileTabHighlight();
             ApplySettings();
-            await ScanHistoricalLogsAsync();
+            TryApplyCachedSnapshotForCurrentSelection();
+            await EnsureInitialTabsLoadedAsync();
+            await EnsureSelectedProfileViewAsync(forceRescan: false);
         }
 
         private async void Profile1_Click(object sender, RoutedEventArgs e)
@@ -737,7 +1213,9 @@ namespace TWChatOverlay.Views
             SelectedProfileTab = 1;
             UpdateProfileTabHighlight();
             ApplySettings();
-            await ScanHistoricalLogsAsync();
+            TryApplyCachedSnapshotForCurrentSelection();
+            await EnsureInitialTabsLoadedAsync();
+            await EnsureSelectedProfileViewAsync(forceRescan: false);
         }
 
         private async void Profile2_Click(object sender, RoutedEventArgs e)
@@ -745,7 +1223,9 @@ namespace TWChatOverlay.Views
             SelectedProfileTab = 2;
             UpdateProfileTabHighlight();
             ApplySettings();
-            await ScanHistoricalLogsAsync();
+            TryApplyCachedSnapshotForCurrentSelection();
+            await EnsureInitialTabsLoadedAsync();
+            await EnsureSelectedProfileViewAsync(forceRescan: false);
         }
 
         private void UpdateProfileTabHighlight()
@@ -863,6 +1343,9 @@ namespace TWChatOverlay.Views
 
         private void CountUp_Click(object sender, RoutedEventArgs e)
         {
+            if (!CanEditCurrentProfileSettings())
+                return;
+
             if (sender is Button btn && btn.Tag is DailyWeeklyContentLog item)
             {
                 item.MaxCount = item.EffectiveRequiredCount + 1;
@@ -873,6 +1356,9 @@ namespace TWChatOverlay.Views
 
         private void CountDown_Click(object sender, RoutedEventArgs e)
         {
+            if (!CanEditCurrentProfileSettings())
+                return;
+
             if (sender is Button btn && btn.Tag is DailyWeeklyContentLog item)
             {
                 int newCount = item.EffectiveRequiredCount - 1;
@@ -885,6 +1371,9 @@ namespace TWChatOverlay.Views
 
         private void SettingEnabled_Changed(object sender, RoutedEventArgs e)
         {
+            if (!CanEditCurrentProfileSettings())
+                return;
+
             if (sender is CheckBox cb && cb.Tag is DailyWeeklyContentLog item)
             {
                 SaveItemConfig(item);
@@ -918,7 +1407,7 @@ namespace TWChatOverlay.Views
             }
         }
 
-        private void Close_Click(object sender, RoutedEventArgs e) => Close();
+        private void Close_Click(object sender, RoutedEventArgs e) => Hide();
 
         private void Reset_Click(object sender, RoutedEventArgs e)
         {
@@ -927,6 +1416,7 @@ namespace TWChatOverlay.Views
             _dailyWeeklyLogAnalyzer.ResetPending();
             _dailyWeeklyLogAnalyzer.ResetAccumulatedCounts();
             _abaddonCountStates.Clear();
+            MarkAllProfileCachesDirty();
         }
 
         private void InitializeResetTimer()
@@ -984,6 +1474,7 @@ namespace TWChatOverlay.Views
             foreach (var item in TrackItems.Where(i => !i.IsSubItem && !i.IsWeekly && i.Name != WeeklyContentsGroupName))
                 item.Reset();
             _dailyWeeklyLogAnalyzer.ResetPending();
+            MarkAllProfileCachesDirty();
         }
 
         private void ResetWeeklyItems()
@@ -991,12 +1482,14 @@ namespace TWChatOverlay.Views
             foreach (var item in TrackItems.Where(i => !i.IsSubItem && i.IsWeekly && i.Name != AbandonRoadGroupName))
                 item.Reset();
             _dailyWeeklyLogAnalyzer.ResetAccumulatedCounts();
+            MarkAllProfileCachesDirty();
         }
 
         private void ResetAbaddonItems()
         {
             TrackItems.FirstOrDefault(i => i.Name == AbandonRoadGroupName)?.Reset();
             _abaddonCountStates.Clear();
+            MarkAllProfileCachesDirty();
         }
 
         private static void SetAccumulatedCount(

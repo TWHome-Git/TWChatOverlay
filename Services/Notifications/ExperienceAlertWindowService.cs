@@ -11,6 +11,37 @@ namespace TWChatOverlay.Services
     public static class ExperienceAlertWindowService
     {
         private static ExperienceAlertWindow? _window;
+        private static Func<ExperienceAlertStateSnapshot>? _stateSnapshotProvider;
+        private static Action<ExperienceAlertStateSnapshot>? _stateSnapshotApplyAction;
+
+        public static void ConfigureStateBridge(
+            Func<ExperienceAlertStateSnapshot>? stateSnapshotProvider,
+            Action<ExperienceAlertStateSnapshot>? stateSnapshotApplyAction)
+        {
+            _stateSnapshotProvider = stateSnapshotProvider;
+            _stateSnapshotApplyAction = stateSnapshotApplyAction;
+        }
+
+        public static bool TryGetStateSnapshot(ChatSettings settings, out ExperienceAlertStateSnapshot snapshot)
+        {
+            if (settings == null)
+            {
+                snapshot = new ExperienceAlertStateSnapshot();
+                return false;
+            }
+
+            snapshot = GetCurrentSnapshot(settings);
+            return true;
+        }
+
+        public static bool ApplyStateSnapshot(ExperienceAlertStateSnapshot snapshot)
+        {
+            if (snapshot == null || _stateSnapshotApplyAction == null)
+                return false;
+
+            _stateSnapshotApplyAction(snapshot);
+            return true;
+        }
 
         public static void Show(string message, ChatSettings settings)
         {
@@ -72,6 +103,20 @@ namespace TWChatOverlay.Services
             }));
         }
 
+        public static void RefreshState(ChatSettings settings)
+        {
+            if (settings == null)
+                return;
+
+            Application.Current.Dispatcher.BeginInvoke(new Action(() =>
+            {
+                if (_window == null || !_window.IsLoaded)
+                    return;
+
+                _window.SetSettings(settings);
+            }));
+        }
+
         public static void SaveCurrentPosition(ChatSettings settings)
         {
             if (settings == null)
@@ -105,6 +150,23 @@ namespace TWChatOverlay.Services
 
             window.Left = Math.Max(workArea.Left, left);
             window.Top = Math.Max(workArea.Top, top);
+        }
+
+        private static ExperienceAlertStateSnapshot GetCurrentSnapshot(ChatSettings settings)
+        {
+            var snapshot = _stateSnapshotProvider?.Invoke();
+            if (snapshot != null)
+                return snapshot;
+
+            return new ExperienceAlertStateSnapshot
+            {
+                IsProfileMode = settings.EnableCharacterProfiles,
+                TotalExp = 0,
+                Profile1Exp = 0,
+                Profile2Exp = 0,
+                Profile1Label = string.IsNullOrWhiteSpace(settings.Profile1DisplayName) ? "프로필1" : settings.Profile1DisplayName,
+                Profile2Label = string.IsNullOrWhiteSpace(settings.Profile2DisplayName) ? "프로필2" : settings.Profile2DisplayName
+            };
         }
     }
 }

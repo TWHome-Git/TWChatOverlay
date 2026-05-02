@@ -15,8 +15,11 @@ namespace TWChatOverlay.Views
     public partial class ShoutToastWindow : Window
     {
         private static readonly Regex HtmlTagRegex = new("<[^>]+>", RegexOptions.Compiled);
-        private static readonly Regex ShoutPrefixRegex = new(@"^\[\d{2}:\d{2}:\d{2}\]\s*[^:]+?\s*:\s*", RegexOptions.Compiled);
+        private static readonly Regex ShoutPrefixRegex = new(
+            @"^(?:\[\s*(?:\d{1,2}:\d{2}(?::\d{2})?|\d{1,2}\s*시\s*\d{1,2}\s*분(?:\s*\d{1,2}\s*초)?)\s*\]\s*)?(?:외치기|shout)\s*:\s*",
+            RegexOptions.IgnoreCase | RegexOptions.Compiled);
         private const double ScreenEdgePadding = 16;
+        private const double BaseToastWidth = 420;
         private readonly DispatcherTimer _lifetimeTimer;
         private readonly DispatcherTimer _foregroundTimer;
         private ChatSettings _settings;
@@ -85,12 +88,13 @@ namespace TWChatOverlay.Views
             _isPreviewMode = false;
             RefreshMousePassthroughStyle(forceInteractive: false);
 
+            double centerX = targetLeft + (BaseToastWidth / 2.0);
             Left = targetLeft;
             Top = targetTop - 18;
             Opacity = 0;
             Show();
             UpdateLayout();
-            Left = ClampLeftToWorkArea(targetLeft);
+            Left = ClampLeftToWorkArea(centerX - (ActualWidth / 2.0));
             ApplyForegroundTopmostState();
 
             BeginAnimation(TopProperty, new DoubleAnimation
@@ -119,6 +123,7 @@ namespace TWChatOverlay.Views
             BeginAnimation(TopProperty, null);
             BeginAnimation(LeftProperty, null);
 
+            double centerX = targetLeft + (BaseToastWidth / 2.0);
             Left = targetLeft;
             Top = targetTop;
             Opacity = 1;
@@ -127,7 +132,7 @@ namespace TWChatOverlay.Views
 
             Visibility = Visibility.Visible;
             UpdateLayout();
-            Left = ClampLeftToWorkArea(targetLeft);
+            Left = ClampLeftToWorkArea(centerX - (ActualWidth / 2.0));
             ApplyTopmostState(true);
         }
 
@@ -304,7 +309,13 @@ namespace TWChatOverlay.Views
             string decoded = WebUtility.HtmlDecode(text).Replace("&nbsp;", " ");
             decoded = HtmlTagRegex.Replace(decoded, " ");
             decoded = Regex.Replace(decoded, @"\s+", " ").Trim();
+            decoded = Regex.Replace(
+                decoded,
+                @"^(?:\[\s*(?:\d{1,2}:\d{2}(?::\d{2})?|\d{1,2}\s*시\s*\d{1,2}\s*분(?:\s*\d{1,2}\s*초)?)\s*\]\s*)+",
+                string.Empty,
+                RegexOptions.IgnoreCase);
             decoded = ShoutPrefixRegex.Replace(decoded, string.Empty).Trim();
+            decoded = Regex.Replace(decoded, @"^\s*(?:외치기|shout)\s*:\s*", string.Empty, RegexOptions.IgnoreCase).Trim();
             return decoded;
         }
     }

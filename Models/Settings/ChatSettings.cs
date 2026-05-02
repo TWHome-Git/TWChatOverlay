@@ -112,6 +112,10 @@ namespace TWChatOverlay.Models
         private double _lineMarginLeft = 0.0;
 
         private long _expAlarmThreshold = 10000;
+        private long _experienceLimitTotalExp = 0;
+        private long _experienceLimitProfile1Exp = 0;
+        private long _experienceLimitProfile2Exp = 0;
+        private bool _experienceLimitStateInitialized = false;
         private int _abaddonRoadCountAlertDurationSeconds = 30;
         private int _lastSelectedPresetNumber = 1;
 
@@ -223,6 +227,53 @@ namespace TWChatOverlay.Models
         public string Profile1SwitchLog { get => _profile1SwitchLog; set { _profile1SwitchLog = value ?? string.Empty; OnPropertyChanged(); } }
         [JsonPropertyOrder(245)]
         public string Profile2SwitchLog { get => _profile2SwitchLog; set { _profile2SwitchLog = value ?? string.Empty; OnPropertyChanged(); } }
+        [JsonPropertyOrder(246)]
+        public long ExperienceLimitTotalExp
+        {
+            get => _experienceLimitTotalExp;
+            set
+            {
+                long clamped = Math.Max(0, value);
+                if (_experienceLimitTotalExp == clamped) return;
+                _experienceLimitTotalExp = clamped;
+                OnPropertyChanged();
+            }
+        }
+        [JsonPropertyOrder(247)]
+        public long ExperienceLimitProfile1Exp
+        {
+            get => _experienceLimitProfile1Exp;
+            set
+            {
+                long clamped = Math.Max(0, value);
+                if (_experienceLimitProfile1Exp == clamped) return;
+                _experienceLimitProfile1Exp = clamped;
+                OnPropertyChanged();
+            }
+        }
+        [JsonPropertyOrder(248)]
+        public long ExperienceLimitProfile2Exp
+        {
+            get => _experienceLimitProfile2Exp;
+            set
+            {
+                long clamped = Math.Max(0, value);
+                if (_experienceLimitProfile2Exp == clamped) return;
+                _experienceLimitProfile2Exp = clamped;
+                OnPropertyChanged();
+            }
+        }
+        [JsonPropertyOrder(249)]
+        public bool ExperienceLimitStateInitialized
+        {
+            get => _experienceLimitStateInitialized;
+            set
+            {
+                if (_experienceLimitStateInitialized == value) return;
+                _experienceLimitStateInitialized = value;
+                OnPropertyChanged();
+            }
+        }
         [JsonPropertyOrder(25)]
         public double ItemDropAlertVolume
         {

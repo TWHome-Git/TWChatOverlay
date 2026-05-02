@@ -1,6 +1,9 @@
-﻿using System.Linq;
+using System.Linq;
+using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Data;
+using System.Windows.Input;
 using System.Windows.Threading;
 using TWChatOverlay.Services;
 using TWChatOverlay.ViewModels;
@@ -87,6 +90,26 @@ namespace TWChatOverlay.Views
             if (DataContext is AddonViewModel vm)
             {
                 vm.MoveToDefault(CustomDropItemsListBox.SelectedItems.Cast<DropItemFilterEntry>().ToList());
+            }
+        }
+
+        private void ExperienceLimitExp_PreviewTextInput(object sender, TextCompositionEventArgs e)
+        {
+            e.Handled = !Regex.IsMatch(e.Text, @"^[0-9,]+$");
+        }
+
+        private void ExperienceLimitExp_Pasting(object sender, DataObjectPastingEventArgs e)
+        {
+            if (!e.SourceDataObject.GetDataPresent(DataFormats.Text, true))
+            {
+                e.CancelCommand();
+                return;
+            }
+
+            if (e.SourceDataObject.GetData(DataFormats.Text) is not string text ||
+                !Regex.IsMatch(text, @"^[0-9,]+$"))
+            {
+                e.CancelCommand();
             }
         }
 

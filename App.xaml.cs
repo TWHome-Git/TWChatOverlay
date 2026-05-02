@@ -229,6 +229,15 @@ namespace TWChatOverlay
                 AppLogger.Warn("Failed to persist window positions during shutdown.", ex);
             }
 
+            try
+            {
+                TWChatOverlay.Services.MonthlyReadableLogExportService.PersistCachedMonthlyData();
+            }
+            catch (Exception ex)
+            {
+                AppLogger.Warn("Failed to persist cached monthly item data during shutdown.", ex);
+            }
+
             EtaProfileResolver.DeleteCache();
             NotificationService.DeleteCachedAudioFiles();
             _mutex?.ReleaseMutex();

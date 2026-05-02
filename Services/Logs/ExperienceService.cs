@@ -10,11 +10,15 @@ namespace TWChatOverlay.Services
     /// </summary>
     public class ExperienceService
     {
+        private static readonly TimeSpan InactivityTimeout = TimeSpan.FromMinutes(1);
         private readonly ChatSettings _settings;
         private readonly DispatcherTimer _expTimer;
+        private readonly DispatcherTimer _inactivityTimer;
         private DateTime _lastAlarmTime = DateTime.MinValue;
         private readonly DateTime _startTime = DateTime.Now;
+        private DateTime? _lastExpAt;
         private bool _isReady = false;
+        private bool _isSessionExpired = false;
         private readonly bool _suppressAlert;
         public ExpSessionState SessionState { get; } = new();
         public bool IsReady => _isReady;
@@ -28,10 +32,21 @@ namespace TWChatOverlay.Services
             _suppressAlert = suppressAlert;
             _expTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(3000) };
             _expTimer.Tick += (s, e) => SessionState.RefreshDisplay();
+            _inactivityTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(30) };
+            _inactivityTimer.Tick += (s, e) => CheckInactivityTimeout();
         }
 
-        public void Start() => _expTimer.Start();
-        public void Stop() => _expTimer.Stop();
+        public void Start()
+        {
+            _expTimer.Start();
+            _inactivityTimer.Start();
+        }
+
+        public void Stop()
+        {
+            _expTimer.Stop();
+            _inactivityTimer.Stop();
+        }
         public void SetReady() => _isReady = true;
 
         /// <summary>
@@ -40,8 +55,16 @@ namespace TWChatOverlay.Services
         public void AddExp(long gained)
         {
             if (gained <= 0) return;
+
+            if (_isSessionExpired)
+            {
+                SessionState.Reset();
+                _isSessionExpired = false;
+            }
+
             SessionState.LastGainedExp = gained;
             SessionState.TotalExp += gained;
+            _lastExpAt = DateTime.Now;
 
             if (!_isReady || (DateTime.Now - _startTime).TotalSeconds < 5)
             {
@@ -64,6 +87,20 @@ namespace TWChatOverlay.Services
         public void Reset()
         {
             SessionState.Reset();
+            _lastExpAt = null;
+            _isSessionExpired = false;
+        }
+
+        private void CheckInactivityTimeout()
+        {
+            if (_isSessionExpired || !_lastExpAt.HasValue)
+                return;
+
+            if (DateTime.Now - _lastExpAt.Value < InactivityTimeout)
+                return;
+
+            SessionState.FreezeTotalExpDisplay();
+            _isSessionExpired = true;
         }
     }
 }
