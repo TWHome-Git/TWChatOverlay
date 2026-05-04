@@ -36,7 +36,6 @@ namespace TWChatOverlay.Views
                 Instance.Show();
 
             Instance.Topmost = true;
-            Instance.Activate();
         }
 
         private void Window_Loaded(object sender, RoutedEventArgs e)

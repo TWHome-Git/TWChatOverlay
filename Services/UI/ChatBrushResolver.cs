@@ -21,7 +21,12 @@ namespace TWChatOverlay.Services
 
             try
             {
-                return new BrushConverter().ConvertFromString(hex) as SolidColorBrush ?? Brushes.White;
+                var brush = new BrushConverter().ConvertFromString(hex) as SolidColorBrush ?? Brushes.White;
+                if (!brush.IsFrozen && brush.CanFreeze)
+                {
+                    brush.Freeze();
+                }
+                return brush;
             }
             catch
             {

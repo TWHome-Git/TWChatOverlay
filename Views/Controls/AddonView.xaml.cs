@@ -22,9 +22,6 @@ namespace TWChatOverlay.Views
         public AddonView()
         {
             InitializeComponent();
-#if DEBUG
-            DebugRefreshBossTimerButton.Visibility = Visibility.Visible;
-#endif
             _itemDropPreviewTimer = new DispatcherTimer
             {
                 Interval = System.TimeSpan.FromMilliseconds(180)
@@ -72,6 +69,16 @@ namespace TWChatOverlay.Views
                 return;
             }
 
+            // Ignore binding-driven updates (tab switch/load). Preview only on direct user interaction.
+            bool isUserInteraction =
+                slider.IsMouseCaptureWithin ||
+                (slider.IsKeyboardFocusWithin &&
+                 (Keyboard.IsKeyDown(Key.Left) || Keyboard.IsKeyDown(Key.Right) || Keyboard.IsKeyDown(Key.Up) || Keyboard.IsKeyDown(Key.Down)));
+            if (!isUserInteraction)
+            {
+                return;
+            }
+
             _pendingPreviewSoundFile = soundFile;
             _itemDropPreviewTimer.Stop();
             _itemDropPreviewTimer.Start();
@@ -113,32 +120,5 @@ namespace TWChatOverlay.Views
             }
         }
 
-        private async void DebugRefreshBossTimerButton_Click(object sender, RoutedEventArgs e)
-        {
-#if DEBUG
-            if (DataContext is not AddonViewModel vm)
-            {
-                return;
-            }
-
-            Button? refreshButton = sender as Button;
-            if (refreshButton != null)
-            {
-                refreshButton.IsEnabled = false;
-            }
-
-            try
-            {
-                await vm.RefreshBossAlarmCardsAsync(forceRefresh: true);
-            }
-            finally
-            {
-                if (refreshButton != null)
-                {
-                    refreshButton.IsEnabled = true;
-                }
-            }
-#endif
-        }
     }
 }

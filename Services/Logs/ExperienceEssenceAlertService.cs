@@ -29,15 +29,11 @@ namespace TWChatOverlay.Services
         private readonly DispatcherTimer _showDelayTimer;
         private bool _isTracking;
         private long _trackedExp;
-        private long _profile1TrackedExp;
-        private long _profile2TrackedExp;
 
         public ExperienceEssenceAlertService(ChatSettings settings)
         {
             _settings = settings ?? throw new ArgumentNullException(nameof(settings));
             _trackedExp = Math.Max(0, _settings.ExperienceLimitTotalExp);
-            _profile1TrackedExp = Math.Max(0, _settings.ExperienceLimitProfile1Exp);
-            _profile2TrackedExp = Math.Max(0, _settings.ExperienceLimitProfile2Exp);
             _isTracking = true;
             _showDelayTimer = new DispatcherTimer
             {
@@ -53,12 +49,18 @@ namespace TWChatOverlay.Services
             };
         }
 
-        public void Process(LogAnalysisResult analysis, int effectiveProfileSlot = 0, bool isProfileEnabled = false)
+        public void Process(LogAnalysisResult analysis)
         {
             if (!analysis.IsSuccess)
                 return;
 
             string text = analysis.Parsed.FormattedText ?? string.Empty;
+            if (IsRuneExperienceLog(text))
+            {
+                AppLogger.Debug($"Experience essence tracker ignored rune EXP log. Message='{text}'");
+                return;
+            }
+
             if (IsExperienceResetLog(text))
             {
                 // Keep this as a normal experience delta source; the actual delta is handled by the parser.
@@ -79,35 +81,10 @@ namespace TWChatOverlay.Services
             if (_trackedExp < 0)
                 _trackedExp = 0;
 
-            if (effectiveProfileSlot is 1 or 2)
-            {
-                if (effectiveProfileSlot == 2)
-                    _profile2TrackedExp += gainedExp;
-                else
-                    _profile1TrackedExp += gainedExp;
-
-                if (_profile1TrackedExp < 0) _profile1TrackedExp = 0;
-                if (_profile2TrackedExp < 0) _profile2TrackedExp = 0;
-            }
-
-            AppLogger.Info($"Experience essence tracker accumulated EXP. Gain={gainedExp:N0}, Total={_trackedExp:N0}, P1={_profile1TrackedExp:N0}, P2={_profile2TrackedExp:N0}, Threshold={ThresholdExp:N0}");
+            AppLogger.Info($"Experience essence tracker accumulated EXP. Gain={gainedExp:N0}, Total={_trackedExp:N0}, Threshold={ThresholdExp:N0}");
             SaveStateToSettings();
 
-            if (_settings.EnableCharacterProfiles && isProfileEnabled)
-            {
-                long targetExp = effectiveProfileSlot == 2 ? _profile2TrackedExp : _profile1TrackedExp;
-                if (targetExp >= ThresholdExp && _settings.EnableExperienceLimitAlert)
-                {
-                    _showDelayTimer.Stop();
-                    _showDelayTimer.Start();
-                }
-                else if (!ShouldShowAlertNow())
-                {
-                    _showDelayTimer.Stop();
-                    ExperienceAlertWindowService.Close();
-                }
-            }
-            else if (_trackedExp >= ThresholdExp)
+            if (_trackedExp >= ThresholdExp)
             {
                 if (_settings.EnableExperienceLimitAlert)
                 {
@@ -128,26 +105,16 @@ namespace TWChatOverlay.Services
         {
             _isTracking = false;
             _trackedExp = 0;
-            _profile1TrackedExp = 0;
-            _profile2TrackedExp = 0;
             _showDelayTimer.Stop();
             SaveStateToSettings();
         }
 
         public ExperienceAlertStateSnapshot GetStateSnapshot()
         {
-            bool isProfileMode = _settings.EnableCharacterProfiles;
             return new ExperienceAlertStateSnapshot
             {
-                IsProfileMode = isProfileMode,
                 TotalExp = _trackedExp,
-                Profile1Exp = _profile1TrackedExp,
-                Profile2Exp = _profile2TrackedExp,
-                Profile1Label = GetProfile1Label(),
-                Profile2Label = GetProfile2Label(),
-                IsVisible = isProfileMode
-                    ? (_profile1TrackedExp >= ThresholdExp || _profile2TrackedExp >= ThresholdExp)
-                    : _trackedExp >= ThresholdExp
+                IsVisible = _trackedExp >= ThresholdExp
             };
         }
 
@@ -156,18 +123,12 @@ namespace TWChatOverlay.Services
             if (snapshot == null)
                 return;
 
-            bool isProfileMode = _settings.EnableCharacterProfiles && snapshot.IsProfileMode;
-            if (isProfileMode)
-            {
-                _profile1TrackedExp = Math.Max(0, snapshot.Profile1Exp);
-                _profile2TrackedExp = Math.Max(0, snapshot.Profile2Exp);
-            }
             _trackedExp = Math.Max(0, snapshot.TotalExp);
 
             _isTracking = true;
             SaveStateToSettings();
             ExperienceAlertWindowService.RefreshState(_settings);
-            AppLogger.Info($"Experience essence tracker state overridden manually. ProfileMode={isProfileMode}, Total={_trackedExp:N0}, P1={_profile1TrackedExp:N0}, P2={_profile2TrackedExp:N0}");
+            AppLogger.Info($"Experience essence tracker state overridden manually. Total={_trackedExp:N0}");
         }
 
         public void RestoreFromRecentLogs(IEnumerable<string> logPaths, LogAnalysisService logAnalysisService)
@@ -227,7 +188,6 @@ namespace TWChatOverlay.Services
                     : ReadLogLines(path).ToList();
 
                 int startIndex = 0;
-                int profileSlot = 1;
                 if (!shouldReplay)
                 {
                     shouldReplay = true;
@@ -237,40 +197,17 @@ namespace TWChatOverlay.Services
                 for (int lineIndex = startIndex; lineIndex < lines.Count; lineIndex++)
                 {
                     string replayLine = lines[lineIndex];
-                    if (_settings.EnableCharacterProfiles)
-                    {
-                        profileSlot = CharacterProfileLogRouter.GetNextProfileSlot(profileSlot, replayLine, _settings);
-                    }
-
                     replayedLines++;
                     var analysis = logAnalysisService.Analyze(replayLine, isRealTime: false);
                     if (analysis.IsSuccess && analysis.Parsed.GainedExp > 0)
                     {
                         _trackedExp += analysis.Parsed.GainedExp;
-                        if (_settings.EnableCharacterProfiles)
-                        {
-                            if (profileSlot == 2)
-                                _profile2TrackedExp += analysis.Parsed.GainedExp;
-                            else
-                                _profile1TrackedExp += analysis.Parsed.GainedExp;
-                        }
                     }
                     else if (analysis.IsSuccess && analysis.Parsed.GainedExp < 0)
                     {
                         _trackedExp += analysis.Parsed.GainedExp;
                         if (_trackedExp < 0)
                             _trackedExp = 0;
-
-                        if (_settings.EnableCharacterProfiles)
-                        {
-                            if (profileSlot == 2)
-                                _profile2TrackedExp += analysis.Parsed.GainedExp;
-                            else
-                                _profile1TrackedExp += analysis.Parsed.GainedExp;
-
-                            if (_profile1TrackedExp < 0) _profile1TrackedExp = 0;
-                            if (_profile2TrackedExp < 0) _profile2TrackedExp = 0;
-                        }
                     }
                 }
             }
@@ -283,52 +220,18 @@ namespace TWChatOverlay.Services
         private void SaveStateToSettings()
         {
             _settings.ExperienceLimitTotalExp = _trackedExp;
-            _settings.ExperienceLimitProfile1Exp = _profile1TrackedExp;
-            _settings.ExperienceLimitProfile2Exp = _profile2TrackedExp;
             _settings.ExperienceLimitStateInitialized = true;
         }
 
         private bool ShouldShowAlertNow()
-        {
-            if (_settings.EnableCharacterProfiles)
-            {
-                return _profile1TrackedExp >= ThresholdExp || _profile2TrackedExp >= ThresholdExp;
-            }
-
-            return _trackedExp >= ThresholdExp;
-        }
+            => _trackedExp >= ThresholdExp;
 
         private void ShowAlertWindow()
         {
-            if (_settings.EnableCharacterProfiles)
-            {
-                if (_profile1TrackedExp >= ThresholdExp)
-                {
-                    ExperienceAlertWindowService.Show(
-                        $"{GetProfile1Label()} 경험치 {FormatExpEok(_profile1TrackedExp)} 누적 달성",
-                        _settings);
-                    return;
-                }
-
-                if (_profile2TrackedExp >= ThresholdExp)
-                {
-                    ExperienceAlertWindowService.Show(
-                        $"{GetProfile2Label()} 경험치 {FormatExpEok(_profile2TrackedExp)} 누적 달성",
-                        _settings);
-                    return;
-                }
-            }
-
             ExperienceAlertWindowService.Show(
                 $"\uACBD\uD5D8\uCE58 {FormatExpEok(_trackedExp)} \uB204\uC801 \uB2EC\uC131",
                 _settings);
         }
-
-        private string GetProfile1Label()
-            => string.IsNullOrWhiteSpace(_settings.Profile1DisplayName) ? "프로필1" : _settings.Profile1DisplayName;
-
-        private string GetProfile2Label()
-            => string.IsNullOrWhiteSpace(_settings.Profile2DisplayName) ? "프로필2" : _settings.Profile2DisplayName;
 
         private static bool IsExperienceResetLog(string text)
         {
@@ -337,6 +240,17 @@ namespace TWChatOverlay.Services
 
             string body = LeadingTimestampRegex.Replace(text.Trim(), string.Empty);
             return ResetMessageRegex.IsMatch(body);
+        }
+
+        private static bool IsRuneExperienceLog(string text)
+        {
+            if (string.IsNullOrWhiteSpace(text))
+                return false;
+
+            string body = LeadingTimestampRegex.Replace(text.Trim(), string.Empty);
+            string compact = body.Replace(" ", string.Empty);
+            return (body.Contains("룬 경험치", StringComparison.Ordinal) || compact.Contains("룬경험치", StringComparison.Ordinal)) &&
+                   (body.Contains("올랐습니다", StringComparison.Ordinal) || body.Contains("상승했습니다", StringComparison.Ordinal));
         }
 
         private static IEnumerable<string> ReadLogLines(string path)

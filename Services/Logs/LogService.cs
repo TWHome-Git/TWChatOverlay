@@ -1,44 +1,63 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
 using System.Text;
+using System.Text.Json;
 using System.Text.RegularExpressions;
-using System.Threading;
 using System.Windows;
 using System.Windows.Threading;
 using TWChatOverlay.Models;
 
 namespace TWChatOverlay.Services
 {
+    public sealed record LogFeedItem(
+        string Html,
+        bool IsRealTime);
+
+    public sealed class LogPipelineCheckpoint
+    {
+        public string LogPath { get; set; } = string.Empty;
+        public long LastPosition { get; set; }
+        public string LastLogTimeText { get; set; } = string.Empty;
+        public DateTime UpdatedAtUtc { get; set; }
+    }
+
     /// <summary>
-    /// 테일즈위버 로그(HTML)를 실시간으로 감시하고 읽어오는 서비스
+    /// 테일즈위버 로그(HTML)를 폴링 기반 단일 파이프라인으로 수집합니다.
+    /// 캐시는 사용하지 않고 체크포인트(마지막 읽은 오프셋)만 유지합니다.
     /// </summary>
     public class LogService : IDisposable
     {
         #region Fields & Properties
 
         private string _logPath = null!;
-        private long _lastPosition = 0;
-        private readonly object _lockObj = new object();
+        private long _lastPosition;
+        private readonly object _lockObj = new();
         private readonly DispatcherTimer _pollingTimer;
-        private FileSystemWatcher? _logWatcher;
-        private int _immediateReadScheduled;
         private bool _disposed;
         private readonly ExperienceService _experienceService;
         private readonly ChatSettings _settings;
         private readonly Encoding _logEncoding;
         private readonly Decoder _logDecoder;
         private string _pendingRawContent = string.Empty;
-        private const int InitialLogTailBytes = 2 * 1024 * 1024;
+        private string _lastLogTimeText = string.Empty;
 
-        public event Action<string>? OnNewLogRead;
+        private const int InitialLogTailBytes = 2 * 1024 * 1024;
+        private const int PollingIntervalMilliseconds = 30;
+        private static readonly string StateDirectoryPath = LogStoragePaths.StateDirectory;
+        private static readonly string CheckpointPath = Path.Combine(StateDirectoryPath, "log_pipeline_checkpoint.json");
+        private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.General);
+        private static readonly UTF8Encoding Utf8BomEncoding = new(encoderShouldEmitUTF8Identifier: true);
+
+        public event Action<LogFeedItem>? OnNewLogRead;
         public event Action? InitialLogsLoaded;
-        private static readonly Regex LineSplitRegex = new Regex(@"</?br\s*>|\r?\n", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+        private static readonly Regex LineSplitRegex = new(@"</?br\s*>|\r?\n", RegexOptions.IgnoreCase | RegexOptions.Compiled);
         private static readonly Regex ShoutLineRegex = new(
             @"^\s*<font[^>]*color=[""']?#?(?:white|ffffff)[""']?[^>]*>\s*(?<time>\[[^<]+?\])\s*</font>\s*<font[^>]*color=[""']?#?c896c8[""']?[^>]*>(?<content>.*?)</font>\s*$",
             RegexOptions.IgnoreCase | RegexOptions.Compiled);
+        private static readonly Regex LeadingTimeRegex = new(@"\[\s*(?<time>[^\]]+)\s*\]", RegexOptions.Compiled);
 
         #endregion
 
@@ -52,8 +71,8 @@ namespace TWChatOverlay.Services
             _experienceService = experienceService;
             _settings = settings;
 
-            _pollingTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(100) };
-            _pollingTimer.Tick += (s, e) =>
+            _pollingTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(PollingIntervalMilliseconds) };
+            _pollingTimer.Tick += (_, _) =>
             {
                 CheckDateAndPath();
                 ReadLog();
@@ -63,9 +82,6 @@ namespace TWChatOverlay.Services
 
         public void Start()
         {
-            if (_logWatcher != null)
-                _logWatcher.EnableRaisingEvents = true;
-
             _pollingTimer.Start();
             AppLogger.Info("LogService polling started.");
         }
@@ -73,10 +89,6 @@ namespace TWChatOverlay.Services
         public void Stop()
         {
             _pollingTimer.Stop();
-
-            if (_logWatcher != null)
-                _logWatcher.EnableRaisingEvents = false;
-
             AppLogger.Info("LogService polling stopped.");
         }
 
@@ -86,19 +98,19 @@ namespace TWChatOverlay.Services
             _disposed = true;
 
             try { Stop(); } catch { }
-            DisposeWatcher();
             GC.SuppressFinalize(this);
         }
 
         #endregion
 
         #region Path Management
+
         /// <summary>
         /// MainWindow에서 이벤트를 연결한 후 명시적으로 호출해야 합니다.
         /// </summary>
         public void Initialize()
         {
-            UpdatePath();
+            UpdatePath(isInitialLoad: true);
             AppLogger.Info($"LogService initialized path: {_logPath}");
         }
 
@@ -113,147 +125,74 @@ namespace TWChatOverlay.Services
             if (_logPath != expectedPath)
             {
                 AppLogger.Info($"Detected log path rollover. Updating path from '{_logPath}' to '{expectedPath}'.");
-                UpdatePath();
+                UpdatePath(isInitialLoad: false);
             }
         }
 
         /// <summary>
-        /// 현재 날짜에 맞는 로그 경로를 설정하고 초기 위치를 지정
+        /// 현재 날짜에 맞는 로그 경로를 설정하고 체크포인트 기준으로 초기 위치를 결정합니다.
         /// </summary>
-        private void UpdatePath()
+        private void UpdatePath(bool isInitialLoad)
         {
-            string today = DateTime.Now.ToString("yyyy_MM_dd");
-            _logPath = Path.Combine(_settings.ChatLogFolderPath, $"TWChatLog_{today}.html");
-            ConfigureWatcherForCurrentPath();
-
-            if (File.Exists(_logPath))
+            lock (_lockObj)
             {
+                string today = DateTime.Now.ToString("yyyy_MM_dd");
+                _logPath = Path.Combine(_settings.ChatLogFolderPath, $"TWChatLog_{today}.html");
                 _pendingRawContent = string.Empty;
+                _lastLogTimeText = string.Empty;
                 _logDecoder.Reset();
-                LoadInitialLogs(1000);
-                var fileInfo = new FileInfo(_logPath);
-                _lastPosition = fileInfo.Length;
-                AppLogger.Info($"Log file ready: {_logPath}, initial position={_lastPosition}.");
-            }
-            else
-            {
-                _lastPosition = 0;
-                _pendingRawContent = string.Empty;
-                _logDecoder.Reset();
-                AppLogger.Warn($"Log file not found: {_logPath}.");
-            }
-        }
 
-        private void ConfigureWatcherForCurrentPath()
-        {
-            try
-            {
-                string? directory = Path.GetDirectoryName(_logPath);
-                string? fileName = Path.GetFileName(_logPath);
-
-                if (string.IsNullOrWhiteSpace(directory) || string.IsNullOrWhiteSpace(fileName) || !Directory.Exists(directory))
+                if (File.Exists(_logPath))
                 {
-                    DisposeWatcher();
-                    return;
+                    var fileInfo = new FileInfo(_logPath);
+                    long sourceLength = fileInfo.Length;
+                    bool resumedFromCheckpoint = TryRestoreCheckpoint(sourceLength);
+
+                    if (!resumedFromCheckpoint)
+                    {
+                        LoadInitialLogsFromTail(1000);
+                        _lastPosition = sourceLength;
+                        SaveCheckpoint();
+                    }
+
+                    if (_lastPosition < sourceLength)
+                    {
+                        ReadLog(isRealTimeOverride: false);
+                    }
+
+                    AppLogger.Info($"Log file ready: {_logPath}, resume position={_lastPosition}.");
                 }
-
-                bool needsRecreate =
-                    _logWatcher == null ||
-                    !string.Equals(_logWatcher.Path, directory, StringComparison.OrdinalIgnoreCase) ||
-                    !string.Equals(_logWatcher.Filter, fileName, StringComparison.OrdinalIgnoreCase);
-
-                if (!needsRecreate)
-                    return;
-
-                DisposeWatcher();
-
-                _logWatcher = new FileSystemWatcher(directory, fileName)
+                else
                 {
-                    NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.Size | NotifyFilters.FileName | NotifyFilters.CreationTime,
-                    IncludeSubdirectories = false,
-                    EnableRaisingEvents = _pollingTimer.IsEnabled
-                };
-                _logWatcher.Changed += LogWatcher_OnChanged;
-                _logWatcher.Created += LogWatcher_OnChanged;
-                _logWatcher.Renamed += LogWatcher_OnRenamed;
+                    _lastPosition = 0;
+                    AppLogger.Warn($"Log file not found: {_logPath}.");
+                }
             }
-            catch (Exception ex)
+
+            if (isInitialLoad)
             {
-                AppLogger.Warn("Failed to configure log file watcher.", ex);
-            }
-        }
-
-        private void DisposeWatcher()
-        {
-            try
-            {
-                if (_logWatcher == null) return;
-
-                _logWatcher.EnableRaisingEvents = false;
-                _logWatcher.Changed -= LogWatcher_OnChanged;
-                _logWatcher.Created -= LogWatcher_OnChanged;
-                _logWatcher.Renamed -= LogWatcher_OnRenamed;
-                _logWatcher.Dispose();
-                _logWatcher = null;
-            }
-            catch
-            {
-            }
-        }
-
-        private void LogWatcher_OnChanged(object sender, FileSystemEventArgs e)
-        {
-            if (!string.Equals(e.FullPath, _logPath, StringComparison.OrdinalIgnoreCase))
-                return;
-
-            ScheduleImmediateRead();
-        }
-
-        private void LogWatcher_OnRenamed(object sender, RenamedEventArgs e)
-        {
-            if (!string.Equals(e.FullPath, _logPath, StringComparison.OrdinalIgnoreCase))
-                return;
-
-            ScheduleImmediateRead();
-        }
-
-        private void ScheduleImmediateRead()
-        {
-            if (Interlocked.Exchange(ref _immediateReadScheduled, 1) != 0)
-                return;
-
-            try
-            {
-                Application.Current?.Dispatcher?.BeginInvoke(new Action(() =>
+                InitialLogsLoaded?.Invoke();
+                Application.Current.Dispatcher.BeginInvoke(new Action(() =>
                 {
-                    Interlocked.Exchange(ref _immediateReadScheduled, 0);
-                    CheckDateAndPath();
-                    ReadLog();
-                }), DispatcherPriority.Background);
-            }
-            catch
-            {
-                Interlocked.Exchange(ref _immediateReadScheduled, 0);
+                    _experienceService.SetReady();
+                }), DispatcherPriority.Loaded);
             }
         }
 
         #endregion
 
-        #region Method
+        #region Methods
 
         /// <summary>
-        /// 초기 구동 시 기존 로그의 마지막 부분을 가져옴
+        /// 초기 구동 시 기존 로그의 마지막 부분을 가져옵니다.
         /// </summary>
-        private void LoadInitialLogs(int lineCount)
+        private void LoadInitialLogsFromTail(int lineCount)
         {
             try
             {
                 using var stream = new FileStream(_logPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
                 if (stream.Length == 0)
-                {
-                    InitialLogsLoaded?.Invoke();
                     return;
-                }
 
                 int bytesToRead = (int)Math.Min(stream.Length, InitialLogTailBytes);
                 stream.Seek(-bytesToRead, SeekOrigin.End);
@@ -272,15 +211,8 @@ namespace TWChatOverlay.Services
                 if (totalRead > 0)
                 {
                     string tailContent = _logEncoding.GetString(buffer, 0, totalRead);
-                    ProcessRawContent(tailContent, lineCount);
+                    ProcessRawContent(tailContent, isRealTime: false, lineCount);
                 }
-
-                InitialLogsLoaded?.Invoke();
-
-                Application.Current.Dispatcher.BeginInvoke(new Action(() =>
-                {
-                    _experienceService.SetReady();
-                }), DispatcherPriority.Loaded);
             }
             catch (Exception ex)
             {
@@ -289,9 +221,9 @@ namespace TWChatOverlay.Services
         }
 
         /// <summary>
-        /// 실시간으로 추가된 로그만 Seek를 이용해 빠르게 읽음
+        /// 실시간으로 추가된 로그를 증분으로 읽습니다.
         /// </summary>
-        public void ReadLog()
+        public void ReadLog(bool? isRealTimeOverride = null)
         {
             lock (_lockObj)
             {
@@ -315,6 +247,7 @@ namespace TWChatOverlay.Services
                         _lastPosition = stream.Length;
                         _pendingRawContent = string.Empty;
                         _logDecoder.Reset();
+                        SaveCheckpoint();
                         return;
                     }
 
@@ -332,10 +265,16 @@ namespace TWChatOverlay.Services
 
                     _lastPosition = stream.Position;
                     if (totalRead == 0)
+                    {
+                        SaveCheckpoint();
                         return;
+                    }
 
                     string newContent = DecodeIncrementalBytes(buffer, totalRead);
-                    ProcessIncrementalContent(newContent);
+                    ProcessIncrementalContent(
+                        newContent,
+                        isRealTimeOverride ?? _experienceService.IsReady);
+                    SaveCheckpoint();
                 }
                 catch (Exception ex)
                 {
@@ -348,7 +287,7 @@ namespace TWChatOverlay.Services
         {
             lock (_lockObj)
             {
-                ProcessRawContent(content);
+                ProcessRawContent(content, isRealTime: false);
             }
         }
 
@@ -357,15 +296,15 @@ namespace TWChatOverlay.Services
         #region Processing
 
         /// <summary>
-        /// 읽어온 원문 HTML을 <br> 태그 단위로 쪼개어 이벤트를 발생
+        /// 읽어온 원문 HTML을 <br> 태그 단위로 분리해 이벤트를 발생시킵니다.
         /// </summary>
-        private void ProcessRawContent(string content, int takeLastCount = -1)
+        private void ProcessRawContent(string content, bool isRealTime, int takeLastCount = -1)
         {
             if (string.IsNullOrWhiteSpace(content)) return;
 
             var lines = LineSplitRegex.Split(content)
-                                  .Where(l => !string.IsNullOrWhiteSpace(l))
-                                  .ToList();
+                .Where(l => !string.IsNullOrWhiteSpace(l))
+                .ToList();
 
             lines = MergeWrappedShoutLines(lines);
 
@@ -374,9 +313,17 @@ namespace TWChatOverlay.Services
                 lines = lines.Skip(lines.Count - takeLastCount).ToList();
             }
 
-            foreach (var line in lines)
+            foreach (string line in lines)
             {
-                OnNewLogRead?.Invoke(line.Trim());
+                string normalized = line.Trim();
+                if (normalized.Length == 0)
+                    continue;
+
+                string? logTimeText = ExtractLogTimeText(normalized);
+                if (!string.IsNullOrWhiteSpace(logTimeText))
+                    _lastLogTimeText = logTimeText;
+
+                OnNewLogRead?.Invoke(new LogFeedItem(normalized, isRealTime));
             }
         }
 
@@ -458,7 +405,7 @@ namespace TWChatOverlay.Services
             return charsUsed <= 0 ? string.Empty : new string(chars, 0, charsUsed);
         }
 
-        private void ProcessIncrementalContent(string content)
+        private void ProcessIncrementalContent(string content, bool isRealTime)
         {
             if (string.IsNullOrEmpty(content))
                 return;
@@ -473,7 +420,7 @@ namespace TWChatOverlay.Services
 
             string readyContent = combined.Substring(0, completeEnd);
             _pendingRawContent = completeEnd < combined.Length ? combined.Substring(completeEnd) : string.Empty;
-            ProcessRawContent(readyContent);
+            ProcessRawContent(readyContent, isRealTime);
         }
 
         private static int FindLastCompleteLogBoundary(string content)
@@ -499,6 +446,75 @@ namespace TWChatOverlay.Services
             }
 
             return -1;
+        }
+
+        #endregion
+
+        #region Checkpoint
+
+        private bool TryRestoreCheckpoint(long sourceLength)
+        {
+            LogPipelineCheckpoint? checkpoint = LoadCheckpoint();
+            if (checkpoint == null)
+                return false;
+
+            if (!string.Equals(checkpoint.LogPath, _logPath, StringComparison.OrdinalIgnoreCase))
+                return false;
+
+            if (checkpoint.LastPosition < 0 || checkpoint.LastPosition > sourceLength)
+                return false;
+
+            _lastPosition = checkpoint.LastPosition;
+            _lastLogTimeText = checkpoint.LastLogTimeText ?? string.Empty;
+            return true;
+        }
+
+        private static LogPipelineCheckpoint? LoadCheckpoint()
+        {
+            if (!File.Exists(CheckpointPath))
+                return null;
+
+            try
+            {
+                string json = File.ReadAllText(CheckpointPath, Encoding.UTF8);
+                return JsonSerializer.Deserialize<LogPipelineCheckpoint>(json, JsonOptions);
+            }
+            catch (Exception ex)
+            {
+                AppLogger.Warn($"Failed to load log checkpoint '{CheckpointPath}'.", ex);
+                return null;
+            }
+        }
+
+        private void SaveCheckpoint()
+        {
+            try
+            {
+                Directory.CreateDirectory(StateDirectoryPath);
+                var checkpoint = new LogPipelineCheckpoint
+                {
+                    LogPath = _logPath,
+                    LastPosition = _lastPosition,
+                    LastLogTimeText = _lastLogTimeText,
+                    UpdatedAtUtc = DateTime.UtcNow
+                };
+
+                File.WriteAllText(CheckpointPath, JsonSerializer.Serialize(checkpoint, JsonOptions), Utf8BomEncoding);
+            }
+            catch (Exception ex)
+            {
+                AppLogger.Warn($"Failed to save log checkpoint '{CheckpointPath}'.", ex);
+            }
+        }
+
+        private static string? ExtractLogTimeText(string line)
+        {
+            Match match = LeadingTimeRegex.Match(WebUtility.HtmlDecode(line));
+            if (!match.Success)
+                return null;
+
+            string value = match.Groups["time"].Value.Trim();
+            return string.IsNullOrWhiteSpace(value) ? null : value;
         }
 
         #endregion

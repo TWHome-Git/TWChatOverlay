@@ -14,6 +14,7 @@ namespace TWChatOverlay.Services.LogAnalysis
         public const string AbyssDepthOneItemName = "어비스 - 심층Ⅰ";
         public const string AbyssDepthTwoItemName = "어비스 - 심층Ⅱ";
         public const string AbyssDepthThreeItemName = "어비스 - 심층Ⅲ";
+        public const string ApetiriaHardItemName = "아페티리아 어려움";
 
         public const string AbandonRoadKeywordToken = "어밴던로드";
         public const string CravingPleasureLogKeyword = "남은 에너지는";
@@ -40,7 +41,7 @@ namespace TWChatOverlay.Services.LogAnalysis
         private const string MercurialRewardSeedToken2 = "SEED";
         private const string MercurialRewardSeedToken3 = "획득했습니다";
 
-        private static readonly Regex AbaddonCountRegex = new(@"도전 횟수는\s*(\d+)번", RegexOptions.Compiled);
+        private static readonly Regex AbandonCountRegex = new(@"도전 횟수는\s*(\d+)번", RegexOptions.Compiled);
         private static readonly Regex PleasureEnergyRegex = new(@"남은\s*에너지는\s*\[\s*(\d+)\s*\]", RegexOptions.Compiled);
         private static readonly Regex AbyssEntryRegex = new(@"어비스 - 심층(?<floor>[ⅠⅡⅢ])\(보스전\)에 지옥 난이도로 입장하셨습니다", RegexOptions.Compiled);
         private static readonly Regex AbyssFloorRegex = new(@"어비스 - 심층(?<floor>[ⅠⅡⅢ])\(보스전\) 플레이를 이번 주에 \d+회 중\s*\d+회째", RegexOptions.Compiled);
@@ -55,6 +56,9 @@ namespace TWChatOverlay.Services.LogAnalysis
         private string? _pendingAbyssEntryFloor;
         private string? _pendingAbyssFloor;
         private bool _pendingMercurialSingleEntry;
+        private bool _pendingMercurialRewardExpSeen;
+        private bool _pendingMercurialRewardSeedSeen;
+        private int _pendingApetiriaHardBoxes;
 
         public DailyWeeklyLogAnalyzer(IReadOnlyList<DailyWeeklyContentLog> trackItems)
         {
@@ -98,7 +102,19 @@ namespace TWChatOverlay.Services.LogAnalysis
                     if (TryUpdateDetail(item, text, out int? count) && count.HasValue)
                         break;
 
-                    item.Mark();
+                    if (item.Name == ApetiriaHardItemName)
+                    {
+                        _pendingApetiriaHardBoxes++;
+                        if (_pendingApetiriaHardBoxes >= 3)
+                        {
+                            _pendingApetiriaHardBoxes = 0;
+                            item.Mark();
+                        }
+                    }
+                    else
+                    {
+                        item.Mark();
+                    }
                     break;
                 }
 
@@ -121,11 +137,15 @@ namespace TWChatOverlay.Services.LogAnalysis
             _pendingAbyssEntryFloor = null;
             _pendingAbyssFloor = null;
             _pendingMercurialSingleEntry = false;
+            _pendingMercurialRewardExpSeen = false;
+            _pendingMercurialRewardSeedSeen = false;
+            _pendingApetiriaHardBoxes = 0;
         }
 
         public void ResetAccumulatedCounts()
         {
             _countStates.Clear();
+            _pendingApetiriaHardBoxes = 0;
         }
 
         private bool TryProcessMercurialSingleLog(string text)
@@ -133,14 +153,26 @@ namespace TWChatOverlay.Services.LogAnalysis
             if (IsMercurialEntryMessage(text))
             {
                 _pendingMercurialSingleEntry = true;
+                _pendingMercurialRewardExpSeen = false;
+                _pendingMercurialRewardSeedSeen = false;
                 return false;
             }
 
-            if (_pendingMercurialSingleEntry && IsMercurialRewardMessage(text))
+            if (_pendingMercurialSingleEntry)
             {
-                _pendingMercurialSingleEntry = false;
-                _trackItems.FirstOrDefault(static item => item.Name == MercurialCaveItemName)?.Mark();
-                return true;
+                if (IsMercurialRewardExpMessage(text))
+                    _pendingMercurialRewardExpSeen = true;
+                if (IsMercurialRewardSeedMessage(text))
+                    _pendingMercurialRewardSeedSeen = true;
+
+                if (_pendingMercurialRewardExpSeen && _pendingMercurialRewardSeedSeen)
+                {
+                    _pendingMercurialSingleEntry = false;
+                    _pendingMercurialRewardExpSeen = false;
+                    _pendingMercurialRewardSeedSeen = false;
+                    _trackItems.FirstOrDefault(static item => item.Name == MercurialCaveItemName)?.Mark();
+                    return true;
+                }
             }
 
             return false;
@@ -217,6 +249,17 @@ namespace TWChatOverlay.Services.LogAnalysis
             return expReward || seedReward;
         }
 
+        public static bool IsMercurialRewardExpMessage(string text)
+            => !string.IsNullOrWhiteSpace(text) &&
+               text.Contains(MercurialRewardExpToken1, StringComparison.Ordinal) &&
+               text.Contains(MercurialRewardExpToken2, StringComparison.Ordinal);
+
+        public static bool IsMercurialRewardSeedMessage(string text)
+            => !string.IsNullOrWhiteSpace(text) &&
+               text.Contains(MercurialRewardSeedToken1, StringComparison.Ordinal) &&
+               text.Contains(MercurialRewardSeedToken2, StringComparison.Ordinal) &&
+               text.Contains(MercurialRewardSeedToken3, StringComparison.Ordinal);
+
         public static bool TryMatchAbyssFloor(string text, out string floor)
         {
             var match = AbyssFloorRegex.Match(text);
@@ -249,9 +292,9 @@ namespace TWChatOverlay.Services.LogAnalysis
             return TryParseFirstGroup(match, out count);
         }
 
-        public static bool TryMatchAbaddonRoadCount(string text, out int count)
+        public static bool TryMatchAbandonRoadCount(string text, out int count)
         {
-            var match = AbaddonCountRegex.Match(text);
+            var match = AbandonCountRegex.Match(text);
             return TryParseFirstGroup(match, out count);
         }
 
@@ -290,7 +333,7 @@ namespace TWChatOverlay.Services.LogAnalysis
             if (item.LogKeyword?.Contains(AbandonRoadKeywordToken, StringComparison.Ordinal) == true)
             {
                 detailKind = DailyWeeklyDetailKind.AbandonRoad;
-                return TryParseFirstGroup(AbaddonCountRegex.Match(text), out value);
+                return TryParseFirstGroup(AbandonCountRegex.Match(text), out value);
             }
 
             if (item.LogKeyword?.Contains(CravingPleasureKeywordToken, StringComparison.Ordinal) == true)

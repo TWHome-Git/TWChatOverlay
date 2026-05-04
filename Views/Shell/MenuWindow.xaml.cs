@@ -134,6 +134,18 @@ namespace TWChatOverlay.Views
             return ConfigService.Load();
         }
 
+        private static MainWindow? GetMainWindow()
+        {
+            try
+            {
+                return Application.Current.Windows.OfType<MainWindow>().FirstOrDefault();
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
         private void OpenChild_Click(object sender, RoutedEventArgs e)
         {
             if (sender is not Button btn)
@@ -226,7 +238,7 @@ namespace TWChatOverlay.Views
         private void OpenSubMenuFallback()
         {
             var child = new SubMenuWindow();
-            child.Owner = this;
+            child.Owner = (Window?)GetMainWindow() ?? this;
             child.Show();
             AppLogger.Info("Opened fallback submenu window.");
         }
@@ -319,7 +331,7 @@ namespace TWChatOverlay.Views
                 if (host == null)
                 {
                     host = new SubMenuWindow();
-                    host.Owner = this;
+                    host.Owner = (Window?)GetMainWindow() ?? this;
                     host.Show();
                 }
 
@@ -346,7 +358,6 @@ namespace TWChatOverlay.Views
                 {
                     if (win is MainWindow main)
                     {
-                        main.Dispatcher.Invoke(() => main.Activate());
                         break;
                     }
                 }
@@ -367,7 +378,7 @@ namespace TWChatOverlay.Views
             if (host == null)
             {
                 host = new SubMenuWindow();
-                host.Owner = this;
+                host.Owner = (Window?)GetMainWindow() ?? this;
                 host.Show();
             }
 
@@ -395,7 +406,7 @@ namespace TWChatOverlay.Views
                     Content = content,
                     Width = 560,
                     Height = 420,
-                    Owner = this,
+                    Owner = (Window?)GetMainWindow() ?? this,
                     WindowStartupLocation = WindowStartupLocation.CenterOwner
                 };
                 WindowFontService.Apply(window);
@@ -510,7 +521,6 @@ namespace TWChatOverlay.Views
                 }
 
                 WindowState = WindowState.Normal;
-                Activate();
             });
         }
 

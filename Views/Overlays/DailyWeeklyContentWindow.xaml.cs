@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -30,21 +31,17 @@ namespace TWChatOverlay.Views
         private readonly ObservableCollection<DailyWeeklyContentLog> _weeklyContentItems = new();
         private readonly ObservableCollection<DailyWeeklyContentLog> _completedItems = new();
         private DailyWeeklyLogAnalyzer _dailyWeeklyLogAnalyzer = null!;
-        private readonly Dictionary<string, AccumulatedCountState> _abaddonCountStates = new();
-        private readonly Dictionary<int, ProfileScanCache> _profileScanCaches = new();
+        private readonly Dictionary<string, AccumulatedCountState> _AbandonCountStates = new();
+        private readonly ScanCache _scanCache = new();
         private bool _suppressSave = false;
         private bool _pendingRescanAfterSettings = false;
-        private bool _isProfileViewRefreshing;
         private bool _isLoading;
         private DispatcherTimer? _resetTimer;
         private DateTime _lastDailyResetDate;
         private DateTime _lastWeeklyResetKey;
-        private DateTime _lastAbaddonResetKey;
-        private int _selectedProfileTab;
+        private DateTime _lastAbandonResetKey;
         private const string DailyContentsGroupName = "일일 컨텐츠";
         private const string WeeklyContentsGroupName = "주간 컨텐츠";
-        private const int NonProfileCacheKey = -1;
-        private const int CombinedProfileCacheKey = 0;
 
         private const string MercurialCaveItemName = "머큐리얼 케이브";
         private const int MercurialCaveDefaultMaxCount = 4;
@@ -130,7 +127,13 @@ namespace TWChatOverlay.Views
 
         private static readonly Regex HtmlTagRegex = new("<[^>]+>", RegexOptions.Compiled);
         private static readonly Regex WhiteSpaceRegex = new(@"\s+", RegexOptions.Compiled);
-        private static readonly Regex AbaddonRoadCountRegex = new(
+        private static readonly Regex ContentArchiveEntryRegex = new(
+            "<div\\s+class=\"log\\s+content\"(?<attrs>[^>]*)>(?<text>.*?)</div>",
+            RegexOptions.IgnoreCase | RegexOptions.Compiled);
+        private static readonly Regex ArchiveAttrRegex = new(
+            "(?<name>data-[a-z0-9\\-]+)=\"(?<value>[^\"]*)\"",
+            RegexOptions.IgnoreCase | RegexOptions.Compiled);
+        private static readonly Regex AbandonRoadCountRegex = new(
             @"이번\s*주\s*어밴던\s*로드\s*(?<region>필멸의\s*땅|카디프|오를란느)\s*지역의\s*도전\s*횟수는\s*(?<count>\d+)\s*번",
             RegexOptions.Compiled);
         private static readonly Regex CravingPleasureEnergyRegex = new(
@@ -146,13 +149,13 @@ namespace TWChatOverlay.Views
             public string? Detail { get; init; }
         }
 
-        private sealed class ProfileScanCache
+        private sealed class ScanCache
         {
             public ItemStateSnapshotMap? Snapshot { get; set; }
             public bool IsDirty { get; set; } = true;
             public DateTime DailyResetDate { get; set; } = DateTime.MinValue;
             public DateTime WeeklyResetKey { get; set; } = DateTime.MinValue;
-            public DateTime AbaddonResetKey { get; set; } = DateTime.MinValue;
+            public DateTime AbandonResetKey { get; set; } = DateTime.MinValue;
         }
 
         private sealed class ItemStateSnapshotMap : Dictionary<string, ItemStateSnapshot>
@@ -172,19 +175,6 @@ namespace TWChatOverlay.Views
         public ObservableCollection<DailyWeeklyContentLog> CompletedItems => _completedItems;
 
         public bool HasCompletedItems => _completedItems.Count > 0;
-        public bool IsProfileTabsVisible => _settings.EnableCharacterProfiles;
-        public string Profile1DisplayName => string.IsNullOrWhiteSpace(_settings.Profile1DisplayName) ? "프로필1" : _settings.Profile1DisplayName;
-        public string Profile2DisplayName => string.IsNullOrWhiteSpace(_settings.Profile2DisplayName) ? "프로필2" : _settings.Profile2DisplayName;
-        public int SelectedProfileTab
-        {
-            get => _selectedProfileTab;
-            private set
-            {
-                if (_selectedProfileTab == value) return;
-                _selectedProfileTab = value;
-                OnPropertyChanged();
-            }
-        }
 
         public string ProgressDisplay =>
             $"{TrackItems.Count(i => !i.IsSubItem && i.IsEnabled && i.IsCleared)} / {TrackItems.Count(i => !i.IsSubItem && i.IsEnabled)} 완료";
@@ -236,9 +226,7 @@ namespace TWChatOverlay.Views
             InitializeComponent();
             DataContext = this;
             this.FontFamily = FontService.GetFont(_settings.FontFamily);
-            SelectedProfileTab = 0;
-            UpdateProfileTabHighlight();
-            InitializeProfileScanCaches();
+            InitializeScanCache();
 
             foreach (var item in TrackItems)
                 item.PropertyChanged += (_, e) =>
@@ -261,13 +249,13 @@ namespace TWChatOverlay.Views
             LocationChanged += DailyWeeklyContentWindow_LocationChanged;
         }
 
-        private void InitializeProfileScanCaches()
+        private void InitializeScanCache()
         {
-            _profileScanCaches.Clear();
-            _profileScanCaches[NonProfileCacheKey] = new ProfileScanCache();
-            _profileScanCaches[CombinedProfileCacheKey] = new ProfileScanCache();
-            _profileScanCaches[1] = new ProfileScanCache();
-            _profileScanCaches[2] = new ProfileScanCache();
+            _scanCache.Snapshot = null;
+            _scanCache.IsDirty = true;
+            _scanCache.DailyResetDate = DateTime.MinValue;
+            _scanCache.WeeklyResetKey = DateTime.MinValue;
+            _scanCache.AbandonResetKey = DateTime.MinValue;
         }
 
         private void DailyWeeklyContentWindow_LocationChanged(object? sender, EventArgs e)
@@ -314,14 +302,14 @@ namespace TWChatOverlay.Views
 
             var eclipseBoss = new DailyWeeklyContentLog { Name = EclipseBossRaidItemName, Children = subBosses };
 
-            var abaddonItems = new DailyWeeklyContentLog[]
+            var AbandonItems = new DailyWeeklyContentLog[]
             {
                 new() { Name = ImmortalLandItemName, IsSubItem = true, IsWeekly = true, AllowCountOverMax = true, DefaultMaxCount = 10, MaxCount = 10, LogKeyword = ImmortalLandLogKeyword },
                 new() { Name = CardiffItemName, IsSubItem = true, IsWeekly = true, AllowCountOverMax = true, DefaultMaxCount = 10, MaxCount = 10, LogKeyword = CardiffLogKeyword },
                 new() { Name = OrlanneItemName, IsSubItem = true, IsWeekly = true, AllowCountOverMax = true, DefaultMaxCount = 10, MaxCount = 10, LogKeyword = OrlanneLogKeyword }
             };
 
-            var abaddonGroup = new DailyWeeklyContentLog { Name = AbandonRoadGroupName, Children = abaddonItems, IsWeekly = true };
+            var AbandonGroup = new DailyWeeklyContentLog { Name = AbandonRoadGroupName, Children = AbandonItems, IsWeekly = true };
 
             var abyssItems = new DailyWeeklyContentLog[]
             {
@@ -343,7 +331,7 @@ namespace TWChatOverlay.Views
                 new() { Name = ApetiriaHardItemName, IsWeekly = true, DefaultMaxCount = 7, MaxCount = 7, LogKeyword = ApetiriaHardLogKeyword  },
                 new() { Name = SiegeOfSiochanheimBossesItemName, IsWeekly = true, AllowCountOverMax = true, DefaultMaxCount = 7, MaxCount = 7, LogKeyword = SiegeOfSiochanheimBossesLogKeyword },
                 new() { Name = SiochanheimOdinAllOutWarItemName, IsWeekly = true, AllowCountOverMax = true, DefaultMaxCount = 7, MaxCount = 7, LogKeyword = SiochanheimOdinAllOutWarLogKeyword },
-                abaddonGroup
+                AbandonGroup
             };
 
             var dailyItems = new DailyWeeklyContentLog[]
@@ -383,8 +371,8 @@ namespace TWChatOverlay.Views
                 list.Add(item);
                 if (ReferenceEquals(item, abyssGroup))
                     foreach (var child in abyssItems) list.Add(child);
-                if (ReferenceEquals(item, abaddonGroup))
-                    foreach (var child in abaddonItems) list.Add(child);
+                if (ReferenceEquals(item, AbandonGroup))
+                    foreach (var child in AbandonItems) list.Add(child);
             }
 
             var dailyDisplay = new ObservableCollection<DailyWeeklyContentLog>();
@@ -401,8 +389,8 @@ namespace TWChatOverlay.Views
                 weeklyDisplay.Add(item);
                 if (ReferenceEquals(item, abyssGroup))
                     foreach (var child in abyssItems) weeklyDisplay.Add(child);
-                if (ReferenceEquals(item, abaddonGroup))
-                    foreach (var child in abaddonItems) weeklyDisplay.Add(child);
+                if (ReferenceEquals(item, AbandonGroup))
+                    foreach (var child in AbandonItems) weeklyDisplay.Add(child);
             }
 
             return (list, dailyDisplay, weeklyDisplay);
@@ -443,21 +431,10 @@ namespace TWChatOverlay.Views
         }
 
         private void ApplySettings()
-            => ApplySettingsForProfileTab(SelectedProfileTab);
-
-        private void ApplySettingsForProfileTab(int profileTab)
         {
             foreach (var item in TrackItems)
             {
-                if (_settings.EnableCharacterProfiles && profileTab == 0)
-                {
-                    var profile1Config = GetProfileConfig(item.Name, 1);
-                    var profile2Config = GetProfileConfig(item.Name, 2);
-                    item.IsEnabled = profile1Config.IsEnabled && profile2Config.IsEnabled;
-                    continue;
-                }
-
-                if (!TryGetProfileConfig(item.Name, profileTab, out var config))
+                if (!_settings.DungeonItemConfigs.TryGetValue(item.Name, out var config))
                     continue;
 
                 item.IsEnabled = config.IsEnabled;
@@ -468,117 +445,33 @@ namespace TWChatOverlay.Views
         private void SaveItemConfig(DailyWeeklyContentLog item)
         {
             if (_suppressSave) return;
-            if (!CanEditCurrentProfileSettings()) return;
-            foreach (string key in GetCurrentProfileConfigKeys(item.Name))
+            if (!_settings.DungeonItemConfigs.TryGetValue(item.Name, out var config))
+                config = new DungeonItemConfig();
+            config.IsEnabled = item.IsEnabled;
+            config.RequiredCount = (item.MaxCount == item.DefaultMaxCount) ? 0 : item.MaxCount;
+            config.CurrentCount = 0;
+            config.IsCleared = false;
+            config.SavedAt = DateTime.MinValue;
+            _settings.DungeonItemConfigs[item.Name] = config;
+            ConfigService.SaveDeferred(_settings);
+            _scanCache.IsDirty = true;
+        }
+
+        private void SaveAllConfigs()
+        {
+            foreach (var item in TrackItems.Where(i => !i.HasChildren))
             {
-                if (!_settings.DungeonItemConfigs.TryGetValue(key, out var config))
+                if (!_settings.DungeonItemConfigs.TryGetValue(item.Name, out var config))
                     config = new DungeonItemConfig();
                 config.IsEnabled = item.IsEnabled;
                 config.RequiredCount = (item.MaxCount == item.DefaultMaxCount) ? 0 : item.MaxCount;
                 config.CurrentCount = 0;
                 config.IsCleared = false;
                 config.SavedAt = DateTime.MinValue;
-                _settings.DungeonItemConfigs[key] = config;
+                _settings.DungeonItemConfigs[item.Name] = config;
             }
             ConfigService.SaveDeferred(_settings);
-            MarkAllProfileCachesDirty();
-        }
-
-        private void SaveAllConfigs()
-        {
-            if (!CanEditCurrentProfileSettings()) return;
-            foreach (var item in TrackItems.Where(i => !i.HasChildren))
-            {
-                foreach (string key in GetCurrentProfileConfigKeys(item.Name))
-                {
-                    if (!_settings.DungeonItemConfigs.TryGetValue(key, out var config))
-                        config = new DungeonItemConfig();
-                    config.IsEnabled = item.IsEnabled;
-                    config.RequiredCount = (item.MaxCount == item.DefaultMaxCount) ? 0 : item.MaxCount;
-                    config.CurrentCount = 0;
-                    config.IsCleared = false;
-                    config.SavedAt = DateTime.MinValue;
-                    _settings.DungeonItemConfigs[key] = config;
-                }
-            }
-            ConfigService.SaveDeferred(_settings);
-            MarkAllProfileCachesDirty();
-        }
-
-        private bool CanEditCurrentProfileSettings()
-        {
-            if (!_settings.EnableCharacterProfiles)
-                return true;
-
-            return SelectedProfileTab is 1 or 2;
-        }
-
-        private string GetCurrentProfileConfigKey(string itemName)
-        {
-            if (!_settings.EnableCharacterProfiles || SelectedProfileTab == 0)
-                return itemName;
-
-            return SelectedProfileTab == 1
-                ? $"{itemName}__PROFILE1"
-                : $"{itemName}__PROFILE2";
-        }
-
-        private IEnumerable<string> GetCurrentProfileConfigKeys(string itemName)
-        {
-            if (!_settings.EnableCharacterProfiles)
-            {
-                yield return itemName;
-                yield break;
-            }
-
-            if (SelectedProfileTab == 1)
-            {
-                yield return $"{itemName}__PROFILE1";
-                yield break;
-            }
-
-            if (SelectedProfileTab == 2)
-            {
-                yield return $"{itemName}__PROFILE2";
-                yield break;
-            }
-
-            yield return $"{itemName}__PROFILE1";
-            yield return $"{itemName}__PROFILE2";
-        }
-
-        private DungeonItemConfig GetProfileConfig(string itemName, int profileSlot)
-        {
-            string key = profileSlot == 1 ? $"{itemName}__PROFILE1" : $"{itemName}__PROFILE2";
-            if (_settings.DungeonItemConfigs.TryGetValue(key, out var profileConfig))
-                return profileConfig;
-
-            if (_settings.DungeonItemConfigs.TryGetValue(itemName, out var defaultConfig))
-                return defaultConfig;
-
-            return new DungeonItemConfig();
-        }
-
-        private bool TryGetCurrentProfileConfig(string itemName, out DungeonItemConfig config)
-            => TryGetProfileConfig(itemName, SelectedProfileTab, out config);
-
-        private bool TryGetProfileConfig(string itemName, int profileTab, out DungeonItemConfig config)
-        {
-            string key = GetProfileConfigKey(itemName, profileTab);
-            if (_settings.DungeonItemConfigs.TryGetValue(key, out config!))
-                return true;
-
-            return _settings.DungeonItemConfigs.TryGetValue(itemName, out config!);
-        }
-
-        private string GetProfileConfigKey(string itemName, int profileTab)
-        {
-            if (!_settings.EnableCharacterProfiles || profileTab == 0)
-                return itemName;
-
-            return profileTab == 1
-                ? $"{itemName}__PROFILE1"
-                : $"{itemName}__PROFILE2";
+            _scanCache.IsDirty = true;
         }
 
         /// <summary>
@@ -586,46 +479,27 @@ namespace TWChatOverlay.Views
         /// </summary>
         public async Task ScanHistoricalLogsAsync()
         {
-            await EnsureInitialTabsLoadedAsync();
-            await EnsureSelectedProfileViewAsync(forceRescan: false);
+            IsLoading = true;
+            try
+            {
+                var snapshot = await EnsureScanCacheAsync(forceRescan: false);
+                ApplySnapshot(snapshot);
+            }
+            finally
+            {
+                IsLoading = false;
+            }
         }
 
         public async Task EnsureInitialTabsLoadedAsync()
         {
-            if (!_settings.EnableCharacterProfiles)
-            {
-                if (_profileScanCaches.TryGetValue(NonProfileCacheKey, out var single) && single.Snapshot != null)
-                    return;
-
-                IsLoading = true;
-                try
-                {
-                    await EnsureProfileCacheAsync(NonProfileCacheKey, forceRescan: false);
-                }
-                finally
-                {
-                    IsLoading = false;
-                }
-                return;
-            }
-
-            bool hasProfile1 = _profileScanCaches.TryGetValue(1, out var profile1Cache) && profile1Cache.Snapshot != null;
-            bool hasProfile2 = _profileScanCaches.TryGetValue(2, out var profile2Cache) && profile2Cache.Snapshot != null;
-            bool hasCombined = _profileScanCaches.TryGetValue(CombinedProfileCacheKey, out var combinedCache) && combinedCache.Snapshot != null;
-            if (hasProfile1 && hasProfile2 && hasCombined)
+            if (_scanCache.Snapshot != null)
                 return;
 
             IsLoading = true;
             try
             {
-                var profile1 = await EnsureProfileCacheAsync(1, forceRescan: false);
-                var profile2 = await EnsureProfileCacheAsync(2, forceRescan: false);
-                var combined = BuildCombinedSnapshot(profile1, profile2);
-                _profileScanCaches[CombinedProfileCacheKey].Snapshot = combined;
-                _profileScanCaches[CombinedProfileCacheKey].IsDirty = false;
-                _profileScanCaches[CombinedProfileCacheKey].DailyResetDate = _lastDailyResetDate;
-                _profileScanCaches[CombinedProfileCacheKey].WeeklyResetKey = _lastWeeklyResetKey;
-                _profileScanCaches[CombinedProfileCacheKey].AbaddonResetKey = _lastAbaddonResetKey;
+                await EnsureScanCacheAsync(forceRescan: false);
             }
             finally
             {
@@ -633,144 +507,31 @@ namespace TWChatOverlay.Views
             }
         }
 
-        private void MarkAllProfileCachesDirty()
+        private async Task<ItemStateSnapshotMap> EnsureScanCacheAsync(bool forceRescan)
         {
-            foreach (var cache in _profileScanCaches.Values)
-            {
-                cache.IsDirty = true;
-            }
-        }
-
-        private void MarkProfileCacheDirty(int profileSlot)
-        {
-            if (_profileScanCaches.TryGetValue(profileSlot, out var cache))
-            {
-                cache.IsDirty = true;
-            }
-        }
-
-        private bool TryApplyCachedSnapshotForCurrentSelection()
-        {
-            if (!_settings.EnableCharacterProfiles)
-            {
-                if (_profileScanCaches.TryGetValue(NonProfileCacheKey, out var nonProfile) && nonProfile.Snapshot != null)
-                {
-                    ApplySnapshot(nonProfile.Snapshot);
-                    return true;
-                }
-
-                return false;
-            }
-
-            if (SelectedProfileTab is 1 or 2)
-            {
-                if (_profileScanCaches.TryGetValue(SelectedProfileTab, out var profile) && profile.Snapshot != null)
-                {
-                    ApplySnapshot(profile.Snapshot);
-                    return true;
-                }
-
-                return false;
-            }
-
-            if (_profileScanCaches.TryGetValue(CombinedProfileCacheKey, out var combined) && combined.Snapshot != null)
-            {
-                ApplySnapshot(combined.Snapshot);
-                return true;
-            }
-
-            return false;
-        }
-
-        private async Task EnsureSelectedProfileViewAsync(bool forceRescan)
-        {
-            if (_isProfileViewRefreshing)
-                return;
-
-            bool needsLoadingOverlay = false;
-            if (!_settings.EnableCharacterProfiles)
-            {
-                needsLoadingOverlay = !_profileScanCaches.TryGetValue(NonProfileCacheKey, out var c) || c.Snapshot == null;
-            }
-            else if (SelectedProfileTab is 1 or 2)
-            {
-                needsLoadingOverlay = !_profileScanCaches.TryGetValue(SelectedProfileTab, out var c) || c.Snapshot == null;
-            }
-            else
-            {
-                bool hasCombined = _profileScanCaches.TryGetValue(CombinedProfileCacheKey, out var cc) && cc.Snapshot != null;
-                bool has1 = _profileScanCaches.TryGetValue(1, out var c1) && c1.Snapshot != null;
-                bool has2 = _profileScanCaches.TryGetValue(2, out var c2) && c2.Snapshot != null;
-                needsLoadingOverlay = !(hasCombined && has1 && has2);
-            }
-
-            if (needsLoadingOverlay)
-                IsLoading = true;
-
-            _isProfileViewRefreshing = true;
-            try
-            {
-                if (!_settings.EnableCharacterProfiles)
-                {
-                    var snapshot = await EnsureProfileCacheAsync(NonProfileCacheKey, forceRescan);
-                    ApplySnapshot(snapshot);
-                    return;
-                }
-
-                if (SelectedProfileTab is 1 or 2)
-                {
-                    var snapshot = await EnsureProfileCacheAsync(SelectedProfileTab, forceRescan);
-                    ApplySnapshot(snapshot);
-                    return;
-                }
-
-                var profile1Snapshot = await EnsureProfileCacheAsync(1, forceRescan);
-                var profile2Snapshot = await EnsureProfileCacheAsync(2, forceRescan);
-                var combined = BuildCombinedSnapshot(profile1Snapshot, profile2Snapshot);
-                ApplySnapshot(combined);
-                _profileScanCaches[CombinedProfileCacheKey].Snapshot = combined;
-                _profileScanCaches[CombinedProfileCacheKey].IsDirty = false;
-                _profileScanCaches[CombinedProfileCacheKey].DailyResetDate = _lastDailyResetDate;
-                _profileScanCaches[CombinedProfileCacheKey].WeeklyResetKey = _lastWeeklyResetKey;
-                _profileScanCaches[CombinedProfileCacheKey].AbaddonResetKey = _lastAbaddonResetKey;
-            }
-            finally
-            {
-                _isProfileViewRefreshing = false;
-                IsLoading = false;
-            }
-        }
-
-        private async Task<ItemStateSnapshotMap> EnsureProfileCacheAsync(int profileSlot, bool forceRescan)
-        {
-            if (!_profileScanCaches.TryGetValue(profileSlot, out var cache))
-            {
-                cache = new ProfileScanCache();
-                _profileScanCaches[profileSlot] = cache;
-            }
+            var cache = _scanCache;
 
             bool resetBoundaryChanged =
                 cache.DailyResetDate != _lastDailyResetDate ||
                 cache.WeeklyResetKey != _lastWeeklyResetKey ||
-                cache.AbaddonResetKey != _lastAbaddonResetKey;
+                cache.AbandonResetKey != _lastAbandonResetKey;
 
-            if (forceRescan || resetBoundaryChanged || cache.Snapshot == null)
+            if (forceRescan || resetBoundaryChanged || cache.IsDirty || cache.Snapshot == null)
             {
-                await ScanHistoricalLogsCoreAsync(profileSlot);
+                await ScanHistoricalLogsCoreAsync();
                 cache.Snapshot = CaptureSnapshot();
                 cache.IsDirty = false;
                 cache.DailyResetDate = _lastDailyResetDate;
                 cache.WeeklyResetKey = _lastWeeklyResetKey;
-                cache.AbaddonResetKey = _lastAbaddonResetKey;
+                cache.AbandonResetKey = _lastAbandonResetKey;
             }
 
             return cache.Snapshot;
         }
 
-        private async Task ScanHistoricalLogsCoreAsync(int targetProfileSlot)
+        private async Task ScanHistoricalLogsCoreAsync()
         {
             DateTime today = DateTime.Today;
-            bool profileEnabledForScan = _settings.EnableCharacterProfiles && targetProfileSlot is 1 or 2;
 
             var dailyItems = TrackItems
                 .Where(i => (!i.IsWeekly) && (i.LogKeyword != null || i.Name == MercurialCaveItemName))
@@ -780,15 +541,15 @@ namespace TWChatOverlay.Views
             _suppressSave = true;
             try
             {
-                ApplySettingsForProfileTab(profileEnabledForScan ? targetProfileSlot : 0);
+                ApplySettings();
                 ResetScannedItems(dailyItems);
                 ResetScannedItems(weeklyItems);
                 _dailyWeeklyLogAnalyzer.ResetPending();
                 _dailyWeeklyLogAnalyzer.ResetAccumulatedCounts();
-                _abaddonCountStates.Clear();
+                _AbandonCountStates.Clear();
 
-                await ScanAndApplyAsync(dailyItems, new[] { GetLogPath(today) }, targetProfileSlot, profileEnabledForScan);
-                await ScanAndApplyAsync(weeklyItems, GetWeekLogPaths(today), targetProfileSlot, profileEnabledForScan);
+                await ScanAndApplyAsync(dailyItems, new[] { GetLogPath(today) }, today.Date);
+                await ScanAndApplyAsync(weeklyItems, GetWeekLogPaths(today), null);
             }
             finally
             {
@@ -846,54 +607,12 @@ namespace TWChatOverlay.Views
             {
                 _suppressSave = false;
             }
-
             ReorderItems();
             OnPropertyChanged(nameof(ProgressDisplay));
             OnPropertyChanged(nameof(DailyProgressDisplay));
             OnPropertyChanged(nameof(WeeklyProgressDisplay));
         }
 
-        private ItemStateSnapshotMap BuildCombinedSnapshot(ItemStateSnapshotMap profile1, ItemStateSnapshotMap profile2)
-        {
-            var combined = new ItemStateSnapshotMap();
-
-            foreach (var item in TrackItems)
-            {
-                profile1.TryGetValue(item.Name, out var first);
-                profile2.TryGetValue(item.Name, out var second);
-                first ??= new ItemStateSnapshot();
-                second ??= new ItemStateSnapshot();
-
-                if (item.HasChildren)
-                {
-                    combined[item.Name] = new ItemStateSnapshot
-                    {
-                        IsEnabled = first.IsEnabled && second.IsEnabled,
-                        MaxCount = 0,
-                        CurrentCount = 0,
-                        IsCleared = false,
-                        Detail = null
-                    };
-                    continue;
-                }
-
-                int required1 = first.MaxCount > 0 ? first.MaxCount : 1;
-                int required2 = second.MaxCount > 0 ? second.MaxCount : 1;
-                int current1 = first.MaxCount > 0 ? first.CurrentCount : (first.IsCleared ? 1 : 0);
-                int current2 = second.MaxCount > 0 ? second.CurrentCount : (second.IsCleared ? 1 : 0);
-
-                combined[item.Name] = new ItemStateSnapshot
-                {
-                    IsEnabled = first.IsEnabled && second.IsEnabled,
-                    MaxCount = required1 + required2,
-                    CurrentCount = current1 + current2,
-                    IsCleared = false,
-                    Detail = first.Detail ?? second.Detail
-                };
-            }
-
-            return combined;
-        }
 
         private static void ResetScannedItems(IEnumerable<DailyWeeklyContentLog> items)
         {
@@ -911,16 +630,23 @@ namespace TWChatOverlay.Views
 
         private IEnumerable<string> GetWeekLogPaths(DateTime today)
         {
-            int diff = (7 + (int)today.DayOfWeek - (int)DayOfWeek.Monday) % 7;
-            DateTime monday = today.AddDays(-diff);
-            for (int i = 0; i < 7; i++)
-                yield return GetLogPath(monday.AddDays(i));
+            string weekPath = GetContentWeekLogPath(today);
+            if (!string.IsNullOrWhiteSpace(weekPath))
+                yield return weekPath;
         }
 
         private string GetLogPath(DateTime date)
-            => Path.Combine(_settings.ChatLogFolderPath, $"TWChatLog_{date:yyyy_MM_dd}.html");
+            => GetContentWeekLogPath(date);
 
-        private async Task ScanAndApplyAsync(IReadOnlyList<DailyWeeklyContentLog> items, IEnumerable<string> filePaths, int targetProfileSlot, bool profileEnabled)
+        private static string GetContentWeekLogPath(DateTime date)
+        {
+            string root = LogStoragePaths.ContentDirectory;
+            int isoYear = ISOWeek.GetYear(date);
+            int isoWeek = ISOWeek.GetWeekOfYear(date);
+            return Path.Combine(root, $"{isoYear}-W{isoWeek:00}.html");
+        }
+
+        private async Task ScanAndApplyAsync(IReadOnlyList<DailyWeeklyContentLog> items, IEnumerable<string> filePaths, DateTime? onlyDate)
         {
             if (items.Count == 0) return;
 
@@ -963,67 +689,74 @@ namespace TWChatOverlay.Views
 
                     foreach (var filePath in filePaths)
                     {
-                        int profileSlot = 1;
                         if (!File.Exists(filePath)) continue;
 
+                        bool isDedicatedContentLog = IsDedicatedContentLogPath(filePath);
+                        Encoding encoding = isDedicatedContentLog ? Encoding.UTF8 : Encoding.GetEncoding(949);
                         using var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
-                        using var reader = new StreamReader(stream, Encoding.GetEncoding(949));
+                        using var reader = new StreamReader(stream, encoding);
                         string? line;
                         while ((line = reader.ReadLine()) != null)
                         {
-                            if (profileEnabled)
-                                profileSlot = CharacterProfileLogRouter.GetNextProfileSlot(profileSlot, line, _settings);
+                            string effectiveLine = line;
+                            DateTime? logDate = null;
+                            if (isDedicatedContentLog)
+                            {
+                                if (!TryParseContentArchiveLine(line, out effectiveLine, out DateTime parsedDate))
+                                    continue;
+                                logDate = parsedDate.Date;
+                            }
 
-                            if (profileEnabled && targetProfileSlot is 1 or 2 && profileSlot != targetProfileSlot)
+                            if (onlyDate.HasValue && logDate.HasValue && logDate.Value != onlyDate.Value.Date)
                                 continue;
 
-                            if (DailyWeeklyLogAnalyzer.IsMercurialEntryMessage(line))
+                            if (DailyWeeklyLogAnalyzer.IsMercurialEntryMessage(effectiveLine))
                             {
                                 pendingMercurialEntry = true;
                             }
-                            else if (pendingMercurialEntry && DailyWeeklyLogAnalyzer.IsMercurialRewardMessage(line))
+                            else if (pendingMercurialEntry && DailyWeeklyLogAnalyzer.IsMercurialRewardMessage(effectiveLine))
                             {
                                 mercurialClearCount++;
                                 pendingMercurialEntry = false;
                             }
 
-                            if (DailyWeeklyLogAnalyzer.TryMatchAbyssEntry(line, out string abyssEntryFloor))
+                            if (DailyWeeklyLogAnalyzer.TryMatchAbyssEntry(effectiveLine, out string abyssEntryFloor))
                             {
                                 pendingAbyssEntryFloor = abyssEntryFloor;
                                 pendingAbyssFloor = null;
                             }
 
-                            if (DailyWeeklyLogAnalyzer.TryMatchAbyssFloor(line, out string abyssFloor))
+                            if (DailyWeeklyLogAnalyzer.TryMatchAbyssFloor(effectiveLine, out string abyssFloor))
                             {
                                 if (pendingAbyssEntryFloor == abyssFloor)
                                     pendingAbyssFloor = abyssFloor;
                                 pendingAbyssEntryFloor = null;
                             }
 
-                            if (DailyWeeklyLogAnalyzer.TryMatchAbyssReward(line, out int abyssValue) && pendingAbyssFloor != null)
+                            if (DailyWeeklyLogAnalyzer.TryMatchAbyssReward(effectiveLine, out int abyssValue) && pendingAbyssFloor != null)
                             {
                                 string abyssKey = $"{DailyWeeklyLogAnalyzer.AbyssSpecialKeyPrefix}{pendingAbyssFloor}";
                                 specialCounts[abyssKey] = AccumulateCount(abyssKey, abyssValue);
                                 pendingAbyssFloor = null;
                             }
 
-                            if (DailyWeeklyLogAnalyzer.TryMatchSinjoReward(line, out int sinjoValue))
+                            if (DailyWeeklyLogAnalyzer.TryMatchSinjoReward(effectiveLine, out int sinjoValue))
                             {
                                 specialCounts[DailyWeeklyLogAnalyzer.SinjoSpecialKey] = AccumulateCount(DailyWeeklyLogAnalyzer.SinjoSpecialKey, sinjoValue);
                             }
 
-                            if (DailyWeeklyLogAnalyzer.TryMatchCatacombsReward(line, out int catacombsValue))
+                            if (DailyWeeklyLogAnalyzer.TryMatchCatacombsReward(effectiveLine, out int catacombsValue))
                             {
                                 specialCounts[DailyWeeklyLogAnalyzer.CatacombsSpecialKey] = AccumulateCount(DailyWeeklyLogAnalyzer.CatacombsSpecialKey, catacombsValue);
                             }
 
-                            string normalizedLine = NormalizeLogText(line);
-                            if (TryExtractAbaddonRoadCount(normalizedLine, out string abaddonItemName, out int abaddonValue))
+                            string normalizedLine = NormalizeLogText(effectiveLine);
+                            if (TryExtractAbandonRoadCount(normalizedLine, out string AbandonItemName, out int AbandonValue))
                             {
-                                var abaddonItem = items.FirstOrDefault(i => i.Name == abaddonItemName);
-                                if (abaddonItem != null)
+                                var AbandonItem = items.FirstOrDefault(i => i.Name == AbandonItemName);
+                                if (AbandonItem != null)
                                 {
-                                    maxExtractedCounts[abaddonItem] = AccumulateCount(abaddonItem.Name, abaddonValue);
+                                    maxExtractedCounts[AbandonItem] = AccumulateCount(AbandonItem.Name, AbandonValue);
                                 }
                             }
 
@@ -1036,29 +769,29 @@ namespace TWChatOverlay.Views
 
                             foreach (var item in items)
                             {
-                                if (item.LogKeyword == null || !line.Contains(item.LogKeyword)) continue;
-                                if (DailyWeeklyLogAnalyzer.TryExtractDetailValue(item, line, out int v, out var detailKind) &&
+                                if (item.LogKeyword == null || !effectiveLine.Contains(item.LogKeyword)) continue;
+                                if (DailyWeeklyLogAnalyzer.TryExtractDetailValue(item, effectiveLine, out int v, out var detailKind) &&
                                     detailKind == DailyWeeklyDetailKind.Siochanheim)
                                 {
                                     maxExtractedCounts[item] = AccumulateCount(item.Name, v);
                                 }
                                 else if (item.LogKeyword.Contains(DailyWeeklyLogAnalyzer.CravingPleasureKeywordToken, StringComparison.Ordinal))
                                 {
-                                    lastMatchedLines[item] = line;
+                                    lastMatchedLines[item] = effectiveLine;
                                 }
                             }
                             foreach (var (primary, secondary) in scanList)
                             {
                                 if (secondary == null)
                                 {
-                                    if (line.Contains(primary))
+                                    if (effectiveLine.Contains(primary))
                                         counts[primary]++;
                                 }
                                 else
                                 {
-                                    if (line.Contains(primary))
+                                    if (effectiveLine.Contains(primary))
                                         seenPrimary.Add(primary);
-                                    else if (line.Contains(secondary) && seenPrimary.Remove(primary))
+                                    else if (effectiveLine.Contains(secondary) && seenPrimary.Remove(primary))
                                         counts[primary]++;
                                 }
                             }
@@ -1086,6 +819,7 @@ namespace TWChatOverlay.Views
             foreach (var item in items)
             {
                 if (item.LogKeyword == null) continue;
+                if (!item.IsEnabled) continue;
                 if (item.LogKeyword.Contains(DailyWeeklyLogAnalyzer.AbandonRoadKeywordToken, StringComparison.Ordinal) ||
                     item.LogKeyword.Contains(DailyWeeklyLogAnalyzer.CravingPleasureKeywordToken, StringComparison.Ordinal) ||
                     item.LogKeyword.Contains(DailyWeeklyLogAnalyzer.AbyssKeywordToken, StringComparison.Ordinal) ||
@@ -1094,6 +828,9 @@ namespace TWChatOverlay.Views
                     item.LogKeyword.Contains(DailyWeeklyLogAnalyzer.SiochanheimKeywordToken, StringComparison.Ordinal))
                     continue;
                 if (!counts.TryGetValue(item.LogKeyword, out int count) || count == 0) continue;
+                if (item.Name == ApetiriaHardItemName)
+                    count /= 3;
+                if (count <= 0) continue;
                 int times = item.HasCount ? Math.Min(count, item.MaxCount) : 1;
                 for (int i = 0; i < times; i++)
                     item.Mark();
@@ -1102,176 +839,100 @@ namespace TWChatOverlay.Views
             DailyWeeklyLogAnalyzer.ApplySpecialCounts(items, specialCounts);
         }
 
+        private static bool IsDedicatedContentLogPath(string path)
+        {
+            if (string.IsNullOrWhiteSpace(path))
+                return false;
+
+            string fullPath = Path.GetFullPath(path);
+            string contentRoot = Path.GetFullPath(LogStoragePaths.ContentDirectory);
+            return fullPath.StartsWith(contentRoot, StringComparison.OrdinalIgnoreCase);
+        }
+
+        private static bool TryParseContentArchiveLine(string line, out string text, out DateTime logDate)
+        {
+            text = string.Empty;
+            logDate = DateTime.MinValue;
+
+            Match match = ContentArchiveEntryRegex.Match(line);
+            if (!match.Success)
+                return false;
+
+            string attrsRaw = match.Groups["attrs"].Value;
+            string? dateRaw = null;
+            foreach (Match attrMatch in ArchiveAttrRegex.Matches(attrsRaw))
+            {
+                string key = attrMatch.Groups["name"].Value.Trim();
+                if (!string.Equals(key, "data-date", StringComparison.OrdinalIgnoreCase))
+                    continue;
+
+                dateRaw = WebUtility.HtmlDecode(attrMatch.Groups["value"].Value).Trim();
+                break;
+            }
+
+            if (string.IsNullOrWhiteSpace(dateRaw) ||
+                !DateTime.TryParseExact(dateRaw, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out logDate))
+            {
+                return false;
+            }
+
+            text = WebUtility.HtmlDecode(match.Groups["text"].Value).Trim();
+            return !string.IsNullOrWhiteSpace(text);
+        }
+
         /// <summary>
         /// 시스템 로그 텍스트를 받아 키워드와 일치하는 항목을 자동으로 체크합니다.
         /// </summary>
         public void ProcessLog(string text)
         {
             _dailyWeeklyLogAnalyzer.Process(text);
-            UpdateCacheAfterRealtimeProcess(profileSlot: 0, profileEnabled: false, wasAppliedToCurrentView: true);
+            UpdateCacheAfterRealtimeProcess(wasAppliedToCurrentView: true);
         }
 
-        public bool TryProcessAbaddonOrCravingLog(string rawLog, int profileSlot = 0, bool profileEnabled = false)
+        public bool TryProcessAbandonOrCravingLog(string rawLog)
         {
-            if (profileEnabled && profileSlot is 1 or 2 && SelectedProfileTab is 1 or 2 && profileSlot != SelectedProfileTab)
-            {
-                MarkProfileCacheDirty(profileSlot);
-                return false;
-            }
-
             string text = NormalizeLogText(rawLog);
             if (string.IsNullOrWhiteSpace(text))
                 return false;
 
-            bool handled = TryProcessAbaddonRoadLog(text) || TryProcessCravingPleasureLog(text);
+            bool handled = TryProcessAbandonRoadLog(text) || TryProcessCravingPleasureLog(text);
             if (handled)
-                UpdateCacheAfterRealtimeProcess(profileSlot, profileEnabled, wasAppliedToCurrentView: true);
+                UpdateCacheAfterRealtimeProcess(wasAppliedToCurrentView: true);
 
             return handled;
         }
 
-        public void ProcessLog(LogAnalysisResult analysis, int profileSlot = 0, bool profileEnabled = false)
+        public void ProcessLog(LogAnalysisResult analysis)
         {
             if (!analysis.ShouldRunDailyWeeklyContent)
                 return;
 
-            if (profileEnabled && profileSlot is 1 or 2 && SelectedProfileTab is 1 or 2 && profileSlot != SelectedProfileTab)
-            {
-                MarkProfileCacheDirty(profileSlot);
-                return;
-            }
-
             _dailyWeeklyLogAnalyzer.Process(analysis);
-            UpdateCacheAfterRealtimeProcess(profileSlot, profileEnabled, wasAppliedToCurrentView: true);
+            UpdateCacheAfterRealtimeProcess(wasAppliedToCurrentView: true);
         }
 
-        private void UpdateCacheAfterRealtimeProcess(int profileSlot, bool profileEnabled, bool wasAppliedToCurrentView)
+        private void UpdateCacheAfterRealtimeProcess(bool wasAppliedToCurrentView)
         {
             if (!wasAppliedToCurrentView)
                 return;
 
-            if (!profileEnabled || !_settings.EnableCharacterProfiles)
-            {
-                if (_profileScanCaches.TryGetValue(NonProfileCacheKey, out var defaultCache))
-                {
-                    defaultCache.Snapshot = CaptureSnapshot();
-                    defaultCache.IsDirty = false;
-                    defaultCache.DailyResetDate = _lastDailyResetDate;
-                    defaultCache.WeeklyResetKey = _lastWeeklyResetKey;
-                    defaultCache.AbaddonResetKey = _lastAbaddonResetKey;
-                }
-                return;
-            }
-
-            if (profileSlot is not 1 and not 2)
-            {
-                MarkAllProfileCachesDirty();
-                return;
-            }
-
-            if (SelectedProfileTab == profileSlot)
-            {
-                if (_profileScanCaches.TryGetValue(profileSlot, out var selectedCache))
-                {
-                    selectedCache.Snapshot = CaptureSnapshot();
-                    selectedCache.IsDirty = false;
-                    selectedCache.DailyResetDate = _lastDailyResetDate;
-                    selectedCache.WeeklyResetKey = _lastWeeklyResetKey;
-                    selectedCache.AbaddonResetKey = _lastAbaddonResetKey;
-                }
-                MarkProfileCacheDirty(CombinedProfileCacheKey);
-                return;
-            }
-
-            if (SelectedProfileTab == CombinedProfileCacheKey)
-            {
-                if (_profileScanCaches.TryGetValue(CombinedProfileCacheKey, out var combinedCache))
-                {
-                    combinedCache.Snapshot = CaptureSnapshot();
-                    combinedCache.IsDirty = false;
-                    combinedCache.DailyResetDate = _lastDailyResetDate;
-                    combinedCache.WeeklyResetKey = _lastWeeklyResetKey;
-                    combinedCache.AbaddonResetKey = _lastAbaddonResetKey;
-                }
-            }
-
-            MarkProfileCacheDirty(profileSlot);
+            _scanCache.Snapshot = CaptureSnapshot();
+            _scanCache.IsDirty = false;
+            _scanCache.DailyResetDate = _lastDailyResetDate;
+            _scanCache.WeeklyResetKey = _lastWeeklyResetKey;
+            _scanCache.AbandonResetKey = _lastAbandonResetKey;
         }
 
-        private async void ProfileBasic_Click(object sender, RoutedEventArgs e)
+        private bool TryProcessAbandonRoadLog(string text)
         {
-            SelectedProfileTab = 0;
-            UpdateProfileTabHighlight();
-            ApplySettings();
-            TryApplyCachedSnapshotForCurrentSelection();
-            await EnsureInitialTabsLoadedAsync();
-            await EnsureSelectedProfileViewAsync(forceRescan: false);
-        }
-
-        private async void Profile1_Click(object sender, RoutedEventArgs e)
-        {
-            SelectedProfileTab = 1;
-            UpdateProfileTabHighlight();
-            ApplySettings();
-            TryApplyCachedSnapshotForCurrentSelection();
-            await EnsureInitialTabsLoadedAsync();
-            await EnsureSelectedProfileViewAsync(forceRescan: false);
-        }
-
-        private async void Profile2_Click(object sender, RoutedEventArgs e)
-        {
-            SelectedProfileTab = 2;
-            UpdateProfileTabHighlight();
-            ApplySettings();
-            TryApplyCachedSnapshotForCurrentSelection();
-            await EnsureInitialTabsLoadedAsync();
-            await EnsureSelectedProfileViewAsync(forceRescan: false);
-        }
-
-        private void UpdateProfileTabHighlight()
-        {
-            if (ProfileBasicButton == null || Profile1Button == null || Profile2Button == null)
-                return;
-
-            var normalBackground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#21262D"));
-            var normalForeground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FFCC00"));
-            var selectedBackground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#00BCD4"));
-            var selectedForeground = Brushes.Black;
-
-            ProfileBasicButton.Background = normalBackground;
-            ProfileBasicButton.Foreground = normalForeground;
-            Profile1Button.Background = normalBackground;
-            Profile1Button.Foreground = normalForeground;
-            Profile2Button.Background = normalBackground;
-            Profile2Button.Foreground = normalForeground;
-
-            if (SelectedProfileTab == 0)
-            {
-                ProfileBasicButton.Background = selectedBackground;
-                ProfileBasicButton.Foreground = selectedForeground;
-            }
-            else if (SelectedProfileTab == 1)
-            {
-                Profile1Button.Background = selectedBackground;
-                Profile1Button.Foreground = selectedForeground;
-            }
-            else
-            {
-                Profile2Button.Background = selectedBackground;
-                Profile2Button.Foreground = selectedForeground;
-            }
-        }
-
-        private bool TryProcessAbaddonRoadLog(string text)
-        {
-            if (!TryExtractAbaddonRoadCount(text, out string itemName, out int count))
+            if (!TryExtractAbandonRoadCount(text, out string itemName, out int count))
                 return false;
 
             DailyWeeklyContentLog? item = TrackItems.FirstOrDefault(i => i.Name == itemName);
             if (item == null || !item.IsEnabled)
                 return false;
 
-            SetAccumulatedCount(_abaddonCountStates, item, count);
+            SetAccumulatedCount(_AbandonCountStates, item, count);
             return true;
         }
 
@@ -1288,12 +949,12 @@ namespace TWChatOverlay.Views
             return true;
         }
 
-        private static bool TryExtractAbaddonRoadCount(string text, out string itemName, out int count)
+        private static bool TryExtractAbandonRoadCount(string text, out string itemName, out int count)
         {
             itemName = string.Empty;
             count = 0;
 
-            Match match = AbaddonRoadCountRegex.Match(text);
+            Match match = AbandonRoadCountRegex.Match(text);
             if (!match.Success || !int.TryParse(match.Groups["count"].Value, out count))
                 return false;
 
@@ -1343,9 +1004,6 @@ namespace TWChatOverlay.Views
 
         private void CountUp_Click(object sender, RoutedEventArgs e)
         {
-            if (!CanEditCurrentProfileSettings())
-                return;
-
             if (sender is Button btn && btn.Tag is DailyWeeklyContentLog item)
             {
                 item.MaxCount = item.EffectiveRequiredCount + 1;
@@ -1356,9 +1014,6 @@ namespace TWChatOverlay.Views
 
         private void CountDown_Click(object sender, RoutedEventArgs e)
         {
-            if (!CanEditCurrentProfileSettings())
-                return;
-
             if (sender is Button btn && btn.Tag is DailyWeeklyContentLog item)
             {
                 int newCount = item.EffectiveRequiredCount - 1;
@@ -1371,9 +1026,6 @@ namespace TWChatOverlay.Views
 
         private void SettingEnabled_Changed(object sender, RoutedEventArgs e)
         {
-            if (!CanEditCurrentProfileSettings())
-                return;
-
             if (sender is CheckBox cb && cb.Tag is DailyWeeklyContentLog item)
             {
                 SaveItemConfig(item);
@@ -1415,15 +1067,15 @@ namespace TWChatOverlay.Views
                 item.Reset();
             _dailyWeeklyLogAnalyzer.ResetPending();
             _dailyWeeklyLogAnalyzer.ResetAccumulatedCounts();
-            _abaddonCountStates.Clear();
-            MarkAllProfileCachesDirty();
+            _AbandonCountStates.Clear();
+            _scanCache.IsDirty = true;
         }
 
         private void InitializeResetTimer()
         {
             _lastDailyResetDate = DateTime.Today;
             _lastWeeklyResetKey = GetWeeklyResetKey(DateTime.Now);
-            _lastAbaddonResetKey = GetAbaddonResetKey(DateTime.Now);
+            _lastAbandonResetKey = GetAbandonResetKey(DateTime.Now);
 
             _resetTimer = new DispatcherTimer { Interval = TimeSpan.FromMinutes(1) };
             _resetTimer.Tick += ResetTimer_Tick;
@@ -1447,11 +1099,11 @@ namespace TWChatOverlay.Views
                 ResetWeeklyItems();
             }
 
-            var abaddonKey = GetAbaddonResetKey(now);
-            if (abaddonKey != _lastAbaddonResetKey)
+            var AbandonKey = GetAbandonResetKey(now);
+            if (AbandonKey != _lastAbandonResetKey)
             {
-                _lastAbaddonResetKey = abaddonKey;
-                ResetAbaddonItems();
+                _lastAbandonResetKey = AbandonKey;
+                ResetAbandonItems();
             }
         }
 
@@ -1461,7 +1113,7 @@ namespace TWChatOverlay.Views
             return now.Date.AddDays(-diff);
         }
 
-        private static DateTime GetAbaddonResetKey(DateTime now)
+        private static DateTime GetAbandonResetKey(DateTime now)
         {
             int diff = (7 + (int)now.DayOfWeek - (int)DayOfWeek.Monday) % 7;
             DateTime monday = now.Date.AddDays(-diff);
@@ -1474,7 +1126,7 @@ namespace TWChatOverlay.Views
             foreach (var item in TrackItems.Where(i => !i.IsSubItem && !i.IsWeekly && i.Name != WeeklyContentsGroupName))
                 item.Reset();
             _dailyWeeklyLogAnalyzer.ResetPending();
-            MarkAllProfileCachesDirty();
+            _scanCache.IsDirty = true;
         }
 
         private void ResetWeeklyItems()
@@ -1482,14 +1134,14 @@ namespace TWChatOverlay.Views
             foreach (var item in TrackItems.Where(i => !i.IsSubItem && i.IsWeekly && i.Name != AbandonRoadGroupName))
                 item.Reset();
             _dailyWeeklyLogAnalyzer.ResetAccumulatedCounts();
-            MarkAllProfileCachesDirty();
+            _scanCache.IsDirty = true;
         }
 
-        private void ResetAbaddonItems()
+        private void ResetAbandonItems()
         {
             TrackItems.FirstOrDefault(i => i.Name == AbandonRoadGroupName)?.Reset();
-            _abaddonCountStates.Clear();
-            MarkAllProfileCachesDirty();
+            _AbandonCountStates.Clear();
+            _scanCache.IsDirty = true;
         }
 
         private static void SetAccumulatedCount(

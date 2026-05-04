@@ -30,6 +30,44 @@ namespace TWChatOverlay.Views
         private static readonly Regex ShoutToastSourceRegex = new(
             @"^\s*\[\s*(?:\d{1,2}:\d{2}(?::\d{2})?|\d{1,2}\s*시\s*\d{1,2}\s*분(?:\s*\d{1,2}\s*초)?)\s*\]\s*외치기\s*:",
             RegexOptions.IgnoreCase | RegexOptions.Compiled);
+        private static readonly string[] DailyWeeklyContentArchiveKeywords =
+        {
+            "금일 [루미너스] 보스 토벌에 성공하였습니다.",
+            "로카고스의 보관 주머니",
+            "에토스의 보관 주머니",
+            "체리아의 보관 주머니",
+            "마티아의 보관 주머니",
+            "티로로스의 보관 주머니",
+            "라이코스의 보관 주머니",
+            "이클립스 보스 토벌전 보상 상자",
+            "보급품 탈환에 성공하였",
+            "모든 훈련을 클리어했",
+            "별동대 토벌 보상으로 경험치",
+            "혼란한 대지 미션에 성공하여",
+            "색을 잃은 땅 미션에 성공하여",
+            "코어 던전 몬스터를 모두 퇴치하여",
+            "모든 일반지역을 토벌하여",
+            "오늘 무료 클리어 횟수 : 1/1 회",
+            "숨겨진 구역으로 이동할 수 있는 포탈이 맵 중앙",
+            "차원의 틈 봉인에 성공하였",
+            "심연의 보물창고 밖으로 이동 됩니다",
+            "청소 아르바이트 보상 조건을 달성하였습니다.",
+            "프라바 방어전 성공 보상으로 경험치 1000만을 획득",
+            "이번 주 사명의 계승자 닉스 보상을",
+            "이번 주 신조 보상을",
+            "[키시니크의 보관 주머니]",
+            "[아페티리아 어려움 보상 상자]",
+            "시오칸하임 - 보스 토벌전의 클리어 횟수 :",
+            "시오칸하임 - 오딘 전면전의 클리어 횟수 :",
+            "이번 주 어밴던로드 필멸의 땅 지역의 도전 횟수는",
+            "이번 주 어밴던로드 카디프 지역의 도전 횟수는",
+            "이번 주 어밴던로드 오를란느 지역의 도전 횟수는",
+            "어비스 - 심층Ⅰ(보스전) 플레이를 이번 주에 7회 중",
+            "어비스 - 심층Ⅱ(보스전) 플레이를 이번 주에 7회 중",
+            "어비스 - 심층Ⅲ(보스전) 플레이를 이번 주에 7회 중",
+            "남은 에너지는",
+            "경험치가 100억이 차감되고, 경험의 정수 1개를 획득 하였습니다."
+        };
 
         #region Log Processing
 
@@ -68,24 +106,18 @@ namespace TWChatOverlay.Views
 
         private UnifiedLogPipelineContext CreateLogPipelineContext(string html, bool isRealTime, bool deferUiScroll)
         {
-            _characterProfileState.AdvanceProfileSlot(html);
-            int effectiveProfileSlot = _characterProfileState.EffectiveProfileSlot;
-
             var context = new UnifiedLogPipelineContext(
                 html,
                 isRealTime,
                 deferUiScroll,
-                effectiveProfileSlot,
-                _characterProfileState.IsProfileEnabled);
+                1,
+                false);
 
             _dungeonCountDisplayService.ProcessRaw(context.RawHtml, context.IsRealTime);
             context.HandledDailyWeeklyCountLog =
                 context.IsRealTime &&
                 _dailyWeeklyContentOverlay?.IsVisible == true &&
-                _dailyWeeklyContentOverlay.TryProcessAbaddonOrCravingLog(
-                    context.RawHtml,
-                    context.EffectiveProfileSlot,
-                    context.IsProfileEnabled);
+                _dailyWeeklyContentOverlay.TryProcessAbandonOrCravingLog(context.RawHtml);
 
             return context;
         }
@@ -99,21 +131,20 @@ namespace TWChatOverlay.Views
             var analysis = pipelineAnalysis.Primary;
             if (!analysis.IsSuccess) return;
             var parseResult = analysis.Parsed;
+            bool isActualShout = parseResult.Category == ChatCategory.Shout && IsActualShoutSource(parseResult.FormattedText);
+            bool isContentCompletionRelevant = IsContentCompletionRelevantLog(parseResult.FormattedText);
 
             _buffTrackerService.ProcessLog(analysis);
-            _characterProfileState.ProcessProfileBuff(analysis);
 
             if (analysis.HasExperienceGain) _expService.AddExp(parseResult.GainedExp);
-            if (analysis.HasExperienceGain)
-                _characterProfileState.ProcessProfileExperienceGain(parseResult.GainedExp);
 
             if (context.IsRealTime)
-                _experienceEssenceAlertService.Process(analysis, context.EffectiveProfileSlot, context.IsProfileEnabled);
+                _experienceEssenceAlertService.Process(analysis);
 
             if (!context.HandledDailyWeeklyCountLog &&
                 analysis.ShouldRunDailyWeeklyContent &&
                 _dailyWeeklyContentOverlay != null)
-                _dailyWeeklyContentOverlay.ProcessLog(analysis, context.EffectiveProfileSlot, context.IsProfileEnabled);
+                _dailyWeeklyContentOverlay.ProcessLog(analysis);
 
             foreach (string tabName in analysis.BufferTabs)
                 AddToBuffer(tabName, parseResult);
@@ -130,7 +161,6 @@ namespace TWChatOverlay.Views
 
                 if (parseResult.Category == ChatCategory.Shout)
                 {
-                    bool isActualShout = IsActualShoutSource(parseResult.FormattedText);
                     if (!isActualShout)
                     {
                         AppLogger.Debug($"Skipped shout toast for non-shout formatted line: '{parseResult.FormattedText}'");
@@ -154,44 +184,58 @@ namespace TWChatOverlay.Views
                 }
             }
 
-            if ((pipelineAnalysis.DefaultItemDrop?.HasTrackedItemDrop ?? analysis.HasTrackedItemDrop) &&
-                (pipelineAnalysis.DefaultItemDrop?.Parsed is { } itemDropParseResult))
+            if (context.IsRealTime)
             {
-                ItemMonthlySnapshotService.AppendMonthlySnapshot(DateTime.Today, itemDropParseResult, context.EffectiveProfileSlot);
-            }
-            else if (analysis.HasTrackedItemDrop)
-            {
-                ItemMonthlySnapshotService.AppendMonthlySnapshot(DateTime.Today, parseResult, context.EffectiveProfileSlot);
+                _readableLogArchiveService.AppendFromAnalysis(DateTime.Today, analysis, isContentCompletionRelevant);
             }
 
             if (context.IsRealTime &&
                 (pipelineAnalysis.DefaultItemDrop?.HasTrackedItemDrop ?? analysis.HasTrackedItemDrop))
             {
                 var realtimeItemParseResult = pipelineAnalysis.DefaultItemDrop?.Parsed ?? parseResult;
-                _itemCalendarWindow?.ApplyRealtimeItemLog(realtimeItemParseResult, DateTime.Today, context.EffectiveProfileSlot, context.IsProfileEnabled);
+                _itemCalendarWindow?.ApplyRealtimeItemLog(realtimeItemParseResult, DateTime.Today);
             }
 
             if (context.IsRealTime)
             {
                 RecaptureSupplyAlertService.Observe(parseResult.FormattedText);
+                if (IsExperienceEssenceExchangeLog(parseResult.FormattedText))
+                    _itemCalendarWindow?.ApplyRealtimeExperienceEssenceLog(parseResult.FormattedText, DateTime.Today);
             }
 
-            if (context.IsRealTime &&
-                analysis.ShouldRunDailyWeeklyContent &&
-                DailyWeeklyLogAnalyzer.TryMatchAbaddonRoadCount(parseResult.FormattedText, out _))
+            if (context.IsRealTime && analysis.ShouldRunDailyWeeklyContent)
             {
-                if (_settings.ShowAbaddonRoadSummaryWindow)
-                    ShowAbaddonRoadSummaryWindow(previewMode: _isSettingsPositionMode);
-            }
+                EnsureAbandonWeeklySummaryCurrent(DateTime.Today);
+                bool isAbandonCountEntry = DailyWeeklyLogAnalyzer.TryMatchAbandonRoadCount(parseResult.FormattedText, out _);
 
-            if (context.IsRealTime)
-                RefreshAbaddonRoadSummaryWindow();
+                if (AbandonSummaryCalculator.TryAccumulate(parseResult.FormattedText, ref _AbandonWeeklySummary))
+                {
+                    _itemCalendarWindow?.ApplyRealtimeAbandonLog(parseResult.FormattedText, DateTime.Today);
+
+                    if (_settings.ShowAbandonRoadSummaryWindow &&
+                        _canShowAuxiliaryWindows &&
+                        WindowState != WindowState.Minimized)
+                    {
+                        ShowAbandonRoadSummaryWindow(previewMode: false, restartLifetime: true, activateWindow: false);
+                        _AbandonRoadSummaryWindow?.UpdateSummary(_AbandonWeeklySummary);
+                    }
+                }
+                else if (isAbandonCountEntry &&
+                         _settings.ShowAbandonRoadSummaryWindow &&
+                         _canShowAuxiliaryWindows &&
+                         WindowState != WindowState.Minimized)
+                {
+                    ShowAbandonRoadSummaryWindow(previewMode: false, restartLifetime: true, activateWindow: false);
+                    _AbandonRoadSummaryWindow?.UpdateSummary(_AbandonWeeklySummary);
+                }
+            }
 
             if (context.IsRealTime)
             {
                 if (_logAnalysisService.ShouldRenderToTab(parseResult, _currentTabTag))
                 {
-                    AddToUI(parseResult, isRealTime: context.IsRealTime, deferScroll: context.DeferUiScroll);
+                    if (!ShouldSuppressOverlayText(parseResult))
+                        AddToUI(parseResult, isRealTime: context.IsRealTime, deferScroll: context.DeferUiScroll);
                 }
             }
 
@@ -210,6 +254,121 @@ namespace TWChatOverlay.Views
             => !string.IsNullOrWhiteSpace(formattedText) &&
                ShoutToastSourceRegex.IsMatch(formattedText);
 
+        private bool ShouldSuppressOverlayText(LogParser.ParseResult parseResult)
+        {
+            if (parseResult == null || string.IsNullOrWhiteSpace(parseResult.FormattedText))
+                return false;
+
+            string text = parseResult.FormattedText;
+            if (parseResult.Category == ChatCategory.Club &&
+                !_settings.ShowClubBoss &&
+                IgnoredChatMessageService.IsIgnoredClubMessage(text))
+            {
+                return true;
+            }
+
+            if (parseResult.Category == ChatCategory.Normal || parseResult.Category == ChatCategory.NormalSelf)
+            {
+                return IgnoredChatMessageService.IsIgnoredNormalMessage(text);
+            }
+
+            return false;
+        }
+
+        private static bool IsContentCompletionRelevantLog(string? formattedText)
+        {
+            if (string.IsNullOrWhiteSpace(formattedText))
+                return false;
+
+            string text = formattedText;
+
+            if (IsConfusedOrColorlessElsoRewardLine(text))
+                return false;
+
+            if (DailyWeeklyLogAnalyzer.TryMatchAbyssEntry(text, out _) ||
+                DailyWeeklyLogAnalyzer.TryMatchAbyssFloor(text, out _) ||
+                DailyWeeklyLogAnalyzer.TryMatchAbyssReward(text, out _) ||
+                DailyWeeklyLogAnalyzer.TryMatchSinjoReward(text, out _) ||
+                DailyWeeklyLogAnalyzer.TryMatchCatacombsReward(text, out _) ||
+                DailyWeeklyLogAnalyzer.TryMatchAbandonRoadCount(text, out _))
+            {
+                return true;
+            }
+
+            if (ContainsAnyContentArchiveKeyword(text))
+                return true;
+
+            if (IsExperienceEssenceExchangeLog(text))
+                return true;
+
+            if (IsMercurialSeedCompletionLog(text))
+                return true;
+
+            return DailyWeeklyLogAnalyzer.IsMercurialEntryMessage(text) ||
+                   DailyWeeklyLogAnalyzer.IsMercurialRewardExpMessage(text) ||
+                   DailyWeeklyLogAnalyzer.IsMercurialRewardSeedMessage(text) ||
+                   IsStrictMercurialCompletionLog(text);
+        }
+
+        private static bool IsMercurialSeedCompletionLog(string text)
+        {
+            if (string.IsNullOrWhiteSpace(text))
+                return false;
+
+            return text.Contains("머큐리얼 케이브", StringComparison.Ordinal) &&
+                   text.Contains("콘텐츠 클리어 보상으로", StringComparison.Ordinal) &&
+                   text.Contains("SEED", StringComparison.Ordinal) &&
+                   text.Contains("획득했습니다", StringComparison.Ordinal);
+        }
+
+        private static bool IsStrictMercurialCompletionLog(string text)
+        {
+            if (string.IsNullOrWhiteSpace(text))
+                return false;
+
+            return IsMercurialSeedCompletionLog(text) ||
+                   text.Contains("머큐리얼 케이브의 [싱글 플레이] 모드로 입장 하였습니다.", StringComparison.Ordinal) ||
+                   (text.Contains("머큐리얼 케이브", StringComparison.Ordinal) &&
+                    text.Contains("싱글 플레이", StringComparison.Ordinal) &&
+                    text.Contains("입장", StringComparison.Ordinal));
+        }
+
+        private static bool IsConfusedOrColorlessElsoRewardLine(string text)
+        {
+            if (string.IsNullOrWhiteSpace(text))
+                return false;
+
+            bool isTargetContent =
+                text.Contains("혼란한 대지 미션에 성공하여", StringComparison.Ordinal) ||
+                text.Contains("색을 잃은 땅 미션에 성공하여", StringComparison.Ordinal);
+
+            if (!isTargetContent)
+                return false;
+
+            return text.Contains("ELSO를 획득했습니다", StringComparison.Ordinal);
+        }
+
+        private static bool IsExperienceEssenceExchangeLog(string text)
+        {
+            if (string.IsNullOrWhiteSpace(text))
+                return false;
+
+            return text.Contains(
+                "경험치 100억이 차감되고, 경험의 정수 1개를 획득 하였습니다.",
+                StringComparison.Ordinal);
+        }
+
+        private static bool ContainsAnyContentArchiveKeyword(string text)
+        {
+            foreach (string keyword in DailyWeeklyContentArchiveKeywords)
+            {
+                if (text.Contains(keyword, StringComparison.Ordinal))
+                    return true;
+            }
+
+            return false;
+        }
+
         private void AddToBuffer(string tabName, LogParser.ParseResult log)
         {
             _logTabBufferStore.Add(tabName, log);
@@ -226,11 +385,15 @@ namespace TWChatOverlay.Views
             Brush foreground = isBlacklisted ? BlacklistService.HighlightBrush : log.Brush;
             string displayText = isBlacklisted ? $"{log.FormattedText} [ {blacklistReason} ]" : log.FormattedText;
 
+            FontFamily safeFont = this.CurrentFont ?? FontService.GetFont(_settings.FontFamily);
+            if (safeFont == null)
+                safeFont = new FontFamily("Malgun Gothic");
+
             Paragraph p = new Paragraph(new Run(displayText))
             {
                 Foreground = foreground,
                 FontSize = _settings.FontSize,
-                FontFamily = this.CurrentFont,
+                FontFamily = safeFont,
                 Margin = new Thickness(0, 0, 0, 1),
                 LineHeight = 1
             };
@@ -345,7 +508,7 @@ namespace TWChatOverlay.Views
             box.Document.Blocks.Add(p);
         }
 
-        private static void AddStoneIconLine(RichTextBox box, FontFamily family, double size, AbaddonSummaryValue summary)
+        private static void AddStoneIconLine(RichTextBox box, FontFamily family, double size, AbandonSummaryValue summary)
         {
             var p = new Paragraph
             {
@@ -381,495 +544,25 @@ namespace TWChatOverlay.Views
             return new InlineUIContainer(img) { BaselineAlignment = BaselineAlignment.Center };
         }
 
-        private string GetAbaddonWeekHeaderText()
-        {
-            DateTime pivot = _loadedItemMonthStart != DateTime.MinValue
-                ? _loadedItemMonthStart
-                : DateTime.Today;
-
-            return $"< {pivot.Year}년 {pivot.Month}월 어밴던로드 수익 로그 >";
-        }
-
-        private string GetItemWeekHeaderText()
-        {
-            DateTime pivot = _loadedItemMonthStart != DateTime.MinValue
-                ? _loadedItemMonthStart
-                : DateTime.Today;
-
-            return $"< {pivot.Year}년 {pivot.Month}월 아이템 획득 로그 >";
-        }
-
-        private async Task EnsureItemMonthLogsLoadedAsync()
-        {
-            if (_isItemMonthLogsLoading) return;
-
-            DateTime monthStart = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1);
-            if (_loadedItemMonthStart == monthStart && _logTabBufferStore.GetLogs("Item").Count > 0)
-                return;
-
-            _isItemMonthLogsLoading = true;
-            try
-            {
-                var monthlySnapshotLogs = await Task.Run(() => LoadItemTabLogsFromMonthlySnapshot(monthStart)).ConfigureAwait(true);
-                if (monthlySnapshotLogs.Count > 0)
-                {
-                    _logTabBufferStore.Replace("Item", monthlySnapshotLogs);
-                    _loadedItemMonthStart = monthStart;
-                    AppLogger.Info($"Loaded monthly item logs from snapshot. Count={monthlySnapshotLogs.Count}");
-                }
-                else
-                {
-                    AppLogger.Info("No monthly item snapshot found yet.");
-                }
-
-                if (_currentTabTag == "Item")
-                    RequestRefreshLogDisplay();
-            }
-            catch (Exception ex)
-            {
-                AppLogger.Warn("Failed to load monthly item logs.", ex);
-            }
-            finally
-            {
-                _isItemMonthLogsLoading = false;
-            }
-        }
-
-        private List<LogParser.ParseResult> LoadItemTabLogsFromMonthlySnapshot(DateTime monthStart)
-        {
-            var results = new List<LogParser.ParseResult>();
-            foreach (var snapshot in ItemMonthlySnapshotService.LoadOrBuildMonthlySnapshots(monthStart, _settings.ChatLogFolderPath, _logAnalysisService))
-            {
-                string displayName = string.IsNullOrWhiteSpace(snapshot.DisplayName)
-                    ? snapshot.ItemName ?? "아이템"
-                    : snapshot.DisplayName;
-
-                string dateLabel = snapshot.Date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
-                var parsed = new LogParser.ParseResult
-                {
-                    FormattedText = BuildItemTabText(snapshot.FormattedText ?? string.Empty, displayName, snapshot.Count, dateLabel),
-                    Brush = GetItemDropForeground(snapshot.Grade) as SolidColorBrush ?? Brushes.White,
-                    Category = ChatCategory.System,
-                    IsSuccess = true,
-                    IsTrackedItemDrop = true,
-                    TrackedItemName = displayName,
-                    TrackedItemGrade = snapshot.Grade,
-                    TrackedItemCount = snapshot.Count,
-                    SenderId = null
-                };
-
-                results.Add(parsed);
-            }
-
-            return results;
-        }
-
-        private (List<LogParser.ParseResult> Logs, AbaddonSummaryValue Summary) ParseTrackedItemLogs(IEnumerable<string> filePaths)
-        {
-            var results = new List<LogParser.ParseResult>();
-            var summary = new AbaddonSummaryValue();
-
-            foreach (var filePath in filePaths)
-            {
-                if (!File.Exists(filePath)) continue;
-                string dateLabel = ExtractDateLabelFromLogPath(filePath);
-
-                using var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
-                using var reader = new StreamReader(stream, Encoding.GetEncoding(949));
-                string? line;
-                while ((line = reader.ReadLine()) != null)
-                {
-                    var analysis = _logAnalysisService.Analyze(line, isRealTime: false);
-                    var parsed = analysis.Parsed;
-                    if (analysis.IsSuccess)
-                        TryAccumulateAbaddonWeeklySummary(parsed.FormattedText, ref summary);
-
-                    if (analysis.IsSuccess && analysis.IsRareTrackedItemDrop)
-                    {
-                        parsed.FormattedText = ReplaceLeadingTimeWithDate(parsed.FormattedText, dateLabel);
-                        if (parsed.Brush != null && !parsed.Brush.IsFrozen && parsed.Brush.CanFreeze)
-                            parsed.Brush.Freeze();
-                        results.Add(CreateItemTabLog(parsed, dateLabel));
-                    }
-                }
-            }
-
-            return (results, summary);
-        }
-
-        private static string ExtractDateLabelFromLogPath(string filePath)
-        {
-            string fileName = Path.GetFileNameWithoutExtension(filePath);
-            var match = Regex.Match(fileName, @"(?<y>\d{4})_(?<m>\d{2})_(?<d>\d{2})$");
-            if (!match.Success) return DateTime.Today.ToString("yyyy-MM-dd");
-
-            return $"{match.Groups["y"].Value}-{match.Groups["m"].Value}-{match.Groups["d"].Value}";
-        }
-
-        private static string ReplaceLeadingTimeWithDate(string original, string dateLabel)
-            => ItemLogDisplayFormatter.ReplaceLeadingTimeWithDate(original, dateLabel);
-
-        private static bool TryAccumulateAbaddonWeeklySummary(string formattedText, ref AbaddonSummaryValue summary)
-            => AbaddonSummaryCalculator.TryAccumulate(formattedText, ref summary);
-
-        private static bool TryAccumulateAbaddonMonthlySummary(string formattedText, AbaddonMonthlySummarySnapshotEntry summary)
-            => AbaddonSummaryCalculator.TryAccumulate(formattedText, summary);
-
-        private static bool TryParseLong(string raw, out long value)
-            => long.TryParse(raw.Replace(",", string.Empty).Trim(), out value);
-
-        private static DateTime GetMonday(DateTime date)
-        {
-            int diff = (7 + (int)date.DayOfWeek - (int)DayOfWeek.Monday) % 7;
-            return date.AddDays(-diff).Date;
-        }
-
-        private static string GetMonthlyItemLogPath(DateTime date)
-            => Path.Combine(ItemLogDirectoryPath, $"ItemLog_{date:yyyy_MM}.jsonl");
-
-        private void SaveMonthlyItemLogsSnapshot(DateTime monthStart, IReadOnlyList<LogParser.ParseResult> itemLogs)
-        {
-            try
-            {
-                Directory.CreateDirectory(ItemLogDirectoryPath);
-                string path = GetMonthlyItemLogPath(monthStart);
-                using var writer = new StreamWriter(path, append: false, Encoding.UTF8);
-                foreach (var itemLog in itemLogs)
-                {
-                    var snapshot = CreateSnapshotFromItemLog(itemLog, ExtractSnapshotDate(itemLog.FormattedText) ?? monthStart.Date);
-                    writer.WriteLine(JsonSerializer.Serialize(snapshot));
-                }
-            }
-            catch (Exception ex)
-            {
-                AppLogger.Warn("Failed to save monthly item log snapshot.", ex);
-            }
-        }
-
-        private void AppendMonthlyItemSnapshot(LogParser.ParseResult itemLog, DateTime date)
-            => ItemMonthlySnapshotService.AppendMonthlySnapshot(date, itemLog);
-
-        private IReadOnlyList<ItemLogSnapshotEntry> LoadMonthlyItemSnapshots(DateTime monthStart)
-        {
-            string path = GetMonthlyItemLogPath(monthStart);
-            if (!File.Exists(path))
-                return Array.Empty<ItemLogSnapshotEntry>();
-
-            var snapshots = new List<ItemLogSnapshotEntry>();
-            try
-            {
-                foreach (string line in File.ReadLines(path, Encoding.UTF8))
-                {
-                    if (string.IsNullOrWhiteSpace(line))
-                        continue;
-
-                    var snapshot = JsonSerializer.Deserialize<ItemLogSnapshotEntry>(line);
-                    if (snapshot == null)
-                        continue;
-
-                    if (snapshot.Date.Year != monthStart.Year || snapshot.Date.Month != monthStart.Month)
-                        continue;
-
-                    snapshots.Add(snapshot);
-                }
-            }
-            catch (Exception ex)
-            {
-                AppLogger.Warn($"Failed to load monthly item snapshots from '{path}'.", ex);
-            }
-
-            return snapshots;
-        }
-
-        private static ItemLogSnapshotEntry CreateSnapshotFromItemLog(LogParser.ParseResult itemLog, DateTime date)
-        {
-            return new ItemLogSnapshotEntry
-            {
-                Date = date.Date,
-                ItemName = itemLog.TrackedItemName,
-                DisplayName = string.IsNullOrWhiteSpace(itemLog.TrackedItemName)
-                    ? "아이템"
-                    : DropItemResolver.GetTrackedItemDisplayName(itemLog.TrackedItemName),
-                Grade = itemLog.TrackedItemGrade,
-                Count = Math.Max(1, itemLog.TrackedItemCount),
-                FormattedText = itemLog.FormattedText
-            };
-        }
-
-        private static DateTime? ExtractSnapshotDate(string? formattedText)
-        {
-            if (string.IsNullOrWhiteSpace(formattedText))
-                return null;
-
-            var match = Regex.Match(formattedText, @"^\[(?<date>\d{4}-\d{2}-\d{2})\]");
-            if (!match.Success)
-                return null;
-
-            if (DateTime.TryParseExact(match.Groups["date"].Value, "yyyy-MM-dd", CultureInfo.InvariantCulture,
-                    DateTimeStyles.None, out DateTime parsed))
-            {
-                return parsed.Date;
-            }
-
-            return null;
-        }
-
-        private void EnsureCurrentAbaddonWeeklySummaryLoaded(DateTime date)
-        {
-            DateTime monthStart = new(date.Year, date.Month, 1);
-            _loadedAbaddonMonthStart = monthStart;
-            _abaddonWeeklySummary = LoadCurrentAbaddonWeeklySummary(monthStart);
-        }
-
-        private AbaddonSummaryValue LoadCurrentAbaddonWeeklySummary(DateTime monthStart)
-        {
-            MonthlyReadableLogData data;
-            DateTime today = DateTime.Today;
-            if (monthStart.Year == today.Year && monthStart.Month == today.Month)
-            {
-                data = MonthlyReadableLogExportService.RefreshCurrentMonthFromTodayOnly(
-                    monthStart,
-                    _settings.ChatLogFolderPath,
-                    _logAnalysisService);
-            }
-            else
-            {
-                data = MonthlyReadableLogExportService.LoadOrBuildMonth(
-                    monthStart,
-                    _settings.ChatLogFolderPath,
-                    _logAnalysisService);
-            }
-
-            return AbaddonSummaryCalculator.FromMonthly(data.AbaddonSummary);
-        }
-
-        private IEnumerable<DateTime> EnumerateChatLogMonthStarts()
-        {
-            if (string.IsNullOrWhiteSpace(_settings.ChatLogFolderPath) ||
-                !Directory.Exists(_settings.ChatLogFolderPath))
-            {
-                yield break;
-            }
-
-            foreach (string path in Directory.EnumerateFiles(_settings.ChatLogFolderPath, "TWChatLog_*.html")
-                         .OrderBy(path => path, StringComparer.OrdinalIgnoreCase))
-            {
-                DateTime logDate = ExtractDateFromChatLogPath(path);
-                if (logDate == DateTime.MinValue)
-                    continue;
-
-                yield return new DateTime(logDate.Year, logDate.Month, 1);
-            }
-        }
-
-        private void StartHistoricalItemWarmup()
-        {
-            if (_isHistoricalItemWarmupRunning)
-                return;
-
-            _isHistoricalItemWarmupRunning = true;
-            Task.Run(() =>
-            {
-                try
-                {
-                    BuildHistoricalMonthlyItemSnapshots();
-                }
-                catch (Exception ex)
-                {
-                    AppLogger.Warn("Failed to build historical monthly item snapshots.", ex);
-                }
-                finally
-                {
-                    _isHistoricalItemWarmupRunning = false;
-                    try
-                    {
-                        Dispatcher.BeginInvoke(new Action(() =>
-                        {
-                            if (_currentTabTag == "Item")
-                                _ = EnsureItemMonthLogsLoadedAsync();
-                        }), DispatcherPriority.Background);
-                    }
-                    catch { }
-                }
-            });
-        }
-
-        private void StartHistoricalAbaddonWarmup()
-        {
-            if (_isHistoricalAbaddonWarmupRunning)
-                return;
-
-            _isHistoricalAbaddonWarmupRunning = true;
-            Task.Run(() =>
-            {
-                try
-                {
-                    BuildHistoricalMonthlyAbaddonSummaries();
-                }
-                catch (Exception ex)
-                {
-                    AppLogger.Warn("Failed to build historical monthly Abaddon summaries.", ex);
-                }
-                finally
-                {
-                    _isHistoricalAbaddonWarmupRunning = false;
-                    try
-                    {
-                        Dispatcher.BeginInvoke(new Action(() =>
-                        {
-                            EnsureCurrentAbaddonWeeklySummaryLoaded(DateTime.Today);
-                            RefreshAbaddonRoadSummaryWindow();
-                        }), DispatcherPriority.Background);
-                    }
-                    catch { }
-                }
-            });
-        }
-
-        private void BuildHistoricalMonthlyAbaddonSummaries()
-        {
-            if (string.IsNullOrWhiteSpace(_settings.ChatLogFolderPath) ||
-                !Directory.Exists(_settings.ChatLogFolderPath))
-                return;
-
-            Directory.CreateDirectory(ItemLogDirectoryPath);
-            foreach (DateTime monthStart in EnumerateChatLogMonthStarts())
-            {
-                try
-                {
-                    LoadCurrentAbaddonWeeklySummary(monthStart);
-                }
-                catch (Exception ex)
-                {
-                    AppLogger.Warn($"Failed to warm up Abaddon summary for '{monthStart:yyyy-MM}'.", ex);
-                }
-            }
-        }
-
-        private void BuildHistoricalMonthlyItemSnapshots()
-        {
-            if (string.IsNullOrWhiteSpace(_settings.ChatLogFolderPath) ||
-                !Directory.Exists(_settings.ChatLogFolderPath))
-                return;
-
-            Directory.CreateDirectory(ItemLogDirectoryPath);
-            var monthStarts = Directory.EnumerateFiles(_settings.ChatLogFolderPath, "TWChatLog_*.html")
-                .Select(ExtractDateFromChatLogPath)
-                .Where(date => date != DateTime.MinValue)
-                .Select(date => new DateTime(date.Year, date.Month, 1))
-                .Distinct()
-                .OrderBy(date => date)
-                .ToList();
-
-            DateTime currentMonthStart = new(DateTime.Today.Year, DateTime.Today.Month, 1);
-            foreach (DateTime monthStart in monthStarts)
-            {
-                try
-                {
-                    if (monthStart == currentMonthStart)
-                    {
-                        ItemMonthlySnapshotService.RefreshCurrentMonthIncremental(monthStart, _settings.ChatLogFolderPath, _logAnalysisService);
-                    }
-                    else
-                    {
-                        ItemMonthlySnapshotService.LoadOrBuildMonthlySnapshots(monthStart, _settings.ChatLogFolderPath, _logAnalysisService);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    AppLogger.Warn($"Failed to warm up item snapshot for '{monthStart:yyyy-MM}'.", ex);
-                }
-            }
-
-        }
-
-        private void QueuePendingMonthlyItemSnapshot(LogParser.ParseResult itemLog, DateTime date)
-        {
-            if (itemLog == null || string.IsNullOrWhiteSpace(itemLog.FormattedText))
-                return;
-
-            var snapshot = new ItemLogSnapshotEntry
-            {
-                Date = date.Date,
-                ItemName = itemLog.TrackedItemName,
-                DisplayName = string.IsNullOrWhiteSpace(itemLog.TrackedItemName)
-                    ? "Item"
-                    : DropItemResolver.GetTrackedItemDisplayName(itemLog.TrackedItemName),
-                Grade = itemLog.TrackedItemGrade,
-                Count = Math.Max(1, itemLog.TrackedItemCount),
-                FormattedText = itemLog.FormattedText
-            };
-
-            lock (_pendingMonthlyItemSnapshotsLock)
-            {
-                _pendingMonthlyItemSnapshots.Add(snapshot);
-            }
-        }
-
-        private void FlushPendingMonthlyItemSnapshots()
-        {
-            List<ItemLogSnapshotEntry> pendingSnapshots;
-            lock (_pendingMonthlyItemSnapshotsLock)
-            {
-                if (_pendingMonthlyItemSnapshots.Count == 0)
-                    return;
-
-                pendingSnapshots = new List<ItemLogSnapshotEntry>(_pendingMonthlyItemSnapshots);
-                _pendingMonthlyItemSnapshots.Clear();
-            }
-
-            var snapshotsByMonth = pendingSnapshots
-                .GroupBy(snapshot => new DateTime(snapshot.Date.Year, snapshot.Date.Month, 1))
-                .ToList();
-
-            foreach (var monthGroup in snapshotsByMonth)
-            {
-                ItemMonthlySnapshotService.AppendMonthlySnapshots(monthGroup.Key, monthGroup.ToList());
-            }
-        }
-
-        private static DateTime ExtractDateFromChatLogPath(string filePath)
-        {
-            string fileName = Path.GetFileNameWithoutExtension(filePath);
-            var match = Regex.Match(fileName, @"(?<y>\d{4})_(?<m>\d{2})_(?<d>\d{2})$");
-            if (!match.Success)
-                return DateTime.MinValue;
-
-            if (!int.TryParse(match.Groups["y"].Value, out int year) ||
-                !int.TryParse(match.Groups["m"].Value, out int month) ||
-                !int.TryParse(match.Groups["d"].Value, out int day))
-                return DateTime.MinValue;
-
-            return new DateTime(year, month, day);
-        }
-
-        private static LogParser.ParseResult CreateItemTabLog(LogParser.ParseResult source, string? dateLabel = null)
-        {
-            return new LogParser.ParseResult
-            {
-                FormattedText = BuildItemTabText(source.FormattedText, source.TrackedItemName, source.TrackedItemCount, dateLabel),
-                Brush = source.Brush,
-                Category = source.Category,
-                IsSuccess = source.IsSuccess,
-                IsTrackedItemDrop = source.IsTrackedItemDrop,
-                TrackedItemName = source.TrackedItemName,
-                TrackedItemGrade = source.TrackedItemGrade,
-                TrackedItemCount = source.TrackedItemCount,
-                SenderId = source.SenderId
-            };
-        }
-
-        private static string BuildItemTabText(string formattedText, string? itemName, int itemCount, string? dateLabel)
-            => ItemLogDisplayFormatter.BuildItemTabText(formattedText, itemName, itemCount, dateLabel);
-
-        private static Brush GetItemDropForeground(ItemDropGrade grade)
-            => ItemLogDisplayFormatter.GetItemDropForeground(grade);
-
         private static string FormatSignedCount(long count)
-            => AbaddonSummaryCalculator.FormatSignedCount(count);
+            => AbandonSummaryCalculator.FormatSignedCount(count);
 
-        private static string FormatManAmount(long totalMan)
-            => AbaddonSummaryCalculator.FormatManAmount(totalMan);
+        private void EnsureAbandonWeeklySummaryCurrent(DateTime date)
+        {
+            string weekKey = GetIsoWeekKey(date);
+            if (string.Equals(_AbandonWeeklySummaryWeekKey, weekKey, StringComparison.Ordinal))
+                return;
+
+            _AbandonWeeklySummary = _readableLogArchiveService.LoadAbandonWeeklySummary(date);
+            _AbandonWeeklySummaryWeekKey = weekKey;
+        }
+
+        private static string GetIsoWeekKey(DateTime date)
+        {
+            int isoYear = ISOWeek.GetYear(date);
+            int isoWeek = ISOWeek.GetWeekOfYear(date);
+            return $"{isoYear}-W{isoWeek:00}";
+        }
 
         #endregion
     }

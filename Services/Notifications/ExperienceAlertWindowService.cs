@@ -160,12 +160,7 @@ namespace TWChatOverlay.Services
 
             return new ExperienceAlertStateSnapshot
             {
-                IsProfileMode = settings.EnableCharacterProfiles,
-                TotalExp = 0,
-                Profile1Exp = 0,
-                Profile2Exp = 0,
-                Profile1Label = string.IsNullOrWhiteSpace(settings.Profile1DisplayName) ? "프로필1" : settings.Profile1DisplayName,
-                Profile2Label = string.IsNullOrWhiteSpace(settings.Profile2DisplayName) ? "프로필2" : settings.Profile2DisplayName
+                TotalExp = 0
             };
         }
     }

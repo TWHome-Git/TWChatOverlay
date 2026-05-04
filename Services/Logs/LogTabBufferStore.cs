@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Windows.Media;
 using TWChatOverlay.Models;
 
@@ -49,6 +50,16 @@ namespace TWChatOverlay.Services
             }
 
             return Array.Empty<LogParser.ParseResult>();
+        }
+
+        public IReadOnlyDictionary<string, IReadOnlyList<LogParser.ParseResult>> GetAllLogsSnapshot()
+        {
+            var snapshot = new Dictionary<string, IReadOnlyList<LogParser.ParseResult>>(StringComparer.Ordinal);
+            foreach (var pair in _buffers)
+            {
+                snapshot[pair.Key] = pair.Value.ToList();
+            }
+            return snapshot;
         }
 
         public void Replace(string tabName, IEnumerable<LogParser.ParseResult> logs)

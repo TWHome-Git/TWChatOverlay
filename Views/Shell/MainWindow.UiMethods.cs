@@ -208,7 +208,7 @@ namespace TWChatOverlay.Views
                 return _defaultDropItemFilterSnapshot;
 
             var snapshot = DropItemResolver.LoadDefaultFilterSnapshotAsync().GetAwaiter().GetResult();
-            lock (_pendingMonthlyItemSnapshotsLock)
+            lock (_defaultDropItemFilterLock)
             {
                 _defaultDropItemFilterSnapshot ??= snapshot;
                 return _defaultDropItemFilterSnapshot;

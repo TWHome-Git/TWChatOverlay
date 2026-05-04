@@ -17,9 +17,7 @@ namespace TWChatOverlay.Models
 
         public string? FormattedText { get; set; }
 
-        /// <summary>
-        /// 0=기본(통합), 1=프로필1, 2=프로필2
-        /// </summary>
-        public int ProfileSlot { get; set; } = 0;
+        public int ExperienceEssenceCount { get; set; } = 0;
+
     }
 }

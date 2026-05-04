@@ -37,8 +37,8 @@ namespace TWChatOverlay.Models
             _showExperienceLimitAlertWindow = false;
             _showDailyWeeklyContentOverlay = false;
             _showEtosDirectionAlert = false;
-            _enableAbaddonRoadCountAlert = false;
-            _showAbaddonRoadSummaryWindow = false;
+            _enableAbandonRoadCountAlert = false;
+            _showAbandonRoadSummaryWindow = false;
             _enableCravingPleasureCountAlert = false;
             _showDungeonCountDisplayWindow = false;
             _showItemDropAlert = false;
@@ -49,15 +49,10 @@ namespace TWChatOverlay.Models
             _enableBuffTrackerAlert = false;
             _enableBuffTrackerEndSound = false;
             _showBuffTrackerWindow = false;
-            _enableCharacterProfiles = false;
-            _profile1DisplayName = "프로필1";
-            _profile2DisplayName = "프로필2";
-            _profile1SwitchLog = "[이클립스 코어] 진화 4단계-3세트 효과가 발동되었습니다.";
-            _profile2SwitchLog = "[이클립스 코어] 진화 2단계-6세트 효과가 발동되었습니다.";
             _experienceLimitTotalExp = 0;
-            _experienceLimitProfile1Exp = 0;
-            _experienceLimitProfile2Exp = 0;
             _experienceLimitStateInitialized = false;
+            _experienceLimitLastRefreshWeekKey = string.Empty;
+            _experienceLimitWeeklyPromptShownWeekKey = string.Empty;
             _buffTrackerEndSoundVolume = 1.0;
             _itemDropAlertVolume = 0.1;
             _highlightAlertVolume = 1.0;
@@ -86,8 +81,8 @@ namespace TWChatOverlay.Models
             _buffTrackerWindowTop = 0.0;
             _itemCalendarWindowLeft = 0.0;
             _itemCalendarWindowTop = 0.0;
-            _abaddonRoadSummaryWindowLeft = 0.0;
-            _abaddonRoadSummaryWindowTop = 0.0;
+            _AbandonRoadSummaryWindowLeft = 0.0;
+            _AbandonRoadSummaryWindowTop = 0.0;
             _shoutToastWindowLeft = null;
             _shoutToastWindowTop = null;
             _recaptureSupplyWindowLeft = null;
@@ -110,7 +105,7 @@ namespace TWChatOverlay.Models
             _lineMargin = 0.0;
             _lineMarginLeft = 0.0;
             _expAlarmThreshold = 10000;
-            _abaddonRoadCountAlertDurationSeconds = 30;
+            _AbandonRoadCountAlertDurationSeconds = 30;
             _lastSelectedPresetNumber = 1;
             ShowNormal = true;
             ShowShout = true;
@@ -118,6 +113,7 @@ namespace TWChatOverlay.Models
             ShowWhisper = true;
             ShowSystem = true;
             ShowClub = true;
+            ShowClubBoss = true;
             UseKeywordAlert = false;
             IsExpAlarmEnabled = false;
             EnableExperienceLimitAlert = false;

@@ -62,6 +62,7 @@ namespace TWChatOverlay.Views
                 Opacity = 0;
             }
 
+            ApplyAbandonRoadSummaryWindowVisibility();
             PersistSettings();
         }
 
@@ -88,7 +89,6 @@ namespace TWChatOverlay.Views
                 _dailyWeeklyContentOverlay.Show();
             }
 
-            _dailyWeeklyContentOverlay.Activate();
             if (shouldScanHistoricalLogs)
             {
                 _ = _dailyWeeklyContentOverlay.ScanHistoricalLogsAsync();
@@ -140,7 +140,6 @@ namespace TWChatOverlay.Views
                 _itemCalendarWindow.Show();
             }
 
-            _itemCalendarWindow.Activate();
             if (!_itemCalendarWindow.IsMonthLoaded(DateTime.Today))
                 _ = _itemCalendarWindow.LoadCurrentMonthAsync();
             try { ItemCalendarVisibilityChanged?.Invoke(this, true); } catch { }
@@ -161,59 +160,75 @@ namespace TWChatOverlay.Views
             ShowItemCalendarWindow();
         }
 
-        public void ShowAbaddonRoadSummaryWindow(bool previewMode = false, bool restartLifetime = true)
+        public void ShowAbandonRoadSummaryWindow(bool previewMode = false, bool restartLifetime = true, bool activateWindow = true)
         {
-            if (!_settings.ShowAbaddonRoadSummaryWindow)
+            if (!_settings.ShowAbandonRoadSummaryWindow)
             {
-                if (_abaddonRoadSummaryWindow != null)
+                if (_AbandonRoadSummaryWindow != null)
                 {
-                    try { _abaddonRoadSummaryWindow.Close(); } catch { }
+                    try { _AbandonRoadSummaryWindow.Close(); } catch { }
                 }
                 return;
             }
 
-            if (_abaddonRoadSummaryWindow == null || !_abaddonRoadSummaryWindow.IsLoaded)
+            if (!CanShowAbandonRoadSummaryWindow(previewMode))
             {
-                _abaddonRoadSummaryWindow = new AbaddonRoadSummaryWindow(_settings, _logAnalysisService);
-                _abaddonRoadSummaryWindow.Closed += (_, _) =>
+                if (_AbandonRoadSummaryWindow?.IsVisible == true)
+                    _AbandonRoadSummaryWindow.Hide();
+                return;
+            }
+
+            if (_AbandonRoadSummaryWindow == null || !_AbandonRoadSummaryWindow.IsLoaded)
+            {
+                _AbandonRoadSummaryWindow = new AbandonRoadSummaryWindow(_settings, _logAnalysisService);
+                _AbandonRoadSummaryWindow.Closed += (_, _) =>
                 {
-                    _settings.AbaddonRoadSummaryWindowLeft = _abaddonRoadSummaryWindow?.Left;
-                    _settings.AbaddonRoadSummaryWindowTop = _abaddonRoadSummaryWindow?.Top;
+                    _settings.AbandonRoadSummaryWindowLeft = _AbandonRoadSummaryWindow?.Left;
+                    _settings.AbandonRoadSummaryWindowTop = _AbandonRoadSummaryWindow?.Top;
                     PersistSettings();
-                    _abaddonRoadSummaryWindow = null;
+                    _AbandonRoadSummaryWindow = null;
                 };
-                AppLogger.Info("Created AbaddonRoad summary window instance.");
+                AppLogger.Info("Created AbandonRoad summary window instance.");
             }
 
-            if (!_abaddonRoadSummaryWindow.IsVisible)
+            bool wasVisible = _AbandonRoadSummaryWindow.IsVisible;
+            if (!wasVisible)
             {
-                _abaddonRoadSummaryWindow.Owner = this;
-                ApplyStoredPosition(_abaddonRoadSummaryWindow, _settings.AbaddonRoadSummaryWindowLeft, _settings.AbaddonRoadSummaryWindowTop);
-                _abaddonRoadSummaryWindow.WindowStartupLocation = WindowStartupLocation.Manual;
-                _abaddonRoadSummaryWindow.Show();
+                _AbandonRoadSummaryWindow.Owner = this;
+                ApplyStoredPosition(_AbandonRoadSummaryWindow, _settings.AbandonRoadSummaryWindowLeft, _settings.AbandonRoadSummaryWindowTop);
+                _AbandonRoadSummaryWindow.WindowStartupLocation = WindowStartupLocation.Manual;
+                _AbandonRoadSummaryWindow.ShowActivated = activateWindow;
+                _AbandonRoadSummaryWindow.Show();
             }
 
-            _abaddonRoadSummaryWindow.SetPreviewMode(previewMode);
+            _AbandonRoadSummaryWindow.SetPreviewMode(previewMode);
             if (!previewMode && restartLifetime)
             {
-                _abaddonRoadSummaryWindow.StartAutoClose(_settings.AbaddonRoadCountAlertDurationSeconds);
+                _AbandonRoadSummaryWindow.StartAutoClose(_settings.AbandonRoadCountAlertDurationSeconds);
             }
 
-            _abaddonRoadSummaryWindow.Topmost = true;
-            _abaddonRoadSummaryWindow.Activate();
-            TopmostWindowHelper.BringToTopmost(_abaddonRoadSummaryWindow);
-            _ = _abaddonRoadSummaryWindow.LoadCurrentWeekAsync();
+            bool shouldTopmost = _isSettingsPositionMode || _settings.AlwaysVisible || Topmost;
+            _AbandonRoadSummaryWindow.Topmost = shouldTopmost;
+            if (activateWindow)
+            {
+                if (shouldTopmost)
+                    TopmostWindowHelper.BringToTopmost(_AbandonRoadSummaryWindow);
+            }
+            // Avoid reloading from disk on every realtime popup refresh.
+            // Realtime pipeline already pushes in-memory weekly deltas to this window.
+            if (!wasVisible)
+                _ = _AbandonRoadSummaryWindow.LoadCurrentWeekAsync();
         }
 
-        public void RefreshAbaddonRoadSummaryWindow()
+        public void RefreshAbandonRoadSummaryWindow()
         {
-            if (!_settings.ShowAbaddonRoadSummaryWindow)
+            if (!_settings.ShowAbandonRoadSummaryWindow)
                 return;
 
-            if (_abaddonRoadSummaryWindow?.IsVisible != true)
+            if (_AbandonRoadSummaryWindow?.IsVisible != true)
                 return;
 
-            _ = _abaddonRoadSummaryWindow.LoadCurrentWeekAsync();
+            _ = _AbandonRoadSummaryWindow.LoadCurrentWeekAsync();
         }
 
         private void MainWindow_StateChanged(object? sender, EventArgs e)
@@ -224,8 +239,8 @@ namespace TWChatOverlay.Views
                     _dailyWeeklyContentOverlay.Hide();
                 if (_itemCalendarWindow?.IsVisible == true)
                     _itemCalendarWindow.Hide();
-                if (_abaddonRoadSummaryWindow?.IsVisible == true)
-                    _abaddonRoadSummaryWindow.Hide();
+                if (_AbandonRoadSummaryWindow?.IsVisible == true)
+                    _AbandonRoadSummaryWindow.Hide();
                 return;
             }
 
@@ -238,19 +253,7 @@ namespace TWChatOverlay.Views
             if (_itemCalendarWindow != null && !_itemCalendarWindow.IsVisible)
                 _itemCalendarWindow.Show();
 
-            if (_settings.ShowAbaddonRoadSummaryWindow &&
-                _abaddonRoadSummaryWindow != null &&
-                !_abaddonRoadSummaryWindow.IsVisible)
-            {
-                if (_isSettingsPositionMode)
-                {
-                    ShowAbaddonRoadSummaryWindow(previewMode: true, restartLifetime: false);
-                }
-                else if (_abaddonRoadSummaryWindow.IsAutoClosePending)
-                {
-                    ShowAbaddonRoadSummaryWindow(previewMode: false, restartLifetime: false);
-                }
-            }
+            ApplyAbandonRoadSummaryWindowVisibility();
         }
 
         #endregion

@@ -38,11 +38,11 @@ namespace TWChatOverlay.ViewModels
         private bool _showDailyWeeklyContentOverlay;
         private bool _showEtosDirectionAlert;
         private bool _showEtosHelperWindow;
-        private bool _enableAbaddonRoadCountAlert;
-        private bool _showAbaddonRoadSummaryWindow;
+        private bool _enableAbandonRoadCountAlert;
+        private bool _showAbandonRoadSummaryWindow;
         private bool _enableCravingPleasureCountAlert;
         private bool _showDungeonCountDisplayWindow;
-        private int _abaddonRoadCountAlertDurationSeconds;
+        private int _AbandonRoadCountAlertDurationSeconds;
         private bool _showItemDropAlert;
         private bool _showItemDropHelperWindow;
         private bool _useCustomDropItemFilter;
@@ -51,11 +51,6 @@ namespace TWChatOverlay.ViewModels
         private bool _enableBuffTrackerAlert;
         private bool _enableBuffTrackerEndSound;
         private bool _showBuffTrackerWindow;
-        private bool _enableCharacterProfiles;
-        private string _profile1DisplayName = "프로필1";
-        private string _profile2DisplayName = "프로필2";
-        private string _profile1SwitchLog = string.Empty;
-        private string _profile2SwitchLog = string.Empty;
         private double _itemDropAlertVolumePercent;
         private double _highlightAlertVolumePercent;
         private double _magicCircleAlertVolumePercent;
@@ -63,8 +58,6 @@ namespace TWChatOverlay.ViewModels
         private double _buffTrackerEndSoundVolumePercent;
         private double _bossAlertVolumePercent;
         private string _experienceLimitTotalExp = "0";
-        private string _experienceLimitProfile1Exp = "0";
-        private string _experienceLimitProfile2Exp = "0";
 
         public ObservableCollection<BossAlarmCardViewModel> BossAlarmCards { get; } = new();
         public ObservableCollection<DropItemFilterEntry> DefaultDropItems { get; } = new();
@@ -74,7 +67,6 @@ namespace TWChatOverlay.ViewModels
         public ICommand ApplyCustomDropItemFilterCommand { get; }
         public ICommand LoadCustomDropItemFilterCommand { get; }
         public ICommand SaveCustomDropItemFilterCommand { get; }
-        public ICommand RefreshExperienceLimitStateCommand { get; }
         public ICommand ApplyExperienceLimitStateCommand { get; }
 
         public bool UseAlertColor
@@ -131,29 +123,12 @@ namespace TWChatOverlay.ViewModels
             set => SetSetting(ref _showExperienceLimitAlertWindow, value, (settings, newValue) => settings.ShowExperienceLimitAlertWindow = newValue);
         }
 
-        public bool IsExperienceLimitProfileMode => _enableCharacterProfiles;
-
-        public string ExperienceLimitProfile1Label => string.IsNullOrWhiteSpace(_profile1DisplayName) ? "프로필1" : _profile1DisplayName;
-
-        public string ExperienceLimitProfile2Label => string.IsNullOrWhiteSpace(_profile2DisplayName) ? "프로필2" : _profile2DisplayName;
-
         public string ExperienceLimitTotalExp
         {
             get => _experienceLimitTotalExp;
             set => SetProperty(ref _experienceLimitTotalExp, value ?? "0");
         }
 
-        public string ExperienceLimitProfile1Exp
-        {
-            get => _experienceLimitProfile1Exp;
-            set => SetProperty(ref _experienceLimitProfile1Exp, value ?? "0");
-        }
-
-        public string ExperienceLimitProfile2Exp
-        {
-            get => _experienceLimitProfile2Exp;
-            set => SetProperty(ref _experienceLimitProfile2Exp, value ?? "0");
-        }
 
         public int ExpAlarmThresholdMan
         {
@@ -183,16 +158,16 @@ namespace TWChatOverlay.ViewModels
             set => SetSetting(ref _showEtosHelperWindow, value, (settings, newValue) => settings.ShowEtosHelperWindow = newValue);
         }
 
-        public bool EnableAbaddonRoadCountAlert
+        public bool EnableAbandonRoadCountAlert
         {
-            get => _enableAbaddonRoadCountAlert;
-            set => SetSetting(ref _enableAbaddonRoadCountAlert, value, (settings, newValue) => settings.EnableAbaddonRoadCountAlert = newValue);
+            get => _enableAbandonRoadCountAlert;
+            set => SetSetting(ref _enableAbandonRoadCountAlert, value, (settings, newValue) => settings.EnableAbandonRoadCountAlert = newValue);
         }
 
-        public bool ShowAbaddonRoadSummaryWindow
+        public bool ShowAbandonRoadSummaryWindow
         {
-            get => _showAbaddonRoadSummaryWindow;
-            set => SetSetting(ref _showAbaddonRoadSummaryWindow, value, (settings, newValue) => settings.ShowAbaddonRoadSummaryWindow = newValue);
+            get => _showAbandonRoadSummaryWindow;
+            set => SetSetting(ref _showAbandonRoadSummaryWindow, value, (settings, newValue) => settings.ShowAbandonRoadSummaryWindow = newValue);
         }
 
         public bool EnableCravingPleasureCountAlert
@@ -207,10 +182,10 @@ namespace TWChatOverlay.ViewModels
             set => SetSetting(ref _showDungeonCountDisplayWindow, value, (settings, newValue) => settings.ShowDungeonCountDisplayWindow = newValue);
         }
 
-        public int AbaddonRoadCountAlertDurationSeconds
+        public int AbandonRoadCountAlertDurationSeconds
         {
-            get => _abaddonRoadCountAlertDurationSeconds;
-            set => SetSetting(ref _abaddonRoadCountAlertDurationSeconds, value, (settings, newValue) => settings.AbaddonRoadCountAlertDurationSeconds = newValue);
+            get => _AbandonRoadCountAlertDurationSeconds;
+            set => SetSetting(ref _AbandonRoadCountAlertDurationSeconds, value, (settings, newValue) => settings.AbandonRoadCountAlertDurationSeconds = newValue);
         }
 
         public bool ShowItemDropAlert
@@ -261,55 +236,6 @@ namespace TWChatOverlay.ViewModels
             set => SetSetting(ref _showBuffTrackerWindow, value, (settings, newValue) => settings.ShowBuffTrackerWindow = newValue);
         }
 
-        public bool EnableCharacterProfiles
-        {
-            get => _enableCharacterProfiles;
-            set
-            {
-                if (SetSetting(ref _enableCharacterProfiles, value, (settings, newValue) => settings.EnableCharacterProfiles = newValue))
-                {
-                    OnPropertyChanged(nameof(IsExperienceLimitProfileMode));
-                    RefreshExperienceLimitState();
-                }
-            }
-        }
-
-        public string Profile1DisplayName
-        {
-            get => _profile1DisplayName;
-            set
-            {
-                if (SetSetting(ref _profile1DisplayName, value ?? "프로필1", (settings, newValue) => settings.Profile1DisplayName = newValue))
-                {
-                    OnPropertyChanged(nameof(ExperienceLimitProfile1Label));
-                }
-            }
-        }
-
-        public string Profile2DisplayName
-        {
-            get => _profile2DisplayName;
-            set
-            {
-                if (SetSetting(ref _profile2DisplayName, value ?? "프로필2", (settings, newValue) => settings.Profile2DisplayName = newValue))
-                {
-                    OnPropertyChanged(nameof(ExperienceLimitProfile2Label));
-                }
-            }
-        }
-
-        public string Profile1SwitchLog
-        {
-            get => _profile1SwitchLog;
-            set => SetSetting(ref _profile1SwitchLog, value ?? string.Empty, (settings, newValue) => settings.Profile1SwitchLog = newValue);
-        }
-
-        public string Profile2SwitchLog
-        {
-            get => _profile2SwitchLog;
-            set => SetSetting(ref _profile2SwitchLog, value ?? string.Empty, (settings, newValue) => settings.Profile2SwitchLog = newValue);
-        }
-
         public double ItemDropAlertVolumePercent
         {
             get => _itemDropAlertVolumePercent;
@@ -355,7 +281,6 @@ namespace TWChatOverlay.ViewModels
             ApplyCustomDropItemFilterCommand = new RelayCommand(async _ => await ApplyCustomDropItemFilterAsync());
             LoadCustomDropItemFilterCommand = new RelayCommand(_ => LoadCustomDropItemFilter());
             SaveCustomDropItemFilterCommand = new RelayCommand(_ => SaveCustomDropItemFilter());
-            RefreshExperienceLimitStateCommand = new RelayCommand(_ => RefreshExperienceLimitState());
             ApplyExperienceLimitStateCommand = new RelayCommand(_ => ApplyExperienceLimitState());
 
             _useAlertColor = _settings.UseAlertColor;
@@ -370,11 +295,11 @@ namespace TWChatOverlay.ViewModels
             _showDailyWeeklyContentOverlay = _settings.ShowDailyWeeklyContentOverlay;
             _showEtosDirectionAlert = _settings.ShowEtosDirectionAlert;
             _showEtosHelperWindow = _settings.ShowEtosHelperWindow;
-            _enableAbaddonRoadCountAlert = _settings.EnableAbaddonRoadCountAlert;
-            _showAbaddonRoadSummaryWindow = _settings.ShowAbaddonRoadSummaryWindow;
+            _enableAbandonRoadCountAlert = _settings.EnableAbandonRoadCountAlert;
+            _showAbandonRoadSummaryWindow = _settings.ShowAbandonRoadSummaryWindow;
             _enableCravingPleasureCountAlert = _settings.EnableCravingPleasureCountAlert;
             _showDungeonCountDisplayWindow = _settings.ShowDungeonCountDisplayWindow;
-            _abaddonRoadCountAlertDurationSeconds = _settings.AbaddonRoadCountAlertDurationSeconds;
+            _AbandonRoadCountAlertDurationSeconds = _settings.AbandonRoadCountAlertDurationSeconds;
             _showItemDropAlert = _settings.ShowItemDropAlert;
             _showItemDropHelperWindow = _settings.ShowItemDropHelperWindow;
             _useCustomDropItemFilter = _settings.UseCustomDropItemFilter;
@@ -385,18 +310,12 @@ namespace TWChatOverlay.ViewModels
             _enableBuffTrackerAlert = _settings.EnableBuffTrackerAlert;
             _enableBuffTrackerEndSound = _settings.EnableBuffTrackerEndSound;
             _showBuffTrackerWindow = _settings.ShowBuffTrackerWindow;
-            _enableCharacterProfiles = _settings.EnableCharacterProfiles;
-            _profile1DisplayName = _settings.Profile1DisplayName;
-            _profile2DisplayName = _settings.Profile2DisplayName;
-            _profile1SwitchLog = _settings.Profile1SwitchLog;
-            _profile2SwitchLog = _settings.Profile2SwitchLog;
             _itemDropAlertVolumePercent = _settings.ItemDropAlertVolumePercent;
             _highlightAlertVolumePercent = _settings.HighlightAlertVolumePercent;
             _magicCircleAlertVolumePercent = _settings.MagicCircleAlertVolumePercent;
             _expBuffAlertVolumePercent = _settings.ExpBuffAlertVolumePercent;
             _buffTrackerEndSoundVolumePercent = _settings.BuffTrackerEndSoundVolumePercent;
             _bossAlertVolumePercent = _settings.BossAlertVolumePercent;
-
             ReplaceBossAlarmCards(_bossAlarmCardProvider.CreateCards());
             _ = InitializeBossAlarmCardsAsync();
             _ = InitializeDropItemFilterListsAsync();
@@ -413,82 +332,53 @@ namespace TWChatOverlay.ViewModels
             if (!ExperienceAlertWindowService.TryGetStateSnapshot(_settings, out var snapshot))
                 return;
 
-            ExperienceLimitTotalExp = FormatExpValue(snapshot.TotalExp);
-            ExperienceLimitProfile1Exp = FormatExpValue(snapshot.Profile1Exp);
-            ExperienceLimitProfile2Exp = FormatExpValue(snapshot.Profile2Exp);
+            ExperienceLimitTotalExp = FormatExpEokValue(snapshot.TotalExp);
         }
+
 
         private void ApplyExperienceLimitState()
         {
-            if (_enableCharacterProfiles)
+            if (!TryParseExpEokValue(_experienceLimitTotalExp, out long totalExp))
+                return;
+
+            _settings.ExperienceLimitTotalExp = totalExp;
+            _settings.ExperienceLimitStateInitialized = true;
+            AppLogger.Info($"Applied manual total exp from eok input. InputEok='{_experienceLimitTotalExp}', TotalExp={totalExp:N0}");
+            SaveSettings();
+            _ = ExperienceAlertWindowService.ApplyStateSnapshot(new ExperienceAlertStateSnapshot
             {
-                if (!TryParseExpValue(_experienceLimitProfile1Exp, out long profile1Exp) ||
-                    !TryParseExpValue(_experienceLimitProfile2Exp, out long profile2Exp))
-                {
-                    return;
-                }
+                TotalExp = totalExp
+            });
 
-                _settings.ExperienceLimitProfile1Exp = profile1Exp;
-                _settings.ExperienceLimitProfile2Exp = profile2Exp;
-                if (!TryParseExpValue(_experienceLimitTotalExp, out long totalExp))
-                {
-                    return;
-                }
-
-                _settings.ExperienceLimitTotalExp = totalExp;
-                _settings.ExperienceLimitStateInitialized = true;
-                SaveSettings();
-                _ = ExperienceAlertWindowService.ApplyStateSnapshot(new ExperienceAlertStateSnapshot
-                {
-                    IsProfileMode = true,
-                    Profile1Exp = profile1Exp,
-                    Profile2Exp = profile2Exp,
-                    TotalExp = totalExp,
-                    Profile1Label = ExperienceLimitProfile1Label,
-                    Profile2Label = ExperienceLimitProfile2Label
-                });
-            }
-            else
-            {
-                if (!TryParseExpValue(_experienceLimitTotalExp, out long totalExp))
-                {
-                    return;
-                }
-
-                _settings.ExperienceLimitTotalExp = totalExp;
-                _settings.ExperienceLimitStateInitialized = true;
-                SaveSettings();
-                _ = ExperienceAlertWindowService.ApplyStateSnapshot(new ExperienceAlertStateSnapshot
-                {
-                    IsProfileMode = false,
-                    TotalExp = totalExp
-                });
-            }
-
+            ExperienceWeeklyRefreshService.MarkCurrentWeekRefreshed(_settings, DateTime.Now);
             RefreshExperienceLimitState();
         }
 
-        private static bool TryParseExpValue(string? text, out long value)
+
+        private static bool TryParseExpEokValue(string? text, out long value)
         {
             value = 0;
             if (string.IsNullOrWhiteSpace(text))
                 return true;
 
-            string normalized = text.Replace(",", string.Empty).Trim();
+            string normalized = text.Replace(",", string.Empty).Replace("억", string.Empty).Trim();
             if (string.IsNullOrWhiteSpace(normalized))
                 return true;
 
-            if (!long.TryParse(normalized, NumberStyles.Integer, CultureInfo.InvariantCulture, out value))
+            if (!long.TryParse(normalized, NumberStyles.Integer, CultureInfo.InvariantCulture, out long eok))
                 return false;
 
-            if (value < 0)
-                value = 0;
+            if (eok < 0)
+                eok = 0;
+
+            value = checked(eok * 100_000_000L);
 
             return true;
         }
 
-        private static string FormatExpValue(long value)
-            => Math.Max(0, value).ToString("N0", CultureInfo.InvariantCulture);
+        private static string FormatExpEokValue(long value)
+            => (Math.Max(0, value) / 100_000_000L).ToString("N0", CultureInfo.InvariantCulture);
+
 
         private bool SetSetting<T>(ref T field, T value, Action<ChatSettings, T> apply, [CallerMemberName] string? propertyName = null)
         {
@@ -805,4 +695,5 @@ namespace TWChatOverlay.ViewModels
             };
         }
     }
+
 }

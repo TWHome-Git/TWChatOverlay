@@ -19,7 +19,9 @@ namespace TWChatOverlay.Services
         /// </summary>
         public static FontFamily GetFont(string fontFamilyName)
         {
-            if (fontFamilyName == "사용자 설정")
+            string normalized = (fontFamilyName ?? string.Empty).Trim();
+
+            if (normalized == "사용자 설정")
             {
                 if (File.Exists(UserFontPath))
                 {
@@ -37,9 +39,16 @@ namespace TWChatOverlay.Services
                     }
                 }
             }
-            else if (!string.IsNullOrEmpty(fontFamilyName))
+            else if (!string.IsNullOrWhiteSpace(normalized))
             {
-                return new FontFamily(fontFamilyName);
+                try
+                {
+                    return new FontFamily(normalized);
+                }
+                catch
+                {
+                    return new FontFamily("Malgun Gothic");
+                }
             }
 
             return new FontFamily("Malgun Gothic");

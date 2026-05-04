@@ -7,6 +7,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Threading;
 using TWChatOverlay.Models;
 using TWChatOverlay.Services;
 
@@ -22,6 +23,7 @@ namespace TWChatOverlay.Views
         private bool _isInitialized;
         private bool _isSettingsMode;
         private bool _isApplyingSnap;
+        private readonly DispatcherTimer _tabAutoHideTimer = new() { Interval = TimeSpan.FromSeconds(2.5) };
 
         public event PropertyChangedEventHandler? PropertyChanged;
 
@@ -96,7 +98,6 @@ namespace TWChatOverlay.Views
 
             var window = new ChatCloneWindow(settings);
             window.Show();
-            window.Activate();
             return true;
         }
 
@@ -117,6 +118,7 @@ namespace TWChatOverlay.Views
             _settings.PropertyChanged += Settings_PropertyChanged;
             ChatWindowHub.BuffersChanged += ChatWindowHub_BuffersChanged;
             AttachToMainWindow();
+            _tabAutoHideTimer.Tick += (_, _) => HideCloneTabs();
 
             ApplySizeFromMainWindow();
             ApplyDefaultFontSettings();
@@ -154,6 +156,8 @@ namespace TWChatOverlay.Views
             _mainWindow.OverlayVisibilityChanged += MainWindow_OverlayVisibilityChanged;
             _mainWindow.StateChanged += MainWindow_StateChanged;
             _mainWindow.IsVisibleChanged += MainWindow_IsVisibleChanged;
+            _mainWindow.Activated += MainWindow_ActivatedOrDeactivated;
+            _mainWindow.Deactivated += MainWindow_ActivatedOrDeactivated;
         }
 
         private void DetachFromMainWindow()
@@ -164,7 +168,14 @@ namespace TWChatOverlay.Views
             _mainWindow.OverlayVisibilityChanged -= MainWindow_OverlayVisibilityChanged;
             _mainWindow.StateChanged -= MainWindow_StateChanged;
             _mainWindow.IsVisibleChanged -= MainWindow_IsVisibleChanged;
+            _mainWindow.Activated -= MainWindow_ActivatedOrDeactivated;
+            _mainWindow.Deactivated -= MainWindow_ActivatedOrDeactivated;
             _mainWindow = null;
+        }
+
+        private void MainWindow_ActivatedOrDeactivated(object? sender, EventArgs e)
+        {
+            Dispatcher.BeginInvoke(new Action(SyncVisibilityWithMainWindow), DispatcherPriority.Background);
         }
 
         private void MainWindow_OverlayVisibilityChanged(object? sender, bool isVisible)
@@ -204,6 +215,9 @@ namespace TWChatOverlay.Views
             {
                 Hide();
             }
+
+            bool shouldTopmost = _mainWindow.Topmost || _settings.AlwaysVisible;
+            Topmost = shouldTopmost;
         }
 
         private void HandleLocationChanged()
@@ -352,6 +366,7 @@ namespace TWChatOverlay.Views
 
             _currentTabTag = tabTag;
             SetSettingsMode(false);
+            ShowCloneTabsTemporarily();
             RefreshLogDisplay();
         }
 
@@ -365,6 +380,16 @@ namespace TWChatOverlay.Views
             DragBarRow.Height = isSettingsMode ? new GridLength(25) : new GridLength(0);
             ChatDisplay.Visibility = isSettingsMode ? Visibility.Collapsed : Visibility.Visible;
             SettingsScrollViewer.Visibility = isSettingsMode ? Visibility.Visible : Visibility.Collapsed;
+            if (isSettingsMode)
+            {
+                MainTabBackground.Visibility = Visibility.Visible;
+                MainTabPanel.Visibility = Visibility.Visible;
+                _tabAutoHideTimer.Stop();
+            }
+            else
+            {
+                ShowCloneTabsTemporarily();
+            }
         }
 
         private void CloseChat_Click(object sender, RoutedEventArgs e)
@@ -556,10 +581,48 @@ namespace TWChatOverlay.Views
             _isInitialized = true;
             ApplySizeFromMainWindow();
             RefreshLogDisplay();
-            Topmost = true;
             SyncVisibilityWithMainWindow();
-            if (IsVisible)
-                Activate();
+            ShowCloneTabsTemporarily();
+        }
+
+        private void MainBorder_MouseEnter(object sender, MouseEventArgs e)
+            => ShowCloneTabsTemporarily();
+
+        private void MainBorder_MouseMove(object sender, MouseEventArgs e)
+            => ShowCloneTabsTemporarily();
+
+        private void ShowCloneTabsTemporarily()
+        {
+            if (MainTabBackground == null || MainTabPanel == null)
+                return;
+
+            MainTabBackground.Visibility = Visibility.Visible;
+            MainTabPanel.Visibility = Visibility.Visible;
+            _tabAutoHideTimer.Stop();
+            _tabAutoHideTimer.Start();
+        }
+
+        private void HideCloneTabs()
+        {
+            if (_isSettingsMode)
+            {
+                _tabAutoHideTimer.Stop();
+                return;
+            }
+
+            if (MainBorder?.IsMouseOver == true)
+            {
+                _tabAutoHideTimer.Stop();
+                _tabAutoHideTimer.Start();
+                return;
+            }
+
+            _tabAutoHideTimer.Stop();
+            if (MainTabBackground == null || MainTabPanel == null)
+                return;
+
+            MainTabBackground.Visibility = Visibility.Collapsed;
+            MainTabPanel.Visibility = Visibility.Collapsed;
         }
 
         private void SettingsScrollViewer_PreviewMouseWheel(object sender, MouseWheelEventArgs e)

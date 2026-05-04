@@ -58,55 +58,6 @@
                     </StackPanel>
                 </TabItem>
 
-                <TabItem Header="캐릭터 프로필" Style="{StaticResource SettingsTabItemStyle}" Margin="4,0,-4,0">
-                    <StackPanel Margin="8">
-                        <Border Style="{StaticResource SettingsBorderStyle}">
-                            <StackPanel>
-                                <TextBlock Text="캐릭터 프로필" Style="{StaticResource SectionHeaderStyle}"/>
-                                <CheckBox Content="프로필 분리 로직 사용"
-                                          IsChecked="{Binding EnableCharacterProfiles, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                          Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
-                                <StackPanel Margin="0,8,0,0">
-                                    <StackPanel.Style>
-                                        <Style TargetType="StackPanel">
-                                            <Setter Property="Visibility" Value="Collapsed"/>
-                                            <Style.Triggers>
-                                                <DataTrigger Binding="{Binding EnableCharacterProfiles}" Value="True">
-                                                    <Setter Property="Visibility" Value="Visible"/>
-                                                </DataTrigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </StackPanel.Style>
-                                    <TextBlock Text="프로필1 표시명" Style="{StaticResource InfoTextStyle}"/>
-                                    <TextBox Text="{Binding Profile1DisplayName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                             Style="{StaticResource InputTextBoxStyle}"
-                                             Margin="0,4,0,8"/>
-                                    <TextBlock Text="프로필2 표시명" Style="{StaticResource InfoTextStyle}"/>
-                                    <TextBox Text="{Binding Profile2DisplayName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                             Style="{StaticResource InputTextBoxStyle}"
-                                             Margin="0,4,0,8"/>
-                                    <TextBlock Text="프로필1 전환 인식 로그" Style="{StaticResource InfoTextStyle}"/>
-                                    <TextBox Text="{Binding Profile1SwitchLog, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                             Style="{StaticResource InputTextBoxStyle}"
-                                             AcceptsReturn="True"
-                                             TextWrapping="Wrap"
-                                             Height="46"
-                                             Margin="0,4,0,8"/>
-                                    <TextBlock Text="프로필2 전환 인식 로그" Style="{StaticResource InfoTextStyle}"/>
-                                    <TextBox Text="{Binding Profile2SwitchLog, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                             Style="{StaticResource InputTextBoxStyle}"
-                                             AcceptsReturn="True"
-                                             TextWrapping="Wrap"
-                                             Height="46"
-                                             Margin="0,4,0,0"/>
-                                </StackPanel>
-                                <TextBlock Text="* OFF: 기존 통합 로직을 그대로 사용합니다."
-                                           Style="{StaticResource HintTextStyle}"/>
-                            </StackPanel>
-                        </Border>
-                    </StackPanel>
-                </TabItem>
-
                 <TabItem Header="경험치 추적" Style="{StaticResource SettingsTabItemStyle}" Margin="4,0,-4,0">
                     <StackPanel Margin="8">
                         <Border Style="{StaticResource SettingsBorderStyle}">
@@ -149,21 +100,11 @@
                                                    Margin="0,0,0,8"/>
 
                                         <Grid Margin="0,0,0,8">
-                                            <Grid.Style>
-                                                <Style TargetType="Grid">
-                                                    <Setter Property="Visibility" Value="Visible"/>
-                                                    <Style.Triggers>
-                                                        <DataTrigger Binding="{Binding IsExperienceLimitProfileMode}" Value="True">
-                                                            <Setter Property="Visibility" Value="Collapsed"/>
-                                                        </DataTrigger>
-                                                    </Style.Triggers>
-                                                </Style>
-                                            </Grid.Style>
                                             <Grid.ColumnDefinitions>
                                                 <ColumnDefinition Width="80"/>
                                                 <ColumnDefinition Width="*"/>
                                             </Grid.ColumnDefinitions>
-                                            <TextBlock Text="누적"
+                                            <TextBlock Text="누적(억)"
                                                        Foreground="White"
                                                        VerticalAlignment="Center"/>
                                             <TextBox Grid.Column="1"
@@ -175,64 +116,8 @@
                                                      Style="{StaticResource InputTextBoxStyle}"/>
                                         </Grid>
 
-                                        <Grid Margin="0,0,0,8">
-                                            <Grid.Style>
-                                                <Style TargetType="Grid">
-                                                    <Setter Property="Visibility" Value="Collapsed"/>
-                                                    <Style.Triggers>
-                                                        <DataTrigger Binding="{Binding IsExperienceLimitProfileMode}" Value="True">
-                                                            <Setter Property="Visibility" Value="Visible"/>
-                                                        </DataTrigger>
-                                                    </Style.Triggers>
-                                                </Style>
-                                            </Grid.Style>
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="80"/>
-                                                <ColumnDefinition Width="*"/>
-                                            </Grid.ColumnDefinitions>
-                                            <Grid.RowDefinitions>
-                                                <RowDefinition Height="Auto"/>
-                                                <RowDefinition Height="Auto"/>
-                                            </Grid.RowDefinitions>
-
-                                            <TextBlock Grid.Row="0"
-                                                       Text="{Binding ExperienceLimitProfile1Label}"
-                                                       Foreground="White"
-                                                       VerticalAlignment="Center"
-                                                       Margin="0,0,0,6"/>
-                                            <TextBox Grid.Row="0"
-                                                     Grid.Column="1"
-                                                     Text="{Binding ExperienceLimitProfile1Exp, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                                     VerticalAlignment="Center"
-                                                     HorizontalContentAlignment="Right"
-                                                     Margin="0,0,0,6"
-                                                     PreviewTextInput="ExperienceLimitExp_PreviewTextInput"
-                                                     DataObject.Pasting="ExperienceLimitExp_Pasting"
-                                                     Style="{StaticResource InputTextBoxStyle}"/>
-
-                                            <TextBlock Grid.Row="1"
-                                                       Text="{Binding ExperienceLimitProfile2Label}"
-                                                       Foreground="White"
-                                                       VerticalAlignment="Center"/>
-                                            <TextBox Grid.Row="1"
-                                                     Grid.Column="1"
-                                                     Text="{Binding ExperienceLimitProfile2Exp, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                                     VerticalAlignment="Center"
-                                                     HorizontalContentAlignment="Right"
-                                                     PreviewTextInput="ExperienceLimitExp_PreviewTextInput"
-                                                     DataObject.Pasting="ExperienceLimitExp_Pasting"
-                                                     Style="{StaticResource InputTextBoxStyle}"/>
-                                        </Grid>
-
                                         <StackPanel Orientation="Horizontal"
                                                     HorizontalAlignment="Right">
-                                            <Button Content="새로고침"
-                                                    Width="86"
-                                                    Height="30"
-                                                    Padding="10,4"
-                                                    Margin="0,0,6,0"
-                                                    Command="{Binding RefreshExperienceLimitStateCommand}"
-                                                    Style="{StaticResource SecondaryButtonStyle}"/>
                                             <Button Content="적용"
                                                     Width="68"
                                                     Height="30"
@@ -325,10 +210,10 @@
 
                                 <TextBlock Style="{StaticResource SectionHeaderStyle}"><Run Text="던전 카운터"/></TextBlock>
                                 <CheckBox Content="어밴던로드 횟수 알리미"
-                                          IsChecked="{Binding EnableAbaddonRoadCountAlert, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                          IsChecked="{Binding EnableAbandonRoadCountAlert, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                           Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
                                 <CheckBox Content="어밴던로드 누적 금액 알리미"
-                                          IsChecked="{Binding ShowAbaddonRoadSummaryWindow, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                          IsChecked="{Binding ShowAbandonRoadSummaryWindow, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                           Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
                                 <CheckBox Content="갈망하는 즐거움 횟수 알리미"
                                           IsChecked="{Binding EnableCravingPleasureCountAlert, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
@@ -339,7 +224,7 @@
                                                VerticalAlignment="Center"
                                                Foreground="White"
                                                FontSize="13"/>
-                                    <TextBox Text="{Binding AbaddonRoadCountAlertDurationSeconds, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                    <TextBox Text="{Binding AbandonRoadCountAlertDurationSeconds, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                              Width="60"
                                              VerticalAlignment="Center"
                                              HorizontalContentAlignment="Center"
@@ -559,13 +444,6 @@
                         <Border Style="{StaticResource SettingsBorderStyle}">
                             <StackPanel>
                                 <TextBlock Text="필드 보스 알림" Style="{StaticResource SectionHeaderStyle}"/>
-                                <Button x:Name="DebugRefreshBossTimerButton"
-                                        Content="BossTimer 새로고침"
-                                        HorizontalAlignment="Left"
-                                        Margin="0,0,0,12"
-                                        Padding="12,6"
-                                        Visibility="Collapsed"
-                                        Click="DebugRefreshBossTimerButton_Click"/>
                                 <ItemsControl ItemsSource="{Binding BossAlarmCards}">
                                     <ItemsControl.ItemsPanel>
                                         <ItemsPanelTemplate>

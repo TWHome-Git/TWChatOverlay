@@ -5,7 +5,7 @@ using TWChatOverlay.Models;
 
 namespace TWChatOverlay.Services
 {
-    public struct AbaddonSummaryValue
+    public struct AbandonSummaryValue
     {
         private const long LowMagicStoneValueMan = 50;
         private const long MidMagicStoneValueMan = 500;
@@ -14,9 +14,17 @@ namespace TWChatOverlay.Services
 
         public long TotalEntryFeeMan;
         public long Low;
+        public long LowGain;
+        public long LowLoss;
         public long Mid;
+        public long MidGain;
+        public long MidLoss;
         public long High;
+        public long HighGain;
+        public long HighLoss;
         public long Top;
+        public long TopGain;
+        public long TopLoss;
 
         public readonly long StoneRevenueMan =>
             (Low * LowMagicStoneValueMan) +
@@ -27,9 +35,9 @@ namespace TWChatOverlay.Services
         public readonly long NetProfitMan => StoneRevenueMan - TotalEntryFeeMan;
     }
 
-    public static class AbaddonSummaryCalculator
+    public static class AbandonSummaryCalculator
     {
-        private static readonly Regex AbaddonEntryFeeRegex = new(
+        private static readonly Regex AbandonEntryFeeRegex = new(
             @"입장료\s*(?<value>[\d,]+)\s*만\s*Seed",
             RegexOptions.Compiled);
 
@@ -38,10 +46,10 @@ namespace TWChatOverlay.Services
             RegexOptions.Compiled);
 
         private static readonly Regex MagicStoneLossRegex = new(
-            @"(?<grade>하급|중급|상급|최상급)\s*마정석\s*(?<count>[\d,]+)\s*개를\s*빼앗겼습니다",
+            @"(?<grade>하급)\s*마정석\s*(?<count>[\d,]+)\s*개를\s*빼앗겼습니다",
             RegexOptions.Compiled);
 
-        public static bool TryAccumulate(string formattedText, ref AbaddonSummaryValue summary)
+        public static bool TryAccumulate(string formattedText, ref AbandonSummaryValue summary)
         {
             if (!TryParseDelta(formattedText, out string kind, out string grade, out long value))
                 return false;
@@ -54,7 +62,7 @@ namespace TWChatOverlay.Services
             return true;
         }
 
-        public static bool TryAccumulate(string formattedText, AbaddonMonthlySummarySnapshotEntry summary)
+        public static bool TryAccumulate(string formattedText, AbandonMonthlySummarySnapshotEntry summary)
         {
             if (summary == null)
                 throw new ArgumentNullException(nameof(summary));
@@ -70,18 +78,26 @@ namespace TWChatOverlay.Services
             return true;
         }
 
-        public static AbaddonSummaryValue FromMonthly(AbaddonMonthlySummarySnapshotEntry summary)
+        public static AbandonSummaryValue FromMonthly(AbandonMonthlySummarySnapshotEntry summary)
         {
             if (summary == null)
-                return new AbaddonSummaryValue();
+                return new AbandonSummaryValue();
 
-            return new AbaddonSummaryValue
+            return new AbandonSummaryValue
             {
                 TotalEntryFeeMan = summary.TotalEntryFeeMan,
                 Low = summary.Low,
+                LowGain = summary.LowGain,
+                LowLoss = summary.LowLoss,
                 Mid = summary.Mid,
+                MidGain = summary.MidGain,
+                MidLoss = summary.MidLoss,
                 High = summary.High,
-                Top = summary.Top
+                HighGain = summary.HighGain,
+                HighLoss = summary.HighLoss,
+                Top = summary.Top,
+                TopGain = summary.TopGain,
+                TopLoss = summary.TopLoss
             };
         }
 
@@ -110,7 +126,7 @@ namespace TWChatOverlay.Services
             if (body.Contains("주문을 통해", StringComparison.Ordinal))
                 return false;
 
-            var feeMatch = AbaddonEntryFeeRegex.Match(body);
+            var feeMatch = AbandonEntryFeeRegex.Match(body);
             if (feeMatch.Success && TryParseLong(feeMatch.Groups["value"].Value, out long feeMan))
             {
                 kind = "fee";
@@ -144,40 +160,56 @@ namespace TWChatOverlay.Services
         private static bool TryParseLong(string raw, out long value)
             => long.TryParse(raw.Replace(",", string.Empty).Trim(), NumberStyles.Integer, CultureInfo.InvariantCulture, out value);
 
-        private static void ApplyMagicStoneDelta(ref AbaddonSummaryValue summary, string grade, long delta)
+        private static void ApplyMagicStoneDelta(ref AbandonSummaryValue summary, string grade, long delta)
         {
             switch (grade)
             {
                 case "하급":
                     summary.Low += delta;
+                    if (delta >= 0) summary.LowGain += delta;
+                    else summary.LowLoss += -delta;
                     break;
                 case "중급":
                     summary.Mid += delta;
+                    if (delta >= 0) summary.MidGain += delta;
+                    else summary.MidLoss += -delta;
                     break;
                 case "상급":
                     summary.High += delta;
+                    if (delta >= 0) summary.HighGain += delta;
+                    else summary.HighLoss += -delta;
                     break;
                 case "최상급":
                     summary.Top += delta;
+                    if (delta >= 0) summary.TopGain += delta;
+                    else summary.TopLoss += -delta;
                     break;
             }
         }
 
-        private static void ApplyMagicStoneDelta(AbaddonMonthlySummarySnapshotEntry summary, string grade, long delta)
+        private static void ApplyMagicStoneDelta(AbandonMonthlySummarySnapshotEntry summary, string grade, long delta)
         {
             switch (grade)
             {
                 case "하급":
                     summary.Low += delta;
+                    if (delta >= 0) summary.LowGain += delta;
+                    else summary.LowLoss += -delta;
                     break;
                 case "중급":
                     summary.Mid += delta;
+                    if (delta >= 0) summary.MidGain += delta;
+                    else summary.MidLoss += -delta;
                     break;
                 case "상급":
                     summary.High += delta;
+                    if (delta >= 0) summary.HighGain += delta;
+                    else summary.HighLoss += -delta;
                     break;
                 case "최상급":
                     summary.Top += delta;
+                    if (delta >= 0) summary.TopGain += delta;
+                    else summary.TopLoss += -delta;
                     break;
             }
         }

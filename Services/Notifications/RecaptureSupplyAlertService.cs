@@ -121,7 +121,6 @@ namespace TWChatOverlay.Services
                     _window.Show();
                 }
 
-                _window.Activate();
                 TopmostWindowHelper.BringToTopmost(_window);
             });
         }

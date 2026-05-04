@@ -132,6 +132,23 @@ namespace TWChatOverlay.Services
             ProcessLog(analysis.Parsed.FormattedText);
         }
 
+        public bool IsTrackableBuffLog(string? formattedText)
+        {
+            if (string.IsNullOrWhiteSpace(formattedText))
+                return false;
+
+            if (MagicEyeStartRegex.IsMatch(formattedText) || MagicEyeSavedRegex.IsMatch(formattedText))
+                return true;
+
+            foreach (var definition in _definitions)
+            {
+                if (definition.IsMatch(formattedText))
+                    return true;
+            }
+
+            return false;
+        }
+
         public void Dispose()
         {
             _timer.Stop();

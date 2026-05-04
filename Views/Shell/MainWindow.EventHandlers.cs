@@ -117,6 +117,7 @@ namespace TWChatOverlay.Views
                 else if (e.PropertyName == nameof(_settings.AlwaysVisible))
                 {
                     _stickyService?.UpdatePositionImmediately();
+                    ApplyAbandonRoadSummaryWindowVisibility();
                 }
                 else if (e.PropertyName == nameof(_settings.ShowDailyWeeklyContentOverlay))
                 {
@@ -178,9 +179,7 @@ namespace TWChatOverlay.Views
                     else
                         ExperienceAlertWindowService.Close();
                 }
-                else if (e.PropertyName == nameof(_settings.EnableCharacterProfiles) ||
-                         e.PropertyName == nameof(_settings.Profile1DisplayName) ||
-                         e.PropertyName == nameof(_settings.Profile2DisplayName))
+                else if (e.PropertyName == nameof(_settings.ExperienceLimitTotalExp))
                 {
                     ExperienceAlertWindowService.RefreshState(_settings);
                 }
@@ -191,13 +190,13 @@ namespace TWChatOverlay.Views
                     else
                         DungeonCountDisplayWindowService.ClosePositionPreview(_settings);
                 }
-                else if (e.PropertyName == nameof(_settings.ShowAbaddonRoadSummaryWindow))
+                else if (e.PropertyName == nameof(_settings.ShowAbandonRoadSummaryWindow))
                 {
-                    if (_settings.ShowAbaddonRoadSummaryWindow && _isSettingsPositionMode)
-                        ShowAbaddonRoadSummaryWindow(previewMode: _isSettingsPositionMode);
-                    else if (_abaddonRoadSummaryWindow != null)
+                    if (_settings.ShowAbandonRoadSummaryWindow && _isSettingsPositionMode)
+                        ShowAbandonRoadSummaryWindow(previewMode: _isSettingsPositionMode);
+                    else if (_AbandonRoadSummaryWindow != null)
                     {
-                        try { _abaddonRoadSummaryWindow.Close(); } catch { }
+                        try { _AbandonRoadSummaryWindow.Close(); } catch { }
                     }
                 }
                 else if (e.PropertyName == nameof(_settings.BuffTrackerWindowLeft) ||

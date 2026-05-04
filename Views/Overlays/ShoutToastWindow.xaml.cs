@@ -253,7 +253,7 @@ namespace TWChatOverlay.Views
                 return;
             }
 
-            ApplyTopmostState(OverlayHelper.IsForegroundAllowedOverlayWindow());
+            ApplyTopmostState(OverlayHelper.IsForegroundTalesWeaverWindow());
         }
 
         private void ApplyTopmostState(bool shouldTopmost)

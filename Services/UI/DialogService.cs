@@ -40,7 +40,6 @@ namespace TWChatOverlay.Services
             try
             {
                 tempOwner.Show();
-                tempOwner.Activate();
                 return MessageBox.Show(tempOwner, messageBoxText, caption, button, icon, defaultResult);
             }
             finally
@@ -62,7 +61,6 @@ namespace TWChatOverlay.Services
             try
             {
                 owner.Topmost = true;
-                owner.Activate();
                 return MessageBox.Show(owner, messageBoxText, caption, button, icon, defaultResult);
             }
             finally
@@ -70,10 +68,6 @@ namespace TWChatOverlay.Services
                 try
                 {
                     owner.Topmost = originalTopmost;
-                    if (owner.IsVisible)
-                    {
-                        owner.Activate();
-                    }
                 }
                 catch { }
             }
