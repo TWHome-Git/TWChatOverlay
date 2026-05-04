@@ -33,12 +33,11 @@ namespace TWChatOverlay.Views
             ExperienceAlertWindowService.ShowPositionPreview(_settings, force: true);
             DungeonCountDisplayWindowService.ShowPositionPreview(_settings, force: true);
             ShoutToastService.ShowPositionPreview(_settings, force: true);
-            ShowAbaddonRoadSummaryWindow(previewMode: true);
+            ShowAbandonRoadSummaryWindow(previewMode: true);
 
-            if (_abaddonRoadSummaryWindow != null)
+            if (_AbandonRoadSummaryWindow != null)
             {
-                _abaddonRoadSummaryWindow.Topmost = true;
-                _abaddonRoadSummaryWindow.Activate();
+                _AbandonRoadSummaryWindow.Topmost = true;
             }
 
             var etosHelper = SubAddonWindow.Instance ?? CreateSubAddonWindow();
@@ -70,12 +69,12 @@ namespace TWChatOverlay.Views
             DungeonCountDisplayWindowService.ClosePositionPreview(_settings);
             ShoutToastService.ClosePositionPreview(_settings);
 
-            if (_abaddonRoadSummaryWindow != null)
+            if (_AbandonRoadSummaryWindow != null)
             {
                 try
                 {
-                    _settings.AbaddonRoadSummaryWindowLeft = _abaddonRoadSummaryWindow.Left;
-                    _settings.AbaddonRoadSummaryWindowTop = _abaddonRoadSummaryWindow.Top;
+                    _settings.AbandonRoadSummaryWindowLeft = _AbandonRoadSummaryWindow.Left;
+                    _settings.AbandonRoadSummaryWindowTop = _AbandonRoadSummaryWindow.Top;
                 }
                 catch { }
             }
@@ -85,11 +84,11 @@ namespace TWChatOverlay.Views
             ApplyBuffTrackerHelperWindowSettings();
             PersistSettings();
 
-            if (_abaddonRoadSummaryWindow != null)
+            if (_AbandonRoadSummaryWindow != null)
             {
                 try
                 {
-                    _abaddonRoadSummaryWindow.Close();
+                    _AbandonRoadSummaryWindow.Close();
                 }
                 catch { }
             }
@@ -311,6 +310,67 @@ namespace TWChatOverlay.Views
             catch (Exception ex)
             {
                 AppLogger.Warn("Failed to apply DailyWeekly window visibility.", ex);
+            }
+        }
+
+        private bool CanShowAbandonRoadSummaryWindow(bool previewMode)
+        {
+            if (previewMode || _isSettingsPositionMode)
+                return true;
+
+            if (!_isOverlayVisible)
+                return false;
+
+            if (WindowState == WindowState.Minimized)
+                return false;
+
+            if (!_canShowAuxiliaryWindows)
+                return false;
+
+            if (Visibility != Visibility.Visible || Opacity <= 0)
+                return false;
+
+            return true;
+        }
+
+        private void ApplyAbandonRoadSummaryWindowVisibility()
+        {
+            try
+            {
+                if (_AbandonRoadSummaryWindow == null)
+                    return;
+
+                if (_isSettingsPositionMode)
+                {
+                    ShowAbandonRoadSummaryWindow(previewMode: true, restartLifetime: false);
+                    return;
+                }
+
+                bool canShow = _settings.ShowAbandonRoadSummaryWindow && CanShowAbandonRoadSummaryWindow(previewMode: false);
+                if (!canShow)
+                {
+                    if (_AbandonRoadSummaryWindow.IsVisible)
+                        _AbandonRoadSummaryWindow.Hide();
+                    return;
+                }
+
+                if (!_AbandonRoadSummaryWindow.IsVisible && _AbandonRoadSummaryWindow.IsAutoClosePending)
+                {
+                    ShowAbandonRoadSummaryWindow(previewMode: false, restartLifetime: false);
+                    return;
+                }
+
+                if (_AbandonRoadSummaryWindow.IsVisible)
+                {
+                    bool shouldTopmost = _settings.AlwaysVisible || Topmost;
+                    _AbandonRoadSummaryWindow.Topmost = shouldTopmost;
+                    if (shouldTopmost)
+                        TopmostWindowHelper.BringToTopmost(_AbandonRoadSummaryWindow);
+                }
+            }
+            catch (Exception ex)
+            {
+                AppLogger.Warn("Failed to apply Abandon summary window visibility.", ex);
             }
         }
 

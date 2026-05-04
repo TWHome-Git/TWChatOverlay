@@ -104,6 +104,23 @@ namespace TWChatOverlay.Services
 
         private void UpdatePosition()
         {
+            if (_overlayWindow is Views.MainWindow mainWindow && mainWindow.IsSettingsPositionMode)
+            {
+                if (_overlayWindow.Visibility != Visibility.Visible)
+                {
+                    _overlayWindow.Visibility = Visibility.Visible;
+                }
+
+                if (_overlayWindow.Opacity != 1)
+                {
+                    _overlayWindow.Opacity = 1;
+                }
+
+                ApplyTopmostState(true);
+                NotifyAuxiliaryWindowVisibilityChanged(true);
+                return;
+            }
+
             if (_forceHidden)
             {
                 ApplyTopmostState(false);

@@ -4,7 +4,7 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Globalization;
 using System.IO;
-using System.Linq;
+using System.Net;
 using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
@@ -14,31 +14,26 @@ using System.Windows.Input;
 using System.Windows.Threading;
 using TWChatOverlay.Models;
 using TWChatOverlay.Services;
-using TWChatOverlay.Services.LogAnalysis;
 
 namespace TWChatOverlay.Views
 {
-    public partial class AbaddonRoadSummaryWindow : Window, INotifyPropertyChanged
+    public partial class AbandonRoadSummaryWindow : Window, INotifyPropertyChanged
     {
-        private static readonly string ItemLogDirectoryPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Itemlog");
-        private static readonly Regex AbaddonEntryFeeRegex = new(
-            @"입장료\s*(?<value>[\d,]+)\s*만\s*Seed",
-            RegexOptions.Compiled);
-        private static readonly Regex MagicStoneGainRegex = new(
-            @"(?<grade>하급|중급|상급|최상급)\s*마정석\s*(?<count>[\d,]+)\s*개",
-            RegexOptions.Compiled);
-        private static readonly Regex MagicStoneLossRegex = new(
-            @"(?<grade>하급|중급|상급|최상급)\s*마정석\s*(?<count>[\d,]+)\s*개를\s*빼앗겼습니다",
-            RegexOptions.Compiled);
+        private static readonly string AbandonDirectoryPath = LogStoragePaths.AbandonDirectory;
+        private static readonly Regex AbandonEntryRegex = new(
+            "<div\\s+class=\"log\\s+Abandon\"(?<attrs>[^>]*)>(?<text>.*?)</div>",
+            RegexOptions.IgnoreCase | RegexOptions.Compiled);
+        private static readonly Regex AttrRegex = new(
+            "(?<name>data-[a-z0-9\\-]+)=\"(?<value>[^\"]*)\"",
+            RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
         private const string LowMagicStoneIconUri = "pack://application:,,,/Data/images/Item/하급마정석.png";
         private const string MiddleMagicStoneIconUri = "pack://application:,,,/Data/images/Item/중급마정석.png";
         private const string HighMagicStoneIconUri = "pack://application:,,,/Data/images/Item/상급마정석.png";
         private const string TopMagicStoneIconUri = "pack://application:,,,/Data/images/Item/최상급마정석.png";
+        private const string AbandonDaySummarySuffix = ".summary.day.json";
 
-        private readonly ChatSettings _settings;
-        private readonly LogAnalysisService _logAnalysisService;
-        private readonly ObservableCollection<AbaddonMonthlyStoneSummaryEntryViewModel> _stoneEntries = new();
+        private readonly ObservableCollection<AbandonMonthlyStoneSummaryEntryViewModel> _stoneEntries = new();
         private readonly DispatcherTimer _autoCloseTimer;
         private string _weekText = string.Empty;
         private string _summaryText = string.Empty;
@@ -49,10 +44,10 @@ namespace TWChatOverlay.Views
 
         public event PropertyChangedEventHandler? PropertyChanged;
 
-        public AbaddonRoadSummaryWindow(ChatSettings settings, LogAnalysisService logAnalysisService)
+        public AbandonRoadSummaryWindow(ChatSettings settings, LogAnalysisService logAnalysisService)
         {
-            _settings = settings ?? throw new ArgumentNullException(nameof(settings));
-            _logAnalysisService = logAnalysisService ?? throw new ArgumentNullException(nameof(logAnalysisService));
+            _ = settings ?? throw new ArgumentNullException(nameof(settings));
+            _ = logAnalysisService ?? throw new ArgumentNullException(nameof(logAnalysisService));
 
             InitializeComponent();
             DataContext = this;
@@ -61,7 +56,7 @@ namespace TWChatOverlay.Views
             UpdateHeaderText(GetCurrentWeekRange());
         }
 
-        public ObservableCollection<AbaddonMonthlyStoneSummaryEntryViewModel> StoneEntries => _stoneEntries;
+        public ObservableCollection<AbandonMonthlyStoneSummaryEntryViewModel> StoneEntries => _stoneEntries;
 
         public string WeekText
         {
@@ -70,7 +65,6 @@ namespace TWChatOverlay.Views
             {
                 if (_weekText == value)
                     return;
-
                 _weekText = value;
                 OnPropertyChanged(nameof(WeekText));
             }
@@ -83,7 +77,6 @@ namespace TWChatOverlay.Views
             {
                 if (_summaryText == value)
                     return;
-
                 _summaryText = value;
                 OnPropertyChanged(nameof(SummaryText));
             }
@@ -96,7 +89,6 @@ namespace TWChatOverlay.Views
             {
                 if (_isLoading == value)
                     return;
-
                 _isLoading = value;
                 OnPropertyChanged(nameof(IsLoading));
             }
@@ -143,20 +135,17 @@ namespace TWChatOverlay.Views
 
             try
             {
-                AbaddonMonthlySummarySnapshotEntry summary = await Task.Run(() => BuildWeeklySummary(weekStart, today)).ConfigureAwait(true);
-
+                AbandonMonthlySummarySnapshotEntry summary = await Task.Run(() => BuildWeeklySummary(weekStart, weekEnd)).ConfigureAwait(true);
                 if (version != _loadVersion)
                     return;
-
                 UpdateSummary(summary);
             }
             catch (Exception ex)
             {
-                AppLogger.Warn("Failed to load abaddon weekly summary popup.", ex);
+                AppLogger.Warn("Failed to load Abandon weekly summary popup.", ex);
                 if (version != _loadVersion)
                     return;
-
-                UpdateSummary(new AbaddonMonthlySummarySnapshotEntry { MonthStart = weekStart.Date });
+                UpdateSummary(new AbandonMonthlySummarySnapshotEntry { MonthStart = weekStart.Date });
             }
             finally
             {
@@ -165,113 +154,139 @@ namespace TWChatOverlay.Views
             }
         }
 
-        private AbaddonMonthlySummarySnapshotEntry BuildWeeklySummary(DateTime weekStart, DateTime today)
+        private AbandonMonthlySummarySnapshotEntry BuildWeeklySummary(DateTime weekStart, DateTime weekEnd)
         {
-            var summary = new AbaddonMonthlySummarySnapshotEntry { MonthStart = weekStart.Date };
+            var summary = new AbandonMonthlySummarySnapshotEntry { MonthStart = weekStart.Date };
+            if (!Directory.Exists(AbandonDirectoryPath))
+                return summary;
 
-            foreach (string chatLogPath in GetWeekLogPaths(weekStart, today))
+            for (DateTime day = weekStart.Date; day <= weekEnd.Date; day = day.AddDays(1))
             {
-                if (!File.Exists(chatLogPath))
+                string dayPath = Path.Combine(AbandonDirectoryPath, day.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture) + AbandonDaySummarySuffix);
+                if (!TryLoadSummarySnapshot(dayPath, out AbandonMonthlySummarySnapshotEntry daySummary))
                     continue;
 
-                try
-                {
-                    using var stream = new FileStream(chatLogPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
-                    using var reader = new StreamReader(stream, Encoding.GetEncoding(949));
-                    string? line;
-                    while ((line = reader.ReadLine()) != null)
-                    {
-                        var analysis = _logAnalysisService.Analyze(line, isRealTime: false);
-                        if (!analysis.IsSuccess)
-                            continue;
-
-                        TryAccumulateWeeklySummary(analysis.Parsed.FormattedText, summary);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    AppLogger.Warn($"Failed to scan weekly abaddon summary from '{chatLogPath}'.", ex);
-                }
+                summary.TotalEntryFeeMan += daySummary.TotalEntryFeeMan;
+                summary.Low += daySummary.Low;
+                summary.LowLoss += daySummary.LowLoss;
+                summary.Mid += daySummary.Mid;
+                summary.High += daySummary.High;
+                summary.Top += daySummary.Top;
             }
 
             return summary;
         }
 
-        private void UpdateSummary(AbaddonMonthlySummarySnapshotEntry summary)
+        private static bool TryLoadSummarySnapshot(string path, out AbandonMonthlySummarySnapshotEntry summary)
+        {
+            summary = new AbandonMonthlySummarySnapshotEntry();
+            if (!File.Exists(path))
+                return false;
+
+            try
+            {
+                string json = File.ReadAllText(path, Encoding.UTF8);
+                var loaded = JsonSerializer.Deserialize<AbandonMonthlySummarySnapshotEntry>(json);
+                if (loaded == null)
+                    return false;
+
+                summary = loaded;
+                return true;
+            }
+            catch (Exception ex)
+            {
+                AppLogger.Warn($"Failed to read Abandon weekly summary snapshot '{path}'.", ex);
+                return false;
+            }
+        }
+
+        private static void SaveSummarySnapshot(string path, AbandonMonthlySummarySnapshotEntry summary)
+        {
+            try
+            {
+                string json = JsonSerializer.Serialize(summary);
+                File.WriteAllText(path, json, new UTF8Encoding(encoderShouldEmitUTF8Identifier: true));
+            }
+            catch (Exception ex)
+            {
+                AppLogger.Warn($"Failed to write Abandon weekly summary snapshot '{path}'.", ex);
+            }
+        }
+
+        public void UpdateSummary(AbandonMonthlySummarySnapshotEntry summary)
         {
             SummaryText = $"어밴던로드 이번주 합계: {FormatManAmount(summary.NetProfitMan)}";
 
             StoneEntries.Clear();
-            StoneEntries.Add(new AbaddonMonthlyStoneSummaryEntryViewModel("하급 마정석", LowMagicStoneIconUri, summary.Low));
-            StoneEntries.Add(new AbaddonMonthlyStoneSummaryEntryViewModel("중급 마정석", MiddleMagicStoneIconUri, summary.Mid));
-            StoneEntries.Add(new AbaddonMonthlyStoneSummaryEntryViewModel("상급 마정석", HighMagicStoneIconUri, summary.High));
-            StoneEntries.Add(new AbaddonMonthlyStoneSummaryEntryViewModel("최상급 마정석", TopMagicStoneIconUri, summary.Top));
+            StoneEntries.Add(new AbandonMonthlyStoneSummaryEntryViewModel("하급 마정석", LowMagicStoneIconUri, summary.Low));
+            StoneEntries.Add(new AbandonMonthlyStoneSummaryEntryViewModel("중급 마정석", MiddleMagicStoneIconUri, summary.Mid));
+            StoneEntries.Add(new AbandonMonthlyStoneSummaryEntryViewModel("상급 마정석", HighMagicStoneIconUri, summary.High));
+            StoneEntries.Add(new AbandonMonthlyStoneSummaryEntryViewModel("최상급 마정석", TopMagicStoneIconUri, summary.Top));
+            long lowLossCount = Math.Abs(summary.LowLoss);
+            if (lowLossCount == 0 && summary.Low < 0)
+                lowLossCount = Math.Abs(summary.Low);
+            StoneEntries.Add(new AbandonMonthlyStoneSummaryEntryViewModel(
+                "누에게 빼앗긴 마정석",
+                LowMagicStoneIconUri,
+                lowLossCount,
+                "#FF6B6B",
+                "#FF6B6B",
+                $"{lowLossCount:N0}개"));
         }
 
-        private static bool TryAccumulateWeeklySummary(string formattedText, AbaddonMonthlySummarySnapshotEntry summary)
+        public void UpdateSummary(AbandonSummaryValue summary)
         {
-            if (string.IsNullOrWhiteSpace(formattedText))
+            SummaryText = $"어밴던로드 이번주 합계: {FormatManAmount(summary.NetProfitMan)}";
+
+            StoneEntries.Clear();
+            StoneEntries.Add(new AbandonMonthlyStoneSummaryEntryViewModel("하급 마정석", LowMagicStoneIconUri, summary.Low));
+            StoneEntries.Add(new AbandonMonthlyStoneSummaryEntryViewModel("중급 마정석", MiddleMagicStoneIconUri, summary.Mid));
+            StoneEntries.Add(new AbandonMonthlyStoneSummaryEntryViewModel("상급 마정석", HighMagicStoneIconUri, summary.High));
+            StoneEntries.Add(new AbandonMonthlyStoneSummaryEntryViewModel("최상급 마정석", TopMagicStoneIconUri, summary.Top));
+            long lowLossCount = Math.Abs(summary.LowLoss);
+            if (lowLossCount == 0 && summary.Low < 0)
+                lowLossCount = Math.Abs(summary.Low);
+            StoneEntries.Add(new AbandonMonthlyStoneSummaryEntryViewModel(
+                "누에게 빼앗긴 마정석",
+                LowMagicStoneIconUri,
+                lowLossCount,
+                "#FF6B6B",
+                "#FF6B6B",
+                $"{lowLossCount:N0}개"));
+        }
+
+        private static bool TryParseAbandonEntry(string line, out DateTime logDate, out string text)
+        {
+            logDate = DateTime.MinValue;
+            text = string.Empty;
+            Match match = AbandonEntryRegex.Match(line);
+            if (!match.Success)
                 return false;
 
-            string body = Regex.Replace(formattedText, @"^\[[^\]]+\]\s*", string.Empty);
-            if (body.Contains("주문을 통해", StringComparison.Ordinal))
+            var attrs = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            foreach (Match attrMatch in AttrRegex.Matches(match.Groups["attrs"].Value))
+            {
+                string key = attrMatch.Groups["name"].Value.Trim();
+                string value = WebUtility.HtmlDecode(attrMatch.Groups["value"].Value).Trim();
+                if (!string.IsNullOrWhiteSpace(key))
+                    attrs[key] = value;
+            }
+
+            if (!attrs.TryGetValue("data-date", out string? dateRaw) ||
+                !DateTime.TryParseExact(dateRaw, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out logDate))
+            {
                 return false;
-
-            var feeMatch = AbaddonEntryFeeRegex.Match(body);
-            if (feeMatch.Success && TryParseLong(feeMatch.Groups["value"].Value, out long feeMan))
-            {
-                summary.TotalEntryFeeMan += feeMan;
-                return true;
             }
 
-            var lossMatch = MagicStoneLossRegex.Match(body);
-            if (lossMatch.Success && TryParseLong(lossMatch.Groups["count"].Value, out long lossCount))
-            {
-                ApplyMagicStoneDelta(summary, lossMatch.Groups["grade"].Value, -lossCount);
-                return true;
-            }
-
-            var gainMatch = MagicStoneGainRegex.Match(body);
-            if (gainMatch.Success &&
-                body.Contains("획득", StringComparison.Ordinal) &&
-                TryParseLong(gainMatch.Groups["count"].Value, out long gainCount))
-            {
-                ApplyMagicStoneDelta(summary, gainMatch.Groups["grade"].Value, gainCount);
-                return true;
-            }
-
-            return false;
+            text = WebUtility.HtmlDecode(match.Groups["text"].Value).Trim();
+            return !string.IsNullOrWhiteSpace(text);
         }
 
-        private static void ApplyMagicStoneDelta(AbaddonMonthlySummarySnapshotEntry summary, string grade, long delta)
+        private static string GetIsoWeekKey(DateTime date)
         {
-            switch (grade)
-            {
-                case "하급":
-                    summary.Low += delta;
-                    break;
-                case "중급":
-                    summary.Mid += delta;
-                    break;
-                case "상급":
-                    summary.High += delta;
-                    break;
-                case "최상급":
-                    summary.Top += delta;
-                    break;
-            }
-        }
-
-        private static bool TryParseLong(string raw, out long value)
-            => long.TryParse(raw.Replace(",", string.Empty).Trim(), out value);
-
-        private IEnumerable<string> GetWeekLogPaths(DateTime weekStart, DateTime today)
-        {
-            for (int i = 0; i <= (today.Date - weekStart.Date).Days; i++)
-            {
-                DateTime date = weekStart.AddDays(i);
-                yield return Path.Combine(_settings.ChatLogFolderPath, $"TWChatLog_{date:yyyy_MM_dd}.html");
-            }
+            int isoYear = ISOWeek.GetYear(date);
+            int isoWeek = ISOWeek.GetWeekOfYear(date);
+            return $"{isoYear}-W{isoWeek:00}";
         }
 
         private static (DateTime WeekStart, DateTime WeekEnd) GetCurrentWeekRange(DateTime? now = null)

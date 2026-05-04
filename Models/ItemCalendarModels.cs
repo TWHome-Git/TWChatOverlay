@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
@@ -15,6 +15,7 @@ namespace TWChatOverlay.Models
         private readonly ObservableCollection<ItemCalendarEntryViewModel> _observableEntries = new();
         private int _totalCount;
         private int _distinctCount;
+        private int _experienceEssenceCount;
 
         public ItemCalendarDayViewModel(DateTime date, bool isCurrentMonth, IEnumerable<ItemCalendarEntryViewModel> entries)
         {
@@ -25,13 +26,9 @@ namespace TWChatOverlay.Models
         }
 
         public DateTime Date { get; }
-
         public bool IsCurrentMonth { get; }
-
         public string DayLabel => Date.ToString("ddd", CultureInfo.GetCultureInfo("ko-KR"));
-
         public string DateLabel => Date.Day.ToString(CultureInfo.InvariantCulture);
-
         public ObservableCollection<ItemCalendarEntryViewModel> Entries => _observableEntries;
 
         public int TotalCount
@@ -39,9 +36,7 @@ namespace TWChatOverlay.Models
             get => _totalCount;
             private set
             {
-                if (_totalCount == value)
-                    return;
-
+                if (_totalCount == value) return;
                 _totalCount = value;
                 OnPropertyChanged(nameof(TotalCount));
                 OnPropertyChanged(nameof(SummaryText));
@@ -57,28 +52,32 @@ namespace TWChatOverlay.Models
             get => _distinctCount;
             private set
             {
-                if (_distinctCount == value)
-                    return;
-
+                if (_distinctCount == value) return;
                 _distinctCount = value;
                 OnPropertyChanged(nameof(DistinctCount));
             }
         }
 
+        public int ExperienceEssenceCount
+        {
+            get => _experienceEssenceCount;
+            set
+            {
+                if (_experienceEssenceCount == value) return;
+                _experienceEssenceCount = Math.Max(0, value);
+                OnPropertyChanged(nameof(ExperienceEssenceCount));
+                OnPropertyChanged(nameof(HasExperienceEssence));
+                OnPropertyChanged(nameof(ExperienceEssenceText));
+            }
+        }
+
+        public bool HasExperienceEssence => ExperienceEssenceCount > 0;
+        public string ExperienceEssenceText => $"경험의 정수 {ExperienceEssenceCount:N0}개";
         public bool IsHighlighted => TotalCount >= 5;
-
         public string SummaryText => TotalCount > 0 ? $"총 {TotalCount:N0}개" : "기록 없음";
-
         public double CellOpacity => IsCurrentMonth ? 1.0 : 0.45;
-
-        public Brush DayAccentBrush => IsHighlighted
-            ? new SolidColorBrush(Color.FromArgb(0x2A, 0xFF, 0xD8, 0x4A))
-            : Brushes.Transparent;
-
-        public Brush DayBadgeBorderBrush => IsHighlighted
-            ? new SolidColorBrush(Color.FromRgb(0xFF, 0xD8, 0x4A))
-            : new SolidColorBrush(Color.FromRgb(0x45, 0x4E, 0x57));
-
+        public Brush DayAccentBrush => IsHighlighted ? new SolidColorBrush(Color.FromArgb(0x2A, 0xFF, 0xD8, 0x4A)) : Brushes.Transparent;
+        public Brush DayBadgeBorderBrush => IsHighlighted ? new SolidColorBrush(Color.FromRgb(0xFF, 0xD8, 0x4A)) : new SolidColorBrush(Color.FromRgb(0x45, 0x4E, 0x57));
         public Brush DayBadgeForeground => IsHighlighted ? Brushes.White : Brushes.WhiteSmoke;
 
         public event PropertyChangedEventHandler? PropertyChanged;
@@ -112,18 +111,14 @@ namespace TWChatOverlay.Models
             DistinctCount = _observableEntries.Count;
         }
 
-        private void OnPropertyChanged(string propertyName)
-            => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        private void OnPropertyChanged(string propertyName) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
 
-        private static int GetGradeSortOrder(ItemDropGrade grade)
+        private static int GetGradeSortOrder(ItemDropGrade grade) => grade switch
         {
-            return grade switch
-            {
-                ItemDropGrade.Special => 2,
-                ItemDropGrade.Rare => 1,
-                _ => 0
-            };
-        }
+            ItemDropGrade.Special => 2,
+            ItemDropGrade.Rare => 1,
+            _ => 0
+        };
     }
 
     public sealed class ItemCalendarEntryViewModel
@@ -136,13 +131,9 @@ namespace TWChatOverlay.Models
         }
 
         public string DisplayName { get; }
-
         public ItemDropGrade Grade { get; }
-
         public int Count { get; }
-
         public string DisplayText => Count > 1 ? $"{DisplayName} x{Count}" : DisplayName;
-
         public Brush BorderBrush => Grade switch
         {
             ItemDropGrade.Special => new SolidColorBrush(Color.FromRgb(0xFF, 0x7E, 0xDB)),
@@ -151,21 +142,24 @@ namespace TWChatOverlay.Models
         };
     }
 
-    public sealed class AbaddonMonthlyStoneSummaryEntryViewModel
+    public sealed class AbandonMonthlyStoneSummaryEntryViewModel
     {
-        public AbaddonMonthlyStoneSummaryEntryViewModel(string displayName, string iconUri, long count)
+        public AbandonMonthlyStoneSummaryEntryViewModel(string displayName, string iconUri, long count, string? countForegroundHex = null, string? nameForegroundHex = null, string? customCountText = null)
         {
             DisplayName = displayName;
             IconUri = iconUri;
             Count = count;
+            CountForegroundHex = string.IsNullOrWhiteSpace(countForegroundHex) ? "#DCE3EA" : countForegroundHex;
+            NameForegroundHex = string.IsNullOrWhiteSpace(nameForegroundHex) ? "#FFFFFF" : nameForegroundHex;
+            CustomCountText = customCountText;
         }
 
         public string DisplayName { get; }
-
         public string IconUri { get; }
-
         public long Count { get; }
-
-        public string CountText => Count >= 0 ? $"+{Count:N0}" : $"{Count:N0}";
+        public string CountForegroundHex { get; }
+        public string NameForegroundHex { get; }
+        public string? CustomCountText { get; }
+        public string CountText => !string.IsNullOrWhiteSpace(CustomCountText) ? CustomCountText : (Count >= 0 ? $"+{Count:N0}" : $"{Count:N0}");
     }
 }

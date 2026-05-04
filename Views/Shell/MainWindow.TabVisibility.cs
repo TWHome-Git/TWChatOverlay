@@ -19,6 +19,12 @@ namespace TWChatOverlay.Views
 
         private void HideMainTabs()
         {
+            if (_isSettingsPositionMode)
+            {
+                _mainTabAutoHideTimer.Stop();
+                return;
+            }
+
             if (MainBorder?.IsMouseOver == true)
             {
                 _mainTabAutoHideTimer.Stop();

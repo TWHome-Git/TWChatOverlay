@@ -116,36 +116,6 @@
                 </Trigger>
             </Style.Triggers>
         </Style>
-        <Style x:Key="ProfileBookmarkButtonStyle" TargetType="Button">
-            <Setter Property="Background" Value="#161B22"/>
-            <Setter Property="Foreground" Value="#A8B3C2"/>
-            <Setter Property="BorderBrush" Value="#30363D"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="FontSize" Value="11"/>
-            <Setter Property="FontWeight" Value="SemiBold"/>
-            <Setter Property="Padding" Value="0"/>
-            <Setter Property="HorizontalContentAlignment" Value="Center"/>
-            <Setter Property="VerticalContentAlignment" Value="Center"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="Button">
-                        <Border Background="{TemplateBinding Background}"
-                                BorderBrush="{TemplateBinding BorderBrush}"
-                                BorderThickness="{TemplateBinding BorderThickness}"
-                                CornerRadius="6,6,0,0">
-                            <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
-                                              VerticalAlignment="{TemplateBinding VerticalContentAlignment}"/>
-                        </Border>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-            <Style.Triggers>
-                <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="Background" Value="#1F2A36"/>
-                    <Setter Property="Foreground" Value="#EAF6FF"/>
-                </Trigger>
-            </Style.Triggers>
-        </Style>
     </Window.Resources>
     <Grid>
         <Border Margin="0,30,0,0" Background="#E00D1117" CornerRadius="8" BorderBrush="#30363D" BorderThickness="1">
@@ -537,33 +507,5 @@
         </Grid>
         </Border>
 
-        <StackPanel Orientation="Horizontal"
-                    HorizontalAlignment="Left"
-                    VerticalAlignment="Top"
-                    Margin="10,0,0,0"
-                    Panel.ZIndex="20"
-                    Visibility="{Binding IsProfileTabsVisible, Converter={StaticResource BoolToVis}}">
-            <Button x:Name="ProfileBasicButton"
-                    Content="기본"
-                    Width="88"
-                    Height="30"
-                    Margin="0"
-                    Click="ProfileBasic_Click"
-                    Style="{StaticResource ProfileBookmarkButtonStyle}"/>
-            <Button x:Name="Profile1Button"
-                    Content="{Binding Profile1DisplayName}"
-                    Width="88"
-                    Height="30"
-                    Margin="0"
-                    Click="Profile1_Click"
-                    Style="{StaticResource ProfileBookmarkButtonStyle}"/>
-            <Button x:Name="Profile2Button"
-                    Content="{Binding Profile2DisplayName}"
-                    Width="88"
-                    Height="30"
-                    Margin="0"
-                    Click="Profile2_Click"
-                    Style="{StaticResource ProfileBookmarkButtonStyle}"/>
-        </StackPanel>
     </Grid>
 </Window>

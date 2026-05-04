@@ -3,19 +3,27 @@ using System.Text.Json.Serialization;
 
 namespace TWChatOverlay.Models
 {
-    public sealed class AbaddonMonthlySummarySnapshotEntry
+    public sealed class AbandonMonthlySummarySnapshotEntry
     {
         public DateTime MonthStart { get; set; }
 
         public long TotalEntryFeeMan { get; set; }
 
         public long Low { get; set; }
+        public long LowGain { get; set; }
+        public long LowLoss { get; set; }
 
         public long Mid { get; set; }
+        public long MidGain { get; set; }
+        public long MidLoss { get; set; }
 
         public long High { get; set; }
+        public long HighGain { get; set; }
+        public long HighLoss { get; set; }
 
         public long Top { get; set; }
+        public long TopGain { get; set; }
+        public long TopLoss { get; set; }
 
         [JsonIgnore]
         public long StoneRevenueMan =>

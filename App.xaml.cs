@@ -216,10 +216,10 @@ namespace TWChatOverlay
                         cfg.ItemCalendarWindowLeft = itemCalendar.Left;
                         cfg.ItemCalendarWindowTop = itemCalendar.Top;
                     }
-                    else if (w is Views.AbaddonRoadSummaryWindow abaddon)
+                    else if (w is Views.AbandonRoadSummaryWindow Abandon)
                     {
-                        cfg.AbaddonRoadSummaryWindowLeft = abaddon.Left;
-                        cfg.AbaddonRoadSummaryWindowTop = abaddon.Top;
+                        cfg.AbandonRoadSummaryWindowLeft = Abandon.Left;
+                        cfg.AbandonRoadSummaryWindowTop = Abandon.Top;
                     }
                 }
                 TWChatOverlay.Services.ConfigService.Save(cfg);
@@ -227,15 +227,6 @@ namespace TWChatOverlay
             catch (Exception ex)
             {
                 AppLogger.Warn("Failed to persist window positions during shutdown.", ex);
-            }
-
-            try
-            {
-                TWChatOverlay.Services.MonthlyReadableLogExportService.PersistCachedMonthlyData();
-            }
-            catch (Exception ex)
-            {
-                AppLogger.Warn("Failed to persist cached monthly item data during shutdown.", ex);
             }
 
             EtaProfileResolver.DeleteCache();

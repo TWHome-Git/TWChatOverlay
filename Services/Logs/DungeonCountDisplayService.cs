@@ -10,7 +10,7 @@ namespace TWChatOverlay.Services
     /// </summary>
     public sealed class DungeonCountDisplayService
     {
-        private const int AbaddonMaxCount = 10;
+        private const int AbandonMaxCount = 10;
         private const int CravingPleasureMaxCount = 20;
         private const int CravingPleasureDailyEnergy = 21;
 
@@ -22,7 +22,7 @@ namespace TWChatOverlay.Services
             @"\s+",
             RegexOptions.Compiled);
 
-        private static readonly Regex AbaddonRoadRegex = new(
+        private static readonly Regex AbandonRoadRegex = new(
             @"이번\s*주\s*어밴던\s*로드\s*(?<region>.+?)\s*지역의\s*도전\s*횟수는\s*(?<count>\d+)\s*번",
             RegexOptions.Compiled);
 
@@ -60,18 +60,18 @@ namespace TWChatOverlay.Services
             if (string.IsNullOrWhiteSpace(text))
                 return;
 
-            if (TryShowAbaddonRoad(text))
+            if (TryShowAbandonRoad(text))
                 return;
 
             TryShowCravingPleasure(text);
         }
 
-        private bool TryShowAbaddonRoad(string text)
+        private bool TryShowAbandonRoad(string text)
         {
-            if (!_settings.EnableAbaddonRoadCountAlert)
+            if (!_settings.EnableAbandonRoadCountAlert)
                 return false;
 
-            Match match = AbaddonRoadRegex.Match(text);
+            Match match = AbandonRoadRegex.Match(text);
             if (!match.Success)
                 return false;
 
@@ -79,12 +79,12 @@ namespace TWChatOverlay.Services
             if (!int.TryParse(match.Groups["count"].Value, out int count))
                 return false;
 
-            count = Math.Clamp(count, 1, AbaddonMaxCount);
+            count = Math.Clamp(count, 1, AbandonMaxCount);
             DungeonCountDisplayWindowService.Show(
                 $"어밴던로드 - {region}",
                 count,
-                AbaddonMaxCount,
-                _settings.AbaddonRoadCountAlertDurationSeconds,
+                AbandonMaxCount,
+                _settings.AbandonRoadCountAlertDurationSeconds,
                 _settings);
             return true;
         }
@@ -103,7 +103,7 @@ namespace TWChatOverlay.Services
                 "갈망하는 즐거움",
                 count,
                 CravingPleasureMaxCount,
-                _settings.AbaddonRoadCountAlertDurationSeconds,
+                _settings.AbandonRoadCountAlertDurationSeconds,
                 _settings);
             return true;
         }

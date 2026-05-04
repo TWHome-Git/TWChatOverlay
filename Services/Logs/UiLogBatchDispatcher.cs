@@ -41,7 +41,10 @@ namespace TWChatOverlay.Services
         /// <summary>
         /// 로그 항목을 큐에 넣고 필요 시 배치 처리 스케줄을 시작합니다.
         /// </summary>
-        public void Enqueue(string html, bool isRealTime, Action<IReadOnlyList<(string Html, bool IsRealTime)>> onBatchReady)
+        public void Enqueue(
+            string html,
+            bool isRealTime,
+            Action<IReadOnlyList<(string Html, bool IsRealTime)>> onBatchReady)
         {
             if (string.IsNullOrWhiteSpace(html) || onBatchReady == null)
                 return;

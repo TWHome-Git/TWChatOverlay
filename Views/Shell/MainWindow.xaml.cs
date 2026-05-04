@@ -33,7 +33,7 @@ namespace TWChatOverlay.Views
         #region Fields
         private DailyWeeklyContentWindow? _dailyWeeklyContentOverlay;
         private ItemCalendarWindow? _itemCalendarWindow;
-        private AbaddonRoadSummaryWindow? _abaddonRoadSummaryWindow;
+        private AbandonRoadSummaryWindow? _AbandonRoadSummaryWindow;
         private ExperienceService _expService;
         private HotKeyService? _hotKeyService;
         private WindowStickyService? _stickyService;
@@ -41,6 +41,7 @@ namespace TWChatOverlay.Views
         private BuffTrackerService _buffTrackerService;
         private ExperienceEssenceAlertService _experienceEssenceAlertService;
         private DungeonCountDisplayService _dungeonCountDisplayService;
+        private ReadableLogArchiveService _readableLogArchiveService;
         private ChatSettings _settings;
         private LogService? _logService;
         private LogAnalysisService _logAnalysisService;
@@ -69,19 +70,15 @@ namespace TWChatOverlay.Views
         private readonly UiLogBatchDispatcher _uiLogBatchDispatcher;
         private readonly LogTabBufferStore _logTabBufferStore;
         private readonly TabDisplayStateResolver _tabDisplayStateResolver;
-        private DateTime _loadedItemMonthStart = DateTime.MinValue;
-        private DateTime _loadedAbaddonMonthStart = DateTime.MinValue;
-        private bool _isItemMonthLogsLoading;
-        private bool _isHistoricalItemWarmupRunning;
-        private bool _isHistoricalAbaddonWarmupRunning;
         private bool _isRefreshLogDisplayScheduled;
-        private AbaddonSummaryValue _abaddonWeeklySummary = new();
-        private readonly object _pendingMonthlyItemSnapshotsLock = new();
-        private readonly List<ItemLogSnapshotEntry> _pendingMonthlyItemSnapshots = new();
+        private AbandonSummaryValue _AbandonWeeklySummary = new();
+        private string _AbandonWeeklySummaryWeekKey = string.Empty;
+        private readonly object _defaultDropItemFilterLock = new();
         private DropItemResolver.DropItemFilterSnapshot? _defaultDropItemFilterSnapshot;
-        private CharacterProfilePipelineState _characterProfileState;
+        private StartupLoadingWindow? _startupLoadingWindow;
+        private static readonly string TabCachePath = Path.Combine(LogStoragePaths.StateDirectory, "tab_cache.json");
 
-        private static readonly Regex AbaddonEntryFeeRegex = new(
+        private static readonly Regex AbandonEntryFeeRegex = new(
             @"입장료\s*(?<value>[\d,]+)\s*만\s*Seed",
             RegexOptions.Compiled);
         private static readonly Regex MagicStoneGainRegex = new(
@@ -93,6 +90,7 @@ namespace TWChatOverlay.Views
         private static readonly Regex HtmlFontTagRegex = new(
             @"<font\b",
             RegexOptions.IgnoreCase | RegexOptions.Compiled);
+        private static readonly string[] RecoverableTabs = { "General", "Basic", "Team", "Club", "Shout", "System" };
 
         private const string SeedIconUri = "pack://application:,,,/Data/images/Item/시드.png";
         private const string LowMagicStoneIconUri = "pack://application:,,,/Data/images/Item/하급마정석.png";
@@ -135,6 +133,7 @@ namespace TWChatOverlay.Views
             _mainTabAutoHideTimer.Tick += (_, _) => HideMainTabs();
 
             _settings = ConfigService.Load();
+            _ = IgnoredChatMessageService.EnsureLoadedAsync();
             ApplyStartupPreset();
             this.DataContext = _settings;
             _logAnalysisService = new LogAnalysisService(_settings);
@@ -150,16 +149,16 @@ namespace TWChatOverlay.Views
                 () => _experienceEssenceAlertService.GetStateSnapshot(),
                 snapshot => _experienceEssenceAlertService.ApplyStateSnapshot(snapshot));
             _dungeonCountDisplayService = new DungeonCountDisplayService(_settings);
+            _readableLogArchiveService = new ReadableLogArchiveService();
             _buffTrackerService = new BuffTrackerService(_settings);
-            _characterProfileState = new CharacterProfilePipelineState(_settings);
             _buffTrackerService.PropertyChanged += BuffTrackerService_PropertyChanged;
             ExpTrackerPanel.DataContext = _expService.SessionState;
             _logService = new LogService(_expService, _settings);
             TryLoadTestDropItemJsonForSession();
             DropItemResolver.InitializeAsync(_settings);
-            _logService.OnNewLogRead += (html) =>
+            _logService.OnNewLogRead += (logItem) =>
             {
-                _uiLogBatchDispatcher.Enqueue(html, _expService.IsReady, ProcessUiLogBatch);
+                _uiLogBatchDispatcher.Enqueue(logItem.Html, logItem.IsRealTime, ProcessUiLogBatch);
             };
             _logService.InitialLogsLoaded += () =>
             {
@@ -169,26 +168,21 @@ namespace TWChatOverlay.Views
             {
                 Dispatcher.BeginInvoke(new Action(RequestRefreshLogDisplay), DispatcherPriority.Background);
             };
-            _ = InitializeLogServiceAfterEtaProfilesAsync();
-            MonthlyReadableLogExportService.CleanupLegacyArtifacts();
-            ApplyInitialSettings();
-            ApplySubAddonWindowSettings();
-            ApplyItemDropHelperWindowSettings();
-            ApplyBuffTrackerWindowSettings();
-            ApplyBuffTrackerHelperWindowSettings();
-            StartHistoricalAbaddonWarmup();
-
-            Dispatcher.BeginInvoke(new Action(() => InitializeNativeServices()), DispatcherPriority.Loaded);
-
             this.Deactivated += (s, e) => ReleaseMouseForce();
             this.Activated += (s, e) => ReleaseMouseForce();
             this.StateChanged += MainWindow_StateChanged;
             this.Closed += MainWindow_Closed;
             AppLogger.Info("Main window initialized.");
+
+            ShowStartupLoadingWindow();
+            Dispatcher.BeginInvoke(
+                new Action(() => _ = InitializeStartupDataAsync()),
+                DispatcherPriority.ApplicationIdle);
         }
 
         private void MainWindow_Closed(object? sender, EventArgs e)
         {
+            try { SaveTabCache(); } catch { }
             try { _mainTabAutoHideTimer.Stop(); } catch { }
             try { ExperienceAlertWindowService.SaveCurrentPosition(_settings); } catch { }
             try { DungeonCountDisplayWindowService.SaveCurrentPosition(_settings); } catch { }
@@ -203,13 +197,11 @@ namespace TWChatOverlay.Views
                 }
             }
             catch { }
-            try { _abaddonRoadSummaryWindow?.Close(); } catch { }
-            try { FlushPendingMonthlyItemSnapshots(); } catch { }
+            try { _AbandonRoadSummaryWindow?.Close(); } catch { }
+            try { _experienceWeeklyRefreshPromptWindow?.Close(); } catch { }
             try { _logService?.Dispose(); } catch { }
             try { _expService?.Stop(); } catch { }
             try { _buffTrackerService?.Dispose(); } catch { }
-            try { _characterProfileState.StopExperienceTrackers(); } catch { }
-            try { _characterProfileState.Dispose(); } catch { }
             try
             {
                 if (_stickyService != null)
@@ -226,41 +218,7 @@ namespace TWChatOverlay.Views
         public SettingsViewModel SettingsViewModelInstance => _settingsViewModel;
         public bool IsDailyWeeklyVisible => _dailyWeeklyContentOverlay?.IsVisible == true;
         public bool IsItemCalendarVisible => _itemCalendarWindow?.IsVisible == true;
-
-        private void RestoreExperienceEssenceAlertState()
-        {
-            try
-            {
-                if (HasSavedExperienceLimitState())
-                {
-                    AppLogger.Info("Skipped experience essence log restore because saved state already exists.");
-                    return;
-                }
-
-                var logPaths = GetAllChatLogPaths();
-                _experienceEssenceAlertService.RestoreFromRecentLogs(logPaths, _logAnalysisService);
-            }
-            catch (Exception ex)
-            {
-                AppLogger.Warn("Failed to restore experience essence alert state from recent logs.", ex);
-            }
-        }
-
-        private bool HasSavedExperienceLimitState()
-            => _settings.ExperienceLimitStateInitialized;
-
-        private IEnumerable<string> GetAllChatLogPaths()
-        {
-            if (string.IsNullOrWhiteSpace(_settings.ChatLogFolderPath) ||
-                !Directory.Exists(_settings.ChatLogFolderPath))
-                yield break;
-
-            foreach (string path in Directory.EnumerateFiles(_settings.ChatLogFolderPath, "TWChatLog_*.html")
-                         .OrderBy(path => path, StringComparer.OrdinalIgnoreCase))
-            {
-                yield return path;
-            }
-        }
+        public bool IsSettingsPositionMode => _isSettingsPositionMode;
 
         private void BuffTrackerService_PropertyChanged(object? sender, PropertyChangedEventArgs e)
         {
@@ -354,8 +312,8 @@ namespace TWChatOverlay.Views
                 _stickyService.UpdatePositionImmediately();
                 _bossAlarmSchedulerService = new BossAlarmSchedulerService(_settings);
                 _bossAlarmSchedulerService.Start();
+                _expService.Reset();
                 _expService.Start();
-                _characterProfileState.StartExperienceTrackers();
                 StartLogServiceWhenReady();
 
                 _settings.PropertyChanged += OnSettingsPropertyChanged;
@@ -376,6 +334,7 @@ namespace TWChatOverlay.Views
                     ShowDailyWeeklyWindow();
 
                 Dispatcher.BeginInvoke(new Action(CompleteInitialPresentation), DispatcherPriority.ApplicationIdle);
+                Dispatcher.BeginInvoke(new Action(TryShowWeeklyExperienceRefreshPrompt), DispatcherPriority.ApplicationIdle);
 
                 AppLogger.Info("Native services initialized successfully.");
             }
@@ -409,8 +368,6 @@ namespace TWChatOverlay.Views
                 _stickyService?.UpdatePositionImmediately();
             }
 
-            Task.Run(() => RestoreExperienceEssenceAlertState());
-            StartHistoricalItemWarmup();
         }
 
         private void StickyService_AuxiliaryWindowVisibilityChanged(bool canShow)
@@ -420,11 +377,13 @@ namespace TWChatOverlay.Views
                 _canShowAuxiliaryWindows = canShow;
                 ApplyBuffTrackerWindowSettings();
                 ApplyDailyWeeklyWindowVisibility();
+                ApplyAbandonRoadSummaryWindowVisibility();
             }), DispatcherPriority.Background);
         }
 
         private async Task InitializeLogServiceAfterEtaProfilesAsync()
         {
+            UpdateStartupLoadingProgress(15, "외부 설정을 준비하는 중입니다.");
             try
             {
                 await EtaProfileResolver.EnsureLoadedAsync().ConfigureAwait(false);
@@ -434,20 +393,125 @@ namespace TWChatOverlay.Views
                 AppLogger.Warn("ETA profile load failed before log initialization. Logs will still be initialized.", ex);
             }
 
-            await Dispatcher.InvokeAsync(() =>
+            try
             {
-                if (_logService == null || _isLogServiceInitialized)
-                    return;
+                UpdateStartupLoadingProgress(35, "원본 로그를 읽는 중입니다.");
+                await Task.Run(async () =>
+                {
+                    await _readableLogArchiveService.EnsureInitializedFromRawLogsAsync(
+                        _settings.ChatLogFolderPath,
+                        _logAnalysisService,
+                        IsContentCompletionRelevantLog,
+                        (dateText, current, total) =>
+                        {
+                            double ratio = total <= 0 ? 0 : (double)current / total;
+                            double progress = 35 + (ratio * 50.0);
+                            UpdateStartupLoadingProgress(progress, "원본 로그를 읽는 중입니다.", dateText);
+                        }).ConfigureAwait(false);
+                }).ConfigureAwait(false);
 
-                _logService.Initialize();
+                _AbandonWeeklySummary = _readableLogArchiveService.LoadAbandonWeeklySummary(DateTime.Today);
+                _AbandonWeeklySummaryWeekKey = GetIsoWeekKey(DateTime.Today);
+            }
+            catch (Exception ex)
+            {
+                AppLogger.Warn("Failed to initialize dedicated Logs archive from source chat logs.", ex);
+            }
+
+            try
+            {
+                UpdateStartupLoadingProgress(75, "최근 탭 로그를 복원하는 중입니다.");
+                await Dispatcher.InvokeAsync(LoadTabCachePrioritizingCurrentTab, DispatcherPriority.Background);
+                await PrimeTabBuffersFromRecentRawLogsAsync().ConfigureAwait(false);
+            }
+            catch (Exception ex)
+            {
+                AppLogger.Warn("Failed to prime tab buffers from recent raw logs.", ex);
+            }
+
+            if (_logService != null && !_isLogServiceInitialized)
+            {
+                UpdateStartupLoadingProgress(85, "채팅 로그 서비스를 시작하는 중입니다.");
+                await Task.Run(() => _logService.Initialize()).ConfigureAwait(false);
                 _isLogServiceInitialized = true;
 
                 if (_startLogServiceWhenInitialized)
                 {
-                    _logService.Start();
+                    await Task.Run(() => _logService.Start()).ConfigureAwait(false);
                     _startLogServiceWhenInitialized = false;
                 }
-            }, DispatcherPriority.Loaded);
+            }
+
+            UpdateStartupLoadingProgress(100, "초기화가 완료되었습니다.");
+            CloseStartupLoadingWindow();
+        }
+
+        private async Task InitializeStartupDataAsync()
+        {
+            try
+            {
+                await Dispatcher.Yield(DispatcherPriority.ApplicationIdle);
+
+                await InitializeLogServiceAfterEtaProfilesAsync();
+
+                await Dispatcher.InvokeAsync(() =>
+                {
+                    ApplyInitialSettings();
+                    ApplySubAddonWindowSettings();
+                    ApplyItemDropHelperWindowSettings();
+                    ApplyBuffTrackerWindowSettings();
+                    ApplyBuffTrackerHelperWindowSettings();
+                    InitializeNativeServices();
+                }, DispatcherPriority.Background);
+            }
+            catch (Exception ex)
+            {
+                AppLogger.Error("Startup initialization failed.", ex);
+                UpdateStartupLoadingProgress(100, "초기화 중 오류가 발생했습니다.");
+                CloseStartupLoadingWindow();
+            }
+        }
+
+        private void ShowStartupLoadingWindow()
+        {
+            if (_startupLoadingWindow != null)
+                return;
+
+            _startupLoadingWindow = new StartupLoadingWindow();
+            _startupLoadingWindow.Show();
+            _startupLoadingWindow.UpdateProgress(5, "초기화 진행중...");
+        }
+
+        private void UpdateStartupLoadingProgress(double value, string statusText)
+            => UpdateStartupLoadingProgress(value, statusText, string.Empty);
+
+        private void UpdateStartupLoadingProgress(double value, string statusText, string dateText)
+        {
+            if (_startupLoadingWindow == null)
+                return;
+
+            if (!_startupLoadingWindow.Dispatcher.CheckAccess())
+            {
+                _startupLoadingWindow.Dispatcher.BeginInvoke(new Action(() => UpdateStartupLoadingProgress(value, statusText, dateText)));
+                return;
+            }
+
+            _startupLoadingWindow.UpdateProgress(value, statusText, dateText);
+        }
+
+        private void CloseStartupLoadingWindow()
+        {
+            if (_startupLoadingWindow == null)
+                return;
+
+            if (!_startupLoadingWindow.Dispatcher.CheckAccess())
+            {
+                _startupLoadingWindow.Dispatcher.BeginInvoke(new Action(CloseStartupLoadingWindow));
+                return;
+            }
+
+            _startupLoadingWindow.Close();
+            _startupLoadingWindow = null;
         }
 
         private void StartLogServiceWhenReady()
@@ -464,9 +528,189 @@ namespace TWChatOverlay.Views
             _startLogServiceWhenInitialized = true;
         }
 
+        private async Task PrimeTabBuffersFromRecentRawLogsAsync()
+        {
+            string folder = _settings.ChatLogFolderPath;
+            if (string.IsNullOrWhiteSpace(folder) || !Directory.Exists(folder))
+                return;
 
+            const int perTabLimit = 200;
+            string[] tabs = RecoverableTabs;
+            var tabBuffers = new Dictionary<string, List<LogParser.ParseResult>>(StringComparer.Ordinal);
+            foreach (string tab in tabs)
+                tabBuffers[tab] = new List<LogParser.ParseResult>(perTabLimit);
+            var collectedRawLines = new List<string>(2000);
 
+            bool IsAllFilled()
+            {
+                foreach (string tab in tabs)
+                {
+                    if (tabBuffers[tab].Count < perTabLimit)
+                        return false;
+                }
+                return true;
+            }
 
+            await Task.Run(() =>
+            {
+                var files = Directory.EnumerateFiles(folder, "TWChatLog_*.html")
+                    .OrderByDescending(path => path, StringComparer.OrdinalIgnoreCase)
+                    .Take(30);
+
+                foreach (string file in files)
+                {
+                    string content;
+                    try
+                    {
+                        content = File.ReadAllText(file, Encoding.GetEncoding(949));
+                    }
+                    catch
+                    {
+                        continue;
+                    }
+
+                    var lines = Regex.Split(content, @"</?br\s*>|\r?\n", RegexOptions.IgnoreCase)
+                        .Where(line => !string.IsNullOrWhiteSpace(line))
+                        .Select(line => line.Trim())
+                        .Reverse();
+
+                    foreach (string line in lines)
+                    {
+                        if (!HtmlFontTagRegex.IsMatch(line))
+                            continue;
+                        collectedRawLines.Add(line);
+                        if (collectedRawLines.Count >= 8000)
+                            break;
+                    }
+                }
+            }).ConfigureAwait(false);
+
+            await Dispatcher.InvokeAsync(() =>
+            {
+                foreach (string line in collectedRawLines)
+                {
+                    if (IsAllFilled())
+                        break;
+
+                    var analysis = _logPipelineCoordinator.Analyze(line, isRealTime: false).Primary;
+                    if (!analysis.IsSuccess)
+                        continue;
+
+                    var parsed = analysis.Parsed;
+                    if (parsed == null)
+                        continue;
+
+                    foreach (string tab in analysis.BufferTabs)
+                    {
+                        if (!tabBuffers.TryGetValue(tab, out var list))
+                            continue;
+                        if (list.Count >= perTabLimit)
+                            continue;
+                        list.Add(parsed);
+                    }
+                }
+
+                foreach (string tab in tabs)
+                {
+                    if (!tabBuffers.TryGetValue(tab, out var list))
+                        continue;
+                    list.Reverse();
+                    _logTabBufferStore.Replace(tab, list);
+                }
+                ChatWindowHub.NotifyBuffersChanged();
+                RequestRefreshLogDisplay();
+            }, DispatcherPriority.Background);
+        }
+
+        private sealed class TabCachePayload
+        {
+            public DateTime SavedAtUtc { get; set; }
+            public Dictionary<string, List<TabCacheEntry>> Tabs { get; set; } = new(StringComparer.Ordinal);
+        }
+
+        private sealed class TabCacheEntry
+        {
+            public string FormattedText { get; set; } = string.Empty;
+            public ChatCategory Category { get; set; } = ChatCategory.Unknown;
+        }
+
+        private void SaveTabCache()
+        {
+            try
+            {
+                Directory.CreateDirectory(LogStoragePaths.StateDirectory);
+                var payload = new TabCachePayload { SavedAtUtc = DateTime.UtcNow };
+                var all = _logTabBufferStore.GetAllLogsSnapshot();
+                foreach (string tab in RecoverableTabs)
+                {
+                    if (!all.TryGetValue(tab, out var logs))
+                        continue;
+
+                    payload.Tabs[tab] = logs.TakeLast(200)
+                        .Select(l => new TabCacheEntry
+                        {
+                            FormattedText = l.FormattedText ?? string.Empty,
+                            Category = l.Category
+                        })
+                        .Where(e => !string.IsNullOrWhiteSpace(e.FormattedText))
+                        .ToList();
+                }
+
+                File.WriteAllText(TabCachePath, JsonSerializer.Serialize(payload), new UTF8Encoding(false));
+            }
+            catch (Exception ex)
+            {
+                AppLogger.Warn("Failed to save tab cache.", ex);
+            }
+        }
+
+        private void LoadTabCachePrioritizingCurrentTab()
+        {
+            if (!File.Exists(TabCachePath))
+                return;
+
+            try
+            {
+                string json = File.ReadAllText(TabCachePath, Encoding.UTF8);
+                var payload = JsonSerializer.Deserialize<TabCachePayload>(json);
+                if (payload?.Tabs == null || payload.Tabs.Count == 0)
+                    return;
+
+                string current = string.IsNullOrWhiteSpace(_currentTabTag) ? "Basic" : _currentTabTag;
+                var orderedTabs = RecoverableTabs
+                    .OrderBy(tab => string.Equals(tab, current, StringComparison.Ordinal) ? 0 : 1)
+                    .ToList();
+
+                foreach (string tab in orderedTabs)
+                {
+                    if (!payload.Tabs.TryGetValue(tab, out var rawLines) || rawLines == null || rawLines.Count == 0)
+                        continue;
+
+                    var parsed = new List<LogParser.ParseResult>(200);
+                    foreach (TabCacheEntry cached in rawLines.TakeLast(200))
+                    {
+                        if (string.IsNullOrWhiteSpace(cached.FormattedText))
+                            continue;
+                        parsed.Add(new LogParser.ParseResult
+                        {
+                            IsSuccess = true,
+                            Category = cached.Category,
+                            FormattedText = cached.FormattedText,
+                            Brush = ChatBrushResolver.Resolve(_settings, cached.Category)
+                        });
+                    }
+
+                    _logTabBufferStore.Replace(tab, parsed);
+                }
+
+                ChatWindowHub.NotifyBuffersChanged();
+                RequestRefreshLogDisplay();
+            }
+            catch (Exception ex)
+            {
+                AppLogger.Warn("Failed to load tab cache.", ex);
+            }
+        }
 
     }
 }

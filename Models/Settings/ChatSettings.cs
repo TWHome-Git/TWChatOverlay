@@ -41,8 +41,8 @@ namespace TWChatOverlay.Models
         private bool _showExperienceLimitAlertWindow = false;
         private bool _showDailyWeeklyContentOverlay = false;
         private bool _showEtosDirectionAlert = true;
-        private bool _enableAbaddonRoadCountAlert = false;
-        private bool _showAbaddonRoadSummaryWindow = false;
+        private bool _enableAbandonRoadCountAlert = false;
+        private bool _showAbandonRoadSummaryWindow = false;
         private bool _enableCravingPleasureCountAlert = false;
         private bool _showDungeonCountDisplayWindow = false;
         private bool _showItemDropAlert = true;
@@ -53,11 +53,6 @@ namespace TWChatOverlay.Models
         private bool _enableBuffTrackerAlert = false;
         private bool _enableBuffTrackerEndSound = false;
         private bool _showBuffTrackerWindow = false;
-        private bool _enableCharacterProfiles = false;
-        private string _profile1DisplayName = "프로필1";
-        private string _profile2DisplayName = "프로필2";
-        private string _profile1SwitchLog = "[이클립스 코어] 진화 4단계-3세트 효과가 발동되었습니다.";
-        private string _profile2SwitchLog = "[이클립스 코어] 진화 2단계-6세트 효과가 발동되었습니다.";
         private double _buffTrackerEndSoundVolume = 1.0;
         private double _itemDropAlertVolume = 0.1;
         private double _highlightAlertVolume = 1.0;
@@ -86,8 +81,8 @@ namespace TWChatOverlay.Models
         private double? _buffTrackerWindowTop = 0.0;
         private double? _itemCalendarWindowLeft = 0.0;
         private double? _itemCalendarWindowTop = 0.0;
-        private double? _abaddonRoadSummaryWindowLeft = 0.0;
-        private double? _abaddonRoadSummaryWindowTop = 0.0;
+        private double? _AbandonRoadSummaryWindowLeft = 0.0;
+        private double? _AbandonRoadSummaryWindowTop = 0.0;
         private double? _shoutToastWindowLeft = null;
         private double? _shoutToastWindowTop = null;
         private double? _recaptureSupplyWindowLeft = null;
@@ -113,10 +108,10 @@ namespace TWChatOverlay.Models
 
         private long _expAlarmThreshold = 10000;
         private long _experienceLimitTotalExp = 0;
-        private long _experienceLimitProfile1Exp = 0;
-        private long _experienceLimitProfile2Exp = 0;
         private bool _experienceLimitStateInitialized = false;
-        private int _abaddonRoadCountAlertDurationSeconds = 30;
+        private string _experienceLimitLastRefreshWeekKey = string.Empty;
+        private string _experienceLimitWeeklyPromptShownWeekKey = string.Empty;
+        private int _AbandonRoadCountAlertDurationSeconds = 30;
         private int _lastSelectedPresetNumber = 1;
 
         private WindowPositionPreset _preset1 = new("프리셋 1 (X: 0, Y: 0)", 110, 840, 0, 0);
@@ -171,38 +166,40 @@ namespace TWChatOverlay.Models
         [JsonPropertyOrder(6)]
         public bool ShowClub { get; set; } = true;
         [JsonPropertyOrder(7)]
-        public bool UseKeywordAlert { get; set; } = true;
+        public bool ShowClubBoss { get; set; } = true;
         [JsonPropertyOrder(8)]
-        public bool UseAlertColor { get => _useAlertColor; set { _useAlertColor = value; OnPropertyChanged(); } }
+        public bool UseKeywordAlert { get; set; } = true;
         [JsonPropertyOrder(9)]
-        public bool UseAlertSound { get => _useAlertSound; set { _useAlertSound = value; OnPropertyChanged(); } }
+        public bool UseAlertColor { get => _useAlertColor; set { _useAlertColor = value; OnPropertyChanged(); } }
         [JsonPropertyOrder(10)]
-        public bool UseMagicCircleAlert { get => _useMagicCircleAlert; set { _useMagicCircleAlert = value; OnPropertyChanged(); } }
+        public bool UseAlertSound { get => _useAlertSound; set { _useAlertSound = value; OnPropertyChanged(); } }
         [JsonPropertyOrder(11)]
-        public bool ShowEtosDirectionAlert { get => _showEtosDirectionAlert; set { _showEtosDirectionAlert = value; OnPropertyChanged(); } }
+        public bool UseMagicCircleAlert { get => _useMagicCircleAlert; set { _useMagicCircleAlert = value; OnPropertyChanged(); } }
         [JsonPropertyOrder(12)]
-        public bool EnableAbaddonRoadCountAlert { get => _enableAbaddonRoadCountAlert; set { _enableAbaddonRoadCountAlert = value; OnPropertyChanged(); } }
+        public bool ShowEtosDirectionAlert { get => _showEtosDirectionAlert; set { _showEtosDirectionAlert = value; OnPropertyChanged(); } }
         [JsonPropertyOrder(13)]
-        public bool ShowAbaddonRoadSummaryWindow { get => _showAbaddonRoadSummaryWindow; set { _showAbaddonRoadSummaryWindow = value; OnPropertyChanged(); } }
+        public bool EnableAbandonRoadCountAlert { get => _enableAbandonRoadCountAlert; set { _enableAbandonRoadCountAlert = value; OnPropertyChanged(); } }
         [JsonPropertyOrder(14)]
-        public bool EnableCravingPleasureCountAlert { get => _enableCravingPleasureCountAlert; set { _enableCravingPleasureCountAlert = value; OnPropertyChanged(); } }
+        public bool ShowAbandonRoadSummaryWindow { get => _showAbandonRoadSummaryWindow; set { _showAbandonRoadSummaryWindow = value; OnPropertyChanged(); } }
         [JsonPropertyOrder(15)]
-        public bool ShowDungeonCountDisplayWindow { get => _showDungeonCountDisplayWindow; set { _showDungeonCountDisplayWindow = value; OnPropertyChanged(); } }
+        public bool EnableCravingPleasureCountAlert { get => _enableCravingPleasureCountAlert; set { _enableCravingPleasureCountAlert = value; OnPropertyChanged(); } }
         [JsonPropertyOrder(16)]
-        public bool ShowItemDropAlert { get => _showItemDropAlert; set { _showItemDropAlert = value; OnPropertyChanged(); } }
+        public bool ShowDungeonCountDisplayWindow { get => _showDungeonCountDisplayWindow; set { _showDungeonCountDisplayWindow = value; OnPropertyChanged(); } }
         [JsonPropertyOrder(17)]
-        public bool ShowEtosHelperWindow { get => _showEtosHelperWindow; set { _showEtosHelperWindow = value; OnPropertyChanged(); } }
+        public bool ShowItemDropAlert { get => _showItemDropAlert; set { _showItemDropAlert = value; OnPropertyChanged(); } }
         [JsonPropertyOrder(18)]
-        public bool ShowItemDropHelperWindow { get => _showItemDropHelperWindow; set { _showItemDropHelperWindow = value; OnPropertyChanged(); } }
+        public bool ShowEtosHelperWindow { get => _showEtosHelperWindow; set { _showEtosHelperWindow = value; OnPropertyChanged(); } }
         [JsonPropertyOrder(19)]
-        public bool UseCustomDropItemFilter { get => _useCustomDropItemFilter; set { _useCustomDropItemFilter = value; OnPropertyChanged(); } }
+        public bool ShowItemDropHelperWindow { get => _showItemDropHelperWindow; set { _showItemDropHelperWindow = value; OnPropertyChanged(); } }
         [JsonPropertyOrder(20)]
-        public string CustomDropItemJson { get => _customDropItemJson; set { _customDropItemJson = value ?? string.Empty; OnPropertyChanged(); } }
+        public bool UseCustomDropItemFilter { get => _useCustomDropItemFilter; set { _useCustomDropItemFilter = value; OnPropertyChanged(); } }
         [JsonPropertyOrder(21)]
-        public bool EnableBuffTrackerAlert { get => _enableBuffTrackerAlert; set { _enableBuffTrackerAlert = value; OnPropertyChanged(); } }
+        public string CustomDropItemJson { get => _customDropItemJson; set { _customDropItemJson = value ?? string.Empty; OnPropertyChanged(); } }
         [JsonPropertyOrder(22)]
-        public bool EnableBuffTrackerEndSound { get => _enableBuffTrackerEndSound; set { _enableBuffTrackerEndSound = value; OnPropertyChanged(); } }
+        public bool EnableBuffTrackerAlert { get => _enableBuffTrackerAlert; set { _enableBuffTrackerAlert = value; OnPropertyChanged(); } }
         [JsonPropertyOrder(23)]
+        public bool EnableBuffTrackerEndSound { get => _enableBuffTrackerEndSound; set { _enableBuffTrackerEndSound = value; OnPropertyChanged(); } }
+        [JsonPropertyOrder(24)]
         public double BuffTrackerEndSoundVolume
         {
             get => _buffTrackerEndSoundVolume;
@@ -215,18 +212,8 @@ namespace TWChatOverlay.Models
                 OnPropertyChanged(nameof(BuffTrackerEndSoundVolumePercent));
             }
         }
-        [JsonPropertyOrder(24)]
+        [JsonPropertyOrder(25)]
         public bool ShowBuffTrackerWindow { get => _showBuffTrackerWindow; set { _showBuffTrackerWindow = value; OnPropertyChanged(); } }
-        [JsonPropertyOrder(241)]
-        public bool EnableCharacterProfiles { get => _enableCharacterProfiles; set { _enableCharacterProfiles = value; OnPropertyChanged(); } }
-        [JsonPropertyOrder(242)]
-        public string Profile1DisplayName { get => _profile1DisplayName; set { _profile1DisplayName = value ?? "프로필1"; OnPropertyChanged(); } }
-        [JsonPropertyOrder(243)]
-        public string Profile2DisplayName { get => _profile2DisplayName; set { _profile2DisplayName = value ?? "프로필2"; OnPropertyChanged(); } }
-        [JsonPropertyOrder(244)]
-        public string Profile1SwitchLog { get => _profile1SwitchLog; set { _profile1SwitchLog = value ?? string.Empty; OnPropertyChanged(); } }
-        [JsonPropertyOrder(245)]
-        public string Profile2SwitchLog { get => _profile2SwitchLog; set { _profile2SwitchLog = value ?? string.Empty; OnPropertyChanged(); } }
         [JsonPropertyOrder(246)]
         public long ExperienceLimitTotalExp
         {
@@ -239,30 +226,6 @@ namespace TWChatOverlay.Models
                 OnPropertyChanged();
             }
         }
-        [JsonPropertyOrder(247)]
-        public long ExperienceLimitProfile1Exp
-        {
-            get => _experienceLimitProfile1Exp;
-            set
-            {
-                long clamped = Math.Max(0, value);
-                if (_experienceLimitProfile1Exp == clamped) return;
-                _experienceLimitProfile1Exp = clamped;
-                OnPropertyChanged();
-            }
-        }
-        [JsonPropertyOrder(248)]
-        public long ExperienceLimitProfile2Exp
-        {
-            get => _experienceLimitProfile2Exp;
-            set
-            {
-                long clamped = Math.Max(0, value);
-                if (_experienceLimitProfile2Exp == clamped) return;
-                _experienceLimitProfile2Exp = clamped;
-                OnPropertyChanged();
-            }
-        }
         [JsonPropertyOrder(249)]
         public bool ExperienceLimitStateInitialized
         {
@@ -271,6 +234,30 @@ namespace TWChatOverlay.Models
             {
                 if (_experienceLimitStateInitialized == value) return;
                 _experienceLimitStateInitialized = value;
+                OnPropertyChanged();
+            }
+        }
+        [JsonPropertyOrder(250)]
+        public string ExperienceLimitLastRefreshWeekKey
+        {
+            get => _experienceLimitLastRefreshWeekKey;
+            set
+            {
+                value ??= string.Empty;
+                if (_experienceLimitLastRefreshWeekKey == value) return;
+                _experienceLimitLastRefreshWeekKey = value;
+                OnPropertyChanged();
+            }
+        }
+        [JsonPropertyOrder(251)]
+        public string ExperienceLimitWeeklyPromptShownWeekKey
+        {
+            get => _experienceLimitWeeklyPromptShownWeekKey;
+            set
+            {
+                value ??= string.Empty;
+                if (_experienceLimitWeeklyPromptShownWeekKey == value) return;
+                _experienceLimitWeeklyPromptShownWeekKey = value;
                 OnPropertyChanged();
             }
         }
@@ -460,7 +447,17 @@ namespace TWChatOverlay.Models
             }
         }
         [JsonPropertyOrder(22)]
-        public string FontFamily { get => _fontFamily; set { _fontFamily = value; OnPropertyChanged(); } }
+        public string FontFamily
+        {
+            get => _fontFamily;
+            set
+            {
+                string normalized = string.IsNullOrWhiteSpace(value) ? "사용자 설정" : value;
+                if (_fontFamily == normalized) return;
+                _fontFamily = normalized;
+                OnPropertyChanged();
+            }
+        }
         [JsonPropertyOrder(23)]
         public string NormalColor { get => _normalColor; set { _normalColor = value; OnPropertyChanged(); } }
         [JsonPropertyOrder(24)]
@@ -598,18 +595,18 @@ namespace TWChatOverlay.Models
         [JsonPropertyOrder(46)]
         public long ExpAlarmThreshold { get => _expAlarmThreshold; set { _expAlarmThreshold = value; OnPropertyChanged(); } }
         [JsonPropertyOrder(47)]
-        public int AbaddonRoadCountAlertDurationSeconds
+        public int AbandonRoadCountAlertDurationSeconds
         {
-            get => _abaddonRoadCountAlertDurationSeconds;
+            get => _AbandonRoadCountAlertDurationSeconds;
             set
             {
                 int clamped = Math.Max(1, Math.Min(300, value));
-                if (_abaddonRoadCountAlertDurationSeconds == clamped) return;
-                _abaddonRoadCountAlertDurationSeconds = clamped;
+                if (_AbandonRoadCountAlertDurationSeconds == clamped) return;
+                _AbandonRoadCountAlertDurationSeconds = clamped;
                 OnPropertyChanged();
             }
         }
-        [JsonPropertyOrder(48)]
+        [JsonPropertyOrder(900)]
         public int LastSelectedPresetNumber
         {
             get => _lastSelectedPresetNumber;
@@ -746,25 +743,25 @@ namespace TWChatOverlay.Models
         }
 
         [JsonPropertyOrder(64)]
-        public double? AbaddonRoadSummaryWindowLeft
+        public double? AbandonRoadSummaryWindowLeft
         {
-            get => _abaddonRoadSummaryWindowLeft;
+            get => _AbandonRoadSummaryWindowLeft;
             set
             {
-                if (_abaddonRoadSummaryWindowLeft == value) return;
-                _abaddonRoadSummaryWindowLeft = value;
+                if (_AbandonRoadSummaryWindowLeft == value) return;
+                _AbandonRoadSummaryWindowLeft = value;
                 OnPropertyChanged();
             }
         }
 
         [JsonPropertyOrder(65)]
-        public double? AbaddonRoadSummaryWindowTop
+        public double? AbandonRoadSummaryWindowTop
         {
-            get => _abaddonRoadSummaryWindowTop;
+            get => _AbandonRoadSummaryWindowTop;
             set
             {
-                if (_abaddonRoadSummaryWindowTop == value) return;
-                _abaddonRoadSummaryWindowTop = value;
+                if (_AbandonRoadSummaryWindowTop == value) return;
+                _AbandonRoadSummaryWindowTop = value;
                 OnPropertyChanged();
             }
         }
@@ -931,9 +928,9 @@ namespace TWChatOverlay.Models
             get => _chatCloneWindow1FontFamily;
             set
             {
-                value ??= string.Empty;
-                if (_chatCloneWindow1FontFamily == value) return;
-                _chatCloneWindow1FontFamily = value;
+                string normalized = string.IsNullOrWhiteSpace(value) ? "사용자 설정" : value;
+                if (_chatCloneWindow1FontFamily == normalized) return;
+                _chatCloneWindow1FontFamily = normalized;
                 OnPropertyChanged();
             }
         }
@@ -968,9 +965,9 @@ namespace TWChatOverlay.Models
             get => _chatCloneWindow2FontFamily;
             set
             {
-                value ??= string.Empty;
-                if (_chatCloneWindow2FontFamily == value) return;
-                _chatCloneWindow2FontFamily = value;
+                string normalized = string.IsNullOrWhiteSpace(value) ? "사용자 설정" : value;
+                if (_chatCloneWindow2FontFamily == normalized) return;
+                _chatCloneWindow2FontFamily = normalized;
                 OnPropertyChanged();
             }
         }
@@ -999,21 +996,21 @@ namespace TWChatOverlay.Models
                 OnPropertyChanged(nameof(BuffTrackerWindowTop));
         }
 
-        [JsonPropertyOrder(70)]
+        [JsonPropertyOrder(901)]
         public WindowPositionPreset Preset1
         {
             get => _preset1;
             set { _preset1 = value; OnPropertyChanged(); }
         }
 
-        [JsonPropertyOrder(71)]
+        [JsonPropertyOrder(902)]
         public WindowPositionPreset Preset2
         {
             get => _preset2;
             set { _preset2 = value; OnPropertyChanged(); }
         }
 
-        [JsonPropertyOrder(72)]
+        [JsonPropertyOrder(903)]
         public WindowPositionPreset Preset3
         {
             get => _preset3;

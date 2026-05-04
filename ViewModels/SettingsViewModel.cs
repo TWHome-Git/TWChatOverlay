@@ -107,6 +107,20 @@ namespace TWChatOverlay.ViewModels
             }
         }
 
+        public bool ShowClubBoss
+        {
+            get => _settings.ShowClubBoss;
+            set
+            {
+                if (_settings.ShowClubBoss != value)
+                {
+                    _settings.ShowClubBoss = value;
+                    OnPropertyChanged();
+                    SaveSettings();
+                }
+            }
+        }
+
         public bool ShowShout
         {
             get => _settings.ShowShout;
@@ -555,6 +569,7 @@ namespace TWChatOverlay.ViewModels
             OnPropertyChanged(nameof(ShowNormal));
             OnPropertyChanged(nameof(ShowTeam));
             OnPropertyChanged(nameof(ShowClub));
+            OnPropertyChanged(nameof(ShowClubBoss));
             OnPropertyChanged(nameof(ShowShout));
             OnPropertyChanged(nameof(ShowSystem));
             OnPropertyChanged(nameof(ShowEtaLevel));

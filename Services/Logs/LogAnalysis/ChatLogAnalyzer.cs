@@ -138,6 +138,12 @@ namespace TWChatOverlay.Services.LogAnalysis
             return string.IsNullOrWhiteSpace(userId) ? null : userId;
         }
 
+        private static bool IsIgnoredNormalMessage(string rawContent)
+        {
+            string message = Regex.Replace(rawContent, @"\s+", " ").Trim();
+            return IgnoredChatMessageService.IsIgnoredNormalMessage(message);
+        }
+
         private static (ChatCategory category, SolidColorBrush brush) GetCategoryByColor(string colorCode)
         {
             return colorCode switch

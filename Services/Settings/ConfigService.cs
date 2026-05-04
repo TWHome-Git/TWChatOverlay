@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Collections.Generic;
 using System.Text.Encodings.Web;
 using System.Text;
 using System.Text.Json;
@@ -17,6 +18,7 @@ namespace TWChatOverlay.Services
     public static class ConfigService
     {
         private static readonly string FilePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "settings.json");
+        private static readonly string BackupFilePath = FilePath + ".bak";
         private static readonly object _saveLock = new();
         private static readonly TimeSpan SaveDebounce = TimeSpan.FromMilliseconds(250);
         private static readonly JsonSerializerOptions _options = new JsonSerializerOptions
@@ -101,11 +103,13 @@ namespace TWChatOverlay.Services
 
                 if (File.Exists(FilePath))
                 {
+                    File.Copy(FilePath, BackupFilePath, overwrite: true);
                     File.Replace(tempPath, FilePath, null);
                 }
                 else
                 {
                     File.Move(tempPath, FilePath);
+                    File.Copy(FilePath, BackupFilePath, overwrite: true);
                 }
 
                 _lastSavedJson = json;
@@ -139,13 +143,20 @@ namespace TWChatOverlay.Services
                     _lastSavedJson = json;
                     AppLogger.Debug($"Settings loaded from {FilePath}.");
                     var settings = JsonSerializer.Deserialize<ChatSettings>(json, _options) ?? new ChatSettings();
-                    bool cleaned = CleanupLegacyDungeonProgress(json, settings);
-                    bool removedLegacyDebugLogging = CleanupLegacyDebugLoggingSetting(json);
                     AppLogger.IsEnabled = settings.EnableDebugLogging;
-                    if (cleaned || removedLegacyDebugLogging)
+
+                    string normalizedJson = JsonSerializer.Serialize(settings, _options);
+                    bool removedObsoleteKeys = TryRemoveObsoleteKeys(json, normalizedJson, out string? cleanedJson);
+                    if (removedObsoleteKeys && cleanedJson != null)
+                    {
+                        settings = JsonSerializer.Deserialize<ChatSettings>(cleanedJson, _options) ?? settings;
+                        normalizedJson = JsonSerializer.Serialize(settings, _options);
+                    }
+
+                    if (!string.Equals(json, normalizedJson, StringComparison.Ordinal))
                     {
                         Save(settings);
-                        AppLogger.Info("Legacy settings were migrated to the current schema.");
+                        AppLogger.Info("Settings were normalized to the current schema.");
                     }
                     return settings;
                 }
@@ -162,75 +173,56 @@ namespace TWChatOverlay.Services
             return defaultSettings;
         }
 
-        private static bool CleanupLegacyDungeonProgress(string json, ChatSettings settings)
+        private static bool TryRemoveObsoleteKeys(string currentJson, string normalizedJson, out string? cleanedJson)
         {
-            bool changed = false;
-
-            foreach (var config in settings.DungeonItemConfigs.Values)
-            {
-                if (config.CurrentCount != 0 || config.IsCleared || config.SavedAt != DateTime.MinValue)
-                {
-                    config.CurrentCount = 0;
-                    config.IsCleared = false;
-                    config.SavedAt = DateTime.MinValue;
-                    changed = true;
-                }
-            }
-
+            cleanedJson = null;
             try
             {
-                JsonNode? rootNode = JsonNode.Parse(json);
-                if (rootNode is not JsonObject rootObject)
-                {
-                    return changed;
-                }
+                JsonNode? current = JsonNode.Parse(currentJson);
+                JsonNode? normalized = JsonNode.Parse(normalizedJson);
+                if (current is not JsonObject currentObj || normalized is not JsonObject normalizedObj)
+                    return false;
 
-                if (rootObject[nameof(ChatSettings.DungeonItemConfigs)] is not JsonObject configRoot)
-                {
-                    return changed;
-                }
+                bool changed = RemoveObsoleteKeysRecursive(currentObj, normalizedObj);
+                if (!changed)
+                    return false;
 
-                foreach (var pair in configRoot)
-                {
-                    if (pair.Value is not JsonObject configObject)
-                    {
-                        continue;
-                    }
-
-                    if (configObject.ContainsKey(nameof(DungeonItemConfig.CurrentCount)) ||
-                        configObject.ContainsKey(nameof(DungeonItemConfig.IsCleared)) ||
-                        configObject.ContainsKey(nameof(DungeonItemConfig.SavedAt)))
-                    {
-                        changed = true;
-                        break;
-                    }
-                }
+                cleanedJson = currentObj.ToJsonString(_options);
+                return true;
             }
             catch (Exception ex)
             {
-                AppLogger.Warn("Legacy dungeon progress cleanup check failed.", ex);
+                AppLogger.Warn("Failed to remove obsolete nested settings keys.", ex);
+                return false;
+            }
+        }
+
+        private static bool RemoveObsoleteKeysRecursive(JsonObject current, JsonObject reference)
+        {
+            bool changed = false;
+            var keys = new List<string>();
+            foreach (var pair in current)
+                keys.Add(pair.Key);
+
+            foreach (string key in keys)
+            {
+                if (!reference.ContainsKey(key))
+                {
+                    current.Remove(key);
+                    changed = true;
+                    continue;
+                }
+
+                JsonNode? currentNode = current[key];
+                JsonNode? referenceNode = reference[key];
+                if (currentNode is JsonObject currentChildObj && referenceNode is JsonObject referenceChildObj)
+                {
+                    if (RemoveObsoleteKeysRecursive(currentChildObj, referenceChildObj))
+                        changed = true;
+                }
             }
 
             return changed;
-        }
-
-        private static bool CleanupLegacyDebugLoggingSetting(string json)
-        {
-            try
-            {
-                JsonNode? rootNode = JsonNode.Parse(json);
-                if (rootNode is not JsonObject rootObject)
-                {
-                    return false;
-                }
-
-                return rootObject.ContainsKey(nameof(ChatSettings.EnableDebugLogging));
-            }
-            catch (Exception ex)
-            {
-                AppLogger.Warn("Legacy debug logging setting cleanup check failed.", ex);
-                return false;
-            }
         }
     }
 }
