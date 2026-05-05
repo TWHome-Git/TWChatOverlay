@@ -677,28 +677,8 @@ namespace TWChatOverlay.Views
             date = date.Date;
             if (_currentMonthStart.Year != date.Year || _currentMonthStart.Month != date.Month)
                 return;
-
-            var delta = new AbandonMonthlySummarySnapshotEntry();
-            if (!AbandonSummaryCalculator.TryAccumulate(formattedText, delta))
-                return;
-
-            Dispatcher.BeginInvoke(new Action(() =>
-            {
-                _currentMonthAbandonSummary.TotalEntryFeeMan += delta.TotalEntryFeeMan;
-                _currentMonthAbandonSummary.Low += delta.Low;
-                _currentMonthAbandonSummary.LowGain += delta.LowGain;
-                _currentMonthAbandonSummary.LowLoss += delta.LowLoss;
-                _currentMonthAbandonSummary.Mid += delta.Mid;
-                _currentMonthAbandonSummary.MidGain += delta.MidGain;
-                _currentMonthAbandonSummary.MidLoss += delta.MidLoss;
-                _currentMonthAbandonSummary.High += delta.High;
-                _currentMonthAbandonSummary.HighGain += delta.HighGain;
-                _currentMonthAbandonSummary.HighLoss += delta.HighLoss;
-                _currentMonthAbandonSummary.Top += delta.Top;
-                _currentMonthAbandonSummary.TopGain += delta.TopGain;
-                _currentMonthAbandonSummary.TopLoss += delta.TopLoss;
-                UpdateMonthlyAbandonSummary(_currentMonthAbandonSummary);
-            }), DispatcherPriority.Background);
+            // Avoid double counting: month totals are loaded from persisted daily summaries.
+            // Realtime abandon lines can overlap with data already reflected in summary files.
         }
 
         public void ApplyRealtimeExperienceEssenceLog(string formattedText, DateTime date)

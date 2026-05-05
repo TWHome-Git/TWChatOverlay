@@ -740,14 +740,20 @@ namespace TWChatOverlay.Views
                                 pendingAbyssFloor = null;
                             }
 
-                            if (DailyWeeklyLogAnalyzer.TryMatchSinjoReward(effectiveLine, out int sinjoValue))
+                            if (DailyWeeklyLogAnalyzer.TryMatchSinjoReward(effectiveLine, out _))
                             {
-                                specialCounts[DailyWeeklyLogAnalyzer.SinjoSpecialKey] = AccumulateCount(DailyWeeklyLogAnalyzer.SinjoSpecialKey, sinjoValue);
+                                specialCounts[DailyWeeklyLogAnalyzer.SinjoSpecialKey] =
+                                    specialCounts.TryGetValue(DailyWeeklyLogAnalyzer.SinjoSpecialKey, out int existingSinjo)
+                                        ? existingSinjo + 1
+                                        : 1;
                             }
 
-                            if (DailyWeeklyLogAnalyzer.TryMatchCatacombsReward(effectiveLine, out int catacombsValue))
+                            if (DailyWeeklyLogAnalyzer.TryMatchCatacombsReward(effectiveLine, out _))
                             {
-                                specialCounts[DailyWeeklyLogAnalyzer.CatacombsSpecialKey] = AccumulateCount(DailyWeeklyLogAnalyzer.CatacombsSpecialKey, catacombsValue);
+                                specialCounts[DailyWeeklyLogAnalyzer.CatacombsSpecialKey] =
+                                    specialCounts.TryGetValue(DailyWeeklyLogAnalyzer.CatacombsSpecialKey, out int existingCatacombs)
+                                        ? existingCatacombs + 1
+                                        : 1;
                             }
 
                             string normalizedLine = NormalizeLogText(effectiveLine);
@@ -932,7 +938,7 @@ namespace TWChatOverlay.Views
             if (item == null || !item.IsEnabled)
                 return false;
 
-            SetAccumulatedCount(_AbandonCountStates, item, count);
+            item.Mark();
             return true;
         }
 
