@@ -686,9 +686,17 @@ namespace TWChatOverlay.Views
             {
                 _currentMonthAbandonSummary.TotalEntryFeeMan += delta.TotalEntryFeeMan;
                 _currentMonthAbandonSummary.Low += delta.Low;
+                _currentMonthAbandonSummary.LowGain += delta.LowGain;
+                _currentMonthAbandonSummary.LowLoss += delta.LowLoss;
                 _currentMonthAbandonSummary.Mid += delta.Mid;
+                _currentMonthAbandonSummary.MidGain += delta.MidGain;
+                _currentMonthAbandonSummary.MidLoss += delta.MidLoss;
                 _currentMonthAbandonSummary.High += delta.High;
+                _currentMonthAbandonSummary.HighGain += delta.HighGain;
+                _currentMonthAbandonSummary.HighLoss += delta.HighLoss;
                 _currentMonthAbandonSummary.Top += delta.Top;
+                _currentMonthAbandonSummary.TopGain += delta.TopGain;
+                _currentMonthAbandonSummary.TopLoss += delta.TopLoss;
                 UpdateMonthlyAbandonSummary(_currentMonthAbandonSummary);
             }), DispatcherPriority.Background);
         }

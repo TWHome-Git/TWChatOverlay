@@ -215,7 +215,7 @@ namespace TWChatOverlay.Views
 
         public void UpdateSummary(AbandonMonthlySummarySnapshotEntry summary)
         {
-            SummaryText = $"어밴던로드 이번주 합계: {FormatManAmount(summary.NetProfitMan)}";
+            SummaryText = $"어밴던로드 주간 합계: {FormatManAmount(summary.NetProfitMan)}";
 
             StoneEntries.Clear();
             StoneEntries.Add(new AbandonMonthlyStoneSummaryEntryViewModel("하급 마정석", LowMagicStoneIconUri, summary.Low));
@@ -236,7 +236,7 @@ namespace TWChatOverlay.Views
 
         public void UpdateSummary(AbandonSummaryValue summary)
         {
-            SummaryText = $"어밴던로드 이번주 합계: {FormatManAmount(summary.NetProfitMan)}";
+            SummaryText = $"어밴던로드 주간 합계: {FormatManAmount(summary.NetProfitMan)}";
 
             StoneEntries.Clear();
             StoneEntries.Add(new AbandonMonthlyStoneSummaryEntryViewModel("하급 마정석", LowMagicStoneIconUri, summary.Low));
