@@ -299,28 +299,6 @@ namespace TWChatOverlay.Services
                         continue;
 
                     string formattedText = analysis.Parsed.FormattedText;
-                    if (TryExtractMagicStoneGain(formattedText, out string stoneName, out int stoneCount))
-                    {
-                        var gainDelta = new AbandonMonthlySummarySnapshotEntry();
-                        switch (stoneName)
-                        {
-                            case "하급 마정석":
-                                gainDelta.LowGain += stoneCount;
-                                break;
-                            case "중급 마정석":
-                                gainDelta.MidGain += stoneCount;
-                                break;
-                            case "상급 마정석":
-                                gainDelta.HighGain += stoneCount;
-                                break;
-                            case "최상급 마정석":
-                                gainDelta.TopGain += stoneCount;
-                                break;
-                        }
-                        NormalizeStoneConsistency(gainDelta);
-                        UpdateAbandonDailySummary(logDate, gainDelta);
-                        continue;
-                    }
 
                     if (rebuildAbandonSummary && !writeAbandon && TryBuildAbandonDelta(formattedText, out AbandonMonthlySummarySnapshotEntry summaryDelta))
                     {
