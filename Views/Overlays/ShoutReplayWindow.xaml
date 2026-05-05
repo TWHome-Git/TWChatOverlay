@@ -1,0 +1,49 @@
+<Window x:Class="TWChatOverlay.Views.ShoutReplayWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="외치기 다시 보기"
+        Height="640"
+        Width="920"
+        MinHeight="420"
+        MinWidth="620"
+        Background="{DynamicResource PrimaryBackgroundBrush}">
+    <Grid Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <DockPanel Grid.Row="0" Margin="0,0,0,8">
+            <Button x:Name="BtnPrev" Content="&lt;" Width="34" Height="30" Margin="0,0,6,0" Click="Prev_Click"/>
+            <Button x:Name="BtnDate" Content="-" Width="180" Height="30" Click="Date_Click"/>
+            <Button x:Name="BtnNext" Content="&gt;" Width="34" Height="30" Margin="6,0,0,0" Click="Next_Click"/>
+            <TextBlock Margin="12,0,0,0" VerticalAlignment="Center" Foreground="#9AA4B2" Text="외치기 로그"/>
+            <Popup x:Name="DatePopup" PlacementTarget="{Binding ElementName=BtnDate}" Placement="Bottom" StaysOpen="False">
+                <Border Background="#1b1f26" BorderBrush="#3a4556" BorderThickness="1" Padding="8">
+                    <DatePicker x:Name="DatePickerLog" SelectedDateChanged="DatePickerLog_SelectedDateChanged"/>
+                </Border>
+            </Popup>
+        </DockPanel>
+
+        <Grid Grid.Row="1" PreviewMouseDown="LogArea_PreviewMouseDown">
+            <Border Background="#10151D" BorderBrush="#2B3442" BorderThickness="1" CornerRadius="6">
+                <RichTextBox x:Name="LogRichText"
+                             IsReadOnly="True"
+                             IsDocumentEnabled="True"
+                             BorderThickness="0"
+                             Background="Transparent"
+                             Foreground="White"
+                             VerticalScrollBarVisibility="Auto"
+                             HorizontalScrollBarVisibility="Disabled"
+                             Padding="8"
+                             PreviewMouseWheel="LogRichText_PreviewMouseWheel"/>
+            </Border>
+            <Border x:Name="LoadingOverlay" Background="#88000000" Visibility="Collapsed" CornerRadius="6">
+                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <TextBlock Text="로딩 중..." Foreground="White" FontSize="18" HorizontalAlignment="Center"/>
+                    <ProgressBar IsIndeterminate="True" Width="180" Height="12" Margin="0,10,0,0"/>
+                </StackPanel>
+            </Border>
+        </Grid>
+    </Grid>
+</Window>

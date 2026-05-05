@@ -147,6 +147,29 @@ namespace TWChatOverlay
                 AppLogger.Warn("Failed to create menu window.", ex);
             }
 
+            try
+            {
+                Views.MemoOverlayWindow? memo = null;
+                foreach (Window w in Current.Windows)
+                {
+                    if (w is Views.MemoOverlayWindow existingMemo)
+                    {
+                        memo = existingMemo;
+                        break;
+                    }
+                }
+
+                if (memo == null)
+                {
+                    memo = new Views.MemoOverlayWindow();
+                    memo.Show();
+                }
+            }
+            catch (Exception ex)
+            {
+                AppLogger.Warn("Failed to create memo overlay window at startup.", ex);
+            }
+
 #if DEBUG
             try
             {

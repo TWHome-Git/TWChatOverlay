@@ -1,0 +1,39 @@
+<Window x:Class="TWChatOverlay.Views.MemoOverlayWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="메모장"
+        Height="540"
+        Width="420"
+        MinHeight="320"
+        MinWidth="280"
+        Background="#11161E">
+    <Grid Margin="8">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        <StackPanel Grid.Row="0" Margin="0,0,0,8">
+        <DockPanel Margin="0,0,0,6">
+            <TextBlock Text="투명도" VerticalAlignment="Center" Foreground="#C9D4E5" Margin="0,0,8,0"/>
+            <Slider x:Name="OpacitySlider" Minimum="0" Maximum="100" Value="0" Width="180" ValueChanged="OpacitySlider_ValueChanged"/>
+            <Button x:Name="BtnOverlayMode" Content="오버레이 모드" Margin="8,0,0,0" Padding="10,2" Click="OverlayMode_Click"/>
+        </DockPanel>
+        <DockPanel>
+            <TextBlock Text="크기" VerticalAlignment="Center" Foreground="#C9D4E5" Margin="0,0,6,0"/>
+            <Slider x:Name="FontSizeSlider" Minimum="12" Maximum="40" Value="20" Width="110" ValueChanged="FontSizeSlider_ValueChanged"/>
+            <Button x:Name="BtnBold" Content="B" Width="28" Margin="8,0,0,0" Click="BtnBold_Click"/>
+            <Button x:Name="BtnItalic" Content="I" Width="28" Margin="4,0,0,0" Click="BtnItalic_Click"/>
+            <TextBlock Text="색" VerticalAlignment="Center" Foreground="#C9D4E5" Margin="10,0,6,0"/>
+            <ComboBox x:Name="ColorCombo" Width="90" SelectionChanged="ColorCombo_SelectionChanged">
+                <ComboBoxItem Content="White" IsSelected="True"/>
+                <ComboBoxItem Content="Yellow"/>
+                <ComboBoxItem Content="Cyan"/>
+                <ComboBoxItem Content="Pink"/>
+                <ComboBoxItem Content="Lime"/>
+            </ComboBox>
+        </DockPanel>
+        </StackPanel>
+        <TextBox x:Name="MemoTextBox" Grid.Row="1" AcceptsReturn="True" AcceptsTab="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto"
+                 Foreground="#E8EDF7" Background="#10151D" BorderBrush="#2B3442" BorderThickness="1" FontSize="20"/>
+    </Grid>
+</Window>

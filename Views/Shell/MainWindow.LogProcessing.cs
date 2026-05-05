@@ -234,7 +234,7 @@ namespace TWChatOverlay.Views
             {
                 if (_logAnalysisService.ShouldRenderToTab(parseResult, _currentTabTag))
                 {
-                    if (!ShouldSuppressOverlayText(parseResult))
+                    if (!analysis.ShouldShowEtosDirection && !ShouldSuppressOverlayText(parseResult))
                         AddToUI(parseResult, isRealTime: context.IsRealTime, deferScroll: context.DeferUiScroll);
                 }
             }
@@ -279,7 +279,17 @@ namespace TWChatOverlay.Views
             if (parseResult == null || string.IsNullOrWhiteSpace(parseResult.FormattedText))
                 return false;
 
+            // 에토스 방향 알림 트리거 문구는 방향 오버레이만 표시하고 일반 채팅 오버레이에는 노출하지 않음.
+            if (!string.IsNullOrWhiteSpace(parseResult.EtosImagePath))
+                return true;
+
             string text = parseResult.FormattedText;
+            if ((parseResult.Category == ChatCategory.Normal ||
+                 parseResult.Category == ChatCategory.NormalSelf ||
+                 parseResult.Category == ChatCategory.Team) &&
+                text.Contains("에토스", StringComparison.Ordinal))
+                return true;
+
             if (parseResult.Category == ChatCategory.Club &&
                 !_settings.ShowClubBoss &&
                 IgnoredChatMessageService.IsIgnoredClubMessage(text))
@@ -498,6 +508,8 @@ namespace TWChatOverlay.Views
                     var logs = _logTabBufferStore.GetLogs(_currentTabTag);
                     foreach (var log in logs)
                     {
+                        if (ShouldSuppressOverlayText(log))
+                            continue;
                         AddToUI(log, isRealTime: false, deferScroll: true);
                     }
                 }

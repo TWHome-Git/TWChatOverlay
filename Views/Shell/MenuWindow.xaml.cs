@@ -15,6 +15,9 @@ namespace TWChatOverlay.Views
         private Button? _activeSubmenuButton;
         private MainWindow? _subscribedMainWindow;
         private readonly Forms.NotifyIcon _notifyIcon;
+        private static ShoutReplayWindow? _shoutReplayWindow;
+        private static MemoOverlayWindow? _memoWindow;
+        private bool _memoFirstClickForceEditorPending = true;
 
         public MenuWindow()
         {
@@ -219,6 +222,12 @@ namespace TWChatOverlay.Views
                 case "BtnAddon":
                     OpenAddon();
                     break;
+                case "BtnShoutReplay":
+                    OpenShoutReplay();
+                    break;
+                case "BtnMemo":
+                    OpenMemo();
+                    break;
                 case "BtnSettings":
                     OpenSettings();
                     break;
@@ -297,6 +306,105 @@ namespace TWChatOverlay.Views
         {
             var view = new AddonView();
             ShowAddonViewWindow(view, "추가 기능", BtnAddon);
+        }
+
+        private void OpenShoutReplay()
+        {
+            if (_shoutReplayWindow != null && _shoutReplayWindow.IsLoaded && _shoutReplayWindow.IsVisible)
+            {
+                _shoutReplayWindow.Close();
+                return;
+            }
+
+            if (_shoutReplayWindow == null || !_shoutReplayWindow.IsLoaded)
+            {
+                _shoutReplayWindow = new ShoutReplayWindow(GetSharedSettings())
+                {
+                    Owner = (Window?)GetMainWindow() ?? this,
+                    WindowStartupLocation = WindowStartupLocation.CenterOwner
+                };
+                _shoutReplayWindow.Closed += (_, _) =>
+                {
+                    _shoutReplayWindow = null;
+                    SetButtonActive(BtnShoutReplay, false);
+                };
+            }
+            _shoutReplayWindow.Show();
+            _shoutReplayWindow.Dispatcher.BeginInvoke(new Action(() =>
+            {
+                _shoutReplayWindow.Activate();
+                _shoutReplayWindow.Focus();
+                SetButtonActive(BtnShoutReplay, true);
+            }), System.Windows.Threading.DispatcherPriority.Input);
+        }
+
+        private void OpenMemo()
+        {
+            if (_memoWindow == null || !_memoWindow.IsLoaded)
+            {
+                foreach (Window w in Application.Current.Windows)
+                {
+                    if (w is MemoOverlayWindow existingMemo && existingMemo.IsLoaded)
+                    {
+                        _memoWindow = existingMemo;
+                        _memoWindow.EditorModeChanged -= MemoWindow_EditorModeChanged;
+                        _memoWindow.EditorModeChanged += MemoWindow_EditorModeChanged;
+                        _memoWindow.IsVisibleChanged -= MemoWindow_IsVisibleChanged;
+                        _memoWindow.IsVisibleChanged += MemoWindow_IsVisibleChanged;
+                        break;
+                    }
+                }
+            }
+
+            if (_memoWindow == null || !_memoWindow.IsLoaded)
+            {
+                _memoWindow = new MemoOverlayWindow(GetSharedSettings())
+                {
+                    Owner = (Window?)GetMainWindow() ?? this,
+                    WindowStartupLocation = WindowStartupLocation.CenterOwner
+                };
+                _memoWindow.EditorModeChanged += MemoWindow_EditorModeChanged;
+                _memoWindow.IsVisibleChanged += MemoWindow_IsVisibleChanged;
+                _memoWindow.Closed += (_, _) =>
+                {
+                    _memoWindow = null;
+                    SetButtonActive(BtnMemo, false);
+                };
+                _memoWindow.Show();
+                _memoWindow.Activate();
+                SetButtonActive(BtnMemo, _memoWindow.IsEditorModeVisible);
+                return;
+            }
+
+            if (_memoFirstClickForceEditorPending)
+            {
+                _memoFirstClickForceEditorPending = false;
+                _memoWindow.ShowEditorMode();
+                SetButtonActive(BtnMemo, true);
+                return;
+            }
+
+            if (_memoWindow.IsOverlayMode)
+            {
+                _memoWindow.ShowEditorMode();
+            }
+            else
+            {
+                _memoWindow.ToggleModeFromMenu();
+            }
+            SetButtonActive(BtnMemo, _memoWindow.IsEditorModeVisible);
+        }
+
+        private void MemoWindow_EditorModeChanged(object? sender, EventArgs e)
+        {
+            if (sender is MemoOverlayWindow memo)
+                SetButtonActive(BtnMemo, memo.IsEditorModeVisible);
+        }
+
+        private void MemoWindow_IsVisibleChanged(object sender, DependencyPropertyChangedEventArgs e)
+        {
+            if (sender is MemoOverlayWindow memo)
+                SetButtonActive(BtnMemo, memo.IsEditorModeVisible);
         }
 
         private void OpenSettings()
