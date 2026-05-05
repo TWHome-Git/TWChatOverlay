@@ -407,6 +407,8 @@ namespace TWChatOverlay.Views
                             double progress = 35 + (ratio * 50.0);
                             UpdateStartupLoadingProgress(progress, "원본 로그를 읽는 중입니다.", dateText);
                         }).ConfigureAwait(false);
+
+                    _readableLogArchiveService.MigrateContentArchiveIfNeeded();
                 }).ConfigureAwait(false);
 
                 _AbandonWeeklySummary = _readableLogArchiveService.LoadAbandonWeeklySummary(DateTime.Today);

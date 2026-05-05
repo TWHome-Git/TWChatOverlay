@@ -44,7 +44,10 @@ namespace TWChatOverlay.Services
         private readonly string _contentDirectory;
         private readonly string _AbandonDirectory;
         private readonly string _stateDirectory;
-        private const string RawLogCheckpointFileName = "raw-log-rebuild.checkpoint";
+        private const string MigrationStateFileName = "migration.json";
+        private const string ContentArchiveMigrationKey = "content-archive-experience-removal";
+        private const int CurrentContentArchiveMigrationVersion = 1;
+        private const string RawLogRebuildCheckpointKey = "raw-log-rebuild";
         private const string AbandonDaySummarySuffix = ".summary.day.json";
         private readonly Dictionary<DateTime, AbandonMonthlySummarySnapshotEntry> _abandonDayBuffer = new();
 
@@ -187,6 +190,25 @@ namespace TWChatOverlay.Services
             finally
             {
                 _buildGate.Release();
+            }
+        }
+
+        public void MigrateContentArchiveIfNeeded()
+        {
+            lock (_syncRoot)
+            {
+                EnsureArchiveDirectoriesExist();
+                int appliedVersion = LoadMigrationVersion(ContentArchiveMigrationKey);
+                if (appliedVersion >= CurrentContentArchiveMigrationVersion)
+                {
+                    DeleteLegacyStateFiles();
+                    return;
+                }
+
+                RemoveExperienceLinesFromContentArchive();
+
+                SaveMigrationVersion(ContentArchiveMigrationKey, CurrentContentArchiveMigrationVersion);
+                DeleteLegacyStateFiles();
             }
         }
 
@@ -354,21 +376,11 @@ namespace TWChatOverlay.Services
 
         private DateTime? LoadRawLogRebuildCheckpoint()
         {
-            string checkpointPath = Path.Combine(_stateDirectory, RawLogCheckpointFileName);
-            if (!File.Exists(checkpointPath))
-                return null;
-
-            try
-            {
-                string text = File.ReadAllText(checkpointPath, Encoding.UTF8).Trim();
-                if (DateTime.TryParse(text, CultureInfo.InvariantCulture, DateTimeStyles.AssumeLocal, out DateTime parsed))
-                    return parsed.Date;
-            }
-            catch
-            {
-            }
-
-            return null;
+            var state = LoadMigrationState();
+            return state.Checkpoints.TryGetValue(RawLogRebuildCheckpointKey, out var checkpoint) &&
+                   DateTime.TryParse(checkpoint.Value, CultureInfo.InvariantCulture, DateTimeStyles.AssumeLocal, out DateTime parsed)
+                ? parsed.Date
+                : null;
         }
 
         private void SaveRawLogRebuildCheckpoint(DateTime completedDate)
@@ -376,13 +388,148 @@ namespace TWChatOverlay.Services
             try
             {
                 Directory.CreateDirectory(_stateDirectory);
-                string checkpointPath = Path.Combine(_stateDirectory, RawLogCheckpointFileName);
-                File.WriteAllText(checkpointPath, completedDate.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture), Encoding.UTF8);
+                var state = LoadMigrationState();
+                state.Checkpoints[RawLogRebuildCheckpointKey] = new MigrationCheckpoint
+                {
+                    Value = completedDate.Date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
+                    AppliedAtUtc = DateTime.UtcNow
+                };
+
+                string migrationPath = Path.Combine(_stateDirectory, MigrationStateFileName);
+                string json = JsonSerializer.Serialize(state, JsonOptions);
+                File.WriteAllText(migrationPath, json, Utf8BomEncoding);
+                DeleteLegacyStateFiles();
             }
             catch (Exception ex)
             {
                 AppLogger.Warn($"Failed to save raw log rebuild checkpoint for {completedDate:yyyy-MM-dd}.", ex);
             }
+        }
+
+        private sealed class MigrationState
+        {
+            public Dictionary<string, MigrationRecord> Migrations { get; set; } = new(StringComparer.Ordinal);
+            public Dictionary<string, MigrationCheckpoint> Checkpoints { get; set; } = new(StringComparer.Ordinal);
+        }
+
+        private sealed class MigrationRecord
+        {
+            public int Version { get; set; }
+            public DateTime AppliedAtUtc { get; set; }
+        }
+
+        private sealed class MigrationCheckpoint
+        {
+            public string Value { get; set; } = string.Empty;
+            public DateTime AppliedAtUtc { get; set; }
+        }
+
+        private MigrationState LoadMigrationState()
+        {
+            string migrationPath = Path.Combine(_stateDirectory, MigrationStateFileName);
+            if (!File.Exists(migrationPath))
+                return new MigrationState();
+
+            try
+            {
+                string json = File.ReadAllText(migrationPath, Encoding.UTF8);
+                var state = JsonSerializer.Deserialize<MigrationState>(json, JsonOptions);
+                return state ?? new MigrationState();
+            }
+            catch (Exception ex)
+            {
+                AppLogger.Warn($"Failed to load migration state '{migrationPath}'.", ex);
+                return new MigrationState();
+            }
+        }
+
+        private int LoadMigrationVersion(string key)
+        {
+            var state = LoadMigrationState();
+            return state.Migrations.TryGetValue(key, out var record) ? record.Version : 0;
+        }
+
+        private void SaveMigrationVersion(string key, int version)
+        {
+            try
+            {
+                Directory.CreateDirectory(_stateDirectory);
+                var state = LoadMigrationState();
+                state.Migrations[key] = new MigrationRecord
+                {
+                    Version = version,
+                    AppliedAtUtc = DateTime.UtcNow
+                };
+
+                string migrationPath = Path.Combine(_stateDirectory, MigrationStateFileName);
+                string json = JsonSerializer.Serialize(state, JsonOptions);
+                File.WriteAllText(migrationPath, json, Utf8BomEncoding);
+                DeleteLegacyStateFiles();
+            }
+            catch (Exception ex)
+            {
+                AppLogger.Warn($"Failed to save migration state for '{key}' version {version}.", ex);
+            }
+        }
+
+        private void DeleteLegacyStateFiles()
+        {
+            foreach (string legacyName in new[] { "raw-log-rebuild.checkpoint", "content-migration.version" })
+            {
+                try
+                {
+                    string legacyPath = Path.Combine(_stateDirectory, legacyName);
+                    if (File.Exists(legacyPath))
+                        File.Delete(legacyPath);
+                }
+                catch (Exception ex)
+                {
+                    AppLogger.Warn($"Failed to delete legacy state file '{legacyName}'.", ex);
+                }
+            }
+        }
+
+        private void RemoveExperienceLinesFromContentArchive()
+        {
+            if (!Directory.Exists(_contentDirectory))
+                return;
+
+            foreach (string path in Directory.EnumerateFiles(_contentDirectory, "*.html"))
+            {
+                try
+                {
+                    string[] lines = File.ReadAllLines(path, Utf8NoBomEncoding);
+                    var filtered = lines
+                        .Where(line => !ShouldRemoveContentArchiveLine(line))
+                        .ToArray();
+
+                    if (filtered.Length == lines.Length)
+                        continue;
+
+                    File.WriteAllLines(path, filtered, Utf8BomEncoding);
+                    AppLogger.Info($"Migrated content archive file: {Path.GetFileName(path)}");
+                }
+                catch (Exception ex)
+                {
+                    AppLogger.Warn($"Failed to migrate content archive file '{path}'.", ex);
+                }
+            }
+        }
+
+        private static bool ShouldRemoveContentArchiveLine(string line)
+        {
+            if (string.IsNullOrWhiteSpace(line))
+                return false;
+
+            if (!line.Contains("<div", StringComparison.OrdinalIgnoreCase) ||
+                !line.Contains("class=\"log content\"", StringComparison.OrdinalIgnoreCase))
+                return false;
+
+            string decoded = WebUtility.HtmlDecode(line);
+            return decoded.Contains("경험치 100억이 차감되고, 경험의 정수 1개를 획득 하였습니다.", StringComparison.Ordinal) ||
+                   (decoded.Contains("머큐리얼 케이브", StringComparison.Ordinal) &&
+                    decoded.Contains("경험치가", StringComparison.Ordinal) &&
+                    decoded.Contains("올랐습니다", StringComparison.Ordinal));
         }
 
         private void EnsureMissingArchiveFiles(

@@ -328,14 +328,10 @@ namespace TWChatOverlay.Views
             if (ContainsAnyContentArchiveKeyword(text))
                 return true;
 
-            if (IsExperienceEssenceExchangeLog(text))
-                return true;
-
             if (IsMercurialSeedCompletionLog(text))
                 return true;
 
             return DailyWeeklyLogAnalyzer.IsMercurialEntryMessage(text) ||
-                   DailyWeeklyLogAnalyzer.IsMercurialRewardExpMessage(text) ||
                    DailyWeeklyLogAnalyzer.IsMercurialRewardSeedMessage(text) ||
                    IsStrictMercurialCompletionLog(text);
         }
