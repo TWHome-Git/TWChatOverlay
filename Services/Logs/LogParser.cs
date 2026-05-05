@@ -39,7 +39,7 @@ namespace TWChatOverlay
             return tabTag switch
             {
                 "Basic" => IsVisible(log.Category, settings),
-                "General" => log.Category is ChatCategory.NormalSelf or ChatCategory.Normal,
+                "General" => log.Category is ChatCategory.NormalSelf or ChatCategory.Normal && settings.ShowNormal,
                 "Team" => log.Category == ChatCategory.Team,
                 "Club" => log.Category == ChatCategory.Club,
                 "Shout" => log.Category == ChatCategory.Shout,

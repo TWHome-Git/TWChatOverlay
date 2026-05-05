@@ -94,6 +94,7 @@ namespace TWChatOverlay.ViewModels
         public void AddToUI(LogParser.ParseResult log, bool isRealTime = false)
         {
             if (LogDocument == null) return;
+            if (IsHiddenClubBoss(log)) return;
 
             _logDocumentRenderer.AddLog(LogDocument, log, _settings, FontFamily, FontSize, isRealTime, _expService.IsReady);
         }
@@ -108,6 +109,9 @@ namespace TWChatOverlay.ViewModels
             var logs = _tabLogBuffers.GetLogs(CurrentTabTag);
             foreach (var log in logs)
             {
+                if (IsHiddenClubBoss(log))
+                    continue;
+
                 AddToUI(log);
             }
         }
@@ -160,5 +164,10 @@ namespace TWChatOverlay.ViewModels
         {
             RefreshLogDisplay();
         }
+
+        private bool IsHiddenClubBoss(LogParser.ParseResult log)
+            => log.Category == ChatCategory.Club &&
+               !_settings.ShowClubBoss &&
+               IgnoredChatMessageService.IsIgnoredClubMessage(log.FormattedText);
     }
 }
