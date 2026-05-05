@@ -209,16 +209,16 @@ namespace TWChatOverlay.Services.LogAnalysis
             }
 
             var sinjoRewardMatch = SinjoRewardRegex.Match(text);
-            if (sinjoRewardMatch.Success && int.TryParse(sinjoRewardMatch.Groups[1].Value, out int sinjoValue))
+            if (sinjoRewardMatch.Success && int.TryParse(sinjoRewardMatch.Groups[1].Value, out _))
             {
-                SetAccumulatedCount(_trackItems.FirstOrDefault(static item => item.Name == NestOfShinjoHardItemName), sinjoValue);
+                _trackItems.FirstOrDefault(static item => item.Name == NestOfShinjoHardItemName)?.Mark();
                 return true;
             }
 
             var catacombsRewardMatch = CatacombsRewardRegex.Match(text);
-            if (catacombsRewardMatch.Success && int.TryParse(catacombsRewardMatch.Groups[1].Value, out int catacombsValue))
+            if (catacombsRewardMatch.Success && int.TryParse(catacombsRewardMatch.Groups[1].Value, out _))
             {
-                SetAccumulatedCount(_trackItems.FirstOrDefault(static item => item.Name == CatacombsHellModeItemName), catacombsValue);
+                _trackItems.FirstOrDefault(static item => item.Name == CatacombsHellModeItemName)?.Mark();
                 return true;
             }
 
