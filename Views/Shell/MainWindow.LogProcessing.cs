@@ -179,7 +179,7 @@ namespace TWChatOverlay.Views
                         }
                     }
 
-                    if (_settings.ShowShoutToastPopup && isActualShout)
+                    if (_settings.ShowShoutToastPopup && isActualShout && IsTalesWeaverWindowActive())
                         ShoutToastService.Show(parseResult.FormattedText, _settings);
                 }
             }
@@ -253,6 +253,26 @@ namespace TWChatOverlay.Views
         private static bool IsActualShoutSource(string? formattedText)
             => !string.IsNullOrWhiteSpace(formattedText) &&
                ShoutToastSourceRegex.IsMatch(formattedText);
+
+        private static bool IsTalesWeaverWindowActive()
+        {
+            IntPtr hwnd = NativeMethods.GetForegroundWindow();
+            if (hwnd == IntPtr.Zero || !NativeMethods.IsWindow(hwnd))
+                return false;
+
+            int len = NativeMethods.GetWindowTextLength(hwnd);
+            if (len <= 0)
+                return false;
+
+            var sb = new StringBuilder(len + 1);
+            _ = NativeMethods.GetWindowText(hwnd, sb, sb.Capacity);
+            string title = sb.ToString();
+            if (string.IsNullOrWhiteSpace(title))
+                return false;
+
+            return title.Contains("TalesWeaver", StringComparison.OrdinalIgnoreCase) ||
+                   title.Contains("테일즈위버", StringComparison.Ordinal);
+        }
 
         private bool ShouldSuppressOverlayText(LogParser.ParseResult parseResult)
         {

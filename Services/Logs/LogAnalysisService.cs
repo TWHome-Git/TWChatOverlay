@@ -67,10 +67,18 @@ namespace TWChatOverlay.Services
         }
 
         public bool ShouldRenderToTab(LogParser.ParseResult parsed, string currentTabTag)
-            => parsed.IsHighlight || LogParser.IsMatchTab(parsed, currentTabTag, _settings);
+        {
+            if (IsHiddenByChatFilter(parsed))
+                return false;
+
+            return parsed.IsHighlight || LogParser.IsMatchTab(parsed, currentTabTag, _settings);
+        }
 
         public IReadOnlyList<string> ResolveBufferTabs(LogParser.ParseResult parsed)
         {
+            if (IsHiddenByChatFilter(parsed))
+                return Array.Empty<string>();
+
             var tabs = new List<string>(2);
             if (parsed.Category is ChatCategory.NormalSelf or ChatCategory.Normal)
                 tabs.Add("General");
@@ -88,6 +96,36 @@ namespace TWChatOverlay.Services
                 tabs.Add("System");
 
             return tabs;
+        }
+
+        private bool IsHiddenByChatFilter(LogParser.ParseResult parsed)
+        {
+            if (parsed.Category == ChatCategory.Club &&
+                !_settings.ShowClubBoss &&
+                IgnoredChatMessageService.IsIgnoredClubMessage(parsed.FormattedText))
+            {
+                return true;
+            }
+
+            if ((parsed.Category == ChatCategory.Normal || parsed.Category == ChatCategory.NormalSelf) &&
+                IgnoredChatMessageService.IsIgnoredNormalMessage(GetMessageOnly(parsed.FormattedText)))
+            {
+                return true;
+            }
+
+            return false;
+        }
+
+        private static string GetMessageOnly(string formattedText)
+        {
+            if (string.IsNullOrWhiteSpace(formattedText))
+                return string.Empty;
+
+            int closingBracketIndex = formattedText.IndexOf(']');
+            if (closingBracketIndex >= 0 && closingBracketIndex + 1 < formattedText.Length)
+                return formattedText[(closingBracketIndex + 1)..].TrimStart();
+
+            return formattedText.Trim();
         }
     }
 

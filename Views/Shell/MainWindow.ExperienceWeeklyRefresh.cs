@@ -15,7 +15,7 @@ namespace TWChatOverlay.Views
             try
             {
                 DateTime now = DateTime.Now;
-                if (!ExperienceWeeklyRefreshService.ShouldPromptOnMondayFirstLogin(_settings, now))
+                if (!ExperienceWeeklyRefreshService.ShouldPromptForWeeklyRefresh(_settings, now))
                     return;
 
                 ExperienceWeeklyRefreshService.MarkPromptShownForCurrentWeek(_settings, now);

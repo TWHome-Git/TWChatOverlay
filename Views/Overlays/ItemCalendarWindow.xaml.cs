@@ -59,6 +59,7 @@ namespace TWChatOverlay.Views
         private AbandonMonthlySummarySnapshotEntry _currentMonthAbandonSummary = new();
         private readonly object _todayLock = new();
         private readonly List<ItemLogSnapshotEntry> _todaySnapshots = new();
+        private readonly Dictionary<DateTime, int> _pendingExperienceEssenceByDate = new();
         private DateTime _currentMonthStart;
         private DateTime _loadedMonthStart = DateTime.MinValue;
         private DateTime _loadedTodayDate = DateTime.MinValue;
@@ -249,6 +250,13 @@ namespace TWChatOverlay.Views
                 }
             }
 
+            lock (_todayLock)
+            {
+                _pendingExperienceEssenceByDate.Clear();
+                foreach (var pair in essenceCountByDate)
+                    _pendingExperienceEssenceByDate[pair.Key] = pair.Value;
+            }
+
             // Weekly summary files are the source-of-truth for calendar aggregation.
             // If monthly summary lags behind, prefer the recomputed weekly aggregate.
             if (weeklyAggregatedSummary.TotalEntryFeeMan != 0 ||
@@ -258,12 +266,6 @@ namespace TWChatOverlay.Views
                 weeklyAggregatedSummary.Top != 0)
             {
                 AbandonSummary = weeklyAggregatedSummary;
-            }
-
-            foreach (var snapshot in snapshots)
-            {
-                if (essenceCountByDate.TryGetValue(snapshot.Date.Date, out int v))
-                    snapshot.ExperienceEssenceCount = v;
             }
 
             return (snapshots, AbandonSummary);
@@ -296,7 +298,7 @@ namespace TWChatOverlay.Views
                 return false;
 
             Match m = ExperienceEssenceGainRegex.Match(text);
-            return m.Success && int.TryParse(m.Groups["count"].Value, out count) && count > 0;
+            return int.TryParse(m.Groups["count"].Value, out count) && count > 0;
         }
 
         private static IEnumerable<ItemEntry> ReadItemEntries(string path)
@@ -510,7 +512,12 @@ namespace TWChatOverlay.Views
                 bool isCurrentMonth = date.Month == monthStart.Month && date.Year == monthStart.Year;
 
                 snapshotsByDate.TryGetValue(date.Date, out List<ItemLogSnapshotEntry>? daySnapshots);
-                days.Add(BuildDay(date, isCurrentMonth, daySnapshots ?? new List<ItemLogSnapshotEntry>()));
+                int essenceCount = 0;
+                lock (_todayLock)
+                {
+                    _pendingExperienceEssenceByDate.TryGetValue(date.Date, out essenceCount);
+                }
+                days.Add(BuildDay(date, isCurrentMonth, daySnapshots ?? new List<ItemLogSnapshotEntry>(), essenceCount));
             }
 
             return days;
@@ -573,7 +580,7 @@ namespace TWChatOverlay.Views
                 $"{lowLossCount:N0}개"));
         }
 
-        private ItemCalendarDayViewModel BuildDay(DateTime date, bool isCurrentMonth, IReadOnlyCollection<ItemLogSnapshotEntry> snapshots)
+        private ItemCalendarDayViewModel BuildDay(DateTime date, bool isCurrentMonth, IReadOnlyCollection<ItemLogSnapshotEntry> snapshots, int experienceEssenceCount)
         {
             var aggregated = new Dictionary<(string Name, ItemDropGrade Grade), int>();
 
@@ -596,7 +603,7 @@ namespace TWChatOverlay.Views
                 .ToList();
 
             var day = new ItemCalendarDayViewModel(date, isCurrentMonth, entries);
-            day.ExperienceEssenceCount = snapshots.FirstOrDefault()?.ExperienceEssenceCount ?? 0;
+            day.ExperienceEssenceCount = experienceEssenceCount;
             return day;
         }
 
@@ -699,7 +706,17 @@ namespace TWChatOverlay.Views
             {
                 var day = Days.FirstOrDefault(d => d.Date.Date == date);
                 if (day != null)
+                {
                     day.ExperienceEssenceCount += gain;
+                    return;
+                }
+
+                lock (_todayLock)
+                {
+                    _pendingExperienceEssenceByDate[date] = _pendingExperienceEssenceByDate.TryGetValue(date, out int prev)
+                        ? prev + gain
+                        : gain;
+                }
             }), DispatcherPriority.Background);
         }
 

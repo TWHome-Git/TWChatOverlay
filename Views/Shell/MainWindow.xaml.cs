@@ -76,7 +76,6 @@ namespace TWChatOverlay.Views
         private readonly object _defaultDropItemFilterLock = new();
         private DropItemResolver.DropItemFilterSnapshot? _defaultDropItemFilterSnapshot;
         private StartupLoadingWindow? _startupLoadingWindow;
-        private static readonly string TabCachePath = Path.Combine(LogStoragePaths.StateDirectory, "tab_cache.json");
 
         private static readonly Regex AbandonEntryFeeRegex = new(
             @"입장료\s*(?<value>[\d,]+)\s*만\s*Seed",
@@ -182,7 +181,7 @@ namespace TWChatOverlay.Views
 
         private void MainWindow_Closed(object? sender, EventArgs e)
         {
-            try { SaveTabCache(); } catch { }
+            
             try { _mainTabAutoHideTimer.Stop(); } catch { }
             try { ExperienceAlertWindowService.SaveCurrentPosition(_settings); } catch { }
             try { DungeonCountDisplayWindowService.SaveCurrentPosition(_settings); } catch { }
@@ -420,13 +419,15 @@ namespace TWChatOverlay.Views
 
             try
             {
-                UpdateStartupLoadingProgress(75, "최근 탭 로그를 복원하는 중입니다.");
-                await Dispatcher.InvokeAsync(LoadTabCachePrioritizingCurrentTab, DispatcherPriority.Background);
-                await PrimeTabBuffersFromRecentRawLogsAsync().ConfigureAwait(false);
+                UpdateStartupLoadingProgress(75, "최근 로그를 불러오는 중입니다.");
+                await Dispatcher.InvokeAsync(() =>
+                {
+                    LoadRecentLogsFromRawFiles(1000);
+                }, DispatcherPriority.Background);
             }
             catch (Exception ex)
             {
-                AppLogger.Warn("Failed to prime tab buffers from recent raw logs.", ex);
+                AppLogger.Warn("Failed to load recent logs from raw files.", ex);
             }
 
             if (_logService != null && !_isLogServiceInitialized)
@@ -528,179 +529,81 @@ namespace TWChatOverlay.Views
             _startLogServiceWhenInitialized = true;
         }
 
-        private async Task PrimeTabBuffersFromRecentRawLogsAsync()
+        private void LoadRecentLogsFromRawFiles(int lineLimit)
         {
-            string folder = _settings.ChatLogFolderPath;
-            if (string.IsNullOrWhiteSpace(folder) || !Directory.Exists(folder))
-                return;
-
-            const int perTabLimit = 200;
-            string[] tabs = RecoverableTabs;
-            var tabBuffers = new Dictionary<string, List<LogParser.ParseResult>>(StringComparer.Ordinal);
-            foreach (string tab in tabs)
-                tabBuffers[tab] = new List<LogParser.ParseResult>(perTabLimit);
-            var collectedRawLines = new List<string>(2000);
-
-            bool IsAllFilled()
+            try
             {
-                foreach (string tab in tabs)
-                {
-                    if (tabBuffers[tab].Count < perTabLimit)
-                        return false;
-                }
-                return true;
-            }
+                string folder = _settings.ChatLogFolderPath;
+                if (string.IsNullOrWhiteSpace(folder) || !Directory.Exists(folder))
+                    return;
 
-            await Task.Run(() =>
-            {
+                int totalLimit = Math.Max(1, lineLimit);
                 var files = Directory.EnumerateFiles(folder, "TWChatLog_*.html")
-                    .OrderByDescending(path => path, StringComparer.OrdinalIgnoreCase)
-                    .Take(30);
+                    .Select(path => new FileInfo(path))
+                    .OrderByDescending(file => file.Name, StringComparer.OrdinalIgnoreCase)
+                    .Take(30)
+                    .ToList();
 
-                foreach (string file in files)
+                if (files.Count == 0)
+                    return;
+
+                var recentParsed = new List<LogParser.ParseResult>(totalLimit);
+                foreach (FileInfo file in files)
                 {
                     string content;
                     try
                     {
-                        content = File.ReadAllText(file, Encoding.GetEncoding(949));
+                        content = ReadAllTextAllowSharedRead(file.FullName, Encoding.GetEncoding(949));
                     }
                     catch
                     {
                         continue;
                     }
 
-                    var lines = Regex.Split(content, @"</?br\s*>|\r?\n", RegexOptions.IgnoreCase)
+                    foreach (string line in Regex.Split(content, @"</?br\s*>|\r?\n", RegexOptions.IgnoreCase)
                         .Where(line => !string.IsNullOrWhiteSpace(line))
                         .Select(line => line.Trim())
-                        .Reverse();
-
-                    foreach (string line in lines)
+                        .Reverse())
                     {
-                        if (!HtmlFontTagRegex.IsMatch(line))
+                        bool looksLikeChatLine =
+                            HtmlFontTagRegex.IsMatch(line) ||
+                            line.StartsWith("[", StringComparison.Ordinal);
+                        if (!looksLikeChatLine)
                             continue;
-                        collectedRawLines.Add(line);
-                        if (collectedRawLines.Count >= 8000)
+
+                        LogParser.ParseResult parsed = LogParser.ParseLine(line, _settings);
+                        if (!parsed.IsSuccess)
+                            continue;
+
+                        recentParsed.Add(parsed);
+                        if (recentParsed.Count >= totalLimit)
                             break;
                     }
-                }
-            }).ConfigureAwait(false);
 
-            await Dispatcher.InvokeAsync(() =>
-            {
-                foreach (string line in collectedRawLines)
-                {
-                    if (IsAllFilled())
+                    if (recentParsed.Count >= totalLimit)
                         break;
+                }
 
-                    var analysis = _logPipelineCoordinator.Analyze(line, isRealTime: false).Primary;
-                    if (!analysis.IsSuccess)
+                var tabBuffers = new Dictionary<string, List<LogParser.ParseResult>>(StringComparer.Ordinal);
+                foreach (string tab in RecoverableTabs)
+                    tabBuffers[tab] = new List<LogParser.ParseResult>(totalLimit);
+
+                foreach (LogParser.ParseResult parsed in recentParsed)
+                {
+                    if (IsHiddenByUserFilters(parsed))
                         continue;
 
-                    var parsed = analysis.Parsed;
-                    if (parsed == null)
-                        continue;
-
-                    foreach (string tab in analysis.BufferTabs)
+                    foreach (string tab in RecoverableTabs)
                     {
-                        if (!tabBuffers.TryGetValue(tab, out var list))
-                            continue;
-                        if (list.Count >= perTabLimit)
-                            continue;
-                        list.Add(parsed);
+                        if (LogParser.IsMatchTab(parsed, tab, _settings))
+                            tabBuffers[tab].Add(parsed);
                     }
                 }
 
-                foreach (string tab in tabs)
-                {
-                    if (!tabBuffers.TryGetValue(tab, out var list))
-                        continue;
-                    list.Reverse();
-                    _logTabBufferStore.Replace(tab, list);
-                }
-                ChatWindowHub.NotifyBuffersChanged();
-                RequestRefreshLogDisplay();
-            }, DispatcherPriority.Background);
-        }
-
-        private sealed class TabCachePayload
-        {
-            public DateTime SavedAtUtc { get; set; }
-            public Dictionary<string, List<TabCacheEntry>> Tabs { get; set; } = new(StringComparer.Ordinal);
-        }
-
-        private sealed class TabCacheEntry
-        {
-            public string FormattedText { get; set; } = string.Empty;
-            public ChatCategory Category { get; set; } = ChatCategory.Unknown;
-        }
-
-        private void SaveTabCache()
-        {
-            try
-            {
-                Directory.CreateDirectory(LogStoragePaths.StateDirectory);
-                var payload = new TabCachePayload { SavedAtUtc = DateTime.UtcNow };
-                var all = _logTabBufferStore.GetAllLogsSnapshot();
                 foreach (string tab in RecoverableTabs)
                 {
-                    if (!all.TryGetValue(tab, out var logs))
-                        continue;
-
-                    payload.Tabs[tab] = logs.TakeLast(200)
-                        .Select(l => new TabCacheEntry
-                        {
-                            FormattedText = l.FormattedText ?? string.Empty,
-                            Category = l.Category
-                        })
-                        .Where(e => !string.IsNullOrWhiteSpace(e.FormattedText))
-                        .ToList();
-                }
-
-                File.WriteAllText(TabCachePath, JsonSerializer.Serialize(payload), new UTF8Encoding(false));
-            }
-            catch (Exception ex)
-            {
-                AppLogger.Warn("Failed to save tab cache.", ex);
-            }
-        }
-
-        private void LoadTabCachePrioritizingCurrentTab()
-        {
-            if (!File.Exists(TabCachePath))
-                return;
-
-            try
-            {
-                string json = File.ReadAllText(TabCachePath, Encoding.UTF8);
-                var payload = JsonSerializer.Deserialize<TabCachePayload>(json);
-                if (payload?.Tabs == null || payload.Tabs.Count == 0)
-                    return;
-
-                string current = string.IsNullOrWhiteSpace(_currentTabTag) ? "Basic" : _currentTabTag;
-                var orderedTabs = RecoverableTabs
-                    .OrderBy(tab => string.Equals(tab, current, StringComparison.Ordinal) ? 0 : 1)
-                    .ToList();
-
-                foreach (string tab in orderedTabs)
-                {
-                    if (!payload.Tabs.TryGetValue(tab, out var rawLines) || rawLines == null || rawLines.Count == 0)
-                        continue;
-
-                    var parsed = new List<LogParser.ParseResult>(200);
-                    foreach (TabCacheEntry cached in rawLines.TakeLast(200))
-                    {
-                        if (string.IsNullOrWhiteSpace(cached.FormattedText))
-                            continue;
-                        parsed.Add(new LogParser.ParseResult
-                        {
-                            IsSuccess = true,
-                            Category = cached.Category,
-                            FormattedText = cached.FormattedText,
-                            Brush = ChatBrushResolver.Resolve(_settings, cached.Category)
-                        });
-                    }
-
-                    _logTabBufferStore.Replace(tab, parsed);
+                    List<LogParser.ParseResult> ordered = tabBuffers[tab].AsEnumerable().Reverse().ToList();
+                    _logTabBufferStore.Replace(tab, ordered);
                 }
 
                 ChatWindowHub.NotifyBuffersChanged();
@@ -708,8 +611,35 @@ namespace TWChatOverlay.Views
             }
             catch (Exception ex)
             {
-                AppLogger.Warn("Failed to load tab cache.", ex);
+                AppLogger.Warn("Failed to load recent logs from latest raw logs.", ex);
             }
+        }
+
+        private bool IsHiddenByUserFilters(LogParser.ParseResult log)
+        {
+            if (log == null || string.IsNullOrWhiteSpace(log.FormattedText))
+                return false;
+
+            if (log.Category is ChatCategory.Normal or ChatCategory.NormalSelf)
+            {
+                if (IgnoredChatMessageService.IsIgnoredNormalMessage(log.FormattedText))
+                    return true;
+            }
+
+            if (log.Category == ChatCategory.Club && !_settings.ShowClubBoss)
+            {
+                if (IgnoredChatMessageService.IsIgnoredClubMessage(log.FormattedText))
+                    return true;
+            }
+
+            return false;
+        }
+
+        private static string ReadAllTextAllowSharedRead(string path, Encoding encoding)
+        {
+            using var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+            using var reader = new StreamReader(stream, encoding, detectEncodingFromByteOrderMarks: true);
+            return reader.ReadToEnd();
         }
 
     }

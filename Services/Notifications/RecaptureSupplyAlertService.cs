@@ -15,6 +15,9 @@ namespace TWChatOverlay.Services
         private static readonly Regex TriggerRegex = new(
             @"경보\s*장치\s*4개를\s*모두\s*해제하고\s*보급품이\s*보관\s*되어\s*있는\s*막사를\s*찾으시오\.",
             RegexOptions.Compiled);
+        private static readonly Regex CompletionRegex = new(
+            @"보급품\s*탈환에\s*성공하였",
+            RegexOptions.Compiled);
 
         private static readonly HttpClient HttpClient = new()
         {
@@ -55,7 +58,13 @@ namespace TWChatOverlay.Services
         public static void Observe(string formattedText)
         {
             if (string.IsNullOrWhiteSpace(formattedText) || !TriggerRegex.IsMatch(formattedText))
+            {
+                if (!string.IsNullOrWhiteSpace(formattedText) && CompletionRegex.IsMatch(formattedText))
+                {
+                    Close();
+                }
                 return;
+            }
 
             _ = ShowAsync();
         }

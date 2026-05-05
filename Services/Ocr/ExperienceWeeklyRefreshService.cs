@@ -9,12 +9,17 @@ namespace TWChatOverlay.Services
     /// </summary>
     internal static class ExperienceWeeklyRefreshService
     {
-        public static bool ShouldPromptOnMondayFirstLogin(ChatSettings settings, DateTime nowLocal)
+        private static readonly TimeSpan MondayRefreshThreshold = TimeSpan.FromHours(6);
+
+        public static bool ShouldPromptForWeeklyRefresh(ChatSettings settings, DateTime nowLocal)
         {
             if (settings == null)
                 return false;
 
-            if (nowLocal.DayOfWeek != DayOfWeek.Monday)
+            if (!settings.ExperienceLimitStateInitialized)
+                return true;
+
+            if (nowLocal.DayOfWeek != DayOfWeek.Monday || nowLocal.TimeOfDay < MondayRefreshThreshold)
                 return false;
 
             string weekKey = GetIsoWeekKey(nowLocal.Date);
