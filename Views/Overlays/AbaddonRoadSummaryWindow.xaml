@@ -38,7 +38,7 @@
                             Height="28"
                             Click="Close_Click"/>
                     <StackPanel>
-                        <TextBlock Text="어밴던로드 이번주 합계"
+                        <TextBlock Text="어밴던로드 주간 합계"
                                    Foreground="White"
                                    FontSize="16"
                                    FontWeight="Bold"/>

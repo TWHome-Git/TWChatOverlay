@@ -462,6 +462,24 @@ namespace TWChatOverlay.Services
                         stoneName == "상급 마정석" ||
                         stoneName == "최상급 마정석")
                     {
+                        var gainDelta = new AbandonMonthlySummarySnapshotEntry();
+                        switch (stoneName)
+                        {
+                            case "하급 마정석":
+                                gainDelta.LowGain += stoneCount;
+                                break;
+                            case "중급 마정석":
+                                gainDelta.MidGain += stoneCount;
+                                break;
+                            case "상급 마정석":
+                                gainDelta.HighGain += stoneCount;
+                                break;
+                            case "최상급 마정석":
+                                gainDelta.TopGain += stoneCount;
+                                break;
+                        }
+                        NormalizeStoneConsistency(gainDelta);
+                        UpdateAbandonDailySummary(logDate, gainDelta, flushImmediately: true);
                         return;
                     }
                 }
