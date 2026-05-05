@@ -95,6 +95,16 @@ namespace TWChatOverlay.Models
         private double? _chatCloneWindow1Top = null;
         private double? _chatCloneWindow2Left = null;
         private double? _chatCloneWindow2Top = null;
+        private double? _shoutReplayWindowLeft = null;
+        private double? _shoutReplayWindowTop = null;
+        private double? _memoOverlayWindowLeft = null;
+        private double? _memoOverlayWindowTop = null;
+        private string _memoOverlayText = string.Empty;
+        private bool _memoOverlayTextOnlyMode = false;
+        private double _memoOverlayFontSize = 20.0;
+        private bool _memoOverlayBold = false;
+        private bool _memoOverlayItalic = false;
+        private string _memoOverlayColorKey = "White";
         private bool _chatCloneWindow1FollowMainFont = true;
         private string _chatCloneWindow1FontFamily = string.Empty;
         private double? _chatCloneWindow1FontSize = null;
@@ -906,6 +916,128 @@ namespace TWChatOverlay.Models
             {
                 if (_chatCloneWindow2Top == value) return;
                 _chatCloneWindow2Top = value;
+                OnPropertyChanged();
+            }
+        }
+
+        [JsonPropertyOrder(85)]
+        public double? ShoutReplayWindowLeft
+        {
+            get => _shoutReplayWindowLeft;
+            set
+            {
+                if (_shoutReplayWindowLeft == value) return;
+                _shoutReplayWindowLeft = value;
+                OnPropertyChanged();
+            }
+        }
+
+        [JsonPropertyOrder(86)]
+        public double? ShoutReplayWindowTop
+        {
+            get => _shoutReplayWindowTop;
+            set
+            {
+                if (_shoutReplayWindowTop == value) return;
+                _shoutReplayWindowTop = value;
+                OnPropertyChanged();
+            }
+        }
+
+        [JsonPropertyOrder(87)]
+        public double? MemoOverlayWindowLeft
+        {
+            get => _memoOverlayWindowLeft;
+            set
+            {
+                if (_memoOverlayWindowLeft == value) return;
+                _memoOverlayWindowLeft = value;
+                OnPropertyChanged();
+            }
+        }
+
+        [JsonPropertyOrder(88)]
+        public double? MemoOverlayWindowTop
+        {
+            get => _memoOverlayWindowTop;
+            set
+            {
+                if (_memoOverlayWindowTop == value) return;
+                _memoOverlayWindowTop = value;
+                OnPropertyChanged();
+            }
+        }
+
+        [JsonPropertyOrder(89)]
+        public string MemoOverlayText
+        {
+            get => _memoOverlayText;
+            set
+            {
+                value ??= string.Empty;
+                if (_memoOverlayText == value) return;
+                _memoOverlayText = value;
+                OnPropertyChanged();
+            }
+        }
+
+        [JsonPropertyOrder(90)]
+        public bool MemoOverlayTextOnlyMode
+        {
+            get => _memoOverlayTextOnlyMode;
+            set
+            {
+                if (_memoOverlayTextOnlyMode == value) return;
+                _memoOverlayTextOnlyMode = value;
+                OnPropertyChanged();
+            }
+        }
+
+        [JsonPropertyOrder(91)]
+        public double MemoOverlayFontSize
+        {
+            get => _memoOverlayFontSize;
+            set
+            {
+                if (Math.Abs(_memoOverlayFontSize - value) < 0.0001) return;
+                _memoOverlayFontSize = value;
+                OnPropertyChanged();
+            }
+        }
+
+        [JsonPropertyOrder(92)]
+        public bool MemoOverlayBold
+        {
+            get => _memoOverlayBold;
+            set
+            {
+                if (_memoOverlayBold == value) return;
+                _memoOverlayBold = value;
+                OnPropertyChanged();
+            }
+        }
+
+        [JsonPropertyOrder(93)]
+        public bool MemoOverlayItalic
+        {
+            get => _memoOverlayItalic;
+            set
+            {
+                if (_memoOverlayItalic == value) return;
+                _memoOverlayItalic = value;
+                OnPropertyChanged();
+            }
+        }
+
+        [JsonPropertyOrder(94)]
+        public string MemoOverlayColorKey
+        {
+            get => _memoOverlayColorKey;
+            set
+            {
+                value ??= "White";
+                if (_memoOverlayColorKey == value) return;
+                _memoOverlayColorKey = value;
                 OnPropertyChanged();
             }
         }

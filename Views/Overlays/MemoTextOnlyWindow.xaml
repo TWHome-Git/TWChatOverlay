@@ -1,0 +1,20 @@
+<Window x:Class="TWChatOverlay.Views.MemoTextOnlyWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        WindowStyle="None"
+        AllowsTransparency="True"
+        Background="Transparent"
+        Topmost="True"
+        ShowInTaskbar="False"
+        Width="420"
+        Height="540">
+    <Border x:Name="OverlayBackground" Background="#00000000" MouseLeftButtonDown="Border_MouseLeftButtonDown">
+        <TextBlock x:Name="MemoText"
+                   Foreground="#E8EDF7"
+                   FontSize="20"
+                   TextWrapping="Wrap"
+                   Margin="8"
+                   HorizontalAlignment="Left"
+                   VerticalAlignment="Top"/>
+    </Border>
+</Window>
