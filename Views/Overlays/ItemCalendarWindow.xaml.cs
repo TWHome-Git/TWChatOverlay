@@ -569,7 +569,10 @@ namespace TWChatOverlay.Views
             MonthlyAbandonSummary.Add(new AbandonMonthlyStoneSummaryEntryViewModel("상급 마정석", HighMagicStoneIconUri, summary.High));
             MonthlyAbandonSummary.Add(new AbandonMonthlyStoneSummaryEntryViewModel("최상급 마정석", TopMagicStoneIconUri, summary.Top));
             long lowLossCount = Math.Abs(summary.LowLoss);
-            if (lowLossCount == 0 && summary.Low < 0)
+            long derivedLowLoss = Math.Max(0, summary.LowGain - summary.Low);
+            if (derivedLowLoss > 0 && lowLossCount != derivedLowLoss)
+                lowLossCount = derivedLowLoss;
+            else if (lowLossCount == 0 && summary.Low < 0)
                 lowLossCount = Math.Abs(summary.Low);
             MonthlyAbandonSummary.Add(new AbandonMonthlyStoneSummaryEntryViewModel(
                 "누에게 빼앗긴 마정석",
@@ -783,10 +786,17 @@ namespace TWChatOverlay.Views
         {
             target.TotalEntryFeeMan += delta.TotalEntryFeeMan;
             target.Low += delta.Low;
+            target.LowGain += delta.LowGain;
             target.LowLoss += delta.LowLoss;
             target.Mid += delta.Mid;
+            target.MidGain += delta.MidGain;
+            target.MidLoss += delta.MidLoss;
             target.High += delta.High;
+            target.HighGain += delta.HighGain;
+            target.HighLoss += delta.HighLoss;
             target.Top += delta.Top;
+            target.TopGain += delta.TopGain;
+            target.TopLoss += delta.TopLoss;
         }
         private static IEnumerable<DateTime> EachDay(DateTime start, DateTime end)
         {
