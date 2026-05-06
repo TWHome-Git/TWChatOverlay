@@ -38,11 +38,6 @@ namespace TWChatOverlay.Services.LogAnalysis
             context.Result.Brush = brush;
             context.Result.SenderId = ExtractSenderId(chatContent, category);
 
-            if (category == ChatCategory.Shout)
-                chatContent = ApplyEtaProfileByShoutTrailingUserId(chatContent, context.Settings);
-            else if (category is not ChatCategory.System and not ChatCategory.System2 and not ChatCategory.System3)
-                chatContent = ApplyEtaProfile(chatContent, context.Settings);
-
             context.ChatContent = chatContent;
             context.MessageOnly = ExtractMessageOnly(chatContent);
             context.Result.FormattedText = $"{timeRaw} {chatContent}";
@@ -55,56 +50,6 @@ namespace TWChatOverlay.Services.LogAnalysis
             return colonIndex < 0 ? chatContent : chatContent.Substring(colonIndex + 1).Trim();
         }
 
-        private static string ApplyEtaProfile(string chatContent, ChatSettings settings)
-        {
-            int colonIndex = chatContent.IndexOf(":", StringComparison.Ordinal);
-            if (colonIndex <= 0)
-                return chatContent;
-
-            string leftPart = chatContent.Substring(0, colonIndex).TrimEnd();
-            string rightPart = chatContent.Substring(colonIndex + 1);
-
-            int nameStart = leftPart.LastIndexOf(']');
-            nameStart = nameStart >= 0 ? nameStart + 1 : 0;
-
-            string prefix = leftPart.Substring(0, nameStart);
-            string userId = leftPart.Substring(nameStart).Trim();
-
-            if (string.IsNullOrWhiteSpace(userId) || !EtaProfileResolver.TryGetProfile(userId, out var profile))
-                return chatContent;
-
-            string decoratedUserId = $"{userId}{BuildEtaSuffix(profile, settings)}";
-            return $"{prefix}{decoratedUserId}:{rightPart}";
-        }
-
-        private static string ApplyEtaProfileByShoutTrailingUserId(string chatContent, ChatSettings settings)
-        {
-            var match = ShoutTrailingUserIdRegex.Match(chatContent);
-            if (!match.Success)
-                return chatContent;
-
-            string userId = match.Groups["userId"].Value.Trim();
-            if (string.IsNullOrWhiteSpace(userId) || !EtaProfileResolver.TryGetProfile(userId, out var profile))
-                return chatContent;
-
-            string decoratedUserId = $"[{userId}{BuildEtaSuffix(profile, settings)}]";
-            return chatContent.Remove(match.Index, match.Length).Insert(match.Index, decoratedUserId);
-        }
-
-        private static string BuildEtaSuffix(EtaProfileResolver.EtaProfile profile, ChatSettings settings)
-        {
-            if (!settings.ShowEtaLevel && !settings.ShowEtaCharacter)
-                return string.Empty;
-
-            string suffix = string.Empty;
-            if (settings.ShowEtaLevel)
-                suffix += $"[{profile.Level}]";
-
-            if (settings.ShowEtaCharacter && !string.IsNullOrWhiteSpace(profile.CharacterName))
-                suffix += $"[{profile.CharacterName}]";
-
-            return suffix;
-        }
 
         private static string? ExtractSenderId(string chatContent, ChatCategory category)
         {

@@ -27,6 +27,9 @@ namespace TWChatOverlay.Views
 {
     public partial class MainWindow
     {
+        private static readonly Regex LeadingTimestampRegex = new(
+            @"^\s*\[[^\]]+\]\s*",
+            RegexOptions.Compiled);
         private static readonly Regex ShoutToastSourceRegex = new(
             @"^\s*\[\s*(?:\d{1,2}:\d{2}(?::\d{2})?|\d{1,2}\s*시\s*\d{1,2}\s*분(?:\s*\d{1,2}\s*초)?)\s*\]\s*외치기\s*:",
             RegexOptions.IgnoreCase | RegexOptions.Compiled);
@@ -410,6 +413,9 @@ namespace TWChatOverlay.Views
             bool isBlacklisted = BlacklistService.TryGetReason(log.SenderId, out string blacklistReason);
             Brush foreground = isBlacklisted ? BlacklistService.HighlightBrush : log.Brush;
             string displayText = isBlacklisted ? $"{log.FormattedText} [ {blacklistReason} ]" : log.FormattedText;
+            displayText = ApplyEtaDecorations(displayText, log);
+            if (!_settings.ShowTimestamp)
+                displayText = LeadingTimestampRegex.Replace(displayText, string.Empty);
 
             FontFamily safeFont = this.CurrentFont ?? FontService.GetFont(_settings.FontFamily);
             if (safeFont == null)
@@ -462,6 +468,39 @@ namespace TWChatOverlay.Views
                     Dispatcher.BeginInvoke(new Action(ScrollLogDisplayToEndAfterLayout), DispatcherPriority.Background);
                 }
             }
+        }
+
+        private string ApplyEtaDecorations(string text, LogParser.ParseResult log)
+        {
+            if (string.IsNullOrWhiteSpace(text) || string.IsNullOrWhiteSpace(log.SenderId))
+                return text;
+            if (!_settings.ShowEtaLevel && !_settings.ShowEtaCharacter)
+                return text;
+            if (!EtaProfileResolver.TryGetProfile(log.SenderId, out var profile))
+                return text;
+
+            string suffix = string.Empty;
+            if (_settings.ShowEtaLevel)
+                suffix += $"[{profile.Level}]";
+            if (_settings.ShowEtaCharacter && !string.IsNullOrWhiteSpace(profile.CharacterName))
+                suffix += $"[{profile.CharacterName}]";
+            if (string.IsNullOrEmpty(suffix))
+                return text;
+
+            if (log.Category == ChatCategory.Shout)
+            {
+                return Regex.Replace(
+                    text,
+                    $@"\[{Regex.Escape(log.SenderId)}\]\s*$",
+                    $"[{log.SenderId}{suffix}]");
+            }
+
+            int colon = text.IndexOf(':');
+            if (colon <= 0) return text;
+            string left = text.Substring(0, colon);
+            int idx = left.LastIndexOf(log.SenderId, StringComparison.Ordinal);
+            if (idx < 0) return text;
+            return text.Substring(0, idx + log.SenderId.Length) + suffix + text.Substring(idx + log.SenderId.Length);
         }
 
         private void ScrollLogDisplayToEndAfterLayout()

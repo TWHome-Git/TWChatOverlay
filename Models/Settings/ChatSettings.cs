@@ -26,6 +26,7 @@ namespace TWChatOverlay.Models
         private string _shoutColor = "#FF8000";
         private bool _showEtaLevel = true;
         private bool _showEtaCharacter = true;
+        private bool _showTimestamp = true;
         private bool _showShoutToastPopup = true;
         private bool _autoCopyShoutNickname = false;
         private int _shoutToastDurationSeconds = 5;
@@ -85,6 +86,8 @@ namespace TWChatOverlay.Models
         private double? _AbandonRoadSummaryWindowTop = 0.0;
         private double? _shoutToastWindowLeft = null;
         private double? _shoutToastWindowTop = null;
+        private double? _messengerToastWindowLeft = null;
+        private double? _messengerToastWindowTop = null;
         private double? _recaptureSupplyWindowLeft = null;
         private double? _recaptureSupplyWindowTop = null;
         private double? _experienceLimitAlertWindowLeft = null;
@@ -139,6 +142,8 @@ namespace TWChatOverlay.Models
         public bool ShowEtaLevel { get => _showEtaLevel; set { _showEtaLevel = value; OnPropertyChanged(); } }
         [JsonPropertyOrder(37)]
         public bool ShowEtaCharacter { get => _showEtaCharacter; set { _showEtaCharacter = value; OnPropertyChanged(); } }
+        [JsonPropertyOrder(371)]
+        public bool ShowTimestamp { get => _showTimestamp; set { _showTimestamp = value; OnPropertyChanged(); } }
         [JsonPropertyOrder(38)]
         public bool ShowShoutToastPopup { get => _showShoutToastPopup; set { _showShoutToastPopup = value; OnPropertyChanged(); } }
         [JsonPropertyOrder(39)]
@@ -868,6 +873,30 @@ namespace TWChatOverlay.Models
             {
                 if (_shoutToastWindowTop == value) return;
                 _shoutToastWindowTop = value;
+                OnPropertyChanged();
+            }
+        }
+
+        [JsonPropertyOrder(741)]
+        public double? MessengerToastWindowLeft
+        {
+            get => _messengerToastWindowLeft;
+            set
+            {
+                if (_messengerToastWindowLeft == value) return;
+                _messengerToastWindowLeft = value;
+                OnPropertyChanged();
+            }
+        }
+
+        [JsonPropertyOrder(742)]
+        public double? MessengerToastWindowTop
+        {
+            get => _messengerToastWindowTop;
+            set
+            {
+                if (_messengerToastWindowTop == value) return;
+                _messengerToastWindowTop = value;
                 OnPropertyChanged();
             }
         }

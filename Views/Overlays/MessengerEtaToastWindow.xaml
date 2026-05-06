@@ -1,0 +1,98 @@
+<Window x:Class="TWChatOverlay.Views.MessengerEtaToastWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Width="320"
+        Height="160"
+        MinHeight="90"
+        SizeToContent="Height"
+        WindowStyle="None"
+        AllowsTransparency="True"
+        Background="Transparent"
+        ResizeMode="NoResize"
+        ShowInTaskbar="False"
+        Topmost="True"
+        ShowActivated="False">
+    <Window.Resources>
+        <Style x:Key="TitleCloseButtonStyle" TargetType="Button">
+            <Setter Property="Foreground" Value="#FFE8F3FF"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Root"
+                                Background="{TemplateBinding Background}"
+                                CornerRadius="4">
+                            <ContentPresenter HorizontalAlignment="Center"
+                                              VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Root" Property="Background" Value="#66C94B4B"/>
+                                <Setter Property="Foreground" Value="White"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="Root" Property="Background" Value="#99C94B4B"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+    <Border Background="#E6191C22"
+            BorderBrush="#FF58A6FF"
+            BorderThickness="1.2"
+            CornerRadius="8"
+            Padding="12,8"
+            MouseLeftButtonDown="RootBorder_MouseLeftButtonDown">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="8"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+
+            <Border Grid.Row="0"
+                    Grid.Column="0"
+                    Grid.ColumnSpan="2"
+                    Background="#22000000"
+                    CornerRadius="4"
+                    Padding="6,4"
+                    MouseLeftButtonDown="TitleBar_MouseLeftButtonDown">
+                <TextBlock x:Name="TitleText"
+                           Text="1:1 채팅 에타레벨 확인"
+                           Foreground="White"
+                           FontSize="16"
+                           FontWeight="SemiBold"/>
+            </Border>
+            <Button Grid.Row="0"
+                    Grid.Column="1"
+                    x:Name="CloseButton"
+                    Width="28"
+                    Height="26"
+                    Style="{StaticResource TitleCloseButtonStyle}"
+                    Content="X"/>
+
+            <RichTextBox Grid.Row="2"
+                         Grid.ColumnSpan="2"
+                         x:Name="EntryRichText"
+                         IsReadOnly="True"
+                         IsReadOnlyCaretVisible="True"
+                         BorderThickness="0"
+                         Background="#22000000"
+                         Foreground="#FFC8E6FF"
+                         FontSize="20"
+                         VerticalScrollBarVisibility="Disabled"/>
+        </Grid>
+    </Border>
+</Window>

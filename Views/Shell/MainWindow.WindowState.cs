@@ -33,6 +33,7 @@ namespace TWChatOverlay.Views
             ExperienceAlertWindowService.ShowPositionPreview(_settings, force: true);
             DungeonCountDisplayWindowService.ShowPositionPreview(_settings, force: true);
             ShoutToastService.ShowPositionPreview(_settings, force: true);
+            MessengerEtaToastService.ShowPositionPreview(_settings, force: true);
             ShowAbandonRoadSummaryWindow(previewMode: true);
 
             if (_AbandonRoadSummaryWindow != null)
@@ -65,9 +66,11 @@ namespace TWChatOverlay.Views
             ExperienceAlertWindowService.SaveCurrentPosition(_settings);
             DungeonCountDisplayWindowService.SaveCurrentPosition(_settings);
             ShoutToastService.SaveCurrentPosition(_settings);
+            MessengerEtaToastService.SaveCurrentPosition(_settings);
             ExperienceAlertWindowService.Close();
             DungeonCountDisplayWindowService.ClosePositionPreview(_settings);
             ShoutToastService.ClosePositionPreview(_settings);
+            MessengerEtaToastService.ClosePositionPreview(_settings);
 
             if (_AbandonRoadSummaryWindow != null)
             {
