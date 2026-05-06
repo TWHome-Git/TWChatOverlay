@@ -4,9 +4,6 @@ using TWChatOverlay.Models;
 
 namespace TWChatOverlay.Services
 {
-    /// <summary>
-    /// 주간 누적 경험치 수동 갱신 상태를 관리합니다.
-    /// </summary>
     internal static class ExperienceWeeklyRefreshService
     {
         private static readonly TimeSpan MondayRefreshThreshold = TimeSpan.FromHours(6);

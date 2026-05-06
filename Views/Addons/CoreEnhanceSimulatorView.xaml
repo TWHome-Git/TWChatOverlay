@@ -131,9 +131,35 @@
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="8"/>
                         <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="8"/>
+                        <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
 
-                    <Grid Grid.Row="0">
+                    <Border Grid.Row="0"
+                            Background="#0D1625"
+                            BorderBrush="#2E3A4A"
+                            BorderThickness="1"
+                            CornerRadius="6"
+                            Padding="8">
+                        <StackPanel>
+                            <TextBlock Text="코어 종류" Foreground="#8B949E" FontSize="12"/>
+                            <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
+                                <RadioButton x:Name="MercurialAbyssRadio"
+                                             Content="머큐리얼/어비스"
+                                             GroupName="CoreModeGroup"
+                                             Margin="0,0,16,0"
+                                             Foreground="#C9D1D9"
+                                             Checked="CoreModeRadio_Changed"/>
+                                <RadioButton x:Name="EclipseRubiconRadio"
+                                             Content="이클립스/루비코나"
+                                             GroupName="CoreModeGroup"
+                                             Foreground="#C9D1D9"
+                                             Checked="CoreModeRadio_Changed"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+
+                    <Grid Grid.Row="2">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="8"/>
@@ -182,7 +208,7 @@
                         </Border>
                     </Grid>
 
-                    <Grid Grid.Row="2">
+                    <Grid Grid.Row="4">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="8"/>
@@ -232,7 +258,7 @@
                     </Grid>
 
                     <Border x:Name="TicketOnPanel"
-                            Grid.Row="4"
+                            Grid.Row="6"
                             Background="#0D1625"
                             BorderBrush="#2E3A4A"
                             BorderThickness="1"
@@ -272,7 +298,7 @@
                         </StackPanel>
                     </Border>
 
-                    <Button Grid.Row="6"
+                    <Button Grid.Row="8"
                             Content="기대값 계산"
                             Height="34"
                             Style="{StaticResource SimButtonStyle}"

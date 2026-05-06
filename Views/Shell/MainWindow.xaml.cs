@@ -42,6 +42,7 @@ namespace TWChatOverlay.Views
         private ExperienceEssenceAlertService _experienceEssenceAlertService;
         private DungeonCountDisplayService _dungeonCountDisplayService;
         private ReadableLogArchiveService _readableLogArchiveService;
+        private MessengerLogWatcherService _messengerLogWatcherService;
         private ChatSettings _settings;
         private LogService? _logService;
         private LogAnalysisService _logAnalysisService;
@@ -149,6 +150,8 @@ namespace TWChatOverlay.Views
                 snapshot => _experienceEssenceAlertService.ApplyStateSnapshot(snapshot));
             _dungeonCountDisplayService = new DungeonCountDisplayService(_settings);
             _readableLogArchiveService = new ReadableLogArchiveService();
+            _messengerLogWatcherService = new MessengerLogWatcherService(_settings);
+            _messengerLogWatcherService.Start();
             _buffTrackerService = new BuffTrackerService(_settings);
             _buffTrackerService.PropertyChanged += BuffTrackerService_PropertyChanged;
             ExpTrackerPanel.DataContext = _expService.SessionState;
@@ -211,6 +214,7 @@ namespace TWChatOverlay.Views
             catch { }
             try { _stickyService?.Stop(); } catch { }
             try { _bossAlarmSchedulerService?.Stop(); } catch { }
+            try { _messengerLogWatcherService?.Dispose(); } catch { }
             try { _hotKeyService?.Dispose(); } catch { }
         }
 

@@ -14,7 +14,7 @@ namespace TWChatOverlay.Views.Addons
     {
         private const int PieceCount = 1;
         private static readonly Brush SummaryValueBrush = new SolidColorBrush(Color.FromRgb(0xD6, 0xE8, 0xFF));
-        private readonly List<CoreStage> _stages = BuildStages();
+        private List<CoreStage> _stages = BuildStages(isMercurialAbyss: true);
 
         public CoreEnhanceSimulatorView()
         {
@@ -24,6 +24,9 @@ namespace TWChatOverlay.Views.Addons
 
         private void InitializeUi()
         {
+            if (MercurialAbyssRadio != null)
+                MercurialAbyssRadio.IsChecked = true;
+
             if (MainStatToggle != null)
                 MainStatToggle.IsChecked = true;
 
@@ -37,6 +40,13 @@ namespace TWChatOverlay.Views.Addons
             if (Ticket4TextBox != null) Ticket4TextBox.Text = "0.90"; // 9000만원
 
             UpdateStatModeText();
+            ApplyModeUi();
+        }
+
+        private void CoreModeRadio_Changed(object sender, RoutedEventArgs e)
+        {
+            bool isMercurialAbyss = MercurialAbyssRadio?.IsChecked == true;
+            _stages = BuildStages(isMercurialAbyss);
             ApplyModeUi();
         }
 
@@ -54,35 +64,35 @@ namespace TWChatOverlay.Views.Addons
             StatModeTextBlock.Text = isMainStat ? "현재: 주스탯" : "현재: 부스탯";
         }
 
-        private static List<CoreStage> BuildStages()
+        private static List<CoreStage> BuildStages(bool isMercurialAbyss)
         {
             var rows = new (int Tier, int Enhance, int Stat, int Dust, int Crystal, long Seed, int RatePct)[]
             {
                 (0,0,1,0,0,0,0),
                 (0,1,2,10,0,4_000_000,100),
-                (0,2,3,20,0,4_400_000,70),
-                (0,3,4,30,0,4_800_000,50),
-                (0,4,5,40,0,5_200_000,20),
-                (1,0,6,50,0,5_600_000,10),
-                (1,1,7,60,0,6_000_000,7),
-                (1,2,8,70,0,6_400_000,7),
-                (1,3,9,80,0,6_800_000,7),
-                (1,4,10,90,0,7_200_000,7),
-                (2,0,12,100,0,7_600_000,5),
-                (2,1,14,110,0,8_000_000,5),
-                (2,2,16,120,0,8_400_000,5),
-                (2,3,18,130,0,8_800_000,5),
-                (2,4,20,140,0,9_200_000,5),
-                (3,0,23,200,5,12_000_000,2),
-                (3,1,26,210,5,12_400_000,2),
-                (3,2,29,220,5,12_800_000,2),
-                (3,3,32,230,5,13_200_000,2),
-                (3,4,35,240,5,13_600_000,2),
-                (4,0,40,250,5,14_000_000,1),
-                (4,1,50,260,5,14_400_000,1),
-                (4,2,60,270,5,14_800_000,1),
-                (4,3,70,280,5,15_200_000,1),
-                (4,4,80,290,5,15_600_000,1)
+                (0,2,3,20,0,4_400_000,isMercurialAbyss ? 80 : 70),
+                (0,3,4,30,0,4_800_000,isMercurialAbyss ? 60 : 50),
+                (0,4,5,40,0,5_200_000,isMercurialAbyss ? 35 : 20),
+                (1,0,6,50,0,5_600_000,isMercurialAbyss ? 25 : 10),
+                (1,1,7,60,0,6_000_000,isMercurialAbyss ? 20 : 7),
+                (1,2,8,70,0,6_400_000,isMercurialAbyss ? 20 : 7),
+                (1,3,9,80,0,6_800_000,isMercurialAbyss ? 20 : 7),
+                (1,4,10,90,0,7_200_000,isMercurialAbyss ? 20 : 7),
+                (2,0,12,100,0,7_600_000,isMercurialAbyss ? 15 : 5),
+                (2,1,14,110,0,8_000_000,isMercurialAbyss ? 15 : 5),
+                (2,2,16,120,0,8_400_000,isMercurialAbyss ? 15 : 5),
+                (2,3,18,130,0,8_800_000,isMercurialAbyss ? 15 : 5),
+                (2,4,20,140,0,9_200_000,isMercurialAbyss ? 15 : 5),
+                (3,0,23,200,5,12_000_000,isMercurialAbyss ? 8 : 2),
+                (3,1,26,210,5,12_400_000,isMercurialAbyss ? 8 : 2),
+                (3,2,29,220,5,12_800_000,isMercurialAbyss ? 8 : 2),
+                (3,3,32,230,5,13_200_000,isMercurialAbyss ? 8 : 2),
+                (3,4,35,240,5,13_600_000,isMercurialAbyss ? 8 : 2),
+                (4,0,40,250,5,14_000_000,isMercurialAbyss ? 5 : 1),
+                (4,1,50,260,5,14_400_000,isMercurialAbyss ? 5 : 1),
+                (4,2,60,270,5,14_800_000,isMercurialAbyss ? 5 : 1),
+                (4,3,70,280,5,15_200_000,isMercurialAbyss ? 5 : 1),
+                (4,4,80,290,5,15_600_000,isMercurialAbyss ? 5 : 1)
             };
 
             return rows.Select((x, i) => new CoreStage
