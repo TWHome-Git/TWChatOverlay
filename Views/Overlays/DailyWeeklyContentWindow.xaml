@@ -2,6 +2,7 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:models="clr-namespace:TWChatOverlay.Models"
+        xmlns:converters="clr-namespace:TWChatOverlay.Converters"
         Title="일간/주간 컨텐츠 확인"
         Width="280" Height="540"
         Background="Transparent"
@@ -22,6 +23,7 @@
     </Window.Style>
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+        <converters:AddValueConverter x:Key="AddValueConverter"/>
         <Style x:Key="CloseButtonStyle" TargetType="Button">
             <Setter Property="Background" Value="Transparent"/>
             <Setter Property="Foreground" Value="#8B949E"/>
@@ -152,8 +154,12 @@
                 <StackPanel>
                     <DockPanel Margin="0,2,4,6" LastChildFill="False">
                         <Border DockPanel.Dock="Left" Width="3" Background="Cyan" CornerRadius="1" Margin="0,0,6,0"/>
-                        <TextBlock DockPanel.Dock="Left" Text="일일 컨텐츠" Foreground="#C9D1D9" FontSize="13" FontWeight="SemiBold" VerticalAlignment="Center"/>
-                        <TextBlock DockPanel.Dock="Right" Text="{Binding DailyProgressDisplay}" Foreground="#8B949E" FontSize="12" VerticalAlignment="Center"/>
+                        <TextBlock DockPanel.Dock="Left" Text="일일 컨텐츠" Foreground="#C9D1D9"
+                                   FontSize="{Binding DailyWeeklyContentFontSize, Converter={StaticResource AddValueConverter}, ConverterParameter=4}"
+                                   FontWeight="SemiBold" VerticalAlignment="Center"/>
+                        <TextBlock DockPanel.Dock="Right" Text="{Binding DailyProgressDisplay}" Foreground="#8B949E"
+                                   FontSize="{Binding DailyWeeklyContentFontSize, Converter={StaticResource AddValueConverter}, ConverterParameter=3}"
+                                   VerticalAlignment="Center"/>
                     </DockPanel>
                     <ItemsControl ItemsSource="{Binding DailyContentItems}">
                     <ItemsControl.ItemContainerStyle>
@@ -171,6 +177,19 @@
                     <ItemsControl.ItemTemplate>
                         <DataTemplate DataType="{x:Type models:DailyWeeklyContentLog}">
                             <Border Padding="4,2">
+                                <Border.Style>
+                                    <Style TargetType="Border">
+                                        <Setter Property="Margin" Value="0"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding HasChildren}" Value="True">
+                                                <Setter Property="Margin" Value="0,6,0,0"/>
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding IsRegionGroup}" Value="True">
+                                                <Setter Property="Margin" Value="0,10,0,0"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Border.Style>
                                 <DockPanel LastChildFill="True">
                                     <Border DockPanel.Dock="Left" Width="16"
                                             Visibility="{Binding IsSubItem, Converter={StaticResource BoolToVis}}"/>
@@ -192,7 +211,8 @@
                                     </TextBlock>
                                     <TextBlock DockPanel.Dock="Right"
                                                Text="{Binding VisualCountDisplay}"
-                                               Foreground="#FFCC00" FontSize="11"
+                                               Foreground="#FFCC00"
+                                               FontSize="{Binding DataContext.DailyWeeklyContentFontSize, RelativeSource={RelativeSource AncestorType=Window}}"
                                                VerticalAlignment="Center" Margin="4,0,0,0">
                                         <TextBlock.Style>
                                             <Style TargetType="TextBlock">
@@ -205,19 +225,23 @@
                                             </Style>
                                         </TextBlock.Style>
                                     </TextBlock>
-                                    <TextBlock Text="{Binding DisplayName}" VerticalAlignment="Center" FontSize="12">
+                                    <TextBlock Text="{Binding DisplayName}" VerticalAlignment="Center">
                                         <TextBlock.Style>
                                             <Style TargetType="TextBlock">
-                                                <Setter Property="Foreground" Value="#C9D1D9"/>
+                                                <Setter Property="FontSize" Value="{Binding DataContext.DailyWeeklyContentFontSize, RelativeSource={RelativeSource AncestorType=Window}}"/>
+                                                <Setter Property="Foreground" Value="{Binding ProgressForeground}"/>
                                                 <Setter Property="FontWeight" Value="Normal"/>
                                                 <Style.Triggers>
                                                     <DataTrigger Binding="{Binding HasChildren}" Value="True">
                                                         <Setter Property="FontWeight" Value="SemiBold"/>
-                                                        <Setter Property="FontSize" Value="13"/>
-                                                        <Setter Property="Foreground" Value="White"/>
+                                                        <Setter Property="FontSize" Value="{Binding DataContext.DailyWeeklyContentFontSize, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource AddValueConverter}, ConverterParameter=1}"/>
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding IsRegionGroup}" Value="True">
+                                                        <Setter Property="FontWeight" Value="Bold"/>
+                                                        <Setter Property="FontSize" Value="{Binding DataContext.DailyWeeklyContentFontSize, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource AddValueConverter}, ConverterParameter=2}"/>
+                                                        <Setter Property="Foreground" Value="#66D9EF"/>
                                                     </DataTrigger>
                                                     <DataTrigger Binding="{Binding IsCleared}" Value="True">
-                                                        <Setter Property="Foreground" Value="#4CAF50"/>
                                                         <Setter Property="TextDecorations" Value="Strikethrough"/>
                                                     </DataTrigger>
                                                 </Style.Triggers>
@@ -232,8 +256,12 @@
 
                     <DockPanel Margin="0,8,4,6" LastChildFill="False">
                         <Border DockPanel.Dock="Left" Width="3" Background="Cyan" CornerRadius="1" Margin="0,0,6,0"/>
-                        <TextBlock DockPanel.Dock="Left" Text="주간 컨텐츠" Foreground="#C9D1D9" FontSize="13" FontWeight="SemiBold" VerticalAlignment="Center"/>
-                        <TextBlock DockPanel.Dock="Right" Text="{Binding WeeklyProgressDisplay}" Foreground="#8B949E" FontSize="12" VerticalAlignment="Center"/>
+                        <TextBlock DockPanel.Dock="Left" Text="주간 컨텐츠" Foreground="#C9D1D9"
+                                   FontSize="{Binding DailyWeeklyContentFontSize, Converter={StaticResource AddValueConverter}, ConverterParameter=4}"
+                                   FontWeight="SemiBold" VerticalAlignment="Center"/>
+                        <TextBlock DockPanel.Dock="Right" Text="{Binding WeeklyProgressDisplay}" Foreground="#8B949E"
+                                   FontSize="{Binding DailyWeeklyContentFontSize, Converter={StaticResource AddValueConverter}, ConverterParameter=3}"
+                                   VerticalAlignment="Center"/>
                     </DockPanel>
                     <ItemsControl ItemsSource="{Binding WeeklyContentItems}">
                         <ItemsControl.ItemContainerStyle>
@@ -251,6 +279,19 @@
                         <ItemsControl.ItemTemplate>
                             <DataTemplate DataType="{x:Type models:DailyWeeklyContentLog}">
                                 <Border Padding="4,2">
+                                    <Border.Style>
+                                        <Style TargetType="Border">
+                                            <Setter Property="Margin" Value="0"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding HasChildren}" Value="True">
+                                                    <Setter Property="Margin" Value="0,6,0,0"/>
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding IsRegionGroup}" Value="True">
+                                                    <Setter Property="Margin" Value="0,10,0,0"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Border.Style>
                                     <DockPanel LastChildFill="True">
                                         <Border DockPanel.Dock="Left" Width="16"
                                                 Visibility="{Binding IsSubItem, Converter={StaticResource BoolToVis}}"/>
@@ -272,7 +313,8 @@
                                         </TextBlock>
                                         <TextBlock DockPanel.Dock="Right"
                                                    Text="{Binding VisualCountDisplay}"
-                                                   Foreground="#FFCC00" FontSize="11"
+                                                   Foreground="#FFCC00"
+                                                   FontSize="{Binding DataContext.DailyWeeklyContentFontSize, RelativeSource={RelativeSource AncestorType=Window}}"
                                                    VerticalAlignment="Center" Margin="4,0,0,0">
                                             <TextBlock.Style>
                                                 <Style TargetType="TextBlock">
@@ -285,19 +327,23 @@
                                                 </Style>
                                             </TextBlock.Style>
                                         </TextBlock>
-                                        <TextBlock Text="{Binding DisplayName}" VerticalAlignment="Center" FontSize="12">
+                                        <TextBlock Text="{Binding DisplayName}" VerticalAlignment="Center">
                                             <TextBlock.Style>
                                                 <Style TargetType="TextBlock">
-                                                    <Setter Property="Foreground" Value="#C9D1D9"/>
+                                                    <Setter Property="FontSize" Value="{Binding DataContext.DailyWeeklyContentFontSize, RelativeSource={RelativeSource AncestorType=Window}}"/>
+                                                    <Setter Property="Foreground" Value="{Binding ProgressForeground}"/>
                                                     <Setter Property="FontWeight" Value="Normal"/>
                                                     <Style.Triggers>
                                                         <DataTrigger Binding="{Binding HasChildren}" Value="True">
                                                             <Setter Property="FontWeight" Value="SemiBold"/>
-                                                            <Setter Property="FontSize" Value="13"/>
-                                                            <Setter Property="Foreground" Value="White"/>
+                                                            <Setter Property="FontSize" Value="{Binding DataContext.DailyWeeklyContentFontSize, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource AddValueConverter}, ConverterParameter=1}"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding IsRegionGroup}" Value="True">
+                                                            <Setter Property="FontWeight" Value="Bold"/>
+                                                            <Setter Property="FontSize" Value="{Binding DataContext.DailyWeeklyContentFontSize, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource AddValueConverter}, ConverterParameter=2}"/>
+                                                            <Setter Property="Foreground" Value="#66D9EF"/>
                                                         </DataTrigger>
                                                         <DataTrigger Binding="{Binding IsCleared}" Value="True">
-                                                            <Setter Property="Foreground" Value="#4CAF50"/>
                                                             <Setter Property="TextDecorations" Value="Strikethrough"/>
                                                         </DataTrigger>
                                                     </Style.Triggers>
@@ -373,16 +419,21 @@
                                                 </Style>
                                             </TextBlock.Style>
                                         </TextBlock>
-                                        <TextBlock Text="{Binding DisplayName}" VerticalAlignment="Center" FontSize="12">
+                                        <TextBlock Text="{Binding DisplayName}" VerticalAlignment="Center">
                                             <TextBlock.Style>
                                                 <Style TargetType="TextBlock">
+                                                    <Setter Property="FontSize" Value="{Binding DataContext.DailyWeeklyContentFontSize, RelativeSource={RelativeSource AncestorType=Window}}"/>
                                                     <Setter Property="Foreground" Value="#4CAF50"/>
                                                     <Setter Property="TextDecorations" Value="Strikethrough"/>
                                                     <Setter Property="FontWeight" Value="Normal"/>
                                                     <Style.Triggers>
                                                         <DataTrigger Binding="{Binding HasChildren}" Value="True">
                                                             <Setter Property="FontWeight" Value="SemiBold"/>
-                                                            <Setter Property="FontSize" Value="13"/>
+                                                            <Setter Property="FontSize" Value="{Binding DataContext.DailyWeeklyContentFontSize, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource AddValueConverter}, ConverterParameter=1}"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding IsRegionGroup}" Value="True">
+                                                            <Setter Property="FontWeight" Value="Bold"/>
+                                                            <Setter Property="FontSize" Value="{Binding DataContext.DailyWeeklyContentFontSize, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource AddValueConverter}, ConverterParameter=2}"/>
                                                         </DataTrigger>
                                                     </Style.Triggers>
                                                 </Style>
@@ -407,6 +458,14 @@
                     </Style>
                 </ScrollViewer.Style>
                 <StackPanel>
+                    <Border Margin="4,4,4,8" Padding="8,6" CornerRadius="6" Background="#121A24">
+                        <DockPanel LastChildFill="True">
+                            <TextBlock DockPanel.Dock="Left" Text="하위 항목 폰트 크기" Foreground="#C9D1D9" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                            <TextBlock DockPanel.Dock="Right" Text="{Binding DailyWeeklyContentFontSizeDisplay}" Foreground="#C9D1D9" FontWeight="SemiBold" VerticalAlignment="Center" Margin="8,0,0,0"/>
+                            <Slider Minimum="10" Maximum="28" TickFrequency="1" IsSnapToTickEnabled="True"
+                                    Value="{Binding DailyWeeklyContentFontSize, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                        </DockPanel>
+                    </Border>
                     <TextBlock Text="항목 설정" Foreground="#8B949E" FontSize="11" Margin="4,4,0,6"/>
                     <ItemsControl ItemsSource="{Binding TrackItems}">
                         <ItemsControl.ItemTemplate>
@@ -451,7 +510,7 @@
 
             <Border Grid.Row="2" Background="#161B22" CornerRadius="0,0,8,8" Padding="10,0">
                 <DockPanel VerticalAlignment="Center">
-                    <Button DockPanel.Dock="Right" Content="초기화" Click="Reset_Click"
+                    <Button DockPanel.Dock="Right" Content="갱신" Click="Reset_Click"
                             Width="60" Height="24" Background="#21262D" Foreground="White"
                             BorderBrush="#30363D" BorderThickness="1" FontSize="11">
                         <Button.Resources>

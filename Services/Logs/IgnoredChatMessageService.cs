@@ -41,7 +41,8 @@ namespace TWChatOverlay.Services
         private static readonly Regex[] NormalIgnoredRegexes =
         {
             new(@"^(?:\[[^\]]+\]\s*)?(SP|MP|Fever|HP)가\s*\d+%\s*회복되었습니다\.?$", RegexOptions.Compiled),
-            new(@"^(?:\[[^\]]+\]\s*)?체력이\s*\d+%\s*회복되었습니다\.?$", RegexOptions.Compiled)
+            new(@"^(?:\[[^\]]+\]\s*)?체력이\s*\d+%\s*회복되었습니다\.?$", RegexOptions.Compiled),
+            new(@"남은\s*공격\s*횟수\s*:\s*\d+", RegexOptions.Compiled)
         };
 
         public static bool IsIgnoredNormalMessage(string message)

@@ -14,7 +14,6 @@ namespace TWChatOverlay.Services.LogAnalysis
         public const string AbyssDepthOneItemName = "어비스 - 심층Ⅰ";
         public const string AbyssDepthTwoItemName = "어비스 - 심층Ⅱ";
         public const string AbyssDepthThreeItemName = "어비스 - 심층Ⅲ";
-        public const string ApetiriaHardItemName = "아페티리아 어려움";
 
         public const string AbandonRoadKeywordToken = "어밴던로드";
         public const string CravingPleasureLogKeyword = "남은 에너지는";
@@ -48,7 +47,6 @@ namespace TWChatOverlay.Services.LogAnalysis
         private static readonly Regex AbyssRewardRegex = new(@"이번 주 어비스 던전 보상을\s*\d+회 획득하셨습니다.*\[\s*(\d+)회\s*/\s*7회\s*\]?", RegexOptions.Compiled);
         private static readonly Regex CatacombsRewardRegex = new(@"이번 주 사명의 계승자 닉스 보상을\s*(\d+)회 획득\s*하셨습니다", RegexOptions.Compiled);
         private static readonly Regex SinjoRewardRegex = new(@"이번 주 신조 보상을\s*(\d+)회 획득 하셨습니다", RegexOptions.Compiled);
-        private static readonly Regex SiokanClearCountRegex = new(@"클리어 횟수 : (\d+) 회", RegexOptions.Compiled);
 
         private readonly IReadOnlyList<DailyWeeklyContentLog> _trackItems;
         private readonly HashSet<DailyWeeklyContentLog> _pendingDoubleKeyword = new();
@@ -58,7 +56,6 @@ namespace TWChatOverlay.Services.LogAnalysis
         private bool _pendingMercurialSingleEntry;
         private bool _pendingMercurialRewardExpSeen;
         private bool _pendingMercurialRewardSeedSeen;
-        private int _pendingApetiriaHardBoxes;
 
         public DailyWeeklyLogAnalyzer(IReadOnlyList<DailyWeeklyContentLog> trackItems)
         {
@@ -90,31 +87,15 @@ namespace TWChatOverlay.Services.LogAnalysis
                 {
                     if (!text.Contains(item.LogKeyword, StringComparison.Ordinal))
                         continue;
-
-                    if (item.LogKeyword.Contains(SiochanheimKeywordToken, StringComparison.Ordinal) &&
-                        TryExtractDetailValue(item, text, out int siochanheimCount, out var detailKind) &&
-                        detailKind == DailyWeeklyDetailKind.Siochanheim)
-                    {
-                        SetAccumulatedCount(item, siochanheimCount);
-                        break;
-                    }
+                    if (item.Name == "렐릭" &&
+                        !(text.Contains("고대 렐릭의 성소", StringComparison.Ordinal) &&
+                          text.Contains("주간 무료 클리어 횟수", StringComparison.Ordinal)))
+                        continue;
 
                     if (TryUpdateDetail(item, text, out int? count) && count.HasValue)
                         break;
 
-                    if (item.Name == ApetiriaHardItemName)
-                    {
-                        _pendingApetiriaHardBoxes++;
-                        if (_pendingApetiriaHardBoxes >= 3)
-                        {
-                            _pendingApetiriaHardBoxes = 0;
-                            item.Mark();
-                        }
-                    }
-                    else
-                    {
-                        item.Mark();
-                    }
+                    item.Mark();
                     break;
                 }
 
@@ -139,13 +120,11 @@ namespace TWChatOverlay.Services.LogAnalysis
             _pendingMercurialSingleEntry = false;
             _pendingMercurialRewardExpSeen = false;
             _pendingMercurialRewardSeedSeen = false;
-            _pendingApetiriaHardBoxes = 0;
         }
 
         public void ResetAccumulatedCounts()
         {
             _countStates.Clear();
-            _pendingApetiriaHardBoxes = 0;
         }
 
         private bool TryProcessMercurialSingleLog(string text)
@@ -200,10 +179,9 @@ namespace TWChatOverlay.Services.LogAnalysis
 
             var abyssRewardMatch = AbyssRewardRegex.Match(text);
             if (abyssRewardMatch.Success &&
-                _pendingAbyssFloor != null &&
-                int.TryParse(abyssRewardMatch.Groups[1].Value, out int abyssValue))
+                _pendingAbyssFloor != null)
             {
-                SetAccumulatedCount(FindAbyssItemByFloor(_trackItems, _pendingAbyssFloor), abyssValue);
+                FindAbyssItemByFloor(_trackItems, _pendingAbyssFloor)?.Mark();
                 _pendingAbyssFloor = null;
                 return true;
             }
@@ -342,12 +320,6 @@ namespace TWChatOverlay.Services.LogAnalysis
                 return TryParseFirstGroup(PleasureEnergyRegex.Match(text), out value);
             }
 
-            if (item.LogKeyword?.Contains(SiochanheimKeywordToken, StringComparison.Ordinal) == true)
-            {
-                detailKind = DailyWeeklyDetailKind.Siochanheim;
-                return TryParseFirstGroup(SiokanClearCountRegex.Match(text), out value);
-            }
-
             return false;
         }
 
@@ -438,7 +410,6 @@ namespace TWChatOverlay.Services.LogAnalysis
     {
         None,
         AbandonRoad,
-        CravingPleasure,
-        Siochanheim
+        CravingPleasure
     }
 }

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Windows.Media;
 
 namespace TWChatOverlay.Models
 {
@@ -18,6 +19,7 @@ namespace TWChatOverlay.Models
 
         public string Name { get; init; } = "";
         public bool IsSubItem { get; init; } = false;
+        public bool IsRegionGroup { get; init; } = false;
         public bool IsWeekly { get; init; } = false;
         public bool AllowCountOverMax { get; init; } = false;
         public int DefaultMaxCount { get; init; } = 0;
@@ -73,6 +75,7 @@ namespace TWChatOverlay.Models
                 OnPropertyChanged(nameof(IsCleared));
                 OnPropertyChanged(nameof(CountDisplay));
                 OnPropertyChanged(nameof(VisualCountDisplay));
+                OnPropertyChanged(nameof(ProgressForeground));
             }
         }
 
@@ -138,6 +141,7 @@ namespace TWChatOverlay.Models
                 _isCleared = value;
                 OnPropertyChanged();
                 OnPropertyChanged(nameof(VisualCountDisplay));
+                OnPropertyChanged(nameof(ProgressForeground));
             }
         }
 
@@ -152,6 +156,7 @@ namespace TWChatOverlay.Models
                 OnPropertyChanged(nameof(IsCleared));
                 OnPropertyChanged(nameof(CountDisplay));
                 OnPropertyChanged(nameof(VisualCountDisplay));
+                OnPropertyChanged(nameof(ProgressForeground));
             }
         }
 
@@ -161,12 +166,41 @@ namespace TWChatOverlay.Models
 
         public bool ShowVisualCount => !HasChildren;
 
+        public Brush ProgressForeground
+        {
+            get
+            {
+                if (HasChildren)
+                    return Brushes.White;
+
+                if (IsCleared)
+                    return new SolidColorBrush(Color.FromRgb(0x4C, 0xAF, 0x50));
+
+                double ratio;
+                if (HasCount)
+                {
+                    int threshold = ClearThreshold > 0 ? ClearThreshold : Math.Max(1, MaxCount);
+                    ratio = Math.Clamp((double)_currentCount / threshold, 0d, 1d);
+                }
+                else
+                {
+                    ratio = _isCleared ? 1d : 0d;
+                }
+
+                byte startR = 0xC9, startG = 0xD1, startB = 0xD9;
+                byte endR = 0x81, endG = 0xE6, endB = 0x93;
+                byte r = (byte)Math.Round(startR + (endR - startR) * ratio);
+                byte g = (byte)Math.Round(startG + (endG - startG) * ratio);
+                byte b = (byte)Math.Round(startB + (endB - startB) * ratio);
+                return new SolidColorBrush(Color.FromRgb(r, g, b));
+            }
+        }
+
         public void Mark()
         {
             if (HasCount)
             {
-                if (AllowCountOverMax || _currentCount < MaxCount)
-                    CurrentCount++;
+                CurrentCount++;
             }
             else if (!HasChildren)
             {
@@ -189,6 +223,7 @@ namespace TWChatOverlay.Models
                 OnPropertyChanged(nameof(CurrentCount));
                 OnPropertyChanged(nameof(CountDisplay));
                 OnPropertyChanged(nameof(VisualCountDisplay));
+                OnPropertyChanged(nameof(ProgressForeground));
             }
         }
 

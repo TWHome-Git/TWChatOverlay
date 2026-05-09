@@ -176,13 +176,13 @@
                     <StackPanel Margin="8">
                         <Border Style="{StaticResource SettingsBorderStyle}">
                             <StackPanel>
-                                <TextBlock Text="마법진 경고" Style="{StaticResource SectionHeaderStyle}"/>
+                                <TextBlock Text="웨이브 종료 알림" Style="{StaticResource SectionHeaderStyle}"/>
 
-                                <CheckBox Content="마법진 경고"
+                                <CheckBox Content="웨이브 종료 알림"
                                           IsChecked="{Binding UseMagicCircleAlert}"
                                           Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
                                 <StackPanel Margin="6,6,0,8">
-                                    <TextBlock Text="{Binding MagicCircleAlertVolumePercent, StringFormat=마법진 경고 볼륨: {0:F0}%}"
+                                    <TextBlock Text="{Binding MagicCircleAlertVolumePercent, StringFormat=웨이브 종료 알림 볼륨: {0:F0}%}"
                                                Foreground="White"
                                                FontSize="12"
                                                Margin="0,0,0,6"/>
@@ -190,7 +190,7 @@
                                             Maximum="100"
                                             TickFrequency="10"
                                             IsSnapToTickEnabled="True"
-                                            Tag="MagicCircle.wav"
+                                            Tag="Wave.wav"
                                             ValueChanged="PreviewSoundSlider_ValueChanged"
                                             Value="{Binding MagicCircleAlertVolumePercent, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
                                 </StackPanel>

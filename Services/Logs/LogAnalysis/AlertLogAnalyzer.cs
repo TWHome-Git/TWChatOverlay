@@ -7,7 +7,7 @@ namespace TWChatOverlay.Services.LogAnalysis
 {
     public sealed class AlertLogAnalyzer
     {
-        private const string MagicCircleKeyword = "발 밑에 마법진이 나타났다!";
+        private const string MagicCircleKeyword = "몬스터가 남아있으면 다음 웨이브로 넘어가지 않습니다.";
 
         public void Analyze(LogLineContext context)
         {
@@ -16,7 +16,9 @@ namespace TWChatOverlay.Services.LogAnalysis
                 return;
 
             if (settings.UseMagicCircleAlert &&
-                (context.Result.Category == ChatCategory.Normal || context.Result.Category == ChatCategory.NormalSelf) &&
+                (context.Result.Category == ChatCategory.System ||
+                 context.Result.Category == ChatCategory.System2 ||
+                 context.Result.Category == ChatCategory.System3) &&
                 context.MessageOnly.Contains(MagicCircleKeyword, StringComparison.Ordinal))
             {
                 context.Result.IsHighlight = true;

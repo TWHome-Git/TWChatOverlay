@@ -9,6 +9,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Text.Json;
 using System.Threading.Tasks;
+using System.Diagnostics;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
@@ -33,33 +34,35 @@ namespace TWChatOverlay.Views
         private static readonly Regex ShoutToastSourceRegex = new(
             @"^\s*\[\s*(?:\d{1,2}:\d{2}(?::\d{2})?|\d{1,2}\s*시\s*\d{1,2}\s*분(?:\s*\d{1,2}\s*초)?)\s*\]\s*외치기\s*:",
             RegexOptions.IgnoreCase | RegexOptions.Compiled);
+        private static readonly Regex OrlyRemainingAttackOneRegex = new(
+            @"남은\s*공격\s*횟수\s*:\s*1(?!\d)",
+            RegexOptions.Compiled);
         private static readonly string[] DailyWeeklyContentArchiveKeywords =
         {
-            "금일 [루미너스] 보스 토벌에 성공하였습니다.",
-            "로카고스의 보관 주머니",
-            "에토스의 보관 주머니",
-            "체리아의 보관 주머니",
-            "마티아의 보관 주머니",
-            "티로로스의 보관 주머니",
-            "라이코스의 보관 주머니",
-            "이클립스 보스 토벌전 보상 상자",
-            "보급품 탈환에 성공하였",
-            "모든 훈련을 클리어했",
-            "별동대 토벌 보상으로 경험치",
+            "이클립스 보스전(로카고스) 클리어 횟수:",
+            "이클립스 보스전(에토스) 클리어 횟수:",
+            "이클립스 보스전(체리아) 클리어 횟수:",
+            "이클립스 보스전(마티아 ) 클리어 횟수:",
+            "이클립스 보스전(티로로스) 클리어 횟수:",
+            "이클립스 보스전(라이코스 ) 클리어 횟수:",
+            "이클립스 보스 토벌전 클리어 횟수:",
+            "보급품 탈환 클리어 횟수:",
+            "달여왕 군대 훈련소 클리어 횟수:",
+            "별동대 토벌 클리어 횟수:",
             "혼란한 대지 미션에 성공하여",
             "색을 잃은 땅 미션에 성공하여",
-            "코어 던전 몬스터를 모두 퇴치하여",
+            "보스 몬스터를 퇴치하세요.",
+            "던전을 클리어 하였습니다. 곧 마을로 돌아가게 됩니다.",
             "모든 일반지역을 토벌하여",
-            "오늘 무료 클리어 횟수 : 1/1 회",
+            "?고대 렐릭의 성소? - 주간 무료 클리어 횟수 :",
             "숨겨진 구역으로 이동할 수 있는 포탈이 맵 중앙",
             "차원의 틈 봉인에 성공하였",
-            "심연의 보물창고 밖으로 이동 됩니다",
+            "심연의 보물창고 입장 횟수:",
             "청소 아르바이트 보상 조건을 달성하였습니다.",
             "프라바 방어전 성공 보상으로 경험치 1000만을 획득",
             "이번 주 사명의 계승자 닉스 보상을",
             "이번 주 신조 보상을",
-            "[키시니크의 보관 주머니]",
-            "[아페티리아 어려움 보상 상자]",
+            "아페티리아 클리어 횟수:",
             "시오칸하임 - 보스 토벌전의 클리어 횟수 :",
             "시오칸하임 - 오딘 전면전의 클리어 횟수 :",
             "이번 주 어밴던로드 필멸의 땅 지역의 도전 횟수는",
@@ -70,6 +73,35 @@ namespace TWChatOverlay.Views
             "어비스 - 심층Ⅲ(보스전) 플레이를 이번 주에 7회 중",
             "남은 에너지는",
             "경험치가 100억이 차감되고, 경험의 정수 1개를 획득 하였습니다."
+            ,"[경험의 정수] 아이템을 획득하였습니다."
+            ,"[성난 빅테디의 별사탕] 아이템을 획득하였습니다."
+            ,"레이티아 퇴치 보상으로 레이티아 보상 상자 (일반) 1개, 루비코나 코어 상자 20개를"
+            ,"설계자 퇴치 보상으로 설계자 보상 상자 (일반) 1개, 루비코나 코어 상자 20개를 획득"
+            ,"레이티아 퇴치 보상으로 레이티아 보상 상자 (어려움) 1개, 루비코나 코어 상자 30개"
+            ,"설계자 퇴치 보상으로 설계자 보상 상자 (어려움) 1개, 루비코나 코어 상자 30개"
+            ,"[환희의 레이티아 보상 상자] 아이템을 1개 획득하였습니다."
+            ,"샐리온 클리어 횟수:"
+            ,"샐레아나 클리어 횟수:"
+            ,"실라이론 클리어 횟수:"
+            ,"실반 클리어 횟수:"
+            ,"루미너스 클리어 횟수:"
+            ,"루미너스(EX) 클리어 횟수:"
+            ,"샐리온 코어 마스터 던전 클리어 횟수:"
+            ,"샐레아나 코어 마스터 던전 클리어 횟수:"
+            ,"실라이론 코어 마스터 던전 클리어 횟수:"
+            ,"실반 코어 마스터 던전 클리어 횟수:"
+            ,"루미너스 코어 마스터 던전 클리어 횟수:"
+            ,"아페티리아(EX) 클리어 횟수:"
+            ,"로카고스 코어 마스터 클리어 횟수:"
+            ,"에토스 코어 마스터 클리어 횟수:"
+            ,"체리아 코어 마스터 클리어 횟수:"
+            ,"마티아 코어 마스터 클리어 횟수:"
+            ,"라이코스 코어 마스터 클리어 횟수:"
+            ,"티로로스 코어 마스터 클리어 횟수:"
+            ,"코어 마스터 - 심층Ⅰ 클리어 횟수:"
+            ,"코어 마스터 - 심층Ⅱ 클리어 횟수:"
+            ,"코어 마스터 - 심층Ⅲ 클리어 횟수:"
+            ,"티로로스의 계략을 막아내었습니다. 잠시 후 기억의 숲 전초기지로 이동됩니다."
         };
 
         #region Log Processing
@@ -145,8 +177,9 @@ namespace TWChatOverlay.Views
                 _experienceEssenceAlertService.Process(analysis);
 
             if (!context.HandledDailyWeeklyCountLog &&
-                analysis.ShouldRunDailyWeeklyContent &&
-                _dailyWeeklyContentOverlay != null)
+                context.IsRealTime &&
+                _dailyWeeklyContentOverlay != null &&
+                (analysis.ShouldRunDailyWeeklyContent || isContentCompletionRelevant))
                 _dailyWeeklyContentOverlay.ProcessLog(analysis);
 
             foreach (string tabName in analysis.BufferTabs)
@@ -187,26 +220,22 @@ namespace TWChatOverlay.Views
                 }
             }
 
-            if (context.IsRealTime)
-            {
-                _readableLogArchiveService.AppendFromAnalysis(DateTime.Today, analysis, isContentCompletionRelevant);
-            }
+            _readableLogArchiveService.AppendFromAnalysis(DateTime.Today, analysis, isContentCompletionRelevant);
 
-            if (context.IsRealTime &&
-                (pipelineAnalysis.DefaultItemDrop?.HasTrackedItemDrop ?? analysis.HasTrackedItemDrop))
+            if (pipelineAnalysis.DefaultItemDrop?.HasTrackedItemDrop ?? analysis.HasTrackedItemDrop)
             {
                 var realtimeItemParseResult = pipelineAnalysis.DefaultItemDrop?.Parsed ?? parseResult;
                 _itemCalendarWindow?.ApplyRealtimeItemLog(realtimeItemParseResult, DateTime.Today);
             }
 
-            if (context.IsRealTime)
+            if (analysis.IsSystemLog)
             {
                 RecaptureSupplyAlertService.Observe(parseResult.FormattedText);
                 if (IsExperienceEssenceExchangeLog(parseResult.FormattedText))
                     _itemCalendarWindow?.ApplyRealtimeExperienceEssenceLog(parseResult.FormattedText, DateTime.Today);
             }
 
-            if (context.IsRealTime && analysis.ShouldRunDailyWeeklyContent)
+            if (analysis.ShouldRunDailyWeeklyContent || analysis.IsSystemLog)
             {
                 EnsureAbandonWeeklySummaryCurrent(DateTime.Today);
                 bool isAbandonCountEntry = DailyWeeklyLogAnalyzer.TryMatchAbandonRoadCount(parseResult.FormattedText, out _);
@@ -263,6 +292,25 @@ namespace TWChatOverlay.Views
             if (hwnd == IntPtr.Zero || !NativeMethods.IsWindow(hwnd))
                 return false;
 
+            try
+            {
+                _ = NativeMethods.GetWindowThreadProcessId(hwnd, out uint pid);
+                if (pid != 0)
+                {
+                    using Process process = Process.GetProcessById((int)pid);
+                    string processName = process.ProcessName;
+                    if (!string.IsNullOrWhiteSpace(processName) &&
+                        processName.Contains("TalesWeaver", StringComparison.OrdinalIgnoreCase))
+                    {
+                        return true;
+                    }
+                }
+            }
+            catch
+            {
+                // Fall back to title-based detection.
+            }
+
             int len = NativeMethods.GetWindowTextLength(hwnd);
             if (len <= 0)
                 return false;
@@ -318,6 +366,9 @@ namespace TWChatOverlay.Views
             if (IsConfusedOrColorlessElsoRewardLine(text))
                 return false;
 
+            if (text.Contains("[1+1] 이벤트", StringComparison.Ordinal))
+                return false;
+
             if (DailyWeeklyLogAnalyzer.TryMatchAbyssEntry(text, out _) ||
                 DailyWeeklyLogAnalyzer.TryMatchAbyssFloor(text, out _) ||
                 DailyWeeklyLogAnalyzer.TryMatchAbyssReward(text, out _) ||
@@ -331,35 +382,20 @@ namespace TWChatOverlay.Views
             if (ContainsAnyContentArchiveKeyword(text))
                 return true;
 
-            if (IsMercurialSeedCompletionLog(text))
+            if (OrlyRemainingAttackOneRegex.IsMatch(text))
                 return true;
 
-            return DailyWeeklyLogAnalyzer.IsMercurialEntryMessage(text) ||
-                   DailyWeeklyLogAnalyzer.IsMercurialRewardSeedMessage(text) ||
-                   IsStrictMercurialCompletionLog(text);
+            return false;
         }
 
         private static bool IsMercurialSeedCompletionLog(string text)
         {
-            if (string.IsNullOrWhiteSpace(text))
-                return false;
-
-            return text.Contains("머큐리얼 케이브", StringComparison.Ordinal) &&
-                   text.Contains("콘텐츠 클리어 보상으로", StringComparison.Ordinal) &&
-                   text.Contains("SEED", StringComparison.Ordinal) &&
-                   text.Contains("획득했습니다", StringComparison.Ordinal);
+            return false;
         }
 
         private static bool IsStrictMercurialCompletionLog(string text)
         {
-            if (string.IsNullOrWhiteSpace(text))
-                return false;
-
-            return IsMercurialSeedCompletionLog(text) ||
-                   text.Contains("머큐리얼 케이브의 [싱글 플레이] 모드로 입장 하였습니다.", StringComparison.Ordinal) ||
-                   (text.Contains("머큐리얼 케이브", StringComparison.Ordinal) &&
-                    text.Contains("싱글 플레이", StringComparison.Ordinal) &&
-                    text.Contains("입장", StringComparison.Ordinal));
+            return false;
         }
 
         private static bool IsConfusedOrColorlessElsoRewardLine(string text)
@@ -451,7 +487,7 @@ namespace TWChatOverlay.Views
                 if (isRealTime && _expService.IsReady)
                 {
                     if (log.IsMagicCircleAlert && _settings.UseMagicCircleAlert)
-                        NotificationService.PlayAlert("MagicCircle.wav");
+                        NotificationService.PlayAlert("Wave.wav");
                     else if (_settings.UseAlertSound)
                         NotificationService.PlayAlert("Highlight.wav");
                 }

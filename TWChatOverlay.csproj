@@ -9,7 +9,7 @@
 	<UseWindowsForms>true</UseWindowsForms>
 	<CodePage>65001</CodePage>
 	<ApplicationIcon>favicon.ico</ApplicationIcon>
-	<Version>3.0.4</Version>
+	<Version>3.1.0</Version>
 	<AssemblyVersion>$(Version).0</AssemblyVersion>
 	<FileVersion>$(Version).0</FileVersion>
 	<InformationalVersion>$(Version)</InformationalVersion>
@@ -582,6 +582,7 @@
     <None Remove="Sound\EXPCheck.wav" />
     <None Remove="Sound\Highlight.wav" />
     <None Remove="Sound\MagicCircle.wav" />
+    <None Remove="Sound\Wave.wav" />
     <None Remove="Sound\Arkan.wav" />
     <None Remove="Sound\Arkan_before1.wav" />
     <None Remove="Sound\Arkan_before3.wav" />
@@ -821,6 +822,7 @@
     <Resource Include="Sound\EXPCheck.wav" />
     <Resource Include="Sound\Highlight.wav" />
     <Resource Include="Sound\MagicCircle.wav" />
+    <Resource Include="Sound\Wave.wav" />
     <Resource Include="Sound\Arkan.wav" />
     <Resource Include="Sound\Arkan_before1.wav" />
     <Resource Include="Sound\Arkan_before3.wav" />

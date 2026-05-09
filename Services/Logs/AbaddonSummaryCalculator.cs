@@ -125,6 +125,8 @@ namespace TWChatOverlay.Services
             string body = Regex.Replace(formattedText, @"^\[[^\]]+\]\s*", string.Empty);
             if (body.Contains("주문을 통해", StringComparison.Ordinal))
                 return false;
+            if (body.Contains("대량으로 획득", StringComparison.Ordinal))
+                return false;
 
             var feeMatch = AbandonEntryFeeRegex.Match(body);
             if (feeMatch.Success && TryParseLong(feeMatch.Groups["value"].Value, out long feeMan))
