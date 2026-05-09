@@ -42,10 +42,17 @@ namespace TWChatOverlay.Views
         private DateTime _lastAbandonResetKey;
         private const string DailyContentsGroupName = "일일 컨텐츠";
         private const string WeeklyContentsGroupName = "주간 컨텐츠";
+        private const string WeeklyMercurialGroupName = "머큐리얼";
+        private const string WeeklyAbyssGroupName = "어비스";
+        private const string WeeklyEclipseGroupName = "이클립스";
+        private const string WeeklyOtherGroupName = "기타지역";
 
-        private const string MercurialCaveItemName = "머큐리얼 케이브";
-        private const int MercurialCaveDefaultMaxCount = 4;
+        private const string SallionItemName = "샐리온";
+        private const string SeleanaItemName = "샐레아나";
+        private const string SilaironItemName = "실라이론";
+        private const string SilbanItemName = "실반";
         private const string LuminousItemName = "루미너스";
+        private const string LuminousExItemName = "루미너스(EX)";
         private const string EclipseBossRaidItemName = "이클립스 보스";
         private const string EclipseSubjugationItemName = "이클립스 토벌전";
         private const string SupplyRetrievalItemName = "보급품 탈환";
@@ -59,15 +66,50 @@ namespace TWChatOverlay.Views
         private const string DimensionalGapItemName = "차원의 틈";
         private const string AbyssalTreasuryItemName = "심연의 보물창고";
         private const string CravingPleasureItemName = "갈망하는 즐거움";
+        private const string VestigeItemName = "베스티지";
+        private const string OrlyDefenseHellItemName = "오를리 방어전 지옥";
         private const string NestOfShinjoHardItemName = "신조의 둥지 어려움";
-        private const string ApetiriaNormalItemName = "아페티리아 일반";
-        private const string ApetiriaHardItemName = "아페티리아 어려움";
+        private const string ApetiriaItemName = "아페티리아";
         private const string AbandonRoadGroupName = "어밴던로드";
         private const string SiegeOfSiochanheimBossesItemName = "시오칸 하임 보스 토벌전";
         private const string SiochanheimOdinAllOutWarItemName = "시오칸 하임 오딘 전면전";
         private const string CatacombsHellModeItemName = "카타콤 지옥";
         private const string PravaDefenseItemName = "프라바 방어전";
         private const string CleaningPartTimeJobItemName = "청소 아르바이트";
+        private const string ApetiriaExItemName = "아페티리아 EX";
+        private const string EclipseCoreMasterGroupName = "이클립스 코어 마스터";
+        private const string AbysCoreMasterGroupName = "어비스 코어 마스터";
+        private const string MercurialCoreMasterGroupName = "머큐리얼 코어 마스터";
+        private const string MercurialWeeklyDungeonGroupName = "머큐리얼 주간";
+        private const string SallionCoreDungeonItemName = "샐리온 코어 마스터 던전";
+        private const string SeleanaCoreDungeonItemName = "샐레아나 코어 마스터 던전";
+        private const string SilaironCoreDungeonItemName = "실라이론 코어 마스터 던전";
+        private const string SilbanCoreDungeonItemName = "실반 코어 마스터 던전";
+        private const string LuminousCoreDungeonItemName = "루미너스 코어 마스터 던전";
+        private const string FinalBattleItemName = "최후의 결전";
+        private const string FollowingJoyNormalItemName = "추종하는 환희(일반)";
+        private const string GazingSorrowNormalItemName = "응시하는 슬픔(일반)";
+        private const string FollowingJoyHardItemName = "추종하는 환희(어려움)";
+        private const string GazingSorrowHardItemName = "응시하는 슬픔(어려움)";
+        private const string AfterimageOfJoyItemName = "환희의 잔상";
+
+        private const string LokagosCoreMasterItemName = "로카고스 코어 마스터";
+        private const string EthosCoreMasterItemName = "에토스 코어 마스터";
+        private const string CheriaCoreMasterItemName = "체리아 코어 마스터";
+        private const string MatiaCoreMasterItemName = "마티아 코어 마스터";
+        private const string LycosCoreMasterItemName = "라이코스 코어 마스터";
+        private const string TyrorosCoreMasterItemName = "티로로스 코어 마스터";
+
+        private const string AbyssDepthOneCoreMasterItemName = "심층Ⅰ 코어 마스터";
+        private const string AbyssDepthTwoCoreMasterItemName = "심층Ⅱ 코어 마스터";
+        private const string AbyssDepthThreeCoreMasterItemName = "심층Ⅲ 코어 마스터";
+
+        private const string SallionCoreMasterItemName = SallionItemName;
+        private const string SeleanaCoreMasterItemName = SeleanaItemName;
+        private const string SilaironCoreMasterItemName = SilaironItemName;
+        private const string SilbanCoreMasterItemName = SilbanItemName;
+        private const string LuminousCoreMasterItemName = LuminousItemName;
+        private const string LuminousExCoreMasterItemName = LuminousExItemName;
 
         private const string AbyssDepthOneItemName = "어비스 - 심층Ⅰ";
         private const string AbyssDepthTwoItemName = "어비스 - 심층Ⅱ";
@@ -86,12 +128,12 @@ namespace TWChatOverlay.Views
         private const string CardiffItemName = "카디프";
         private const string OrlanneItemName = "오를란느";
 
-        private const string LokagosLogKeyword = "로카고스의 보관 주머니";
-        private const string EthosLogKeyword = "에토스의 보관 주머니";
-        private const string CheriaLogKeyword = "체리아의 보관 주머니";
-        private const string MatiaLogKeyword = "마티아의 보관 주머니";
-        private const string TyrorosLogKeyword = "티로로스의 보관 주머니";
-        private const string LycosLogKeyword = "라이코스의 보관 주머니";
+        private const string LokagosLogKeyword = "이클립스 보스전(로카고스) 클리어 횟수:";
+        private const string EthosLogKeyword = "이클립스 보스전(에토스) 클리어 횟수:";
+        private const string CheriaLogKeyword = "이클립스 보스전(체리아) 클리어 횟수:";
+        private const string MatiaLogKeyword = "이클립스 보스전(마티아 ) 클리어 횟수:";
+        private const string TyrorosLogKeyword = "이클립스 보스전(티로로스) 클리어 횟수:";
+        private const string LycosLogKeyword = "이클립스 보스전(라이코스) 클리어 횟수:";
 
         private const string ImmortalLandLogKeyword = "이번 주 어밴던로드 필멸의 땅 지역의 도전 횟수는";
         private const string CardiffLogKeyword = "이번 주 어밴던로드 카디프 지역의 도전 횟수는";
@@ -105,25 +147,57 @@ namespace TWChatOverlay.Views
         private const string PravaDefenseLogKeyword = "프라바 방어전 성공 보상으로 경험치 1000만을 획득";
         private const string CatacombsHellModeLogKeyword = "이번 주 사명의 계승자 닉스 보상을";
         private const string NestOfShinjoLogKeyword = "이번 주 신조 보상을";
-        private const string ApetiriaNormalLogKeyword = "[키시니크의 보관 주머니]";
-        private const string ApetiriaHardLogKeyword = "[아페티리아 어려움 보상 상자]";
+        private const string ApetiriaLogKeyword = "아페티리아 클리어 횟수:";
         private const string SiegeOfSiochanheimBossesLogKeyword = "시오칸하임 - 보스 토벌전의 클리어 횟수 :";
         private const string SiochanheimOdinAllOutWarLogKeyword = "시오칸하임 - 오딘 전면전의 클리어 횟수 :";
+        private const string ApetiriaExLogKeyword = "아페티리아(EX) 클리어 횟수:";
+        private const string LokagosCoreMasterLogKeyword = "로카고스 코어 마스터 클리어 횟수:";
+        private const string EthosCoreMasterLogKeyword = "에토스 코어 마스터 클리어 횟수:";
+        private const string CheriaCoreMasterLogKeyword = "체리아 코어 마스터 클리어 횟수:";
+        private const string MatiaCoreMasterLogKeyword = "마티아 코어 마스터 클리어 횟수:";
+        private const string LycosCoreMasterLogKeyword = "라이코스 코어 마스터 클리어 횟수:";
+        private const string TyrorosCoreMasterLogKeyword = "티로로스 코어 마스터 클리어 횟수:";
+        private const string AbyssDepthOneCoreMasterLogKeyword = "코어 마스터 - 심층Ⅰ 클리어 횟수:";
+        private const string AbyssDepthTwoCoreMasterLogKeyword = "코어 마스터 - 심층Ⅱ 클리어 횟수:";
+        private const string AbyssDepthThreeCoreMasterLogKeyword = "코어 마스터 - 심층Ⅲ 클리어 횟수:";
+        private const string SallionCoreMasterLogKeyword = "샐리온 클리어 횟수:";
+        private const string SeleanaCoreMasterLogKeyword = "샐레아나 클리어 횟수:";
+        private const string SilaironCoreMasterLogKeyword = "실라이론 클리어 횟수:";
+        private const string SilbanCoreMasterLogKeyword = "실반 클리어 횟수:";
+        private const string LuminousCoreMasterLogKeyword = "루미너스 클리어 횟수:";
+        private const string LuminousExCoreMasterLogKeyword = "루미너스(EX) 클리어 횟수:";
+        private const string SallionCoreDungeonLogKeyword = "샐리온 코어 마스터 던전 클리어 횟수:";
+        private const string SeleanaCoreDungeonLogKeyword = "샐레아나 코어 마스터 던전 클리어 횟수:";
+        private const string SilaironCoreDungeonLogKeyword = "실라이론 코어 마스터 던전 클리어 횟수:";
+        private const string SilbanCoreDungeonLogKeyword = "실반 코어 마스터 던전 클리어 횟수:";
+        private const string LuminousCoreDungeonLogKeyword = "루미너스 코어 마스터 던전 클리어 횟수:";
+        private const string FinalBattleLogKeyword = "티로로스의 계략을 막아내었습니다. 잠시 후 기억의 숲 전초기지로 이동됩니다.";
+        private const string FollowingJoyNormalLogKeyword = "레이티아 퇴치 보상으로 레이티아 보상 상자 (일반) 1개, 루비코나 코어 상자 20개를";
+        private const string GazingSorrowNormalLogKeyword = "설계자 퇴치 보상으로 설계자 보상 상자 (일반) 1개, 루비코나 코어 상자 20개를 획득";
+        private const string FollowingJoyHardLogKeyword = "레이티아 퇴치 보상으로 레이티아 보상 상자 (어려움) 1개, 루비코나 코어 상자 30개";
+        private const string GazingSorrowHardLogKeyword = "설계자 퇴치 보상으로 설계자 보상 상자 (어려움) 1개, 루비코나 코어 상자 30개";
+        private const string AfterimageOfJoyLogKeyword = "[환희의 레이티아 보상 상자] 아이템을 1개 획득하였습니다.";
 
-        private const string EclipseSubjugationLogKeyword = "이클립스 보스 토벌전 보상 상자";
-        private const string SupplyRetrievalLogKeyword = "보급품 탈환에 성공하였";
-        private const string MoonQueensTrainingCenterLogKeyword = "모든 훈련을 클리어했";
-        private const string DetachedForceSubjugationLogKeyword = "별동대 토벌 보상으로 경험치";
+        private const string EclipseSubjugationLogKeyword = "이클립스 보스 토벌전 클리어 횟수:";
+        private const string SupplyRetrievalLogKeyword = "보급품 탈환 클리어 횟수:";
+        private const string MoonQueensTrainingCenterLogKeyword = "달여왕 군대 훈련소 클리어 횟수:";
+        private const string DetachedForceSubjugationLogKeyword = "별동대 토벌 클리어 횟수:";
         private const string ConfusedLandLogKeyword = "혼란한 대지 미션에 성공하여";
         private const string ColorlessLandLogKeyword = "색을 잃은 땅 미션에 성공하여";
-        private const string CoreDungeonLogKeyword = "코어 던전 몬스터를 모두 퇴치하여";
+        private const string CoreDungeonLogKeyword = "보스 몬스터를 퇴치하세요.";
+        private const string CoreDungeonLogKeyword2 = "던전을 클리어 하였습니다. 곧 마을로 돌아가게 됩니다.";
         private const string ExcavationSiteLogKeyword = "모든 일반지역을 토벌하여";
-        private const string RelicLogKeyword = "오늘 무료 클리어 횟수 : 1/1 회";
+        private const string RelicLogKeyword = "?고대 렐릭의 성소? - 주간 무료 클리어 횟수 :";
+        private const string RelicWeeklyClearToken1 = "고대 렐릭의 성소";
+        private const string RelicWeeklyClearToken2 = "주간 무료 클리어 횟수";
+        private const string FreeClearCountKeyword = "오늘 무료 클리어 횟수 : 1/1 회";
         private const string MiningSiteLogKeyword = "숨겨진 구역으로 이동할 수 있는 포탈이 맵 중앙";
         private const string DimensionalGapLogKeyword = "차원의 틈 봉인에 성공하였";
-        private const string AbyssalTreasuryLogKeyword = "심연의 보물창고 밖으로 이동 됩니다";
-        private const string LuminousLogKeyword = "금일 [루미너스] 보스 토벌에 성공하였습니다.";
+        private const string AbyssalTreasuryLogKeyword = "심연의 보물창고 입장 횟수:";
         private const string CravingPleasureLogKeyword = "남은 에너지는";
+        private const string VestigeLogKeyword = "[성난 빅테디의 별사탕] 아이템을 획득하였습니다.";
+        private const string OrlyDefenseHellEntryLogKeyword = "남은 공격 횟수 : 1";
+        private const string OrlyDefenseHellClearLogKeyword = "[경험의 정수] 아이템을 획득하였습니다.";
 
         private static readonly Regex HtmlTagRegex = new("<[^>]+>", RegexOptions.Compiled);
         private static readonly Regex WhiteSpaceRegex = new(@"\s+", RegexOptions.Compiled);
@@ -138,6 +212,9 @@ namespace TWChatOverlay.Views
             RegexOptions.Compiled);
         private static readonly Regex CravingPleasureEnergyRegex = new(
             @"남은\s*에너지는\s*\[\s*(?<remain>\d+)\s*\]",
+            RegexOptions.Compiled);
+        private static readonly Regex FreeClearTitleRegex = new(
+            @"[?？]\s*(?<title>[^?？]+?)\s*[?？]\s*-\s*오늘 무료 클리어 횟수\s*:\s*1/1\s*회",
             RegexOptions.Compiled);
 
         private sealed class ItemStateSnapshot
@@ -208,6 +285,22 @@ namespace TWChatOverlay.Views
             }
         }
 
+        public double DailyWeeklyContentFontSize
+        {
+            get => _settings.DailyWeeklyContentFontSize;
+            set
+            {
+                double clamped = Math.Max(10.0, Math.Min(28.0, value));
+                if (Math.Abs(_settings.DailyWeeklyContentFontSize - clamped) < 0.0001) return;
+                _settings.DailyWeeklyContentFontSize = clamped;
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(DailyWeeklyContentFontSizeDisplay));
+                ConfigService.SaveDeferred(_settings);
+            }
+        }
+
+        public string DailyWeeklyContentFontSizeDisplay => $"{Math.Round(DailyWeeklyContentFontSize):0}px";
+
         public event PropertyChangedEventHandler? PropertyChanged;
         private void OnPropertyChanged([CallerMemberName] string? name = null)
             => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
@@ -224,6 +317,10 @@ namespace TWChatOverlay.Views
             foreach (var item in lists.WeeklyItems) _weeklyContentItems.Add(item);
             ApplySettings();
             InitializeComponent();
+            if (_settings.DailyWeeklyContentOverlayWidth.HasValue && _settings.DailyWeeklyContentOverlayWidth.Value > 100)
+                Width = _settings.DailyWeeklyContentOverlayWidth.Value;
+            if (_settings.DailyWeeklyContentOverlayHeight.HasValue && _settings.DailyWeeklyContentOverlayHeight.Value > 100)
+                Height = _settings.DailyWeeklyContentOverlayHeight.Value;
             DataContext = this;
             this.FontFamily = FontService.GetFont(_settings.FontFamily);
             InitializeScanCache();
@@ -283,6 +380,8 @@ namespace TWChatOverlay.Views
         {
             _settings.DailyWeeklyContentOverlayLeft = this.Left;
             _settings.DailyWeeklyContentOverlayTop = this.Top;
+            _settings.DailyWeeklyContentOverlayWidth = this.Width;
+            _settings.DailyWeeklyContentOverlayHeight = this.Height;
             ConfigService.SaveDeferred(_settings);
         }
 
@@ -292,12 +391,12 @@ namespace TWChatOverlay.Views
         {
             var subBosses = new DailyWeeklyContentLog[]
             {
-                new() { Name = LokagosItemName, IsSubItem = true, LogKeyword = LokagosLogKeyword },
-                new() { Name = EthosItemName,   IsSubItem = true, LogKeyword = EthosLogKeyword },
-                new() { Name = CheriaItemName,   IsSubItem = true, LogKeyword = CheriaLogKeyword },
-                new() { Name = MatiaItemName,   IsSubItem = true, LogKeyword = MatiaLogKeyword },
-                new() { Name = TyrorosItemName, IsSubItem = true, LogKeyword = TyrorosLogKeyword },
-                new() { Name = LycosItemName, IsSubItem = true, LogKeyword = LycosLogKeyword },
+                new() { Name = LokagosItemName, IsSubItem = true, IsWeekly = true, AllowCountOverMax = true, DefaultMaxCount = 7, MaxCount = 7, LogKeyword = LokagosLogKeyword },
+                new() { Name = EthosItemName,   IsSubItem = true, IsWeekly = true, AllowCountOverMax = true, DefaultMaxCount = 7, MaxCount = 7, LogKeyword = EthosLogKeyword },
+                new() { Name = CheriaItemName,  IsSubItem = true, IsWeekly = true, AllowCountOverMax = true, DefaultMaxCount = 7, MaxCount = 7, LogKeyword = CheriaLogKeyword },
+                new() { Name = MatiaItemName,   IsSubItem = true, IsWeekly = true, AllowCountOverMax = true, DefaultMaxCount = 7, MaxCount = 7, LogKeyword = MatiaLogKeyword },
+                new() { Name = TyrorosItemName, IsSubItem = true, IsWeekly = true, AllowCountOverMax = true, DefaultMaxCount = 7, MaxCount = 7, LogKeyword = TyrorosLogKeyword },
+                new() { Name = LycosItemName,   IsSubItem = true, IsWeekly = true, AllowCountOverMax = true, DefaultMaxCount = 7, MaxCount = 7, LogKeyword = LycosLogKeyword },
             };
 
             var eclipseBoss = new DailyWeeklyContentLog { Name = EclipseBossRaidItemName, Children = subBosses };
@@ -319,39 +418,99 @@ namespace TWChatOverlay.Views
             };
 
             var abyssGroup = new DailyWeeklyContentLog { Name = AbyssHellGroupName, Children = abyssItems, IsWeekly = true };
-
-            var weeklyItems = new DailyWeeklyContentLog[]
+            var eclipseCoreMasterItems = new DailyWeeklyContentLog[]
             {
-                new() { Name = CleaningPartTimeJobItemName, IsWeekly = true, LogKeyword = CleaningPartTimeJobLogKeyword },
-                new() { Name = PravaDefenseItemName, IsWeekly = true, DefaultMaxCount = 5, MaxCount = 5, LogKeyword = PravaDefenseLogKeyword },
-                new() { Name = CatacombsHellModeItemName, IsWeekly = true, AllowCountOverMax = true, DefaultMaxCount = 5, MaxCount = 5, LogKeyword = CatacombsHellModeLogKeyword },
-                abyssGroup,
-                new() { Name = NestOfShinjoHardItemName, IsWeekly = true, AllowCountOverMax = true, DefaultMaxCount = 7, MaxCount = 7, LogKeyword = NestOfShinjoLogKeyword },
-                new() { Name = ApetiriaNormalItemName, IsWeekly = true, DefaultMaxCount = 7, MaxCount = 7, LogKeyword = ApetiriaNormalLogKeyword  },
-                new() { Name = ApetiriaHardItemName, IsWeekly = true, DefaultMaxCount = 7, MaxCount = 7, LogKeyword = ApetiriaHardLogKeyword  },
-                new() { Name = SiegeOfSiochanheimBossesItemName, IsWeekly = true, AllowCountOverMax = true, DefaultMaxCount = 7, MaxCount = 7, LogKeyword = SiegeOfSiochanheimBossesLogKeyword },
-                new() { Name = SiochanheimOdinAllOutWarItemName, IsWeekly = true, AllowCountOverMax = true, DefaultMaxCount = 7, MaxCount = 7, LogKeyword = SiochanheimOdinAllOutWarLogKeyword },
-                AbandonGroup
+                new() { Name = LokagosCoreMasterItemName, IsSubItem = true, IsWeekly = true, AllowCountOverMax = true, DefaultMaxCount = 7, MaxCount = 7, LogKeyword = LokagosCoreMasterLogKeyword },
+                new() { Name = EthosCoreMasterItemName, IsSubItem = true, IsWeekly = true, AllowCountOverMax = true, DefaultMaxCount = 7, MaxCount = 7, LogKeyword = EthosCoreMasterLogKeyword },
+                new() { Name = CheriaCoreMasterItemName, IsSubItem = true, IsWeekly = true, AllowCountOverMax = true, DefaultMaxCount = 7, MaxCount = 7, LogKeyword = CheriaCoreMasterLogKeyword },
+                new() { Name = MatiaCoreMasterItemName, IsSubItem = true, IsWeekly = true, AllowCountOverMax = true, DefaultMaxCount = 7, MaxCount = 7, LogKeyword = MatiaCoreMasterLogKeyword },
+                new() { Name = LycosCoreMasterItemName, IsSubItem = true, IsWeekly = true, AllowCountOverMax = true, DefaultMaxCount = 7, MaxCount = 7, LogKeyword = LycosCoreMasterLogKeyword },
+                new() { Name = TyrorosCoreMasterItemName, IsSubItem = true, IsWeekly = true, AllowCountOverMax = true, DefaultMaxCount = 7, MaxCount = 7, LogKeyword = TyrorosCoreMasterLogKeyword }
             };
+            var eclipseCoreMasterGroup = new DailyWeeklyContentLog { Name = EclipseCoreMasterGroupName, Children = eclipseCoreMasterItems, IsWeekly = true };
+
+            var abyssCoreMasterItems = new DailyWeeklyContentLog[]
+            {
+                new() { Name = AbyssDepthOneCoreMasterItemName, IsSubItem = true, IsWeekly = true, AllowCountOverMax = true, DefaultMaxCount = 7, MaxCount = 7, LogKeyword = AbyssDepthOneCoreMasterLogKeyword },
+                new() { Name = AbyssDepthTwoCoreMasterItemName, IsSubItem = true, IsWeekly = true, AllowCountOverMax = true, DefaultMaxCount = 7, MaxCount = 7, LogKeyword = AbyssDepthTwoCoreMasterLogKeyword },
+                new() { Name = AbyssDepthThreeCoreMasterItemName, IsSubItem = true, IsWeekly = true, AllowCountOverMax = true, DefaultMaxCount = 7, MaxCount = 7, LogKeyword = AbyssDepthThreeCoreMasterLogKeyword }
+            };
+            var abyssCoreMasterGroup = new DailyWeeklyContentLog { Name = AbysCoreMasterGroupName, Children = abyssCoreMasterItems, IsWeekly = true };
+
+            var mercurialWeeklyDungeonItems = new DailyWeeklyContentLog[]
+            {
+                new() { Name = SallionCoreMasterItemName, IsSubItem = true, IsWeekly = true, AllowCountOverMax = true, DefaultMaxCount = 7, MaxCount = 7, LogKeyword = SallionCoreMasterLogKeyword },
+                new() { Name = SeleanaCoreMasterItemName, IsSubItem = true, IsWeekly = true, AllowCountOverMax = true, DefaultMaxCount = 7, MaxCount = 7, LogKeyword = SeleanaCoreMasterLogKeyword },
+                new() { Name = SilaironCoreMasterItemName, IsSubItem = true, IsWeekly = true, AllowCountOverMax = true, DefaultMaxCount = 7, MaxCount = 7, LogKeyword = SilaironCoreMasterLogKeyword },
+                new() { Name = SilbanCoreMasterItemName, IsSubItem = true, IsWeekly = true, AllowCountOverMax = true, DefaultMaxCount = 7, MaxCount = 7, LogKeyword = SilbanCoreMasterLogKeyword },
+                new() { Name = LuminousCoreMasterItemName, IsSubItem = true, IsWeekly = true, AllowCountOverMax = true, DefaultMaxCount = 7, MaxCount = 7, LogKeyword = LuminousCoreMasterLogKeyword },
+                new() { Name = LuminousExCoreMasterItemName, IsSubItem = true, IsWeekly = true, AllowCountOverMax = true, DefaultMaxCount = 7, MaxCount = 7, LogKeyword = LuminousExCoreMasterLogKeyword }
+            };
+            var mercurialWeeklyDungeonGroup = new DailyWeeklyContentLog { Name = MercurialWeeklyDungeonGroupName, Children = mercurialWeeklyDungeonItems, IsWeekly = true };
+            var mercurialCoreMasterItems = new DailyWeeklyContentLog[]
+            {
+                new() { Name = SallionCoreDungeonItemName, IsSubItem = true, IsWeekly = true, AllowCountOverMax = true, DefaultMaxCount = 7, MaxCount = 7, LogKeyword = SallionCoreDungeonLogKeyword },
+                new() { Name = SeleanaCoreDungeonItemName, IsSubItem = true, IsWeekly = true, AllowCountOverMax = true, DefaultMaxCount = 7, MaxCount = 7, LogKeyword = SeleanaCoreDungeonLogKeyword },
+                new() { Name = SilaironCoreDungeonItemName, IsSubItem = true, IsWeekly = true, AllowCountOverMax = true, DefaultMaxCount = 7, MaxCount = 7, LogKeyword = SilaironCoreDungeonLogKeyword },
+                new() { Name = SilbanCoreDungeonItemName, IsSubItem = true, IsWeekly = true, AllowCountOverMax = true, DefaultMaxCount = 7, MaxCount = 7, LogKeyword = SilbanCoreDungeonLogKeyword },
+                new() { Name = LuminousCoreDungeonItemName, IsSubItem = true, IsWeekly = true, AllowCountOverMax = true, DefaultMaxCount = 7, MaxCount = 7, LogKeyword = LuminousCoreDungeonLogKeyword }
+            };
+            var mercurialCoreMasterGroup = new DailyWeeklyContentLog { Name = MercurialCoreMasterGroupName, Children = mercurialCoreMasterItems, IsWeekly = true };
+
+            var eclipseSubjugation = new DailyWeeklyContentLog { Name = EclipseSubjugationItemName, IsWeekly = true, AllowCountOverMax = true, DefaultMaxCount = 21, MaxCount = 21, LogKeyword = EclipseSubjugationLogKeyword };
+            var supplyRetrieval = new DailyWeeklyContentLog { Name = SupplyRetrievalItemName, IsWeekly = true, AllowCountOverMax = true, DefaultMaxCount = 7, MaxCount = 7, LogKeyword = SupplyRetrievalLogKeyword };
+            var trainingCenter = new DailyWeeklyContentLog { Name = MoonQueensTrainingCenterItemName, IsWeekly = true, AllowCountOverMax = true, DefaultMaxCount = 7, MaxCount = 7, LogKeyword = MoonQueensTrainingCenterLogKeyword };
+            var detachedForce = new DailyWeeklyContentLog { Name = DetachedForceSubjugationItemName, IsWeekly = true, AllowCountOverMax = true, DefaultMaxCount = 7, MaxCount = 7, LogKeyword = DetachedForceSubjugationLogKeyword };
+            var coreDungeon = new DailyWeeklyContentLog
+            {
+                Name = CoreDungeonItemName,
+                IsWeekly = true,
+                AllowCountOverMax = true,
+                DefaultMaxCount = 7,
+                MaxCount = 7,
+                LogKeyword = CoreDungeonLogKeyword,
+                LogKeyword2 = CoreDungeonLogKeyword2
+            };
+            var excavationSite = new DailyWeeklyContentLog { Name = ExcavationSiteItemName, IsWeekly = true, AllowCountOverMax = true, DefaultMaxCount = 7, MaxCount = 7, LogKeyword = ExcavationSiteLogKeyword };
+            var relic = new DailyWeeklyContentLog { Name = RelicItemName, IsWeekly = true, AllowCountOverMax = true, DefaultMaxCount = 7, MaxCount = 7, LogKeyword = RelicLogKeyword };
+            var dimensionalGap = new DailyWeeklyContentLog { Name = DimensionalGapItemName, IsWeekly = true, AllowCountOverMax = true, DefaultMaxCount = 7, MaxCount = 7, LogKeyword = DimensionalGapLogKeyword };
+            var abyssalTreasury = new DailyWeeklyContentLog { Name = AbyssalTreasuryItemName, IsWeekly = true, AllowCountOverMax = true, DefaultMaxCount = 7, MaxCount = 7, LogKeyword = AbyssalTreasuryLogKeyword };
+            var cleaningPartTime = new DailyWeeklyContentLog { Name = CleaningPartTimeJobItemName, IsWeekly = true, LogKeyword = CleaningPartTimeJobLogKeyword };
+            var pravaDefense = new DailyWeeklyContentLog { Name = PravaDefenseItemName, IsWeekly = true, AllowCountOverMax = true, DefaultMaxCount = 5, MaxCount = 5, LogKeyword = PravaDefenseLogKeyword };
+            var vestige = new DailyWeeklyContentLog { Name = VestigeItemName, IsWeekly = true, AllowCountOverMax = true, DefaultMaxCount = 7, MaxCount = 7, LogKeyword = VestigeLogKeyword };
+            var orlyDefense = new DailyWeeklyContentLog { Name = OrlyDefenseHellItemName, IsWeekly = true, AllowCountOverMax = true, DefaultMaxCount = 7, MaxCount = 7, LogKeyword = OrlyDefenseHellEntryLogKeyword, LogKeyword2 = OrlyDefenseHellClearLogKeyword };
+            var apetiriaEx = new DailyWeeklyContentLog { Name = ApetiriaExItemName, IsWeekly = true, AllowCountOverMax = true, DefaultMaxCount = 7, MaxCount = 7, LogKeyword = ApetiriaExLogKeyword };
+            var finalBattle = new DailyWeeklyContentLog { Name = FinalBattleItemName, IsWeekly = true, AllowCountOverMax = true, DefaultMaxCount = 10, MaxCount = 10, LogKeyword = FinalBattleLogKeyword };
+            var catacombsHell = new DailyWeeklyContentLog { Name = CatacombsHellModeItemName, IsWeekly = true, AllowCountOverMax = true, DefaultMaxCount = 5, MaxCount = 5, LogKeyword = CatacombsHellModeLogKeyword };
+            var shinjoHard = new DailyWeeklyContentLog { Name = NestOfShinjoHardItemName, IsWeekly = true, AllowCountOverMax = true, DefaultMaxCount = 7, MaxCount = 7, LogKeyword = NestOfShinjoLogKeyword };
+            var apetiria = new DailyWeeklyContentLog { Name = ApetiriaItemName, IsWeekly = true, AllowCountOverMax = true, DefaultMaxCount = 7, MaxCount = 7, LogKeyword = ApetiriaLogKeyword };
+            var siochanBosses = new DailyWeeklyContentLog { Name = SiegeOfSiochanheimBossesItemName, IsWeekly = true, AllowCountOverMax = true, DefaultMaxCount = 7, MaxCount = 7, LogKeyword = SiegeOfSiochanheimBossesLogKeyword };
+            var siochanOdin = new DailyWeeklyContentLog { Name = SiochanheimOdinAllOutWarItemName, IsWeekly = true, AllowCountOverMax = true, DefaultMaxCount = 7, MaxCount = 7, LogKeyword = SiochanheimOdinAllOutWarLogKeyword };
+
+            var mercurialRegionGroup = new DailyWeeklyContentLog
+            {
+                Name = WeeklyMercurialGroupName,
+                IsRegionGroup = true,
+                IsWeekly = true,
+                Children = new[] { mercurialCoreMasterGroup, mercurialWeeklyDungeonGroup }
+            };
+            var abyssRegionGroup = new DailyWeeklyContentLog { Name = WeeklyAbyssGroupName, IsRegionGroup = true, IsWeekly = true, Children = new[] { abyssGroup, abyssalTreasury, dimensionalGap, abyssCoreMasterGroup } };
+            var eclipseRegionGroup = new DailyWeeklyContentLog { Name = WeeklyEclipseGroupName, IsRegionGroup = true, IsWeekly = true, Children = new[] { eclipseBoss, eclipseSubjugation, supplyRetrieval, trainingCenter, detachedForce, apetiriaEx, apetiria, eclipseCoreMasterGroup, finalBattle } };
+            var otherRegionGroup = new DailyWeeklyContentLog { Name = WeeklyOtherGroupName, IsRegionGroup = true, IsWeekly = true, Children = new[] { coreDungeon, excavationSite, relic, cleaningPartTime, pravaDefense, vestige, orlyDefense, catacombsHell, shinjoHard, siochanBosses, siochanOdin, AbandonGroup } };
+
+            var weeklyItems = new DailyWeeklyContentLog[] { mercurialRegionGroup, abyssRegionGroup, eclipseRegionGroup, otherRegionGroup };
 
             var dailyItems = new DailyWeeklyContentLog[]
             {
-                new() { Name = MercurialCaveItemName, DefaultMaxCount = MercurialCaveDefaultMaxCount, MaxCount = MercurialCaveDefaultMaxCount },
-                new() { Name = LuminousItemName, LogKeyword = LuminousLogKeyword },
-                eclipseBoss,
-                new() { Name = EclipseSubjugationItemName, DefaultMaxCount = 3, MaxCount = 3, LogKeyword = EclipseSubjugationLogKeyword },
-                new() { Name = SupplyRetrievalItemName, LogKeyword = SupplyRetrievalLogKeyword },
-                new() { Name = MoonQueensTrainingCenterItemName, LogKeyword = MoonQueensTrainingCenterLogKeyword },
-                new() { Name = DetachedForceSubjugationItemName, LogKeyword = DetachedForceSubjugationLogKeyword },
                 new() { Name = ConfusedLandItemName, LogKeyword = ConfusedLandLogKeyword },
                 new() { Name = ColorlessLandItemName, LogKeyword = ColorlessLandLogKeyword },
-                new() { Name = CoreDungeonItemName, LogKeyword = CoreDungeonLogKeyword },
-                new() { Name = ExcavationSiteItemName, LogKeyword = ExcavationSiteLogKeyword },
-                new() { Name = RelicItemName, LogKeyword = RelicLogKeyword },
                 new() { Name = MiningSiteItemName, LogKeyword = MiningSiteLogKeyword },
-                new() { Name = DimensionalGapItemName, LogKeyword = DimensionalGapLogKeyword },
-                new() { Name = AbyssalTreasuryItemName, LogKeyword = AbyssalTreasuryLogKeyword },
-                new() { Name = CravingPleasureItemName, DefaultMaxCount = 20, MaxCount = 20, ClearThreshold = 5, LogKeyword = CravingPleasureLogKeyword }
+                new() { Name = CravingPleasureItemName, AllowCountOverMax = true, DefaultMaxCount = 5, MaxCount = 5, LogKeyword = CravingPleasureLogKeyword }
+                ,new() { Name = FollowingJoyNormalItemName, AllowCountOverMax = true, DefaultMaxCount = 1, MaxCount = 1, LogKeyword = FollowingJoyNormalLogKeyword }
+                ,new() { Name = GazingSorrowNormalItemName, AllowCountOverMax = true, DefaultMaxCount = 1, MaxCount = 1, LogKeyword = GazingSorrowNormalLogKeyword }
+                ,new() { Name = FollowingJoyHardItemName, AllowCountOverMax = true, DefaultMaxCount = 1, MaxCount = 1, LogKeyword = FollowingJoyHardLogKeyword }
+                ,new() { Name = GazingSorrowHardItemName, AllowCountOverMax = true, DefaultMaxCount = 1, MaxCount = 1, LogKeyword = GazingSorrowHardLogKeyword }
+                ,new() { Name = AfterimageOfJoyItemName, AllowCountOverMax = true, DefaultMaxCount = 1, MaxCount = 1, LogKeyword = AfterimageOfJoyLogKeyword }
             };
 
             var weeklyGroup = new DailyWeeklyContentLog { Name = WeeklyContentsGroupName, Children = weeklyItems };
@@ -369,10 +528,16 @@ namespace TWChatOverlay.Views
             foreach (var item in weeklyItems)
             {
                 list.Add(item);
-                if (ReferenceEquals(item, abyssGroup))
-                    foreach (var child in abyssItems) list.Add(child);
-                if (ReferenceEquals(item, AbandonGroup))
-                    foreach (var child in AbandonItems) list.Add(child);
+                if (item.HasChildren)
+                {
+                    foreach (var child in item.Children!)
+                    {
+                        list.Add(child);
+                        if (child.HasChildren)
+                            foreach (var sub in child.Children!)
+                                list.Add(sub);
+                    }
+                }
             }
 
             var dailyDisplay = new ObservableCollection<DailyWeeklyContentLog>();
@@ -387,10 +552,16 @@ namespace TWChatOverlay.Views
             foreach (var item in weeklyItems)
             {
                 weeklyDisplay.Add(item);
-                if (ReferenceEquals(item, abyssGroup))
-                    foreach (var child in abyssItems) weeklyDisplay.Add(child);
-                if (ReferenceEquals(item, AbandonGroup))
-                    foreach (var child in AbandonItems) weeklyDisplay.Add(child);
+                if (item.HasChildren)
+                {
+                    foreach (var child in item.Children!)
+                    {
+                        weeklyDisplay.Add(child);
+                        if (child.HasChildren)
+                            foreach (var sub in child.Children!)
+                                weeklyDisplay.Add(sub);
+                    }
+                }
             }
 
             return (list, dailyDisplay, weeklyDisplay);
@@ -438,7 +609,10 @@ namespace TWChatOverlay.Views
                     continue;
 
                 item.IsEnabled = config.IsEnabled;
-                item.MaxCount = config.RequiredCount > 0 ? config.RequiredCount : item.DefaultMaxCount;
+                int configured = config.RequiredCount > 0 ? config.RequiredCount : item.DefaultMaxCount;
+                if (item.DefaultMaxCount > 0)
+                    configured = Math.Max(1, configured);
+                item.MaxCount = configured;
             }
         }
 
@@ -534,9 +708,11 @@ namespace TWChatOverlay.Views
             DateTime today = DateTime.Today;
 
             var dailyItems = TrackItems
-                .Where(i => (!i.IsWeekly) && (i.LogKeyword != null || i.Name == MercurialCaveItemName))
+                .Where(i => (!i.IsWeekly) && i.LogKeyword != null)
                 .ToList();
-            var weeklyItems = TrackItems.Where(i => i.LogKeyword != null && i.IsWeekly).ToList();
+            var weeklyItems = TrackItems
+                .Where(i => i.IsWeekly && i.LogKeyword != null)
+                .ToList();
 
             _suppressSave = true;
             try
@@ -601,6 +777,8 @@ namespace TWChatOverlay.Views
                     {
                         item.IsCleared = state.IsCleared;
                     }
+
+                    EnsureCountModeForFixedItems(item);
                 }
             }
             finally
@@ -625,6 +803,23 @@ namespace TWChatOverlay.Views
 
                 item.Reset();
                 item.Detail = null;
+                EnsureCountModeForFixedItems(item);
+            }
+        }
+
+        private static void EnsureCountModeForFixedItems(DailyWeeklyContentLog item)
+        {
+            if (item.HasChildren)
+                return;
+
+            if (item.Name == FollowingJoyNormalItemName ||
+                item.Name == GazingSorrowNormalItemName ||
+                item.Name == FollowingJoyHardItemName ||
+                item.Name == GazingSorrowHardItemName ||
+                item.Name == AfterimageOfJoyItemName)
+            {
+                if (item.MaxCount <= 0)
+                    item.MaxCount = Math.Max(1, item.DefaultMaxCount);
             }
         }
 
@@ -669,10 +864,6 @@ namespace TWChatOverlay.Views
                     var seenPrimary = new HashSet<string>();
                     var accumulatedLastRawCounts = new Dictionary<string, int>();
                     var accumulatedOffsets = new Dictionary<string, int>();
-                    string? pendingAbyssEntryFloor = null;
-                    string? pendingAbyssFloor = null;
-                    bool pendingMercurialEntry = false;
-                    int mercurialClearCount = 0;
 
                     int AccumulateCount(string key, int rawCount)
                     {
@@ -710,35 +901,6 @@ namespace TWChatOverlay.Views
                             if (onlyDate.HasValue && logDate.HasValue && logDate.Value != onlyDate.Value.Date)
                                 continue;
 
-                            if (DailyWeeklyLogAnalyzer.IsMercurialEntryMessage(effectiveLine))
-                            {
-                                pendingMercurialEntry = true;
-                            }
-                            else if (pendingMercurialEntry && DailyWeeklyLogAnalyzer.IsMercurialRewardMessage(effectiveLine))
-                            {
-                                mercurialClearCount++;
-                                pendingMercurialEntry = false;
-                            }
-
-                            if (DailyWeeklyLogAnalyzer.TryMatchAbyssEntry(effectiveLine, out string abyssEntryFloor))
-                            {
-                                pendingAbyssEntryFloor = abyssEntryFloor;
-                                pendingAbyssFloor = null;
-                            }
-
-                            if (DailyWeeklyLogAnalyzer.TryMatchAbyssFloor(effectiveLine, out string abyssFloor))
-                            {
-                                if (pendingAbyssEntryFloor == abyssFloor)
-                                    pendingAbyssFloor = abyssFloor;
-                                pendingAbyssEntryFloor = null;
-                            }
-
-                            if (DailyWeeklyLogAnalyzer.TryMatchAbyssReward(effectiveLine, out int abyssValue) && pendingAbyssFloor != null)
-                            {
-                                string abyssKey = $"{DailyWeeklyLogAnalyzer.AbyssSpecialKeyPrefix}{pendingAbyssFloor}";
-                                specialCounts[abyssKey] = AccumulateCount(abyssKey, abyssValue);
-                                pendingAbyssFloor = null;
-                            }
 
                             if (DailyWeeklyLogAnalyzer.TryMatchSinjoReward(effectiveLine, out _))
                             {
@@ -766,24 +928,13 @@ namespace TWChatOverlay.Views
                                 }
                             }
 
-                            if (TryExtractCravingPleasureCount(normalizedLine, out _))
-                            {
-                                var cravingItem = items.FirstOrDefault(i => i.Name == CravingPleasureItemName);
-                                if (cravingItem != null)
-                                    lastMatchedLines[cravingItem] = normalizedLine;
-                            }
-
                             foreach (var item in items)
                             {
                                 if (item.LogKeyword == null || !effectiveLine.Contains(item.LogKeyword)) continue;
-                                if (DailyWeeklyLogAnalyzer.TryExtractDetailValue(item, effectiveLine, out int v, out var detailKind) &&
-                                    detailKind == DailyWeeklyDetailKind.Siochanheim)
+                                if (item.Name == RelicItemName &&
+                                    !IsRelicWeeklyClearLog(effectiveLine))
                                 {
-                                    maxExtractedCounts[item] = AccumulateCount(item.Name, v);
-                                }
-                                else if (item.LogKeyword.Contains(DailyWeeklyLogAnalyzer.CravingPleasureKeywordToken, StringComparison.Ordinal))
-                                {
-                                    lastMatchedLines[item] = effectiveLine;
+                                    continue;
                                 }
                             }
                             foreach (var (primary, secondary) in scanList)
@@ -791,7 +942,14 @@ namespace TWChatOverlay.Views
                                 if (secondary == null)
                                 {
                                     if (effectiveLine.Contains(primary))
+                                    {
+                                        if (string.Equals(primary, RelicLogKeyword, StringComparison.Ordinal))
+                                        {
+                                            if (!IsRelicWeeklyClearLog(effectiveLine))
+                                                continue;
+                                        }
                                         counts[primary]++;
+                                    }
                                 }
                                 else
                                 {
@@ -801,11 +959,33 @@ namespace TWChatOverlay.Views
                                         counts[primary]++;
                                 }
                             }
+
+                            if (effectiveLine.Contains(FreeClearCountKeyword, StringComparison.Ordinal))
+                            {
+                                Match titleMatch = FreeClearTitleRegex.Match(effectiveLine);
+                                if (titleMatch.Success)
+                                {
+                                    string title = titleMatch.Groups["title"].Value.Trim();
+                                    if (title.Contains("환희의 잔상", StringComparison.Ordinal))
+                                    {
+                                        if (counts.ContainsKey(AfterimageOfJoyLogKeyword))
+                                            counts[AfterimageOfJoyLogKeyword]++;
+                                    }
+                                    else if (title.Contains("고대 렐릭의 성소", StringComparison.Ordinal))
+                                    {
+                                        if (counts.ContainsKey(RelicLogKeyword))
+                                            counts[RelicLogKeyword]++;
+                                    }
+                                }
+                                else if (effectiveLine.Contains("렐릭", StringComparison.Ordinal))
+                                {
+                                    if (counts.ContainsKey(RelicLogKeyword))
+                                        counts[RelicLogKeyword]++;
+                                }
+                            }
                         }
                     }
 
-                    if (mercurialClearCount > 0)
-                        specialCounts[DailyWeeklyLogAnalyzer.MercurialCaveSpecialKey] = mercurialClearCount;
                 }
                 catch (Exception ex)
                 {
@@ -827,17 +1007,20 @@ namespace TWChatOverlay.Views
                 if (item.LogKeyword == null) continue;
                 if (!item.IsEnabled) continue;
                 if (item.LogKeyword.Contains(DailyWeeklyLogAnalyzer.AbandonRoadKeywordToken, StringComparison.Ordinal) ||
-                    item.LogKeyword.Contains(DailyWeeklyLogAnalyzer.CravingPleasureKeywordToken, StringComparison.Ordinal) ||
-                    item.LogKeyword.Contains(DailyWeeklyLogAnalyzer.AbyssKeywordToken, StringComparison.Ordinal) ||
                     item.LogKeyword.Contains(DailyWeeklyLogAnalyzer.CatacombsKeywordToken, StringComparison.Ordinal) ||
-                    item.LogKeyword.Contains(DailyWeeklyLogAnalyzer.NestOfShinjoKeywordToken, StringComparison.Ordinal) ||
-                    item.LogKeyword.Contains(DailyWeeklyLogAnalyzer.SiochanheimKeywordToken, StringComparison.Ordinal))
+                    item.LogKeyword.Contains(DailyWeeklyLogAnalyzer.NestOfShinjoKeywordToken, StringComparison.Ordinal))
                     continue;
                 if (!counts.TryGetValue(item.LogKeyword, out int count) || count == 0) continue;
-                if (item.Name == ApetiriaHardItemName)
-                    count /= 3;
                 if (count <= 0) continue;
-                int times = item.HasCount ? Math.Min(count, item.MaxCount) : 1;
+                if (item.Name == FollowingJoyNormalItemName ||
+                    item.Name == GazingSorrowNormalItemName ||
+                    item.Name == FollowingJoyHardItemName ||
+                    item.Name == GazingSorrowHardItemName ||
+                    item.Name == AfterimageOfJoyItemName)
+                {
+                    AppLogger.Info($"DailyWeekly scan count. Item={item.Name}, Count={count}, Max={item.MaxCount}, HasCount={item.HasCount}, OnlyDate={onlyDate:yyyy-MM-dd}");
+                }
+                int times = item.HasCount ? count : 1;
                 for (int i = 0; i < times; i++)
                     item.Mark();
             }
@@ -854,6 +1037,11 @@ namespace TWChatOverlay.Views
             string contentRoot = Path.GetFullPath(LogStoragePaths.ContentDirectory);
             return fullPath.StartsWith(contentRoot, StringComparison.OrdinalIgnoreCase);
         }
+
+        private static bool IsRelicWeeklyClearLog(string text)
+            => !string.IsNullOrWhiteSpace(text) &&
+               text.Contains(RelicWeeklyClearToken1, StringComparison.Ordinal) &&
+               text.Contains(RelicWeeklyClearToken2, StringComparison.Ordinal);
 
         private static bool TryParseContentArchiveLine(string line, out string text, out DateTime logDate)
         {
@@ -944,14 +1132,14 @@ namespace TWChatOverlay.Views
 
         private bool TryProcessCravingPleasureLog(string text)
         {
-            if (!TryExtractCravingPleasureCount(text, out int count))
+            if (!TryExtractCravingPleasureCount(text, out _))
                 return false;
 
             DailyWeeklyContentLog? item = TrackItems.FirstOrDefault(i => i.Name == CravingPleasureItemName);
             if (item == null || !item.IsEnabled)
                 return false;
 
-            item.SetCount(count);
+            item.Mark();
             return true;
         }
 
@@ -1069,12 +1257,82 @@ namespace TWChatOverlay.Views
 
         private void Reset_Click(object sender, RoutedEventArgs e)
         {
-            foreach (var item in TrackItems.Where(i => !i.IsSubItem))
-                item.Reset();
-            _dailyWeeklyLogAnalyzer.ResetPending();
-            _dailyWeeklyLogAnalyzer.ResetAccumulatedCounts();
-            _AbandonCountStates.Clear();
-            _scanCache.IsDirty = true;
+            _ = RefreshCurrentWeekContentLogAsync();
+        }
+
+        private async Task RefreshCurrentWeekContentLogAsync()
+        {
+            try
+            {
+                DateTime today = DateTime.Today;
+                DateTime weekStart = GetWeeklyResetKey(today);
+                DateTime weekEnd = weekStart.AddDays(6);
+                string weekPath = GetContentWeekLogPath(today);
+                string? weekDir = Path.GetDirectoryName(weekPath);
+                if (!string.IsNullOrWhiteSpace(weekDir))
+                    Directory.CreateDirectory(weekDir);
+
+                var keywords = TrackItems
+                    .Where(i => !string.IsNullOrWhiteSpace(i.LogKeyword))
+                    .Select(i => i.LogKeyword!)
+                    .Distinct(StringComparer.Ordinal)
+                    .ToArray();
+
+                var keyword2 = TrackItems
+                    .Where(i => !string.IsNullOrWhiteSpace(i.LogKeyword2))
+                    .Select(i => i.LogKeyword2!)
+                    .Distinct(StringComparer.Ordinal)
+                    .ToArray();
+
+                string logDir = _settings.ChatLogFolderPath;
+                if (string.IsNullOrWhiteSpace(logDir) || !Directory.Exists(logDir))
+                    return;
+
+                var parser = new LogAnalysisService(_settings);
+                var lines = new List<string>();
+                var dedupe = new HashSet<string>(StringComparer.Ordinal);
+
+                for (DateTime day = weekStart; day <= weekEnd; day = day.AddDays(1))
+                {
+                    string path = Path.Combine(logDir, $"TWChatLog_{day:yyyy_MM_dd}.html");
+                    if (!File.Exists(path))
+                        continue;
+
+                    string raw;
+                    using (var sr = new StreamReader(path, Encoding.GetEncoding(949)))
+                        raw = await sr.ReadToEndAsync();
+
+                    foreach (string part in Regex.Split(raw, @"</?br\s*>|\r?\n", RegexOptions.IgnoreCase))
+                    {
+                        if (string.IsNullOrWhiteSpace(part))
+                            continue;
+
+                        var a = parser.Analyze(part, isRealTime: false, default);
+                        if (!a.IsSuccess || string.IsNullOrWhiteSpace(a.Parsed.FormattedText))
+                            continue;
+
+                        string text = a.Parsed.FormattedText.Trim();
+                        bool match = keywords.Any(k => text.Contains(k, StringComparison.Ordinal)) ||
+                                     keyword2.Any(k => text.Contains(k, StringComparison.Ordinal));
+                        if (!match)
+                            continue;
+
+                        string key = $"{day:yyyy-MM-dd}|{text}";
+                        if (!dedupe.Add(key))
+                            continue;
+
+                        lines.Add($"<div class=\"log content\" data-date=\"{day:yyyy-MM-dd}\">{WebUtility.HtmlEncode(text)}</div>");
+                    }
+                }
+
+                await File.WriteAllLinesAsync(weekPath, lines, new UTF8Encoding(false));
+                _scanCache.IsDirty = true;
+                await ScanHistoricalLogsAsync();
+            }
+            catch (Exception ex)
+            {
+                AppLogger.Warn("Failed to refresh weekly content log.", ex);
+            }
         }
 
         private void InitializeResetTimer()

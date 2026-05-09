@@ -144,7 +144,7 @@ namespace TWChatOverlay.Services
                     AppLogger.Debug($"Settings loaded from {FilePath}.");
                     var settings = JsonSerializer.Deserialize<ChatSettings>(json, _options) ?? new ChatSettings();
                     AppLogger.IsEnabled = settings.EnableDebugLogging;
-
+                    //AppLogger.IsEnabled = true;
                     string normalizedJson = JsonSerializer.Serialize(settings, _options);
                     bool removedObsoleteKeys = TryRemoveObsoleteKeys(json, normalizedJson, out string? cleanedJson);
                     if (removedObsoleteKeys && cleanedJson != null)

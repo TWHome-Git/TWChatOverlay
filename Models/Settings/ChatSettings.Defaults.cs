@@ -26,6 +26,7 @@ namespace TWChatOverlay.Models
             _autoCopyShoutNickname = false;
             _shoutToastDurationSeconds = 5;
             _shoutToastFontSize = 15.0;
+            _dailyWeeklyContentFontSize = 12.0;
             _chatLogFolderPath = @"C:\Nexon\TalesWeaver\ChatLog";
             _keywordInput = "";
             _fontFamily = "사용자 설정";
@@ -122,6 +123,8 @@ namespace TWChatOverlay.Models
             WindowHeight = 250.0;
             DailyWeeklyContentOverlayLeft = 0.0;
             DailyWeeklyContentOverlayTop = 0.0;
+            DailyWeeklyContentOverlayWidth = 280.0;
+            DailyWeeklyContentOverlayHeight = 540.0;
             SubAddonWindowLeft = 0.0;
             SubAddonWindowTop = 0.0;
             SubMenuWindowLeft = 0.0;
@@ -157,6 +160,8 @@ namespace TWChatOverlay.Models
                 ["채굴장"] = new() { IsEnabled = true },
                 ["차원의 틈"] = new() { IsEnabled = true },
                 ["심연의 보물창고"] = new() { IsEnabled = true },
+                ["베스티지"] = new() { IsEnabled = true },
+                ["오를리 방어전 지옥"] = new() { IsEnabled = true },
                 ["갈망하는 즐거움"] = new() { IsEnabled = true },
                 ["청소 아르바이트"] = new() { IsEnabled = true },
                 ["프라바 방어전"] = new() { IsEnabled = true },
@@ -169,6 +174,25 @@ namespace TWChatOverlay.Models
                 ["아페티리아 어려움"] = new() { IsEnabled = true },
                 ["시오칸 하임 보스 토벌전"] = new() { IsEnabled = true },
                 ["시오칸 하임 오딘 전면전"] = new() { IsEnabled = true },
+                ["아페티리아 EX"] = new() { IsEnabled = true },
+                ["이클립스 코어 마스터"] = new() { IsEnabled = true },
+                ["로카고스 코어 마스터"] = new() { IsEnabled = true },
+                ["에토스 코어 마스터"] = new() { IsEnabled = true },
+                ["체리아 코어 마스터"] = new() { IsEnabled = true },
+                ["마티아 코어 마스터"] = new() { IsEnabled = true },
+                ["라이코스 코어 마스터"] = new() { IsEnabled = true },
+                ["티로로스 코어 마스터"] = new() { IsEnabled = true },
+                ["어비스 코어 마스터"] = new() { IsEnabled = true },
+                ["심층Ⅰ 코어 마스터"] = new() { IsEnabled = true },
+                ["심층Ⅱ 코어 마스터"] = new() { IsEnabled = true },
+                ["심층Ⅲ 코어 마스터"] = new() { IsEnabled = true },
+                ["머큐리얼 코어 마스터"] = new() { IsEnabled = true },
+                ["샐리온 코어 마스터"] = new() { IsEnabled = true },
+                ["샐레아나 코어 마스터"] = new() { IsEnabled = true },
+                ["실라이론 코어 마스터"] = new() { IsEnabled = true },
+                ["실반 코어 마스터"] = new() { IsEnabled = true },
+                ["루미너스 코어 마스터"] = new() { IsEnabled = true },
+                ["최후의 결전"] = new() { IsEnabled = true },
                 ["필멸의 땅"] = new() { IsEnabled = true },
                 ["카디프"] = new() { IsEnabled = true },
                 ["오를란느"] = new() { IsEnabled = true },

@@ -5,6 +5,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Media.Imaging;
 using TWChatOverlay.Models;
 using TWChatOverlay.Views;
 
@@ -192,8 +193,21 @@ namespace TWChatOverlay.Services
                 }
 
                 await using var input = await response.Content.ReadAsStreamAsync().ConfigureAwait(false);
+                using var memory = new MemoryStream();
+                await input.CopyToAsync(memory).ConfigureAwait(false);
+                memory.Position = 0;
+
+                BitmapDecoder decoder = BitmapDecoder.Create(
+                    memory,
+                    BitmapCreateOptions.PreservePixelFormat,
+                    BitmapCacheOption.OnLoad);
+
+                var pngEncoder = new PngBitmapEncoder();
+                foreach (BitmapFrame frame in decoder.Frames)
+                    pngEncoder.Frames.Add(frame);
+
                 await using var output = new FileStream(CacheFilePath, FileMode.Create, FileAccess.Write, FileShare.Read);
-                await input.CopyToAsync(output).ConfigureAwait(false);
+                pngEncoder.Save(output);
 
                 AppLogger.Info($"Recapture supply image cached at '{CacheFilePath}'.");
                 return IsCacheValid();

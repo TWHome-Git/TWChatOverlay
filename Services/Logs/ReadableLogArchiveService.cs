@@ -33,6 +33,12 @@ namespace TWChatOverlay.Services
         private static readonly Regex DateFromFileNameRegex = new(
             @"TWChatLog_(?<y>\d{4})_(?<m>\d{2})_(?<d>\d{2})\.html$",
             RegexOptions.IgnoreCase | RegexOptions.Compiled);
+        private static readonly Regex ContentLineInnerTextRegex = new(
+            "<div\\s+class=\"log\\s+content\"[^>]*>(?<text>.*?)</div>",
+            RegexOptions.IgnoreCase | RegexOptions.Compiled);
+        private static readonly Regex TimePrefixRegex = new(
+            @"^\s*(?<time>\[[^\]]+\])\s*(?<body>.*)$",
+            RegexOptions.Compiled);
         private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.General);
 
         private readonly object _syncRoot = new();
@@ -568,13 +574,17 @@ namespace TWChatOverlay.Services
                 return;
 
             string text = parsed.FormattedText;
+            bool isJoySorrowRewardLine =
+                text.Contains("레이티아 퇴치 보상으로 레이티아 보상 상자", StringComparison.Ordinal) ||
+                text.Contains("설계자 퇴치 보상으로 설계자 보상 상자", StringComparison.Ordinal) ||
+                text.Contains("[환희의 레이티아 보상 상자] 아이템을 1개 획득하였습니다.", StringComparison.Ordinal);
 
             if (writeShout && parsed.Category == ChatCategory.Shout)
             {
                 AppendShoutLog(logDate, text, pendingArchiveWrites);
             }
 
-            if (writeItem)
+            if (writeItem && !isJoySorrowRewardLine)
             {
                 if (analysis.HasTrackedItemDrop && !string.IsNullOrWhiteSpace(parsed.TrackedItemName))
                 {
@@ -990,6 +1000,7 @@ namespace TWChatOverlay.Services
 
         private static void AppendHtmlLine(string path, string title, string htmlLine, Dictionary<string, List<string>>? pendingArchiveWrites = null)
         {
+            string dedupeKey = BuildDedupeKey(htmlLine);
             if (pendingArchiveWrites != null)
             {
                 if (!pendingArchiveWrites.TryGetValue(path, out List<string>? lines))
@@ -998,8 +1009,20 @@ namespace TWChatOverlay.Services
                     pendingArchiveWrites[path] = lines;
                 }
 
+                if (lines.Any(existing => string.Equals(BuildDedupeKey(existing), dedupeKey, StringComparison.Ordinal)))
+                    return;
+
                 lines.Add(htmlLine);
                 return;
+            }
+
+            if (File.Exists(path))
+            {
+                foreach (string existingLine in File.ReadLines(path, Encoding.UTF8))
+                {
+                    if (string.Equals(BuildDedupeKey(existingLine), dedupeKey, StringComparison.Ordinal))
+                        return;
+                }
             }
 
             EnsureInitialized(path, title);
@@ -1019,14 +1042,57 @@ namespace TWChatOverlay.Services
                 if (lines.Count == 0)
                     continue;
 
+                var uniqueBatch = new List<string>(lines.Count);
+                var seenBatch = new HashSet<string>(StringComparer.Ordinal);
+                foreach (string line in lines)
+                {
+                    string key = BuildDedupeKey(line);
+                    if (seenBatch.Add(key))
+                        uniqueBatch.Add(line);
+                }
+
+                var existing = new HashSet<string>(StringComparer.Ordinal);
+                if (File.Exists(path))
+                {
+                    foreach (string oldLine in File.ReadLines(path, Encoding.UTF8))
+                        existing.Add(BuildDedupeKey(oldLine));
+                }
+
+                List<string> toAppend = uniqueBatch.Where(line => !existing.Contains(BuildDedupeKey(line))).ToList();
+                if (toAppend.Count == 0)
+                    continue;
+
                 string title = Path.GetFileNameWithoutExtension(path) ?? "Log";
                 EnsureInitialized(path, title);
                 using var writer = new StreamWriter(path, append: true, Utf8NoBomEncoding);
-                foreach (string line in lines)
+                foreach (string line in toAppend)
                     writer.WriteLine(line);
             }
 
             pendingArchiveWrites.Clear();
+        }
+
+        private static string BuildDedupeKey(string htmlLine)
+        {
+            if (string.IsNullOrWhiteSpace(htmlLine))
+                return string.Empty;
+
+            Match contentMatch = ContentLineInnerTextRegex.Match(htmlLine);
+            if (contentMatch.Success)
+            {
+                string raw = WebUtility.HtmlDecode(contentMatch.Groups["text"].Value).Trim();
+                Match timeMatch = TimePrefixRegex.Match(raw);
+                if (timeMatch.Success)
+                {
+                    string time = timeMatch.Groups["time"].Value.Trim();
+                    string body = timeMatch.Groups["body"].Value.Trim();
+                    return $"content|{time}|{body}";
+                }
+
+                return $"content|{raw}";
+            }
+
+            return htmlLine.Trim();
         }
 
         private static void EnsureInitialized(string path, string title)

@@ -31,6 +31,7 @@ namespace TWChatOverlay.Models
         private bool _autoCopyShoutNickname = false;
         private int _shoutToastDurationSeconds = 5;
         private double _shoutToastFontSize = 15.0;
+        private double _dailyWeeklyContentFontSize = 12.0;
         private string _chatLogFolderPath = @"C:\Nexon\TalesWeaver\ChatLog";
         private string _keywordInput = "";
         private string _fontFamily = "사용자 설정";
@@ -74,6 +75,8 @@ namespace TWChatOverlay.Models
         private string _toggleSettingsHotKey = "";
         private double? _dailyWeeklyContentOverlayLeft = 0.0;
         private double? _dailyWeeklyContentOverlayTop = 0.0;
+        private double? _dailyWeeklyContentOverlayWidth = 280.0;
+        private double? _dailyWeeklyContentOverlayHeight = 540.0;
         private double? _subAddonWindowLeft = 0.0;
         private double? _subAddonWindowTop = 0.0;
         private double? _itemDropWindowLeft = 0.0;
@@ -658,6 +661,28 @@ namespace TWChatOverlay.Models
             }
         }
 
+        public double? DailyWeeklyContentOverlayWidth
+        {
+            get => _dailyWeeklyContentOverlayWidth;
+            set
+            {
+                if (_dailyWeeklyContentOverlayWidth == value) return;
+                _dailyWeeklyContentOverlayWidth = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public double? DailyWeeklyContentOverlayHeight
+        {
+            get => _dailyWeeklyContentOverlayHeight;
+            set
+            {
+                if (_dailyWeeklyContentOverlayHeight == value) return;
+                _dailyWeeklyContentOverlayHeight = value;
+                OnPropertyChanged();
+            }
+        }
+
         [JsonPropertyOrder(52)]
         public double? SubAddonWindowLeft
         {
@@ -873,6 +898,18 @@ namespace TWChatOverlay.Models
             {
                 if (_shoutToastWindowTop == value) return;
                 _shoutToastWindowTop = value;
+                OnPropertyChanged();
+            }
+        }
+        [JsonPropertyOrder(411)]
+        public double DailyWeeklyContentFontSize
+        {
+            get => _dailyWeeklyContentFontSize;
+            set
+            {
+                double clamped = Math.Max(10.0, Math.Min(28.0, value));
+                if (Math.Abs(_dailyWeeklyContentFontSize - clamped) < 0.0001) return;
+                _dailyWeeklyContentFontSize = clamped;
                 OnPropertyChanged();
             }
         }

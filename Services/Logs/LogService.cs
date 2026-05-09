@@ -157,7 +157,9 @@ namespace TWChatOverlay.Services
 
                     if (_lastPosition < sourceLength)
                     {
-                        ReadLog(isRealTimeOverride: false);
+                        // Startup backfill must flow through the same real-time pipeline
+                        // so content/abandon/exp/item/shout analyzers are not skipped.
+                        ReadLog(isRealTimeOverride: true);
                     }
 
                     AppLogger.Info($"Log file ready: {_logPath}, resume position={_lastPosition}.");
