@@ -18,7 +18,10 @@ namespace TWChatOverlay.Services
             if (string.IsNullOrWhiteSpace(rawImagePath))
                 return null;
 
-            string fileName = Path.GetFileName(rawImagePath);
+            string fileName = ExtractFileName(rawImagePath);
+            if (string.IsNullOrWhiteSpace(fileName))
+                return null;
+
             if (fileName.EndsWith(".webp", StringComparison.OrdinalIgnoreCase))
                 fileName = Path.ChangeExtension(fileName, ".png");
 
@@ -34,6 +37,17 @@ namespace TWChatOverlay.Services
             }
 
             return null;
+        }
+
+        private static string ExtractFileName(string rawImagePath)
+        {
+            string candidate = rawImagePath.Trim();
+            int queryIndex = candidate.IndexOf('?');
+            if (queryIndex >= 0)
+                candidate = candidate[..queryIndex];
+
+            string fileName = Path.GetFileName(candidate).Trim();
+            return Uri.UnescapeDataString(fileName);
         }
 
         private static bool ResourceExists(string packUri)
