@@ -1,0 +1,5462 @@
+[
+  {
+    "id": 1,
+    "name": "세크리드 레이피어",
+    "stats": {
+      "stab": {
+        "min": 475,
+        "max": 525,
+        "enchant": 225,
+        "limit": 0
+      },
+      "hack": {
+        "min": 190,
+        "max": 220,
+        "enchant": 530,
+        "limit": 0
+      },
+      "def": {
+        "min": 36,
+        "max": 38,
+        "enchant": 92,
+        "limit": 0
+      },
+      "int": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "mr": {
+        "min": 36,
+        "max": 40,
+        "enchant": 90,
+        "limit": 0
+      },
+      "dex": {
+        "min": 39,
+        "max": 42,
+        "enchant": 88,
+        "limit": 0
+      },
+      "crit": {
+        "min": 32,
+        "max": 35,
+        "enchant": 95,
+        "limit": 0
+      },
+      "agi": {
+        "min": 29,
+        "max": 34,
+        "enchant": 96,
+        "limit": 0
+      },
+      "smallAgi": {
+        "min": 30,
+        "max": 34,
+        "enchant": 96,
+        "limit": 0
+      }
+    }
+  },
+  {
+    "id": 2,
+    "name": "改-세크리드 리스트",
+    "stats": {
+      "stab": {
+        "min": 320,
+        "max": 370,
+        "enchant": 180,
+        "limit": 0
+      },
+      "hack": {
+        "min": 320,
+        "max": 370,
+        "enchant": 180,
+        "limit": 0
+      },
+      "def": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "int": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "mr": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "dex": {
+        "min": 55,
+        "max": 75,
+        "enchant": 55,
+        "limit": 0
+      },
+      "crit": {
+        "min": 55,
+        "max": 75,
+        "enchant": 55,
+        "limit": 0
+      },
+      "agi": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "smallAgi": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      }
+    }
+  },
+  {
+    "id": 3,
+    "name": "改-세크리드 방패",
+    "stats": {
+      "stab": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "hack": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "def": {
+        "min": 390,
+        "max": 440,
+        "enchant": 180,
+        "limit": 0
+      },
+      "int": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "mr": {
+        "min": 390,
+        "max": 440,
+        "enchant": 180,
+        "limit": 0
+      },
+      "dex": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "crit": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "agi": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "smallAgi": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      }
+    }
+  },
+  {
+    "id": 4,
+    "name": "세크리드 리스트",
+    "stats": {
+      "stab": {
+        "min": 300,
+        "max": 350,
+        "enchant": 160,
+        "limit": 0
+      },
+      "hack": {
+        "min": 300,
+        "max": 350,
+        "enchant": 160,
+        "limit": 0
+      },
+      "def": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "int": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "mr": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "dex": {
+        "min": 55,
+        "max": 75,
+        "enchant": 55,
+        "limit": 0
+      },
+      "crit": {
+        "min": 55,
+        "max": 75,
+        "enchant": 55,
+        "limit": 0
+      },
+      "agi": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "smallAgi": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      }
+    }
+  },
+  {
+    "id": 5,
+    "name": "세크리드 방패",
+    "stats": {
+      "stab": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "hack": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "def": {
+        "min": 370,
+        "max": 420,
+        "enchant": 160,
+        "limit": 0
+      },
+      "int": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "mr": {
+        "min": 370,
+        "max": 420,
+        "enchant": 160,
+        "limit": 0
+      },
+      "dex": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "crit": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "agi": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "smallAgi": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      }
+    }
+  },
+  {
+    "id": 6,
+    "name": "세크리드 소드",
+    "stats": {
+      "stab": {
+        "min": 410,
+        "max": 450,
+        "enchant": 300,
+        "limit": 0
+      },
+      "hack": {
+        "min": 410,
+        "max": 450,
+        "enchant": 300,
+        "limit": 0
+      },
+      "def": {
+        "min": 39,
+        "max": 42,
+        "enchant": 88,
+        "limit": 0
+      },
+      "int": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "mr": {
+        "min": 34,
+        "max": 37,
+        "enchant": 93,
+        "limit": 0
+      },
+      "dex": {
+        "min": 37,
+        "max": 39,
+        "enchant": 91,
+        "limit": 0
+      },
+      "crit": {
+        "min": 31,
+        "max": 34,
+        "enchant": 96,
+        "limit": 0
+      },
+      "agi": {
+        "min": 31,
+        "max": 35,
+        "enchant": 95,
+        "limit": 0
+      },
+      "smallAgi": {
+        "min": 31,
+        "max": 35,
+        "enchant": 95,
+        "limit": 0
+      }
+    }
+  },
+  {
+    "id": 7,
+    "name": "세크리드 시미터",
+    "stats": {
+      "stab": {
+        "min": 190,
+        "max": 220,
+        "enchant": 530,
+        "limit": 0
+      },
+      "hack": {
+        "min": 475,
+        "max": 525,
+        "enchant": 225,
+        "limit": 0
+      },
+      "def": {
+        "min": 38,
+        "max": 41,
+        "enchant": 89,
+        "limit": 0
+      },
+      "int": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "mr": {
+        "min": 35,
+        "max": 37,
+        "enchant": 93,
+        "limit": 0
+      },
+      "dex": {
+        "min": 36,
+        "max": 38,
+        "enchant": 92,
+        "limit": 0
+      },
+      "crit": {
+        "min": 29,
+        "max": 32,
+        "enchant": 98,
+        "limit": 0
+      },
+      "agi": {
+        "min": 32,
+        "max": 33,
+        "enchant": 97,
+        "limit": 0
+      },
+      "smallAgi": {
+        "min": 30,
+        "max": 33,
+        "enchant": 97,
+        "limit": 0
+      }
+    }
+  },
+  {
+    "id": 8,
+    "name": "改-세크리드 글라디우스",
+    "stats": {
+      "stab": {
+        "min": 250,
+        "max": 280,
+        "enchant": 560,
+        "limit": 0
+      },
+      "hack": {
+        "min": 435,
+        "max": 485,
+        "enchant": 355,
+        "limit": 0
+      },
+      "def": {
+        "min": 23,
+        "max": 24,
+        "enchant": 106,
+        "limit": 0
+      },
+      "int": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "mr": {
+        "min": 44,
+        "max": 48,
+        "enchant": 82,
+        "limit": 0
+      },
+      "dex": {
+        "min": 28,
+        "max": 30,
+        "enchant": 100,
+        "limit": 0
+      },
+      "crit": {
+        "min": 23,
+        "max": 6,
+        "enchant": 104,
+        "limit": 0
+      },
+      "agi": {
+        "min": 21,
+        "max": 22,
+        "enchant": 108,
+        "limit": 0
+      },
+      "smallAgi": {
+        "min": 17,
+        "max": 25,
+        "enchant": 105,
+        "limit": 0
+      }
+    }
+  },
+  {
+    "id": 9,
+    "name": "改-세크리드 글라디우스(sub)",
+    "stats": {
+      "stab": {
+        "min": 250,
+        "max": 280,
+        "enchant": 560,
+        "limit": 0
+      },
+      "hack": {
+        "min": 435,
+        "max": 485,
+        "enchant": 355,
+        "limit": 0
+      },
+      "def": {
+        "min": 23,
+        "max": 24,
+        "enchant": 106,
+        "limit": 0
+      },
+      "int": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "mr": {
+        "min": 44,
+        "max": 48,
+        "enchant": 82,
+        "limit": 0
+      },
+      "dex": {
+        "min": 28,
+        "max": 30,
+        "enchant": 100,
+        "limit": 0
+      },
+      "crit": {
+        "min": 23,
+        "max": 6,
+        "enchant": 104,
+        "limit": 0
+      },
+      "agi": {
+        "min": 21,
+        "max": 22,
+        "enchant": 108,
+        "limit": 0
+      },
+      "smallAgi": {
+        "min": 17,
+        "max": 25,
+        "enchant": 105,
+        "limit": 0
+      }
+    }
+  },
+  {
+    "id": 10,
+    "name": "改-세크리드 나이프",
+    "stats": {
+      "stab": {
+        "min": 480,
+        "max": 530,
+        "enchant": 310,
+        "limit": 0
+      },
+      "hack": {
+        "min": 480,
+        "max": 530,
+        "enchant": 310,
+        "limit": 0
+      },
+      "def": {
+        "min": 35,
+        "max": 37,
+        "enchant": 93,
+        "limit": 0
+      },
+      "int": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "mr": {
+        "min": 34,
+        "max": 36,
+        "enchant": 94,
+        "limit": 0
+      },
+      "dex": {
+        "min": 37,
+        "max": 40,
+        "enchant": 90,
+        "limit": 0
+      },
+      "crit": {
+        "min": 30,
+        "max": 32,
+        "enchant": 98,
+        "limit": 0
+      },
+      "agi": {
+        "min": 34,
+        "max": 36,
+        "enchant": 94,
+        "limit": 0
+      },
+      "smallAgi": {
+        "min": 33,
+        "max": 35,
+        "enchant": 95,
+        "limit": 0
+      }
+    }
+  },
+  {
+    "id": 11,
+    "name": "改-세크리드 대거",
+    "stats": {
+      "stab": {
+        "min": 550,
+        "max": 600,
+        "enchant": 240,
+        "limit": 0
+      },
+      "hack": {
+        "min": 250,
+        "max": 280,
+        "enchant": 560,
+        "limit": 0
+      },
+      "def": {
+        "min": 37,
+        "max": 40,
+        "enchant": 90,
+        "limit": 0
+      },
+      "int": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "mr": {
+        "min": 36,
+        "max": 42,
+        "enchant": 88,
+        "limit": 0
+      },
+      "dex": {
+        "min": 39,
+        "max": 41,
+        "enchant": 89,
+        "limit": 0
+      },
+      "crit": {
+        "min": 32,
+        "max": 35,
+        "enchant": 95,
+        "limit": 0
+      },
+      "agi": {
+        "min": 33,
+        "max": 35,
+        "enchant": 95,
+        "limit": 0
+      },
+      "smallAgi": {
+        "min": 30,
+        "max": 34,
+        "enchant": 96,
+        "limit": 0
+      }
+    }
+  },
+  {
+    "id": 12,
+    "name": "改-세크리드 로드",
+    "stats": {
+      "stab": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "hack": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "def": {
+        "min": 38,
+        "max": 41,
+        "enchant": 89,
+        "limit": 0
+      },
+      "int": {
+        "min": 250,
+        "max": 280,
+        "enchant": 560,
+        "limit": 0
+      },
+      "mr": {
+        "min": 540,
+        "max": 590,
+        "enchant": 250,
+        "limit": 0
+      },
+      "dex": {
+        "min": 37,
+        "max": 39,
+        "enchant": 91,
+        "limit": 0
+      },
+      "crit": {
+        "min": 29,
+        "max": 32,
+        "enchant": 98,
+        "limit": 0
+      },
+      "agi": {
+        "min": 35,
+        "max": 38,
+        "enchant": 92,
+        "limit": 0
+      },
+      "smallAgi": {
+        "min": 29,
+        "max": 33,
+        "enchant": 97,
+        "limit": 0
+      }
+    }
+  },
+  {
+    "id": 13,
+    "name": "改-세크리드 로브",
+    "stats": {
+      "stab": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "hack": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "def": {
+        "min": 435,
+        "max": 485,
+        "enchant": 225,
+        "limit": 0
+      },
+      "int": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "mr": {
+        "min": 445,
+        "max": 495,
+        "enchant": 225,
+        "limit": 0
+      },
+      "dex": {
+        "min": 100,
+        "max": 120,
+        "enchant": 10,
+        "limit": 0
+      },
+      "crit": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "agi": {
+        "min": 95,
+        "max": 115,
+        "enchant": 15,
+        "limit": 0
+      },
+      "smallAgi": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      }
+    }
+  },
+  {
+    "id": 14,
+    "name": "改-세크리드 리플렉트",
+    "stats": {
+      "stab": {
+        "min": 140,
+        "max": 160,
+        "enchant": 40,
+        "limit": 0
+      },
+      "hack": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "def": {
+        "min": 435,
+        "max": 485,
+        "enchant": 225,
+        "limit": 0
+      },
+      "int": {
+        "min": 145,
+        "max": 165,
+        "enchant": 40,
+        "limit": 0
+      },
+      "mr": {
+        "min": 355,
+        "max": 405,
+        "enchant": 225,
+        "limit": 0
+      },
+      "dex": {
+        "min": 95,
+        "max": 115,
+        "enchant": 15,
+        "limit": 0
+      },
+      "crit": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "agi": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "smallAgi": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      }
+    }
+  },
+  {
+    "id": 15,
+    "name": "改-세크리드 마나피스톨",
+    "stats": {
+      "stab": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "hack": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "def": {
+        "min": 39,
+        "max": 43,
+        "enchant": 87,
+        "limit": 0
+      },
+      "int": {
+        "min": 560,
+        "max": 610,
+        "enchant": 230,
+        "limit": 0
+      },
+      "mr": {
+        "min": 250,
+        "max": 280,
+        "enchant": 560,
+        "limit": 0
+      },
+      "dex": {
+        "min": 31,
+        "max": 38,
+        "enchant": 92,
+        "limit": 0
+      },
+      "crit": {
+        "min": 30,
+        "max": 32,
+        "enchant": 98,
+        "limit": 0
+      },
+      "agi": {
+        "min": 31,
+        "max": 36,
+        "enchant": 94,
+        "limit": 0
+      },
+      "smallAgi": {
+        "min": 30,
+        "max": 35,
+        "enchant": 95,
+        "limit": 0
+      }
+    }
+  },
+  {
+    "id": 16,
+    "name": "改-세크리드 마법탄창",
+    "stats": {
+      "stab": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "hack": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "def": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "int": {
+        "min": 375,
+        "max": 425,
+        "enchant": 180,
+        "limit": 0
+      },
+      "mr": {
+        "min": 120,
+        "max": 140,
+        "enchant": 130,
+        "limit": 0
+      },
+      "dex": {
+        "min": 75,
+        "max": 95,
+        "enchant": 35,
+        "limit": 0
+      },
+      "crit": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "agi": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "smallAgi": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      }
+    }
+  },
+  {
+    "id": 17,
+    "name": "改-세크리드 메이스",
+    "stats": {
+      "stab": {
+        "min": 480,
+        "max": 530,
+        "enchant": 310,
+        "limit": 0
+      },
+      "hack": {
+        "min": 480,
+        "max": 530,
+        "enchant": 310,
+        "limit": 0
+      },
+      "def": {
+        "min": 42,
+        "max": 44,
+        "enchant": 86,
+        "limit": 0
+      },
+      "int": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "mr": {
+        "min": 98,
+        "max": 102,
+        "enchant": 28,
+        "limit": 0
+      },
+      "dex": {
+        "min": 38,
+        "max": 40,
+        "enchant": 90,
+        "limit": 0
+      },
+      "crit": {
+        "min": 32,
+        "max": 35,
+        "enchant": 95,
+        "limit": 0
+      },
+      "agi": {
+        "min": 32,
+        "max": 35,
+        "enchant": 95,
+        "limit": 0
+      },
+      "smallAgi": {
+        "min": 30,
+        "max": 32,
+        "enchant": 98,
+        "limit": 0
+      }
+    }
+  },
+  {
+    "id": 18,
+    "name": "改-세크리드 메일",
+    "stats": {
+      "stab": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "hack": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "def": {
+        "min": 545,
+        "max": 595,
+        "enchant": 205,
+        "limit": 0
+      },
+      "int": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "mr": {
+        "min": 435,
+        "max": 485,
+        "enchant": 215,
+        "limit": 0
+      },
+      "dex": {
+        "min": 85,
+        "max": 95,
+        "enchant": 35,
+        "limit": 0
+      },
+      "crit": {
+        "min": 65,
+        "max": 85,
+        "enchant": 45,
+        "limit": 0
+      },
+      "agi": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "smallAgi": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      }
+    }
+  },
+  {
+    "id": 19,
+    "name": "改-세크리드 밴드",
+    "stats": {
+      "stab": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "hack": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "def": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "int": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "mr": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "dex": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "crit": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "agi": {
+        "min": 300,
+        "max": 350,
+        "enchant": 160,
+        "limit": 0
+      },
+      "smallAgi": {
+        "min": 300,
+        "max": 350,
+        "enchant": 160,
+        "limit": 0
+      }
+    }
+  },
+  {
+    "id": 20,
+    "name": "改-세크리드 블레이드",
+    "stats": {
+      "stab": {
+        "min": 130,
+        "max": 135,
+        "enchant": 675,
+        "limit": 0
+      },
+      "hack": {
+        "min": 480,
+        "max": 530,
+        "enchant": 310,
+        "limit": 0
+      },
+      "def": {
+        "min": 37,
+        "max": 40,
+        "enchant": 90,
+        "limit": 0
+      },
+      "int": {
+        "min": 480,
+        "max": 530,
+        "enchant": 310,
+        "limit": 0
+      },
+      "mr": {
+        "min": 40,
+        "max": 42,
+        "enchant": 88,
+        "limit": 0
+      },
+      "dex": {
+        "min": 36,
+        "max": 40,
+        "enchant": 90,
+        "limit": 0
+      },
+      "crit": {
+        "min": 31,
+        "max": 34,
+        "enchant": 96,
+        "limit": 0
+      },
+      "agi": {
+        "min": 30,
+        "max": 32,
+        "enchant": 98,
+        "limit": 0
+      },
+      "smallAgi": {
+        "min": 28,
+        "max": 30,
+        "enchant": 100,
+        "limit": 0
+      }
+    }
+  },
+  {
+    "id": 21,
+    "name": "改-세크리드 사이드",
+    "stats": {
+      "stab": {
+        "min": 250,
+        "max": 280,
+        "enchant": 560,
+        "limit": 0
+      },
+      "hack": {
+        "min": 550,
+        "max": 600,
+        "enchant": 240,
+        "limit": 0
+      },
+      "def": {
+        "min": 36,
+        "max": 41,
+        "enchant": 89,
+        "limit": 0
+      },
+      "int": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "mr": {
+        "min": 43,
+        "max": 45,
+        "enchant": 85,
+        "limit": 0
+      },
+      "dex": {
+        "min": 36,
+        "max": 38,
+        "enchant": 92,
+        "limit": 0
+      },
+      "crit": {
+        "min": 29,
+        "max": 32,
+        "enchant": 98,
+        "limit": 0
+      },
+      "agi": {
+        "min": 29,
+        "max": 32,
+        "enchant": 98,
+        "limit": 0
+      },
+      "smallAgi": {
+        "min": 30,
+        "max": 33,
+        "enchant": 97,
+        "limit": 0
+      }
+    }
+  },
+  {
+    "id": 22,
+    "name": "改-세크리드 셉터",
+    "stats": {
+      "stab": {
+        "min": 105,
+        "max": 110,
+        "enchant": 200,
+        "limit": 0
+      },
+      "hack": {
+        "min": 112,
+        "max": 117,
+        "enchant": 200,
+        "limit": 0
+      },
+      "def": {
+        "min": 42,
+        "max": 45,
+        "enchant": 85,
+        "limit": 0
+      },
+      "int": {
+        "min": 560,
+        "max": 610,
+        "enchant": 230,
+        "limit": 0
+      },
+      "mr": {
+        "min": 250,
+        "max": 280,
+        "enchant": 560,
+        "limit": 0
+      },
+      "dex": {
+        "min": 38,
+        "max": 39,
+        "enchant": 91,
+        "limit": 0
+      },
+      "crit": {
+        "min": 32,
+        "max": 34,
+        "enchant": 96,
+        "limit": 0
+      },
+      "agi": {
+        "min": 31,
+        "max": 33,
+        "enchant": 97,
+        "limit": 0
+      },
+      "smallAgi": {
+        "min": 30,
+        "max": 33,
+        "enchant": 97,
+        "limit": 0
+      }
+    }
+  },
+  {
+    "id": 23,
+    "name": "改-세크리드 소드셰이프",
+    "stats": {
+      "stab": {
+        "min": 250,
+        "max": 280,
+        "enchant": 560,
+        "limit": 0
+      },
+      "hack": {
+        "min": 550,
+        "max": 600,
+        "enchant": 240,
+        "limit": 0
+      },
+      "def": {
+        "min": 38,
+        "max": 41,
+        "enchant": 89,
+        "limit": 0
+      },
+      "int": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "mr": {
+        "min": 35,
+        "max": 37,
+        "enchant": 93,
+        "limit": 0
+      },
+      "dex": {
+        "min": 37,
+        "max": 39,
+        "enchant": 91,
+        "limit": 0
+      },
+      "crit": {
+        "min": 32,
+        "max": 33,
+        "enchant": 97,
+        "limit": 0
+      },
+      "agi": {
+        "min": 32,
+        "max": 33,
+        "enchant": 97,
+        "limit": 0
+      },
+      "smallAgi": {
+        "min": 32,
+        "max": 33,
+        "enchant": 97,
+        "limit": 0
+      }
+    }
+  },
+  {
+    "id": 24,
+    "name": "改-세크리드 수정구",
+    "stats": {
+      "stab": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "hack": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "def": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "int": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "mr": {
+        "min": 350,
+        "max": 400,
+        "enchant": 180,
+        "limit": 0
+      },
+      "dex": {
+        "min": 75,
+        "max": 95,
+        "enchant": 35,
+        "limit": 0
+      },
+      "crit": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "agi": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "smallAgi": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      }
+    }
+  },
+  {
+    "id": 25,
+    "name": "改-세크리드 슈츠",
+    "stats": {
+      "stab": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "hack": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "def": {
+        "min": 435,
+        "max": 485,
+        "enchant": 225,
+        "limit": 0
+      },
+      "int": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "mr": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "dex": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "crit": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "agi": {
+        "min": 415,
+        "max": 465,
+        "enchant": 225,
+        "limit": 0
+      },
+      "smallAgi": {
+        "min": 95,
+        "max": 115,
+        "enchant": 15,
+        "limit": 0
+      }
+    }
+  },
+  {
+    "id": 26,
+    "name": "改-세크리드 스몰소드",
+    "stats": {
+      "stab": {
+        "min": 550,
+        "max": 600,
+        "enchant": 240,
+        "limit": 0
+      },
+      "hack": {
+        "min": 250,
+        "max": 280,
+        "enchant": 560,
+        "limit": 0
+      },
+      "def": {
+        "min": 40,
+        "max": 46,
+        "enchant": 84,
+        "limit": 0
+      },
+      "int": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "mr": {
+        "min": 36,
+        "max": 42,
+        "enchant": 88,
+        "limit": 0
+      },
+      "dex": {
+        "min": 30,
+        "max": 36,
+        "enchant": 94,
+        "limit": 0
+      },
+      "crit": {
+        "min": 30,
+        "max": 32,
+        "enchant": 98,
+        "limit": 0
+      },
+      "agi": {
+        "min": 32,
+        "max": 39,
+        "enchant": 91,
+        "limit": 0
+      },
+      "smallAgi": {
+        "min": 30,
+        "max": 35,
+        "enchant": 95,
+        "limit": 0
+      }
+    }
+  },
+  {
+    "id": 27,
+    "name": "改-세크리드 스태프",
+    "stats": {
+      "stab": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "hack": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "def": {
+        "min": 38,
+        "max": 42,
+        "enchant": 88,
+        "limit": 0
+      },
+      "int": {
+        "min": 560,
+        "max": 610,
+        "enchant": 230,
+        "limit": 0
+      },
+      "mr": {
+        "min": 250,
+        "max": 280,
+        "enchant": 560,
+        "limit": 0
+      },
+      "dex": {
+        "min": 38,
+        "max": 42,
+        "enchant": 88,
+        "limit": 0
+      },
+      "crit": {
+        "min": 30,
+        "max": 32,
+        "enchant": 98,
+        "limit": 0
+      },
+      "agi": {
+        "min": 31,
+        "max": 34,
+        "enchant": 96,
+        "limit": 0
+      },
+      "smallAgi": {
+        "min": 29,
+        "max": 33,
+        "enchant": 97,
+        "limit": 0
+      }
+    }
+  },
+  {
+    "id": 28,
+    "name": "改-세크리드 스틱",
+    "stats": {
+      "stab": {
+        "min": 480,
+        "max": 530,
+        "enchant": 310,
+        "limit": 0
+      },
+      "hack": {
+        "min": 480,
+        "max": 530,
+        "enchant": 310,
+        "limit": 0
+      },
+      "def": {
+        "min": 34,
+        "max": 37,
+        "enchant": 93,
+        "limit": 0
+      },
+      "int": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "mr": {
+        "min": 33,
+        "max": 35,
+        "enchant": 95,
+        "limit": 0
+      },
+      "dex": {
+        "min": 36,
+        "max": 37,
+        "enchant": 93,
+        "limit": 0
+      },
+      "crit": {
+        "min": 29,
+        "max": 32,
+        "enchant": 98,
+        "limit": 0
+      },
+      "agi": {
+        "min": 30,
+        "max": 32,
+        "enchant": 98,
+        "limit": 0
+      },
+      "smallAgi": {
+        "min": 28,
+        "max": 32,
+        "enchant": 98,
+        "limit": 0
+      }
+    }
+  },
+  {
+    "id": 29,
+    "name": "改-세크리드 스펠북",
+    "stats": {
+      "stab": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "hack": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "def": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "int": {
+        "min": 405,
+        "max": 455,
+        "enchant": 180,
+        "limit": 0
+      },
+      "mr": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "dex": {
+        "min": 55,
+        "max": 75,
+        "enchant": 55,
+        "limit": 0
+      },
+      "crit": {
+        "min": 55,
+        "max": 75,
+        "enchant": 55,
+        "limit": 0
+      },
+      "agi": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "smallAgi": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      }
+    }
+  },
+  {
+    "id": 30,
+    "name": "改-세크리드 스피어",
+    "stats": {
+      "stab": {
+        "min": 550,
+        "max": 600,
+        "enchant": 240,
+        "limit": 0
+      },
+      "hack": {
+        "min": 250,
+        "max": 280,
+        "enchant": 560,
+        "limit": 0
+      },
+      "def": {
+        "min": 43,
+        "max": 46,
+        "enchant": 84,
+        "limit": 0
+      },
+      "int": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "mr": {
+        "min": 32,
+        "max": 35,
+        "enchant": 95,
+        "limit": 0
+      },
+      "dex": {
+        "min": 34,
+        "max": 36,
+        "enchant": 94,
+        "limit": 0
+      },
+      "crit": {
+        "min": 30,
+        "max": 32,
+        "enchant": 98,
+        "limit": 0
+      },
+      "agi": {
+        "min": 30,
+        "max": 32,
+        "enchant": 98,
+        "limit": 0
+      },
+      "smallAgi": {
+        "min": 29,
+        "max": 32,
+        "enchant": 98,
+        "limit": 0
+      }
+    }
+  },
+  {
+    "id": 31,
+    "name": "改-세크리드 아머",
+    "stats": {
+      "stab": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "hack": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "def": {
+        "min": 445,
+        "max": 495,
+        "enchant": 225,
+        "limit": 0
+      },
+      "int": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "mr": {
+        "min": 405,
+        "max": 455,
+        "enchant": 225,
+        "limit": 0
+      },
+      "dex": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "crit": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "agi": {
+        "min": 120,
+        "max": 140,
+        "enchant": 20,
+        "limit": 0
+      },
+      "smallAgi": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      }
+    }
+  },
+  {
+    "id": 32,
+    "name": "改-세크리드 아밍소드",
+    "stats": {
+      "stab": {
+        "min": 250,
+        "max": 280,
+        "enchant": 560,
+        "limit": 0
+      },
+      "hack": {
+        "min": 550,
+        "max": 600,
+        "enchant": 240,
+        "limit": 0
+      },
+      "def": {
+        "min": 39,
+        "max": 40,
+        "enchant": 90,
+        "limit": 0
+      },
+      "int": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "mr": {
+        "min": 33,
+        "max": 36,
+        "enchant": 94,
+        "limit": 0
+      },
+      "dex": {
+        "min": 37,
+        "max": 39,
+        "enchant": 91,
+        "limit": 0
+      },
+      "crit": {
+        "min": 32,
+        "max": 33,
+        "enchant": 97,
+        "limit": 0
+      },
+      "agi": {
+        "min": 30,
+        "max": 32,
+        "enchant": 98,
+        "limit": 0
+      },
+      "smallAgi": {
+        "min": 32,
+        "max": 33,
+        "enchant": 97,
+        "limit": 0
+      }
+    }
+  },
+  {
+    "id": 33,
+    "name": "改-세크리드 암릿",
+    "stats": {
+      "stab": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "hack": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "def": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "int": {
+        "min": 325,
+        "max": 375,
+        "enchant": 180,
+        "limit": 0
+      },
+      "mr": {
+        "min": 320,
+        "max": 370,
+        "enchant": 180,
+        "limit": 0
+      },
+      "dex": {
+        "min": 75,
+        "max": 95,
+        "enchant": 35,
+        "limit": 0
+      },
+      "crit": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "agi": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "smallAgi": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      }
+    }
+  },
+  {
+    "id": 34,
+    "name": "改-세크리드 액스",
+    "stats": {
+      "stab": {
+        "min": 250,
+        "max": 280,
+        "enchant": 560,
+        "limit": 0
+      },
+      "hack": {
+        "min": 550,
+        "max": 600,
+        "enchant": 240,
+        "limit": 0
+      },
+      "def": {
+        "min": 36,
+        "max": 40,
+        "enchant": 90,
+        "limit": 0
+      },
+      "int": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "mr": {
+        "min": 31,
+        "max": 33,
+        "enchant": 97,
+        "limit": 0
+      },
+      "dex": {
+        "min": 35,
+        "max": 37,
+        "enchant": 93,
+        "limit": 0
+      },
+      "crit": {
+        "min": 29,
+        "max": 31,
+        "enchant": 99,
+        "limit": 0
+      },
+      "agi": {
+        "min": 32,
+        "max": 34,
+        "enchant": 96,
+        "limit": 0
+      },
+      "smallAgi": {
+        "min": 30,
+        "max": 32,
+        "enchant": 98,
+        "limit": 0
+      }
+    }
+  },
+  {
+    "id": 35,
+    "name": "改-세크리드 완드",
+    "stats": {
+      "stab": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "hack": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "def": {
+        "min": 37,
+        "max": 43,
+        "enchant": 87,
+        "limit": 0
+      },
+      "int": {
+        "min": 560,
+        "max": 610,
+        "enchant": 230,
+        "limit": 0
+      },
+      "mr": {
+        "min": 250,
+        "max": 280,
+        "enchant": 560,
+        "limit": 0
+      },
+      "dex": {
+        "min": 30,
+        "max": 33,
+        "enchant": 97,
+        "limit": 0
+      },
+      "crit": {
+        "min": 29,
+        "max": 31,
+        "enchant": 99,
+        "limit": 0
+      },
+      "agi": {
+        "min": 29,
+        "max": 33,
+        "enchant": 97,
+        "limit": 0
+      },
+      "smallAgi": {
+        "min": 28,
+        "max": 31,
+        "enchant": 99,
+        "limit": 0
+      }
+    }
+  },
+  {
+    "id": 36,
+    "name": "改-세크리드 카라",
+    "stats": {
+      "stab": {
+        "min": 250,
+        "max": 280,
+        "enchant": 560,
+        "limit": 0
+      },
+      "hack": {
+        "min": 550,
+        "max": 600,
+        "enchant": 240,
+        "limit": 0
+      },
+      "def": {
+        "min": 39,
+        "max": 40,
+        "enchant": 90,
+        "limit": 0
+      },
+      "int": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "mr": {
+        "min": 33,
+        "max": 36,
+        "enchant": 94,
+        "limit": 0
+      },
+      "dex": {
+        "min": 37,
+        "max": 39,
+        "enchant": 91,
+        "limit": 0
+      },
+      "crit": {
+        "min": 32,
+        "max": 33,
+        "enchant": 97,
+        "limit": 0
+      },
+      "agi": {
+        "min": 30,
+        "max": 32,
+        "enchant": 98,
+        "limit": 0
+      },
+      "smallAgi": {
+        "min": 32,
+        "max": 33,
+        "enchant": 97,
+        "limit": 0
+      }
+    }
+  },
+  {
+    "id": 37,
+    "name": "改-세크리드 크리스",
+    "stats": {
+      "stab": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "hack": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "def": {
+        "min": 21,
+        "max": 23,
+        "enchant": 107,
+        "limit": 0
+      },
+      "int": {
+        "min": 250,
+        "max": 280,
+        "enchant": 560,
+        "limit": 0
+      },
+      "mr": {
+        "min": 430,
+        "max": 480,
+        "enchant": 360,
+        "limit": 0
+      },
+      "dex": {
+        "min": 32,
+        "max": 34,
+        "enchant": 96,
+        "limit": 0
+      },
+      "crit": {
+        "min": 17,
+        "max": 19,
+        "enchant": 111,
+        "limit": 0
+      },
+      "agi": {
+        "min": 22,
+        "max": 23,
+        "enchant": 107,
+        "limit": 0
+      },
+      "smallAgi": {
+        "min": 17,
+        "max": 19,
+        "enchant": 111,
+        "limit": 0
+      }
+    }
+  },
+  {
+    "id": 38,
+    "name": "改-세크리드 크리스(sub)",
+    "stats": {
+      "stab": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "hack": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "def": {
+        "min": 21,
+        "max": 23,
+        "enchant": 107,
+        "limit": 0
+      },
+      "int": {
+        "min": 250,
+        "max": 280,
+        "enchant": 560,
+        "limit": 0
+      },
+      "mr": {
+        "min": 430,
+        "max": 480,
+        "enchant": 360,
+        "limit": 0
+      },
+      "dex": {
+        "min": 32,
+        "max": 34,
+        "enchant": 96,
+        "limit": 0
+      },
+      "crit": {
+        "min": 17,
+        "max": 19,
+        "enchant": 111,
+        "limit": 0
+      },
+      "agi": {
+        "min": 22,
+        "max": 23,
+        "enchant": 107,
+        "limit": 0
+      },
+      "smallAgi": {
+        "min": 17,
+        "max": 19,
+        "enchant": 111,
+        "limit": 0
+      }
+    }
+  },
+  {
+    "id": 39,
+    "name": "改-세크리드 클로",
+    "stats": {
+      "stab": {
+        "min": 550,
+        "max": 600,
+        "enchant": 240,
+        "limit": 0
+      },
+      "hack": {
+        "min": 250,
+        "max": 280,
+        "enchant": 560,
+        "limit": 0
+      },
+      "def": {
+        "min": 33,
+        "max": 37,
+        "enchant": 93,
+        "limit": 0
+      },
+      "int": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "mr": {
+        "min": 34,
+        "max": 37,
+        "enchant": 93,
+        "limit": 0
+      },
+      "dex": {
+        "min": 29,
+        "max": 31,
+        "enchant": 99,
+        "limit": 0
+      },
+      "crit": {
+        "min": 31,
+        "max": 34,
+        "enchant": 96,
+        "limit": 0
+      },
+      "agi": {
+        "min": 37,
+        "max": 39,
+        "enchant": 91,
+        "limit": 0
+      },
+      "smallAgi": {
+        "min": 32,
+        "max": 34,
+        "enchant": 96,
+        "limit": 0
+      }
+    }
+  },
+  {
+    "id": 40,
+    "name": "改-세크리드 탄창",
+    "stats": {
+      "stab": {
+        "min": 440,
+        "max": 490,
+        "enchant": 180,
+        "limit": 0
+      },
+      "hack": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "def": {
+        "min": 90,
+        "max": 110,
+        "enchant": 20,
+        "limit": 0
+      },
+      "int": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "mr": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "dex": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "crit": {
+        "min": 75,
+        "max": 95,
+        "enchant": 35,
+        "limit": 0
+      },
+      "agi": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "smallAgi": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      }
+    }
+  },
+  {
+    "id": 41,
+    "name": "改-세크리드 토템",
+    "stats": {
+      "stab": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "hack": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "def": {
+        "min": 38,
+        "max": 42,
+        "enchant": 88,
+        "limit": 0
+      },
+      "int": {
+        "min": 560,
+        "max": 610,
+        "enchant": 230,
+        "limit": 0
+      },
+      "mr": {
+        "min": 250,
+        "max": 280,
+        "enchant": 560,
+        "limit": 0
+      },
+      "dex": {
+        "min": 38,
+        "max": 41,
+        "enchant": 89,
+        "limit": 0
+      },
+      "crit": {
+        "min": 30,
+        "max": 32,
+        "enchant": 98,
+        "limit": 0
+      },
+      "agi": {
+        "min": 38,
+        "max": 41,
+        "enchant": 89,
+        "limit": 0
+      },
+      "smallAgi": {
+        "min": 29,
+        "max": 33,
+        "enchant": 97,
+        "limit": 0
+      }
+    }
+  },
+  {
+    "id": 42,
+    "name": "改-세크리드 페이크소드",
+    "stats": {
+      "stab": {
+        "min": 480,
+        "max": 530,
+        "enchant": 310,
+        "limit": 0
+      },
+      "hack": {
+        "min": 480,
+        "max": 530,
+        "enchant": 310,
+        "limit": 0
+      },
+      "def": {
+        "min": 41,
+        "max": 43,
+        "enchant": 87,
+        "limit": 0
+      },
+      "int": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "mr": {
+        "min": 35,
+        "max": 38,
+        "enchant": 92,
+        "limit": 0
+      },
+      "dex": {
+        "min": 36,
+        "max": 38,
+        "enchant": 92,
+        "limit": 0
+      },
+      "crit": {
+        "min": 31,
+        "max": 34,
+        "enchant": 96,
+        "limit": 0
+      },
+      "agi": {
+        "min": 31,
+        "max": 34,
+        "enchant": 96,
+        "limit": 0
+      },
+      "smallAgi": {
+        "min": 31,
+        "max": 36,
+        "enchant": 94,
+        "limit": 0
+      }
+    }
+  },
+  {
+    "id": 43,
+    "name": "改-세크리드 펜듈럼",
+    "stats": {
+      "stab": {
+        "min": 320,
+        "max": 370,
+        "enchant": 180,
+        "limit": 0
+      },
+      "hack": {
+        "min": 320,
+        "max": 370,
+        "enchant": 180,
+        "limit": 0
+      },
+      "def": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "int": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "mr": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "dex": {
+        "min": 55,
+        "max": 75,
+        "enchant": 55,
+        "limit": 0
+      },
+      "crit": {
+        "min": 55,
+        "max": 75,
+        "enchant": 55,
+        "limit": 0
+      },
+      "agi": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "smallAgi": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      }
+    }
+  },
+  {
+    "id": 44,
+    "name": "改-세크리드 플레일",
+    "stats": {
+      "stab": {
+        "min": 480,
+        "max": 530,
+        "enchant": 310,
+        "limit": 0
+      },
+      "hack": {
+        "min": 480,
+        "max": 530,
+        "enchant": 310,
+        "limit": 0
+      },
+      "def": {
+        "min": 35,
+        "max": 38,
+        "enchant": 92,
+        "limit": 0
+      },
+      "int": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "mr": {
+        "min": 32,
+        "max": 35,
+        "enchant": 95,
+        "limit": 0
+      },
+      "dex": {
+        "min": 38,
+        "max": 40,
+        "enchant": 90,
+        "limit": 0
+      },
+      "crit": {
+        "min": 31,
+        "max": 33,
+        "enchant": 97,
+        "limit": 0
+      },
+      "agi": {
+        "min": 37,
+        "max": 40,
+        "enchant": 90,
+        "limit": 0
+      },
+      "smallAgi": {
+        "min": 29,
+        "max": 33,
+        "enchant": 97,
+        "limit": 0
+      }
+    }
+  },
+  {
+    "id": 45,
+    "name": "改-세크리드 피스톨",
+    "stats": {
+      "stab": {
+        "min": 550,
+        "max": 600,
+        "enchant": 240,
+        "limit": 0
+      },
+      "hack": {
+        "min": 250,
+        "max": 280,
+        "enchant": 560,
+        "limit": 0
+      },
+      "def": {
+        "min": 41,
+        "max": 43,
+        "enchant": 87,
+        "limit": 0
+      },
+      "int": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "mr": {
+        "min": 34,
+        "max": 36,
+        "enchant": 94,
+        "limit": 0
+      },
+      "dex": {
+        "min": 35,
+        "max": 38,
+        "enchant": 92,
+        "limit": 0
+      },
+      "crit": {
+        "min": 28,
+        "max": 31,
+        "enchant": 99,
+        "limit": 0
+      },
+      "agi": {
+        "min": 33,
+        "max": 35,
+        "enchant": 95,
+        "limit": 0
+      },
+      "smallAgi": {
+        "min": 31,
+        "max": 33,
+        "enchant": 97,
+        "limit": 0
+      }
+    }
+  },
+  {
+    "id": 46,
+    "name": "改-세크리드 해머",
+    "stats": {
+      "stab": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "hack": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "def": {
+        "min": 90,
+        "max": 92,
+        "enchant": 38,
+        "limit": 0
+      },
+      "int": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "mr": {
+        "min": 630,
+        "max": 680,
+        "enchant": 240,
+        "limit": 0
+      },
+      "dex": {
+        "min": 36,
+        "max": 38,
+        "enchant": 92,
+        "limit": 0
+      },
+      "crit": {
+        "min": 32,
+        "max": 37,
+        "enchant": 93,
+        "limit": 0
+      },
+      "agi": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "smallAgi": {
+        "min": 30,
+        "max": 37,
+        "enchant": 93,
+        "limit": 0
+      }
+    }
+  },
+  {
+    "id": 47,
+    "name": "改-세크리드 핸드런처",
+    "stats": {
+      "stab": {
+        "min": 630,
+        "max": 680,
+        "enchant": 240,
+        "limit": 0
+      },
+      "hack": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "def": {
+        "min": 35,
+        "max": 40,
+        "enchant": 90,
+        "limit": 0
+      },
+      "int": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "mr": {
+        "min": 43,
+        "max": 45,
+        "enchant": 85,
+        "limit": 0
+      },
+      "dex": {
+        "min": 36,
+        "max": 38,
+        "enchant": 92,
+        "limit": 0
+      },
+      "crit": {
+        "min": 29,
+        "max": 32,
+        "enchant": 98,
+        "limit": 0
+      },
+      "agi": {
+        "min": 32,
+        "max": 33,
+        "enchant": 97,
+        "limit": 0
+      },
+      "smallAgi": {
+        "min": 30,
+        "max": 33,
+        "enchant": 97,
+        "limit": 0
+      }
+    }
+  },
+  {
+    "id": 48,
+    "name": "改-세크리드 핸드벨",
+    "stats": {
+      "stab": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "hack": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "def": {
+        "min": 44,
+        "max": 49,
+        "enchant": 81,
+        "limit": 0
+      },
+      "int": {
+        "min": 250,
+        "max": 280,
+        "enchant": 560,
+        "limit": 0
+      },
+      "mr": {
+        "min": 540,
+        "max": 590,
+        "enchant": 250,
+        "limit": 0
+      },
+      "dex": {
+        "min": 34,
+        "max": 36,
+        "enchant": 94,
+        "limit": 0
+      },
+      "crit": {
+        "min": 27,
+        "max": 29,
+        "enchant": 101,
+        "limit": 0
+      },
+      "agi": {
+        "min": 33,
+        "max": 36,
+        "enchant": 94,
+        "limit": 0
+      },
+      "smallAgi": {
+        "min": 29,
+        "max": 31,
+        "enchant": 99,
+        "limit": 0
+      }
+    }
+  },
+  {
+    "id": 49,
+    "name": "改-세크리드 휩",
+    "stats": {
+      "stab": {
+        "min": 250,
+        "max": 280,
+        "enchant": 560,
+        "limit": 0
+      },
+      "hack": {
+        "min": 550,
+        "max": 600,
+        "enchant": 240,
+        "limit": 0
+      },
+      "def": {
+        "min": 32,
+        "max": 36,
+        "enchant": 94,
+        "limit": 0
+      },
+      "int": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "mr": {
+        "min": 33,
+        "max": 36,
+        "enchant": 94,
+        "limit": 0
+      },
+      "dex": {
+        "min": 37,
+        "max": 39,
+        "enchant": 91,
+        "limit": 0
+      },
+      "crit": {
+        "min": 29,
+        "max": 31,
+        "enchant": 99,
+        "limit": 0
+      },
+      "agi": {
+        "min": 33,
+        "max": 35,
+        "enchant": 95,
+        "limit": 0
+      },
+      "smallAgi": {
+        "min": 28,
+        "max": 30,
+        "enchant": 100,
+        "limit": 0
+      }
+    }
+  },
+  {
+    "id": 50,
+    "name": "세크리드 글라디우스",
+    "stats": {
+      "stab": {
+        "min": 190,
+        "max": 220,
+        "enchant": 530,
+        "limit": 0
+      },
+      "hack": {
+        "min": 390,
+        "max": 440,
+        "enchant": 310,
+        "limit": 0
+      },
+      "def": {
+        "min": 23,
+        "max": 24,
+        "enchant": 106,
+        "limit": 0
+      },
+      "int": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "mr": {
+        "min": 44,
+        "max": 48,
+        "enchant": 82,
+        "limit": 0
+      },
+      "dex": {
+        "min": 28,
+        "max": 30,
+        "enchant": 100,
+        "limit": 0
+      },
+      "crit": {
+        "min": 23,
+        "max": 26,
+        "enchant": 104,
+        "limit": 0
+      },
+      "agi": {
+        "min": 21,
+        "max": 22,
+        "enchant": 108,
+        "limit": 0
+      },
+      "smallAgi": {
+        "min": 17,
+        "max": 25,
+        "enchant": 105,
+        "limit": 0
+      }
+    }
+  },
+  {
+    "id": 51,
+    "name": "세크리드 글라디우스(sub)",
+    "stats": {
+      "stab": {
+        "min": 190,
+        "max": 220,
+        "enchant": 530,
+        "limit": 0
+      },
+      "hack": {
+        "min": 390,
+        "max": 440,
+        "enchant": 310,
+        "limit": 0
+      },
+      "def": {
+        "min": 23,
+        "max": 24,
+        "enchant": 106,
+        "limit": 0
+      },
+      "int": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "mr": {
+        "min": 44,
+        "max": 48,
+        "enchant": 82,
+        "limit": 0
+      },
+      "dex": {
+        "min": 28,
+        "max": 30,
+        "enchant": 100,
+        "limit": 0
+      },
+      "crit": {
+        "min": 23,
+        "max": 26,
+        "enchant": 104,
+        "limit": 0
+      },
+      "agi": {
+        "min": 21,
+        "max": 22,
+        "enchant": 108,
+        "limit": 0
+      },
+      "smallAgi": {
+        "min": 17,
+        "max": 25,
+        "enchant": 105,
+        "limit": 0
+      }
+    }
+  },
+  {
+    "id": 52,
+    "name": "세크리드 나이프",
+    "stats": {
+      "stab": {
+        "min": 410,
+        "max": 450,
+        "enchant": 300,
+        "limit": 0
+      },
+      "hack": {
+        "min": 410,
+        "max": 450,
+        "enchant": 300,
+        "limit": 0
+      },
+      "def": {
+        "min": 35,
+        "max": 37,
+        "enchant": 93,
+        "limit": 0
+      },
+      "int": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "mr": {
+        "min": 34,
+        "max": 36,
+        "enchant": 94,
+        "limit": 0
+      },
+      "dex": {
+        "min": 37,
+        "max": 40,
+        "enchant": 90,
+        "limit": 0
+      },
+      "crit": {
+        "min": 30,
+        "max": 32,
+        "enchant": 98,
+        "limit": 0
+      },
+      "agi": {
+        "min": 34,
+        "max": 36,
+        "enchant": 94,
+        "limit": 0
+      },
+      "smallAgi": {
+        "min": 33,
+        "max": 35,
+        "enchant": 95,
+        "limit": 0
+      }
+    }
+  },
+  {
+    "id": 53,
+    "name": "세크리드 대거",
+    "stats": {
+      "stab": {
+        "min": 475,
+        "max": 525,
+        "enchant": 225,
+        "limit": 0
+      },
+      "hack": {
+        "min": 190,
+        "max": 220,
+        "enchant": 530,
+        "limit": 0
+      },
+      "def": {
+        "min": 37,
+        "max": 40,
+        "enchant": 90,
+        "limit": 0
+      },
+      "int": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "mr": {
+        "min": 36,
+        "max": 42,
+        "enchant": 88,
+        "limit": 0
+      },
+      "dex": {
+        "min": 39,
+        "max": 41,
+        "enchant": 89,
+        "limit": 0
+      },
+      "crit": {
+        "min": 32,
+        "max": 35,
+        "enchant": 95,
+        "limit": 0
+      },
+      "agi": {
+        "min": 33,
+        "max": 35,
+        "enchant": 95,
+        "limit": 0
+      },
+      "smallAgi": {
+        "min": 30,
+        "max": 34,
+        "enchant": 96,
+        "limit": 0
+      }
+    }
+  },
+  {
+    "id": 54,
+    "name": "세크리드 로드",
+    "stats": {
+      "stab": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "hack": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "def": {
+        "min": 38,
+        "max": 41,
+        "enchant": 89,
+        "limit": 0
+      },
+      "int": {
+        "min": 190,
+        "max": 220,
+        "enchant": 530,
+        "limit": 0
+      },
+      "mr": {
+        "min": 465,
+        "max": 515,
+        "enchant": 235,
+        "limit": 0
+      },
+      "dex": {
+        "min": 37,
+        "max": 39,
+        "enchant": 91,
+        "limit": 0
+      },
+      "crit": {
+        "min": 29,
+        "max": 32,
+        "enchant": 98,
+        "limit": 0
+      },
+      "agi": {
+        "min": 35,
+        "max": 38,
+        "enchant": 92,
+        "limit": 0
+      },
+      "smallAgi": {
+        "min": 29,
+        "max": 33,
+        "enchant": 97,
+        "limit": 0
+      }
+    }
+  },
+  {
+    "id": 55,
+    "name": "세크리드 로브",
+    "stats": {
+      "stab": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "hack": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "def": {
+        "min": 420,
+        "max": 470,
+        "enchant": 190,
+        "limit": 0
+      },
+      "int": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "mr": {
+        "min": 410,
+        "max": 460,
+        "enchant": 210,
+        "limit": 0
+      },
+      "dex": {
+        "min": 100,
+        "max": 120,
+        "enchant": 10,
+        "limit": 0
+      },
+      "crit": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "agi": {
+        "min": 95,
+        "max": 115,
+        "enchant": 15,
+        "limit": 0
+      },
+      "smallAgi": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      }
+    }
+  },
+  {
+    "id": 56,
+    "name": "세크리드 리플렉트 아머",
+    "stats": {
+      "stab": {
+        "min": 130,
+        "max": 150,
+        "enchant": 40,
+        "limit": 0
+      },
+      "hack": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "def": {
+        "min": 420,
+        "max": 470,
+        "enchant": 190,
+        "limit": 0
+      },
+      "int": {
+        "min": 135,
+        "max": 155,
+        "enchant": 40,
+        "limit": 0
+      },
+      "mr": {
+        "min": 330,
+        "max": 380,
+        "enchant": 200,
+        "limit": 0
+      },
+      "dex": {
+        "min": 95,
+        "max": 115,
+        "enchant": 15,
+        "limit": 0
+      },
+      "crit": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "agi": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "smallAgi": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      }
+    }
+  },
+  {
+    "id": 57,
+    "name": "세크리드 마나피스톨",
+    "stats": {
+      "stab": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "hack": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "def": {
+        "min": 39,
+        "max": 43,
+        "enchant": 87,
+        "limit": 0
+      },
+      "int": {
+        "min": 485,
+        "max": 535,
+        "enchant": 215,
+        "limit": 0
+      },
+      "mr": {
+        "min": 190,
+        "max": 220,
+        "enchant": 530,
+        "limit": 0
+      },
+      "dex": {
+        "min": 31,
+        "max": 38,
+        "enchant": 92,
+        "limit": 0
+      },
+      "crit": {
+        "min": 30,
+        "max": 32,
+        "enchant": 98,
+        "limit": 0
+      },
+      "agi": {
+        "min": 31,
+        "max": 36,
+        "enchant": 94,
+        "limit": 0
+      },
+      "smallAgi": {
+        "min": 30,
+        "max": 35,
+        "enchant": 95,
+        "limit": 0
+      }
+    }
+  },
+  {
+    "id": 58,
+    "name": "세크리드 마법탄창",
+    "stats": {
+      "stab": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "hack": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "def": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "int": {
+        "min": 355,
+        "max": 415,
+        "enchant": 150,
+        "limit": 0
+      },
+      "mr": {
+        "min": 120,
+        "max": 140,
+        "enchant": 130,
+        "limit": 0
+      },
+      "dex": {
+        "min": 75,
+        "max": 95,
+        "enchant": 35,
+        "limit": 0
+      },
+      "crit": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "agi": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "smallAgi": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      }
+    }
+  },
+  {
+    "id": 59,
+    "name": "세크리드 메이스",
+    "stats": {
+      "stab": {
+        "min": 410,
+        "max": 450,
+        "enchant": 300,
+        "limit": 0
+      },
+      "hack": {
+        "min": 41,
+        "max": 450,
+        "enchant": 300,
+        "limit": 0
+      },
+      "def": {
+        "min": 42,
+        "max": 44,
+        "enchant": 86,
+        "limit": 0
+      },
+      "int": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "mr": {
+        "min": 98,
+        "max": 102,
+        "enchant": 28,
+        "limit": 0
+      },
+      "dex": {
+        "min": 38,
+        "max": 40,
+        "enchant": 90,
+        "limit": 0
+      },
+      "crit": {
+        "min": 32,
+        "max": 35,
+        "enchant": 95,
+        "limit": 0
+      },
+      "agi": {
+        "min": 32,
+        "max": 35,
+        "enchant": 95,
+        "limit": 0
+      },
+      "smallAgi": {
+        "min": 30,
+        "max": 32,
+        "enchant": 98,
+        "limit": 0
+      }
+    }
+  },
+  {
+    "id": 60,
+    "name": "세크리드 메일",
+    "stats": {
+      "stab": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "hack": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "def": {
+        "min": 510,
+        "max": 560,
+        "enchant": 190,
+        "limit": 0
+      },
+      "int": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "mr": {
+        "min": 400,
+        "max": 450,
+        "enchant": 200,
+        "limit": 0
+      },
+      "dex": {
+        "min": 85,
+        "max": 95,
+        "enchant": 35,
+        "limit": 0
+      },
+      "crit": {
+        "min": 65,
+        "max": 85,
+        "enchant": 45,
+        "limit": 0
+      },
+      "agi": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "smallAgi": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      }
+    }
+  },
+  {
+    "id": 61,
+    "name": "세크리드 밴드",
+    "stats": {
+      "stab": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "hack": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "def": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "int": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "mr": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "dex": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "crit": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "agi": {
+        "min": 300,
+        "max": 350,
+        "enchant": 160,
+        "limit": 0
+      },
+      "smallAgi": {
+        "min": 300,
+        "max": 350,
+        "enchant": 160,
+        "limit": 0
+      }
+    }
+  },
+  {
+    "id": 62,
+    "name": "세크리드 블레이드",
+    "stats": {
+      "stab": {
+        "min": 115,
+        "max": 120,
+        "enchant": 630,
+        "limit": 0
+      },
+      "hack": {
+        "min": 410,
+        "max": 450,
+        "enchant": 300,
+        "limit": 0
+      },
+      "def": {
+        "min": 37,
+        "max": 40,
+        "enchant": 90,
+        "limit": 0
+      },
+      "int": {
+        "min": 41,
+        "max": 450,
+        "enchant": 300,
+        "limit": 0
+      },
+      "mr": {
+        "min": 40,
+        "max": 42,
+        "enchant": 88,
+        "limit": 0
+      },
+      "dex": {
+        "min": 36,
+        "max": 40,
+        "enchant": 90,
+        "limit": 0
+      },
+      "crit": {
+        "min": 31,
+        "max": 34,
+        "enchant": 96,
+        "limit": 0
+      },
+      "agi": {
+        "min": 30,
+        "max": 32,
+        "enchant": 98,
+        "limit": 0
+      },
+      "smallAgi": {
+        "min": 28,
+        "max": 30,
+        "enchant": 100,
+        "limit": 0
+      }
+    }
+  },
+  {
+    "id": 63,
+    "name": "세크리드 사이드",
+    "stats": {
+      "stab": {
+        "min": 190,
+        "max": 220,
+        "enchant": 530,
+        "limit": 0
+      },
+      "hack": {
+        "min": 475,
+        "max": 525,
+        "enchant": 225,
+        "limit": 0
+      },
+      "def": {
+        "min": 36,
+        "max": 41,
+        "enchant": 89,
+        "limit": 0
+      },
+      "int": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "mr": {
+        "min": 43,
+        "max": 45,
+        "enchant": 85,
+        "limit": 0
+      },
+      "dex": {
+        "min": 36,
+        "max": 38,
+        "enchant": 92,
+        "limit": 0
+      },
+      "crit": {
+        "min": 29,
+        "max": 32,
+        "enchant": 98,
+        "limit": 0
+      },
+      "agi": {
+        "min": 29,
+        "max": 32,
+        "enchant": 98,
+        "limit": 0
+      },
+      "smallAgi": {
+        "min": 30,
+        "max": 33,
+        "enchant": 97,
+        "limit": 0
+      }
+    }
+  },
+  {
+    "id": 64,
+    "name": "세크리드 셉터",
+    "stats": {
+      "stab": {
+        "min": 105,
+        "max": 110,
+        "enchant": 200,
+        "limit": 0
+      },
+      "hack": {
+        "min": 112,
+        "max": 117,
+        "enchant": 200,
+        "limit": 0
+      },
+      "def": {
+        "min": 42,
+        "max": 45,
+        "enchant": 85,
+        "limit": 0
+      },
+      "int": {
+        "min": 485,
+        "max": 535,
+        "enchant": 215,
+        "limit": 0
+      },
+      "mr": {
+        "min": 190,
+        "max": 220,
+        "enchant": 530,
+        "limit": 0
+      },
+      "dex": {
+        "min": 38,
+        "max": 39,
+        "enchant": 91,
+        "limit": 0
+      },
+      "crit": {
+        "min": 32,
+        "max": 34,
+        "enchant": 96,
+        "limit": 0
+      },
+      "agi": {
+        "min": 31,
+        "max": 33,
+        "enchant": 97,
+        "limit": 0
+      },
+      "smallAgi": {
+        "min": 30,
+        "max": 33,
+        "enchant": 97,
+        "limit": 0
+      }
+    }
+  },
+  {
+    "id": 65,
+    "name": "세크리드 소드셰이프",
+    "stats": {
+      "stab": {
+        "min": 190,
+        "max": 220,
+        "enchant": 530,
+        "limit": 0
+      },
+      "hack": {
+        "min": 475,
+        "max": 525,
+        "enchant": 225,
+        "limit": 0
+      },
+      "def": {
+        "min": 38,
+        "max": 41,
+        "enchant": 89,
+        "limit": 0
+      },
+      "int": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "mr": {
+        "min": 35,
+        "max": 37,
+        "enchant": 93,
+        "limit": 0
+      },
+      "dex": {
+        "min": 37,
+        "max": 39,
+        "enchant": 91,
+        "limit": 0
+      },
+      "crit": {
+        "min": 32,
+        "max": 33,
+        "enchant": 97,
+        "limit": 0
+      },
+      "agi": {
+        "min": 32,
+        "max": 33,
+        "enchant": 97,
+        "limit": 0
+      },
+      "smallAgi": {
+        "min": 32,
+        "max": 33,
+        "enchant": 97,
+        "limit": 0
+      }
+    }
+  },
+  {
+    "id": 66,
+    "name": "세크리드 수정구",
+    "stats": {
+      "stab": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "hack": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "def": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "int": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "mr": {
+        "min": 330,
+        "max": 380,
+        "enchant": 160,
+        "limit": 0
+      },
+      "dex": {
+        "min": 75,
+        "max": 95,
+        "enchant": 35,
+        "limit": 0
+      },
+      "crit": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "agi": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "smallAgi": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      }
+    }
+  },
+  {
+    "id": 67,
+    "name": "세크리드 슈츠",
+    "stats": {
+      "stab": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "hack": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "def": {
+        "min": 420,
+        "max": 470,
+        "enchant": 190,
+        "limit": 0
+      },
+      "int": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "mr": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "dex": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "crit": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "agi": {
+        "min": 400,
+        "max": 450,
+        "enchant": 190,
+        "limit": 0
+      },
+      "smallAgi": {
+        "min": 95,
+        "max": 115,
+        "enchant": 15,
+        "limit": 0
+      }
+    }
+  },
+  {
+    "id": 68,
+    "name": "세크리드 스몰소드",
+    "stats": {
+      "stab": {
+        "min": 475,
+        "max": 525,
+        "enchant": 225,
+        "limit": 0
+      },
+      "hack": {
+        "min": 190,
+        "max": 220,
+        "enchant": 530,
+        "limit": 0
+      },
+      "def": {
+        "min": 40,
+        "max": 46,
+        "enchant": 84,
+        "limit": 0
+      },
+      "int": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "mr": {
+        "min": 36,
+        "max": 42,
+        "enchant": 88,
+        "limit": 0
+      },
+      "dex": {
+        "min": 30,
+        "max": 36,
+        "enchant": 94,
+        "limit": 0
+      },
+      "crit": {
+        "min": 30,
+        "max": 32,
+        "enchant": 98,
+        "limit": 0
+      },
+      "agi": {
+        "min": 32,
+        "max": 39,
+        "enchant": 91,
+        "limit": 0
+      },
+      "smallAgi": {
+        "min": 30,
+        "max": 35,
+        "enchant": 95,
+        "limit": 0
+      }
+    }
+  },
+  {
+    "id": 69,
+    "name": "세크리드 스태프",
+    "stats": {
+      "stab": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "hack": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "def": {
+        "min": 38,
+        "max": 42,
+        "enchant": 88,
+        "limit": 0
+      },
+      "int": {
+        "min": 485,
+        "max": 535,
+        "enchant": 215,
+        "limit": 0
+      },
+      "mr": {
+        "min": 190,
+        "max": 220,
+        "enchant": 530,
+        "limit": 0
+      },
+      "dex": {
+        "min": 38,
+        "max": 42,
+        "enchant": 88,
+        "limit": 0
+      },
+      "crit": {
+        "min": 30,
+        "max": 32,
+        "enchant": 98,
+        "limit": 0
+      },
+      "agi": {
+        "min": 31,
+        "max": 34,
+        "enchant": 96,
+        "limit": 0
+      },
+      "smallAgi": {
+        "min": 29,
+        "max": 33,
+        "enchant": 97,
+        "limit": 0
+      }
+    }
+  },
+  {
+    "id": 70,
+    "name": "세크리드 스틱",
+    "stats": {
+      "stab": {
+        "min": 410,
+        "max": 450,
+        "enchant": 300,
+        "limit": 0
+      },
+      "hack": {
+        "min": 410,
+        "max": 450,
+        "enchant": 300,
+        "limit": 0
+      },
+      "def": {
+        "min": 34,
+        "max": 37,
+        "enchant": 93,
+        "limit": 0
+      },
+      "int": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "mr": {
+        "min": 33,
+        "max": 35,
+        "enchant": 95,
+        "limit": 0
+      },
+      "dex": {
+        "min": 36,
+        "max": 37,
+        "enchant": 93,
+        "limit": 0
+      },
+      "crit": {
+        "min": 29,
+        "max": 32,
+        "enchant": 98,
+        "limit": 0
+      },
+      "agi": {
+        "min": 30,
+        "max": 32,
+        "enchant": 98,
+        "limit": 0
+      },
+      "smallAgi": {
+        "min": 28,
+        "max": 32,
+        "enchant": 98,
+        "limit": 0
+      }
+    }
+  },
+  {
+    "id": 71,
+    "name": "세크리드 스펠북",
+    "stats": {
+      "stab": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "hack": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "def": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "int": {
+        "min": 385,
+        "max": 435,
+        "enchant": 160,
+        "limit": 0
+      },
+      "mr": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "dex": {
+        "min": 55,
+        "max": 75,
+        "enchant": 55,
+        "limit": 0
+      },
+      "crit": {
+        "min": 55,
+        "max": 75,
+        "enchant": 55,
+        "limit": 0
+      },
+      "agi": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "smallAgi": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      }
+    }
+  },
+  {
+    "id": 72,
+    "name": "세크리드 스피어",
+    "stats": {
+      "stab": {
+        "min": 475,
+        "max": 525,
+        "enchant": 225,
+        "limit": 0
+      },
+      "hack": {
+        "min": 190,
+        "max": 220,
+        "enchant": 530,
+        "limit": 0
+      },
+      "def": {
+        "min": 43,
+        "max": 46,
+        "enchant": 84,
+        "limit": 0
+      },
+      "int": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "mr": {
+        "min": 32,
+        "max": 35,
+        "enchant": 95,
+        "limit": 0
+      },
+      "dex": {
+        "min": 34,
+        "max": 36,
+        "enchant": 94,
+        "limit": 0
+      },
+      "crit": {
+        "min": 30,
+        "max": 32,
+        "enchant": 98,
+        "limit": 0
+      },
+      "agi": {
+        "min": 30,
+        "max": 32,
+        "enchant": 98,
+        "limit": 0
+      },
+      "smallAgi": {
+        "min": 29,
+        "max": 32,
+        "enchant": 98,
+        "limit": 0
+      }
+    }
+  },
+  {
+    "id": 73,
+    "name": "세크리드 아머",
+    "stats": {
+      "stab": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "hack": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "def": {
+        "min": 430,
+        "max": 480,
+        "enchant": 190,
+        "limit": 0
+      },
+      "int": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "mr": {
+        "min": 380,
+        "max": 430,
+        "enchant": 200,
+        "limit": 0
+      },
+      "dex": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "crit": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "agi": {
+        "min": 120,
+        "max": 140,
+        "enchant": 20,
+        "limit": 0
+      },
+      "smallAgi": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      }
+    }
+  },
+  {
+    "id": 74,
+    "name": "세크리드 아밍소드",
+    "stats": {
+      "stab": {
+        "min": 190,
+        "max": 220,
+        "enchant": 530,
+        "limit": 0
+      },
+      "hack": {
+        "min": 475,
+        "max": 525,
+        "enchant": 225,
+        "limit": 0
+      },
+      "def": {
+        "min": 39,
+        "max": 40,
+        "enchant": 90,
+        "limit": 0
+      },
+      "int": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "mr": {
+        "min": 33,
+        "max": 36,
+        "enchant": 94,
+        "limit": 0
+      },
+      "dex": {
+        "min": 37,
+        "max": 39,
+        "enchant": 91,
+        "limit": 0
+      },
+      "crit": {
+        "min": 32,
+        "max": 33,
+        "enchant": 97,
+        "limit": 0
+      },
+      "agi": {
+        "min": 30,
+        "max": 32,
+        "enchant": 98,
+        "limit": 0
+      },
+      "smallAgi": {
+        "min": 32,
+        "max": 33,
+        "enchant": 97,
+        "limit": 0
+      }
+    }
+  },
+  {
+    "id": 75,
+    "name": "세크리드 암릿",
+    "stats": {
+      "stab": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "hack": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "def": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "int": {
+        "min": 305,
+        "max": 355,
+        "enchant": 160,
+        "limit": 0
+      },
+      "mr": {
+        "min": 300,
+        "max": 350,
+        "enchant": 160,
+        "limit": 0
+      },
+      "dex": {
+        "min": 75,
+        "max": 95,
+        "enchant": 35,
+        "limit": 0
+      },
+      "crit": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "agi": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "smallAgi": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      }
+    }
+  },
+  {
+    "id": 76,
+    "name": "세크리드 액스",
+    "stats": {
+      "stab": {
+        "min": 190,
+        "max": 220,
+        "enchant": 530,
+        "limit": 0
+      },
+      "hack": {
+        "min": 475,
+        "max": 525,
+        "enchant": 225,
+        "limit": 0
+      },
+      "def": {
+        "min": 36,
+        "max": 40,
+        "enchant": 90,
+        "limit": 0
+      },
+      "int": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "mr": {
+        "min": 31,
+        "max": 33,
+        "enchant": 97,
+        "limit": 0
+      },
+      "dex": {
+        "min": 35,
+        "max": 37,
+        "enchant": 93,
+        "limit": 0
+      },
+      "crit": {
+        "min": 29,
+        "max": 31,
+        "enchant": 99,
+        "limit": 0
+      },
+      "agi": {
+        "min": 32,
+        "max": 34,
+        "enchant": 96,
+        "limit": 0
+      },
+      "smallAgi": {
+        "min": 30,
+        "max": 32,
+        "enchant": 98,
+        "limit": 0
+      }
+    }
+  },
+  {
+    "id": 77,
+    "name": "세크리드 완드",
+    "stats": {
+      "stab": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "hack": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "def": {
+        "min": 37,
+        "max": 43,
+        "enchant": 87,
+        "limit": 0
+      },
+      "int": {
+        "min": 485,
+        "max": 535,
+        "enchant": 215,
+        "limit": 0
+      },
+      "mr": {
+        "min": 190,
+        "max": 220,
+        "enchant": 530,
+        "limit": 0
+      },
+      "dex": {
+        "min": 30,
+        "max": 33,
+        "enchant": 97,
+        "limit": 0
+      },
+      "crit": {
+        "min": 29,
+        "max": 31,
+        "enchant": 99,
+        "limit": 0
+      },
+      "agi": {
+        "min": 29,
+        "max": 33,
+        "enchant": 97,
+        "limit": 0
+      },
+      "smallAgi": {
+        "min": 28,
+        "max": 31,
+        "enchant": 99,
+        "limit": 0
+      }
+    }
+  },
+  {
+    "id": 78,
+    "name": "세크리드 카라",
+    "stats": {
+      "stab": {
+        "min": 190,
+        "max": 220,
+        "enchant": 530,
+        "limit": 0
+      },
+      "hack": {
+        "min": 475,
+        "max": 525,
+        "enchant": 225,
+        "limit": 0
+      },
+      "def": {
+        "min": 39,
+        "max": 40,
+        "enchant": 90,
+        "limit": 0
+      },
+      "int": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "mr": {
+        "min": 33,
+        "max": 36,
+        "enchant": 94,
+        "limit": 0
+      },
+      "dex": {
+        "min": 37,
+        "max": 39,
+        "enchant": 91,
+        "limit": 0
+      },
+      "crit": {
+        "min": 32,
+        "max": 33,
+        "enchant": 97,
+        "limit": 0
+      },
+      "agi": {
+        "min": 30,
+        "max": 32,
+        "enchant": 98,
+        "limit": 0
+      },
+      "smallAgi": {
+        "min": 32,
+        "max": 33,
+        "enchant": 97,
+        "limit": 0
+      }
+    }
+  },
+  {
+    "id": 79,
+    "name": "세크리드 크리스",
+    "stats": {
+      "stab": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "hack": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "def": {
+        "min": 21,
+        "max": 23,
+        "enchant": 107,
+        "limit": 0
+      },
+      "int": {
+        "min": 190,
+        "max": 220,
+        "enchant": 530,
+        "limit": 0
+      },
+      "mr": {
+        "min": 385,
+        "max": 435,
+        "enchant": 315,
+        "limit": 0
+      },
+      "dex": {
+        "min": 32,
+        "max": 34,
+        "enchant": 96,
+        "limit": 0
+      },
+      "crit": {
+        "min": 17,
+        "max": 19,
+        "enchant": 111,
+        "limit": 0
+      },
+      "agi": {
+        "min": 22,
+        "max": 23,
+        "enchant": 107,
+        "limit": 0
+      },
+      "smallAgi": {
+        "min": 17,
+        "max": 19,
+        "enchant": 111,
+        "limit": 0
+      }
+    }
+  },
+  {
+    "id": 80,
+    "name": "세크리드 크리스(sub)",
+    "stats": {
+      "stab": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "hack": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "def": {
+        "min": 21,
+        "max": 23,
+        "enchant": 107,
+        "limit": 0
+      },
+      "int": {
+        "min": 190,
+        "max": 220,
+        "enchant": 530,
+        "limit": 0
+      },
+      "mr": {
+        "min": 385,
+        "max": 435,
+        "enchant": 315,
+        "limit": 0
+      },
+      "dex": {
+        "min": 32,
+        "max": 34,
+        "enchant": 96,
+        "limit": 0
+      },
+      "crit": {
+        "min": 17,
+        "max": 19,
+        "enchant": 111,
+        "limit": 0
+      },
+      "agi": {
+        "min": 22,
+        "max": 23,
+        "enchant": 107,
+        "limit": 0
+      },
+      "smallAgi": {
+        "min": 17,
+        "max": 19,
+        "enchant": 111,
+        "limit": 0
+      }
+    }
+  },
+  {
+    "id": 81,
+    "name": "세크리드 클로",
+    "stats": {
+      "stab": {
+        "min": 475,
+        "max": 525,
+        "enchant": 225,
+        "limit": 0
+      },
+      "hack": {
+        "min": 190,
+        "max": 220,
+        "enchant": 530,
+        "limit": 0
+      },
+      "def": {
+        "min": 33,
+        "max": 37,
+        "enchant": 93,
+        "limit": 0
+      },
+      "int": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "mr": {
+        "min": 34,
+        "max": 37,
+        "enchant": 93,
+        "limit": 0
+      },
+      "dex": {
+        "min": 29,
+        "max": 31,
+        "enchant": 99,
+        "limit": 0
+      },
+      "crit": {
+        "min": 31,
+        "max": 34,
+        "enchant": 96,
+        "limit": 0
+      },
+      "agi": {
+        "min": 37,
+        "max": 39,
+        "enchant": 91,
+        "limit": 0
+      },
+      "smallAgi": {
+        "min": 32,
+        "max": 34,
+        "enchant": 96,
+        "limit": 0
+      }
+    }
+  },
+  {
+    "id": 82,
+    "name": "세크리드 탄창",
+    "stats": {
+      "stab": {
+        "min": 420,
+        "max": 470,
+        "enchant": 160,
+        "limit": 0
+      },
+      "hack": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "def": {
+        "min": 30,
+        "max": 110,
+        "enchant": 20,
+        "limit": 0
+      },
+      "int": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "mr": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "dex": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "crit": {
+        "min": 75,
+        "max": 95,
+        "enchant": 35,
+        "limit": 0
+      },
+      "agi": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "smallAgi": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      }
+    }
+  },
+  {
+    "id": 83,
+    "name": "세크리드 토템",
+    "stats": {
+      "stab": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "hack": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "def": {
+        "min": 38,
+        "max": 42,
+        "enchant": 88,
+        "limit": 0
+      },
+      "int": {
+        "min": 485,
+        "max": 535,
+        "enchant": 215,
+        "limit": 0
+      },
+      "mr": {
+        "min": 190,
+        "max": 220,
+        "enchant": 530,
+        "limit": 0
+      },
+      "dex": {
+        "min": 38,
+        "max": 41,
+        "enchant": 89,
+        "limit": 0
+      },
+      "crit": {
+        "min": 30,
+        "max": 32,
+        "enchant": 98,
+        "limit": 0
+      },
+      "agi": {
+        "min": 38,
+        "max": 41,
+        "enchant": 89,
+        "limit": 0
+      },
+      "smallAgi": {
+        "min": 29,
+        "max": 33,
+        "enchant": 97,
+        "limit": 0
+      }
+    }
+  },
+  {
+    "id": 84,
+    "name": "세크리드 페이크소드",
+    "stats": {
+      "stab": {
+        "min": 410,
+        "max": 450,
+        "enchant": 300,
+        "limit": 0
+      },
+      "hack": {
+        "min": 410,
+        "max": 450,
+        "enchant": 300,
+        "limit": 0
+      },
+      "def": {
+        "min": 41,
+        "max": 43,
+        "enchant": 87,
+        "limit": 0
+      },
+      "int": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "mr": {
+        "min": 35,
+        "max": 38,
+        "enchant": 92,
+        "limit": 0
+      },
+      "dex": {
+        "min": 36,
+        "max": 38,
+        "enchant": 92,
+        "limit": 0
+      },
+      "crit": {
+        "min": 31,
+        "max": 34,
+        "enchant": 96,
+        "limit": 0
+      },
+      "agi": {
+        "min": 31,
+        "max": 34,
+        "enchant": 96,
+        "limit": 0
+      },
+      "smallAgi": {
+        "min": 31,
+        "max": 36,
+        "enchant": 94,
+        "limit": 0
+      }
+    }
+  },
+  {
+    "id": 85,
+    "name": "세크리드 펜듈럼",
+    "stats": {
+      "stab": {
+        "min": 300,
+        "max": 350,
+        "enchant": 160,
+        "limit": 0
+      },
+      "hack": {
+        "min": 300,
+        "max": 350,
+        "enchant": 160,
+        "limit": 0
+      },
+      "def": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "int": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "mr": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "dex": {
+        "min": 55,
+        "max": 75,
+        "enchant": 55,
+        "limit": 0
+      },
+      "crit": {
+        "min": 55,
+        "max": 75,
+        "enchant": 55,
+        "limit": 0
+      },
+      "agi": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "smallAgi": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      }
+    }
+  },
+  {
+    "id": 86,
+    "name": "세크리드 플레일",
+    "stats": {
+      "stab": {
+        "min": 410,
+        "max": 450,
+        "enchant": 300,
+        "limit": 0
+      },
+      "hack": {
+        "min": 410,
+        "max": 450,
+        "enchant": 300,
+        "limit": 0
+      },
+      "def": {
+        "min": 35,
+        "max": 38,
+        "enchant": 92,
+        "limit": 0
+      },
+      "int": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "mr": {
+        "min": 32,
+        "max": 35,
+        "enchant": 95,
+        "limit": 0
+      },
+      "dex": {
+        "min": 38,
+        "max": 40,
+        "enchant": 90,
+        "limit": 0
+      },
+      "crit": {
+        "min": 31,
+        "max": 33,
+        "enchant": 97,
+        "limit": 0
+      },
+      "agi": {
+        "min": 37,
+        "max": 40,
+        "enchant": 90,
+        "limit": 0
+      },
+      "smallAgi": {
+        "min": 29,
+        "max": 33,
+        "enchant": 97,
+        "limit": 0
+      }
+    }
+  },
+  {
+    "id": 87,
+    "name": "세크리드 피스톨",
+    "stats": {
+      "stab": {
+        "min": 475,
+        "max": 525,
+        "enchant": 225,
+        "limit": 0
+      },
+      "hack": {
+        "min": 190,
+        "max": 220,
+        "enchant": 530,
+        "limit": 0
+      },
+      "def": {
+        "min": 41,
+        "max": 43,
+        "enchant": 87,
+        "limit": 0
+      },
+      "int": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "mr": {
+        "min": 34,
+        "max": 36,
+        "enchant": 94,
+        "limit": 0
+      },
+      "dex": {
+        "min": 35,
+        "max": 38,
+        "enchant": 92,
+        "limit": 0
+      },
+      "crit": {
+        "min": 28,
+        "max": 31,
+        "enchant": 99,
+        "limit": 0
+      },
+      "agi": {
+        "min": 33,
+        "max": 35,
+        "enchant": 95,
+        "limit": 0
+      },
+      "smallAgi": {
+        "min": 31,
+        "max": 33,
+        "enchant": 97,
+        "limit": 0
+      }
+    }
+  },
+  {
+    "id": 88,
+    "name": "세크리드 해머",
+    "stats": {
+      "stab": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "hack": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "def": {
+        "min": 90,
+        "max": 92,
+        "enchant": 38,
+        "limit": 0
+      },
+      "int": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "mr": {
+        "min": 575,
+        "max": 625,
+        "enchant": 225,
+        "limit": 0
+      },
+      "dex": {
+        "min": 36,
+        "max": 38,
+        "enchant": 92,
+        "limit": 0
+      },
+      "crit": {
+        "min": 32,
+        "max": 37,
+        "enchant": 93,
+        "limit": 0
+      },
+      "agi": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "smallAgi": {
+        "min": 30,
+        "max": 37,
+        "enchant": 93,
+        "limit": 0
+      }
+    }
+  },
+  {
+    "id": 89,
+    "name": "세크리드 핸드런처",
+    "stats": {
+      "stab": {
+        "min": 575,
+        "max": 625,
+        "enchant": 225,
+        "limit": 0
+      },
+      "hack": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "def": {
+        "min": 35,
+        "max": 40,
+        "enchant": 90,
+        "limit": 0
+      },
+      "int": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "mr": {
+        "min": 43,
+        "max": 45,
+        "enchant": 85,
+        "limit": 0
+      },
+      "dex": {
+        "min": 36,
+        "max": 38,
+        "enchant": 92,
+        "limit": 0
+      },
+      "crit": {
+        "min": 29,
+        "max": 32,
+        "enchant": 98,
+        "limit": 0
+      },
+      "agi": {
+        "min": 32,
+        "max": 33,
+        "enchant": 97,
+        "limit": 0
+      },
+      "smallAgi": {
+        "min": 30,
+        "max": 33,
+        "enchant": 97,
+        "limit": 0
+      }
+    }
+  },
+  {
+    "id": 90,
+    "name": "세크리드 핸드벨",
+    "stats": {
+      "stab": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "hack": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "def": {
+        "min": 44,
+        "max": 49,
+        "enchant": 81,
+        "limit": 0
+      },
+      "int": {
+        "min": 190,
+        "max": 220,
+        "enchant": 530,
+        "limit": 0
+      },
+      "mr": {
+        "min": 465,
+        "max": 515,
+        "enchant": 235,
+        "limit": 0
+      },
+      "dex": {
+        "min": 34,
+        "max": 36,
+        "enchant": 94,
+        "limit": 0
+      },
+      "crit": {
+        "min": 27,
+        "max": 29,
+        "enchant": 101,
+        "limit": 0
+      },
+      "agi": {
+        "min": 33,
+        "max": 36,
+        "enchant": 94,
+        "limit": 0
+      },
+      "smallAgi": {
+        "min": 29,
+        "max": 31,
+        "enchant": 99,
+        "limit": 0
+      }
+    }
+  },
+  {
+    "id": 91,
+    "name": "세크리드 휩",
+    "stats": {
+      "stab": {
+        "min": 190,
+        "max": 220,
+        "enchant": 530,
+        "limit": 0
+      },
+      "hack": {
+        "min": 475,
+        "max": 525,
+        "enchant": 225,
+        "limit": 0
+      },
+      "def": {
+        "min": 32,
+        "max": 36,
+        "enchant": 94,
+        "limit": 0
+      },
+      "int": {
+        "min": 0,
+        "max": 0,
+        "enchant": 0,
+        "limit": 0
+      },
+      "mr": {
+        "min": 33,
+        "max": 36,
+        "enchant": 94,
+        "limit": 0
+      },
+      "dex": {
+        "min": 37,
+        "max": 39,
+        "enchant": 91,
+        "limit": 0
+      },
+      "crit": {
+        "min": 29,
+        "max": 31,
+        "enchant": 99,
+        "limit": 0
+      },
+      "agi": {
+        "min": 33,
+        "max": 35,
+        "enchant": 95,
+        "limit": 0
+      },
+      "smallAgi": {
+        "min": 28,
+        "max": 30,
+        "enchant": 100,
+        "limit": 0
+      }
+    }
+  }
+]
