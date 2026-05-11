@@ -142,12 +142,10 @@
                                                         </Image.Style>
                                                     </Image>
                                                 </Grid>
-                                                <TextBlock Foreground="White" FontSize="{StaticResource MaterialNameFontSize}" VerticalAlignment="Center">
-                                                    <Run Text="{Binding Material.Name}"/>
-                                                    <Run Text="("/>
-                                                    <Run Text="{Binding Material.Count}"/>
-                                                    <Run Text="개)"/>
-                                                </TextBlock>
+                                                <TextBlock Foreground="White"
+                                                           FontSize="{StaticResource MaterialNameFontSize}"
+                                                           VerticalAlignment="Center"
+                                                           Text="{Binding DisplayName, Mode=OneWay}"/>
                                             </StackPanel>
 
                                             <TextBox Grid.Column="1"
