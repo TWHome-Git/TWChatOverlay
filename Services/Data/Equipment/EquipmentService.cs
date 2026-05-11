@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Net.Http;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -24,6 +25,10 @@ namespace TWChatOverlay.Services
     public class EquipmentService : IEquipmentService
     {
         private const string EquipmentDataUrl = "https://raw.githubusercontent.com/TWHome-Git/TWHomeDB/main/EquipmentData.json";
+        private static readonly string LocalEquipmentDataPath = Path.Combine(
+            AppDomain.CurrentDomain.BaseDirectory,
+            "Cache",
+            "EquipmentData.json");
         private static readonly TimeSpan CacheTtl = TimeSpan.FromHours(6);
         private static readonly HttpClient HttpClient = new HttpClient
         {
@@ -51,6 +56,9 @@ namespace TWChatOverlay.Services
         {
             try
             {
+                if (TryReadLocalEquipmentData(out string? localJson))
+                    return DeserializeEquipments(localJson);
+
                 string? json = await CacheClient.GetJsonAsync(forceRefresh: false);
 
                 if (string.IsNullOrWhiteSpace(json))
@@ -65,6 +73,26 @@ namespace TWChatOverlay.Services
             {
                 Debug.WriteLine($"[Service Error] {ex.Message}");
                 return new List<EquipmentModel>();
+            }
+        }
+
+        private static bool TryReadLocalEquipmentData(out string? json)
+        {
+            json = null;
+
+            if (!File.Exists(LocalEquipmentDataPath))
+                return false;
+
+            try
+            {
+                json = File.ReadAllText(LocalEquipmentDataPath);
+                return !string.IsNullOrWhiteSpace(json);
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[EquipmentService] Local equipment data read failed: {ex.Message}");
+                json = null;
+                return false;
             }
         }
 

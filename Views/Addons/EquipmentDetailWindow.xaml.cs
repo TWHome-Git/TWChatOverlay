@@ -145,6 +145,13 @@ namespace TWChatOverlay.Views.Addons
 
         private sealed class MaterialInputRow
         {
+            private static readonly string[] NameOnlyPrefixes =
+            {
+                "달의 약초",
+                "룬의 원석(귀속)",
+                "아크론 혈투의 증표(귀속)"
+            };
+
             public MaterialInputRow(EquipmentModel.CraftMaterial material)
             {
                 Material = material;
@@ -152,6 +159,19 @@ namespace TWChatOverlay.Views.Addons
 
             public EquipmentModel.CraftMaterial Material { get; }
             public string UnitPriceText { get; set; } = "0.00";
+            public string DisplayName
+            {
+                get
+                {
+                    foreach (string prefix in NameOnlyPrefixes)
+                    {
+                        if (Material.Name.StartsWith(prefix, StringComparison.Ordinal))
+                            return Material.Name;
+                    }
+
+                    return $"{Material.Name} ({Material.Count} 개)";
+                }
+            }
         }
     }
 }
