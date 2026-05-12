@@ -56,10 +56,14 @@ namespace TWChatOverlay.Services
         {
             try
             {
+                bool manifestChanged = await RemoteResourceManifestService.ShouldForceRefreshAsync("EquipmentData.json");
                 if (TryReadLocalEquipmentData(out string? localJson))
+                {
+                    if (!manifestChanged)
                     return DeserializeEquipments(localJson);
+                }
 
-                string? json = await CacheClient.GetJsonAsync(forceRefresh: false);
+                string? json = await CacheClient.GetJsonAsync(forceRefresh: manifestChanged);
 
                 if (string.IsNullOrWhiteSpace(json))
                 {
@@ -67,6 +71,7 @@ namespace TWChatOverlay.Services
                     return new List<EquipmentModel>();
                 }
 
+                await RemoteResourceManifestService.MarkResourceVersionAppliedAsync("EquipmentData.json");
                 return DeserializeEquipments(json);
             }
             catch (Exception ex)
@@ -108,6 +113,8 @@ namespace TWChatOverlay.Services
                     return false;
 
                 var data = DeserializeEquipments(json);
+                if (data.Count > 0)
+                    await RemoteResourceManifestService.MarkResourceVersionAppliedAsync("EquipmentData.json");
                 return data.Count > 0;
             }
             catch (Exception ex)

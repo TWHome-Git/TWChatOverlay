@@ -19,6 +19,19 @@ namespace TWChatOverlay.Models
         public string RangeText => (Min == 0 && Max == 0) ? "-" : $"{Min}-{Max}";
 
         public string LimitText => Limit == 0 ? "-" : Limit.ToString();
+
+        public string MaxHintText
+        {
+            get
+            {
+                if (Limit <= 0 || !HasValue)
+                    return "MAX : -";
+
+                int remain = Limit - Max;
+                if (remain < 0) remain = 0;
+                return $"MAX : {remain}";
+            }
+        }
     }
 
     /// <summary>

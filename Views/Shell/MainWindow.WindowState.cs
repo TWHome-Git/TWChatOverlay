@@ -28,8 +28,128 @@ namespace TWChatOverlay.Views
             }
         }
 
+        public void SetWizardChatPositionMode(bool isEnabled)
+        {
+            _isWizardChatPositionMode = isEnabled;
+            SetSettingsPositionMode(isEnabled);
+            ApplyWizardChatPositionUi(isEnabled);
+        }
+
+        public void ShowWizardStepPreviewWindows(int stepIndex)
+        {
+            try
+            {
+                ExperienceAlertWindowService.Close();
+                DungeonCountDisplayWindowService.ClosePositionPreview(_settings);
+                ShoutToastService.ClosePositionPreview(_settings);
+                MessengerEtaToastService.ClosePositionPreview(_settings);
+                SubAddonWindow.Instance?.ApplyPositionPreviewVisibility(false);
+                ItemDropHelperWindow.Instance?.Hide();
+                BuffTrackerHelperWindow.Instance?.Hide();
+                _AbandonRoadSummaryWindow?.Hide();
+            }
+            catch { }
+
+            try
+            {
+                switch (stepIndex)
+                {
+                    case 3:
+                        ShoutToastService.ShowPositionPreview(_settings, force: true);
+                        break;
+                    case 5:
+                        ExperienceAlertWindowService.ShowPositionPreview(_settings, force: true);
+                        break;
+                    case 6:
+                        DungeonCountDisplayWindowService.ShowPositionPreview(_settings, force: true);
+                        ShowAbandonRoadSummaryWindow(previewMode: true, restartLifetime: false, activateWindow: false, forcePreview: true);
+                        var etosHelper = SubAddonWindow.Instance ?? CreateSubAddonWindow();
+                        etosHelper?.ApplyPositionPreviewVisibility(true);
+                        break;
+                    case 7:
+                        var itemHelper = ItemDropHelperWindow.Instance ?? CreateItemDropHelperWindow();
+                        if (itemHelper != null)
+                        {
+                            ApplyStoredPosition(itemHelper, _settings.ItemDropWindowLeft, _settings.ItemDropWindowTop);
+                            if (!itemHelper.IsVisible)
+                                itemHelper.Show();
+                        }
+                        break;
+                    case 8:
+                        var buffHelper = BuffTrackerHelperWindow.Instance ?? CreateBuffTrackerHelperWindow();
+                        if (buffHelper != null)
+                        {
+                            ApplyStoredPosition(buffHelper, _settings.BuffTrackerWindowLeft, _settings.BuffTrackerWindowTop);
+                            if (!buffHelper.IsVisible)
+                                buffHelper.Show();
+                        }
+                        break;
+                }
+            }
+            catch (Exception ex)
+            {
+                AppLogger.Warn("Failed to show wizard step preview windows.", ex);
+            }
+        }
+
+        private void ApplyWizardChatPositionUi(bool enabled)
+        {
+            if (enabled)
+            {
+                try
+                {
+                    if (!IsVisible)
+                        Show();
+
+                    Opacity = 1;
+                    IsHitTestVisible = true;
+                    Visibility = Visibility.Visible;
+
+                    SettingsDisplay.Visibility = Visibility.Collapsed;
+                    if (LogDisplay != null)
+                        LogDisplay.Visibility = Visibility.Visible;
+
+                    DragBar.Visibility = Visibility.Visible;
+                    DragBarRow.Height = new GridLength(25);
+
+                    _stickyService?.SetPositionTrackingEnabled(false);
+                }
+                catch { }
+            }
+            else
+            {
+                try
+                {
+                    DragBar.Visibility = Visibility.Collapsed;
+                    DragBarRow.Height = new GridLength(0);
+                    _stickyService?.SetPositionTrackingEnabled(true);
+                    _stickyService?.UpdatePositionImmediately();
+                }
+                catch { }
+            }
+        }
+
         private void ShowSettingsPositionWindows()
         {
+            if (_isWizardChatPositionMode)
+            {
+                try
+                {
+                    ExperienceAlertWindowService.Close();
+                    DungeonCountDisplayWindowService.ClosePositionPreview(_settings);
+                    ShoutToastService.ClosePositionPreview(_settings);
+                    MessengerEtaToastService.ClosePositionPreview(_settings);
+                    if (_dailyWeeklyContentOverlay?.IsVisible == true)
+                        _dailyWeeklyContentOverlay.Hide();
+                    SubAddonWindow.Instance?.Hide();
+                    ItemDropHelperWindow.Instance?.Hide();
+                    BuffTrackerHelperWindow.Instance?.Hide();
+                    _AbandonRoadSummaryWindow?.Hide();
+                }
+                catch { }
+                return;
+            }
+
             ExperienceAlertWindowService.ShowPositionPreview(_settings, force: true);
             DungeonCountDisplayWindowService.ShowPositionPreview(_settings, force: true);
             ShoutToastService.ShowPositionPreview(_settings, force: true);
@@ -63,6 +183,12 @@ namespace TWChatOverlay.Views
 
         private void HideSettingsPositionWindows()
         {
+            if (_isWizardChatPositionMode)
+            {
+                _isWizardChatPositionMode = false;
+                return;
+            }
+
             ExperienceAlertWindowService.SaveCurrentPosition(_settings);
             DungeonCountDisplayWindowService.SaveCurrentPosition(_settings);
             ShoutToastService.SaveCurrentPosition(_settings);
@@ -298,7 +424,7 @@ namespace TWChatOverlay.Views
                 if (_dailyWeeklyContentOverlay == null)
                     return;
 
-                if (_settings.ShowDailyWeeklyContentOverlay && _canShowAuxiliaryWindows)
+                if (!_isWizardChatPositionMode && _settings.ShowDailyWeeklyContentOverlay && _canShowAuxiliaryWindows)
                 {
                     if (!_dailyWeeklyContentOverlay.IsVisible)
                     {

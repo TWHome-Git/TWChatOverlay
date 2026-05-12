@@ -35,6 +35,18 @@ namespace TWChatOverlay.Services
             _options.NumberHandling = JsonNumberHandling.AllowNamedFloatingPointLiterals;
         }
 
+        public static bool SettingsFileExists()
+        {
+            try
+            {
+                return File.Exists(FilePath);
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
 
         /// <summary>
         /// 설정 객체를 파일로 저장
@@ -143,6 +155,7 @@ namespace TWChatOverlay.Services
                     _lastSavedJson = json;
                     AppLogger.Debug($"Settings loaded from {FilePath}.");
                     var settings = JsonSerializer.Deserialize<ChatSettings>(json, _options) ?? new ChatSettings();
+                    MigrateDungeonItemConfigKeys(settings);
                     AppLogger.IsEnabled = settings.EnableDebugLogging;
                     //AppLogger.IsEnabled = true;
                     string normalizedJson = JsonSerializer.Serialize(settings, _options);
@@ -223,6 +236,34 @@ namespace TWChatOverlay.Services
             }
 
             return changed;
+        }
+
+        private static void MigrateDungeonItemConfigKeys(ChatSettings settings)
+        {
+            try
+            {
+                if (settings.DungeonItemConfigs == null)
+                    return;
+
+                bool hasUnified = settings.DungeonItemConfigs.TryGetValue("아페티리아", out var unifiedCfg);
+                bool hasNormal = settings.DungeonItemConfigs.TryGetValue("아페티리아 일반", out var normalCfg);
+                bool hasHard = settings.DungeonItemConfigs.TryGetValue("아페티리아 어려움", out var hardCfg);
+
+                if (!hasUnified && (hasNormal || hasHard))
+                {
+                    // Prefer hard-mode state when both exist, otherwise fallback to normal-mode state.
+                    settings.DungeonItemConfigs["아페티리아"] = hasHard ? hardCfg! : normalCfg!;
+                }
+
+                if (hasNormal)
+                    settings.DungeonItemConfigs.Remove("아페티리아 일반");
+                if (hasHard)
+                    settings.DungeonItemConfigs.Remove("아페티리아 어려움");
+            }
+            catch (Exception ex)
+            {
+                AppLogger.Warn("Failed to migrate dungeon item config keys.", ex);
+            }
         }
     }
 }

@@ -21,6 +21,7 @@ namespace TWChatOverlay.Views.Addons
         private FrameworkElement? _lastSelectedEtaControl;
         private List<EtaProfileResolver.EtaRankingEntry> _allEtaRankings = new();
         private readonly DispatcherTimer _etaSearchDebounceTimer;
+        private bool _isRefreshing;
 
         public EtaRankingView()
         {
@@ -40,6 +41,7 @@ namespace TWChatOverlay.Views.Addons
         {
             Loaded -= OnLoaded;
             await LoadEtaRankingData();
+            UpdateRefreshButtonState();
         }
 
         private async System.Threading.Tasks.Task LoadEtaRankingData()
@@ -64,11 +66,71 @@ namespace TWChatOverlay.Views.Addons
                 };
 
                 ApplyEtaRankingFilter();
+                UpdateRefreshButtonState();
             }
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"[EtaRankingView] ETA Ranking Load Error: {ex.Message}");
             }
+        }
+
+        private async void EtaRefreshButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (_isRefreshing)
+                return;
+
+            SetRefreshBusy(true, "원격 데이터를 확인하고 있습니다.");
+            try
+            {
+                bool refreshed = await EtaRankingService.ForceRefreshAsync();
+                if (!refreshed)
+                {
+                    EtaRefreshLoadingText.Text = "갱신에 실패했습니다. 잠시 후 다시 시도해주세요.";
+                    MessageBox.Show("에타 랭킹 갱신에 실패했습니다.\n네트워크 상태를 확인한 뒤 다시 시도해주세요.", "갱신 실패", MessageBoxButton.OK, MessageBoxImage.Warning);
+                }
+                else
+                {
+                    EtaRefreshLoadingText.Text = "갱신 완료. 목록을 반영하고 있습니다.";
+                }
+
+                _allEtaRankings = EtaProfileResolver.GetRankings().ToList();
+                ApplyEtaRankingFilter();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"에타 랭킹 갱신 중 오류가 발생했습니다.\n{ex.Message}", "갱신 오류", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            finally
+            {
+                SetRefreshBusy(false);
+                UpdateRefreshButtonState();
+            }
+        }
+
+        private void SetRefreshBusy(bool isBusy, string? statusText = null)
+        {
+            _isRefreshing = isBusy;
+            if (EtaRefreshLoadingOverlay != null)
+                EtaRefreshLoadingOverlay.Visibility = isBusy ? Visibility.Visible : Visibility.Collapsed;
+
+            if (!string.IsNullOrWhiteSpace(statusText) && EtaRefreshLoadingText != null)
+                EtaRefreshLoadingText.Text = statusText;
+
+            if (EtaRefreshButton != null)
+                EtaRefreshButton.IsEnabled = isBusy ? false : !EtaRankingService.IsRefreshCompletedForCurrentCycle();
+        }
+
+        private void UpdateRefreshButtonState()
+        {
+            bool completed = EtaRankingService.IsRefreshCompletedForCurrentCycle();
+            DateTime? payloadDate = EtaRankingService.GetLastPayloadDate();
+            EtaUpdatedDateText.Text = $"갱신일: {(payloadDate.HasValue ? payloadDate.Value.ToString("yyyy-MM-dd") : "-")}";
+            EtaRefreshButton.Content = completed ? "갱신 완료" : "갱신 가능";
+            EtaRefreshButton.IsEnabled = !completed;
+            EtaRefreshButton.Background = completed
+                ? new SolidColorBrush((Color)ColorConverter.ConvertFromString("#4B5563"))
+                : new SolidColorBrush((Color)ColorConverter.ConvertFromString("#1F7A3E"));
+            EtaRefreshButton.Foreground = Brushes.White;
         }
 
         private void EtaCategoryButton_Click(object sender, RoutedEventArgs e)

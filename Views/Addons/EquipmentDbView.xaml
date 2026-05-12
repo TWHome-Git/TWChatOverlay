@@ -4,6 +4,21 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              mc:Ignorable="d">
+    <UserControl.Resources>
+        <Style x:Key="DarkCardToolTipStyle" TargetType="ToolTip">
+            <Setter Property="Background" Value="#0F1722"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderBrush" Value="#334155"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="8,5"/>
+            <Setter Property="FontSize" Value="12"/>
+        </Style>
+        <Style x:Key="StatToolTipCellBaseStyle" TargetType="DataGridCell">
+            <Setter Property="ToolTipService.InitialShowDelay" Value="50"/>
+            <Setter Property="ToolTipService.BetweenShowDelay" Value="0"/>
+            <Setter Property="ToolTipService.ShowDuration" Value="5000"/>
+        </Style>
+    </UserControl.Resources>
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="200"/>
@@ -68,6 +83,9 @@
             </Border>
 
             <DataGrid Grid.Row="1" x:Name="EquipmentGrid" AutoGenerateColumns="False" Background="Transparent" RowBackground="#161B22" AlternatingRowBackground="#1C2128" BorderThickness="0" Foreground="White" GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="#30363D" HeadersVisibility="Column" CanUserAddRows="False" RowHeight="75" VerticalContentAlignment="Center" MouseDoubleClick="EquipmentGrid_MouseDoubleClick">
+                <DataGrid.Resources>
+                    <Style TargetType="ToolTip" BasedOn="{StaticResource DarkCardToolTipStyle}"/>
+                </DataGrid.Resources>
                 <DataGrid.ColumnHeaderStyle>
                     <Style TargetType="DataGridColumnHeader">
                         <Setter Property="Background" Value="#0D1117"/>
@@ -130,6 +148,13 @@
                     </DataGridTemplateColumn>
 
                     <DataGridTemplateColumn Header="찌르기" Width="70">
+                        <DataGridTemplateColumn.CellStyle>
+                            <Style TargetType="DataGridCell" BasedOn="{StaticResource StatToolTipCellBaseStyle}">
+                                <Setter Property="ToolTipService.IsEnabled" Value="True"/>
+                                <Setter Property="ToolTipService.ShowOnDisabled" Value="True"/>
+                                <Setter Property="ToolTip" Value="{Binding Stab.MaxHintText}"/>
+                            </Style>
+                        </DataGridTemplateColumn.CellStyle>
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
                                 <Grid VerticalAlignment="Center">
@@ -138,7 +163,7 @@
                                         <RowDefinition Height="Auto"/>
                                         <RowDefinition Height="*"/>
                                     </Grid.RowDefinitions>
-                                    <TextBlock Grid.Row="0" Text="{Binding Stab.RangeText}" Foreground="White" HorizontalAlignment="Center"/>
+                                    <TextBlock Grid.Row="0" Text="{Binding Stab.RangeText}" Foreground="White" HorizontalAlignment="Center" Tag="Stab"/>
                                     <Border Grid.Row="1" Height="1" Background="#30363D" Margin="5,4" SnapsToDevicePixels="True"/>
                                     <TextBlock Grid.Row="2" Text="{Binding Stab.LimitText}" Foreground="#F85149" FontSize="10" HorizontalAlignment="Center" FontWeight="Bold" Visibility="{Binding Stab.Limit, Converter={StaticResource VisibilityConverter}}"/>
                                 </Grid>
@@ -147,6 +172,13 @@
                     </DataGridTemplateColumn>
 
                     <DataGridTemplateColumn Header="베기" Width="70">
+                        <DataGridTemplateColumn.CellStyle>
+                            <Style TargetType="DataGridCell" BasedOn="{StaticResource StatToolTipCellBaseStyle}">
+                                <Setter Property="ToolTipService.IsEnabled" Value="True"/>
+                                <Setter Property="ToolTipService.ShowOnDisabled" Value="True"/>
+                                <Setter Property="ToolTip" Value="{Binding Hack.MaxHintText}"/>
+                            </Style>
+                        </DataGridTemplateColumn.CellStyle>
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
                                 <Grid VerticalAlignment="Center">
@@ -155,7 +187,7 @@
                                         <RowDefinition Height="Auto"/>
                                         <RowDefinition Height="*"/>
                                     </Grid.RowDefinitions>
-                                    <TextBlock Grid.Row="0" Text="{Binding Hack.RangeText}" Foreground="White" HorizontalAlignment="Center"/>
+                                    <TextBlock Grid.Row="0" Text="{Binding Hack.RangeText}" Foreground="White" HorizontalAlignment="Center" Tag="Hack"/>
                                     <Border Grid.Row="1" Height="1" Background="#30363D" Margin="5,4"/>
                                     <TextBlock Grid.Row="2" Text="{Binding Hack.LimitText}" Foreground="#F85149" FontSize="10" HorizontalAlignment="Center" FontWeight="Bold" Visibility="{Binding Hack.Limit, Converter={StaticResource VisibilityConverter}}"/>
                                 </Grid>
@@ -164,6 +196,13 @@
                     </DataGridTemplateColumn>
 
                     <DataGridTemplateColumn Header="물리방어" Width="70" Visibility="Collapsed">
+                        <DataGridTemplateColumn.CellStyle>
+                            <Style TargetType="DataGridCell" BasedOn="{StaticResource StatToolTipCellBaseStyle}">
+                                <Setter Property="ToolTipService.IsEnabled" Value="True"/>
+                                <Setter Property="ToolTipService.ShowOnDisabled" Value="True"/>
+                                <Setter Property="ToolTip" Value="{Binding Def.MaxHintText}"/>
+                            </Style>
+                        </DataGridTemplateColumn.CellStyle>
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
                                 <Grid VerticalAlignment="Center" Visibility="{Binding Def.HasValue, Converter={StaticResource VisibilityConverter}}">
@@ -172,7 +211,7 @@
                                         <RowDefinition Height="Auto"/>
                                         <RowDefinition Height="*"/>
                                     </Grid.RowDefinitions>
-                                    <TextBlock Grid.Row="0" Text="{Binding Def.RangeText}" Foreground="White" HorizontalAlignment="Center"/>
+                                    <TextBlock Grid.Row="0" Text="{Binding Def.RangeText}" Foreground="White" HorizontalAlignment="Center" Tag="Def"/>
                                     <Border Grid.Row="1" Height="1" Background="#30363D" Margin="5,4"/>
                                     <TextBlock Grid.Row="2" Text="{Binding Def.LimitText}" Foreground="#F85149" FontSize="10" HorizontalAlignment="Center" FontWeight="Bold" Visibility="{Binding Def.Limit, Converter={StaticResource VisibilityConverter}}"/>
                                 </Grid>
@@ -181,6 +220,13 @@
                     </DataGridTemplateColumn>
 
                     <DataGridTemplateColumn Header="마법공격" Width="70">
+                        <DataGridTemplateColumn.CellStyle>
+                            <Style TargetType="DataGridCell" BasedOn="{StaticResource StatToolTipCellBaseStyle}">
+                                <Setter Property="ToolTipService.IsEnabled" Value="True"/>
+                                <Setter Property="ToolTipService.ShowOnDisabled" Value="True"/>
+                                <Setter Property="ToolTip" Value="{Binding Int.MaxHintText}"/>
+                            </Style>
+                        </DataGridTemplateColumn.CellStyle>
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
                                 <Grid VerticalAlignment="Center">
@@ -189,7 +235,7 @@
                                         <RowDefinition Height="Auto"/>
                                         <RowDefinition Height="*"/>
                                     </Grid.RowDefinitions>
-                                    <TextBlock Grid.Row="0" Text="{Binding Int.RangeText}" Foreground="White" HorizontalAlignment="Center"/>
+                                    <TextBlock Grid.Row="0" Text="{Binding Int.RangeText}" Foreground="White" HorizontalAlignment="Center" Tag="Int"/>
                                     <Border Grid.Row="1" Height="1" Background="#30363D" Margin="5,4"/>
                                     <TextBlock Grid.Row="2" Text="{Binding Int.LimitText}" Foreground="#F85149" FontSize="10" HorizontalAlignment="Center" FontWeight="Bold" Visibility="{Binding Int.Limit, Converter={StaticResource VisibilityConverter}}"/>
                                 </Grid>
@@ -198,6 +244,13 @@
                     </DataGridTemplateColumn>
 
                     <DataGridTemplateColumn Header="마법방어" Width="70">
+                        <DataGridTemplateColumn.CellStyle>
+                            <Style TargetType="DataGridCell" BasedOn="{StaticResource StatToolTipCellBaseStyle}">
+                                <Setter Property="ToolTipService.IsEnabled" Value="True"/>
+                                <Setter Property="ToolTipService.ShowOnDisabled" Value="True"/>
+                                <Setter Property="ToolTip" Value="{Binding MR.MaxHintText}"/>
+                            </Style>
+                        </DataGridTemplateColumn.CellStyle>
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
                                 <Grid VerticalAlignment="Center">
@@ -206,7 +259,7 @@
                                         <RowDefinition Height="Auto"/>
                                         <RowDefinition Height="*"/>
                                     </Grid.RowDefinitions>
-                                    <TextBlock Grid.Row="0" Text="{Binding MR.RangeText}" Foreground="White" HorizontalAlignment="Center"/>
+                                    <TextBlock Grid.Row="0" Text="{Binding MR.RangeText}" Foreground="White" HorizontalAlignment="Center" Tag="MR"/>
                                     <Border Grid.Row="1" Height="1" Background="#30363D" Margin="5,4"/>
                                     <TextBlock Grid.Row="2" Text="{Binding MR.LimitText}" Foreground="#F85149" FontSize="10" HorizontalAlignment="Center" FontWeight="Bold" Visibility="{Binding MR.Limit, Converter={StaticResource VisibilityConverter}}"/>
                                 </Grid>
@@ -215,6 +268,13 @@
                     </DataGridTemplateColumn>
 
                     <DataGridTemplateColumn Header="명중" Width="70">
+                        <DataGridTemplateColumn.CellStyle>
+                            <Style TargetType="DataGridCell" BasedOn="{StaticResource StatToolTipCellBaseStyle}">
+                                <Setter Property="ToolTipService.IsEnabled" Value="True"/>
+                                <Setter Property="ToolTipService.ShowOnDisabled" Value="True"/>
+                                <Setter Property="ToolTip" Value="{Binding Dex.MaxHintText}"/>
+                            </Style>
+                        </DataGridTemplateColumn.CellStyle>
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
                                 <Grid VerticalAlignment="Center">
@@ -223,7 +283,7 @@
                                         <RowDefinition Height="Auto"/>
                                         <RowDefinition Height="*"/>
                                     </Grid.RowDefinitions>
-                                    <TextBlock Grid.Row="0" Text="{Binding Dex.RangeText}" Foreground="White" HorizontalAlignment="Center"/>
+                                    <TextBlock Grid.Row="0" Text="{Binding Dex.RangeText}" Foreground="White" HorizontalAlignment="Center" Tag="Dex"/>
                                     <Border Grid.Row="1" Height="1" Background="#30363D" Margin="5,4"/>
                                     <TextBlock Grid.Row="2" Text="{Binding Dex.LimitText}" Foreground="#F85149" FontSize="10" HorizontalAlignment="Center" FontWeight="Bold" Visibility="{Binding Dex.Limit, Converter={StaticResource VisibilityConverter}}"/>
                                 </Grid>
@@ -232,6 +292,13 @@
                     </DataGridTemplateColumn>
 
                     <DataGridTemplateColumn Header="회피" Width="70">
+                        <DataGridTemplateColumn.CellStyle>
+                            <Style TargetType="DataGridCell" BasedOn="{StaticResource StatToolTipCellBaseStyle}">
+                                <Setter Property="ToolTipService.IsEnabled" Value="True"/>
+                                <Setter Property="ToolTipService.ShowOnDisabled" Value="True"/>
+                                <Setter Property="ToolTip" Value="{Binding Agi.MaxHintText}"/>
+                            </Style>
+                        </DataGridTemplateColumn.CellStyle>
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
                                 <Grid VerticalAlignment="Center">
@@ -240,7 +307,7 @@
                                         <RowDefinition Height="Auto"/>
                                         <RowDefinition Height="*"/>
                                     </Grid.RowDefinitions>
-                                    <TextBlock Grid.Row="0" Text="{Binding Agi.RangeText}" Foreground="White" HorizontalAlignment="Center"/>
+                                    <TextBlock Grid.Row="0" Text="{Binding Agi.RangeText}" Foreground="White" HorizontalAlignment="Center" Tag="Agi"/>
                                     <Border Grid.Row="1" Height="1" Background="#30363D" Margin="5,4"/>
                                     <TextBlock Grid.Row="2" Text="{Binding Agi.LimitText}" Foreground="#F85149" FontSize="10" HorizontalAlignment="Center" FontWeight="Bold" Visibility="{Binding Agi.Limit, Converter={StaticResource VisibilityConverter}}"/>
                                 </Grid>
@@ -249,6 +316,13 @@
                     </DataGridTemplateColumn>
 
                     <DataGridTemplateColumn Header="민첩" Width="70">
+                        <DataGridTemplateColumn.CellStyle>
+                            <Style TargetType="DataGridCell" BasedOn="{StaticResource StatToolTipCellBaseStyle}">
+                                <Setter Property="ToolTipService.IsEnabled" Value="True"/>
+                                <Setter Property="ToolTipService.ShowOnDisabled" Value="True"/>
+                                <Setter Property="ToolTip" Value="{Binding SmallAgi.MaxHintText}"/>
+                            </Style>
+                        </DataGridTemplateColumn.CellStyle>
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
                                 <Grid VerticalAlignment="Center">
@@ -257,7 +331,7 @@
                                         <RowDefinition Height="Auto"/>
                                         <RowDefinition Height="*"/>
                                     </Grid.RowDefinitions>
-                                    <TextBlock Grid.Row="0" Text="{Binding SmallAgi.RangeText}" Foreground="White" HorizontalAlignment="Center"/>
+                                    <TextBlock Grid.Row="0" Text="{Binding SmallAgi.RangeText}" Foreground="White" HorizontalAlignment="Center" Tag="SmallAgi"/>
                                     <Border Grid.Row="1" Height="1" Background="#30363D" Margin="5,4"/>
                                     <TextBlock Grid.Row="2" Text="{Binding SmallAgi.LimitText}" Foreground="#F85149" FontSize="10" HorizontalAlignment="Center" FontWeight="Bold" Visibility="{Binding SmallAgi.Limit, Converter={StaticResource VisibilityConverter}}"/>
                                 </Grid>
@@ -266,6 +340,13 @@
                     </DataGridTemplateColumn>
 
                     <DataGridTemplateColumn Header="크리티컬" Width="70">
+                        <DataGridTemplateColumn.CellStyle>
+                            <Style TargetType="DataGridCell" BasedOn="{StaticResource StatToolTipCellBaseStyle}">
+                                <Setter Property="ToolTipService.IsEnabled" Value="True"/>
+                                <Setter Property="ToolTipService.ShowOnDisabled" Value="True"/>
+                                <Setter Property="ToolTip" Value="{Binding Crit.MaxHintText}"/>
+                            </Style>
+                        </DataGridTemplateColumn.CellStyle>
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
                                 <Grid VerticalAlignment="Center">
@@ -274,7 +355,7 @@
                                         <RowDefinition Height="Auto"/>
                                         <RowDefinition Height="*"/>
                                     </Grid.RowDefinitions>
-                                    <TextBlock Grid.Row="0" Text="{Binding Crit.RangeText}" Foreground="White" HorizontalAlignment="Center"/>
+                                    <TextBlock Grid.Row="0" Text="{Binding Crit.RangeText}" Foreground="White" HorizontalAlignment="Center" Tag="Crit"/>
                                     <Border Grid.Row="1" Height="1" Background="#30363D" Margin="5,4"/>
                                     <TextBlock Grid.Row="2" Text="{Binding Crit.LimitText}" Foreground="#F85149" FontSize="10" HorizontalAlignment="Center" FontWeight="Bold" Visibility="{Binding Crit.Limit, Converter={StaticResource VisibilityConverter}}"/>
                                 </Grid>
@@ -286,3 +367,5 @@
         </Grid>
     </Grid>
 </UserControl>
+
+

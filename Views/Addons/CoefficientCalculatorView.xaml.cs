@@ -596,6 +596,14 @@ namespace TWChatOverlay.Views.Addons
             };
             _slotGrid.AlternatingRowBackground = bgRowAlt;
             _slotGrid.AlternationCount = 2;
+            var darkToolTipStyle = new Style(typeof(ToolTip));
+            darkToolTipStyle.Setters.Add(new Setter(Control.BackgroundProperty, new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(0x0F, 0x17, 0x22))));
+            darkToolTipStyle.Setters.Add(new Setter(Control.ForegroundProperty, System.Windows.Media.Brushes.White));
+            darkToolTipStyle.Setters.Add(new Setter(Control.BorderBrushProperty, new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(0x33, 0x41, 0x55))));
+            darkToolTipStyle.Setters.Add(new Setter(Control.BorderThicknessProperty, new Thickness(1)));
+            darkToolTipStyle.Setters.Add(new Setter(Control.PaddingProperty, new Thickness(8, 5, 8, 5)));
+            darkToolTipStyle.Setters.Add(new Setter(Control.FontSizeProperty, 12.0));
+            _slotGrid.Resources[typeof(ToolTip)] = darkToolTipStyle;
             ScrollViewer.SetVerticalScrollBarVisibility(_slotGrid, ScrollBarVisibility.Disabled);
 
             var colHeaderStyle = new Style(typeof(DataGridColumnHeader));
@@ -675,6 +683,27 @@ namespace TWChatOverlay.Views.Addons
                 Setters = { new Setter(TextBlock.ForegroundProperty, headerFg) }
             });
 
+            var primaryEnchantDisplayStyle = new Style(typeof(TextBlock), enchantDisplayStyle);
+            primaryEnchantDisplayStyle.Setters.Add(new Setter(FrameworkElement.ToolTipProperty, new Binding(nameof(CalculatorSlotRow.AttackEnchantMaxHintText))));
+            var secondaryEnchantDisplayStyle = new Style(typeof(TextBlock), enchantDisplayStyle);
+            secondaryEnchantDisplayStyle.Setters.Add(new Setter(FrameworkElement.ToolTipProperty, new Binding(nameof(CalculatorSlotRow.DefenseEnchantMaxHintText))));
+
+            var primaryEnchantEditStyle = new Style(typeof(TextBox), textEditStyle);
+            primaryEnchantEditStyle.Setters.Add(new Setter(FrameworkElement.ToolTipProperty, new Binding(nameof(CalculatorSlotRow.AttackEnchantMaxHintText))));
+            var secondaryEnchantEditStyle = new Style(typeof(TextBox), textEditStyle);
+            secondaryEnchantEditStyle.Setters.Add(new Setter(FrameworkElement.ToolTipProperty, new Binding(nameof(CalculatorSlotRow.DefenseEnchantMaxHintText))));
+            var primaryEnchantCellStyle = new Style(typeof(DataGridCell), cellStyle);
+            primaryEnchantCellStyle.Setters.Add(new Setter(FrameworkElement.ToolTipProperty, new Binding(nameof(CalculatorSlotRow.AttackEnchantMaxHintText))));
+            primaryEnchantCellStyle.Setters.Add(new Setter(ToolTipService.InitialShowDelayProperty, 0));
+            primaryEnchantCellStyle.Setters.Add(new Setter(ToolTipService.BetweenShowDelayProperty, 0));
+            primaryEnchantCellStyle.Setters.Add(new Setter(ToolTipService.ShowDurationProperty, 3000));
+
+            var secondaryEnchantCellStyle = new Style(typeof(DataGridCell), cellStyle);
+            secondaryEnchantCellStyle.Setters.Add(new Setter(FrameworkElement.ToolTipProperty, new Binding(nameof(CalculatorSlotRow.DefenseEnchantMaxHintText))));
+            secondaryEnchantCellStyle.Setters.Add(new Setter(ToolTipService.InitialShowDelayProperty, 0));
+            secondaryEnchantCellStyle.Setters.Add(new Setter(ToolTipService.BetweenShowDelayProperty, 0));
+            secondaryEnchantCellStyle.Setters.Add(new Setter(ToolTipService.ShowDurationProperty, 3000));
+
             var coreExcludeDisplayStyle = new Style(typeof(TextBlock), textDisplayStyle);
             coreExcludeDisplayStyle.Triggers.Add(new DataTrigger
             {
@@ -733,8 +762,9 @@ namespace TWChatOverlay.Views.Addons
                 Header = "강화 공격력",
                 Binding = new Binding(nameof(CalculatorSlotRow.AttackEnchant)) { Converter = zeroFallback, Mode = BindingMode.TwoWay, UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged },
                 Width = 80,
-                ElementStyle = enchantDisplayStyle,
-                EditingElementStyle = textEditStyle
+                ElementStyle = primaryEnchantDisplayStyle,
+                EditingElementStyle = primaryEnchantEditStyle,
+                CellStyle = primaryEnchantCellStyle
             };
             _slotGrid.Columns.Add(_primaryEnchantColumn);
             _secondaryValueColumn = new DataGridTextColumn
@@ -751,8 +781,9 @@ namespace TWChatOverlay.Views.Addons
                 Header = "강화 보조공격력",
                 Binding = new Binding(nameof(CalculatorSlotRow.DefenseEnchant)) { Converter = zeroFallback, Mode = BindingMode.TwoWay, UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged },
                 Width = 80,
-                ElementStyle = enchantDisplayStyle,
-                EditingElementStyle = textEditStyle
+                ElementStyle = secondaryEnchantDisplayStyle,
+                EditingElementStyle = secondaryEnchantEditStyle,
+                CellStyle = secondaryEnchantCellStyle
             };
             _slotGrid.Columns.Add(_secondaryEnchantColumn);
             _slotGrid.Columns.Add(new DataGridTextColumn
@@ -829,17 +860,31 @@ namespace TWChatOverlay.Views.Addons
             var rBrd = new Thickness(0, 0, 0, 1);
 
             RtCell(0, 0, bgDarkest, cBrd);
-            RtCell(0, 1, bgDarkest, cBrd).Child = RtHdr("주스탯");
-            RtCell(0, 2, bgDarkest, cBrd).Child = RtHdr("부스탯");
+            var primaryStatHeader = RtHdr("주스탯");
+            BindDarkTooltip(primaryStatHeader, _accessoryRows[0], nameof(CalculatorSlotRow.PrimaryStatMaxHint));
+            var primaryHeaderCell = RtCell(0, 1, bgDarkest, cBrd);
+            BindDarkTooltip(primaryHeaderCell, _accessoryRows[0], nameof(CalculatorSlotRow.PrimaryStatMaxHint));
+            primaryHeaderCell.Child = primaryStatHeader;
+            var secondaryStatHeader = RtHdr("부스탯");
+            BindDarkTooltip(secondaryStatHeader, _accessoryRows[0], nameof(CalculatorSlotRow.SecondaryStatMaxHint));
+            var secondaryHeaderCell = RtCell(0, 2, bgDarkest, cBrd);
+            BindDarkTooltip(secondaryHeaderCell, _accessoryRows[0], nameof(CalculatorSlotRow.SecondaryStatMaxHint));
+            secondaryHeaderCell.Child = secondaryStatHeader;
             RtCell(0, 3, bgDarkest, rBrd).Child = RtHdr("계수");
 
             RtCell(1, 0, bgRowAlt, cBrd).Child = RtLbl("스탯");
             var statMRInput = RtInput();
             statMRInput.SetBinding(TextBox.TextProperty, new Binding(nameof(CalculatorSlotRow.PrimaryStatValue)) { Source = _accessoryRows[0], Converter = zeroFallback, Mode = BindingMode.TwoWay, UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged });
-            RtCell(1, 1, System.Windows.Media.Brushes.Transparent, cBrd).Child = statMRInput;
+            BindDarkTooltip(statMRInput, _accessoryRows[0], nameof(CalculatorSlotRow.PrimaryStatMaxHint));
+            var primaryInputCell = RtCell(1, 1, System.Windows.Media.Brushes.Transparent, cBrd);
+            BindDarkTooltip(primaryInputCell, _accessoryRows[0], nameof(CalculatorSlotRow.PrimaryStatMaxHint));
+            primaryInputCell.Child = statMRInput;
             var statINTInput = RtInput();
             statINTInput.SetBinding(TextBox.TextProperty, new Binding(nameof(CalculatorSlotRow.SecondaryStatValue)) { Source = _accessoryRows[0], Converter = zeroFallback, Mode = BindingMode.TwoWay, UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged });
-            RtCell(1, 2, System.Windows.Media.Brushes.Transparent, cBrd).Child = statINTInput;
+            BindDarkTooltip(statINTInput, _accessoryRows[0], nameof(CalculatorSlotRow.SecondaryStatMaxHint));
+            var secondaryInputCell = RtCell(1, 2, System.Windows.Media.Brushes.Transparent, cBrd);
+            BindDarkTooltip(secondaryInputCell, _accessoryRows[0], nameof(CalculatorSlotRow.SecondaryStatMaxHint));
+            secondaryInputCell.Child = statINTInput;
             var statCoeffVal = RtVal();
             statCoeffVal.SetBinding(TextBlock.TextProperty, new Binding(nameof(CalculatorSlotRow.Coefficient)) { Source = _accessoryRows[0], Converter = zeroFallback });
             RtCell(1, 3, System.Windows.Media.Brushes.Transparent, rBrd).Child = statCoeffVal;
@@ -1123,6 +1168,7 @@ namespace TWChatOverlay.Views.Addons
             }
 
             LoadSavedState();
+            UpdateStatLimitHintsFromSelectedWeapon();
             RecalculateTotalCoefficient();
         }
 
@@ -1263,6 +1309,8 @@ namespace TWChatOverlay.Views.Addons
                 row.DefenseValue = 0;
                 row.PrimaryStatValue = 0;
                 row.SecondaryStatValue = 0;
+                row.AttackEnchantMaxHintText = "MAX : -";
+                row.DefenseEnchantMaxHintText = "MAX : -";
                 return;
             }
 
@@ -1270,21 +1318,114 @@ namespace TWChatOverlay.Views.Addons
             if (item == null) return;
 
             var type = GetSelectedCalculatorType();
-            var (primaryStat, secondaryStat) = type switch
+            var (primaryStat, secondaryStat, primaryLimit, secondaryLimit) = type switch
             {
-                CoefficientCalculatorType.Stab => (item.Stab.Max, item.Hack.Max),
-                CoefficientCalculatorType.Hack => (item.Hack.Max, item.Stab.Max),
-                CoefficientCalculatorType.MagicAttack => (item.Int.Max, item.MR.Max),
-                CoefficientCalculatorType.MagicDefense => (item.MR.Max, item.Int.Max),
-                CoefficientCalculatorType.PhysicalHybrid => (item.Stab.Max, item.Hack.Max),
-                CoefficientCalculatorType.MagicHack => (item.Hack.Max, item.Int.Max),
-                _ => (item.Stab.Max, item.Hack.Max)
+                CoefficientCalculatorType.Stab => (item.Stab.Max, item.Hack.Max, item.Stab.Limit, item.Hack.Limit),
+                CoefficientCalculatorType.Hack => (item.Hack.Max, item.Stab.Max, item.Hack.Limit, item.Stab.Limit),
+                CoefficientCalculatorType.MagicAttack => (item.Int.Max, item.MR.Max, item.Int.Limit, item.MR.Limit),
+                CoefficientCalculatorType.MagicDefense => (item.MR.Max, item.Int.Max, item.MR.Limit, item.Int.Limit),
+                CoefficientCalculatorType.PhysicalHybrid => (item.Stab.Max, item.Hack.Max, item.Stab.Limit, item.Hack.Limit),
+                CoefficientCalculatorType.MagicHack => (item.Hack.Max, item.Int.Max, item.Hack.Limit, item.Int.Limit),
+                _ => (item.Stab.Max, item.Hack.Max, item.Stab.Limit, item.Hack.Limit)
             };
 
             row.AttackValue = primaryStat;
             row.DefenseValue = secondaryStat;
             row.PrimaryStatValue = 0;
             row.SecondaryStatValue = 0;
+            row.AttackEnchantMaxHintText = primaryLimit > 0 ? $"MAX : {Math.Max(0, primaryLimit - primaryStat)}" : "MAX : -";
+            row.DefenseEnchantMaxHintText = secondaryLimit > 0 ? $"MAX : {Math.Max(0, secondaryLimit - secondaryStat)}" : "MAX : -";
+            UpdateStatLimitHintsFromSelectedWeapon();
+        }
+
+        private void UpdateStatLimitHintsFromSelectedWeapon()
+        {
+            if (_accessoryRows.Count == 0)
+                return;
+
+            var statRow = _accessoryRows[0];
+            var weaponRow = _slotRows.FirstOrDefault(x => x.SlotName == "무기");
+            if (weaponRow == null || string.IsNullOrWhiteSpace(weaponRow.SelectedEquipmentName) || weaponRow.SelectedEquipmentName == "수동 입력")
+            {
+                statRow.PrimaryStatMaxHint = "MAX : -";
+                statRow.SecondaryStatMaxHint = "MAX : -";
+                return;
+            }
+
+            var item = _allEquipments.FirstOrDefault(x => string.Equals(x.Name, weaponRow.SelectedEquipmentName, StringComparison.Ordinal));
+            if (item == null)
+            {
+                statRow.PrimaryStatMaxHint = "MAX : -";
+                statRow.SecondaryStatMaxHint = "MAX : -";
+                return;
+            }
+
+            var type = GetSelectedCalculatorType();
+            var (primaryRemain, secondaryRemain) = type switch
+            {
+                CoefficientCalculatorType.Stab => (Math.Max(0, item.Stab.Limit - item.Stab.Max), Math.Max(0, item.Hack.Limit - item.Hack.Max)),
+                CoefficientCalculatorType.Hack => (Math.Max(0, item.Hack.Limit - item.Hack.Max), Math.Max(0, item.Stab.Limit - item.Stab.Max)),
+                CoefficientCalculatorType.MagicAttack => (Math.Max(0, item.Int.Limit - item.Int.Max), Math.Max(0, item.MR.Limit - item.MR.Max)),
+                CoefficientCalculatorType.MagicDefense => (Math.Max(0, item.MR.Limit - item.MR.Max), Math.Max(0, item.Int.Limit - item.Int.Max)),
+                CoefficientCalculatorType.PhysicalHybrid => (Math.Max(0, item.Stab.Limit - item.Stab.Max), Math.Max(0, item.Hack.Limit - item.Hack.Max)),
+                CoefficientCalculatorType.MagicHack => (Math.Max(0, item.Hack.Limit - item.Hack.Max), Math.Max(0, item.Int.Limit - item.Int.Max)),
+                _ => (0, 0)
+            };
+
+            statRow.PrimaryStatMaxHint = $"MAX : {primaryRemain}";
+            statRow.SecondaryStatMaxHint = $"MAX : {secondaryRemain}";
+        }
+
+        private static ToolTip CreateDarkToolTip(string text)
+        {
+            return new ToolTip
+            {
+                Content = text,
+                Background = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(0x0F, 0x17, 0x22)),
+                Foreground = System.Windows.Media.Brushes.White,
+                BorderBrush = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(0x33, 0x41, 0x55)),
+                BorderThickness = new Thickness(1),
+                Padding = new Thickness(8, 5, 8, 5),
+                FontSize = 12
+            };
+        }
+
+        private static void BindDarkTooltip(FrameworkElement element, object source, string path)
+        {
+            element.ToolTipOpening += (_, _) =>
+            {
+                string text = ResolveTooltipText(source, path);
+                if (element.ToolTip is ToolTip tip)
+                {
+                    tip.Content = text;
+                }
+                else
+                {
+                    element.ToolTip = CreateDarkToolTip(text);
+                }
+            };
+            ToolTipService.SetInitialShowDelay(element, 0);
+            ToolTipService.SetBetweenShowDelay(element, 0);
+            ToolTipService.SetShowDuration(element, 60000);
+            ToolTipService.SetIsEnabled(element, true);
+            ToolTipService.SetShowOnDisabled(element, true);
+        }
+
+        private static string ResolveTooltipText(object source, string path)
+        {
+            if (source == null || string.IsNullOrWhiteSpace(path))
+                return "MAX : -";
+
+            try
+            {
+                var prop = source.GetType().GetProperty(path);
+                var value = prop?.GetValue(source) as string;
+                return string.IsNullOrWhiteSpace(value) ? "MAX : -" : value;
+            }
+            catch
+            {
+                return "MAX : -";
+            }
         }
 
         private void RecalculateTotalCoefficient()
@@ -1421,7 +1562,7 @@ namespace TWChatOverlay.Views.Addons
                     && config.ArmorKeywords.Any(k => ContainsCategory(x, k))
                     && IsMatchByAttackType(x, type, allowWhenUnknown: true)),
                 "갑옷" => candidates.Where(x => ContainsCategory(x, "갑옷") && IsMatchByAttackType(x, type, allowWhenUnknown: true)),
-                "아티팩트" when config != null => candidates.Where(x => ContainsCategory(x, "아티팩트") && ContainsKeyword(x, config.ArtifactKeyword)),
+                "아티팩트" => candidates.Where(x => ContainsCategory(x, "아티팩트") && IsMatchByAttackType(x, type, allowWhenUnknown: false)),
                 "다리" => candidates.Where(x => ContainsCategory(x, "발") || ContainsCategory(x, "다리")),
                 "손" => candidates.Where(x => ContainsCategory(x, "손") && !ContainsCategory(x, "손목")),
                 _ when slot.Contains("어빌리티") => Enumerable.Empty<EquipmentModel>(),
@@ -1465,6 +1606,31 @@ namespace TWChatOverlay.Views.Addons
                 || item.MajorCategory?.Contains(keyword, StringComparison.OrdinalIgnoreCase) == true;
         }
 
+        private static bool MatchesArtifactKeyword(EquipmentModel item, string keyword)
+        {
+            string normalizedKeyword = NormalizeTypeToken(keyword);
+            if (string.IsNullOrWhiteSpace(normalizedKeyword))
+                return true;
+
+            foreach (string attackType in item.AttackTypes)
+            {
+                if (NormalizeTypeToken(attackType) == normalizedKeyword)
+                    return true;
+            }
+
+            var texts = new[] { item.Name ?? string.Empty, item.SubCategory ?? string.Empty, item.MajorCategory ?? string.Empty };
+            foreach (var text in texts)
+            {
+                foreach (var token in TokenizeTypeText(text))
+                {
+                    if (NormalizeTypeToken(token) == normalizedKeyword)
+                        return true;
+                }
+            }
+
+            return false;
+        }
+
         private static bool IsWeaponMatchByType(EquipmentModel item, CoefficientCalculatorType type)
         {
             string matchKeyword = type switch
@@ -1472,7 +1638,7 @@ namespace TWChatOverlay.Views.Addons
                 CoefficientCalculatorType.Stab => "찌르기",
                 CoefficientCalculatorType.Hack => "베기",
                 CoefficientCalculatorType.MagicAttack => "마법공격",
-                CoefficientCalculatorType.MagicDefense => "마법방어",
+                CoefficientCalculatorType.MagicDefense => "신성",
                 CoefficientCalculatorType.PhysicalHybrid => "물리복합",
                 CoefficientCalculatorType.MagicHack => "마법베기",
                 _ => string.Empty
@@ -1493,7 +1659,7 @@ namespace TWChatOverlay.Views.Addons
                 CoefficientCalculatorType.Stab => "찌르기",
                 CoefficientCalculatorType.Hack => "베기",
                 CoefficientCalculatorType.MagicAttack => "마법공격",
-                CoefficientCalculatorType.MagicDefense => "마법방어",
+                CoefficientCalculatorType.MagicDefense => "신성",
                 CoefficientCalculatorType.PhysicalHybrid => "물리복합",
                 CoefficientCalculatorType.MagicHack => "마법베기",
                 _ => string.Empty
@@ -1503,16 +1669,58 @@ namespace TWChatOverlay.Views.Addons
                 return true;
 
             if (item.AttackTypes.Any())
-                return item.AttackTypes.Any(x => string.Equals(x, matchKeyword, StringComparison.OrdinalIgnoreCase));
+            {
+                var normalizedTypes = item.AttackTypes
+                    .Select(NormalizeTypeToken)
+                    .Where(x => !string.IsNullOrWhiteSpace(x))
+                    .Distinct(StringComparer.OrdinalIgnoreCase)
+                    .ToList();
 
-            bool textMatched =
-                item.SubCategory?.Contains(matchKeyword, StringComparison.OrdinalIgnoreCase) == true
-                || item.Name?.Contains(matchKeyword, StringComparison.OrdinalIgnoreCase) == true;
+                string target = NormalizeTypeToken(matchKeyword);
+                if (type == CoefficientCalculatorType.Hack)
+                {
+                    // 베기에서는 마법베기 전용 아티팩트를 제외합니다.
+                    return normalizedTypes.Contains("베기", StringComparer.OrdinalIgnoreCase)
+                           && !normalizedTypes.Contains("마법베기", StringComparer.OrdinalIgnoreCase);
+                }
+
+                if (type == CoefficientCalculatorType.MagicHack)
+                {
+                    return normalizedTypes.Contains("마법베기", StringComparer.OrdinalIgnoreCase);
+                }
+
+                return normalizedTypes.Contains(target, StringComparer.OrdinalIgnoreCase);
+            }
+
+            bool textMatched = MatchesArtifactKeyword(item, matchKeyword);
 
             if (textMatched)
                 return true;
 
             return allowWhenUnknown;
+        }
+
+        private static IEnumerable<string> TokenizeTypeText(string text)
+        {
+            if (string.IsNullOrWhiteSpace(text))
+                yield break;
+
+            char[] separators = { '/', ',', '|', ' ', '\t', '(', ')', '[', ']', '-', '_' };
+            foreach (string token in text.Split(separators, StringSplitOptions.RemoveEmptyEntries))
+            {
+                yield return token.Trim();
+            }
+        }
+
+        private static string NormalizeTypeToken(string token)
+        {
+            token = token?.Trim() ?? string.Empty;
+            token = token.Replace(" ", string.Empty);
+            if (token == "마법방어" || token == "신성공격")
+                return "신성";
+            if (token == "물리복합" || token == "물리복합형")
+                return "물리복합";
+            return token;
         }
 
         private static IReadOnlyList<CoefficientCalculatorType> ResolveCalculatorTypes(string characterName)
@@ -1586,6 +1794,10 @@ namespace TWChatOverlay.Views.Addons
             private double _primaryStatValue;
             private double _secondaryStatValue;
             private double _coefficient;
+            private string _primaryStatMaxHint = "MAX -";
+            private string _secondaryStatMaxHint = "MAX -";
+            private string _attackEnchantMaxHintText = "MAX : -";
+            private string _defenseEnchantMaxHintText = "MAX : -";
             private List<string> _equipmentCandidates = new() { "수동 입력" };
 
             public CalculatorSlotRow(string slotName)
@@ -1719,6 +1931,50 @@ namespace TWChatOverlay.Views.Addons
                 private set
                 {
                     _coefficient = value;
+                    OnPropertyChanged();
+                }
+            }
+
+            public string PrimaryStatMaxHint
+            {
+                get => _primaryStatMaxHint;
+                set
+                {
+                    if (_primaryStatMaxHint == value) return;
+                    _primaryStatMaxHint = value;
+                    OnPropertyChanged();
+                }
+            }
+
+            public string SecondaryStatMaxHint
+            {
+                get => _secondaryStatMaxHint;
+                set
+                {
+                    if (_secondaryStatMaxHint == value) return;
+                    _secondaryStatMaxHint = value;
+                    OnPropertyChanged();
+                }
+            }
+
+            public string AttackEnchantMaxHintText
+            {
+                get => _attackEnchantMaxHintText;
+                set
+                {
+                    if (_attackEnchantMaxHintText == value) return;
+                    _attackEnchantMaxHintText = value;
+                    OnPropertyChanged();
+                }
+            }
+
+            public string DefenseEnchantMaxHintText
+            {
+                get => _defenseEnchantMaxHintText;
+                set
+                {
+                    if (_defenseEnchantMaxHintText == value) return;
+                    _defenseEnchantMaxHintText = value;
                     OnPropertyChanged();
                 }
             }

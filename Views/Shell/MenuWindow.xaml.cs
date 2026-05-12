@@ -17,7 +17,6 @@ namespace TWChatOverlay.Views
         private readonly Forms.NotifyIcon _notifyIcon;
         private static ShoutReplayWindow? _shoutReplayWindow;
         private static MemoOverlayWindow? _memoWindow;
-        private bool _memoFirstClickForceEditorPending = true;
 
         public MenuWindow()
         {
@@ -373,14 +372,6 @@ namespace TWChatOverlay.Views
                 _memoWindow.Show();
                 _memoWindow.Activate();
                 SetButtonActive(BtnMemo, _memoWindow.IsEditorModeVisible);
-                return;
-            }
-
-            if (_memoFirstClickForceEditorPending)
-            {
-                _memoFirstClickForceEditorPending = false;
-                _memoWindow.ShowEditorMode();
-                SetButtonActive(BtnMemo, true);
                 return;
             }
 

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
@@ -29,6 +29,7 @@ namespace TWChatOverlay.Views
             SizeChanged += MemoOverlayWindow_SizeChanged;
             MemoTextBox.TextChanged += MemoTextBox_TextChanged;
             Application.Current.Exit += Current_Exit;
+            Closed += MemoOverlayWindow_Closed;
         }
 
         private void MemoOverlayWindow_Loaded(object sender, RoutedEventArgs e)
@@ -54,27 +55,22 @@ namespace TWChatOverlay.Views
 
             _isApplyingLoadedState = false;
             _isStateReady = true;
-
-            Dispatcher.BeginInvoke(new Action(() =>
-            {
-                _isApplyingLoadedState = true;
-                try
-                {
-                    _isOverlayMode = true;
-                    ShowTextOnly();
-                    EditorModeChanged?.Invoke(this, EventArgs.Empty);
-                    PersistState();
-                }
-                finally
-                {
-                    _isApplyingLoadedState = false;
-                }
-            }), System.Windows.Threading.DispatcherPriority.ContextIdle);
+            EditorModeChanged?.Invoke(this, EventArgs.Empty);
         }
 
         private void MemoOverlayWindow_Closing(object? sender, System.ComponentModel.CancelEventArgs e)
         {
             PersistState();
+        }
+        private void MemoOverlayWindow_Closed(object? sender, EventArgs e)
+        {
+            try { Application.Current.Exit -= Current_Exit; } catch { }
+            try { MemoTextBox.TextChanged -= MemoTextBox_TextChanged; } catch { }
+            try { LocationChanged -= MemoOverlayWindow_LocationChanged; } catch { }
+            try { SizeChanged -= MemoOverlayWindow_SizeChanged; } catch { }
+            try { Loaded -= MemoOverlayWindow_Loaded; } catch { }
+            try { Closing -= MemoOverlayWindow_Closing; } catch { }
+            try { Closed -= MemoOverlayWindow_Closed; } catch { }
         }
         private void Current_Exit(object? sender, ExitEventArgs e) => PersistState();
 
@@ -201,7 +197,7 @@ namespace TWChatOverlay.Views
             snapshot.MemoOverlayWindowLeft = left;
             snapshot.MemoOverlayWindowTop = top;
             snapshot.MemoOverlayText = text;
-            snapshot.MemoOverlayTextOnlyMode = true;
+            snapshot.MemoOverlayTextOnlyMode = _isOverlayMode;
             snapshot.MemoOverlayFontSize = MemoTextBox?.FontSize ?? 20.0;
             snapshot.MemoOverlayBold = MemoTextBox?.FontWeight == FontWeights.Bold;
             snapshot.MemoOverlayItalic = MemoTextBox?.FontStyle == FontStyles.Italic;
@@ -275,3 +271,4 @@ namespace TWChatOverlay.Views
         }
     }
 }
+

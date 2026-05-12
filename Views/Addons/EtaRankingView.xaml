@@ -61,10 +61,14 @@
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto"/>
                         <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
                     <TextBlock Text="🔍" VerticalAlignment="Center" Foreground="#8B949E" Margin="0,0,10,0" FontSize="14"/>
-                    <TextBox x:Name="EtaSearchBox" Grid.Column="1" Background="Transparent" BorderThickness="0" Foreground="White" FontSize="13" VerticalContentAlignment="Center" TextChanged="EtaSearchBox_TextChanged" CaretBrush="Cyan"/>
+                    <TextBox x:Name="EtaSearchBox" Grid.Column="1" Height="34" Padding="0,0,0,0" Background="Transparent" BorderThickness="0" Foreground="White" FontSize="13" VerticalContentAlignment="Center" TextChanged="EtaSearchBox_TextChanged" CaretBrush="Cyan"/>
                     <TextBlock Grid.Column="1" Text="아이디/캐릭터로 검색..." Foreground="#484F58" IsHitTestVisible="False" VerticalAlignment="Center" FontSize="13" Visibility="{Binding Text.IsEmpty, ElementName=EtaSearchBox, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                    <TextBlock x:Name="EtaUpdatedDateText" Grid.Column="2" VerticalAlignment="Center" Margin="10,0,8,0" Foreground="#8B949E" FontSize="12" Text="갱신일: -"/>
+                    <Button x:Name="EtaRefreshButton" Grid.Column="3" Width="88" Height="32" Margin="0,0,0,0" Click="EtaRefreshButton_Click" Style="{StaticResource SecondaryButtonStyle}" FontSize="12" Content="갱신 가능"/>
                 </Grid>
             </Border>
 
@@ -136,6 +140,38 @@
                     <DataGridTextColumn Header="정수" Binding="{Binding Essence}" Width="110" ElementStyle="{StaticResource EtaGridTextCellTextStyle}"/>
                 </DataGrid.Columns>
             </DataGrid>
+
+            <Grid x:Name="EtaRefreshLoadingOverlay"
+                  Grid.RowSpan="2"
+                  Background="#AA0D1117"
+                  Visibility="Collapsed"
+                  Panel.ZIndex="100">
+                <Border Width="260"
+                        Padding="16"
+                        CornerRadius="8"
+                        Background="#161B22"
+                        BorderBrush="#30363D"
+                        BorderThickness="1"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center">
+                    <StackPanel>
+                        <TextBlock Text="에타 랭킹 갱신 중..."
+                                   Foreground="White"
+                                   FontSize="14"
+                                   FontWeight="SemiBold"
+                                   HorizontalAlignment="Center"
+                                   Margin="0,0,0,10"/>
+                        <ProgressBar IsIndeterminate="True"
+                                     Height="8"
+                                     Margin="0,0,0,10"/>
+                        <TextBlock x:Name="EtaRefreshLoadingText"
+                                   Text="원격 데이터를 확인하고 있습니다."
+                                   Foreground="#8B949E"
+                                   FontSize="12"
+                                   TextAlignment="Center"/>
+                    </StackPanel>
+                </Border>
+            </Grid>
         </Grid>
     </Grid>
 </UserControl>
