@@ -51,6 +51,7 @@ namespace TWChatOverlay.Views
         private bool _hasCompletedInitialPresentation;
         private bool _canShowAuxiliaryWindows = true;
         private bool _isSettingsPositionMode;
+        private bool _isWizardChatPositionMode;
         private readonly DispatcherTimer _mainTabAutoHideTimer;
         private bool _isLogServiceInitialized;
         private bool _startLogServiceWhenInitialized;
@@ -77,6 +78,10 @@ namespace TWChatOverlay.Views
         private readonly object _defaultDropItemFilterLock = new();
         private DropItemResolver.DropItemFilterSnapshot? _defaultDropItemFilterSnapshot;
         private StartupLoadingWindow? _startupLoadingWindow;
+        private InitialSetupWizardWindow? _initialSetupWizardWindow;
+        private readonly bool _settingsFileMissingOnStartup;
+        private bool _pendingInitialSetupWizard;
+        private bool _isInitialSetupWizardRunning;
 
         private static readonly Regex AbandonEntryFeeRegex = new(
             @"입장료\s*(?<value>[\d,]+)\s*만\s*Seed",
@@ -126,6 +131,8 @@ namespace TWChatOverlay.Views
             Opacity = 0;
             IsHitTestVisible = false;
             Topmost = false;
+            _settingsFileMissingOnStartup = !ConfigService.SettingsFileExists();
+            _pendingInitialSetupWizard = _settingsFileMissingOnStartup;
             _uiLogBatchDispatcher = new UiLogBatchDispatcher(Dispatcher, 60);
             _logTabBufferStore = ChatWindowHub.SharedLogBuffers;
             _tabDisplayStateResolver = new TabDisplayStateResolver();
@@ -133,6 +140,10 @@ namespace TWChatOverlay.Views
             _mainTabAutoHideTimer.Tick += (_, _) => HideMainTabs();
 
             _settings = ConfigService.Load();
+            if (!_settings.InitialSetupWizardCompleted)
+            {
+                _pendingInitialSetupWizard = true;
+            }
             _ = IgnoredChatMessageService.EnsureLoadedAsync();
             ApplyStartupPreset();
             this.DataContext = _settings;
@@ -245,6 +256,18 @@ namespace TWChatOverlay.Views
             RequestRefreshLogDisplay();
             try { ApplyHotKeys(); }
             catch (Exception ex) { AppLogger.Warn("Failed to reapply hotkeys after settings reset.", ex); }
+
+            try
+            {
+                foreach (var sub in Application.Current.Windows.OfType<SubMenuWindow>().ToList())
+                {
+                    try { sub.Hide(); } catch { }
+                }
+            }
+            catch { }
+
+            _pendingInitialSetupWizard = true;
+            Dispatcher.BeginInvoke(new Action(TryShowInitialSetupWizardIfNeeded), DispatcherPriority.Background);
         }
 
         protected override void OnSourceInitialized(EventArgs e)
@@ -358,6 +381,12 @@ namespace TWChatOverlay.Views
 
             if (_isOverlayVisible)
             {
+                if (_pendingInitialSetupWizard)
+                {
+                    TryShowInitialSetupWizardIfNeeded();
+                    return;
+                }
+
                 _stickyService?.UpdatePositionNow();
 
                 if (!IsVisible)
@@ -369,8 +398,122 @@ namespace TWChatOverlay.Views
                 IsHitTestVisible = true;
                 Visibility = Visibility.Visible;
                 _stickyService?.UpdatePositionImmediately();
+                EnsureMenuWindowVisible();
             }
 
+        }
+
+        private void TryShowInitialSetupWizardIfNeeded()
+        {
+            if (!_pendingInitialSetupWizard || _isInitialSetupWizardRunning)
+                return;
+
+            _isInitialSetupWizardRunning = true;
+            _pendingInitialSetupWizard = false;
+
+            try
+            {
+                try { Hide(); } catch { }
+                Opacity = 0;
+                IsHitTestVisible = false;
+
+                try
+                {
+                    var menu = Application.Current.Windows.OfType<MenuWindow>().FirstOrDefault();
+                    menu?.Hide();
+                }
+                catch { }
+
+                try
+                {
+                    foreach (var sub in Application.Current.Windows.OfType<SubMenuWindow>().ToList())
+                    {
+                        try { sub.Hide(); } catch { }
+                    }
+                }
+                catch { }
+
+                _initialSetupWizardWindow = new InitialSetupWizardWindow(_settings, this);
+                _initialSetupWizardWindow.Owner = null;
+                _initialSetupWizardWindow.Topmost = true;
+                _initialSetupWizardWindow.WizardFinished += InitialSetupWizardWindow_WizardFinished;
+                _initialSetupWizardWindow.Closed += InitialSetupWizardWindow_Closed;
+                _initialSetupWizardWindow.Show();
+                _initialSetupWizardWindow.Activate();
+                _initialSetupWizardWindow.Focus();
+            }
+            catch (Exception ex)
+            {
+                AppLogger.Warn("Failed to open initial setup wizard.", ex);
+                RevealMainUiAfterWizard();
+            }
+        }
+
+        private void InitialSetupWizardWindow_WizardFinished(object? sender, bool completed)
+        {
+            AppLogger.Info($"Initial setup wizard closed. Completed={completed}");
+            if (completed)
+            {
+                try
+                {
+                    _settings.InitialSetupWizardCompleted = true;
+                    ConfigService.SaveDeferred(_settings);
+                }
+                catch (Exception ex)
+                {
+                    AppLogger.Warn("Failed to persist initial setup completion state.", ex);
+                }
+            }
+        }
+
+        private void InitialSetupWizardWindow_Closed(object? sender, EventArgs e)
+        {
+            if (_initialSetupWizardWindow != null)
+            {
+                _initialSetupWizardWindow.WizardFinished -= InitialSetupWizardWindow_WizardFinished;
+                _initialSetupWizardWindow.Closed -= InitialSetupWizardWindow_Closed;
+            }
+
+            _initialSetupWizardWindow = null;
+            RevealMainUiAfterWizard();
+        }
+
+        private void RevealMainUiAfterWizard()
+        {
+            _isInitialSetupWizardRunning = false;
+
+            if (!IsVisible)
+            {
+                Show();
+            }
+
+            Opacity = 1;
+            IsHitTestVisible = true;
+            Visibility = Visibility.Visible;
+            _stickyService?.UpdatePositionImmediately();
+            EnsureMenuWindowVisible();
+        }
+
+        private void EnsureMenuWindowVisible()
+        {
+            try
+            {
+                var menu = Application.Current.Windows.OfType<MenuWindow>().FirstOrDefault();
+                if (menu == null)
+                {
+                    menu = new MenuWindow();
+                    menu.Topmost = true;
+                    menu.Show();
+                }
+                else if (!menu.IsVisible)
+                {
+                    menu.Show();
+                }
+            }
+            catch (Exception ex)
+            {
+                AppLogger.Warn("Failed to show menu window after startup.", ex);
+            }
         }
 
         private void StickyService_AuxiliaryWindowVisibilityChanged(bool canShow)
@@ -458,6 +601,12 @@ namespace TWChatOverlay.Views
             try
             {
                 await Dispatcher.Yield(DispatcherPriority.ApplicationIdle);
+                UpdateStartupLoadingProgress(10, "업데이트를 확인하는 중입니다.");
+                var updateResult = await UpdateService.CheckForUpdateAsync(forceInstallLatest: false, showNoUpdateMessage: false);
+                if (updateResult == UpdateCheckResult.UpdateApplied)
+                {
+                    return;
+                }
 
                 await InitializeLogServiceAfterEtaProfilesAsync();
 
@@ -468,6 +617,7 @@ namespace TWChatOverlay.Views
                     ApplyItemDropHelperWindowSettings();
                     ApplyBuffTrackerWindowSettings();
                     ApplyBuffTrackerHelperWindowSettings();
+                    TryPrewarmDisplayWindows();
                     InitializeNativeServices();
                 }, DispatcherPriority.Background);
             }
@@ -533,6 +683,18 @@ namespace TWChatOverlay.Views
             }
 
             _startLogServiceWhenInitialized = true;
+        }
+
+        private void TryPrewarmDisplayWindows()
+        {
+            try
+            {
+                ShoutToastService.GetOrCreatePreviewWindow(_settings);
+            }
+            catch (Exception ex)
+            {
+                AppLogger.Warn("Display prewarm failed.", ex);
+            }
         }
 
         private void LoadRecentLogsFromRawFiles(int lineLimit)

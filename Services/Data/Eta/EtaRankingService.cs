@@ -4,6 +4,7 @@ using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Net.Http;
+using System.Globalization;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading;
@@ -57,6 +58,7 @@ namespace TWChatOverlay.Services
 
         private static Dictionary<string, EtaProfileResolver.EtaProfile> _profiles = new(StringComparer.OrdinalIgnoreCase);
         private static IReadOnlyList<EtaProfileResolver.EtaRankingEntry> _rankings = Array.Empty<EtaProfileResolver.EtaRankingEntry>();
+        private static DateTime? _payloadDateLocal;
         private static int _isInitialized;
         private static readonly SemaphoreSlim LoadLock = new(1, 1);
 
@@ -119,6 +121,21 @@ namespace TWChatOverlay.Services
                 return _rankings;
 
             return _rankings.Where(x => x.CharacterName == characterName).ToList();
+        }
+
+        public static bool IsRefreshCompletedForCurrentCycle()
+        {
+            if (!_payloadDateLocal.HasValue)
+                return false;
+
+            DateTime now = DateTime.Now;
+            DateTime cycleDate = now.Hour >= 11 ? now.Date : now.Date.AddDays(-1);
+            return _payloadDateLocal.Value.Date == cycleDate;
+        }
+
+        public static DateTime? GetLastPayloadDate()
+        {
+            return _payloadDateLocal;
         }
 
         public static void DeleteCache()
@@ -189,6 +206,7 @@ namespace TWChatOverlay.Services
 
                 _profiles = next;
                 _rankings = new ReadOnlyCollection<EtaProfileResolver.EtaRankingEntry>(rankingRows);
+                _payloadDateLocal = ResolvePayloadDate(json, payload);
                 return true;
             }
             catch (Exception ex)
@@ -200,8 +218,95 @@ namespace TWChatOverlay.Services
 
         private sealed class EtaRankingPayload
         {
+            [JsonPropertyName("Date")]
+            public DateTime? Date { get; set; }
+
+            [JsonPropertyName("CollectDate")]
+            public string? CollectDate { get; set; }
+
             [JsonPropertyName("Rankings")]
             public List<EtaRankingRow> Rankings { get; set; } = new();
+        }
+
+        private static DateTime? ResolvePayloadDate(string json, EtaRankingPayload payload)
+        {
+            if (payload.Date.HasValue)
+                return payload.Date.Value.Date;
+
+            if (!string.IsNullOrWhiteSpace(payload.CollectDate))
+            {
+                if (DateTime.TryParse(payload.CollectDate, CultureInfo.InvariantCulture, DateTimeStyles.AssumeLocal, out DateTime collectParsed) ||
+                    DateTime.TryParse(payload.CollectDate, out collectParsed))
+                {
+                    return collectParsed.Date;
+                }
+            }
+
+            try
+            {
+                using var doc = JsonDocument.Parse(json);
+                var root = doc.RootElement;
+                if (TryResolveDateElement(root, out var dateElement))
+                {
+                    return ParseDateElement(dateElement);
+                }
+            }
+            catch
+            {
+            }
+
+            return null;
+        }
+
+        private static bool TryResolveDateElement(JsonElement root, out JsonElement dateElement)
+        {
+            if (root.TryGetProperty("CollectDate", out dateElement) ||
+                root.TryGetProperty("collectDate", out dateElement) ||
+                root.TryGetProperty("Date", out dateElement) ||
+                root.TryGetProperty("date", out dateElement))
+            {
+                return true;
+            }
+
+            foreach (var property in root.EnumerateObject())
+            {
+                if (property.Name.EndsWith("date", StringComparison.OrdinalIgnoreCase))
+                {
+                    dateElement = property.Value;
+                    return true;
+                }
+            }
+
+            dateElement = default;
+            return false;
+        }
+
+        private static DateTime? ParseDateElement(JsonElement dateElement)
+        {
+            if (dateElement.ValueKind == JsonValueKind.String)
+            {
+                string? raw = dateElement.GetString();
+                if (!string.IsNullOrWhiteSpace(raw))
+                {
+                    if (DateTime.TryParse(raw, CultureInfo.InvariantCulture, DateTimeStyles.AssumeLocal, out DateTime parsed) ||
+                        DateTime.TryParse(raw, out parsed))
+                    {
+                        return parsed.Date;
+                    }
+                }
+            }
+            else if (dateElement.ValueKind == JsonValueKind.Number && dateElement.TryGetInt64(out long unix))
+            {
+                try
+                {
+                    return DateTimeOffset.FromUnixTimeSeconds(unix).LocalDateTime.Date;
+                }
+                catch
+                {
+                }
+            }
+
+            return null;
         }
 
         private sealed class EtaRankingRow

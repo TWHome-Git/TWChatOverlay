@@ -46,7 +46,8 @@ namespace TWChatOverlay.Services
             await LoadLock.WaitAsync().ConfigureAwait(false);
             try
             {
-                string? json = await CacheClient.GetJsonAsync(forceRefresh).ConfigureAwait(false);
+                bool manifestChanged = await RemoteResourceManifestService.ShouldForceRefreshAsync("BossTimer.json").ConfigureAwait(false);
+                string? json = await CacheClient.GetJsonAsync(forceRefresh || manifestChanged).ConfigureAwait(false);
                 if (string.IsNullOrWhiteSpace(json))
                     return;
 
@@ -68,6 +69,7 @@ namespace TWChatOverlay.Services
                     return;
 
                 _bosses = ordered;
+                await RemoteResourceManifestService.MarkResourceVersionAppliedAsync("BossTimer.json").ConfigureAwait(false);
                 BossesUpdated?.Invoke();
                 AppLogger.Info($"Boss timer data loaded. Count={ordered.Count}");
             }

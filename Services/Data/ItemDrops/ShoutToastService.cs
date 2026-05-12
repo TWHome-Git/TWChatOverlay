@@ -128,6 +128,24 @@ namespace TWChatOverlay.Services
             Application.Current.Dispatcher.BeginInvoke(new Action(RearrangeToasts));
         }
 
+        public static ShoutToastWindow? GetOrCreatePreviewWindow(ChatSettings settings)
+        {
+            if (settings == null)
+                return null;
+
+            if (_previewToast == null || !_previewToast.IsLoaded)
+            {
+                _previewToast = new ShoutToastWindow("외치기 토스트 위치", ResolveToastFont(), settings);
+                _previewToast.Closed += (_, _) => { _previewToast = null; };
+            }
+            else
+            {
+                _previewToast.SetSettings(settings);
+            }
+
+            return _previewToast;
+        }
+
         private static void RearrangeToasts()
         {
             var basePosition = ResolveBasePositionFromSharedSettings();

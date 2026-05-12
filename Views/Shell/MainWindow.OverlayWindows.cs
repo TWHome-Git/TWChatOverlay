@@ -160,9 +160,9 @@ namespace TWChatOverlay.Views
             ShowItemCalendarWindow();
         }
 
-        public void ShowAbandonRoadSummaryWindow(bool previewMode = false, bool restartLifetime = true, bool activateWindow = true)
+        public void ShowAbandonRoadSummaryWindow(bool previewMode = false, bool restartLifetime = true, bool activateWindow = true, bool forcePreview = false)
         {
-            if (!_settings.ShowAbandonRoadSummaryWindow)
+            if (!_settings.ShowAbandonRoadSummaryWindow && !forcePreview)
             {
                 if (_AbandonRoadSummaryWindow != null)
                 {

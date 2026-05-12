@@ -254,10 +254,15 @@ namespace TWChatOverlay.Services
                     return;
                 }
 
-                string? json = await CacheClient.GetJsonAsync().ConfigureAwait(false);
+                bool manifestChanged = await RemoteResourceManifestService.ShouldForceRefreshAsync("DropItem.Json").ConfigureAwait(false);
+                string? json = await CacheClient.GetJsonAsync(forceRefresh: manifestChanged).ConfigureAwait(false);
                 if (!string.IsNullOrWhiteSpace(json))
                 {
                     bool applied = TryApplyJson(json);
+                    if (applied)
+                    {
+                        await RemoteResourceManifestService.MarkResourceVersionAppliedAsync("DropItem.Json").ConfigureAwait(false);
+                    }
                     AppLogger.Info($"Tracked item list load {(applied ? "succeeded" : "failed")}.");
                 }
                 else
@@ -299,10 +304,12 @@ namespace TWChatOverlay.Services
 
         public static async Task<IReadOnlyList<(string Name, ItemDropGrade Grade, string? Abbreviation)>> LoadDefaultItemsAsync()
         {
-            string? json = await CacheClient.GetJsonAsync().ConfigureAwait(false);
+            bool manifestChanged = await RemoteResourceManifestService.ShouldForceRefreshAsync("DropItem.Json").ConfigureAwait(false);
+            string? json = await CacheClient.GetJsonAsync(forceRefresh: manifestChanged).ConfigureAwait(false);
             if (!string.IsNullOrWhiteSpace(json) &&
                 TryParseJson(json, out var rows, out _))
             {
+                await RemoteResourceManifestService.MarkResourceVersionAppliedAsync("DropItem.Json").ConfigureAwait(false);
                 return rows.ConvertAll(row => (row.Name, row.Grade, row.Abbreviation));
             }
 

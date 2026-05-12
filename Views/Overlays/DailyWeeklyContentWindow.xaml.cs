@@ -494,8 +494,8 @@ namespace TWChatOverlay.Views
                 IsWeekly = true,
                 Children = new[] { mercurialCoreMasterGroup, mercurialWeeklyDungeonGroup }
             };
-            var abyssRegionGroup = new DailyWeeklyContentLog { Name = WeeklyAbyssGroupName, IsRegionGroup = true, IsWeekly = true, Children = new[] { abyssGroup, abyssalTreasury, dimensionalGap, abyssCoreMasterGroup } };
-            var eclipseRegionGroup = new DailyWeeklyContentLog { Name = WeeklyEclipseGroupName, IsRegionGroup = true, IsWeekly = true, Children = new[] { eclipseBoss, eclipseSubjugation, supplyRetrieval, trainingCenter, detachedForce, apetiriaEx, apetiria, eclipseCoreMasterGroup, finalBattle } };
+            var abyssRegionGroup = new DailyWeeklyContentLog { Name = WeeklyAbyssGroupName, IsRegionGroup = true, IsWeekly = true, Children = new[] { abyssCoreMasterGroup, abyssGroup, abyssalTreasury, dimensionalGap } };
+            var eclipseRegionGroup = new DailyWeeklyContentLog { Name = WeeklyEclipseGroupName, IsRegionGroup = true, IsWeekly = true, Children = new[] { eclipseCoreMasterGroup, eclipseBoss, eclipseSubjugation, supplyRetrieval, trainingCenter, detachedForce, apetiriaEx, apetiria, finalBattle } };
             var otherRegionGroup = new DailyWeeklyContentLog { Name = WeeklyOtherGroupName, IsRegionGroup = true, IsWeekly = true, Children = new[] { coreDungeon, excavationSite, relic, cleaningPartTime, pravaDefense, vestige, orlyDefense, catacombsHell, shinjoHard, siochanBosses, siochanOdin, AbandonGroup } };
 
             var weeklyItems = new DailyWeeklyContentLog[] { mercurialRegionGroup, abyssRegionGroup, eclipseRegionGroup, otherRegionGroup };
@@ -1222,10 +1222,32 @@ namespace TWChatOverlay.Views
         {
             if (sender is CheckBox cb && cb.Tag is DailyWeeklyContentLog item)
             {
-                SaveItemConfig(item);
                 if (item.Children != null)
-                    foreach (var child in item.Children)
-                        SaveItemConfig(child);
+                {
+                    foreach (var child in EnumerateDescendants(item))
+                    {
+                        child.IsEnabled = item.IsEnabled;
+                    }
+                }
+
+                SaveItemConfig(item);
+                foreach (var child in EnumerateDescendants(item))
+                {
+                    SaveItemConfig(child);
+                }
+            }
+        }
+
+        private static IEnumerable<DailyWeeklyContentLog> EnumerateDescendants(DailyWeeklyContentLog root)
+        {
+            if (root.Children == null)
+                yield break;
+
+            foreach (var child in root.Children)
+            {
+                yield return child;
+                foreach (var grandChild in EnumerateDescendants(child))
+                    yield return grandChild;
             }
         }
 

@@ -134,6 +134,7 @@ namespace TWChatOverlay.Models
             Preset1 = new WindowPositionPreset("프리셋 1", 0, 0);
             Preset2 = new WindowPositionPreset("프리셋 2", 0, 0);
             Preset3 = new WindowPositionPreset("프리셋 3", 0, 0);
+            InitialSetupWizardCompleted = false;
             DungeonItemConfigs = CreateDefaultDungeonItemConfigs();
             BossAlertConfigs = CreateDefaultBossAlertConfigs();
         }
@@ -170,8 +171,7 @@ namespace TWChatOverlay.Models
                 ["어비스 - 심층Ⅱ"] = new() { IsEnabled = true },
                 ["어비스 - 심층Ⅲ"] = new() { IsEnabled = true },
                 ["신조의 둥지 어려움"] = new() { IsEnabled = true },
-                ["아페티리아 일반"] = new() { IsEnabled = false },
-                ["아페티리아 어려움"] = new() { IsEnabled = true },
+                ["아페티리아"] = new() { IsEnabled = true },
                 ["시오칸 하임 보스 토벌전"] = new() { IsEnabled = true },
                 ["시오칸 하임 오딘 전면전"] = new() { IsEnabled = true },
                 ["아페티리아 EX"] = new() { IsEnabled = true },

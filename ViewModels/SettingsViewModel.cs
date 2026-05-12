@@ -27,6 +27,7 @@ namespace TWChatOverlay.ViewModels
         public ICommand ColorPickCommand { get; }
         public ICommand InitSettingsCommand { get; }
         public ICommand ExitAppCommand { get; }
+        public ICommand ManualUpdateCommand { get; }
         public ICommand SaveOrLoadPresetCommand { get; }
         public ICommand ApplyHotkeysCommand { get; }
         public ICommand CancelHotkeysCommand { get; }
@@ -494,6 +495,7 @@ namespace TWChatOverlay.ViewModels
             ColorPickCommand = new RelayCommand<string?>(ExecuteColorPick);
             InitSettingsCommand = new RelayCommand<object?>(_ => ExecuteInitSettings());
             ExitAppCommand = new RelayCommand<object?>(_ => ExecuteExitApp());
+            ManualUpdateCommand = new RelayCommand<object?>(async _ => await ExecuteManualUpdateAsync());
             SaveOrLoadPresetCommand = new RelayCommand<string?>(ExecuteSaveOrLoadPreset);
             ApplyHotkeysCommand = new RelayCommand<object?>(_ => ExecuteApplyHotkeys());
             CancelHotkeysCommand = new RelayCommand<object?>(_ => ExecuteCancelHotkeys());
@@ -692,6 +694,23 @@ namespace TWChatOverlay.ViewModels
         {
             AppLogger.Warn("Exit command invoked from settings view.");
             _onExit?.Invoke();
+        }
+
+        private async System.Threading.Tasks.Task ExecuteManualUpdateAsync()
+        {
+            try
+            {
+                var result = await UpdateService.CheckForUpdateAsync(forceInstallLatest: true, showNoUpdateMessage: true);
+                if (result == UpdateCheckResult.Failed)
+                {
+                    MessageBox.Show("업데이트 확인/적용 중 오류가 발생했습니다.", "수동 업데이트", MessageBoxButton.OK, MessageBoxImage.Warning);
+                }
+            }
+            catch (Exception ex)
+            {
+                AppLogger.Warn("Manual update failed.", ex);
+                MessageBox.Show("수동 업데이트 중 오류가 발생했습니다.", "수동 업데이트", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
         }
 
         /// <summary>

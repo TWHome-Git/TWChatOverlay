@@ -127,7 +127,7 @@
                 <Button x:Name="BtnMemo" Width="{DynamicResource MenuIconSize}" Height="{DynamicResource MenuIconSize}" Click="OpenChild_Click" ToolTip="메모장" Style="{StaticResource MenuIconButtonStyle}" Margin="2,2,2,2" Content="M"/>
                 <!-- 10: AddonView (추가기능) -->
                 <Button x:Name="BtnAddon" Width="{DynamicResource MenuIconSize}" Height="{DynamicResource MenuIconSize}" Click="OpenChild_Click" ToolTip="추가 기능" Style="{StaticResource MenuIconButtonStyle}" Margin="2,2,2,2">
-                    <Image Source="/TWChatOverlay;component/Data/images/MenuIcon/Dungeon.png" MaxWidth="{DynamicResource MenuIconSize}" MaxHeight="{DynamicResource MenuIconSize}" Stretch="Uniform" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    <TextBlock Text="+" FontSize="22" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                 </Button>
                 <!-- 11: Settings -->
                 <Button x:Name="BtnSettings" Width="{DynamicResource MenuIconSize}" Height="{DynamicResource MenuIconSize}" Click="OpenChild_Click" ToolTip="설정" Style="{StaticResource MenuIconButtonStyle}" Margin="2,2,2,2" HorizontalAlignment="Center">

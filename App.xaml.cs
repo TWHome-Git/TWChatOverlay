@@ -94,81 +94,6 @@ namespace TWChatOverlay
                 AppLogger.Warn("Failed to create main window.", ex);
             }
 
-            try
-            {
-                Views.MenuWindow? menu = null;
-                foreach (Window w in Current.Windows)
-                {
-                    if (w is Views.MenuWindow existingMenu)
-                    {
-                        menu = existingMenu;
-                        break;
-                    }
-                }
-
-                if (menu == null)
-                {
-                    menu = new Views.MenuWindow();
-                    try
-                    {
-                        var settings = TWChatOverlay.Services.ConfigService.Load();
-                        if (settings.MenuWindowLeft.HasValue && settings.MenuWindowTop.HasValue)
-                        {
-                            menu.WindowStartupLocation = WindowStartupLocation.Manual;
-                            menu.Left = settings.MenuWindowLeft.Value;
-                            menu.Top = settings.MenuWindowTop.Value;
-                        }
-                        else if (main != null)
-                        {
-                            menu.Left = main.Left;
-                            menu.Top = main.Top;
-                            menu.Owner = main;
-                        }
-                        else
-                        {
-                            menu.WindowStartupLocation = WindowStartupLocation.CenterScreen;
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        AppLogger.Warn("Failed to position menu window.", ex);
-                    }
-
-                    menu.Topmost = true;
-                    menu.Show();
-                }
-                else
-                {
-                    menu.Topmost = true;
-                }
-            }
-            catch (Exception ex)
-            {
-                AppLogger.Warn("Failed to create menu window.", ex);
-            }
-
-            try
-            {
-                Views.MemoOverlayWindow? memo = null;
-                foreach (Window w in Current.Windows)
-                {
-                    if (w is Views.MemoOverlayWindow existingMemo)
-                    {
-                        memo = existingMemo;
-                        break;
-                    }
-                }
-
-                if (memo == null)
-                {
-                    memo = new Views.MemoOverlayWindow();
-                    memo.Show();
-                }
-            }
-            catch (Exception ex)
-            {
-                AppLogger.Warn("Failed to create memo overlay window at startup.", ex);
-            }
 
 #if DEBUG
             try
@@ -181,11 +106,7 @@ namespace TWChatOverlay
             }
 #endif
 
-            Task.Run(() => UpdateService.CheckForUpdateAsync()).ContinueWith(t =>
-            {
-                if (t.Exception != null)
-                    AppLogger.Warn("Update check failed.", t.Exception, "CheckForUpdateAsync");
-            }, TaskContinuationOptions.OnlyOnFaulted);
+            
         }
 
         protected override void OnExit(ExitEventArgs e)
