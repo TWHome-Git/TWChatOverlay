@@ -706,7 +706,7 @@ namespace TWChatOverlay.Views
             AddDungeonChecks(middle, new[]
             {
                 ("- 머큐리얼 코어 마스터 던전", "머큐리얼 코어 마스터"),
-                ("- 머큐리얼 주간", "최후의 결전")
+                ("- 머큐리얼 주간", "머큐리얼 주간")
             }, indent: 10);
 
             AddSubgroup(middle, "어비스");
@@ -728,7 +728,7 @@ namespace TWChatOverlay.Views
                 ("- 훈련소", "훈련소"),
                 ("- 별동대", "별동대"),
                 ("- 아페티리아 EX", "아페티리아 EX"),
-                ("- 아페티리아", "아페티리아 어려움"),
+                ("- 아페티리아", "아페티리아"),
                 ("- 최후의 결전", "최후의 결전")
             }, indent: 10);
 
@@ -853,12 +853,40 @@ namespace TWChatOverlay.Views
 
         private void SetDungeonItemEnabled(string key, bool enabled)
         {
+            SetDungeonItemEnabledRecursive(key, enabled, new HashSet<string>(StringComparer.Ordinal));
+        }
+
+        private void SetDungeonItemEnabledRecursive(string key, bool enabled, HashSet<string> visited)
+        {
             string resolvedKey = ResolveDungeonConfigKey(key);
+            if (!visited.Add(resolvedKey))
+                return;
+
             if (_settings.DungeonItemConfigs.TryGetValue(resolvedKey, out var cfg))
             {
                 cfg.IsEnabled = enabled;
                 _settings.DungeonItemConfigs[resolvedKey] = cfg;
             }
+
+            foreach (string child in GetDungeonChildKeys(resolvedKey))
+            {
+                SetDungeonItemEnabledRecursive(child, enabled, visited);
+            }
+        }
+
+        private static IEnumerable<string> GetDungeonChildKeys(string key)
+        {
+            return key switch
+            {
+                "어밴던로드" => new[] { "필멸의 땅", "카디프", "오를란느" },
+                "이클립스 보스" => new[] { "로카고스", "에토스", "체리아", "마티아", "티로로스", "라이코스" },
+                "이클립스 코어 마스터" => new[] { "로카고스 코어 마스터", "에토스 코어 마스터", "체리아 코어 마스터", "마티아 코어 마스터", "라이코스 코어 마스터", "티로로스 코어 마스터" },
+                "어비스 코어 마스터" => new[] { "심층Ⅰ 코어 마스터", "심층Ⅱ 코어 마스터", "심층Ⅲ 코어 마스터" },
+                "어비스 지옥" => new[] { "어비스 - 심층Ⅰ", "어비스 - 심층Ⅱ", "어비스 - 심층Ⅲ" },
+                "머큐리얼 코어 마스터" => new[] { "샐리온 코어 마스터 던전", "샐레아나 코어 마스터 던전", "실라이론 코어 마스터 던전", "실반 코어 마스터 던전", "루미너스 코어 마스터 던전" },
+                "머큐리얼 주간" => new[] { "샐리온", "샐레아나", "실라이론", "실반", "루미너스", "루미너스(EX)" },
+                _ => Array.Empty<string>()
+            };
         }
 
         private string ResolveDungeonConfigKey(string key)
@@ -868,6 +896,9 @@ namespace TWChatOverlay.Views
 
             return key switch
             {
+                "아페티리아" => _settings.DungeonItemConfigs.ContainsKey("아페티리아") ? "아페티리아" : key,
+                "아페티리아 어려움" => _settings.DungeonItemConfigs.ContainsKey("아페티리아") ? "아페티리아" : key,
+                "아페티리아 일반" => _settings.DungeonItemConfigs.ContainsKey("아페티리아") ? "아페티리아" : key,
                 "추종하는 환희(일반)" => _settings.DungeonItemConfigs.ContainsKey("아페티리아 일반") ? "아페티리아 일반" : key,
                 "추종하는 환희(어려움)" => _settings.DungeonItemConfigs.ContainsKey("아페티리아 어려움") ? "아페티리아 어려움" : key,
                 "응시하는 슬픔(일반)" => _settings.DungeonItemConfigs.ContainsKey("카디프") ? "카디프" : key,

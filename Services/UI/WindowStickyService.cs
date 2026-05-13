@@ -28,7 +28,8 @@ namespace TWChatOverlay.Services
         private bool? _lastCanShowAuxiliaryWindows;
         private DateTime _foregroundChangedAt = DateTime.MinValue;
 
-        private static readonly TimeSpan ForegroundStabilizationDelay = TimeSpan.FromMilliseconds(80);
+        private static readonly TimeSpan ForegroundEnterDelay = TimeSpan.FromMilliseconds(80);
+        private static readonly TimeSpan ForegroundExitDelay = TimeSpan.FromMilliseconds(320);
         private static readonly TimeSpan ForegroundPollInterval = TimeSpan.FromMilliseconds(40);
 
         public double _dpiX = 1.0;
@@ -265,7 +266,8 @@ namespace TWChatOverlay.Services
 
         private void PollForegroundWindow()
         {
-            bool observedForegroundAllowed = OverlayHelper.IsForegroundAllowedOverlayWindow();
+            EnsureGameWindowHandle();
+            bool observedForegroundAllowed = OverlayHelper.IsForegroundAllowedOverlayWindow(_gameHwnd);
 
             lock (_foregroundStateLock)
             {
@@ -283,8 +285,9 @@ namespace TWChatOverlay.Services
                     return;
                 }
 
+                TimeSpan requiredDelay = observedForegroundAllowed ? ForegroundEnterDelay : ForegroundExitDelay;
                 if (_foregroundChangedAt == DateTime.MinValue ||
-                    (DateTime.UtcNow - _foregroundChangedAt) < ForegroundStabilizationDelay)
+                    (DateTime.UtcNow - _foregroundChangedAt) < requiredDelay)
                 {
                     return;
                 }
@@ -331,10 +334,18 @@ namespace TWChatOverlay.Services
         private void ApplyTopmostState(bool shouldTopmost)
         {
             IntPtr hwnd = new WindowInteropHelper(_overlayWindow).Handle;
+            bool isWindowTopmost = _overlayWindow.Topmost;
+
+            // Prevent repetitive SetWindowPos calls with identical state.
+            // Frequent no-op topmost toggles can still cause visible flicker on some systems.
+            if (shouldTopmost == _lastAppliedTopmost && isWindowTopmost == shouldTopmost)
+            {
+                return;
+            }
 
             if (shouldTopmost)
             {
-                if (!_overlayWindow.Topmost)
+                if (!isWindowTopmost)
                 {
                     _overlayWindow.Topmost = true;
                 }
@@ -358,7 +369,7 @@ namespace TWChatOverlay.Services
                 return;
             }
 
-            if (_overlayWindow.Topmost)
+            if (isWindowTopmost)
             {
                 _overlayWindow.Topmost = false;
             }
