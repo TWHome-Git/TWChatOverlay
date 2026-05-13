@@ -1560,9 +1560,9 @@ namespace TWChatOverlay.Views.Addons
                 "갑옷" when config != null => candidates.Where(x =>
                     ContainsCategory(x, "갑옷")
                     && config.ArmorKeywords.Any(k => ContainsCategory(x, k))
-                    && IsMatchByAttackType(x, type, allowWhenUnknown: true)),
-                "갑옷" => candidates.Where(x => ContainsCategory(x, "갑옷") && IsMatchByAttackType(x, type, allowWhenUnknown: true)),
-                "아티팩트" => candidates.Where(x => ContainsCategory(x, "아티팩트") && IsMatchByAttackType(x, type, allowWhenUnknown: false)),
+                    && IsMatchByAttackType(x, type, allowWhenUnknown: true, excludeMagicHackWhenHack: false)),
+                "갑옷" => candidates.Where(x => ContainsCategory(x, "갑옷") && IsMatchByAttackType(x, type, allowWhenUnknown: true, excludeMagicHackWhenHack: false)),
+                "아티팩트" => candidates.Where(x => ContainsCategory(x, "아티팩트") && IsMatchByAttackType(x, type, allowWhenUnknown: false, excludeMagicHackWhenHack: true)),
                 "다리" => candidates.Where(x => ContainsCategory(x, "발") || ContainsCategory(x, "다리")),
                 "손" => candidates.Where(x => ContainsCategory(x, "손") && !ContainsCategory(x, "손목")),
                 _ when slot.Contains("어빌리티") => Enumerable.Empty<EquipmentModel>(),
@@ -1652,7 +1652,7 @@ namespace TWChatOverlay.Views.Addons
             return IsMatchByAttackType(item, type, allowWhenUnknown: false);
         }
 
-        private static bool IsMatchByAttackType(EquipmentModel item, CoefficientCalculatorType type, bool allowWhenUnknown)
+        private static bool IsMatchByAttackType(EquipmentModel item, CoefficientCalculatorType type, bool allowWhenUnknown, bool excludeMagicHackWhenHack = true)
         {
             string matchKeyword = type switch
             {
@@ -1677,7 +1677,7 @@ namespace TWChatOverlay.Views.Addons
                     .ToList();
 
                 string target = NormalizeTypeToken(matchKeyword);
-                if (type == CoefficientCalculatorType.Hack)
+                if (type == CoefficientCalculatorType.Hack && excludeMagicHackWhenHack)
                 {
                     // 베기에서는 마법베기 전용 아티팩트를 제외합니다.
                     return normalizedTypes.Contains("베기", StringComparer.OrdinalIgnoreCase)
