@@ -21,6 +21,8 @@
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="8"/>
                 <RowDefinition Height="Auto"/>
+                <RowDefinition Height="12"/>
+                <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
 
             <TextBlock x:Name="TitleText"
@@ -50,6 +52,14 @@
                        Foreground="#9FB0C2"
                        FontSize="12"
                        HorizontalAlignment="Center"/>
+
+            <Button Grid.Row="8"
+                    x:Name="CancelButton"
+                    Width="96"
+                    Height="28"
+                    Content="취소"
+                    HorizontalAlignment="Center"
+                    Click="CancelButton_Click"/>
         </Grid>
     </Border>
 </Window>

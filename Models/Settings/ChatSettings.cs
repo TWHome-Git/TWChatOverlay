@@ -112,6 +112,8 @@ namespace TWChatOverlay.Models
         private bool _memoOverlayItalic = false;
         private string _memoOverlayColorKey = "White";
         private bool _initialSetupWizardCompleted = false;
+        private bool _startupLogReadCanceled = false;
+        private bool _startupTodayOnlyBootstrapCompleted = false;
         private bool _chatCloneWindow1FollowMainFont = true;
         private string _chatCloneWindow1FontFamily = string.Empty;
         private double? _chatCloneWindow1FontSize = null;
@@ -1224,6 +1226,30 @@ namespace TWChatOverlay.Models
             {
                 if (_initialSetupWizardCompleted == value) return;
                 _initialSetupWizardCompleted = value;
+                OnPropertyChanged();
+            }
+        }
+
+        [JsonPropertyOrder(905)]
+        public bool StartupLogReadCanceled
+        {
+            get => _startupLogReadCanceled;
+            set
+            {
+                if (_startupLogReadCanceled == value) return;
+                _startupLogReadCanceled = value;
+                OnPropertyChanged();
+            }
+        }
+
+        [JsonPropertyOrder(906)]
+        public bool StartupTodayOnlyBootstrapCompleted
+        {
+            get => _startupTodayOnlyBootstrapCompleted;
+            set
+            {
+                if (_startupTodayOnlyBootstrapCompleted == value) return;
+                _startupTodayOnlyBootstrapCompleted = value;
                 OnPropertyChanged();
             }
         }
