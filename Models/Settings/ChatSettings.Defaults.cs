@@ -187,6 +187,7 @@ namespace TWChatOverlay.Models
                 ["심층Ⅱ 코어 마스터"] = new() { IsEnabled = true },
                 ["심층Ⅲ 코어 마스터"] = new() { IsEnabled = true },
                 ["머큐리얼 코어 마스터"] = new() { IsEnabled = true },
+                ["머큐리얼 주간"] = new() { IsEnabled = true },
                 ["샐리온 코어 마스터"] = new() { IsEnabled = true },
                 ["샐레아나 코어 마스터"] = new() { IsEnabled = true },
                 ["실라이론 코어 마스터"] = new() { IsEnabled = true },

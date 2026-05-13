@@ -89,9 +89,16 @@ namespace TWChatOverlay.Services
             IntPtr foundHandle = IntPtr.Zero;
             EnumWindows((hWnd, lParam) =>
             {
-                string title = GetWindowTitle(hWnd);
+                if (!IsWindowVisible(hWnd))
+                {
+                    return true;
+                }
 
-                if (title.Contains("Talesweaver", StringComparison.OrdinalIgnoreCase) && IsWindowVisible(hWnd))
+                string title = GetWindowTitle(hWnd);
+                string processName = GetProcessName(hWnd);
+
+                if (title.Contains("Talesweaver", StringComparison.OrdinalIgnoreCase) ||
+                    processName.Contains("Talesweaver", StringComparison.OrdinalIgnoreCase))
                 {
                     foundHandle = hWnd;
                     return false;
@@ -125,7 +132,7 @@ namespace TWChatOverlay.Services
             return title.Contains("Talesweaver", StringComparison.OrdinalIgnoreCase);
         }
 
-        public static bool IsForegroundAllowedOverlayWindow()
+        public static bool IsForegroundAllowedOverlayWindow(IntPtr gameWindowHandle)
         {
             IntPtr foreground = GetForegroundWindow();
             if (foreground == IntPtr.Zero)
@@ -133,8 +140,7 @@ namespace TWChatOverlay.Services
                 return false;
             }
 
-            string title = GetWindowTitle(foreground);
-            if (title.Contains("Talesweaver", StringComparison.OrdinalIgnoreCase))
+            if (gameWindowHandle != IntPtr.Zero && foreground == gameWindowHandle)
             {
                 return true;
             }
@@ -142,19 +148,45 @@ namespace TWChatOverlay.Services
             try
             {
                 GetWindowThreadProcessId(foreground, out uint processId);
-                uint currentProcessId = (uint)Process.GetCurrentProcess().Id;
-                if (processId != currentProcessId)
+                if (processId == 0)
                 {
                     return false;
                 }
 
-                return string.Equals(title, "설정", StringComparison.Ordinal) ||
-                       string.Equals(title, "Menu", StringComparison.Ordinal) ||
-                       string.Equals(title, "TW Chat Overlay", StringComparison.Ordinal);
+                if (gameWindowHandle != IntPtr.Zero)
+                {
+                    GetWindowThreadProcessId(gameWindowHandle, out uint gameProcessId);
+                    if (gameProcessId != 0 && processId == gameProcessId)
+                    {
+                        return true;
+                    }
+                }
+
+                uint currentProcessId = (uint)Process.GetCurrentProcess().Id;
+                return processId == currentProcessId;
             }
             catch
             {
                 return false;
+            }
+        }
+
+        private static string GetProcessName(IntPtr hWnd)
+        {
+            try
+            {
+                GetWindowThreadProcessId(hWnd, out uint processId);
+                if (processId == 0)
+                {
+                    return string.Empty;
+                }
+
+                using Process process = Process.GetProcessById((int)processId);
+                return process.ProcessName ?? string.Empty;
+            }
+            catch
+            {
+                return string.Empty;
             }
         }
 
