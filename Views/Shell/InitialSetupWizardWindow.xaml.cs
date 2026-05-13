@@ -43,6 +43,7 @@ namespace TWChatOverlay.Views
         private UIElement? _dailyWeeklyStepContent;
 
         public event EventHandler<bool>? WizardFinished;
+        public event EventHandler<string>? LogPathConfirmed;
 
         public InitialSetupWizardWindow(ChatSettings settings, MainWindow? mainWindow)
         {
@@ -952,6 +953,11 @@ namespace TWChatOverlay.Views
 
         private void NextButton_Click(object sender, RoutedEventArgs e)
         {
+            if (_stepIndex == 0)
+            {
+                LogPathConfirmed?.Invoke(this, _settings.ChatLogFolderPath ?? string.Empty);
+            }
+
             if (_stepIndex == 1)
             {
                 SaveMainWindowPositionToPreset1();

@@ -135,6 +135,8 @@ namespace TWChatOverlay.Models
             Preset2 = new WindowPositionPreset("프리셋 2", 0, 0);
             Preset3 = new WindowPositionPreset("프리셋 3", 0, 0);
             InitialSetupWizardCompleted = false;
+            StartupLogReadCanceled = false;
+            StartupTodayOnlyBootstrapCompleted = false;
             DungeonItemConfigs = CreateDefaultDungeonItemConfigs();
             BossAlertConfigs = CreateDefaultBossAlertConfigs();
         }

@@ -8,6 +8,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Text.Json;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -82,6 +83,8 @@ namespace TWChatOverlay.Views
         private readonly bool _settingsFileMissingOnStartup;
         private bool _pendingInitialSetupWizard;
         private bool _isInitialSetupWizardRunning;
+        private CancellationTokenSource? _startupLogInitCts;
+        private bool _startupLogInitRunning;
 
         private static readonly Regex AbandonEntryFeeRegex = new(
             @"입장료\s*(?<value>[\d,]+)\s*만\s*Seed",
@@ -212,6 +215,8 @@ namespace TWChatOverlay.Views
             catch { }
             try { _AbandonRoadSummaryWindow?.Close(); } catch { }
             try { _experienceWeeklyRefreshPromptWindow?.Close(); } catch { }
+            try { _startupLogInitCts?.Cancel(); } catch { }
+            try { _startupLogInitCts?.Dispose(); } catch { }
             try { _logService?.Dispose(); } catch { }
             try { _expService?.Stop(); } catch { }
             try { _buffTrackerService?.Dispose(); } catch { }
@@ -437,6 +442,7 @@ namespace TWChatOverlay.Views
                 _initialSetupWizardWindow.Owner = null;
                 _initialSetupWizardWindow.Topmost = true;
                 _initialSetupWizardWindow.WizardFinished += InitialSetupWizardWindow_WizardFinished;
+                _initialSetupWizardWindow.LogPathConfirmed += InitialSetupWizardWindow_LogPathConfirmed;
                 _initialSetupWizardWindow.Closed += InitialSetupWizardWindow_Closed;
                 _initialSetupWizardWindow.Show();
                 _initialSetupWizardWindow.Activate();
@@ -471,11 +477,23 @@ namespace TWChatOverlay.Views
             if (_initialSetupWizardWindow != null)
             {
                 _initialSetupWizardWindow.WizardFinished -= InitialSetupWizardWindow_WizardFinished;
+                _initialSetupWizardWindow.LogPathConfirmed -= InitialSetupWizardWindow_LogPathConfirmed;
                 _initialSetupWizardWindow.Closed -= InitialSetupWizardWindow_Closed;
             }
 
             _initialSetupWizardWindow = null;
             RevealMainUiAfterWizard();
+        }
+
+        private void InitialSetupWizardWindow_LogPathConfirmed(object? sender, string selectedPath)
+        {
+            _ = Dispatcher.BeginInvoke(new Action(() =>
+            {
+                if (_isLogServiceInitialized || _startupLogInitRunning)
+                    return;
+
+                _ = RunDeferredLogInitializationAsync(isFirstRun: true);
+            }), DispatcherPriority.Background);
         }
 
         private void RevealMainUiAfterWizard()
@@ -527,7 +545,7 @@ namespace TWChatOverlay.Views
             }), DispatcherPriority.Background);
         }
 
-        private async Task InitializeLogServiceAfterEtaProfilesAsync()
+        private async Task InitializeLogServiceAfterEtaProfilesAsync(bool onlyToday, CancellationToken cancellationToken)
         {
             UpdateStartupLoadingProgress(15, "외부 설정을 준비하는 중입니다.");
             try
@@ -544,6 +562,7 @@ namespace TWChatOverlay.Views
                 UpdateStartupLoadingProgress(35, "원본 로그를 읽는 중입니다.");
                 await Task.Run(async () =>
                 {
+                    Func<DateTime, bool>? dateFilter = onlyToday ? (d => d.Date == DateTime.Today) : null;
                     await _readableLogArchiveService.EnsureInitializedFromRawLogsAsync(
                         _settings.ChatLogFolderPath,
                         _logAnalysisService,
@@ -553,13 +572,23 @@ namespace TWChatOverlay.Views
                             double ratio = total <= 0 ? 0 : (double)current / total;
                             double progress = 35 + (ratio * 50.0);
                             UpdateStartupLoadingProgress(progress, "원본 로그를 읽는 중입니다.", dateText);
-                        }).ConfigureAwait(false);
+                        },
+                        dateFilter,
+                        cancellationToken).ConfigureAwait(false);
 
                     _readableLogArchiveService.MigrateContentArchiveIfNeeded();
-                }).ConfigureAwait(false);
+                }, cancellationToken).ConfigureAwait(false);
 
                 _AbandonWeeklySummary = _readableLogArchiveService.LoadAbandonWeeklySummary(DateTime.Today);
                 _AbandonWeeklySummaryWeekKey = GetIsoWeekKey(DateTime.Today);
+                _settings.StartupLogReadCanceled = false;
+                ConfigService.SaveDeferred(_settings);
+            }
+            catch (OperationCanceledException)
+            {
+                _settings.StartupLogReadCanceled = true;
+                ConfigService.SaveDeferred(_settings);
+                throw;
             }
             catch (Exception ex)
             {
@@ -608,7 +637,8 @@ namespace TWChatOverlay.Views
                     return;
                 }
 
-                await InitializeLogServiceAfterEtaProfilesAsync();
+                bool needsWizardLogPath = _pendingInitialSetupWizard;
+                bool shouldRunStartupLogInitialization = !needsWizardLogPath || _settings.StartupLogReadCanceled;
 
                 await Dispatcher.InvokeAsync(() =>
                 {
@@ -620,6 +650,16 @@ namespace TWChatOverlay.Views
                     TryPrewarmDisplayWindows();
                     InitializeNativeServices();
                 }, DispatcherPriority.Background);
+
+                if (shouldRunStartupLogInitialization)
+                {
+                    bool isFirstRun = !_settings.StartupTodayOnlyBootstrapCompleted;
+                    await RunDeferredLogInitializationAsync(isFirstRun).ConfigureAwait(false);
+                }
+                else
+                {
+                    CloseStartupLoadingWindow();
+                }
             }
             catch (Exception ex)
             {
@@ -635,7 +675,9 @@ namespace TWChatOverlay.Views
                 return;
 
             _startupLoadingWindow = new StartupLoadingWindow();
+            _startupLoadingWindow.CancelRequested += StartupLoadingWindow_CancelRequested;
             _startupLoadingWindow.Show();
+            _startupLoadingWindow.SetCancelEnabled(true);
             _startupLoadingWindow.UpdateProgress(5, "초기화 진행중...");
         }
 
@@ -667,8 +709,53 @@ namespace TWChatOverlay.Views
                 return;
             }
 
+            _startupLoadingWindow.CancelRequested -= StartupLoadingWindow_CancelRequested;
             _startupLoadingWindow.Close();
             _startupLoadingWindow = null;
+        }
+
+        private async Task RunDeferredLogInitializationAsync(bool isFirstRun)
+        {
+            if (_startupLogInitRunning || _isLogServiceInitialized)
+                return;
+
+            _startupLogInitRunning = true;
+            _startupLogInitCts?.Dispose();
+            _startupLogInitCts = new CancellationTokenSource();
+
+            ShowStartupLoadingWindow();
+            UpdateStartupLoadingProgress(12, "로그 초기화를 준비하는 중입니다.");
+
+            try
+            {
+                bool onlyToday = isFirstRun && !_settings.StartupLogReadCanceled;
+                await InitializeLogServiceAfterEtaProfilesAsync(onlyToday, _startupLogInitCts.Token).ConfigureAwait(false);
+                if (onlyToday)
+                {
+                    _settings.StartupTodayOnlyBootstrapCompleted = true;
+                    ConfigService.SaveDeferred(_settings);
+                }
+            }
+            catch (OperationCanceledException)
+            {
+                UpdateStartupLoadingProgress(100, "로그 읽기를 취소했습니다. 다음 실행 시 다시 진행됩니다.");
+            }
+            finally
+            {
+                _startupLogInitRunning = false;
+                CloseStartupLoadingWindow();
+            }
+        }
+
+        private void StartupLoadingWindow_CancelRequested(object? sender, EventArgs e)
+        {
+            try
+            {
+                _startupLogInitCts?.Cancel();
+            }
+            catch
+            {
+            }
         }
 
         private void StartLogServiceWhenReady()

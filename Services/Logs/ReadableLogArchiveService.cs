@@ -74,7 +74,9 @@ namespace TWChatOverlay.Services
             string chatLogFolderPath,
             LogAnalysisService logAnalysisService,
             Func<string, bool> isContentRelevant,
-            Action<string, int, int>? onProgressText = null)
+            Action<string, int, int>? onProgressText = null,
+            Func<DateTime, bool>? sourceDateFilter = null,
+            CancellationToken cancellationToken = default)
         {
             if (string.IsNullOrWhiteSpace(chatLogFolderPath) || !Directory.Exists(chatLogFolderPath))
                 return;
@@ -82,10 +84,11 @@ namespace TWChatOverlay.Services
             if (logAnalysisService == null || isContentRelevant == null)
                 return;
 
-            await _buildGate.WaitAsync().ConfigureAwait(false);
+            await _buildGate.WaitAsync(cancellationToken).ConfigureAwait(false);
             try
             {
-                var allSourceFiles = DiscoverSourceLogFiles(chatLogFolderPath);
+                cancellationToken.ThrowIfCancellationRequested();
+                var allSourceFiles = DiscoverSourceLogFiles(chatLogFolderPath, sourceDateFilter);
                 if (allSourceFiles.Count == 0)
                     return;
 
@@ -186,6 +189,7 @@ namespace TWChatOverlay.Services
                     logAnalysisService,
                     isContentRelevant,
                     onProgressText,
+                    cancellationToken,
                     missingShoutDates,
                     missingExpDates,
                     missingItemDays,
@@ -267,6 +271,7 @@ namespace TWChatOverlay.Services
             LogAnalysisService logAnalysisService,
             Func<string, bool> isContentRelevant,
             Action<string, int, int>? onProgressText,
+            CancellationToken cancellationToken,
             HashSet<DateTime> missingShoutDates,
             HashSet<DateTime> missingExpDates,
             HashSet<DateTime> missingItemDays,
@@ -280,6 +285,7 @@ namespace TWChatOverlay.Services
             int total = sourceFiles.Count;
             for (int i = 0; i < sourceFiles.Count; i++)
             {
+                cancellationToken.ThrowIfCancellationRequested();
                 SourceLogFile source = sourceFiles[i];
                 DateTime logDate = source.Date.Date;
                 onProgressText?.Invoke($"{logDate:yyyy-MM-dd} 처리 중...", i + 1, total);
@@ -300,6 +306,7 @@ namespace TWChatOverlay.Services
                 var lines = SplitLogLines(rawContent);
                 foreach (string line in lines)
                 {
+                    cancellationToken.ThrowIfCancellationRequested();
                     var analysis = logAnalysisService.Analyze(line, isRealTime: false, filterSnapshot);
                     if (!analysis.IsSuccess)
                         continue;
@@ -337,11 +344,12 @@ namespace TWChatOverlay.Services
             FlushAbandonDayBuffer();
         }
 
-        private static List<SourceLogFile> DiscoverSourceLogFiles(string chatLogFolderPath)
+        private static List<SourceLogFile> DiscoverSourceLogFiles(string chatLogFolderPath, Func<DateTime, bool>? sourceDateFilter)
         {
             return Directory.EnumerateFiles(chatLogFolderPath, "TWChatLog_*.html")
                 .Select(path => new { Path = path, DateFound = TryExtractDateFromPath(path, out DateTime date), Date = date })
                 .Where(x => x.DateFound)
+                .Where(x => sourceDateFilter == null || sourceDateFilter(x.Date.Date))
                 .Select(x => new SourceLogFile(x.Path, x.Date.Date))
                 .OrderBy(x => x.Date)
                 .ThenBy(x => x.Path, StringComparer.OrdinalIgnoreCase)
