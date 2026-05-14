@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -25,8 +25,8 @@ namespace TWChatOverlay.Services
     }
 
     /// <summary>
-    /// 테일즈위버 로그(HTML)를 폴링 기반 단일 파이프라인으로 수집합니다.
-    /// 캐시는 사용하지 않고 체크포인트(마지막 읽은 오프셋)만 유지합니다.
+    /// ?뚯씪利덉쐞踰?濡쒓렇(HTML)瑜??대쭅 湲곕컲 ?⑥씪 ?뚯씠?꾨씪?몄쑝濡??섏쭛?⑸땲??
+    /// 罹먯떆???ъ슜?섏? ?딄퀬 泥댄겕?ъ씤??留덉?留??쎌? ?ㅽ봽??留??좎??⑸땲??
     /// </summary>
     public class LogService : IDisposable
     {
@@ -54,9 +54,6 @@ namespace TWChatOverlay.Services
         public event Action<LogFeedItem>? OnNewLogRead;
         public event Action? InitialLogsLoaded;
         private static readonly Regex LineSplitRegex = new(@"</?br\s*>|\r?\n", RegexOptions.IgnoreCase | RegexOptions.Compiled);
-        private static readonly Regex ShoutLineRegex = new(
-            @"^\s*<font[^>]*color=[""']?#?(?:white|ffffff)[""']?[^>]*>\s*(?<time>\[[^<]+?\])\s*</font>\s*<font[^>]*color=[""']?#?c896c8[""']?[^>]*>(?<content>.*?)</font>\s*$",
-            RegexOptions.IgnoreCase | RegexOptions.Compiled);
         private static readonly Regex LeadingTimeRegex = new(@"\[\s*(?<time>[^\]]+)\s*\]", RegexOptions.Compiled);
 
         #endregion
@@ -106,7 +103,7 @@ namespace TWChatOverlay.Services
         #region Path Management
 
         /// <summary>
-        /// MainWindow에서 이벤트를 연결한 후 명시적으로 호출해야 합니다.
+        /// MainWindow?먯꽌 ?대깽?몃? ?곌껐????紐낆떆?곸쑝濡??몄텧?댁빞 ?⑸땲??
         /// </summary>
         public void Initialize()
         {
@@ -115,7 +112,7 @@ namespace TWChatOverlay.Services
         }
 
         /// <summary>
-        /// 날짜가 변경되었는지 확인하고 필요시 경로를 업데이트
+        /// ?좎쭨媛 蹂寃쎈릺?덈뒗吏 ?뺤씤?섍퀬 ?꾩슂??寃쎈줈瑜??낅뜲?댄듃
         /// </summary>
         private void CheckDateAndPath()
         {
@@ -130,7 +127,7 @@ namespace TWChatOverlay.Services
         }
 
         /// <summary>
-        /// 현재 날짜에 맞는 로그 경로를 설정하고 체크포인트 기준으로 초기 위치를 결정합니다.
+        /// ?꾩옱 ?좎쭨??留욌뒗 濡쒓렇 寃쎈줈瑜??ㅼ젙?섍퀬 泥댄겕?ъ씤??湲곗??쇰줈 珥덇린 ?꾩튂瑜?寃곗젙?⑸땲??
         /// </summary>
         private void UpdatePath(bool isInitialLoad)
         {
@@ -186,7 +183,7 @@ namespace TWChatOverlay.Services
         #region Methods
 
         /// <summary>
-        /// 초기 구동 시 기존 로그의 마지막 부분을 가져옵니다.
+        /// 珥덇린 援щ룞 ??湲곗〈 濡쒓렇??留덉?留?遺遺꾩쓣 媛?몄샃?덈떎.
         /// </summary>
         private void LoadInitialLogsFromTail(int lineCount)
         {
@@ -223,7 +220,7 @@ namespace TWChatOverlay.Services
         }
 
         /// <summary>
-        /// 실시간으로 추가된 로그를 증분으로 읽습니다.
+        /// ?ㅼ떆媛꾩쑝濡?異붽???濡쒓렇瑜?利앸텇?쇰줈 ?쎌뒿?덈떎.
         /// </summary>
         public void ReadLog(bool? isRealTimeOverride = null)
         {
@@ -298,7 +295,7 @@ namespace TWChatOverlay.Services
         #region Processing
 
         /// <summary>
-        /// 읽어온 원문 HTML을 <br> 태그 단위로 분리해 이벤트를 발생시킵니다.
+        /// ?쎌뼱???먮Ц HTML??<br> ?쒓렇 ?⑥쐞濡?遺꾨━???대깽?몃? 諛쒖깮?쒗궢?덈떎.
         /// </summary>
         private void ProcessRawContent(string content, bool isRealTime, int takeLastCount = -1)
         {
@@ -308,7 +305,7 @@ namespace TWChatOverlay.Services
                 .Where(l => !string.IsNullOrWhiteSpace(l))
                 .ToList();
 
-            lines = MergeWrappedShoutLines(lines);
+            lines = ShoutLineMergeHelper.MergeWrappedShoutLines(lines);
 
             if (takeLastCount > 0 && lines.Count > takeLastCount)
             {
@@ -329,62 +326,6 @@ namespace TWChatOverlay.Services
             }
         }
 
-        private static List<string> MergeWrappedShoutLines(IReadOnlyList<string> lines)
-        {
-            if (lines.Count <= 1)
-                return lines.ToList();
-
-            var merged = new List<string>(lines.Count);
-            int index = 0;
-            while (index < lines.Count)
-            {
-                string current = lines[index].Trim();
-                if (index + 1 < lines.Count &&
-                    TryMergeWrappedShout(current, lines[index + 1], out string joined))
-                {
-                    merged.Add(joined);
-                    index += 2;
-                    continue;
-                }
-
-                merged.Add(current);
-                index++;
-            }
-
-            return merged;
-        }
-
-        private static bool TryMergeWrappedShout(string firstLine, string secondLine, out string mergedLine)
-        {
-            mergedLine = firstLine;
-
-            var first = ShoutLineRegex.Match(firstLine);
-            var second = ShoutLineRegex.Match(secondLine);
-            if (!first.Success || !second.Success)
-                return false;
-
-            string time1 = NormalizeWhitespace(WebUtility.HtmlDecode(first.Groups["time"].Value));
-            string time2 = NormalizeWhitespace(WebUtility.HtmlDecode(second.Groups["time"].Value));
-            if (!string.Equals(time1, time2, StringComparison.Ordinal))
-                return false;
-
-            string content1 = first.Groups["content"].Value;
-            string content2 = second.Groups["content"].Value;
-            string plain1 = NormalizeWhitespace(WebUtility.HtmlDecode(content1));
-            string plain2 = NormalizeWhitespace(WebUtility.HtmlDecode(content2));
-
-            bool firstLooksLikeShout = plain1.Contains("외치기", StringComparison.OrdinalIgnoreCase);
-            bool secondLooksLikeContinuation = !plain2.Contains("외치기", StringComparison.OrdinalIgnoreCase);
-            if (!firstLooksLikeShout || !secondLooksLikeContinuation)
-                return false;
-
-            mergedLine =
-                $@"<font color=""white"">{first.Groups["time"].Value}</font><font color=""#c896c8"">{content1}{content2}</font>";
-            return true;
-        }
-
-        private static string NormalizeWhitespace(string text)
-            => Regex.Replace(text ?? string.Empty, @"\s+", " ").Trim();
 
         private string DecodeIncrementalBytes(byte[] buffer, int byteCount)
         {

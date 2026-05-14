@@ -19,10 +19,6 @@ namespace TWChatOverlay.Services
 
         private static readonly UTF8Encoding Utf8BomEncoding = new(encoderShouldEmitUTF8Identifier: true);
         private static readonly UTF8Encoding Utf8NoBomEncoding = new(encoderShouldEmitUTF8Identifier: false);
-        private static readonly Regex LineSplitRegex = new(@"</?br\s*>|\r?\n", RegexOptions.IgnoreCase | RegexOptions.Compiled);
-        private static readonly Regex ShoutLineRegex = new(
-            @"^\s*<font[^>]*color=[""']?#?(?:white|ffffff)[""']?[^>]*>\s*(?<time>\[[^<]+?\])\s*</font>\s*<font[^>]*color=[""']?#?c896c8[""']?[^>]*>(?<content>.*?)</font>\s*$",
-            RegexOptions.IgnoreCase | RegexOptions.Compiled);
         private static readonly Regex ExpDecreaseHundredBillionRegex = new(
             @"경험치가\s*(?:10[,，]?)?0{9}\s*(?:감소|차감)",
             RegexOptions.Compiled);
@@ -108,29 +104,35 @@ namespace TWChatOverlay.Services
                 var missingAbandonDays = new HashSet<DateTime>();
                 var missingAbandonSummaryDays = new HashSet<DateTime>();
 
+                bool hasCheckpoint = lastCompletedDate.HasValue;
                 foreach (SourceLogFile source in allSourceFiles)
                 {
                     DateTime day = source.Date.Date;
                     string dayKey = day.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
                     string shoutPath = Path.Combine(_shoutDirectory, $"{dayKey}.html");
-                    if (!File.Exists(shoutPath))
+                    if ((!hasCheckpoint && !HasUsableArchiveContent(shoutPath)) ||
+                        (hasCheckpoint && File.Exists(shoutPath) && !HasUsableArchiveContent(shoutPath)))
                         missingShoutDates.Add(day);
 
                     string expPath = Path.Combine(_expDirectory, $"{dayKey}.html");
-                    if (!File.Exists(expPath))
+                    if ((!hasCheckpoint && !HasUsableArchiveContent(expPath)) ||
+                        (hasCheckpoint && File.Exists(expPath) && !HasUsableArchiveContent(expPath)))
                         missingExpDates.Add(day);
 
                     string itemPath = Path.Combine(_itemDirectory, $"{dayKey}.html");
-                    if (!File.Exists(itemPath))
+                    if ((!hasCheckpoint && !HasUsableArchiveContent(itemPath)) ||
+                        (hasCheckpoint && File.Exists(itemPath) && !HasUsableArchiveContent(itemPath)))
                         missingItemDays.Add(day);
 
                     string weekKey = GetIsoWeekKey(day);
                     string contentPath = Path.Combine(_contentDirectory, $"{weekKey}.html");
-                    if (!File.Exists(contentPath))
+                    if ((!hasCheckpoint && !HasUsableArchiveContent(contentPath)) ||
+                        (hasCheckpoint && File.Exists(contentPath) && !HasUsableArchiveContent(contentPath)))
                         missingContentWeeks.Add(weekKey);
 
                     string AbandonPath = Path.Combine(_AbandonDirectory, $"{dayKey}.html");
-                    if (!File.Exists(AbandonPath))
+                    if ((!hasCheckpoint && !HasUsableArchiveContent(AbandonPath)) ||
+                        (hasCheckpoint && File.Exists(AbandonPath) && !HasUsableArchiveContent(AbandonPath)))
                         missingAbandonDays.Add(day);
                     string abandonSummaryPath = Path.Combine(_AbandonDirectory, $"{dayKey}{AbandonDaySummarySuffix}");
                     if (!File.Exists(abandonSummaryPath))
@@ -177,12 +179,6 @@ namespace TWChatOverlay.Services
                 }
 
                 EnsureArchiveDirectoriesExist();
-                EnsureMissingArchiveFiles(
-                    missingShoutDates,
-                    missingExpDates,
-                    missingItemDays,
-                    missingContentWeeks,
-                    missingAbandonDays);
 
                 await BuildFromRawLogsAsync(
                     sourceFiles,
@@ -281,8 +277,9 @@ namespace TWChatOverlay.Services
         {
             DropItemResolver.DropItemFilterSnapshot filterSnapshot = await DropItemResolver.LoadDefaultFilterSnapshotAsync().ConfigureAwait(false);
             _abandonDayBuffer.Clear();
-            var pendingArchiveWrites = new Dictionary<string, List<string>>(StringComparer.OrdinalIgnoreCase);
+            using var pendingArchiveWrites = new ArchiveWriteBatch();
             int total = sourceFiles.Count;
+            DateTime? lastProcessedDate = null;
             for (int i = 0; i < sourceFiles.Count; i++)
             {
                 cancellationToken.ThrowIfCancellationRequested();
@@ -300,16 +297,12 @@ namespace TWChatOverlay.Services
 
                 bool hasArchiveWriteTarget = writeShout || writeExp || writeItem || writeContent || writeAbandon;
 
-                if (!TryReadSourceLogContent(source.Path, out string rawContent))
-                    continue;
-
-                var lines = SplitLogLines(rawContent);
-                foreach (string line in lines)
+                ProcessSourceLinesMerged(source.Path, cancellationToken, line =>
                 {
                     cancellationToken.ThrowIfCancellationRequested();
                     var analysis = logAnalysisService.Analyze(line, isRealTime: false, filterSnapshot);
                     if (!analysis.IsSuccess)
-                        continue;
+                        return;
 
                     string formattedText = analysis.Parsed.FormattedText;
 
@@ -335,13 +328,14 @@ namespace TWChatOverlay.Services
                                 pendingArchiveWrites);
                         }
                     }
-                }
-
-                FlushPendingArchiveWrites(pendingArchiveWrites);
-                SaveRawLogRebuildCheckpoint(logDate);
+                });
+                lastProcessedDate = logDate;
             }
-            FlushPendingArchiveWrites(pendingArchiveWrites);
+            pendingArchiveWrites.FlushAll();
             FlushAbandonDayBuffer();
+            RemoveExactDuplicateLinesFromArchiveFiles(pendingArchiveWrites.TouchedPaths);
+            if (lastProcessedDate.HasValue)
+                SaveRawLogRebuildCheckpoint(lastProcessedDate.Value);
         }
 
         private static List<SourceLogFile> DiscoverSourceLogFiles(string chatLogFolderPath, Func<DateTime, bool>? sourceDateFilter)
@@ -524,47 +518,6 @@ namespace TWChatOverlay.Services
                     decoded.Contains("올랐습니다", StringComparison.Ordinal));
         }
 
-        private void EnsureMissingArchiveFiles(
-            IEnumerable<DateTime> missingShoutDates,
-            IEnumerable<DateTime> missingExpDates,
-            IEnumerable<DateTime> missingItemDays,
-            IEnumerable<string> missingContentWeeks,
-            IEnumerable<DateTime> missingAbandonDays)
-        {
-            foreach (DateTime date in missingShoutDates.Distinct().OrderBy(d => d))
-            {
-                string dateKey = date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
-                string path = Path.Combine(_shoutDirectory, $"{dateKey}.html");
-                EnsureInitialized(path, $"Shout {dateKey}");
-            }
-
-            foreach (DateTime date in missingExpDates.Distinct().OrderBy(d => d))
-            {
-                string dateKey = date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
-                string path = Path.Combine(_expDirectory, $"{dateKey}.html");
-                EnsureInitialized(path, $"Exp {dateKey}");
-            }
-
-            foreach (DateTime day in missingItemDays.Distinct().OrderBy(d => d))
-            {
-                string dayKey = day.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
-                string path = Path.Combine(_itemDirectory, $"{dayKey}.html");
-                EnsureInitialized(path, $"Item {dayKey}");
-            }
-
-            foreach (string weekKey in missingContentWeeks.Distinct(StringComparer.Ordinal).OrderBy(w => w, StringComparer.Ordinal))
-            {
-                string path = Path.Combine(_contentDirectory, $"{weekKey}.html");
-                EnsureInitialized(path, $"Content {weekKey}");
-            }
-
-            foreach (DateTime day in missingAbandonDays.Distinct().OrderBy(d => d))
-            {
-                string dayKey = day.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
-                string path = Path.Combine(_AbandonDirectory, $"{dayKey}.html");
-                EnsureInitialized(path, $"Abandon {dayKey}");
-            }
-        }
 
         private void AppendFromAnalysisSelective(
             DateTime logDate,
@@ -575,7 +528,7 @@ namespace TWChatOverlay.Services
             bool writeExp,
             bool writeContent,
             bool writeAbandon,
-            Dictionary<string, List<string>>? pendingArchiveWrites = null)
+            ArchiveWriteBatch? pendingArchiveWrites = null)
         {
             var parsed = analysis.Parsed;
             if (parsed == null || string.IsNullOrWhiteSpace(parsed.FormattedText))
@@ -596,7 +549,7 @@ namespace TWChatOverlay.Services
             {
                 if (analysis.HasTrackedItemDrop && !string.IsNullOrWhiteSpace(parsed.TrackedItemName))
                 {
-                    AppendItemLog(logDate, text, parsed.TrackedItemName!, parsed.TrackedItemGrade.ToString(), Math.Max(1, parsed.TrackedItemCount));
+                    AppendItemLog(logDate, text, parsed.TrackedItemName!, parsed.TrackedItemGrade.ToString(), Math.Max(1, parsed.TrackedItemCount), pendingArchiveWrites);
                 }
                 else if (TryExtractMagicStoneGain(text, out string stoneName, out int stoneCount))
                 {
@@ -622,7 +575,8 @@ namespace TWChatOverlay.Services
                                 break;
                         }
                         NormalizeStoneConsistency(gainDelta);
-                        UpdateAbandonDailySummary(logDate, gainDelta, flushImmediately: true);
+                        bool flushSummaryNow = pendingArchiveWrites == null;
+                        UpdateAbandonDailySummary(logDate, gainDelta, flushImmediately: flushSummaryNow);
                         return;
                     }
                 }
@@ -644,7 +598,7 @@ namespace TWChatOverlay.Services
             }
         }
 
-        private void AppendShoutLog(DateTime logDate, string text, Dictionary<string, List<string>>? pendingArchiveWrites = null)
+        private void AppendShoutLog(DateTime logDate, string text, ArchiveWriteBatch? pendingArchiveWrites = null)
         {
             string dateKey = logDate.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
             string path = Path.Combine(_shoutDirectory, $"{dateKey}.html");
@@ -652,7 +606,7 @@ namespace TWChatOverlay.Services
             AppendHtmlLine(path, $"Shout {dateKey}", entry, pendingArchiveWrites);
         }
 
-        private void AppendItemLog(DateTime logDate, string text, string itemName, string itemGrade, int itemCount, Dictionary<string, List<string>>? pendingArchiveWrites = null)
+        private void AppendItemLog(DateTime logDate, string text, string itemName, string itemGrade, int itemCount, ArchiveWriteBatch? pendingArchiveWrites = null)
         {
             string dateKey = logDate.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
             string path = Path.Combine(_itemDirectory, $"{dateKey}.html");
@@ -660,7 +614,7 @@ namespace TWChatOverlay.Services
             AppendHtmlLine(path, $"Item {dateKey}", entry, pendingArchiveWrites);
         }
 
-        private void AppendContentLog(DateTime logDate, string text, Dictionary<string, List<string>>? pendingArchiveWrites = null)
+        private void AppendContentLog(DateTime logDate, string text, ArchiveWriteBatch? pendingArchiveWrites = null)
         {
             string weekKey = GetIsoWeekKey(logDate);
             string dateKey = logDate.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
@@ -669,7 +623,7 @@ namespace TWChatOverlay.Services
             AppendHtmlLine(path, $"Content {weekKey}", entry, pendingArchiveWrites);
         }
 
-        private void AppendExpLog(DateTime logDate, string text, Dictionary<string, List<string>>? pendingArchiveWrites = null)
+        private void AppendExpLog(DateTime logDate, string text, ArchiveWriteBatch? pendingArchiveWrites = null)
         {
             string dateKey = logDate.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
             string path = Path.Combine(_expDirectory, $"{dateKey}.html");
@@ -678,7 +632,7 @@ namespace TWChatOverlay.Services
             AppendHtmlLine(path, $"Exp {dateKey}", entry, pendingArchiveWrites);
         }
 
-        private void AppendAbandonLog(DateTime logDate, string text, Dictionary<string, List<string>>? pendingArchiveWrites = null)
+        private void AppendAbandonLog(DateTime logDate, string text, ArchiveWriteBatch? pendingArchiveWrites = null)
         {
             string dateKey = logDate.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
             string path = Path.Combine(_AbandonDirectory, $"{dateKey}.html");
@@ -686,7 +640,10 @@ namespace TWChatOverlay.Services
             AppendHtmlLine(path, $"Abandon {dateKey}", entry, pendingArchiveWrites);
 
             if (TryBuildAbandonDelta(text, out AbandonMonthlySummarySnapshotEntry delta))
-                UpdateAbandonDailySummary(logDate, delta, flushImmediately: true);
+            {
+                bool flushSummaryNow = pendingArchiveWrites == null;
+                UpdateAbandonDailySummary(logDate, delta, flushImmediately: flushSummaryNow);
+            }
         }
 
         private static bool IsExperienceDecreaseLog(string text)
@@ -879,36 +836,90 @@ namespace TWChatOverlay.Services
             return true;
         }
 
-        private static bool TryReadSourceLogContent(string path, out string rawContent)
-        {
-            rawContent = string.Empty;
-            Encoding encoding = Encoding.GetEncoding(949);
 
+        private static void ProcessSourceLinesMerged(string path, CancellationToken cancellationToken, Action<string> onLine)
+        {
+            Encoding encoding = Encoding.GetEncoding(949);
             const int maxAttempts = 5;
+            const int streamBufferSize = 1 << 20; // 1MB
+
             for (int attempt = 1; attempt <= maxAttempts; attempt++)
             {
                 try
                 {
-                    using var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
-                    using var reader = new StreamReader(stream, encoding, detectEncodingFromByteOrderMarks: true);
-                    rawContent = reader.ReadToEnd();
-                    return true;
+                    using var stream = new FileStream(
+                        path,
+                        FileMode.Open,
+                        FileAccess.Read,
+                        FileShare.ReadWrite,
+                        bufferSize: streamBufferSize,
+                        FileOptions.SequentialScan);
+                    using var reader = new StreamReader(stream, encoding, detectEncodingFromByteOrderMarks: true, bufferSize: streamBufferSize);
+
+                    string? pending = null;
+                    while (!reader.EndOfStream)
+                    {
+                        cancellationToken.ThrowIfCancellationRequested();
+                        string? raw = reader.ReadLine();
+                        if (string.IsNullOrWhiteSpace(raw))
+                            continue;
+
+                        string current = raw.Trim();
+                        if (pending == null)
+                        {
+                            pending = current;
+                            continue;
+                        }
+
+                        var mergedPair = ShoutLineMergeHelper.MergeWrappedShoutLines(new[] { pending, current });
+                        if (mergedPair.Count == 1)
+                        {
+                            pending = mergedPair[0];
+                            continue;
+                        }
+
+                        onLine(pending);
+                        pending = current;
+                    }
+
+                    if (!string.IsNullOrWhiteSpace(pending))
+                        onLine(pending);
+                    return;
                 }
                 catch (IOException ex)
                 {
                     if (attempt == maxAttempts)
                     {
-                        AppLogger.Warn($"Failed to read source chat log '{path}' after {maxAttempts} attempts.", ex);
-                        return false;
+                        AppLogger.Warn($"Failed to stream source chat log '{path}' after {maxAttempts} attempts.", ex);
+                        return;
                     }
 
                     Thread.Sleep(120 * attempt);
                 }
                 catch (Exception ex)
                 {
-                    AppLogger.Warn($"Failed to read source chat log '{path}'.", ex);
-                    return false;
+                    AppLogger.Warn($"Failed to stream source chat log '{path}'.", ex);
+                    return;
                 }
+            }
+        }
+
+        private static bool HasUsableArchiveContent(string path)
+        {
+            if (!File.Exists(path))
+                return false;
+
+            try
+            {
+                foreach (string line in File.ReadLines(path, Encoding.UTF8))
+                {
+                    if (line.Contains("<div class=\"log ", StringComparison.OrdinalIgnoreCase))
+                        return true;
+                }
+            }
+            catch
+            {
+                return false;
             }
 
             return false;
@@ -938,99 +949,14 @@ namespace TWChatOverlay.Services
             }
         }
 
-        private static List<string> SplitLogLines(string rawContent)
-        {
-            if (string.IsNullOrWhiteSpace(rawContent))
-                return new List<string>();
 
-            var lines = LineSplitRegex.Split(rawContent)
-                .Where(line => !string.IsNullOrWhiteSpace(line))
-                .Select(line => line.Trim())
-                .ToList();
-            return MergeWrappedShoutLines(lines);
-        }
-
-        private static List<string> MergeWrappedShoutLines(IReadOnlyList<string> lines)
-        {
-            if (lines.Count <= 1)
-                return lines.ToList();
-
-            var merged = new List<string>(lines.Count);
-            int index = 0;
-            while (index < lines.Count)
-            {
-                string current = lines[index].Trim();
-                if (index + 1 < lines.Count &&
-                    TryMergeWrappedShout(current, lines[index + 1], out string joined))
-                {
-                    merged.Add(joined);
-                    index += 2;
-                    continue;
-                }
-
-                merged.Add(current);
-                index++;
-            }
-
-            return merged;
-        }
-
-        private static bool TryMergeWrappedShout(string firstLine, string secondLine, out string mergedLine)
-        {
-            mergedLine = firstLine;
-
-            var first = ShoutLineRegex.Match(firstLine);
-            var second = ShoutLineRegex.Match(secondLine);
-            if (!first.Success || !second.Success)
-                return false;
-
-            string time1 = NormalizeWhitespace(WebUtility.HtmlDecode(first.Groups["time"].Value));
-            string time2 = NormalizeWhitespace(WebUtility.HtmlDecode(second.Groups["time"].Value));
-            if (!string.Equals(time1, time2, StringComparison.Ordinal))
-                return false;
-
-            string content1 = first.Groups["content"].Value;
-            string content2 = second.Groups["content"].Value;
-            string plain1 = NormalizeWhitespace(WebUtility.HtmlDecode(content1));
-            string plain2 = NormalizeWhitespace(WebUtility.HtmlDecode(content2));
-
-            bool firstLooksLikeShout = plain1.Contains("외치기", StringComparison.OrdinalIgnoreCase);
-            bool secondLooksLikeContinuation = !plain2.Contains("외치기", StringComparison.OrdinalIgnoreCase);
-            if (!firstLooksLikeShout || !secondLooksLikeContinuation)
-                return false;
-
-            mergedLine = $@"<font color=""white"">{first.Groups["time"].Value}</font><font color=""#c896c8"">{content1}{content2}</font>";
-            return true;
-        }
-
-        private static string NormalizeWhitespace(string text)
-            => Regex.Replace(text ?? string.Empty, @"\s+", " ").Trim();
-
-        private static void AppendHtmlLine(string path, string title, string htmlLine, Dictionary<string, List<string>>? pendingArchiveWrites = null)
+        private static void AppendHtmlLine(string path, string title, string htmlLine, ArchiveWriteBatch? pendingArchiveWrites = null)
         {
             string dedupeKey = BuildDedupeKey(htmlLine);
             if (pendingArchiveWrites != null)
             {
-                if (!pendingArchiveWrites.TryGetValue(path, out List<string>? lines))
-                {
-                    lines = new List<string>();
-                    pendingArchiveWrites[path] = lines;
-                }
-
-                if (lines.Any(existing => string.Equals(BuildDedupeKey(existing), dedupeKey, StringComparison.Ordinal)))
-                    return;
-
-                lines.Add(htmlLine);
+                pendingArchiveWrites.Enqueue(path, title, htmlLine, dedupeKey);
                 return;
-            }
-
-            if (File.Exists(path))
-            {
-                foreach (string existingLine in File.ReadLines(path, Encoding.UTF8))
-                {
-                    if (string.Equals(BuildDedupeKey(existingLine), dedupeKey, StringComparison.Ordinal))
-                        return;
-                }
             }
 
             EnsureInitialized(path, title);
@@ -1038,46 +964,106 @@ namespace TWChatOverlay.Services
             writer.WriteLine(htmlLine);
         }
 
-        private static void FlushPendingArchiveWrites(Dictionary<string, List<string>> pendingArchiveWrites)
+        private void RemoveExactDuplicateLinesFromArchiveFiles(IEnumerable<string> targetPaths)
         {
-            if (pendingArchiveWrites.Count == 0)
+            foreach (string path in targetPaths.Distinct(StringComparer.OrdinalIgnoreCase))
+                RemoveExactDuplicateLinesInFile(path);
+        }
+
+        private static void RemoveExactDuplicateLinesInFile(string filePath)
+        {
+            if (string.IsNullOrWhiteSpace(filePath) || !File.Exists(filePath))
                 return;
 
-            foreach (var kv in pendingArchiveWrites)
+            try
             {
-                string path = kv.Key;
-                List<string> lines = kv.Value;
-                if (lines.Count == 0)
-                    continue;
+                string[] lines = File.ReadAllLines(filePath, Encoding.UTF8);
+                if (lines.Length <= 1)
+                    return;
 
-                var uniqueBatch = new List<string>(lines.Count);
-                var seenBatch = new HashSet<string>(StringComparer.Ordinal);
+                var seen = new HashSet<string>(StringComparer.Ordinal);
+                var unique = new List<string>(lines.Length);
                 foreach (string line in lines)
                 {
-                    string key = BuildDedupeKey(line);
-                    if (seenBatch.Add(key))
-                        uniqueBatch.Add(line);
+                    if (seen.Add(line))
+                        unique.Add(line);
                 }
 
-                var existing = new HashSet<string>(StringComparer.Ordinal);
-                if (File.Exists(path))
+                if (unique.Count != lines.Length)
+                    File.WriteAllLines(filePath, unique, Utf8BomEncoding);
+            }
+            catch (Exception ex)
+            {
+                AppLogger.Warn($"Failed to remove duplicate lines from '{filePath}'.", ex);
+            }
+        }
+
+        private sealed class ArchiveWriteBatch : IDisposable
+        {
+            private const int FlushThresholdChars = 256 * 1024;
+            private readonly Dictionary<string, HashSet<string>> _seenByPath = new(StringComparer.OrdinalIgnoreCase);
+            private readonly Dictionary<string, StringBuilder> _bufferByPath = new(StringComparer.OrdinalIgnoreCase);
+            private readonly Dictionary<string, StreamWriter> _writerByPath = new(StringComparer.OrdinalIgnoreCase);
+            public HashSet<string> TouchedPaths { get; } = new(StringComparer.OrdinalIgnoreCase);
+
+            public void Enqueue(string path, string title, string htmlLine, string dedupeKey)
+            {
+                if (!_seenByPath.TryGetValue(path, out HashSet<string>? seen))
                 {
-                    foreach (string oldLine in File.ReadLines(path, Encoding.UTF8))
-                        existing.Add(BuildDedupeKey(oldLine));
+                    seen = new HashSet<string>(StringComparer.Ordinal);
+                    _seenByPath[path] = seen;
                 }
 
-                List<string> toAppend = uniqueBatch.Where(line => !existing.Contains(BuildDedupeKey(line))).ToList();
-                if (toAppend.Count == 0)
-                    continue;
+                if (!seen.Add(dedupeKey))
+                    return;
 
-                string title = Path.GetFileNameWithoutExtension(path) ?? "Log";
-                EnsureInitialized(path, title);
-                using var writer = new StreamWriter(path, append: true, Utf8NoBomEncoding);
-                foreach (string line in toAppend)
-                    writer.WriteLine(line);
+                if (!_bufferByPath.TryGetValue(path, out StringBuilder? buffer))
+                {
+                    buffer = new StringBuilder(4096);
+                    _bufferByPath[path] = buffer;
+                }
+
+                buffer.AppendLine(htmlLine);
+                TouchedPaths.Add(path);
+                if (buffer.Length >= FlushThresholdChars)
+                    FlushPath(path, title);
             }
 
-            pendingArchiveWrites.Clear();
+            public void FlushAll()
+            {
+                foreach (string path in _bufferByPath.Keys.ToList())
+                {
+                    string title = Path.GetFileNameWithoutExtension(path) ?? "Log";
+                    FlushPath(path, title);
+                }
+
+                foreach (var writer in _writerByPath.Values)
+                    writer.Flush();
+            }
+
+            private void FlushPath(string path, string title)
+            {
+                if (!_bufferByPath.TryGetValue(path, out StringBuilder? buffer) || buffer.Length == 0)
+                    return;
+
+                if (!_writerByPath.TryGetValue(path, out StreamWriter? writer))
+                {
+                    EnsureInitialized(path, title);
+                    writer = new StreamWriter(path, append: true, Utf8NoBomEncoding);
+                    _writerByPath[path] = writer;
+                }
+
+                writer.Write(buffer.ToString());
+                buffer.Clear();
+            }
+
+            public void Dispose()
+            {
+                FlushAll();
+                foreach (var writer in _writerByPath.Values)
+                    writer.Dispose();
+                _writerByPath.Clear();
+            }
         }
 
         private static string BuildDedupeKey(string htmlLine)
