@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -85,6 +86,8 @@ namespace TWChatOverlay.Views
         private bool _isInitialSetupWizardRunning;
         private CancellationTokenSource? _startupLogInitCts;
         private bool _startupLogInitRunning;
+        private bool _restartRequestedAfterWizardCompletion;
+        private bool _restartLaunchTriggered;
 
         private static readonly Regex AbandonEntryFeeRegex = new(
             @"입장료\s*(?<value>[\d,]+)\s*만\s*Seed",
@@ -98,7 +101,6 @@ namespace TWChatOverlay.Views
         private static readonly Regex HtmlFontTagRegex = new(
             @"<font\b",
             RegexOptions.IgnoreCase | RegexOptions.Compiled);
-        private static readonly string[] RecoverableTabs = { "General", "Basic", "Team", "Club", "Shout", "System" };
 
         private const string SeedIconUri = "pack://application:,,,/Data/images/Item/시드.png";
         private const string LowMagicStoneIconUri = "pack://application:,,,/Data/images/Item/하급마정석.png";
@@ -458,17 +460,24 @@ namespace TWChatOverlay.Views
         private void InitialSetupWizardWindow_WizardFinished(object? sender, bool completed)
         {
             AppLogger.Info($"Initial setup wizard closed. Completed={completed}");
-            if (completed)
+            if (!completed)
+                return;
+
+            try
             {
-                try
-                {
-                    _settings.InitialSetupWizardCompleted = true;
-                    ConfigService.SaveDeferred(_settings);
-                }
-                catch (Exception ex)
-                {
-                    AppLogger.Warn("Failed to persist initial setup completion state.", ex);
-                }
+                _settings.InitialSetupWizardCompleted = true;
+                ConfigService.Save(_settings);
+            }
+            catch (Exception ex)
+            {
+                AppLogger.Warn("Failed to persist initial setup completion state.", ex);
+            }
+
+            _restartRequestedAfterWizardCompletion = true;
+
+            if (!_startupLogInitRunning)
+            {
+                RestartApplicationAfterInitialSetupWizard();
             }
         }
 
@@ -482,6 +491,17 @@ namespace TWChatOverlay.Views
             }
 
             _initialSetupWizardWindow = null;
+
+            if (_restartRequestedAfterWizardCompletion)
+            {
+                if (!_startupLogInitRunning)
+                {
+                    RestartApplicationAfterInitialSetupWizard();
+                }
+
+                return;
+            }
+
             RevealMainUiAfterWizard();
         }
 
@@ -595,18 +615,8 @@ namespace TWChatOverlay.Views
                 AppLogger.Warn("Failed to initialize dedicated Logs archive from source chat logs.", ex);
             }
 
-            try
-            {
-                UpdateStartupLoadingProgress(75, "최근 로그를 불러오는 중입니다.");
-                await Dispatcher.InvokeAsync(() =>
-                {
-                    LoadRecentLogsFromRawFiles(1000);
-                }, DispatcherPriority.Background);
-            }
-            catch (Exception ex)
-            {
-                AppLogger.Warn("Failed to load recent logs from raw files.", ex);
-            }
+            // Raw logs were already fully scanned by EnsureInitializedFromRawLogsAsync above.
+            // Skip an immediate second raw-file pass to avoid duplicate I/O on startup.
 
             if (_logService != null && !_isLogServiceInitialized)
             {
@@ -744,6 +754,11 @@ namespace TWChatOverlay.Views
             {
                 _startupLogInitRunning = false;
                 CloseStartupLoadingWindow();
+
+                if (_restartRequestedAfterWizardCompletion)
+                {
+                    _ = Dispatcher.BeginInvoke(new Action(RestartApplicationAfterInitialSetupWizard), DispatcherPriority.Background);
+                }
             }
         }
 
@@ -755,6 +770,53 @@ namespace TWChatOverlay.Views
             }
             catch
             {
+            }
+        }
+
+        private void RestartApplicationAfterInitialSetupWizard()
+        {
+            if (!Dispatcher.CheckAccess())
+            {
+                Dispatcher.BeginInvoke(new Action(RestartApplicationAfterInitialSetupWizard), DispatcherPriority.Background);
+                return;
+            }
+
+            if (!_restartRequestedAfterWizardCompletion || _restartLaunchTriggered)
+                return;
+
+            _restartLaunchTriggered = true;
+
+            try
+            {
+                string? executablePath = Environment.ProcessPath;
+                if (string.IsNullOrWhiteSpace(executablePath) || !File.Exists(executablePath))
+                {
+                    executablePath = Process.GetCurrentProcess().MainModule?.FileName;
+                }
+
+                if (string.IsNullOrWhiteSpace(executablePath) || !File.Exists(executablePath))
+                    throw new InvalidOperationException("Unable to resolve current executable path for restart.");
+
+                string cmdArgs = $"/c timeout /t 1 /nobreak >nul && start \"\" \"{executablePath}\"";
+
+                Process.Start(new ProcessStartInfo
+                {
+                    FileName = "cmd.exe",
+                    Arguments = cmdArgs,
+                    UseShellExecute = false,
+                    CreateNoWindow = true
+                });
+
+                AppLogger.Info("Restarting application after initial setup wizard completion.");
+                Application.Current.Shutdown();
+            }
+            catch (Exception ex)
+            {
+                _restartLaunchTriggered = false;
+                _restartRequestedAfterWizardCompletion = false;
+                AppLogger.Warn("Failed to restart after initial setup wizard completion.", ex);
+                RevealMainUiAfterWizard();
+                Dispatcher.BeginInvoke(new Action(TryShowWeeklyExperienceRefreshPrompt), DispatcherPriority.ApplicationIdle);
             }
         }
 
@@ -784,118 +846,6 @@ namespace TWChatOverlay.Views
             }
         }
 
-        private void LoadRecentLogsFromRawFiles(int lineLimit)
-        {
-            try
-            {
-                string folder = _settings.ChatLogFolderPath;
-                if (string.IsNullOrWhiteSpace(folder) || !Directory.Exists(folder))
-                    return;
-
-                int totalLimit = Math.Max(1, lineLimit);
-                var files = Directory.EnumerateFiles(folder, "TWChatLog_*.html")
-                    .Select(path => new FileInfo(path))
-                    .OrderByDescending(file => file.Name, StringComparer.OrdinalIgnoreCase)
-                    .Take(30)
-                    .ToList();
-
-                if (files.Count == 0)
-                    return;
-
-                var recentParsed = new List<LogParser.ParseResult>(totalLimit);
-                foreach (FileInfo file in files)
-                {
-                    string content;
-                    try
-                    {
-                        content = ReadAllTextAllowSharedRead(file.FullName, Encoding.GetEncoding(949));
-                    }
-                    catch
-                    {
-                        continue;
-                    }
-
-                    foreach (string line in Regex.Split(content, @"</?br\s*>|\r?\n", RegexOptions.IgnoreCase)
-                        .Where(line => !string.IsNullOrWhiteSpace(line))
-                        .Select(line => line.Trim())
-                        .Reverse())
-                    {
-                        bool looksLikeChatLine =
-                            HtmlFontTagRegex.IsMatch(line) ||
-                            line.StartsWith("[", StringComparison.Ordinal);
-                        if (!looksLikeChatLine)
-                            continue;
-
-                        LogParser.ParseResult parsed = LogParser.ParseLine(line, _settings);
-                        if (!parsed.IsSuccess)
-                            continue;
-
-                        recentParsed.Add(parsed);
-                        if (recentParsed.Count >= totalLimit)
-                            break;
-                    }
-
-                    if (recentParsed.Count >= totalLimit)
-                        break;
-                }
-
-                var tabBuffers = new Dictionary<string, List<LogParser.ParseResult>>(StringComparer.Ordinal);
-                foreach (string tab in RecoverableTabs)
-                    tabBuffers[tab] = new List<LogParser.ParseResult>(totalLimit);
-
-                foreach (LogParser.ParseResult parsed in recentParsed)
-                {
-                    if (IsHiddenByUserFilters(parsed))
-                        continue;
-
-                    foreach (string tab in RecoverableTabs)
-                    {
-                        if (LogParser.IsMatchTab(parsed, tab, _settings))
-                            tabBuffers[tab].Add(parsed);
-                    }
-                }
-
-                foreach (string tab in RecoverableTabs)
-                {
-                    List<LogParser.ParseResult> ordered = tabBuffers[tab].AsEnumerable().Reverse().ToList();
-                    _logTabBufferStore.Replace(tab, ordered);
-                }
-
-                ChatWindowHub.NotifyBuffersChanged();
-                RequestRefreshLogDisplay();
-            }
-            catch (Exception ex)
-            {
-                AppLogger.Warn("Failed to load recent logs from latest raw logs.", ex);
-            }
-        }
-
-        private bool IsHiddenByUserFilters(LogParser.ParseResult log)
-        {
-            if (log == null || string.IsNullOrWhiteSpace(log.FormattedText))
-                return false;
-
-            if (log.Category is ChatCategory.Normal or ChatCategory.NormalSelf)
-            {
-                if (IgnoredChatMessageService.IsIgnoredNormalMessage(log.FormattedText))
-                    return true;
-            }
-
-            if (log.Category == ChatCategory.Club && !_settings.ShowClubBoss)
-            {
-                if (IgnoredChatMessageService.IsIgnoredClubMessage(log.FormattedText))
-                    return true;
-            }
-
-            return false;
-        }
-
-        private static string ReadAllTextAllowSharedRead(string path, Encoding encoding)
-        {
-            using var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
-            using var reader = new StreamReader(stream, encoding, detectEncodingFromByteOrderMarks: true);
-            return reader.ReadToEnd();
-        }
 
     }
 }

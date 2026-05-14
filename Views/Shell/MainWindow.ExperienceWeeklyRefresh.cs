@@ -14,6 +14,9 @@ namespace TWChatOverlay.Views
         {
             try
             {
+                if (_pendingInitialSetupWizard || _isInitialSetupWizardRunning || !_settings.InitialSetupWizardCompleted)
+                    return;
+
                 DateTime now = DateTime.Now;
                 if (!ExperienceWeeklyRefreshService.ShouldPromptForWeeklyRefresh(_settings, now))
                     return;
