@@ -19,20 +19,12 @@
     <Grid Background="#161B22" Margin="8">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
             <RowDefinition Height="8"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
-        <TextBlock Grid.Row="0"
-                   Text="시뮬레이터"
-                   Foreground="#58A6FF"
-                   FontSize="40"
-                   FontWeight="SemiBold"
-                   Margin="4,0,0,8"/>
-
         <TabControl x:Name="SimulatorTabControl"
-                    Grid.Row="1"
+                    Grid.Row="0"
                     Background="Transparent"
                     BorderThickness="0"
                     SelectedIndex="0"
@@ -42,7 +34,7 @@
             <TabItem Header="신조 렐릭 기대값" Tag="Relic" Style="{StaticResource SimulatorTabItemStyle}" Margin="0,0,0,0"/>
         </TabControl>
 
-        <Border Grid.Row="3"
+        <Border Grid.Row="2"
                 Background="#101720"
                 BorderBrush="#2E3A4A"
                 BorderThickness="1"

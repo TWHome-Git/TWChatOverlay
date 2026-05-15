@@ -327,6 +327,7 @@ namespace TWChatOverlay.Views.Addons
             string statLabel = isMainStat ? "주스탯" : "부스탯";
             if (useTicket)
             {
+                SummaryTextBlock.Visibility = Visibility.Visible;
                 SummaryTextBlock.Text =
                     $"{statLabel} / {start.Display} -> {target.Display} {PieceCount}개 기대값\n" +
                     $"총 진화권 사용 갯수: {FormatExpectedCount(totalTicketCount)}개\n" +
@@ -357,6 +358,7 @@ namespace TWChatOverlay.Views.Addons
             if (SummaryTextBlock == null)
                 return;
 
+            SummaryTextBlock.Visibility = Visibility.Visible;
             SummaryTextBlock.Inlines.Clear();
             SummaryTextBlock.Inlines.Add(new Run(title)
             {

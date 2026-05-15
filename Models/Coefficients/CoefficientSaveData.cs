@@ -11,6 +11,7 @@ namespace TWChatOverlay.Models
         public string? LastSelectedCharacterName { get; set; }
         public string? LastSelectedCalculatorType { get; set; }
         public Dictionary<string, CoefficientSlotSnapshot[]> Entries { get; set; } = new();
+        public Dictionary<string, AvatarEnhancementSnapshot> AvatarEnhancementEntries { get; set; } = new();
     }
 
     /// <summary>
@@ -30,5 +31,14 @@ namespace TWChatOverlay.Models
         public double CoreValue { get; set; }
         public double PrimaryStatValue { get; set; }
         public double SecondaryStatValue { get; set; }
+    }
+
+    /// <summary>
+    /// 아바타 강화 토글 상태 저장 스냅샷입니다.
+    /// </summary>
+    public class AvatarEnhancementSnapshot
+    {
+        public bool MainEnhanceEnabled { get; set; }
+        public bool SubEnhanceEnabled { get; set; }
     }
 }

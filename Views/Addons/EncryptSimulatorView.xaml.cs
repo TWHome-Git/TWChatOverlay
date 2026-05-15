@@ -466,8 +466,15 @@ namespace TWChatOverlay.Views.Addons
                 StartInkTextBox.Text = _currentInk.ToString();
             AttemptsAndSuccessText.Text = $"{_successCount:N0} / {_totalAttempts:N0}";
             DestroyAndCostText.Text = FormatKoreanCost(_totalCost);
-            LuckInfoText.Text = BuildLuckText();
-            LuckGraphText.Text = BuildLuckGraphText();
+
+            bool hasLuckStats = TryGetLuckStats(out _, out _);
+            LuckInfoText.Visibility = hasLuckStats ? Visibility.Visible : Visibility.Collapsed;
+            LuckGraphText.Visibility = hasLuckStats ? Visibility.Visible : Visibility.Collapsed;
+            if (hasLuckStats)
+            {
+                LuckInfoText.Text = BuildLuckText();
+                LuckGraphText.Text = BuildLuckGraphText();
+            }
         }
 
         private void AccumulateLuckStats(double chance)

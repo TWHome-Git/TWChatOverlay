@@ -394,7 +394,7 @@
                            Margin="2,0,2,2"
                            LineHeight="22"
                            TextWrapping="WrapWithOverflow"
-                           Text="계산 대기"/>
+                           Visibility="Collapsed"/>
             </Grid>
         </Border>
     </Grid>

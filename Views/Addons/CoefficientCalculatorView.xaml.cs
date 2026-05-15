@@ -155,6 +155,9 @@ namespace TWChatOverlay.Views.Addons
         private CoefficientSaveData _saveData = CoefficientDataService.Load();
         private string _lastSaveKey = string.Empty;
 
+        public event Action<CoefficientDamageBaseSnapshot>? SnapshotChanged;
+        public CoefficientDamageBaseSnapshot CurrentSnapshot => BuildDamageBaseSnapshot();
+
         public CoefficientCalculatorView()
         {
             InitializeComponent();
@@ -176,6 +179,7 @@ namespace TWChatOverlay.Views.Addons
             Loaded -= OnLoaded;
             await EnsureEquipmentLoadedAsync();
             await RestoreLastSelectionAsync();
+            NotifySnapshotChanged();
         }
 
         private void InitializeCharacters()
@@ -283,6 +287,7 @@ namespace TWChatOverlay.Views.Addons
 
             CharacterSelectView.Visibility = Visibility.Collapsed;
             CalculatorDetailView.Visibility = Visibility.Visible;
+            NotifySnapshotChanged();
         }
 
         private async System.Threading.Tasks.Task EnsureEquipmentLoadedAsync()
@@ -314,6 +319,7 @@ namespace TWChatOverlay.Views.Addons
             SaveCurrentState();
             CalculatorDetailView.Visibility = Visibility.Collapsed;
             CharacterSelectView.Visibility = Visibility.Visible;
+            NotifySnapshotChanged();
         }
 
         private static ControlTemplate CreateDarkComboBoxTemplate()
@@ -1217,6 +1223,11 @@ namespace TWChatOverlay.Views.Addons
             }
 
             _saveData.Entries[_lastSaveKey] = snapshots.ToArray();
+            _saveData.AvatarEnhancementEntries[_lastSaveKey] = new AvatarEnhancementSnapshot
+            {
+                MainEnhanceEnabled = _avatarMainEnhanceCheckBox?.IsChecked == true,
+                SubEnhanceEnabled = _avatarSubEnhanceCheckBox?.IsChecked == true
+            };
             CoefficientDataService.Save(_saveData);
         }
 
@@ -1266,6 +1277,21 @@ namespace TWChatOverlay.Views.Addons
                 row.PrimaryStatValue = snap.PrimaryStatValue;
                 row.SecondaryStatValue = snap.SecondaryStatValue;
                 row.RecalculateCoefficient();
+            }
+
+            if (_saveData.AvatarEnhancementEntries.TryGetValue(key, out var avatarEnhancement))
+            {
+                if (_avatarMainEnhanceCheckBox != null)
+                    _avatarMainEnhanceCheckBox.IsChecked = avatarEnhancement.MainEnhanceEnabled;
+                if (_avatarSubEnhanceCheckBox != null)
+                    _avatarSubEnhanceCheckBox.IsChecked = avatarEnhancement.SubEnhanceEnabled;
+            }
+            else
+            {
+                if (_avatarMainEnhanceCheckBox != null)
+                    _avatarMainEnhanceCheckBox.IsChecked = false;
+                if (_avatarSubEnhanceCheckBox != null)
+                    _avatarSubEnhanceCheckBox.IsChecked = false;
             }
         }
 
@@ -1430,6 +1456,21 @@ namespace TWChatOverlay.Views.Addons
 
         private void RecalculateTotalCoefficient()
         {
+            var totals = CalculateTotalMetrics();
+
+            if (_summaryPrimaryBaseValue != null) _summaryPrimaryBaseValue.Text = totals.PrimaryBaseSum.ToString("F0");
+            if (_summaryPrimaryEnchantValue != null) _summaryPrimaryEnchantValue.Text = totals.PrimaryEnchantSum.ToString("F0");
+            if (_summarySecondaryValue != null) _summarySecondaryValue.Text = totals.SecondarySum.ToString("F0");
+            if (_summarySecondaryEnchantValue != null) _summarySecondaryEnchantValue.Text = totals.SecondaryEnchantSum.ToString("F0");
+            if (_summaryTotalValue != null) _summaryTotalValue.Text = totals.TotalCoefficient.ToString("F2");
+            if (_contentSummaryValue != null) _contentSummaryValue.Text = totals.TotalPrimarySum.ToString("F0");
+
+            UpdateContentAvailability(totals.TotalCoefficient, totals.SecondaryEnchantSum);
+            NotifySnapshotChanged();
+        }
+
+        private (double PrimaryBaseSum, double PrimaryEnchantSum, double SecondarySum, double SecondaryEnchantSum, double TotalPrimarySum, double TotalCoefficient) CalculateTotalMetrics()
+        {
             var avatarRow = GetAccessoryRow("아바타");
             var cuffRow = GetAccessoryRow("커프");
             var relicRow = GetAccessoryRow("렐릭");
@@ -1463,17 +1504,79 @@ namespace TWChatOverlay.Views.Addons
 
             double baseTotal = _slotRows.Sum(x => x.Coefficient) + _accessoryRows.Sum(x => x.Coefficient);
             double bonusCoefficient = CalculateAvatarEnhancementBonusCoefficient(avatarMainEnhanceBonus, avatarSubEnhanceBonus);
-            double total = baseTotal + bonusCoefficient;
-            double totalPrimarySum = primaryBaseSum + primaryEnchantSum;
+            double totalCoefficient = baseTotal + bonusCoefficient;
 
-            if (_summaryPrimaryBaseValue != null) _summaryPrimaryBaseValue.Text = primaryBaseSum.ToString("F0");
-            if (_summaryPrimaryEnchantValue != null) _summaryPrimaryEnchantValue.Text = primaryEnchantSum.ToString("F0");
-            if (_summarySecondaryValue != null) _summarySecondaryValue.Text = secondarySum.ToString("F0");
-            if (_summarySecondaryEnchantValue != null) _summarySecondaryEnchantValue.Text = secondaryEnchantSum.ToString("F0");
-            if (_summaryTotalValue != null) _summaryTotalValue.Text = total.ToString("F2");
-            if (_contentSummaryValue != null) _contentSummaryValue.Text = totalPrimarySum.ToString("F0");
+            return (
+                primaryBaseSum,
+                primaryEnchantSum,
+                secondarySum,
+                secondaryEnchantSum,
+                primaryBaseSum + primaryEnchantSum,
+                totalCoefficient
+            );
+        }
 
-            UpdateContentAvailability(total, secondaryEnchantSum);
+        private CoefficientDamageBaseSnapshot BuildDamageBaseSnapshot()
+        {
+            bool hasData =
+                CalculatorDetailView.Visibility == Visibility.Visible
+                && !string.IsNullOrWhiteSpace(_selectedCharacterName);
+
+            if (!hasData)
+            {
+                return CoefficientDamageBaseSnapshot.Empty;
+            }
+
+            var totals = CalculateTotalMetrics();
+            var mainSlots = _slotRows
+                .Select(row => new CoefficientSlotValueSnapshot
+                {
+                    SlotName = row.SlotName,
+                    SelectedEquipmentName = row.SelectedEquipmentName ?? string.Empty,
+                    AttackValue = row.AttackValue,
+                    AttackEnchant = row.AttackEnchant,
+                    DefenseValue = row.DefenseValue,
+                    DefenseEnchant = row.DefenseEnchant,
+                    PrimaryStatValue = row.PrimaryStatValue,
+                    SecondaryStatValue = row.SecondaryStatValue,
+                    Coefficient = row.Coefficient
+                })
+                .ToArray();
+
+            var accessorySlots = _accessoryRows
+                .Select(row => new CoefficientSlotValueSnapshot
+                {
+                    SlotName = row.SlotName,
+                    SelectedEquipmentName = row.SelectedEquipmentName ?? string.Empty,
+                    AttackValue = row.AttackValue,
+                    AttackEnchant = row.AttackEnchant,
+                    DefenseValue = row.DefenseValue,
+                    DefenseEnchant = row.DefenseEnchant,
+                    PrimaryStatValue = row.PrimaryStatValue,
+                    SecondaryStatValue = row.SecondaryStatValue,
+                    Coefficient = row.Coefficient
+                })
+                .ToArray();
+
+            return new CoefficientDamageBaseSnapshot
+            {
+                HasData = true,
+                CharacterName = _selectedCharacterName,
+                CalculatorTypeName = GetCalculatorTypeDisplayName(GetSelectedCalculatorType()),
+                PrimaryBaseSum = totals.PrimaryBaseSum,
+                PrimaryEnchantSum = totals.PrimaryEnchantSum,
+                SecondarySum = totals.SecondarySum,
+                SecondaryEnchantSum = totals.SecondaryEnchantSum,
+                TotalPrimarySum = totals.TotalPrimarySum,
+                TotalCoefficient = totals.TotalCoefficient,
+                MainSlots = mainSlots,
+                AccessorySlots = accessorySlots
+            };
+        }
+
+        private void NotifySnapshotChanged()
+        {
+            SnapshotChanged?.Invoke(BuildDamageBaseSnapshot());
         }
 
         private void UpdateContentAvailability(double totalCoefficient, double secondaryEnchantCoefficientInput)
