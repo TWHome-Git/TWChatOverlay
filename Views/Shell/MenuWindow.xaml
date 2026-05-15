@@ -100,7 +100,7 @@
                     <Image Source="/TWChatOverlay;component/Data/images/MenuIcon/Eta.png" MaxWidth="{DynamicResource MenuIconSize}" MaxHeight="{DynamicResource MenuIconSize}" Stretch="Uniform" HorizontalAlignment="Center" VerticalAlignment="Center" />
                 </Button>
                 <!-- 3: Coefficient Calculator -->
-                <Button x:Name="BtnCoefficient" Width="{DynamicResource MenuIconSize}" Height="{DynamicResource MenuIconSize}" Click="OpenChild_Click" ToolTip="계수 계산기" Style="{StaticResource MenuIconButtonStyle}" Margin="2,2,2,2">
+                <Button x:Name="BtnCoefficient" Width="{DynamicResource MenuIconSize}" Height="{DynamicResource MenuIconSize}" Click="OpenChild_Click" ToolTip="계산기" Style="{StaticResource MenuIconButtonStyle}" Margin="2,2,2,2">
                     <Image Source="/TWChatOverlay;component/Data/images/MenuIcon/Core.png" MaxWidth="{DynamicResource MenuIconSize}" MaxHeight="{DynamicResource MenuIconSize}" Stretch="Uniform" HorizontalAlignment="Center" VerticalAlignment="Center" />
                 </Button>
                 <!-- 4: Equipment DB -->

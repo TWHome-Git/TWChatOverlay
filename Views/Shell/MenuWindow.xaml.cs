@@ -279,14 +279,14 @@ namespace TWChatOverlay.Views
 
         private void OpenCoefficientCalculator()
         {
-            var view = new Addons.CoefficientCalculatorView();
-            ShowAddonViewWindow(view, "계수 계산기", BtnCoefficient);
+            var view = new Addons.CalculatorTabsView(initialSelectedIndex: 0);
+            ShowAddonViewWindow(view, "계산기", BtnCoefficient);
         }
 
         private void OpenDamageCalculator()
         {
-            var view = new Addons.DamageCalculatorView();
-            ShowAddonViewWindow(view, "Damage Calculator", null);
+            var view = new Addons.CalculatorTabsView(initialSelectedIndex: 1);
+            ShowAddonViewWindow(view, "계산기", BtnCoefficient);
         }
 
         private void OpenEquipmentDb()

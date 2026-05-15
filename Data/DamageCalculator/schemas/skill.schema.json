@@ -1,0 +1,206 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/TWHome-Git/TWHomeDB/main/schemas/skill.schema.json",
+  "title": "TWHome Skill Data Schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "버전",
+    "캐릭터목록"
+  ],
+  "properties": {
+    "버전": {
+      "type": "string",
+      "description": "스키마/데이터 버전"
+    },
+    "캐릭터목록": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/character"
+      }
+    }
+  },
+  "$defs": {
+    "character": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "캐릭터",
+        "스킬",
+        "특성"
+      ],
+      "properties": {
+        "캐릭터": {
+          "type": "string"
+        },
+        "스킬": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "베기",
+            "찌르기",
+            "마법공격",
+            "마법방어",
+            "물리복합",
+            "마법베기"
+          ],
+          "properties": {
+            "베기": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/skill"
+              }
+            },
+            "찌르기": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/skill"
+              }
+            },
+            "마법공격": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/skill"
+              }
+            },
+            "마법방어": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/skill"
+              }
+            },
+            "물리복합": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/skill"
+              }
+            },
+            "마법베기": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/skill"
+              }
+            }
+          }
+        },
+        "특성": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "파괴",
+            "비호",
+            "마법인형"
+          ],
+          "properties": {
+            "파괴": {
+              "$ref": "#/$defs/trait"
+            },
+            "비호": {
+              "$ref": "#/$defs/trait"
+            },
+            "마법인형": {
+              "$ref": "#/$defs/trait"
+            }
+          }
+        },
+        "버프": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/effect"
+          },
+          "default": []
+        },
+        "디버프": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/effect"
+          },
+          "default": []
+        }
+      }
+    },
+    "skill": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "스킬이름",
+        "스킬배율",
+        "크리티컬배율",
+        "타수",
+        "중딜레이"
+      ],
+      "properties": {
+        "스킬이름": {
+          "type": "string"
+        },
+        "스킬배율": {
+          "type": "number",
+          "minimum": 0
+        },
+        "크리티컬배율": {
+          "type": "number",
+          "minimum": 0
+        },
+        "타수": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "중딜레이": {
+          "type": "number",
+          "minimum": 0
+        },
+        "설명": {
+          "type": "string"
+        }
+      }
+    },
+    "trait": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "공격피해량": {
+          "type": "number"
+        },
+        "받는피해증가": {
+          "type": "number"
+        },
+        "능력치감소": {
+          "type": "number"
+        },
+        "추가대미지": {
+          "type": "number"
+        }
+      },
+      "default": {}
+    },
+    "effect": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "이름",
+        "값"
+      ],
+      "properties": {
+        "이름": {
+          "type": "string"
+        },
+        "값": {
+          "type": "number"
+        },
+        "단위": {
+          "type": "string",
+          "enum": [
+            "%",
+            "배율",
+            "고정값"
+          ],
+          "default": "%"
+        },
+        "설명": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

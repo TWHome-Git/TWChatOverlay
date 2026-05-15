@@ -170,8 +170,8 @@
 
             <Border Grid.Row="1" Background="#161B22" BorderBrush="#30363D" BorderThickness="1" CornerRadius="8" Padding="10" Margin="0,0,0,8">
                 <StackPanel>
-                    <TextBlock x:Name="LuckInfoText" Foreground="#58A6FF" FontSize="13" Text="행운 지표: 계산 대기"/>
-                    <TextBlock x:Name="LuckGraphText" Foreground="#C9D1D9" FontSize="12" FontFamily="Consolas" Margin="0,4,0,0" Text="계산 대기"/>
+                    <TextBlock x:Name="LuckInfoText" Foreground="#58A6FF" FontSize="13" Visibility="Collapsed"/>
+                    <TextBlock x:Name="LuckGraphText" Foreground="#C9D1D9" FontSize="12" FontFamily="Consolas" Margin="0,4,0,0" Visibility="Collapsed"/>
                 </StackPanel>
             </Border>
 
