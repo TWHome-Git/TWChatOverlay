@@ -615,9 +615,6 @@ namespace TWChatOverlay.Views
                 AppLogger.Warn("Failed to initialize dedicated Logs archive from source chat logs.", ex);
             }
 
-            // Raw logs were already fully scanned by EnsureInitializedFromRawLogsAsync above.
-            // Skip an immediate second raw-file pass to avoid duplicate I/O on startup.
-
             if (_logService != null && !_isLogServiceInitialized)
             {
                 UpdateStartupLoadingProgress(85, "채팅 로그 서비스를 시작하는 중입니다.");

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 
 namespace TWChatOverlay.Views.Addons
@@ -18,6 +18,8 @@ namespace TWChatOverlay.Views.Addons
         public double PrimaryEnchantSum { get; init; }
         public double SecondarySum { get; init; }
         public double SecondaryEnchantSum { get; init; }
+        public double StatCoefficient { get; init; }
+        public double DexValue { get; init; }
         public double TotalPrimarySum { get; init; }
         public double TotalCoefficient { get; init; }
 

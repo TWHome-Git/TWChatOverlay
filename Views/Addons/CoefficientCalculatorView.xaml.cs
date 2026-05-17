@@ -148,6 +148,7 @@ namespace TWChatOverlay.Views.Addons
         private TextBlock? _rightSecondaryHeader;
         private CheckBox? _avatarMainEnhanceCheckBox;
         private CheckBox? _avatarSubEnhanceCheckBox;
+        private TextBox? _dexInputTextBox;
         private TextBlock? _contentSummaryHeader;
         private TextBlock? _contentSummaryValue;
         private readonly Dictionary<string, TextBlock> _contentStatusLabels = new();
@@ -976,6 +977,30 @@ namespace TWChatOverlay.Views.Addons
             checkboxPanel.Children.Add(_avatarMainEnhanceCheckBox);
             checkboxPanel.Children.Add(_avatarSubEnhanceCheckBox);
 
+            var dexPanel = new StackPanel { Margin = new Thickness(0, 0, 0, 6) };
+            dexPanel.Children.Add(new TextBlock
+            {
+                Text = "덱스",
+                Foreground = System.Windows.Media.Brushes.White,
+                FontSize = 11,
+                FontWeight = FontWeights.SemiBold,
+                Margin = new Thickness(0, 0, 0, 2)
+            });
+            _dexInputTextBox = new TextBox
+            {
+                Width = 90,
+                Height = 24,
+                Text = "0",
+                Background = bgDarkest,
+                Foreground = System.Windows.Media.Brushes.White,
+                BorderBrush = borderDark,
+                BorderThickness = new Thickness(1),
+                HorizontalAlignment = HorizontalAlignment.Left
+            };
+            _dexInputTextBox.TextChanged += DexInputTextBox_TextChanged;
+            dexPanel.Children.Add(_dexInputTextBox);
+            checkboxPanel.Children.Add(dexPanel);
+
             var rightPanel = new StackPanel { Margin = new Thickness(8, 28, 0, 0) };
             rightPanel.Children.Add(rightTableBorder);
             rightPanel.Children.Add(checkboxPanel);
@@ -1184,6 +1209,7 @@ namespace TWChatOverlay.Views.Addons
             {
                 _saveData.LastSelectedCharacterName = _selectedCharacterName;
                 _saveData.LastSelectedCalculatorType = GetSelectedCalculatorType().ToString();
+                _saveData.LastDexValue = ReadDexValue();
             }
 
             if (string.IsNullOrEmpty(_lastSaveKey))
@@ -1293,6 +1319,9 @@ namespace TWChatOverlay.Views.Addons
                 if (_avatarSubEnhanceCheckBox != null)
                     _avatarSubEnhanceCheckBox.IsChecked = false;
             }
+
+            if (_dexInputTextBox != null)
+                _dexInputTextBox.Text = _saveData.LastDexValue > 0 ? _saveData.LastDexValue.ToString("0") : "0";
         }
 
         private void UpdateColumnHeaders()
@@ -1567,6 +1596,8 @@ namespace TWChatOverlay.Views.Addons
                 PrimaryEnchantSum = totals.PrimaryEnchantSum,
                 SecondarySum = totals.SecondarySum,
                 SecondaryEnchantSum = totals.SecondaryEnchantSum,
+                StatCoefficient = _accessoryRows.Count > 0 ? _accessoryRows[0].Coefficient : 0,
+                DexValue = ReadDexValue(),
                 TotalPrimarySum = totals.TotalPrimarySum,
                 TotalCoefficient = totals.TotalCoefficient,
                 MainSlots = mainSlots,
@@ -1577,6 +1608,29 @@ namespace TWChatOverlay.Views.Addons
         private void NotifySnapshotChanged()
         {
             SnapshotChanged?.Invoke(BuildDamageBaseSnapshot());
+        }
+
+        private double ReadDexValue()
+        {
+            if (_dexInputTextBox == null)
+                return _saveData.LastDexValue;
+
+            if (!double.TryParse(_dexInputTextBox.Text, out double dex))
+                dex = 0;
+
+            return Math.Max(0, dex);
+        }
+
+        private void DexInputTextBox_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            if (_dexInputTextBox == null)
+                return;
+
+            if (!double.TryParse(_dexInputTextBox.Text, out double dex))
+                dex = 0;
+
+            _saveData.LastDexValue = Math.Max(0, dex);
+            RecalculateTotalCoefficient();
         }
 
         private void UpdateContentAvailability(double totalCoefficient, double secondaryEnchantCoefficientInput)
