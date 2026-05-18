@@ -98,6 +98,7 @@ namespace TWChatOverlay.Services
                             "highlight.wav" => Math.Max(0.0, Math.Min(1.0, settings.HighlightAlertVolume)),
                             "magiccircle.wav" => Math.Max(0.0, Math.Min(1.0, settings.MagicCircleAlertVolume)),
                             "wave.wav" => Math.Max(0.0, Math.Min(1.0, settings.MagicCircleAlertVolume)),
+                            "reflection.wav" => Math.Max(0.0, Math.Min(1.0, settings.ReflectionPatternAlertVolume)),
                             "expbuffcheck.wav" => Math.Max(0.0, Math.Min(1.0, settings.ExpBuffAlertVolume)),
                             "expcheck.wav" => Math.Max(0.0, Math.Min(1.0, settings.ExpBuffAlertVolume)),
                             "buffcheck.wav" => Math.Max(0.0, Math.Min(1.0, settings.BuffTrackerEndSoundVolume)),

@@ -11,14 +11,67 @@ namespace TWChatOverlay.Views
             ConfigService.SaveDeferred(_settings);
         }
 
+        private void PersistCurrentMainWindowPosition()
+        {
+            SyncMarginsFromWindowPosition(this.Left, this.Top);
+            _settings.UpdatePositionDisplay(_settings.LineMarginLeft, _settings.LineMargin);
+
+            try
+            {
+                _settings.SavePreset(
+                    _settings.LastSelectedPresetNumber,
+                    this.Left,
+                    this.Top,
+                    _settings.LineMarginLeft,
+                    _settings.LineMargin);
+            }
+            catch (Exception ex)
+            {
+                AppLogger.Warn("Failed to persist main window position to preset.", ex);
+            }
+
+            PersistSettings();
+        }
+
         public void SetSettingsPositionMode(bool isEnabled)
         {
             if (_isSettingsPositionMode == isEnabled)
                 return;
 
             _isSettingsPositionMode = isEnabled;
+            ApplyPositionModeWindows();
+        }
 
-            if (isEnabled)
+        public void SetAddonPositionMode(bool isEnabled)
+        {
+            if (_isAddonPositionMode == isEnabled)
+                return;
+
+            _isAddonPositionMode = isEnabled;
+            if (!isEnabled)
+            {
+                CloseAddonPositionPreviewWindows(savePositions: true, restoreNormalWindows: true);
+            }
+            ApplyPositionModeWindows();
+        }
+
+        public void SetAddonPositionPreviewTabIndex(int tabIndex)
+        {
+            int normalized = tabIndex < 0 ? -1 : tabIndex;
+            if (_addonPositionPreviewTabIndex == normalized)
+                return;
+
+            _addonPositionPreviewTabIndex = normalized;
+
+            if (_isAddonPositionMode && !_isWizardChatPositionMode)
+            {
+                ShowSettingsPositionWindows();
+            }
+        }
+
+        private void ApplyPositionModeWindows()
+        {
+            if (_isSettingsPositionMode || _isAddonPositionMode)
             {
                 ShowSettingsPositionWindows();
             }
@@ -150,34 +203,21 @@ namespace TWChatOverlay.Views
                 return;
             }
 
-            ExperienceAlertWindowService.ShowPositionPreview(_settings, force: true);
-            DungeonCountDisplayWindowService.ShowPositionPreview(_settings, force: true);
-            ShoutToastService.ShowPositionPreview(_settings, force: true);
-            MessengerEtaToastService.ShowPositionPreview(_settings, force: true);
-            ShowAbandonRoadSummaryWindow(previewMode: true);
+            try { ApplyDailyWeeklyWindowVisibility(); } catch { }
 
-            if (_AbandonRoadSummaryWindow != null)
+            if (_isSettingsPositionMode)
             {
-                _AbandonRoadSummaryWindow.Topmost = true;
+                ShoutToastService.ShowPositionPreview(_settings, force: true);
+                MessengerEtaToastService.ShowPositionPreview(_settings, force: true);
+            }
+            else
+            {
+                CloseNonAddonPositionPreviewWindows(savePositions: true);
             }
 
-            var etosHelper = SubAddonWindow.Instance ?? CreateSubAddonWindow();
-            etosHelper?.ApplyPositionPreviewVisibility(true);
-
-            var itemHelper = ItemDropHelperWindow.Instance ?? CreateItemDropHelperWindow();
-            if (itemHelper != null)
+            if (_isAddonPositionMode)
             {
-                ApplyStoredPosition(itemHelper, _settings.ItemDropWindowLeft, _settings.ItemDropWindowTop);
-                if (!itemHelper.IsVisible)
-                    itemHelper.Show();
-            }
-
-            var buffHelper = BuffTrackerHelperWindow.Instance ?? CreateBuffTrackerHelperWindow();
-            if (buffHelper != null)
-            {
-                ApplyStoredPosition(buffHelper, _settings.BuffTrackerWindowLeft, _settings.BuffTrackerWindowTop);
-                if (!buffHelper.IsVisible)
-                    buffHelper.Show();
+                ShowAddonPositionPreviewForSelectedTab();
             }
         }
 
@@ -189,29 +229,93 @@ namespace TWChatOverlay.Views
                 return;
             }
 
-            ExperienceAlertWindowService.SaveCurrentPosition(_settings);
-            DungeonCountDisplayWindowService.SaveCurrentPosition(_settings);
-            ShoutToastService.SaveCurrentPosition(_settings);
-            MessengerEtaToastService.SaveCurrentPosition(_settings);
-            ExperienceAlertWindowService.Close();
-            DungeonCountDisplayWindowService.ClosePositionPreview(_settings);
-            ShoutToastService.ClosePositionPreview(_settings);
-            MessengerEtaToastService.ClosePositionPreview(_settings);
+            CloseNonAddonPositionPreviewWindows(savePositions: true);
+            CloseAddonPositionPreviewWindows(savePositions: true, restoreNormalWindows: true);
+            try { ApplyDailyWeeklyWindowVisibility(); } catch { }
+        }
 
-            if (_AbandonRoadSummaryWindow != null)
+        private void CloseNonAddonPositionPreviewWindows(bool savePositions)
+        {
+            if (savePositions)
             {
-                try
-                {
-                    _settings.AbandonRoadSummaryWindowLeft = _AbandonRoadSummaryWindow.Left;
-                    _settings.AbandonRoadSummaryWindowTop = _AbandonRoadSummaryWindow.Top;
-                }
-                catch { }
+                ShoutToastService.SaveCurrentPosition(_settings);
+                MessengerEtaToastService.SaveCurrentPosition(_settings);
             }
 
-            SubAddonWindow.Instance?.ApplyPositionPreviewVisibility(false);
-            ApplyItemDropHelperWindowSettings();
-            ApplyBuffTrackerHelperWindowSettings();
-            PersistSettings();
+            ShoutToastService.ClosePositionPreview(_settings);
+            MessengerEtaToastService.ClosePositionPreview(_settings);
+        }
+
+        private void ShowAddonPositionPreviewForSelectedTab()
+        {
+            CloseAddonPositionPreviewWindows(savePositions: true, restoreNormalWindows: false);
+
+            switch (_addonPositionPreviewTabIndex)
+            {
+                case 1:
+                    ExperienceAlertWindowService.ShowPositionPreview(_settings, force: true);
+                    break;
+                case 2:
+                    DungeonCountDisplayWindowService.ShowPositionPreview(_settings, force: true);
+                    ShowAbandonRoadSummaryWindow(previewMode: true, restartLifetime: false, activateWindow: false, forcePreview: true);
+                    if (_AbandonRoadSummaryWindow != null)
+                        _AbandonRoadSummaryWindow.Topmost = true;
+
+                    var etosHelper = SubAddonWindow.Instance ?? CreateSubAddonWindow();
+                    etosHelper?.ApplyPositionPreviewVisibility(true);
+                    break;
+                case 3:
+                    var itemHelper = ItemDropHelperWindow.Instance ?? CreateItemDropHelperWindow();
+                    if (itemHelper != null)
+                    {
+                        ApplyStoredPosition(itemHelper, _settings.ItemDropWindowLeft, _settings.ItemDropWindowTop);
+                        if (!itemHelper.IsVisible)
+                            itemHelper.Show();
+                    }
+                    break;
+                case 4:
+                    var buffHelper = BuffTrackerHelperWindow.Instance ?? CreateBuffTrackerHelperWindow();
+                    if (buffHelper != null)
+                    {
+                        ApplyStoredPosition(buffHelper, _settings.BuffTrackerWindowLeft, _settings.BuffTrackerWindowTop);
+                        if (!buffHelper.IsVisible)
+                            buffHelper.Show();
+                    }
+                    break;
+            }
+        }
+
+        private void CloseAddonPositionPreviewWindows(bool savePositions, bool restoreNormalWindows)
+        {
+            if (savePositions)
+            {
+                ExperienceAlertWindowService.SaveCurrentPosition(_settings);
+                DungeonCountDisplayWindowService.SaveCurrentPosition(_settings);
+
+                if (_AbandonRoadSummaryWindow != null)
+                {
+                    try
+                    {
+                        _settings.AbandonRoadSummaryWindowLeft = _AbandonRoadSummaryWindow.Left;
+                        _settings.AbandonRoadSummaryWindowTop = _AbandonRoadSummaryWindow.Top;
+                    }
+                    catch { }
+                }
+            }
+
+            ExperienceAlertWindowService.Close();
+            DungeonCountDisplayWindowService.ClosePositionPreview(_settings);
+            SubAddonWindow.Instance?.Hide();
+            ItemDropHelperWindow.Instance?.Hide();
+            BuffTrackerHelperWindow.Instance?.Hide();
+
+            if (restoreNormalWindows)
+            {
+                ApplySubAddonWindowSettings();
+                ApplyItemDropHelperWindowSettings();
+                ApplyBuffTrackerHelperWindowSettings();
+                PersistSettings();
+            }
 
             if (_AbandonRoadSummaryWindow != null)
             {
@@ -233,27 +337,8 @@ namespace TWChatOverlay.Views
 
         private void SyncMarginsFromWindowPosition(double windowLeft, double windowTop)
         {
-            IntPtr gameHwnd = OverlayHelper.FindTalesWeaverWindow();
-            if (gameHwnd == IntPtr.Zero) return;
-
-            var rect = OverlayHelper.GetActualRect(gameHwnd);
-
-            double dpiX = _stickyService?._dpiX > 0 ? _stickyService._dpiX : 1.0;
-            double dpiY = _stickyService?._dpiY > 0 ? _stickyService._dpiY : 1.0;
-
-            double gameWidth = (rect.Right - rect.Left) / dpiX;
-            double gameHeight = (rect.Bottom - rect.Top) / dpiY;
-            double gameLeft = rect.Left / dpiX;
-            double gameTop = rect.Top / dpiY;
-
-            double windowWidth = this.ActualWidth > 0 ? this.ActualWidth : _settings.WindowWidth;
-            double windowHeight = this.ActualHeight > 0 ? this.ActualHeight : _settings.WindowHeight;
-
-            double centerAlignedLeft = gameLeft + (gameWidth / 2.0) - (windowWidth / 2.0);
-            double bottomAlignedTop = gameTop + gameHeight - windowHeight;
-
-            _settings.LineMarginLeft = (windowLeft - centerAlignedLeft) * dpiX;
-            _settings.LineMargin = (bottomAlignedTop - windowTop) * dpiY;
+            _settings.LineMarginLeft = windowLeft;
+            _settings.LineMargin = windowTop;
         }
 
         private SubAddonWindow? CreateSubAddonWindow()
@@ -358,7 +443,7 @@ namespace TWChatOverlay.Views
         {
             try
             {
-                if (!_isSettingsPositionMode && !_settings.ShowItemDropHelperWindow && ItemDropHelperWindow.Instance == null)
+                if (!_isAddonPositionMode && !_settings.ShowItemDropHelperWindow && ItemDropHelperWindow.Instance == null)
                     return;
 
                 var helper = ItemDropHelperWindow.Instance ?? CreateItemDropHelperWindow();
@@ -370,7 +455,7 @@ namespace TWChatOverlay.Views
                 if (_settings.ItemDropWindowTop.HasValue)
                     helper.Top = _settings.ItemDropWindowTop.Value;
 
-                if (_isSettingsPositionMode || _settings.ShowItemDropHelperWindow)
+                if (_isAddonPositionMode || _settings.ShowItemDropHelperWindow)
                 {
                     if (!helper.IsVisible)
                         helper.Show();
@@ -421,17 +506,23 @@ namespace TWChatOverlay.Views
         {
             try
             {
-                if (_dailyWeeklyContentOverlay == null)
-                    return;
+                bool shouldShow = !_isWizardChatPositionMode &&
+                                  !IsSettingsPositionMode &&
+                                  _settings.ShowDailyWeeklyContentOverlay &&
+                                  _canShowAuxiliaryWindows;
 
-                if (!_isWizardChatPositionMode && _settings.ShowDailyWeeklyContentOverlay && _canShowAuxiliaryWindows)
+                if (shouldShow)
                 {
-                    if (!_dailyWeeklyContentOverlay.IsVisible)
+                    if (_dailyWeeklyContentOverlay == null || !_dailyWeeklyContentOverlay.IsLoaded)
                     {
-                        _dailyWeeklyContentOverlay.Show();
+                        ShowDailyWeeklyWindow();
+                        return;
                     }
+
+                    if (!_dailyWeeklyContentOverlay.IsVisible)
+                        _dailyWeeklyContentOverlay.Show();
                 }
-                else if (_dailyWeeklyContentOverlay.IsVisible)
+                else if (_dailyWeeklyContentOverlay?.IsVisible == true)
                 {
                     _dailyWeeklyContentOverlay.Hide();
                 }
@@ -444,7 +535,7 @@ namespace TWChatOverlay.Views
 
         private bool CanShowAbandonRoadSummaryWindow(bool previewMode)
         {
-            if (previewMode || _isSettingsPositionMode)
+            if (previewMode || _isAddonPositionMode)
                 return true;
 
             if (!_isOverlayVisible)
@@ -469,7 +560,7 @@ namespace TWChatOverlay.Views
                 if (_AbandonRoadSummaryWindow == null)
                     return;
 
-                if (_isSettingsPositionMode)
+                if (_isAddonPositionMode)
                 {
                     ShowAbandonRoadSummaryWindow(previewMode: true, restartLifetime: false);
                     return;
@@ -491,7 +582,7 @@ namespace TWChatOverlay.Views
 
                 if (_AbandonRoadSummaryWindow.IsVisible)
                 {
-                    bool shouldTopmost = _settings.AlwaysVisible || Topmost;
+                    bool shouldTopmost = Topmost;
                     _AbandonRoadSummaryWindow.Topmost = shouldTopmost;
                     if (shouldTopmost)
                         TopmostWindowHelper.BringToTopmost(_AbandonRoadSummaryWindow);
@@ -507,7 +598,7 @@ namespace TWChatOverlay.Views
         {
             try
             {
-                if (!_isSettingsPositionMode && !_settings.ShowBuffTrackerWindow && BuffTrackerHelperWindow.Instance == null)
+                if (!_isAddonPositionMode && !_settings.ShowBuffTrackerWindow && BuffTrackerHelperWindow.Instance == null)
                     return;
 
                 var helper = BuffTrackerHelperWindow.Instance ?? CreateBuffTrackerHelperWindow();
@@ -519,7 +610,7 @@ namespace TWChatOverlay.Views
                 if (_settings.BuffTrackerWindowTop.HasValue)
                     helper.Top = _settings.BuffTrackerWindowTop.Value;
 
-                if (_isSettingsPositionMode || _settings.ShowBuffTrackerWindow)
+                if (_isAddonPositionMode || _settings.ShowBuffTrackerWindow)
                 {
                     if (!helper.IsVisible)
                         helper.Show();

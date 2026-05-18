@@ -26,9 +26,9 @@ namespace TWChatOverlay.Services.LogAnalysis
             string timeRaw = fontMatches[0].Groups["content"].Value.Trim();
             string chatColor = fontMatches[1].Groups["color"].Value.ToLowerInvariant();
             string rawContent = fontMatches[1].Groups["content"].Value;
-            string chatContent = WebUtility.HtmlDecode(rawContent)
+            string decodedContent = WebUtility.HtmlDecode(rawContent)
                 .Replace("&nbsp", " ");
-            chatContent = Regex.Replace(chatContent, @"\s+", " ").Trim();
+            string chatContent = Regex.Replace(decodedContent, @"\s+", " ").Trim();
 
             if (chatColor == "white")
                 chatColor = "ffffff";
@@ -37,6 +37,8 @@ namespace TWChatOverlay.Services.LogAnalysis
             context.Result.Category = category;
             context.Result.Brush = brush;
             context.Result.SenderId = ExtractSenderId(chatContent, category);
+            context.Result.RawSenderId = ExtractRawSenderId(decodedContent, category);
+            context.Result.HasLeadingBodyWhitespace = !string.IsNullOrEmpty(decodedContent) && char.IsWhiteSpace(decodedContent[0]);
 
             context.ChatContent = chatContent;
             context.MessageOnly = ExtractMessageOnly(chatContent);
@@ -81,6 +83,38 @@ namespace TWChatOverlay.Services.LogAnalysis
 
             string userId = leftPart.Substring(nameStart).Trim();
             return string.IsNullOrWhiteSpace(userId) ? null : userId;
+        }
+
+        private static string? ExtractRawSenderId(string chatContent, ChatCategory category)
+        {
+            if (string.IsNullOrEmpty(chatContent))
+                return null;
+
+            if (category == ChatCategory.Shout)
+            {
+                var shoutMatch = ShoutTrailingUserIdRegex.Match(chatContent);
+                if (shoutMatch.Success)
+                {
+                    string shoutUserId = shoutMatch.Groups["userId"].Value;
+                    return shoutUserId.Length == 0 ? null : shoutUserId;
+                }
+
+                return null;
+            }
+
+            if (category is ChatCategory.System or ChatCategory.System2 or ChatCategory.System3)
+                return null;
+
+            int colonIndex = chatContent.IndexOf(':');
+            if (colonIndex <= 0)
+                return null;
+
+            string leftPart = chatContent.Substring(0, colonIndex);
+            int nameStart = leftPart.LastIndexOf(']');
+            nameStart = nameStart >= 0 ? nameStart + 1 : 0;
+
+            string userId = leftPart.Substring(nameStart);
+            return userId.Length == 0 ? null : userId;
         }
 
         private static bool IsIgnoredNormalMessage(string rawContent)

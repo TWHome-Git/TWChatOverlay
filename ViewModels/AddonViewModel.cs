@@ -37,6 +37,7 @@ namespace TWChatOverlay.ViewModels
         private long _expAlarmThresholdMan;
         private bool _showDailyWeeklyContentOverlay;
         private bool _showEtosDirectionAlert;
+        private bool _enableReflectionPatternAlert;
         private bool _showEtosHelperWindow;
         private bool _enableAbandonRoadCountAlert;
         private bool _showAbandonRoadSummaryWindow;
@@ -54,6 +55,7 @@ namespace TWChatOverlay.ViewModels
         private double _itemDropAlertVolumePercent;
         private double _highlightAlertVolumePercent;
         private double _magicCircleAlertVolumePercent;
+        private double _reflectionPatternAlertVolumePercent;
         private double _expBuffAlertVolumePercent;
         private double _buffTrackerEndSoundVolumePercent;
         private double _bossAlertVolumePercent;
@@ -150,6 +152,12 @@ namespace TWChatOverlay.ViewModels
         {
             get => _showEtosDirectionAlert;
             set => SetSetting(ref _showEtosDirectionAlert, value, (settings, newValue) => settings.ShowEtosDirectionAlert = newValue);
+        }
+
+        public bool EnableReflectionPatternAlert
+        {
+            get => _enableReflectionPatternAlert;
+            set => SetSetting(ref _enableReflectionPatternAlert, value, (settings, newValue) => settings.EnableReflectionPatternAlert = newValue);
         }
 
         public bool ShowEtosHelperWindow
@@ -254,6 +262,12 @@ namespace TWChatOverlay.ViewModels
             set => SetSetting(ref _magicCircleAlertVolumePercent, value, (settings, newValue) => settings.MagicCircleAlertVolumePercent = newValue);
         }
 
+        public double ReflectionPatternAlertVolumePercent
+        {
+            get => _reflectionPatternAlertVolumePercent;
+            set => SetSetting(ref _reflectionPatternAlertVolumePercent, value, (settings, newValue) => settings.ReflectionPatternAlertVolumePercent = newValue);
+        }
+
         public double ExpBuffAlertVolumePercent
         {
             get => _expBuffAlertVolumePercent;
@@ -294,6 +308,7 @@ namespace TWChatOverlay.ViewModels
             _expAlarmThresholdMan = _settings.ExpAlarmThreshold;
             _showDailyWeeklyContentOverlay = _settings.ShowDailyWeeklyContentOverlay;
             _showEtosDirectionAlert = _settings.ShowEtosDirectionAlert;
+            _enableReflectionPatternAlert = _settings.EnableReflectionPatternAlert;
             _showEtosHelperWindow = _settings.ShowEtosHelperWindow;
             _enableAbandonRoadCountAlert = _settings.EnableAbandonRoadCountAlert;
             _showAbandonRoadSummaryWindow = _settings.ShowAbandonRoadSummaryWindow;
@@ -313,6 +328,7 @@ namespace TWChatOverlay.ViewModels
             _itemDropAlertVolumePercent = _settings.ItemDropAlertVolumePercent;
             _highlightAlertVolumePercent = _settings.HighlightAlertVolumePercent;
             _magicCircleAlertVolumePercent = _settings.MagicCircleAlertVolumePercent;
+            _reflectionPatternAlertVolumePercent = _settings.ReflectionPatternAlertVolumePercent;
             _expBuffAlertVolumePercent = _settings.ExpBuffAlertVolumePercent;
             _buffTrackerEndSoundVolumePercent = _settings.BuffTrackerEndSoundVolumePercent;
             _bossAlertVolumePercent = _settings.BossAlertVolumePercent;

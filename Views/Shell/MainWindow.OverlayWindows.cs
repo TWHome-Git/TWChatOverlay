@@ -207,7 +207,7 @@ namespace TWChatOverlay.Views
                 _AbandonRoadSummaryWindow.StartAutoClose(_settings.AbandonRoadCountAlertDurationSeconds);
             }
 
-            bool shouldTopmost = _isSettingsPositionMode || _settings.AlwaysVisible || Topmost;
+            bool shouldTopmost = IsSettingsPositionMode || Topmost;
             _AbandonRoadSummaryWindow.Topmost = shouldTopmost;
             if (activateWindow)
             {

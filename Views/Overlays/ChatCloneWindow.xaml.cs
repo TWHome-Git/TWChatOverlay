@@ -216,7 +216,7 @@ namespace TWChatOverlay.Views
                 Hide();
             }
 
-            bool shouldTopmost = _mainWindow.Topmost || _settings.AlwaysVisible;
+            bool shouldTopmost = _mainWindow.Topmost;
             Topmost = shouldTopmost;
         }
 

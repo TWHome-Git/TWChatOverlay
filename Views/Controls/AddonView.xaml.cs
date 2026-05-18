@@ -35,11 +35,17 @@ namespace TWChatOverlay.Views
                 }
             };
 
-            Loaded += (_, _) => _isLoaded = true;
+            Loaded += (_, _) =>
+            {
+                _isLoaded = true;
+                int tabIndex = AddonTabControl?.SelectedIndex ?? 0;
+                UpdateAddonPositionState(true, tabIndex);
+            };
             Unloaded += (_, _) =>
             {
                 _isLoaded = false;
                 _itemDropPreviewTimer.Stop();
+                UpdateAddonPositionState(false, -1);
             };
 
             if (DataContext == null)
@@ -117,6 +123,30 @@ namespace TWChatOverlay.Views
                 !Regex.IsMatch(text, @"^[0-9,]+$"))
             {
                 e.CancelCommand();
+            }
+        }
+
+        private void AddonTabControl_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (!ReferenceEquals(e.OriginalSource, AddonTabControl))
+                return;
+
+            if (!_isLoaded)
+                return;
+
+            UpdateAddonPositionState(true, AddonTabControl.SelectedIndex);
+        }
+
+        private static void UpdateAddonPositionState(bool isEnabled, int tabIndex)
+        {
+            foreach (Window window in Application.Current.Windows)
+            {
+                if (window is MainWindow mainWindow)
+                {
+                    mainWindow.SetAddonPositionPreviewTabIndex(tabIndex);
+                    mainWindow.SetAddonPositionMode(isEnabled);
+                    return;
+                }
             }
         }
 

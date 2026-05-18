@@ -73,13 +73,10 @@
                                    TextTrimming="CharacterEllipsis"
                                    VerticalAlignment="Center"/>
                         <Button Content="갱신"
-                                Width="54"
-                                Margin="0,0,6,0"
-                                Style="{StaticResource CalendarTitleButtonStyle}"
+                                Style="{StaticResource WindowCloseButtonStyle}"
                                 Click="Refresh_Click"/>
                         <Button Content="닫기"
-                                Width="54"
-                                Style="{StaticResource DangerButtonStyle}"
+                                Style="{StaticResource WindowCloseButtonStyle}"
                                 Click="Close_Click"/>
                     </StackPanel>
 

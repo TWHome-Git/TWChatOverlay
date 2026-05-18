@@ -9,7 +9,6 @@ namespace TWChatOverlay.Views
     public partial class BuffTrackerHelperWindow : Window
     {
         public static BuffTrackerHelperWindow? Instance { get; private set; }
-        private bool _isDragging;
 
         public BuffTrackerHelperWindow()
         {
@@ -21,6 +20,8 @@ namespace TWChatOverlay.Views
 
         protected override void OnClosed(EventArgs e)
         {
+            CommitPositionToSettings();
+
             if (ReferenceEquals(Instance, this))
                 Instance = null;
 
@@ -32,11 +33,9 @@ namespace TWChatOverlay.Views
             if (e.ButtonState != MouseButtonState.Pressed)
                 return;
 
-            _isDragging = true;
             try { DragMove(); } catch { }
             finally
             {
-                _isDragging = false;
                 CommitPositionToSettings();
             }
         }
@@ -49,15 +48,8 @@ namespace TWChatOverlay.Views
                 {
                     if (window is MainWindow mainWindow && mainWindow.DataContext is ChatSettings settings)
                     {
-                        if (_isDragging)
-                        {
-                            settings.SetBuffTrackerWindowPosition(Left, Top, notify: false);
-                            SyncTrackerWindowPosition();
-                        }
-                        else
-                        {
-                            settings.SetBuffTrackerWindowPosition(Left, Top, notify: true);
-                        }
+                        settings.SetBuffTrackerWindowPosition(Left, Top, notify: false);
+                        SyncTrackerWindowPosition();
 
                         break;
                     }
@@ -74,8 +66,9 @@ namespace TWChatOverlay.Views
                 {
                     if (window is MainWindow mainWindow && mainWindow.DataContext is ChatSettings settings)
                     {
-                        settings.SetBuffTrackerWindowPosition(Left, Top, notify: true);
+                        settings.SetBuffTrackerWindowPosition(Left, Top, notify: false);
                         SyncTrackerWindowPosition();
+                        ConfigService.SaveDeferred(settings);
                         break;
                     }
                 }

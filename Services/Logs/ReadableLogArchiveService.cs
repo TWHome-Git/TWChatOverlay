@@ -218,6 +218,63 @@ namespace TWChatOverlay.Services
             }
         }
 
+        public void ResetRawLogRebuildCheckpoint()
+        {
+            lock (_syncRoot)
+            {
+                try
+                {
+                    Directory.CreateDirectory(_stateDirectory);
+                    var state = LoadMigrationState();
+                    if (state.Checkpoints.Remove(RawLogRebuildCheckpointKey))
+                    {
+                        string migrationPath = Path.Combine(_stateDirectory, MigrationStateFileName);
+                        string json = JsonSerializer.Serialize(state, JsonOptions);
+                        File.WriteAllText(migrationPath, json, Utf8BomEncoding);
+                    }
+
+                    DeleteLegacyStateFiles();
+                }
+                catch (Exception ex)
+                {
+                    AppLogger.Warn("Failed to reset raw log rebuild checkpoint.", ex);
+                }
+            }
+        }
+
+        public void ClearArchiveLogsAndResetCheckpoint()
+        {
+            lock (_syncRoot)
+            {
+                try
+                {
+                    EnsureArchiveDirectoriesExist();
+                    _abandonDayBuffer.Clear();
+
+                    DeleteFilesByPattern(_shoutDirectory, "*.html");
+                    DeleteFilesByPattern(_itemDirectory, "*.html");
+                    DeleteFilesByPattern(_expDirectory, "*.html");
+                    DeleteFilesByPattern(_contentDirectory, "*.html");
+                    DeleteFilesByPattern(_AbandonDirectory, "*.html");
+                    DeleteFilesByPattern(_AbandonDirectory, $"*{AbandonDaySummarySuffix}");
+
+                    var state = LoadMigrationState();
+                    if (state.Checkpoints.Remove(RawLogRebuildCheckpointKey))
+                    {
+                        string migrationPath = Path.Combine(_stateDirectory, MigrationStateFileName);
+                        string json = JsonSerializer.Serialize(state, JsonOptions);
+                        File.WriteAllText(migrationPath, json, Utf8BomEncoding);
+                    }
+
+                    DeleteLegacyStateFiles();
+                }
+                catch (Exception ex)
+                {
+                    AppLogger.Warn("Failed to clear archive logs and reset checkpoint.", ex);
+                }
+            }
+        }
+
         public void AppendFromAnalysis(DateTime logDate, LogAnalysisResult analysis, bool isContentRelevant)
         {
             if (analysis == null || !analysis.IsSuccess)
@@ -814,6 +871,10 @@ namespace TWChatOverlay.Services
             if (string.IsNullOrWhiteSpace(text) || !text.Contains("획득", StringComparison.Ordinal))
                 return false;
 
+            // Ignore announcement lines that should not count as player's abandoned-road gains.
+            if (text.Contains("누군가 어밴던로드에서 주문을 통해 하급 마정석 1000개를 획득 하였습니다.", StringComparison.Ordinal))
+                return false;
+
             Match match = MagicStoneGainRegex.Match(text);
             if (!match.Success)
                 return false;
@@ -923,6 +984,24 @@ namespace TWChatOverlay.Services
             }
 
             return false;
+        }
+
+        private static void DeleteFilesByPattern(string directoryPath, string pattern)
+        {
+            if (string.IsNullOrWhiteSpace(directoryPath) || !Directory.Exists(directoryPath))
+                return;
+
+            foreach (string path in Directory.EnumerateFiles(directoryPath, pattern, SearchOption.TopDirectoryOnly))
+            {
+                try
+                {
+                    File.Delete(path);
+                }
+                catch (Exception ex)
+                {
+                    AppLogger.Warn($"Failed to delete archive log file '{path}'.", ex);
+                }
+            }
         }
 
         private static bool TryExtractDateFromPath(string path, out DateTime date)

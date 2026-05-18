@@ -41,6 +41,23 @@ namespace TWChatOverlay.Views
                 _ = LoadDateAsync(_dates[^1]);
         }
 
+        private void TitleBar_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            if (e.ButtonState == MouseButtonState.Pressed)
+            {
+                try
+                {
+                    DragMove();
+                }
+                catch { }
+            }
+        }
+
+        private void CloseButton_Click(object sender, RoutedEventArgs e)
+        {
+            Close();
+        }
+
         private void ShoutReplayWindow_Loaded(object sender, RoutedEventArgs e)
         {
             EnsureMouseHitTestEnabled();

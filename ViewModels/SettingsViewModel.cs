@@ -22,12 +22,15 @@ namespace TWChatOverlay.ViewModels
         private readonly Action? _onExit;
         private readonly Action? _onSettingsReset;
         private readonly Action? _onHotKeysChanged;
+        private readonly Func<System.Threading.Tasks.Task<bool>>? _onManualLogReload;
         private int _selectedPresetNumber = 1;
+        private bool _isManualLogReloadRunning;
 
         public ICommand ColorPickCommand { get; }
         public ICommand InitSettingsCommand { get; }
         public ICommand ExitAppCommand { get; }
         public ICommand ManualUpdateCommand { get; }
+        public ICommand ManualLogReloadCommand { get; }
         public ICommand SaveOrLoadPresetCommand { get; }
         public ICommand ApplyHotkeysCommand { get; }
         public ICommand CancelHotkeysCommand { get; }
@@ -45,20 +48,6 @@ namespace TWChatOverlay.ViewModels
                 if (_settings.ShowNormal != value)
                 {
                     _settings.ShowNormal = value;
-                    OnPropertyChanged();
-                    SaveSettings();
-                }
-            }
-        }
-
-        public bool AlwaysVisible
-        {
-            get => _settings.AlwaysVisible;
-            set
-            {
-                if (_settings.AlwaysVisible != value)
-                {
-                    _settings.AlwaysVisible = value;
                     OnPropertyChanged();
                     SaveSettings();
                 }
@@ -384,18 +373,6 @@ namespace TWChatOverlay.ViewModels
             }
         }
 
-        public string ToggleAlwaysVisibleHotKey
-        {
-            get => _settings.ToggleAlwaysVisibleHotKey;
-            set
-            {
-                if (_settings.ToggleAlwaysVisibleHotKey == value) return;
-                _settings.ToggleAlwaysVisibleHotKey = value;
-                OnPropertyChanged();
-                SaveSettings();
-            }
-        }
-
         public string ToggleDailyWeeklyContentHotKey
         {
             get => _settings.ToggleDailyWeeklyContentHotKey;
@@ -484,18 +461,21 @@ namespace TWChatOverlay.ViewModels
 
         public SettingsViewModel(ChatSettings settings, Action<string>? onColorsUpdated = null,
                                  Action? onExit = null, Action? onSettingsReset = null,
-                                 Action? onHotKeysChanged = null)
+                                 Action? onHotKeysChanged = null,
+                                 Func<System.Threading.Tasks.Task<bool>>? onManualLogReload = null)
         {
             _settings = settings ?? throw new ArgumentNullException(nameof(settings));
             _onColorsUpdated = onColorsUpdated;
             _onExit = onExit;
             _onSettingsReset = onSettingsReset;
             _onHotKeysChanged = onHotKeysChanged;
+            _onManualLogReload = onManualLogReload;
 
             ColorPickCommand = new RelayCommand<string?>(ExecuteColorPick);
             InitSettingsCommand = new RelayCommand<object?>(_ => ExecuteInitSettings());
             ExitAppCommand = new RelayCommand<object?>(_ => ExecuteExitApp());
             ManualUpdateCommand = new RelayCommand<object?>(async _ => await ExecuteManualUpdateAsync());
+            ManualLogReloadCommand = new RelayCommand<object?>(async _ => await ExecuteManualLogReloadAsync());
             SaveOrLoadPresetCommand = new RelayCommand<string?>(ExecuteSaveOrLoadPreset);
             ApplyHotkeysCommand = new RelayCommand<object?>(_ => ExecuteApplyHotkeys());
             CancelHotkeysCommand = new RelayCommand<object?>(_ => ExecuteCancelHotkeys());
@@ -516,7 +496,6 @@ namespace TWChatOverlay.ViewModels
                 OnPropertyChanged(nameof(ExitHotKey));
                 OnPropertyChanged(nameof(ToggleOverlayHotKey));
                 OnPropertyChanged(nameof(ToggleAddonHotKey));
-                OnPropertyChanged(nameof(ToggleAlwaysVisibleHotKey));
                 OnPropertyChanged(nameof(ToggleDailyWeeklyContentHotKey));
             }
             else if (e.PropertyName == nameof(ChatSettings.LineMargin))
@@ -526,10 +505,6 @@ namespace TWChatOverlay.ViewModels
             else if (e.PropertyName == nameof(ChatSettings.CurrentPositionDisplay))
             {
                 OnPropertyChanged(nameof(CurrentPositionDisplay));
-            }
-            else if (e.PropertyName == nameof(ChatSettings.AlwaysVisible))
-            {
-                OnPropertyChanged(nameof(AlwaysVisible));
             }
         }
 
@@ -595,7 +570,6 @@ namespace TWChatOverlay.ViewModels
             OnPropertyChanged(nameof(AutoCopyShoutNickname));
             OnPropertyChanged(nameof(ShoutToastDurationSeconds));
             OnPropertyChanged(nameof(ShoutToastFontSize));
-            OnPropertyChanged(nameof(AlwaysVisible));
             OnPropertyChanged(nameof(EnableDebugLogging));
             OnPropertyChanged(nameof(NormalColor));
             OnPropertyChanged(nameof(TeamColor));
@@ -609,7 +583,6 @@ namespace TWChatOverlay.ViewModels
             OnPropertyChanged(nameof(ExitHotKey));
             OnPropertyChanged(nameof(ToggleOverlayHotKey));
             OnPropertyChanged(nameof(ToggleAddonHotKey));
-            OnPropertyChanged(nameof(ToggleAlwaysVisibleHotKey));
             OnPropertyChanged(nameof(ToggleDailyWeeklyContentHotKey));
             OnPropertyChanged(nameof(ToggleEtaRankingHotKey));
             OnPropertyChanged(nameof(ToggleCoefficientHotKey));
@@ -650,7 +623,6 @@ namespace TWChatOverlay.ViewModels
                 _settings.ExitHotKey = saved.ExitHotKey;
                 _settings.ToggleOverlayHotKey = saved.ToggleOverlayHotKey;
                 _settings.ToggleAddonHotKey = saved.ToggleAddonHotKey;
-                _settings.ToggleAlwaysVisibleHotKey = saved.ToggleAlwaysVisibleHotKey;
                 _settings.ToggleDailyWeeklyContentHotKey = saved.ToggleDailyWeeklyContentHotKey;
                 _settings.ToggleEtaRankingHotKey = saved.ToggleEtaRankingHotKey;
                 _settings.ToggleCoefficientHotKey = saved.ToggleCoefficientHotKey;
@@ -661,7 +633,6 @@ namespace TWChatOverlay.ViewModels
                 OnPropertyChanged(nameof(ExitHotKey));
                 OnPropertyChanged(nameof(ToggleOverlayHotKey));
                 OnPropertyChanged(nameof(ToggleAddonHotKey));
-                OnPropertyChanged(nameof(ToggleAlwaysVisibleHotKey));
                 OnPropertyChanged(nameof(ToggleDailyWeeklyContentHotKey));
                 OnPropertyChanged(nameof(ToggleEtaRankingHotKey));
                 OnPropertyChanged(nameof(ToggleCoefficientHotKey));
@@ -710,6 +681,37 @@ namespace TWChatOverlay.ViewModels
             {
                 AppLogger.Warn("Manual update failed.", ex);
                 MessageBox.Show("수동 업데이트 중 오류가 발생했습니다.", "수동 업데이트", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
+        }
+
+        private async System.Threading.Tasks.Task ExecuteManualLogReloadAsync()
+        {
+            if (_isManualLogReloadRunning)
+                return;
+
+            if (_onManualLogReload == null)
+            {
+                MessageBox.Show("로그 다시 읽기 기능을 사용할 수 없습니다.", "로그 다시 읽기", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            _isManualLogReloadRunning = true;
+            try
+            {
+                bool success = await _onManualLogReload.Invoke();
+                if (!success)
+                {
+                    MessageBox.Show("로그 다시 읽기를 완료하지 못했습니다. 로그 경로 또는 초기화 상태를 확인해주세요.", "로그 다시 읽기", MessageBoxButton.OK, MessageBoxImage.Warning);
+                }
+            }
+            catch (Exception ex)
+            {
+                AppLogger.Warn("Manual log reload failed.", ex);
+                MessageBox.Show("로그 다시 읽기 중 오류가 발생했습니다.", "로그 다시 읽기", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
+            finally
+            {
+                _isManualLogReloadRunning = false;
             }
         }
 
@@ -768,8 +770,8 @@ namespace TWChatOverlay.ViewModels
                     var preset = _settings.GetPreset(_selectedPresetNumber);
                     if (preset != null && preset.HasMarginData)
                     {
-                        _settings.LineMarginLeft = preset.LineMarginLeft;
-                        _settings.LineMargin = preset.LineMargin;
+                        _settings.LineMarginLeft = preset.Left;
+                        _settings.LineMargin = preset.Top;
                         OnPropertyChanged(nameof(LineMarginLeft));
                         OnPropertyChanged(nameof(LineMargin));
 
@@ -807,8 +809,8 @@ namespace TWChatOverlay.ViewModels
                 return;
             }
 
-            _settings.LineMarginLeft = preset.LineMarginLeft;
-            _settings.LineMargin = preset.LineMargin;
+            _settings.LineMarginLeft = preset.Left;
+            _settings.LineMargin = preset.Top;
             _settings.UpdatePositionDisplay(_settings.LineMarginLeft, _settings.LineMargin);
 
             OnPropertyChanged(nameof(LineMarginLeft));

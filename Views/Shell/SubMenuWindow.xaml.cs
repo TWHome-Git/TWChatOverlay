@@ -1,6 +1,7 @@
 ﻿using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using System.Windows.Media;
 using TWChatOverlay.Services;
 
@@ -15,6 +16,23 @@ namespace TWChatOverlay.Views
             Loaded += SubMenuWindow_Loaded;
             UseLayoutRounding = true;
             SnapsToDevicePixels = true;
+        }
+
+        private void TitleBar_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            if (e.ButtonState == MouseButtonState.Pressed)
+            {
+                try
+                {
+                    DragMove();
+                }
+                catch { }
+            }
+        }
+
+        private void CloseButton_Click(object sender, RoutedEventArgs e)
+        {
+            Close();
         }
 
         private void SubMenuWindow_Loaded(object sender, RoutedEventArgs e)

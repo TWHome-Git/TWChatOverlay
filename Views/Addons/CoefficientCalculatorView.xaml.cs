@@ -807,7 +807,7 @@ namespace TWChatOverlay.Views.Addons
             rightTableGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
             rightTableGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
             rightTableGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(120) });
-            foreach (int h in new[] { 26, 26, 26, 26, 26, 26, 26, 26 })
+            foreach (int h in new[] { 26, 26, 28, 26, 26, 26, 26, 26, 26 })
                 rightTableGrid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(h) });
 
             Border RtCell(int row, int col, System.Windows.Media.Brush bg, Thickness brd, int colSpan = 1)
@@ -896,17 +896,24 @@ namespace TWChatOverlay.Views.Addons
             statCoeffVal.SetBinding(TextBlock.TextProperty, new Binding(nameof(CalculatorSlotRow.Coefficient)) { Source = _accessoryRows[0], Converter = zeroFallback });
             RtCell(1, 3, System.Windows.Media.Brushes.Transparent, rBrd).Child = statCoeffVal;
 
-            RtCell(2, 0, bgDarkest, cBrd);
+            RtCell(2, 0, bgRowAlt, cBrd).Child = RtLbl("덱스");
+            _dexInputTextBox = RtInput();
+            _dexInputTextBox.Width = 90;
+            _dexInputTextBox.Text = "0";
+            _dexInputTextBox.TextChanged += DexInputTextBox_TextChanged;
+            RtCell(2, 1, bgDarkest, cBrd, 3).Child = _dexInputTextBox;
+
+            RtCell(3, 0, bgDarkest, cBrd);
             _rightPrimaryHeader = RtHdr("공격력");
-            RtCell(2, 1, bgDarkest, cBrd).Child = _rightPrimaryHeader;
+            RtCell(3, 1, bgDarkest, cBrd).Child = _rightPrimaryHeader;
             _rightSecondaryHeader = RtHdr("보조공격력");
-            RtCell(2, 2, bgDarkest, cBrd).Child = _rightSecondaryHeader;
-            RtCell(2, 3, bgDarkest, rBrd);
+            RtCell(3, 2, bgDarkest, cBrd).Child = _rightSecondaryHeader;
+            RtCell(3, 3, bgDarkest, rBrd);
 
             (string name, int idx)[] midSlots = { ("아바타", 1), ("커프", 2), ("렐릭", 3) };
             foreach (var (slotName, slotIdx) in midSlots)
             {
-                int gr = 2 + slotIdx;
+                int gr = 3 + slotIdx;
                 var accRow = _accessoryRows[slotIdx];
                 RtCell(gr, 0, bgRowAlt, cBrd).Child = RtLbl(slotName, slotName.Length > 2 ? 10 : 11);
                 var col1 = RtInput();
@@ -920,25 +927,25 @@ namespace TWChatOverlay.Views.Addons
                 RtCell(gr, 3, System.Windows.Media.Brushes.Transparent, rBrd).Child = cv;
             }
 
-            // Row 6: 칭호
-            RtCell(6, 0, bgRowAlt, cBrd).Child = RtLbl("칭호");
+            // Row 7: 칭호
+            RtCell(7, 0, bgRowAlt, cBrd).Child = RtLbl("칭호");
             var titleInput = RtInput();
             titleInput.SetBinding(TextBox.TextProperty, new Binding(nameof(CalculatorSlotRow.TitleValue)) { Source = _accessoryRows[4], Converter = zeroFallback, Mode = BindingMode.TwoWay, UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged });
-            RtCell(6, 1, System.Windows.Media.Brushes.Transparent, cBrd).Child = titleInput;
-            RtCell(6, 2, bgDarkest, cBrd);
+            RtCell(7, 1, System.Windows.Media.Brushes.Transparent, cBrd).Child = titleInput;
+            RtCell(7, 2, bgDarkest, cBrd);
             var titleCoeffVal = RtVal();
             titleCoeffVal.SetBinding(TextBlock.TextProperty, new Binding(nameof(CalculatorSlotRow.Coefficient)) { Source = _accessoryRows[4], Converter = zeroFallback });
-            RtCell(6, 3, System.Windows.Media.Brushes.Transparent, rBrd).Child = titleCoeffVal;
+            RtCell(7, 3, System.Windows.Media.Brushes.Transparent, rBrd).Child = titleCoeffVal;
 
-            // Row 7: 코어
-            RtCell(7, 0, bgRowAlt, new Thickness(0, 0, 1, 0)).Child = RtLbl("코어");
+            // Row 8: 코어
+            RtCell(8, 0, bgRowAlt, new Thickness(0, 0, 1, 0)).Child = RtLbl("코어");
             var coreInput = RtInput();
             coreInput.SetBinding(TextBox.TextProperty, new Binding(nameof(CalculatorSlotRow.CoreValue)) { Source = _accessoryRows[5], Converter = zeroFallback, Mode = BindingMode.TwoWay, UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged });
-            RtCell(7, 1, System.Windows.Media.Brushes.Transparent, new Thickness(0, 0, 1, 0)).Child = coreInput;
-            RtCell(7, 2, bgDarkest, new Thickness(0, 0, 1, 0));
+            RtCell(8, 1, System.Windows.Media.Brushes.Transparent, new Thickness(0, 0, 1, 0)).Child = coreInput;
+            RtCell(8, 2, bgDarkest, new Thickness(0, 0, 1, 0));
             var coreCoeffVal = RtVal();
             coreCoeffVal.SetBinding(TextBlock.TextProperty, new Binding(nameof(CalculatorSlotRow.Coefficient)) { Source = _accessoryRows[5], Converter = zeroFallback });
-            RtCell(7, 3, System.Windows.Media.Brushes.Transparent, new Thickness(0)).Child = coreCoeffVal;
+            RtCell(8, 3, System.Windows.Media.Brushes.Transparent, new Thickness(0)).Child = coreCoeffVal;
 
             var rightTableBorder = new Border
             {
@@ -976,30 +983,6 @@ namespace TWChatOverlay.Views.Addons
             _avatarSubEnhanceCheckBox.Unchecked += AvatarEnhancementCheckChanged;
             checkboxPanel.Children.Add(_avatarMainEnhanceCheckBox);
             checkboxPanel.Children.Add(_avatarSubEnhanceCheckBox);
-
-            var dexPanel = new StackPanel { Margin = new Thickness(0, 0, 0, 6) };
-            dexPanel.Children.Add(new TextBlock
-            {
-                Text = "덱스",
-                Foreground = System.Windows.Media.Brushes.White,
-                FontSize = 11,
-                FontWeight = FontWeights.SemiBold,
-                Margin = new Thickness(0, 0, 0, 2)
-            });
-            _dexInputTextBox = new TextBox
-            {
-                Width = 90,
-                Height = 24,
-                Text = "0",
-                Background = bgDarkest,
-                Foreground = System.Windows.Media.Brushes.White,
-                BorderBrush = borderDark,
-                BorderThickness = new Thickness(1),
-                HorizontalAlignment = HorizontalAlignment.Left
-            };
-            _dexInputTextBox.TextChanged += DexInputTextBox_TextChanged;
-            dexPanel.Children.Add(_dexInputTextBox);
-            checkboxPanel.Children.Add(dexPanel);
 
             var rightPanel = new StackPanel { Margin = new Thickness(8, 28, 0, 0) };
             rightPanel.Children.Add(rightTableBorder);

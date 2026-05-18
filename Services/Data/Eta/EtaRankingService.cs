@@ -109,7 +109,7 @@ namespace TWChatOverlay.Services
         public static bool TryGetProfile(string userId, out EtaProfileResolver.EtaProfile profile)
         {
             profile = default;
-            if (string.IsNullOrWhiteSpace(userId))
+            if (string.IsNullOrEmpty(userId))
                 return false;
 
             return _profiles.TryGetValue(userId, out profile);

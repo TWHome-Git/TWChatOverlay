@@ -43,6 +43,7 @@ namespace TWChatOverlay.Models
         private bool _showExperienceLimitAlertWindow = false;
         private bool _showDailyWeeklyContentOverlay = false;
         private bool _showEtosDirectionAlert = true;
+        private bool _enableReflectionPatternAlert = false;
         private bool _enableAbandonRoadCountAlert = false;
         private bool _showAbandonRoadSummaryWindow = false;
         private bool _enableCravingPleasureCountAlert = false;
@@ -59,6 +60,7 @@ namespace TWChatOverlay.Models
         private double _itemDropAlertVolume = 0.1;
         private double _highlightAlertVolume = 1.0;
         private double _magicCircleAlertVolume = 1.0;
+        private double _reflectionPatternAlertVolume = 1.0;
         private double _expBuffAlertVolume = 1.0;
         private double _bossAlertVolume = 1.0;
         private bool _alwaysVisible = false;
@@ -198,6 +200,8 @@ namespace TWChatOverlay.Models
         public bool UseMagicCircleAlert { get => _useMagicCircleAlert; set { _useMagicCircleAlert = value; OnPropertyChanged(); } }
         [JsonPropertyOrder(12)]
         public bool ShowEtosDirectionAlert { get => _showEtosDirectionAlert; set { _showEtosDirectionAlert = value; OnPropertyChanged(); } }
+        [JsonPropertyOrder(121)]
+        public bool EnableReflectionPatternAlert { get => _enableReflectionPatternAlert; set { _enableReflectionPatternAlert = value; OnPropertyChanged(); } }
         [JsonPropertyOrder(13)]
         public bool EnableAbandonRoadCountAlert { get => _enableAbandonRoadCountAlert; set { _enableAbandonRoadCountAlert = value; OnPropertyChanged(); } }
         [JsonPropertyOrder(14)]
@@ -321,6 +325,19 @@ namespace TWChatOverlay.Models
                 OnPropertyChanged(nameof(MagicCircleAlertVolumePercent));
             }
         }
+        [JsonPropertyOrder(271)]
+        public double ReflectionPatternAlertVolume
+        {
+            get => _reflectionPatternAlertVolume;
+            set
+            {
+                double clamped = ClampVolume(value);
+                if (Math.Abs(_reflectionPatternAlertVolume - clamped) < 0.0001) return;
+                _reflectionPatternAlertVolume = clamped;
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(ReflectionPatternAlertVolumePercent));
+            }
+        }
         [JsonPropertyOrder(28)]
         public double ExpBuffAlertVolume
         {
@@ -374,6 +391,13 @@ namespace TWChatOverlay.Models
         {
             get => Math.Round(_magicCircleAlertVolume * 100.0, 0);
             set => MagicCircleAlertVolume = Math.Max(0.0, Math.Min(100.0, value)) / 100.0;
+        }
+        [JsonPropertyOrder(291)]
+        [JsonIgnore]
+        public double ReflectionPatternAlertVolumePercent
+        {
+            get => Math.Round(_reflectionPatternAlertVolume * 100.0, 0);
+            set => ReflectionPatternAlertVolume = Math.Max(0.0, Math.Min(100.0, value)) / 100.0;
         }
         [JsonPropertyOrder(30)]
         [JsonIgnore]

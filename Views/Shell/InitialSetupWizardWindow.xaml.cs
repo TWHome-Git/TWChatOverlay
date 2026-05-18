@@ -6,6 +6,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Documents;
+using System.Windows.Input;
 using System.Windows.Media;
 using TWChatOverlay.Models;
 using TWChatOverlay.Services;
@@ -50,9 +51,36 @@ namespace TWChatOverlay.Views
             InitializeComponent();
             WindowFontService.Apply(this);
             _settings = settings;
+            if (!_settings.InitialSetupWizardCompleted)
+            {
+                ResetInitialWindowPositionsToOrigin();
+                ConfigService.SaveDeferred(_settings);
+            }
             _addonViewModel = new AddonViewModel(settings);
             _mainWindow = mainWindow;
             RenderStep();
+        }
+
+        private void TitleBar_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            if (e.ButtonState == MouseButtonState.Pressed)
+            {
+                try
+                {
+                    DragMove();
+                }
+                catch { }
+            }
+        }
+
+        private void MinimizeButton_Click(object sender, RoutedEventArgs e)
+        {
+            WindowState = WindowState.Minimized;
+        }
+
+        private void CloseButton_Click(object sender, RoutedEventArgs e)
+        {
+            SkipButton_Click(sender, e);
         }
 
         private void RenderStep()
@@ -483,6 +511,17 @@ namespace TWChatOverlay.Views
             vol.SetBinding(Slider.ValueProperty, new Binding(nameof(ChatSettings.MagicCircleAlertVolumePercent)) { Source = _settings, Mode = BindingMode.TwoWay });
             panel.Children.Add(vol);
             panel.Children.Add(CreateCheckRow("에토스 방향 알림 ON/OFF", nameof(ChatSettings.ShowEtosDirectionAlert)));
+            panel.Children.Add(CreateCheckRow("반사 패턴 알림 ON/OFF", nameof(ChatSettings.EnableReflectionPatternAlert)));
+            var reflectionVolLabel = new TextBlock { Foreground = Brushes.White, Margin = new Thickness(0, 8, 0, 4) };
+            reflectionVolLabel.SetBinding(TextBlock.TextProperty, new Binding(nameof(ChatSettings.ReflectionPatternAlertVolumePercent))
+            {
+                Source = _settings,
+                StringFormat = "반사 패턴 알림 볼륨: {0:F0}%"
+            });
+            panel.Children.Add(reflectionVolLabel);
+            var reflectionVol = new Slider { Minimum = 0, Maximum = 100, TickFrequency = 10, IsSnapToTickEnabled = true };
+            reflectionVol.SetBinding(Slider.ValueProperty, new Binding(nameof(ChatSettings.ReflectionPatternAlertVolumePercent)) { Source = _settings, Mode = BindingMode.TwoWay });
+            panel.Children.Add(reflectionVol);
             panel.Children.Add(CreateCheckRow("어밴던로드 횟수 알리미", nameof(ChatSettings.EnableAbandonRoadCountAlert)));
             panel.Children.Add(CreateCheckRow("어밴던로드 누적 금액 알리미", nameof(ChatSettings.ShowAbandonRoadSummaryWindow)));
             panel.Children.Add(CreateCheckRow("갈망하는 즐거움 횟수 알리미", nameof(ChatSettings.EnableCravingPleasureCountAlert)));
@@ -679,7 +718,7 @@ namespace TWChatOverlay.Views
 
         private UIElement CreateDailyWeeklyChecklistStep()
         {
-            var root = new Grid();
+            var root = new Grid { Margin = new Thickness(0, 0, 8, 12) };
             root.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
             root.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
             root.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
@@ -759,8 +798,8 @@ namespace TWChatOverlay.Views
 
             return new ScrollViewer
             {
-                Height = 330,
                 VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
+                HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled,
                 Content = root
             };
         }
@@ -943,6 +982,46 @@ namespace TWChatOverlay.Views
                 cb.Unchecked += (_, _) => SetDungeonItemEnabled(key, false);
                 parent.Children.Add(cb);
             }
+        }
+
+        private void ResetInitialWindowPositionsToOrigin()
+        {
+            _settings.LineMarginLeft = 0.0;
+            _settings.LineMargin = 0.0;
+            _settings.DailyWeeklyContentOverlayLeft = 0.0;
+            _settings.DailyWeeklyContentOverlayTop = 0.0;
+            _settings.SubAddonWindowLeft = 0.0;
+            _settings.SubAddonWindowTop = 0.0;
+            _settings.SubMenuWindowLeft = 0.0;
+            _settings.SubMenuWindowTop = 0.0;
+            _settings.MenuWindowLeft = 0.0;
+            _settings.MenuWindowTop = 0.0;
+            _settings.ItemDropWindowLeft = 0.0;
+            _settings.ItemDropWindowTop = 0.0;
+            _settings.BuffTrackerWindowLeft = 0.0;
+            _settings.BuffTrackerWindowTop = 0.0;
+            _settings.ItemCalendarWindowLeft = 0.0;
+            _settings.ItemCalendarWindowTop = 0.0;
+            _settings.AbandonRoadSummaryWindowLeft = 0.0;
+            _settings.AbandonRoadSummaryWindowTop = 0.0;
+            _settings.RecaptureSupplyWindowLeft = 0.0;
+            _settings.RecaptureSupplyWindowTop = 0.0;
+            _settings.ExperienceLimitAlertWindowLeft = 0.0;
+            _settings.ExperienceLimitAlertWindowTop = 0.0;
+            _settings.DungeonCountDisplayWindowLeft = 0.0;
+            _settings.DungeonCountDisplayWindowTop = 0.0;
+            _settings.ShoutToastWindowLeft = 0.0;
+            _settings.ShoutToastWindowTop = 0.0;
+            _settings.MessengerToastWindowLeft = 0.0;
+            _settings.MessengerToastWindowTop = 0.0;
+            _settings.ChatCloneWindow1Left = 0.0;
+            _settings.ChatCloneWindow1Top = 0.0;
+            _settings.ChatCloneWindow2Left = 0.0;
+            _settings.ChatCloneWindow2Top = 0.0;
+            _settings.ShoutReplayWindowLeft = 0.0;
+            _settings.ShoutReplayWindowTop = 0.0;
+            _settings.MemoOverlayWindowLeft = 0.0;
+            _settings.MemoOverlayWindowTop = 0.0;
         }
 
         private void PrevButton_Click(object sender, RoutedEventArgs e)

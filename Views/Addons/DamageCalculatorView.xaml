@@ -13,7 +13,7 @@
                 <Setter Property="CornerRadius" Value="8"/>
                 <Setter Property="Padding" Value="12"/>
                 <Setter Property="Margin" Value="0,0,8,8"/>
-                <Setter Property="MinHeight" Value="420"/>
+                <Setter Property="MinHeight" Value="340"/>
             </Style>
             <Style x:Key="GroupTitleStyle" TargetType="TextBlock">
                 <Setter Property="Foreground" Value="#58A6FF"/>
@@ -27,14 +27,71 @@
                 <Setter Property="VerticalAlignment" Value="Center"/>
             </Style>
             <Style x:Key="InlineComboStyle" TargetType="ComboBox" BasedOn="{StaticResource DarkComboBoxStyle}">
-                <Setter Property="Height" Value="30"/>
-                <Setter Property="Width" Value="120"/>
+                <Setter Property="Height" Value="24"/>
+                <Setter Property="Width" Value="124"/>
+                <Setter Property="HorizontalAlignment" Value="Right"/>
+            </Style>
+            <Style x:Key="CompactInlineComboStyle" TargetType="ComboBox" BasedOn="{StaticResource InlineComboStyle}">
+                <Setter Property="Height" Value="24"/>
+                <Setter Property="MinHeight" Value="24"/>
+                <Setter Property="FontSize" Value="11"/>
+                <Setter Property="Padding" Value="4,1"/>
+                <Setter Property="VerticalContentAlignment" Value="Center"/>
+            </Style>
+            <Style x:Key="SectionCardStyle" TargetType="Border">
+                <Setter Property="Background" Value="#111821"/>
+                <Setter Property="BorderBrush" Value="#30363D"/>
+                <Setter Property="BorderThickness" Value="1"/>
+                <Setter Property="CornerRadius" Value="8"/>
+                <Setter Property="Padding" Value="12"/>
+                <Setter Property="Margin" Value="0,0,0,8"/>
+            </Style>
+            <Style x:Key="SectionTitleStyle" TargetType="TextBlock">
+                <Setter Property="Foreground" Value="#58A6FF"/>
+                <Setter Property="FontSize" Value="15"/>
+                <Setter Property="FontWeight" Value="SemiBold"/>
+                <Setter Property="Margin" Value="0,0,0,8"/>
+            </Style>
+            <Style x:Key="SectionLabelStyle" TargetType="TextBlock">
+                <Setter Property="Foreground" Value="#8B949E"/>
+                <Setter Property="FontSize" Value="12"/>
+                <Setter Property="VerticalAlignment" Value="Center"/>
+            </Style>
+            <Style x:Key="SectionNoteStyle" TargetType="TextBlock">
+                <Setter Property="Foreground" Value="#C9D1D9"/>
+                <Setter Property="FontSize" Value="13"/>
+                <Setter Property="TextWrapping" Value="Wrap"/>
+                <Setter Property="Margin" Value="0,2,0,0"/>
+            </Style>
+            <Style x:Key="SectionActionButtonStyle" TargetType="Button" BasedOn="{StaticResource SimButtonStyle}">
+                <Setter Property="Width" Value="96"/>
+                <Setter Property="Height" Value="32"/>
+                <Setter Property="Padding" Value="10,4"/>
                 <Setter Property="HorizontalAlignment" Value="Left"/>
             </Style>
-            <Style x:Key="InlineTextBoxStyle" TargetType="TextBox" BasedOn="{StaticResource SimTextBoxStyle}">
-                <Setter Property="Height" Value="30"/>
-                <Setter Property="Width" Value="120"/>
+            <Style x:Key="SectionSmallButtonStyle" TargetType="Button" BasedOn="{StaticResource SimButtonStyle}">
+                <Setter Property="Width" Value="96"/>
+                <Setter Property="Height" Value="32"/>
+                <Setter Property="Padding" Value="10,4"/>
                 <Setter Property="HorizontalAlignment" Value="Left"/>
+            </Style>
+            <Style x:Key="HighlightBarStyle" TargetType="Border">
+                <Setter Property="Background" Value="#0D1625"/>
+                <Setter Property="BorderBrush" Value="#2E3A4A"/>
+                <Setter Property="BorderThickness" Value="1"/>
+                <Setter Property="CornerRadius" Value="8"/>
+                <Setter Property="Padding" Value="10"/>
+                <Setter Property="Margin" Value="0,0,0,10"/>
+            </Style>
+            <Style x:Key="InlineTextBoxStyle" TargetType="TextBox" BasedOn="{StaticResource SimTextBoxStyle}">
+                <Setter Property="Height" Value="24"/>
+                <Setter Property="Width" Value="120"/>
+                <Setter Property="FontSize" Value="11"/>
+                <Setter Property="Padding" Value="4,1"/>
+                <Setter Property="HorizontalAlignment" Value="Right"/>
+            </Style>
+            <Style x:Key="SkillInfoTextBoxStyle" TargetType="TextBox" BasedOn="{StaticResource InlineTextBoxStyle}">
+                <Setter Property="Width" Value="64"/>
             </Style>
             <Style x:Key="GroupOpenButtonStyle" TargetType="Button" BasedOn="{StaticResource SimButtonStyle}">
                 <Setter Property="Width" Value="96"/>
@@ -78,136 +135,64 @@
                             CornerRadius="8"
                             Padding="12">
                         <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="110"/>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="110"/>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="110"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
                             <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
                                 <RowDefinition Height="Auto"/>
                                 <RowDefinition Height="Auto"/>
                             </Grid.RowDefinitions>
 
-                                        <TextBlock Grid.Row="0" Grid.Column="0" Style="{StaticResource FieldLabelStyle}" Text="캐릭터"/>
-                                        <TextBlock x:Name="CharacterNameText" Grid.Row="0" Grid.Column="1" Foreground="White" FontWeight="SemiBold"/>
-                                        <TextBlock Grid.Row="0" Grid.Column="2" Style="{StaticResource FieldLabelStyle}" Text="계산 타입"/>
-                                        <TextBlock x:Name="CalculatorTypeText" Grid.Row="0" Grid.Column="3" Foreground="White" FontWeight="SemiBold"/>
-                                        <TextBlock Grid.Row="0" Grid.Column="4" Style="{StaticResource FieldLabelStyle}" Text="총 계수"/>
-                            <TextBlock x:Name="TotalCoefficientText" Grid.Row="0" Grid.Column="5" Foreground="#58A6FF" FontWeight="SemiBold"/>
+                            <WrapPanel Grid.Row="0"
+                                       VerticalAlignment="Center"
+                                       ItemHeight="30">
+                                <TextBlock Style="{StaticResource FieldLabelStyle}" Text="캐릭터" Margin="0,0,6,0"/>
+                                <TextBlock x:Name="CharacterNameText" Foreground="White" FontWeight="SemiBold" VerticalAlignment="Center" Margin="0,0,18,0"/>
+                                <TextBlock Style="{StaticResource FieldLabelStyle}" Text="계산타입" Margin="0,0,6,0"/>
+                                <TextBlock x:Name="CalculatorTypeText" Foreground="White" FontWeight="SemiBold" VerticalAlignment="Center" Margin="0,0,12,0"/>
+                                <StackPanel x:Name="AnaisVariantPanel"
+                                            Orientation="Horizontal"
+                                            Visibility="Collapsed"
+                                            Margin="0,0,14,0">
+                                    <ComboBox x:Name="AnaisVariantComboBox"
+                                              Width="70"
+                                              SelectedIndex="0"
+                                              Style="{StaticResource CompactInlineComboStyle}"
+                                              SelectionChanged="AnaisVariantComboBox_SelectionChanged">
+                                        <ComboBoxItem Content="마법"/>
+                                        <ComboBoxItem Content="파괴"/>
+                                    </ComboBox>
+                                </StackPanel>
+                                <TextBlock Style="{StaticResource FieldLabelStyle}" Text="최종 계수" Margin="0,0,6,0"/>
+                                <TextBlock x:Name="TotalCoefficientText" Foreground="#58A6FF" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                            </WrapPanel>
 
-                                        <TextBlock Grid.Row="1" Grid.Column="0" Style="{StaticResource FieldLabelStyle}" Text="총 공격력" Margin="0,6,0,0"/>
-                                        <TextBlock x:Name="TotalPrimaryText" Grid.Row="1" Grid.Column="1" Foreground="White" Margin="0,6,0,0"/>
-                                        <TextBlock Grid.Row="1" Grid.Column="2" Style="{StaticResource FieldLabelStyle}" Text="강화 공격력" Margin="0,6,0,0"/>
-                                        <TextBlock x:Name="PrimaryEnchantText" Grid.Row="1" Grid.Column="3" Foreground="White" Margin="0,6,0,0"/>
-                                        <TextBlock Grid.Row="1" Grid.Column="4" Style="{StaticResource FieldLabelStyle}" Text="보조/강화 보조" Margin="0,6,0,0"/>
-                                        <TextBlock x:Name="SecondarySummaryText" Grid.Row="1" Grid.Column="5" Foreground="White" Margin="0,6,0,0"/>
+                            <WrapPanel Grid.Row="1"
+                                       Margin="0,8,0,0"
+                                       VerticalAlignment="Center"
+                                       ItemHeight="30">
+                                <TextBlock Style="{StaticResource FieldLabelStyle}" Text="몬스터" Margin="0,0,8,0"/>
+                                <ComboBox x:Name="MonsterSelectComboBox"
+                                          Width="154"
+                                          Style="{StaticResource CompactInlineComboStyle}"
+                                          SelectionChanged="MonsterSelectComboBox_SelectionChanged"/>
+                                <TextBlock x:Name="MonsterSummaryText"
+                                           Margin="14,0,0,0"
+                                           Style="{StaticResource FieldLabelStyle}"
+                                           VerticalAlignment="Center"
+                                           Text="대미지 -"/>
+                            </WrapPanel>
 
-                                        <TextBlock Grid.Row="2" Grid.Column="0" Style="{StaticResource FieldLabelStyle}" Text="스탯 계수" Margin="0,6,0,0"/>
-                                        <TextBlock x:Name="StatCoefficientText" Grid.Row="2" Grid.Column="1" Foreground="White" Margin="0,6,0,0"/>
-                                        <TextBlock Grid.Row="2" Grid.Column="2" Style="{StaticResource FieldLabelStyle}" Text="장비 계수" Margin="0,6,0,0"/>
-                                        <TextBlock x:Name="EquipmentCoefficientText" Grid.Row="2" Grid.Column="3" Foreground="White" Margin="0,6,0,0"/>
-                                        <TextBlock Grid.Row="2" Grid.Column="4" Style="{StaticResource FieldLabelStyle}" Text="보정치" Margin="0,6,0,0"/>
-                                        <TextBlock x:Name="DexCorrectionText" Grid.Row="2" Grid.Column="5" Foreground="White" Margin="0,6,0,0"/>
-
-                                        <TextBlock Grid.Row="3" Grid.Column="0" Style="{StaticResource FieldLabelStyle}" Text="최종 계수" Margin="0,6,0,0"/>
-                                        <TextBlock x:Name="FinalCoefficientBreakdownText" Grid.Row="3" Grid.Column="1" Foreground="#58A6FF" FontWeight="SemiBold" Margin="0,6,0,0"/>
-
-                            <StackPanel x:Name="AnaisVariantPanel"
-                                        Grid.Row="4"
-                                        Grid.ColumnSpan="6"
-                                        Orientation="Horizontal"
-                                        Margin="0,10,0,0"
-                                        Visibility="Collapsed">
-                                <TextBlock Style="{StaticResource FieldLabelStyle}" Text="아나이스 특성" VerticalAlignment="Center"/>
-                                <RadioButton x:Name="AnaisMagicRadioButton"
-                                             GroupName="AnaisVariant"
-                                             Content="마법"
-                                             Margin="10,0,0,0"
-                                             Padding="10,4"
-                                             MinWidth="72"
-                                             Checked="AnaisVariantRadioButton_Checked"/>
-                                <RadioButton x:Name="AnaisDestructionRadioButton"
-                                             GroupName="AnaisVariant"
-                                             Content="파괴"
-                                             Margin="6,0,0,0"
-                                             Padding="10,4"
-                                             MinWidth="72"
-                                             Checked="AnaisVariantRadioButton_Checked"/>
-                                <TextBlock x:Name="SelectedModifierText"
-                                           Margin="12,0,0,0"
-                                           Foreground="#58A6FF"
-                                           FontWeight="SemiBold"
-                                           VerticalAlignment="Center"/>
+                            <StackPanel Visibility="Collapsed">
+                                <TextBlock x:Name="TotalPrimaryText"/>
+                                <TextBlock x:Name="PrimaryEnchantText"/>
+                                <TextBlock x:Name="SecondarySummaryText"/>
+                                <TextBlock x:Name="StatCoefficientText"/>
+                                <TextBlock x:Name="EquipmentCoefficientText"/>
+                                <TextBlock x:Name="DexCorrectionText"/>
+                                <TextBlock x:Name="FinalCoefficientBreakdownText"/>
+                                <TextBlock x:Name="CategorySummaryText"/>
+                                <TextBlock x:Name="IntermediateDamageText"/>
+                                <TextBlock x:Name="MinimumDamageText"/>
+                                <TextBlock x:Name="MaximumDamageText"/>
                             </StackPanel>
-
-                            <Grid Grid.Row="5"
-                                  Grid.ColumnSpan="6"
-                                  Margin="0,10,0,0">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="16"/>
-                                    <ColumnDefinition Width="340"/>
-                                </Grid.ColumnDefinitions>
-
-                                <StackPanel Grid.Column="0">
-                                    <TextBlock Style="{StaticResource FieldLabelStyle}"
-                                               Text="카테고리 정리"
-                                               FontSize="13"
-                                               FontWeight="SemiBold"
-                                               Foreground="#58A6FF"/>
-                                    <TextBlock x:Name="CategorySummaryText"
-                                               Margin="0,4,0,0"
-                                               Foreground="#FFDE59"
-                                               TextWrapping="Wrap"
-                                               LineStackingStrategy="BlockLineHeight"/>
-                                </StackPanel>
-
-                                <StackPanel Grid.Column="2"
-                                            HorizontalAlignment="Stretch"
-                                            VerticalAlignment="Top">
-                                    <TextBlock Style="{StaticResource FieldLabelStyle}"
-                                               Text="내부 중간값"
-                                               FontSize="13"
-                                               FontWeight="SemiBold"
-                                               Foreground="#58A6FF"/>
-                                    <TextBlock x:Name="IntermediateDamageText"
-                                               Margin="0,4,0,0"
-                                               Foreground="#FFDE59"
-                                               TextWrapping="Wrap"
-                                               LineStackingStrategy="BlockLineHeight"/>
-                                    <TextBlock Style="{StaticResource FieldLabelStyle}"
-                                               Text="최소 대미지"
-                                               FontSize="13"
-                                               FontWeight="SemiBold"
-                                               Foreground="#58A6FF"/>
-                                    <TextBlock x:Name="MinimumDamageText"
-                                               Margin="0,4,0,0"
-                                               Foreground="#FFDE59"
-                                               TextWrapping="Wrap"
-                                               LineStackingStrategy="BlockLineHeight"/>
-                                    <TextBlock Style="{StaticResource FieldLabelStyle}"
-                                               Text="최대 대미지"
-                                               FontSize="13"
-                                               FontWeight="SemiBold"
-                                               Foreground="#58A6FF"
-                                               Margin="0,12,0,0"/>
-                                    <TextBlock x:Name="MaximumDamageText"
-                                               Margin="0,4,0,0"
-                                               Foreground="#FFDE59"
-                                               TextWrapping="Wrap"
-                                               LineStackingStrategy="BlockLineHeight"/>
-                                </StackPanel>
-                            </Grid>
                         </Grid>
                     </Border>
 
@@ -215,321 +200,398 @@
                                   Margin="0,10,0,0"
                                   VerticalScrollBarVisibility="Auto"
                                   Style="{StaticResource OverlayScrollViewerStyle}">
-                        <UniformGrid Columns="3">
-                            <Border Style="{StaticResource GroupBorderStyle}">
-                                <Grid>
-                                    <Grid.RowDefinitions>
-                                        <RowDefinition Height="Auto"/>
-                                        <RowDefinition Height="*"/>
-                                    </Grid.RowDefinitions>
-                                    <TextBlock Grid.Row="0" Style="{StaticResource GroupTitleStyle}" Text="기본 옵션"/>
-                                    <Grid Grid.Row="1">
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="110"/>
-                                            <ColumnDefinition Width="*"/>
-                                        </Grid.ColumnDefinitions>
-                                        <Grid.RowDefinitions>
-                                            <RowDefinition Height="Auto"/>
-                                            <RowDefinition Height="Auto"/>
-                                            <RowDefinition Height="Auto"/>
-                                            <RowDefinition Height="Auto"/>
-                                            <RowDefinition Height="Auto"/>
-                                            <RowDefinition Height="Auto"/>
-                                            <RowDefinition Height="Auto"/>
-                                            <RowDefinition Height="Auto"/>
-                                            <RowDefinition Height="Auto"/>
-                                        </Grid.RowDefinitions>
+                        <StackPanel>
+                            <Grid Margin="0,0,0,8">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="1*"/>
+                                    <ColumnDefinition Width="1.1*"/>
+                                    <ColumnDefinition Width="1.1*"/>
+                                    <ColumnDefinition Width="1.05*"/>
+                                </Grid.ColumnDefinitions>
 
-                                        <TextBlock Grid.Row="0" Grid.Column="0" Style="{StaticResource FieldLabelStyle}" Text="투구 어빌리티 (10%)"/>
-                                        <CheckBox x:Name="HelmetAbilityToggle" Grid.Row="0" Grid.Column="1" Content="적용" Style="{StaticResource ToggleSwitchCheckBoxStyle}" HorizontalAlignment="Left" Checked="BasicOption_Changed" Unchecked="BasicOption_Changed"/>
-
-                                        <TextBlock Grid.Row="1" Grid.Column="0" Style="{StaticResource FieldLabelStyle}" Text="무기 추가 대미지" Margin="0,6,0,0"/>
-                                        <TextBox x:Name="WeaponAdditionalDamageTextBox" Grid.Row="1" Grid.Column="1" Margin="0,6,0,0" Text="0" Style="{StaticResource InlineTextBoxStyle}" TextChanged="BasicOption_TextChanged"/>
-
-                                        <TextBlock Grid.Row="2" Grid.Column="0" Style="{StaticResource FieldLabelStyle}" Text="스킬 배율" Margin="0,6,0,0"/>
-                                        <TextBox x:Name="SkillMultiplierTextBox"
-                                                 Grid.Row="2"
-                                                 Grid.Column="1"
-                                                 Margin="0,6,0,0"
-                                                 Text="0"
-                                                 Style="{StaticResource InlineTextBoxStyle}"
-                                                 PreviewTextInput="NumberTextBox_PreviewTextInput"
-                                                 PreviewKeyDown="NumberTextBox_PreviewKeyDown"
-                                                 DataObject.Pasting="NumberTextBox_OnPaste"
-                                                 LostFocus="NumberTextBox_LostFocus"
-                                                 TextChanged="BasicOption_TextChanged"/>
-
-                                        <TextBlock Grid.Row="3" Grid.Column="0" Style="{StaticResource FieldLabelStyle}" Text="크리배율" Margin="0,6,0,0"/>
-                                        <TextBox x:Name="CriticalMultiplierTextBox"
-                                                 Grid.Row="3"
-                                                 Grid.Column="1"
-                                                 Margin="0,6,0,0"
-                                                 Text="0"
-                                                 Style="{StaticResource InlineTextBoxStyle}"
-                                                 PreviewTextInput="NumberTextBox_PreviewTextInput"
-                                                 PreviewKeyDown="NumberTextBox_PreviewKeyDown"
-                                                 DataObject.Pasting="NumberTextBox_OnPaste"
-                                                 LostFocus="NumberTextBox_LostFocus"
-                                                 TextChanged="BasicOption_TextChanged"/>
-
-                                        <TextBlock Grid.Row="4" Grid.Column="0" Style="{StaticResource FieldLabelStyle}" Text="타수" Margin="0,6,0,0"/>
-                                        <TextBox x:Name="HitCountTextBox"
-                                                 Grid.Row="4"
-                                                 Grid.Column="1"
-                                                 Margin="0,6,0,0"
-                                                 Text="1"
-                                                 Style="{StaticResource InlineTextBoxStyle}"
-                                                 PreviewTextInput="NumberTextBox_PreviewTextInput"
-                                                 PreviewKeyDown="NumberTextBox_PreviewKeyDown"
-                                                 DataObject.Pasting="NumberTextBox_OnPaste"
-                                                 LostFocus="NumberTextBox_LostFocus"
-                                                 TextChanged="BasicOption_TextChanged"/>
-
-                                        <TextBlock Grid.Row="5" Grid.Column="0" Style="{StaticResource FieldLabelStyle}" Text="에타 레벨" Margin="0,12,0,0"/>
-                                        <TextBox x:Name="EtaLevelTextBox"
-                                                 Grid.Row="5"
-                                                 Grid.Column="1"
-                                                 Margin="0,12,0,0"
-                                                 Text="1"
-                                                 Style="{StaticResource InlineTextBoxStyle}"
-                                                 PreviewTextInput="EtaLevelTextBox_PreviewTextInput"
-                                                 PreviewKeyDown="EtaLevelTextBox_PreviewKeyDown"
-                                                 DataObject.Pasting="EtaLevelTextBox_OnPaste"
-                                                 LostFocus="EtaLevelTextBox_LostFocus"
-                                                 TextChanged="EtaLevelTextBox_TextChanged"/>
-                                        <TextBlock Grid.Row="7" Grid.Column="0" Style="{StaticResource FieldLabelStyle}" Text="속성 값" Margin="0,12,0,0"/>
-                                        <TextBox x:Name="ElementValueTextBox" Grid.Row="7" Grid.Column="1" Margin="0,12,0,0" Text="210" Style="{StaticResource InlineTextBoxStyle}" TextChanged="BasicOption_TextChanged"/>
-                                    </Grid>
-                                </Grid>
-                            </Border>
-
-                            <Border Style="{StaticResource GroupBorderStyle}">
-                                <StackPanel>
-                                    <TextBlock Style="{StaticResource GroupTitleStyle}" Text="그룹 설정 (옵션 3개 이상은 별도 창)"/>
-
-                                    <Grid Margin="0,0,0,6">
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="130"/>
-                                            <ColumnDefinition Width="*"/>
-                                        </Grid.ColumnDefinitions>
-                                        <Grid.RowDefinitions>
-                                            <RowDefinition Height="Auto"/>
-                                            <RowDefinition Height="Auto"/>
-                                            <RowDefinition Height="Auto"/>
-                                            <RowDefinition Height="Auto"/>
-                                            <RowDefinition Height="Auto"/>
-                                        </Grid.RowDefinitions>
-
-                                        <Button Grid.Row="0" Grid.Column="0" Content="그룹1/2/4 설정" Style="{StaticResource GroupOpenButtonStyle}" Click="OpenGroup1Window_Click"/>
-                                        <TextBlock x:Name="Group1SummaryText" Grid.Row="0" Grid.Column="1" Style="{StaticResource FieldLabelStyle}" VerticalAlignment="Center" TextWrapping="Wrap"/>
-
-                                        <Button Grid.Row="1" Grid.Column="0" Margin="0,6,0,0" Content="그룹5 설정" Style="{StaticResource GroupOpenButtonStyle}" Click="OpenGroup5Window_Click"/>
-                                        <TextBlock x:Name="Group5SummaryText" Grid.Row="1" Grid.Column="1" Margin="0,6,0,0" Style="{StaticResource FieldLabelStyle}" VerticalAlignment="Center" TextWrapping="Wrap"/>
-
-                                        <Button Grid.Row="2" Grid.Column="0" Margin="0,6,0,0" Content="그룹11 설정" Style="{StaticResource GroupOpenButtonStyle}" Click="OpenGroup11Window_Click"/>
-                                        <TextBlock x:Name="Group11SummaryText" Grid.Row="2" Grid.Column="1" Margin="0,6,0,0" Style="{StaticResource FieldLabelStyle}" VerticalAlignment="Center" TextWrapping="Wrap"/>
-
-                                        <Button Grid.Row="3" Grid.Column="0" Margin="0,6,0,0" Content="몬스터 설정" Style="{StaticResource GroupOpenButtonStyle}" Click="OpenMonsterWindow_Click"/>
-                                        <TextBlock x:Name="MonsterSummaryText" Grid.Row="3" Grid.Column="1" Margin="0,6,0,0" Style="{StaticResource FieldLabelStyle}" VerticalAlignment="Center" TextWrapping="Wrap"/>
-                                    </Grid>
-                                </StackPanel>
-                            </Border>
-
-                            <Border Style="{StaticResource GroupBorderStyle}">
-                                <StackPanel>
-                                    <TextBlock Style="{StaticResource GroupTitleStyle}" Text="그룹6 - 치명타 배율"/>
-                                    <StackPanel Margin="0,0,0,6">
-                                        <TextBlock Style="{StaticResource FieldLabelStyle}" Text="약점 간파"/>
-                                        <CheckBox x:Name="WeakPointToggle"
-                                                  Content="OFF"
-                                                  Style="{StaticResource ToggleSwitchCheckBoxStyle}"
-                                                  Checked="WeakPointToggle_Changed"
-                                                  Unchecked="WeakPointToggle_Changed"/>
-                                        <TextBlock x:Name="WeakPointValueText"
-                                                   Margin="0,6,0,0"
-                                                   Foreground="White"
-                                                   FontWeight="SemiBold"
-                                                   Text="0%"/>
-                                    </StackPanel>
+                                <Border Grid.Column="0" Style="{StaticResource SectionCardStyle}" Margin="0,0,8,0">
                                     <StackPanel>
-                                        <TextBlock Style="{StaticResource FieldLabelStyle}" Text="정의의 심판"/>
-                                        <ComboBox x:Name="JudgementComboBox"
-                                                  Style="{StaticResource InlineComboStyle}"
-                                                  SelectedIndex="0"
-                                                  SelectionChanged="JudgementComboBox_SelectionChanged">
-                                            <ComboBoxItem Content="0"/>
-                                            <ComboBoxItem Content="1"/>
-                                            <ComboBoxItem Content="2"/>
-                                            <ComboBoxItem Content="3"/>
-                                            <ComboBoxItem Content="4"/>
-                                            <ComboBoxItem Content="5"/>
-                                            <ComboBoxItem Content="6"/>
-                                            <ComboBoxItem Content="7"/>
-                                            <ComboBoxItem Content="8"/>
-                                            <ComboBoxItem Content="9"/>
-                                            <ComboBoxItem Content="10"/>
-                                            <ComboBoxItem Content="11"/>
-                                            <ComboBoxItem Content="12"/>
-                                            <ComboBoxItem Content="13"/>
-                                            <ComboBoxItem Content="14"/>
-                                            <ComboBoxItem Content="15"/>
-                                            <ComboBoxItem Content="16"/>
-                                            <ComboBoxItem Content="17"/>
-                                            <ComboBoxItem Content="18"/>
-                                            <ComboBoxItem Content="19"/>
-                                            <ComboBoxItem Content="20"/>
-                                            <ComboBoxItem Content="21"/>
-                                            <ComboBoxItem Content="22"/>
-                                            <ComboBoxItem Content="23"/>
-                                            <ComboBoxItem Content="24"/>
-                                            <ComboBoxItem Content="25"/>
-                                            <ComboBoxItem Content="26"/>
-                                            <ComboBoxItem Content="27"/>
-                                            <ComboBoxItem Content="28"/>
-                                            <ComboBoxItem Content="29"/>
-                                            <ComboBoxItem Content="30"/>
-                                            <ComboBoxItem Content="31"/>
-                                            <ComboBoxItem Content="32"/>
-                                            <ComboBoxItem Content="33"/>
-                                            <ComboBoxItem Content="34"/>
-                                            <ComboBoxItem Content="35"/>
-                                            <ComboBoxItem Content="36"/>
-                                            <ComboBoxItem Content="37"/>
-                                            <ComboBoxItem Content="38"/>
-                                            <ComboBoxItem Content="39"/>
-                                            <ComboBoxItem Content="40"/>
-                                        </ComboBox>
-                                        <TextBlock x:Name="JudgementValueText"
-                                                   Margin="0,6,0,0"
-                                                   Foreground="White"
-                                                   FontWeight="SemiBold"
-                                                   Text="0%"/>
+                                        <TextBlock Style="{StaticResource SectionTitleStyle}" Text="스킬 정보"/>
+                                        <Grid Margin="0,4,0,0">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="130"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="Auto"/>
+                                            </Grid.RowDefinitions>
+
+                                            <TextBlock Grid.Row="0" Grid.Column="0" Style="{StaticResource SectionLabelStyle}" Text="스킬 배율"/>
+                                            <TextBox x:Name="SkillMultiplierTextBox"
+                                                     Grid.Row="0"
+                                                     Grid.Column="1"
+                                                     Text="0"
+                                                     Style="{StaticResource SkillInfoTextBoxStyle}"
+                                                     PreviewTextInput="NumberTextBox_PreviewTextInput"
+                                                     PreviewKeyDown="NumberTextBox_PreviewKeyDown"
+                                                     DataObject.Pasting="NumberTextBox_OnPaste"
+                                                     LostFocus="NumberTextBox_LostFocus"
+                                                     TextChanged="BasicOption_TextChanged"/>
+
+                                            <TextBlock Grid.Row="1" Grid.Column="0" Style="{StaticResource SectionLabelStyle}" Text="크리배율" Margin="0,6,0,0"/>
+                                            <TextBox x:Name="CriticalMultiplierTextBox"
+                                                     Grid.Row="1"
+                                                     Grid.Column="1"
+                                                     Margin="0,6,0,0"
+                                                     Text="0"
+                                                     Style="{StaticResource SkillInfoTextBoxStyle}"
+                                                     PreviewTextInput="NumberTextBox_PreviewTextInput"
+                                                     PreviewKeyDown="NumberTextBox_PreviewKeyDown"
+                                                     DataObject.Pasting="NumberTextBox_OnPaste"
+                                                     LostFocus="NumberTextBox_LostFocus"
+                                                     TextChanged="BasicOption_TextChanged"/>
+
+                                            <TextBlock Grid.Row="2" Grid.Column="0" Style="{StaticResource SectionLabelStyle}" Text="타수" Margin="0,6,0,0"/>
+                                            <TextBox x:Name="HitCountTextBox"
+                                                     Grid.Row="2"
+                                                     Grid.Column="1"
+                                                     Margin="0,6,0,0"
+                                                     Text="1"
+                                                     Style="{StaticResource SkillInfoTextBoxStyle}"
+                                                     PreviewTextInput="NumberTextBox_PreviewTextInput"
+                                                     PreviewKeyDown="NumberTextBox_PreviewKeyDown"
+                                                     DataObject.Pasting="NumberTextBox_OnPaste"
+                                                     LostFocus="NumberTextBox_LostFocus"
+                                                     TextChanged="BasicOption_TextChanged"/>
+
+                                            <TextBlock Grid.Row="3" Grid.Column="0" Style="{StaticResource SectionLabelStyle}" Text="무기 추가 대미지" Margin="0,6,0,0"/>
+                                            <TextBox x:Name="WeaponAdditionalDamageTextBox"
+                                                     Grid.Row="3"
+                                                     Grid.Column="1"
+                                                     Margin="0,6,0,0"
+                                                     Text="0"
+                                                     Style="{StaticResource SkillInfoTextBoxStyle}"
+                                                     TextChanged="BasicOption_TextChanged"/>
+
+                                            <TextBlock Grid.Row="4" Grid.Column="0" Style="{StaticResource SectionLabelStyle}" Text="에타 레벨" Margin="0,6,0,0"/>
+                                            <TextBox x:Name="EtaLevelTextBox"
+                                                     Grid.Row="4"
+                                                     Grid.Column="1"
+                                                     Margin="0,6,0,0"
+                                                     Text="1"
+                                                     Style="{StaticResource SkillInfoTextBoxStyle}"
+                                                     PreviewTextInput="EtaLevelTextBox_PreviewTextInput"
+                                                     PreviewKeyDown="EtaLevelTextBox_PreviewKeyDown"
+                                                     DataObject.Pasting="EtaLevelTextBox_OnPaste"
+                                                     LostFocus="EtaLevelTextBox_LostFocus"
+                                                     TextChanged="EtaLevelTextBox_TextChanged"/>
+
+                                            <TextBlock Grid.Row="5" Grid.Column="0" Style="{StaticResource SectionLabelStyle}" Text="속성 값" Margin="0,6,0,0"/>
+                                            <TextBox x:Name="ElementValueTextBox"
+                                                     Grid.Row="5"
+                                                     Grid.Column="1"
+                                                     Margin="0,6,0,0"
+                                                     Text="210"
+                                                     Style="{StaticResource SkillInfoTextBoxStyle}"
+                                                     TextChanged="BasicOption_TextChanged"/>
+
+                                            <TextBlock Grid.Row="6" Grid.Column="0" Style="{StaticResource SectionLabelStyle}" Text="특수 피해 감소율" Margin="0,6,0,0"/>
+                                            <TextBox x:Name="SpecialDamageReductionTextBox"
+                                                     Grid.Row="6"
+                                                     Grid.Column="1"
+                                                     Margin="0,6,0,0"
+                                                     Text="0"
+                                                     Style="{StaticResource SkillInfoTextBoxStyle}"
+                                                     PreviewTextInput="NumberTextBox_PreviewTextInput"
+                                                     PreviewKeyDown="NumberTextBox_PreviewKeyDown"
+                                                     DataObject.Pasting="NumberTextBox_OnPaste"
+                                                     LostFocus="NumberTextBox_LostFocus"
+                                                     TextChanged="SpecialDamageReductionTextBox_TextChanged"/>
+                                        </Grid>
                                     </StackPanel>
-                                    <StackPanel Margin="0,8,0,0">
-                                        <TextBlock Style="{StaticResource FieldLabelStyle}" Text="에타링크 - 치명타 배율"/>
-                                        <ComboBox x:Name="EtaLinkCriticalComboBox"
-                                                  Style="{StaticResource InlineComboStyle}"
-                                                  SelectedIndex="0"
-                                                  SelectionChanged="EtaLinkCriticalComboBox_SelectionChanged">
-                                            <ComboBoxItem Content="0"/>
-                                            <ComboBoxItem Content="1"/>
-                                            <ComboBoxItem Content="2"/>
-                                            <ComboBoxItem Content="3"/>
-                                            <ComboBoxItem Content="4"/>
-                                            <ComboBoxItem Content="5"/>
-                                            <ComboBoxItem Content="6"/>
-                                            <ComboBoxItem Content="7"/>
-                                            <ComboBoxItem Content="8"/>
-                                            <ComboBoxItem Content="9"/>
-                                            <ComboBoxItem Content="10"/>
-                                            <ComboBoxItem Content="11"/>
-                                            <ComboBoxItem Content="12"/>
-                                            <ComboBoxItem Content="13"/>
-                                            <ComboBoxItem Content="14"/>
-                                            <ComboBoxItem Content="15"/>
-                                            <ComboBoxItem Content="16"/>
-                                            <ComboBoxItem Content="17"/>
-                                            <ComboBoxItem Content="18"/>
-                                            <ComboBoxItem Content="19"/>
-                                            <ComboBoxItem Content="20"/>
-                                        </ComboBox>
-                                        <TextBlock x:Name="EtaLinkCriticalValueText"
-                                                   Margin="0,6,0,0"
-                                                   Foreground="White"
+                                </Border>
+
+                                <Border Grid.Column="1" Style="{StaticResource SectionCardStyle}" Margin="0,0,8,0">
+                                    <StackPanel>
+                                        <TextBlock Style="{StaticResource SectionTitleStyle}" Text="공격 피해량(이자벨)"/>
+                                        <TextBlock x:Name="Group1SummaryText"
+                                                   Foreground="#FFDE59"
+                                                   FontSize="13"
                                                    FontWeight="SemiBold"
-                                                   Text="0%"/>
+                                                   Margin="0,0,0,6"
+                                                   Text="0% / 50%"/>
+                                        <StackPanel x:Name="Group1InlineHost"/>
                                     </StackPanel>
-                                </StackPanel>
-                            </Border>
+                                </Border>
 
-                            <Border Style="{StaticResource GroupBorderStyle}">
-                                <StackPanel>
-                                    <TextBlock Style="{StaticResource GroupTitleStyle}" Text="그룹7 - 최종 대미지"/>
-                                    <CheckBox x:Name="ClubFinalDamageToggle" Content="클럽 공증 효과 (5%)" Style="{StaticResource ToggleSwitchCheckBoxStyle}" Margin="0,0,0,6" Checked="FinalDamageOption_Changed" Unchecked="FinalDamageOption_Changed"/>
-                                    <TextBlock Style="{StaticResource FieldLabelStyle}" Text="코어 세트 효과"/>
-                                    <TextBox x:Name="CoreSetTextBox" Text="0" Style="{StaticResource InlineTextBoxStyle}" PreviewTextInput="NumberTextBox_PreviewTextInput" PreviewKeyDown="NumberTextBox_PreviewKeyDown" DataObject.Pasting="NumberTextBox_OnPaste" LostFocus="NumberTextBox_LostFocus" TextChanged="FinalDamageOption_Changed"/>
-                                    <StackPanel Margin="0,8,0,0">
-                                        <TextBlock Style="{StaticResource FieldLabelStyle}" Text="에타링크 - 최종 대미지"/>
-                                        <ComboBox x:Name="EtaLinkFinalDamageComboBox"
-                                                  Style="{StaticResource InlineComboStyle}"
-                                                  SelectedIndex="0"
-                                                  SelectionChanged="EtaLinkFinalDamageComboBox_SelectionChanged">
-                                            <ComboBoxItem Content="0"/>
-                                            <ComboBoxItem Content="1"/>
-                                            <ComboBoxItem Content="2"/>
-                                            <ComboBoxItem Content="3"/>
-                                            <ComboBoxItem Content="4"/>
-                                            <ComboBoxItem Content="5"/>
-                                        </ComboBox>
-                                        <TextBlock x:Name="EtaLinkFinalDamageValueText"
-                                                   Margin="0,6,0,0"
-                                                   Foreground="White"
+                                <Border Grid.Column="2" Style="{StaticResource SectionCardStyle}" Margin="0,0,8,0">
+                                    <StackPanel>
+                                        <TextBlock Style="{StaticResource SectionTitleStyle}" Text="공격 피해량(일반)"/>
+                                        <TextBlock x:Name="Group2SummaryText"
+                                                   Foreground="#FFDE59"
+                                                   FontSize="13"
                                                    FontWeight="SemiBold"
-                                                   Text="0%"/>
+                                                   Margin="0,0,0,6"
+                                                   Text="0% / 30%"/>
+                                        <StackPanel x:Name="Group2InlineHost"/>
                                     </StackPanel>
-                                </StackPanel>
-                            </Border>
+                                </Border>
 
-                            <Border Style="{StaticResource GroupBorderStyle}">
-                                <StackPanel>
-                                    <TextBlock Style="{StaticResource GroupTitleStyle}" Text="그룹8 - 시에나"/>
-                                    <TextBox x:Name="SienaTextBox" Text="0" Style="{StaticResource InlineTextBoxStyle}" TextChanged="SienaTextBox_TextChanged"/>
-                                </StackPanel>
-                            </Border>
+                                <Border Grid.Column="3" Style="{StaticResource SectionCardStyle}" Margin="0">
+                                    <StackPanel>
+                                        <TextBlock Style="{StaticResource SectionTitleStyle}" Text="공격 피해량(캐릭터)"/>
+                                        <TextBlock x:Name="Group4SummaryText"
+                                                   Foreground="#FFDE59"
+                                                   FontSize="13"
+                                                   FontWeight="SemiBold"
+                                                   Margin="0,0,0,6"
+                                                   Text="0% / 80%"/>
+                                        <StackPanel x:Name="Group4InlineHost"/>
+                                    </StackPanel>
+                                </Border>
+                            </Grid>
 
-                            <Border Style="{StaticResource GroupBorderStyle}">
-                                <StackPanel>
-                                    <TextBlock Style="{StaticResource GroupTitleStyle}" Text="그룹9 - 적이 받는 피해 증가"/>
-                                    <CheckBox x:Name="EnemyTakenDamageWeaponToggle" Content="무기 옵션 (10%)" Style="{StaticResource ToggleSwitchCheckBoxStyle}" Margin="0,0,0,6" Checked="CategoryToggle_Changed" Unchecked="CategoryToggle_Changed"/>
-                                    <TextBlock Style="{StaticResource FieldLabelStyle}" Text="캐릭터 고유 값 (특성 연동)"/>
-                                    <TextBlock x:Name="TraitEnemyTakenDamageValueText"
-                                               Text="0"
-                                               Foreground="White"
-                                               FontWeight="SemiBold"
-                                               Margin="0,2,0,0"/>
-                                </StackPanel>
-                            </Border>
+                            <Grid Margin="0,0,0,0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="1.2*"/>
+                                    <ColumnDefinition Width="0.8*"/>
+                                    <ColumnDefinition Width="1.2*"/>
+                                    <ColumnDefinition Width="1.0*"/>
+                                </Grid.ColumnDefinitions>
 
-                            <Border Style="{StaticResource GroupBorderStyle}">
-                                <StackPanel>
-                                    <TextBlock Style="{StaticResource GroupTitleStyle}" Text="그룹10 - 능력치감소"/>
-                                    <TextBlock Style="{StaticResource FieldLabelStyle}" Text="캐릭터 고유 값 (특성 연동)"/>
-                                    <TextBlock x:Name="TraitStatReductionValueText"
-                                               Text="0"
-                                               Foreground="White"
-                                               FontWeight="SemiBold"
-                                               Margin="0,2,0,0"/>
-                                </StackPanel>
-                            </Border>
+                                <Border Grid.Column="0" Style="{StaticResource SectionCardStyle}" Margin="0,0,8,8">
+                                    <StackPanel>
+                                        <TextBlock Style="{StaticResource SectionTitleStyle}" Text="기본 정보"/>
 
-                            <Border Style="{StaticResource GroupBorderStyle}">
-                                <StackPanel>
-                                    <TextBlock Style="{StaticResource GroupTitleStyle}" Text="그룹13 - 콤보 보너스"/>
-                                    <CheckBox x:Name="ComboBonusToggle" Content="콤보 보너스 (15%)" Style="{StaticResource ToggleSwitchCheckBoxStyle}" Margin="0,0,0,6" Checked="ComboBonusToggle_Changed" Unchecked="ComboBonusToggle_Changed"/>
-                                    <TextBlock x:Name="ComboBonusValueText" Text="0%" Foreground="White" FontWeight="SemiBold"/>
-                                    <TextBlock Style="{StaticResource FieldLabelStyle}" Text="특수 피해 감소율"/>
-                                    <TextBox x:Name="SpecialDamageReductionTextBox"
-                                             Text="0"
-                                             Style="{StaticResource InlineTextBoxStyle}"
-                                             PreviewTextInput="NumberTextBox_PreviewTextInput"
-                                             PreviewKeyDown="NumberTextBox_PreviewKeyDown"
-                                             DataObject.Pasting="NumberTextBox_OnPaste"
-                                             LostFocus="NumberTextBox_LostFocus"
-                                             TextChanged="SpecialDamageReductionTextBox_TextChanged"/>
-                                </StackPanel>
-                            </Border>
+                                        <Grid Margin="0,4,0,0">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="160"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="Auto"/>
+                                            </Grid.RowDefinitions>
 
-                            <Border Style="{StaticResource GroupBorderStyle}">
-                                <StackPanel>
-                                    <TextBlock Style="{StaticResource GroupTitleStyle}" Text="그룹12 - 방어력 무시"/>
-                                    <ComboBox x:Name="IgnoreDefenseComboBox" Style="{StaticResource InlineComboStyle}" SelectedIndex="0">
-                                        <ComboBoxItem Content="0%"/>
-                                        <ComboBoxItem Content="15%"/>
-                                        <ComboBoxItem Content="50%"/>
-                                    </ComboBox>
-                                </StackPanel>
-                            </Border>
-                        </UniformGrid>
+                                            <TextBlock Grid.Row="0" Grid.Column="0" Foreground="White" Text="어빌 - 전설의 스킬 공격력" VerticalAlignment="Center"/>
+                                            <CheckBox x:Name="HelmetAbilityToggle"
+                                                      Grid.Row="0"
+                                                      Grid.Column="1"
+                                                      Content=""
+                                                      Style="{StaticResource ToggleSwitchCheckBoxStyle}"
+                                                      HorizontalAlignment="Right"
+                                                      Checked="BasicOption_Changed"
+                                                      Unchecked="BasicOption_Changed">
+                                                <CheckBox.LayoutTransform>
+                                                    <ScaleTransform ScaleX="0.8" ScaleY="0.8"/>
+                                                </CheckBox.LayoutTransform>
+                                            </CheckBox>
+
+                                            <TextBlock Grid.Row="1" Grid.Column="0" Foreground="White" Text="부가 - 물리/마법 피해 증폭" VerticalAlignment="Center" Margin="0,6,0,0"/>
+                                            <CheckBox x:Name="EnemyTakenDamageWeaponToggle"
+                                                      Grid.Row="1"
+                                                      Grid.Column="1"
+                                                      Content=""
+                                                      Style="{StaticResource ToggleSwitchCheckBoxStyle}"
+                                                      Margin="0,6,0,0"
+                                                      HorizontalAlignment="Right"
+                                                      Checked="CategoryToggle_Changed"
+                                                      Unchecked="CategoryToggle_Changed">
+                                                <CheckBox.LayoutTransform>
+                                                    <ScaleTransform ScaleX="0.8" ScaleY="0.8"/>
+                                                </CheckBox.LayoutTransform>
+                                            </CheckBox>
+
+                                            <TextBlock Grid.Row="2" Grid.Column="0" Foreground="White" Text="콤보 보너스" VerticalAlignment="Center" Margin="0,6,0,0"/>
+                                            <CheckBox x:Name="ComboBonusToggle"
+                                                      Grid.Row="2"
+                                                      Grid.Column="1"
+                                                      Content=""
+                                                      Style="{StaticResource ToggleSwitchCheckBoxStyle}"
+                                                      Margin="0,6,0,0"
+                                                      HorizontalAlignment="Right"
+                                                      Checked="ComboBonusToggle_Changed"
+                                                      Unchecked="ComboBonusToggle_Changed">
+                                                <CheckBox.LayoutTransform>
+                                                    <ScaleTransform ScaleX="0.8" ScaleY="0.8"/>
+                                                </CheckBox.LayoutTransform>
+                                            </CheckBox>
+                                        </Grid>
+
+                                        <TextBlock x:Name="Group5SummaryText"
+                                                   Margin="0,10,0,4"
+                                                   Foreground="White"
+                                                   FontSize="12"
+                                                   FontWeight="SemiBold"
+                                                   Text="계열 공격력 0%"/>
+                                        <StackPanel x:Name="Group5InlineHost"/>
+
+                                        <TextBlock x:Name="Group11SummaryText"
+                                                   Margin="0,10,0,4"
+                                                   Foreground="White"
+                                                   FontSize="12"
+                                                   FontWeight="SemiBold"
+                                                   Text="추가 대미지 0%"/>
+                                        <StackPanel x:Name="Group11InlineHost"/>
+                                    </StackPanel>
+                                </Border>
+
+                                <Border Grid.Column="1" Style="{StaticResource SectionCardStyle}" Margin="0,0,8,8">
+                                    <StackPanel>
+                                        <TextBlock Style="{StaticResource SectionTitleStyle}" Text="캐릭터 특성"/>
+                                        <TextBlock x:Name="SelectedModifierText"
+                                                   Foreground="White"
+                                                   FontSize="13"
+                                                   FontWeight="SemiBold"
+                                                   Margin="0,2,0,8"
+                                                   Text=""/>
+
+                                        <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                                            <TextBlock Text="공격 피해량(스킬) " Foreground="#8B949E" FontSize="12" VerticalAlignment="Center"/>
+                                            <TextBlock x:Name="Group3DamageSummaryText" Foreground="White" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center" Text="0%"/>
+                                        </StackPanel>
+
+                                        <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                                            <TextBlock Text="적이 받는 피해 증가 " Foreground="#8B949E" FontSize="12" VerticalAlignment="Center"/>
+                                            <TextBlock x:Name="TraitEnemyTakenDamageValueText" Text="0%" Foreground="White" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                        </StackPanel>
+
+                                        <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                                            <TextBlock Text="능력치 감소 " Foreground="#8B949E" FontSize="12" VerticalAlignment="Center"/>
+                                            <TextBlock x:Name="TraitStatReductionValueText" Text="0%" Foreground="White" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                        </StackPanel>
+
+                                        <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                                            <TextBlock Text="캐릭터 고유 값 " Foreground="#8B949E" FontSize="12" VerticalAlignment="Center"/>
+                                            <TextBlock x:Name="Group11TraitValueText" Text="0" Foreground="White" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                    </StackPanel>
+                                </Border>
+
+                                <Border Grid.Column="2" Style="{StaticResource SectionCardStyle}" Margin="0,0,8,8">
+                                    <StackPanel>
+                                        <TextBlock Style="{StaticResource SectionTitleStyle}" Text="최종 대미지"/>
+                                        <Grid Margin="0,4,0,0">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="160"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="Auto"/>
+                                            </Grid.RowDefinitions>
+
+                                            <TextBlock Grid.Row="0" Grid.Column="0" Foreground="White" Text="클럽 공격력 증가" VerticalAlignment="Center"/>
+                                            <CheckBox x:Name="ClubFinalDamageToggle"
+                                                      Grid.Row="0"
+                                                      Grid.Column="1"
+                                                      Content=""
+                                                      Style="{StaticResource ToggleSwitchCheckBoxStyle}"
+                                                      HorizontalAlignment="Right"
+                                                      Checked="FinalDamageOption_Changed"
+                                                      Unchecked="FinalDamageOption_Changed">
+                                                <CheckBox.LayoutTransform>
+                                                    <ScaleTransform ScaleX="0.8" ScaleY="0.8"/>
+                                                </CheckBox.LayoutTransform>
+                                            </CheckBox>
+
+                                            <TextBlock Grid.Row="1" Grid.Column="0" Foreground="White" Text="코어 세트 효과" VerticalAlignment="Center" Margin="0,8,0,0"/>
+                                            <TextBox x:Name="CoreSetTextBox"
+                                                     Grid.Row="1"
+                                                     Grid.Column="1"
+                                                     Margin="0,8,0,0"
+                                                     Text="0"
+                                                     Width="50"
+                                                     Style="{StaticResource InlineTextBoxStyle}"
+                                                     HorizontalAlignment="Right"
+                                                     PreviewTextInput="NumberTextBox_PreviewTextInput"
+                                                     PreviewKeyDown="NumberTextBox_PreviewKeyDown"
+                                                     DataObject.Pasting="NumberTextBox_OnPaste"
+                                                     LostFocus="NumberTextBox_LostFocus"
+                                                     TextChanged="FinalDamageOption_Changed"/>
+
+                                            <TextBlock Grid.Row="2" Grid.Column="0" Foreground="White" Text="에타 - 최종 대미지" VerticalAlignment="Center" Margin="0,8,0,0"/>
+                                            <ComboBox x:Name="EtaLinkFinalDamageComboBox"
+                                                      Grid.Row="2"
+                                                      Grid.Column="1"
+                                                      Margin="0,8,0,0"
+                                                      Width="80"
+                                                      Style="{StaticResource CompactInlineComboStyle}"
+                                                      HorizontalAlignment="Right"
+                                                      SelectedIndex="0"
+                                                      SelectionChanged="EtaLinkFinalDamageComboBox_SelectionChanged"/>
+
+                                            <TextBlock Grid.Row="3" Grid.Column="0" Foreground="White" Text="공격력 증가" VerticalAlignment="Center" Margin="0,10,0,0"/>
+                                            <TextBox x:Name="SienaTextBox"
+                                                     Grid.Row="3"
+                                                     Grid.Column="1"
+                                                     Width="50"
+                                                     Margin="0,10,0,0"
+                                                     Text="0"
+                                                     Style="{StaticResource InlineTextBoxStyle}"
+                                                     HorizontalAlignment="Right"
+                                                     TextChanged="SienaTextBox_TextChanged"/>
+                                        </Grid>
+                                    </StackPanel>
+                                </Border>
+
+                                <Border Grid.Column="3" Style="{StaticResource SectionCardStyle}" Margin="0,0,0,8">
+                                    <StackPanel>
+                                        <TextBlock Style="{StaticResource SectionTitleStyle}" Text="치명타 배율"/>
+                                        <Grid Margin="0,4,0,0">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="160"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="Auto"/>
+                                            </Grid.RowDefinitions>
+
+                                            <TextBlock Grid.Row="0" Grid.Column="0" Foreground="White" Text="약점 간파" VerticalAlignment="Center"/>
+                                            <CheckBox x:Name="WeakPointToggle"
+                                                      Grid.Row="0"
+                                                      Grid.Column="1"
+                                                      Content=""
+                                                      Style="{StaticResource ToggleSwitchCheckBoxStyle}"
+                                                      HorizontalAlignment="Right"
+                                                      Checked="WeakPointToggle_Changed"
+                                                      Unchecked="WeakPointToggle_Changed">
+                                                <CheckBox.LayoutTransform>
+                                                    <ScaleTransform ScaleX="0.8" ScaleY="0.8"/>
+                                                </CheckBox.LayoutTransform>
+                                            </CheckBox>
+
+                                            <TextBlock Grid.Row="1" Grid.Column="0" Foreground="White" Text="정의의 심판" VerticalAlignment="Center" Margin="0,8,0,0"/>
+                                            <ComboBox x:Name="JudgementComboBox"
+                                                      Grid.Row="1"
+                                                      Grid.Column="1"
+                                                      Margin="0,8,0,0"
+                                                      Style="{StaticResource CompactInlineComboStyle}"
+                                                      HorizontalAlignment="Right"
+                                                      SelectedIndex="0"
+                                                      SelectionChanged="JudgementComboBox_SelectionChanged"/>
+
+                                            <TextBlock Grid.Row="2" Grid.Column="0" Foreground="White" Text="에타 - 치명타 배율" VerticalAlignment="Center" Margin="0,8,0,0"/>
+                                            <ComboBox x:Name="EtaLinkCriticalComboBox"
+                                                      Grid.Row="2"
+                                                      Grid.Column="1"
+                                                      Margin="0,8,0,0"
+                                                      Style="{StaticResource CompactInlineComboStyle}"
+                                                      HorizontalAlignment="Right"
+                                                      SelectedIndex="0"
+                                                      SelectionChanged="EtaLinkCriticalComboBox_SelectionChanged"/>
+                                        </Grid>
+                                    </StackPanel>
+                                </Border>
+                            </Grid>
+
+                        </StackPanel>
                     </ScrollViewer>
                 </Grid>
             </Grid>

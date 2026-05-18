@@ -101,26 +101,27 @@
                     Padding="10"
                     Margin="0,0,0,10"
                     MouseLeftButtonDown="TitleBar_MouseLeftButtonDown">
-                <DockPanel>
-                    <StackPanel DockPanel.Dock="Left">
+                <Grid>
+                    <StackPanel HorizontalAlignment="Center"
+                                VerticalAlignment="Center">
                         <TextBlock Text="디버그 로그 테스트"
                                    Foreground="White"
                                    FontSize="16"
-                                   FontWeight="Bold"/>
+                                   FontWeight="Bold"
+                                   HorizontalAlignment="Center"
+                                   TextAlignment="Center"/>
                         <TextBlock Text="선택한 분류로 실제 로그처럼 주입합니다."
                                    Foreground="#C9D1D9"
                                    FontSize="12"
-                                   Margin="0,2,0,0"/>
+                                   Margin="0,2,0,0"
+                                   HorizontalAlignment="Center"
+                                   TextAlignment="Center"/>
                     </StackPanel>
-                    <Button Content="닫기"
-                            Width="56"
-                            Height="28"
-                            DockPanel.Dock="Right"
+                    <Button HorizontalAlignment="Right"
                             Click="Close_Click"
-                            Background="#313844"
-                            Foreground="White"
-                            BorderBrush="#56616F"/>
-                </DockPanel>
+                            Content="닫기"
+                            Style="{StaticResource WindowCloseButtonStyle}"/>
+                </Grid>
             </Border>
 
             <Border Grid.Row="1"

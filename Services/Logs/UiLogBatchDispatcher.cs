@@ -18,14 +18,16 @@ namespace TWChatOverlay.Services
 
         private readonly struct QueuedLogItem
         {
-            public QueuedLogItem(string html, bool isRealTime)
+            public QueuedLogItem(string html, bool isRealTime, bool isStartupBackfill)
             {
                 Html = html;
                 IsRealTime = isRealTime;
+                IsStartupBackfill = isStartupBackfill;
             }
 
             public string Html { get; }
             public bool IsRealTime { get; }
+            public bool IsStartupBackfill { get; }
         }
 
         /// <summary>
@@ -44,7 +46,8 @@ namespace TWChatOverlay.Services
         public void Enqueue(
             string html,
             bool isRealTime,
-            Action<IReadOnlyList<(string Html, bool IsRealTime)>> onBatchReady)
+            bool isStartupBackfill,
+            Action<IReadOnlyList<(string Html, bool IsRealTime, bool IsStartupBackfill)>> onBatchReady)
         {
             if (string.IsNullOrWhiteSpace(html) || onBatchReady == null)
                 return;
@@ -57,7 +60,7 @@ namespace TWChatOverlay.Services
                     _queue.Dequeue();
                 }
 
-                _queue.Enqueue(new QueuedLogItem(html, isRealTime));
+                _queue.Enqueue(new QueuedLogItem(html, isRealTime, isStartupBackfill));
                 if (!_isScheduled)
                 {
                     _isScheduled = true;
@@ -71,9 +74,9 @@ namespace TWChatOverlay.Services
             }
         }
 
-        private void Flush(Action<IReadOnlyList<(string Html, bool IsRealTime)>> onBatchReady)
+        private void Flush(Action<IReadOnlyList<(string Html, bool IsRealTime, bool IsStartupBackfill)>> onBatchReady)
         {
-            List<(string Html, bool IsRealTime)> batch = new(_batchSize);
+            List<(string Html, bool IsRealTime, bool IsStartupBackfill)> batch = new(_batchSize);
             bool hasMore;
 
             lock (_lockObj)
@@ -81,7 +84,7 @@ namespace TWChatOverlay.Services
                 while (_queue.Count > 0 && batch.Count < _batchSize)
                 {
                     var item = _queue.Dequeue();
-                    batch.Add((item.Html, item.IsRealTime));
+                    batch.Add((item.Html, item.IsRealTime, item.IsStartupBackfill));
                 }
 
                 hasMore = _queue.Count > 0;

@@ -73,11 +73,14 @@ namespace TWChatOverlay.Services
 
         private static string ApplyEtaDecorations(string text, LogParser.ParseResult log, ChatSettings settings)
         {
-            if (string.IsNullOrWhiteSpace(text) || string.IsNullOrWhiteSpace(log.SenderId))
+            string lookupSenderId = log.RawSenderId ?? log.SenderId ?? string.Empty;
+            string displaySenderId = log.SenderId ?? log.RawSenderId ?? string.Empty;
+
+            if (string.IsNullOrWhiteSpace(text) || lookupSenderId.Length == 0 || displaySenderId.Length == 0)
                 return text;
             if (!settings.ShowEtaLevel && !settings.ShowEtaCharacter)
                 return text;
-            if (!EtaProfileResolver.TryGetProfile(log.SenderId, out var profile))
+            if (!EtaProfileResolver.TryGetProfile(lookupSenderId, out var profile))
                 return text;
 
             string suffix = string.Empty;
@@ -92,16 +95,16 @@ namespace TWChatOverlay.Services
             {
                 return Regex.Replace(
                     text,
-                    $@"\[{Regex.Escape(log.SenderId)}\]\s*$",
-                    $"[{log.SenderId}{suffix}]");
+                    $@"\[{Regex.Escape(displaySenderId)}\]\s*$",
+                    $"[{displaySenderId}{suffix}]");
             }
 
             int colon = text.IndexOf(':');
             if (colon <= 0) return text;
             string left = text.Substring(0, colon);
-            int idx = left.LastIndexOf(log.SenderId, StringComparison.Ordinal);
+            int idx = left.LastIndexOf(displaySenderId, StringComparison.Ordinal);
             if (idx < 0) return text;
-            return text.Substring(0, idx + log.SenderId.Length) + suffix + text.Substring(idx + log.SenderId.Length);
+            return text.Substring(0, idx + displaySenderId.Length) + suffix + text.Substring(idx + displaySenderId.Length);
         }
     }
 }

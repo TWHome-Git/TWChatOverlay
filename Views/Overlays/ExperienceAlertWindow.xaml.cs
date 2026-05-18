@@ -79,7 +79,7 @@ namespace TWChatOverlay.Views
 
         private void SyncPositionToSettings(bool notify)
         {
-            if (_settings == null || !_settings.ShowExperienceLimitAlertWindow || !IsVisible)
+            if (_settings == null || !IsVisible)
                 return;
 
             _settings.ExperienceLimitAlertWindowLeft = Left;

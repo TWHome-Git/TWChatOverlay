@@ -13,7 +13,13 @@
         <Border Background="#161B22" CornerRadius="8" Margin="0,0,15,0" BorderBrush="#30363D" BorderThickness="1">
             <ScrollViewer VerticalScrollBarVisibility="Auto">
                 <StackPanel Margin="5">
-                    <TextBlock Text="에타 순위" Foreground="#58A6FF" FontSize="11" FontWeight="Bold" Margin="10,10,10,15"/>
+                    <TextBlock Text="에타 순위"
+                               Foreground="#58A6FF"
+                               FontSize="11"
+                               FontWeight="Bold"
+                               Margin="10,10,10,15"
+                               HorizontalAlignment="Center"
+                               TextAlignment="Center"/>
                     <Button Content="전체" Tag="전체" Click="EtaCategoryButton_Click" Style="{StaticResource CategoryButtonStyle}"/>
                     <Separator Background="#30363D" Margin="5,10"/>
 

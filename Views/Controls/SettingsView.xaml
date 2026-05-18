@@ -177,7 +177,6 @@
                                             <Button Content="저장" Height="32" Margin="0,0,5,0" Command="{Binding SaveOrLoadPresetCommand}" CommandParameter="Save" Background="#30FFFFFF" Foreground="White" FontSize="12" Cursor="Hand"/>
                                             <Button Content="불러오기" Height="32" Margin="5,0,0,0" Command="{Binding SaveOrLoadPresetCommand}" CommandParameter="Load" Background="#307FFF8F" Foreground="White" FontSize="12" Cursor="Hand"/>
                                         </UniformGrid>
-                                        <CheckBox Content="항상 보이기" IsChecked="{Binding AlwaysVisible}" Foreground="White" Margin="0,0,0,10"/>
                                         <UniformGrid Columns="2">
                                             <StackPanel Margin="0,0,10,0">
                                                 <TextBlock Text="X 좌표 (좌우)" Foreground="#888" FontSize="12" Margin="0,0,0,5"/>
@@ -211,8 +210,9 @@
                                         </StackPanel>
                                     </Border>
 
-                                    <UniformGrid Columns="3" Margin="0,8,0,0">
+                                    <UniformGrid Columns="4" Margin="0,8,0,0">
                                         <Button Content="수동 업데이트" Height="32" Margin="0,0,4,0" Command="{Binding ManualUpdateCommand}" Style="{StaticResource SecondaryButtonStyle}" FontSize="12"/>
+                                        <Button Content="로그 다시 읽기" Height="32" Margin="4,0,4,0" Command="{Binding ManualLogReloadCommand}" Style="{StaticResource SecondaryButtonStyle}" FontSize="12"/>
                                         <Button Content="설정 초기화" Height="32" Margin="4,0,4,0" Command="{Binding InitSettingsCommand}" Style="{StaticResource SecondaryButtonStyle}" FontSize="12"/>
                                         <Button Content="프로그램 종료" Height="32" Margin="4,0,0,0" Command="{Binding ExitAppCommand}" Style="{StaticResource DangerButtonStyle}" FontSize="12"/>
                                     </UniformGrid>
@@ -289,14 +289,8 @@
                                             <TextBox Text="{Binding ToggleSettingsHotKey, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Height="28" Background="#333" Foreground="White" BorderBrush="#555" VerticalContentAlignment="Center" TextAlignment="Center" PreviewKeyDown="HotKeyInput_PreviewKeyDown" PreviewMouseLeftButtonDown="HotKeyTextBox_PreviewMouseLeftButtonDown" IsReadOnly="True" Tag="HotKey"/>
                                         </StackPanel>
 
-                                        <!-- 9: 항상 보이기 ON/OFF -->
+                                        <!-- 9: 프로그램 종료 -->
                                         <StackPanel Margin="0,0,5,10">
-                                            <TextBlock Text="항상 보이기 ON/OFF" Foreground="#888" FontSize="12" Margin="0,0,0,5"/>
-                                            <TextBox Text="{Binding ToggleAlwaysVisibleHotKey, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Height="28" Background="#333" Foreground="White" BorderBrush="#555" VerticalContentAlignment="Center" TextAlignment="Center" PreviewKeyDown="HotKeyInput_PreviewKeyDown" PreviewMouseLeftButtonDown="HotKeyTextBox_PreviewMouseLeftButtonDown" IsReadOnly="True" Tag="HotKey"/>
-                                        </StackPanel>
-
-                                        <!-- 10: 프로그램 종료 -->
-                                        <StackPanel Margin="5,0,0,10">
                                             <TextBlock Text="프로그램 종료" Foreground="#888" FontSize="12" Margin="0,0,0,5"/>
                                             <TextBox Text="{Binding ExitHotKey, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Height="28" Background="#333" Foreground="White" BorderBrush="#555" VerticalContentAlignment="Center" TextAlignment="Center" PreviewKeyDown="HotKeyInput_PreviewKeyDown" PreviewMouseLeftButtonDown="HotKeyTextBox_PreviewMouseLeftButtonDown" IsReadOnly="True" Tag="HotKey"/>
                                         </StackPanel>

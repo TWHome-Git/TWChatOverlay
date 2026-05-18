@@ -19,15 +19,9 @@
         <Grid>
             <Button HorizontalAlignment="Right"
                     VerticalAlignment="Top"
-                    Width="26"
-                    Height="26"
                     Click="CloseButton_Click"
-                    Background="#33FFFFFF"
-                    BorderBrush="#55FFFFFF"
-                    BorderThickness="1"
-                    Foreground="White"
-                    Cursor="Hand"
-                    Content="X"/>
+                    Content="X"
+                    Style="{StaticResource WindowCloseButtonStyle}"/>
 
             <TextBlock x:Name="MessageTextBlock"
                        Margin="34,0,34,0"

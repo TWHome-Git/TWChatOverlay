@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using TWChatOverlay.Models;
 using TWChatOverlay.Services;
 
@@ -33,6 +34,28 @@ namespace TWChatOverlay.Views.Addons
             ConfigureLayoutForMaterials();
 
             UpdateTotalCost();
+        }
+
+        private void TitleBar_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            if (e.ButtonState == MouseButtonState.Pressed)
+            {
+                try
+                {
+                    DragMove();
+                }
+                catch { }
+            }
+        }
+
+        private void MinimizeButton_Click(object sender, RoutedEventArgs e)
+        {
+            WindowState = WindowState.Minimized;
+        }
+
+        private void CloseButton_Click(object sender, RoutedEventArgs e)
+        {
+            Close();
         }
 
         private void MaterialPriceTextBox_TextChanged(object sender, TextChangedEventArgs e)

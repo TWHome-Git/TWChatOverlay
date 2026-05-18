@@ -59,11 +59,13 @@ namespace TWChatOverlay.Views.Addons
             {
                 _currentDamageStateKey = BuildDamageStateKey(_saveData.LastSelectedCharacterName, _saveData.LastSelectedCalculatorType);
                 _damageState = LoadDamageStateForKey(_currentDamageStateKey);
-                AnaisMagicRadioButton.IsChecked = true;
+                InitializeMonsterComboBox();
+                InitializePercentageComboBoxes();
+                SetAnaisVariantSelection("마법");
                 WeakPointToggle.IsChecked = false;
-            _calc.SkillMultiplier = 0;
-            _calc.SkillCriticalMultiplier = 0;
-            _calc.HitCount = 1;
+                _calc.SkillMultiplier = 0;
+                _calc.SkillCriticalMultiplier = 0;
+                _calc.HitCount = 1;
                 LoadDamageCalculatorState();
                 ApplySnapshot(CoefficientDamageBaseSnapshot.Empty);
                 RefreshGroupSummaryTexts();
@@ -157,7 +159,6 @@ namespace TWChatOverlay.Views.Addons
 
             CharacterNameText.Text = snapshot.CharacterName;
             CalculatorTypeText.Text = snapshot.CalculatorTypeName;
-            TotalCoefficientText.Text = snapshot.TotalCoefficient.ToString("F2", CultureInfo.CurrentCulture);
             TotalPrimaryText.Text = snapshot.TotalPrimarySum.ToString("F0", CultureInfo.CurrentCulture);
             PrimaryEnchantText.Text = snapshot.PrimaryEnchantSum.ToString("F0", CultureInfo.CurrentCulture);
             SecondarySummaryText.Text =
@@ -193,6 +194,8 @@ namespace TWChatOverlay.Views.Addons
                 EquipmentCoefficientText.Text = Math.Round(equipmentCoefficient).ToString("F0", CultureInfo.CurrentCulture);
             if (DexCorrectionText != null)
                 DexCorrectionText.Text = Math.Round(correction).ToString("F0", CultureInfo.CurrentCulture);
+            if (TotalCoefficientText != null)
+                TotalCoefficientText.Text = Math.Round(finalCoefficient).ToString("F0", CultureInfo.CurrentCulture);
             if (FinalCoefficientBreakdownText != null)
                 FinalCoefficientBreakdownText.Text = Math.Round(finalCoefficient).ToString("F0", CultureInfo.CurrentCulture);
 
@@ -292,6 +295,15 @@ namespace TWChatOverlay.Views.Addons
         private string GetGroup3DamageSummary()
         {
             return $"{_calc.Group3TraitAttackDamageValue:0.#}%";
+        }
+
+        private void UpdateGroup3SummaryText(string? selectedModifierText)
+        {
+            if (Group3DamageSummaryText != null)
+                Group3DamageSummaryText.Text = $"{_calc.Group3TraitAttackDamageValue:0.#}%";
+
+            if (SelectedModifierText != null)
+                SelectedModifierText.Text = selectedModifierText ?? string.Empty;
         }
 
         private string GetGroup4DamageSummary()
@@ -402,6 +414,8 @@ namespace TWChatOverlay.Views.Addons
                 IntermediateDamageText.Text = "-";
                 MinimumDamageText.Text = "-";
                 MaximumDamageText.Text = "-";
+                if (MonsterSummaryText != null)
+                    MonsterSummaryText.Text = "대미지 -";
                 return;
             }
 
@@ -438,6 +452,8 @@ namespace TWChatOverlay.Views.Addons
             IntermediateDamageText.Text = $"1차 INT: {innerMin:N0} / {innerMax:N0}\n2차 INT: {middleMin:N0} / {middleMax:N0}";
             MinimumDamageText.Text = $"{minimumDamage:N0}";
             MaximumDamageText.Text = $"{maximumDamage:N0}";
+            if (MonsterSummaryText != null)
+                MonsterSummaryText.Text = $"대미지 {minimumDamage:N0}~{maximumDamage:N0}";
         }
 
         private string BuildDamageFormula(bool useMaximum)
@@ -600,37 +616,6 @@ namespace TWChatOverlay.Views.Addons
             return entries[index];
         }
 
-        private static TextBlock AddMonsterDetailRow(Grid grid, int row, string label)
-        {
-            while (grid.RowDefinitions.Count <= row)
-                grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
-
-            var labelBlock = new TextBlock
-            {
-                Text = label,
-                Foreground = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(0x8B, 0x94, 0x9E)),
-                FontSize = 12,
-                Margin = new Thickness(0, 0, 0, 4)
-            };
-            Grid.SetRow(labelBlock, row);
-            Grid.SetColumn(labelBlock, 0);
-
-            var valueBlock = new TextBlock
-            {
-                Text = "0",
-                Foreground = System.Windows.Media.Brushes.White,
-                FontWeight = FontWeights.SemiBold,
-                Margin = new Thickness(0, 0, 0, 4),
-                TextWrapping = TextWrapping.Wrap
-            };
-            Grid.SetRow(valueBlock, row);
-            Grid.SetColumn(valueBlock, 1);
-
-            grid.Children.Add(labelBlock);
-            grid.Children.Add(valueBlock);
-            return valueBlock;
-        }
-
         private void UpdateGroup2State()
         {
             _group2.Gaegakbi = _group2.Gaegakbi;
@@ -648,9 +633,9 @@ namespace TWChatOverlay.Views.Addons
                 _calc.SelectedModifier = null;
                 _calc.Group3TraitAttackDamageValue = 0;
                 AnaisVariantPanel.Visibility = Visibility.Collapsed;
-                SelectedModifierText.Text = string.Empty;
                 TraitEnemyTakenDamageValueText.Text = "0";
                 TraitStatReductionValueText.Text = "0";
+                UpdateGroup3SummaryText("특성 값 없음");
                 return;
             }
 
@@ -669,7 +654,7 @@ namespace TWChatOverlay.Views.Addons
                         variant = "마법";
 
                     _calc.SelectedAnisVariant = variant;
-                    SetAnaisRadioState(_calc.SelectedAnisVariant);
+                    SetAnaisVariantSelection(_calc.SelectedAnisVariant);
                 }
 
                 resolvedName = isMagicDefense
@@ -680,7 +665,7 @@ namespace TWChatOverlay.Views.Addons
                 if (!isMagicAttack)
                 {
                     _calc.SelectedAnisVariant = "비호";
-                    SetAnaisRadioState(null);
+                    SetAnaisVariantSelection(null);
                 }
             }
             else
@@ -698,18 +683,18 @@ namespace TWChatOverlay.Views.Addons
             if (_calc.SelectedModifier == null)
             {
                 _calc.Group3TraitAttackDamageValue = 0;
-                SelectedModifierText.Text = "특성 값 없음";
                 TraitEnemyTakenDamageValueText.Text = "0";
                 TraitStatReductionValueText.Text = "0";
                 _calc.TraitEnemyTakenDamagePercent = 0;
+                UpdateGroup3SummaryText("특성 값 없음");
                 return;
             }
 
-            SelectedModifierText.Text = _calc.SelectedModifier.Value.Name;
             _calc.TraitEnemyTakenDamagePercent = _calc.SelectedModifier.Value.DamageAmplification;
-            TraitEnemyTakenDamageValueText.Text = _calc.TraitEnemyTakenDamagePercent.ToString("0.##", CultureInfo.CurrentCulture);
-            TraitStatReductionValueText.Text = _calc.SelectedModifier.Value.SkillReduction.ToString("0.##", CultureInfo.CurrentCulture);
+            TraitEnemyTakenDamageValueText.Text = $"{_calc.TraitEnemyTakenDamagePercent:0.##}%";
+            TraitStatReductionValueText.Text = $"{_calc.SelectedModifier.Value.SkillReduction:0.##}%";
             _calc.Group3TraitAttackDamageValue = _calc.SelectedModifier.Value.AttackPower;
+            UpdateGroup3SummaryText(GetCurrentTraitDisplayName());
         }
 
         private static DamageReferenceData.CharacterModifierEntry? ResolveModifier(string modifierName, bool isAnais, bool isMagicDefense)
@@ -722,12 +707,12 @@ namespace TWChatOverlay.Views.Addons
             return string.IsNullOrWhiteSpace(modifier.Name) ? null : modifier;
         }
 
-        private void AnaisVariantRadioButton_Checked(object sender, RoutedEventArgs e)
+        private void AnaisVariantComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            if (sender is not RadioButton radioButton)
+            if (_isRestoringDamageState || sender is not ComboBox)
                 return;
 
-            string variant = radioButton.Content?.ToString() ?? string.Empty;
+            string variant = GetSelectedAnaisVariant();
             if (!string.Equals(variant, "마법", StringComparison.Ordinal) &&
                 !string.Equals(variant, "파괴", StringComparison.Ordinal))
                 return;
@@ -740,27 +725,83 @@ namespace TWChatOverlay.Views.Addons
             SaveDamageCalculatorState();
         }
 
-        private void SetAnaisRadioState(string? variant)
+        private void SetAnaisVariantSelection(string? variant)
         {
-            if (AnaisMagicRadioButton == null || AnaisDestructionRadioButton == null)
+            if (AnaisVariantComboBox == null)
                 return;
 
-            bool isMagic = string.Equals(variant, "마법", StringComparison.Ordinal);
-            bool isDestruction = string.Equals(variant, "파괴", StringComparison.Ordinal);
-
-            AnaisMagicRadioButton.IsChecked = isMagic;
-            AnaisDestructionRadioButton.IsChecked = isDestruction;
+            AnaisVariantComboBox.SelectedIndex = string.Equals(variant, "파괴", StringComparison.Ordinal) ? 1 : 0;
         }
 
         private string GetSelectedAnaisVariant()
         {
-            if (AnaisDestructionRadioButton?.IsChecked == true)
+            if (AnaisVariantComboBox?.SelectedItem is ComboBoxItem comboItem)
+            {
+                string selected = comboItem.Content?.ToString() ?? string.Empty;
+                if (string.Equals(selected, "파괴", StringComparison.Ordinal))
+                    return "파괴";
+                if (string.Equals(selected, "마법", StringComparison.Ordinal))
+                    return "마법";
+            }
+
+            if (AnaisVariantComboBox?.SelectedIndex == 1)
                 return "파괴";
 
-            if (AnaisMagicRadioButton?.IsChecked == true)
+            if (AnaisVariantComboBox?.SelectedIndex == 0)
                 return "마법";
 
             return _calc.SelectedAnisVariant;
+        }
+
+        private void InitializeMonsterComboBox()
+        {
+            if (MonsterSelectComboBox == null)
+                return;
+
+            MonsterSelectComboBox.ItemsSource = DamageReferenceData.MonsterEntries.Select(entry => entry.Name).ToArray();
+            if (MonsterSelectComboBox.Items.Count == 0)
+            {
+                MonsterSelectComboBox.SelectedIndex = -1;
+                return;
+            }
+
+            int selectedIndex = Math.Clamp(_monster.SelectedIndex, 0, MonsterSelectComboBox.Items.Count - 1);
+            MonsterSelectComboBox.SelectedIndex = selectedIndex;
+            _monster.SelectedIndex = selectedIndex;
+        }
+
+        private void InitializePercentageComboBoxes()
+        {
+            PopulatePercentageComboBox(JudgementComboBox, Enumerable.Range(0, 41).Select(GetJudgementPercentText));
+            PopulatePercentageComboBox(EtaLinkCriticalComboBox, Enumerable.Range(0, 21).Select(i => $"{GetEtaLinkCriticalPercent(i):0.#}%"));
+            PopulatePercentageComboBox(EtaLinkFinalDamageComboBox, Enumerable.Range(0, 6).Select(i => $"{GetEtaLinkFinalPercent(i):0.#}%"));
+        }
+
+        private static void PopulatePercentageComboBox(ComboBox? comboBox, IEnumerable<string> items)
+        {
+            if (comboBox == null)
+                return;
+
+            comboBox.Items.Clear();
+            foreach (var item in items)
+                comboBox.Items.Add(item);
+        }
+
+        private static string GetJudgementPercentText(int level)
+        {
+            double value = Math.Max(0, level) * 0.75;
+            return $"{value:0.##}%";
+        }
+
+        private void MonsterSelectComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (MonsterSelectComboBox == null)
+                return;
+
+            int selectedIndex = MonsterSelectComboBox.SelectedIndex;
+            _monster.SelectedIndex = selectedIndex < 0 ? 0 : selectedIndex;
+            UpdateMonsterSummaryText();
+            SaveDamageCalculatorState();
         }
 
         private void OpenGroup1Window_Click(object sender, RoutedEventArgs e)
@@ -1013,6 +1054,147 @@ namespace TWChatOverlay.Views.Addons
             return border;
         }
 
+        private void BuildInlineGroupSections()
+        {
+            BuildGroup1InlineSection();
+            BuildGroup2InlineSection();
+            BuildGroup4InlineSection();
+            BuildGroup5InlineSection();
+            BuildGroup11InlineSection();
+        }
+
+        private void BuildGroup1InlineSection()
+        {
+            if (Group1InlineHost == null)
+                return;
+
+            Group1InlineHost.Children.Clear();
+
+            var snowmanToggle = CreateToggle("눈사람 (20%)", _group1.Snowman);
+            var illumiToggle = CreateToggle("일루미 (10%)", _group1.Illumi);
+            snowmanToggle.Checked += (_, _) => illumiToggle.IsChecked = false;
+            illumiToggle.Checked += (_, _) => snowmanToggle.IsChecked = false;
+            snowmanToggle.Checked += (_, _) => { _group1.Snowman = true; _group1.Illumi = false; RefreshGroupSummaryTexts(); UpdateCategorySummaryText(); };
+            snowmanToggle.Unchecked += (_, _) => { _group1.Snowman = false; RefreshGroupSummaryTexts(); UpdateCategorySummaryText(); };
+            illumiToggle.Checked += (_, _) => { _group1.Illumi = true; _group1.Snowman = false; RefreshGroupSummaryTexts(); UpdateCategorySummaryText(); };
+            illumiToggle.Unchecked += (_, _) => { _group1.Illumi = false; RefreshGroupSummaryTexts(); UpdateCategorySummaryText(); };
+
+            var isabelDamageToggle = CreateToggle("이자벨 대미지 (10%)", _group1.IsabelDamage);
+            var isabelSpecialToggle = CreateToggle("이자벨 특선 대미지 (10%)", _group1.IsabelSpecial);
+            var isabelBattleToggle = CreateToggle("이자벨 전투 (10%)", _group1.IsabelBattle);
+            isabelDamageToggle.Checked += (_, _) => { _group1.IsabelDamage = true; RefreshGroupSummaryTexts(); UpdateCategorySummaryText(); };
+            isabelDamageToggle.Unchecked += (_, _) => { _group1.IsabelDamage = false; RefreshGroupSummaryTexts(); UpdateCategorySummaryText(); };
+            isabelSpecialToggle.Checked += (_, _) => { _group1.IsabelSpecial = true; RefreshGroupSummaryTexts(); UpdateCategorySummaryText(); };
+            isabelSpecialToggle.Unchecked += (_, _) => { _group1.IsabelSpecial = false; RefreshGroupSummaryTexts(); UpdateCategorySummaryText(); };
+            isabelBattleToggle.Checked += (_, _) => { _group1.IsabelBattle = true; RefreshGroupSummaryTexts(); UpdateCategorySummaryText(); };
+            isabelBattleToggle.Unchecked += (_, _) => { _group1.IsabelBattle = false; RefreshGroupSummaryTexts(); UpdateCategorySummaryText(); };
+
+            Group1InlineHost.Children.Add(CreateLabeledToggleRow("눈사람 (20%)", snowmanToggle));
+            Group1InlineHost.Children.Add(CreateLabeledToggleRow("일루미 (10%)", illumiToggle));
+            Group1InlineHost.Children.Add(CreateLabeledToggleRow("이자벨 대미지 (10%)", isabelDamageToggle));
+            Group1InlineHost.Children.Add(CreateLabeledToggleRow("이자벨 특선 대미지 (10%)", isabelSpecialToggle));
+            Group1InlineHost.Children.Add(CreateLabeledToggleRow("이자벨 전투 (10%)", isabelBattleToggle));
+            Group1InlineHost.Children.Add(CreateLabeledTextBoxRow("기타", _group1.EtcValue, out var etcText));
+            etcText.TextChanged += (_, _) => { _group1.EtcValue = etcText.Text.Trim(); RefreshGroupSummaryTexts(); UpdateCategorySummaryText(); };
+        }
+
+        private void BuildGroup2InlineSection()
+        {
+            if (Group2InlineHost == null)
+                return;
+
+            Group2InlineHost.Children.Clear();
+
+            var gaegakbiToggle = CreateToggle("개각비 (5%)", _group2.Gaegakbi);
+            var clubTypePToggle = CreateToggle("클럽 Type-P (5%)", _group2.ClubTypeP);
+            var exploreToggle = CreateToggle("탐험 포인트 공증 (5%)", _group2.ExplorePoint);
+            var twPowerToggle = CreateToggle("테일즈위버 기운 (5%)", _group2.TwPower);
+            var hamToggle = CreateToggle("괴력의 햄 (10%)", _group2.Ham);
+            var eventToggle = CreateToggle("이벤트 (10%)", _group2.Event);
+            gaegakbiToggle.Checked += (_, _) => { _group2.Gaegakbi = true; RefreshGroupSummaryTexts(); UpdateCategorySummaryText(); };
+            gaegakbiToggle.Unchecked += (_, _) => { _group2.Gaegakbi = false; RefreshGroupSummaryTexts(); UpdateCategorySummaryText(); };
+            clubTypePToggle.Checked += (_, _) => { _group2.ClubTypeP = true; RefreshGroupSummaryTexts(); UpdateCategorySummaryText(); };
+            clubTypePToggle.Unchecked += (_, _) => { _group2.ClubTypeP = false; RefreshGroupSummaryTexts(); UpdateCategorySummaryText(); };
+            exploreToggle.Checked += (_, _) => { _group2.ExplorePoint = true; RefreshGroupSummaryTexts(); UpdateCategorySummaryText(); };
+            exploreToggle.Unchecked += (_, _) => { _group2.ExplorePoint = false; RefreshGroupSummaryTexts(); UpdateCategorySummaryText(); };
+            twPowerToggle.Checked += (_, _) => { _group2.TwPower = true; RefreshGroupSummaryTexts(); UpdateCategorySummaryText(); };
+            twPowerToggle.Unchecked += (_, _) => { _group2.TwPower = false; RefreshGroupSummaryTexts(); UpdateCategorySummaryText(); };
+            hamToggle.Checked += (_, _) => { _group2.Ham = true; RefreshGroupSummaryTexts(); UpdateCategorySummaryText(); };
+            hamToggle.Unchecked += (_, _) => { _group2.Ham = false; RefreshGroupSummaryTexts(); UpdateCategorySummaryText(); };
+            eventToggle.Checked += (_, _) => { _group2.Event = true; RefreshGroupSummaryTexts(); UpdateCategorySummaryText(); };
+            eventToggle.Unchecked += (_, _) => { _group2.Event = false; RefreshGroupSummaryTexts(); UpdateCategorySummaryText(); };
+
+            Group2InlineHost.Children.Add(CreateLabeledToggleRow("개각비 (5%)", gaegakbiToggle));
+            Group2InlineHost.Children.Add(CreateLabeledToggleRow("클럽 Type-P (5%)", clubTypePToggle));
+            Group2InlineHost.Children.Add(CreateLabeledToggleRow("탐험 포인트 공증 (5%)", exploreToggle));
+            Group2InlineHost.Children.Add(CreateLabeledToggleRow("테일즈위버 기운 (5%)", twPowerToggle));
+            Group2InlineHost.Children.Add(CreateLabeledToggleRow("괴력의 햄 (10%)", hamToggle));
+            Group2InlineHost.Children.Add(CreateLabeledToggleRow("이벤트 (10%)", eventToggle));
+            Group2InlineHost.Children.Add(CreateLabeledTextBoxRow("기타", _group2.EtcValue, out var etcText));
+            etcText.TextChanged += (_, _) => { _group2.EtcValue = etcText.Text.Trim(); RefreshGroupSummaryTexts(); UpdateCategorySummaryText(); };
+        }
+
+        private void BuildGroup4InlineSection()
+        {
+            if (Group4InlineHost == null)
+                return;
+
+            Group4InlineHost.Children.Clear();
+
+            var titleToggle = CreateToggle("칭호 (20%)", _group4.TitleDamage);
+            var feverToggle = CreateToggle("피버 (10%)", _group4.Fever);
+            titleToggle.Checked += (_, _) => { _group4.TitleDamage = true; RefreshGroupSummaryTexts(); UpdateCategorySummaryText(); };
+            titleToggle.Unchecked += (_, _) => { _group4.TitleDamage = false; RefreshGroupSummaryTexts(); UpdateCategorySummaryText(); };
+            feverToggle.Checked += (_, _) => { _group4.Fever = true; RefreshGroupSummaryTexts(); UpdateCategorySummaryText(); };
+            feverToggle.Unchecked += (_, _) => { _group4.Fever = false; RefreshGroupSummaryTexts(); UpdateCategorySummaryText(); };
+
+            Group4InlineHost.Children.Add(CreateLabeledToggleRow("칭호 (20%)", titleToggle));
+            Group4InlineHost.Children.Add(CreateLabeledToggleRow("피버 (10%)", feverToggle));
+            Group4InlineHost.Children.Add(CreateLabeledComboRow("무기 어빌리티", new[] { "없음 (0%)", "심연 (9%)", "상실 (10%)", "야성 (11%)" }, _group4.WeaponAbilityIndex, out var weaponAbilityCombo));
+            Group4InlineHost.Children.Add(CreateLabeledComboRow("손목 어빌리티", new[] { "없음 (0%)", "심연 (9%)", "상실 (10%)", "야성 (11%)" }, _group4.WristAbilityIndex, out var wristCombo));
+            Group4InlineHost.Children.Add(CreateLabeledComboRow("손 어빌리티", new[] { "없음 (0%)", "심연 (7%)", "상실 (8%)", "야성 (9%)" }, _group4.HandAbilityIndex, out var handCombo));
+            Group4InlineHost.Children.Add(CreateLabeledComboRow("루나리아 어빌리티", new[] { "0%", "1%", "2%", "3%", "4%", "5%", "6%", "7%", "8%", "9%", "10%" }, _group4.LunariaAbilityIndex, out var lunariaCombo));
+            Group4InlineHost.Children.Add(CreateLabeledComboRow("심화 룬", new[] { "0렙 (0%)", "1렙 (3%)", "2렙 (6%)", "3렙 (9%)" }, _group4.DeepRuneIndex, out var deepRuneCombo));
+            Group4InlineHost.Children.Add(CreateLabeledTextBoxRow("기타", _group4.EtcValue, out var etcText));
+
+            wristCombo.SelectionChanged += (_, _) => { _group4.WristAbilityIndex = Math.Max(0, wristCombo.SelectedIndex); RefreshGroupSummaryTexts(); UpdateCategorySummaryText(); };
+            weaponAbilityCombo.SelectionChanged += (_, _) => { _group4.WeaponAbilityIndex = Math.Max(0, weaponAbilityCombo.SelectedIndex); RefreshGroupSummaryTexts(); UpdateCategorySummaryText(); };
+            handCombo.SelectionChanged += (_, _) => { _group4.HandAbilityIndex = Math.Max(0, handCombo.SelectedIndex); RefreshGroupSummaryTexts(); UpdateCategorySummaryText(); };
+            lunariaCombo.SelectionChanged += (_, _) => { _group4.LunariaAbilityIndex = Math.Max(0, lunariaCombo.SelectedIndex); RefreshGroupSummaryTexts(); UpdateCategorySummaryText(); };
+            deepRuneCombo.SelectionChanged += (_, _) => { _group4.DeepRuneIndex = Math.Max(0, deepRuneCombo.SelectedIndex); RefreshGroupSummaryTexts(); UpdateCategorySummaryText(); };
+            etcText.TextChanged += (_, _) => { _group4.EtcValue = etcText.Text.Trim(); RefreshGroupSummaryTexts(); UpdateCategorySummaryText(); };
+        }
+
+        private void BuildGroup5InlineSection()
+        {
+            if (Group5InlineHost == null)
+                return;
+
+            Group5InlineHost.Children.Clear();
+            Group5InlineHost.Children.Add(CreateLabeledCombo("아티팩트", new[] { "프시키 (15%)", "아크론 (20%)", "이클립스 (30%)", "에테리얼 (35%)" }, _group5.ArtifactIndex, out var artifactCombo));
+            Group5InlineHost.Children.Add(CreateLabeledCombo("손목 부가", new[] { "25%", "26%", "27%", "28%" }, _group5.WristExtraIndex, out var wristCombo));
+            Group5InlineHost.Children.Add(CreateLabeledCombo("루나리아 부가", new[] { "0%", "1%", "2%", "3%", "4%", "5%", "6%", "7%", "8%", "9%", "10%" }, _group5.LunariaExtraIndex, out var lunariaCombo));
+
+            artifactCombo.SelectionChanged += (_, _) => { _group5.ArtifactIndex = Math.Max(0, artifactCombo.SelectedIndex); RefreshGroupSummaryTexts(); UpdateCategorySummaryText(); };
+            wristCombo.SelectionChanged += (_, _) => { _group5.WristExtraIndex = Math.Max(0, wristCombo.SelectedIndex); RefreshGroupSummaryTexts(); UpdateCategorySummaryText(); };
+            lunariaCombo.SelectionChanged += (_, _) => { _group5.LunariaExtraIndex = Math.Max(0, lunariaCombo.SelectedIndex); RefreshGroupSummaryTexts(); UpdateCategorySummaryText(); };
+        }
+
+        private void BuildGroup11InlineSection()
+        {
+            if (Group11InlineHost == null)
+                return;
+
+            Group11InlineHost.Children.Clear();
+            Group11InlineHost.Children.Add(CreateLabeledCombo("저격 연마", new[] { "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10" }, _group11.SniperIndex, out var sniperCombo));
+            Group11InlineHost.Children.Add(CreateLabeledCombo("장비 강화석 옵션", new[] { "0%", "45%", "46%", "47%", "48%" }, _group11.GemOptionIndex, out var gemCombo));
+            Group11InlineHost.Children.Add(CreateLabeledCombo("무기 부가", new[] { "0%", "18%", "19%", "20%", "21%" }, _group11.WeaponExtraIndex, out var weaponCombo));
+
+            sniperCombo.SelectionChanged += (_, _) => { _group11.SniperIndex = Math.Max(0, sniperCombo.SelectedIndex); RefreshGroupSummaryTexts(); UpdateCategorySummaryText(); };
+            gemCombo.SelectionChanged += (_, _) => { _group11.GemOptionIndex = Math.Max(0, gemCombo.SelectedIndex); RefreshGroupSummaryTexts(); UpdateCategorySummaryText(); };
+            weaponCombo.SelectionChanged += (_, _) => { _group11.WeaponExtraIndex = Math.Max(0, weaponCombo.SelectedIndex); RefreshGroupSummaryTexts(); UpdateCategorySummaryText(); };
+        }
+
         private void OpenGroup5Window_Click(object sender, RoutedEventArgs e)
         {
             var window = CreateSettingsWindow("그룹5 설정 (상한 73%)");
@@ -1078,97 +1260,33 @@ namespace TWChatOverlay.Views.Addons
             window.ShowDialog();
         }
 
-        private void OpenMonsterWindow_Click(object sender, RoutedEventArgs e)
-        {
-            var window = CreateSettingsWindow("몬스터 설정");
-            var panel = CreateWindowRootPanel(window);
-
-            var monsterNames = DamageReferenceData.MonsterEntries.Select(x => x.Name).ToArray();
-            panel.Children.Add(CreateLabeledCombo("몬스터", monsterNames, _monster.SelectedIndex, out var monsterCombo));
-
-            var detailGrid = new Grid { Margin = new Thickness(0, 8, 0, 0) };
-            detailGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(130) });
-            detailGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
-
-            var detailName = AddMonsterDetailRow(detailGrid, 0, "이름");
-            var detailStatDefense = AddMonsterDetailRow(detailGrid, 1, "스탯 방어력");
-            var detailFixedDefense = AddMonsterDetailRow(detailGrid, 2, "고정 방어력");
-            var detailFixedDamageReduction = AddMonsterDetailRow(detailGrid, 3, "고정 피해 감소");
-            var detailDamageReductionRate = AddMonsterDetailRow(detailGrid, 4, "피해 감소율");
-            var detailAttribute = AddMonsterDetailRow(detailGrid, 5, "속성");
-            var detailHp = AddMonsterDetailRow(detailGrid, 6, "HP(솔로)");
-            panel.Children.Add(detailGrid);
-
-            void RefreshMonsterDetail()
-            {
-                var entry = GetSelectedMonsterEntry(monsterCombo.SelectedIndex);
-                if (entry == null)
-                {
-                    detailName.Text = "-";
-                    detailStatDefense.Text = "0";
-                    detailFixedDefense.Text = "0";
-                    detailFixedDamageReduction.Text = "0";
-                    detailDamageReductionRate.Text = "0%";
-                    detailAttribute.Text = "0";
-                    detailHp.Text = "0";
-                    return;
-                }
-
-                detailName.Text = entry.Value.Name;
-                detailStatDefense.Text = entry.Value.StatDefense.ToString("0.##", CultureInfo.CurrentCulture);
-                detailFixedDefense.Text = entry.Value.FixedDefense.ToString("0.##", CultureInfo.CurrentCulture);
-                detailFixedDamageReduction.Text = entry.Value.FixedDamageReduction.ToString("0.##", CultureInfo.CurrentCulture);
-                detailDamageReductionRate.Text = $"{entry.Value.DamageReductionRate:0.##}%";
-                detailAttribute.Text = entry.Value.AttributeValue.ToString("0.##", CultureInfo.CurrentCulture);
-                detailHp.Text = entry.Value.HpSolo.ToString("0", CultureInfo.CurrentCulture);
-            }
-
-            monsterCombo.SelectionChanged += (_, _) =>
-            {
-                _monster.SelectedIndex = Math.Max(0, monsterCombo.SelectedIndex);
-                RefreshMonsterDetail();
-                UpdateMonsterSummaryText();
-                SaveDamageCalculatorState();
-            };
-
-            RefreshMonsterDetail();
-            AddSaveButton(panel, () =>
-            {
-                _monster.SelectedIndex = Math.Max(0, monsterCombo.SelectedIndex);
-                UpdateMonsterSummaryText();
-                SaveDamageCalculatorState();
-                window.DialogResult = true;
-                window.Close();
-            });
-
-            window.Closing += (_, _) =>
-            {
-                _monster.SelectedIndex = Math.Max(0, monsterCombo.SelectedIndex);
-                UpdateMonsterSummaryText();
-                SaveDamageCalculatorState();
-            };
-
-            window.ShowDialog();
-        }
-
         private void RefreshGroupSummaryTexts()
         {
-            Group1SummaryText.Text = $"그룹1:{OnOff(_group1.Snowman)}/{OnOff(_group1.Illumi)} / 그룹2:{CountTrue(_group2.Gaegakbi, _group2.ClubTypeP, _group2.ExplorePoint, _group2.TwPower, _group2.Ham, _group2.Event)}개 / 그룹4:{IndexToName(_group4.WristAbilityIndex, new[] { "없음", "심연", "상실", "야성" })}/{IndexToName(_group4.WeaponAbilityIndex, new[] { "없음", "심연", "상실", "야성" })}/{IndexToName(_group4.HandAbilityIndex, new[] { "없음", "심연", "상실", "야성" })}";
-            Group5SummaryText.Text = $"아티팩트:{IndexToName(_group5.ArtifactIndex, new[] { "프시키", "아크론", "이클립스", "에테리얼" })}";
-            Group11SummaryText.Text = $"저격:{IndexToName(_group11.SniperIndex, new[] { "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10" })}렙 / 추가대미지:{GetSniperAdditionalDamagePercent(_group11.SniperIndex):0.#}% / 강화석:{IndexToName(_group11.GemOptionIndex, new[] { "0", "45", "46", "47", "48" })}%";
+            Group1SummaryText.Text = $"{GetGroup1TotalPercent():0.#}% / 50%";
+            Group2SummaryText.Text = $"{GetGroup2TotalPercent():0.#}% / 30%";
+            Group4SummaryText.Text = $"{GetGroup4TotalPercent():0.#}% / 80%";
+            if (Group5SummaryText != null)
+                Group5SummaryText.Text = $"계열 공격력 {GetSeriesAttackDamageSummary()}";
+            if (Group11SummaryText != null)
+                Group11SummaryText.Text = $"추가 대미지 {GetSniperAdditionalDamagePercent(_group11.SniperIndex):0.#}%";
+            if (Group11TraitValueText != null)
+                Group11TraitValueText.Text = _group11.TraitValue;
             UpdateMonsterSummaryText();
         }
 
         private void UpdateMonsterSummaryText()
         {
+            if (MonsterSelectComboBox != null && MonsterSelectComboBox.Items.Count > 0)
+            {
+                int selectedIndex = Math.Clamp(_monster.SelectedIndex, 0, MonsterSelectComboBox.Items.Count - 1);
+                if (MonsterSelectComboBox.SelectedIndex != selectedIndex)
+                    MonsterSelectComboBox.SelectedIndex = selectedIndex;
+            }
+
             if (MonsterSummaryText == null)
                 return;
 
-            var entry = GetSelectedMonsterEntry(_monster.SelectedIndex);
-            double currentAttribute = GetTextBoxValue(ElementValueTextBox);
-            MonsterSummaryText.Text = entry == null
-                ? "몬스터: -"
-                : $"몬스터:{entry.Value.Name} / 방어:{entry.Value.StatDefense:0.##} / 고정방어:{entry.Value.FixedDefense:0.##} / 고정피감:{entry.Value.FixedDamageReduction:0.##} / 피감율:{entry.Value.DamageReductionRate:0.##}% / 속성:{entry.Value.AttributeValue:0.##} / HP:{entry.Value.HpSolo:0} / 속성보정:{GetMonsterAttributeFactor(currentAttribute, entry.Value.AttributeValue):0.##} / 피감펙터:{GetMonsterDamageReductionFactor(entry.Value.DamageReductionRate):0.##}";
+            UpdateDamageRangeText();
         }
 
         private static double GetMonsterAttributeFactor(double currentAttribute, double monsterAttribute)
@@ -1204,41 +1322,28 @@ namespace TWChatOverlay.Views.Addons
 
         private void UpdateWeakPointUi()
         {
-            if (WeakPointToggle == null || WeakPointValueText == null)
+            if (WeakPointToggle == null)
                 return;
 
-            WeakPointToggle.Content = WeakPointToggle.IsChecked == true ? "ON" : "OFF";
-            bool weakPointOn = WeakPointToggle.IsChecked == true;
-            WeakPointValueText.Text = weakPointOn ? "40%" : "0%";
             SaveDamageCalculatorState();
         }
 
         private void UpdateJudgementUi()
         {
-            if (JudgementComboBox == null || JudgementValueText == null)
+            if (JudgementComboBox == null)
                 return;
-
-            int judgementValue = JudgementComboBox.SelectedIndex < 0 ? 0 : JudgementComboBox.SelectedIndex;
-            double judgementPercent = judgementValue * 0.75;
-            JudgementValueText.Text = $"{judgementPercent:0.#}%";
         }
 
         private void UpdateEtaLinkCriticalUi()
         {
-            if (EtaLinkCriticalComboBox == null || EtaLinkCriticalValueText == null)
+            if (EtaLinkCriticalComboBox == null)
                 return;
-
-            int level = Math.Clamp(EtaLinkCriticalComboBox.SelectedIndex, 0, 20);
-            EtaLinkCriticalValueText.Text = $"{GetEtaLinkCriticalPercent(level):0.#}%";
         }
 
         private void UpdateEtaLinkFinalDamageUi()
         {
-            if (EtaLinkFinalDamageComboBox == null || EtaLinkFinalDamageValueText == null)
+            if (EtaLinkFinalDamageComboBox == null)
                 return;
-
-            int level = Math.Clamp(EtaLinkFinalDamageComboBox.SelectedIndex, 0, 5);
-            EtaLinkFinalDamageValueText.Text = $"{GetEtaLinkFinalPercent(level):0.#}%";
         }
 
         private static string NormalizeEtaLevelText(string text)
@@ -1260,6 +1365,8 @@ namespace TWChatOverlay.Views.Addons
                 Height = 840,
                 ResizeMode = ResizeMode.CanMinimize,
                 WindowStartupLocation = WindowStartupLocation.CenterOwner,
+                Owner = Application.Current?.MainWindow,
+                Topmost = true,
                 Background = System.Windows.Media.Brushes.Transparent,
                 AllowsTransparency = false,
                 SizeToContent = SizeToContent.Manual
@@ -1307,7 +1414,7 @@ namespace TWChatOverlay.Views.Addons
             };
             if (Application.Current?.TryFindResource("ToggleSwitchCheckBoxStyle") is Style toggleStyle)
                 checkBox.Style = toggleStyle;
-            checkBox.LayoutTransform = new System.Windows.Media.ScaleTransform(0.8, 0.8);
+            checkBox.LayoutTransform = new System.Windows.Media.ScaleTransform(0.75, 0.75);
             return checkBox;
         }
 
@@ -1318,7 +1425,7 @@ namespace TWChatOverlay.Views.Addons
                 Margin = new Thickness(0, 0, 0, 1)
             };
             grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
-            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(72) });
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(64) });
 
             var textBlock = new TextBlock
             {
@@ -1359,7 +1466,7 @@ namespace TWChatOverlay.Views.Addons
                 Margin = new Thickness(0, 0, 0, 1)
             };
             grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
-            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(72) });
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(64) });
 
             var textBlock = new TextBlock
             {
@@ -1424,7 +1531,7 @@ namespace TWChatOverlay.Views.Addons
             return new Border { Child = grid };
         }
 
-        private static Border CreateLabeledComboRow(string label, string[] options, int selectedIndex, out ComboBox comboBox, double comboWidth = 100)
+        private static Border CreateLabeledComboRow(string label, string[] options, int selectedIndex, out ComboBox comboBox, double comboWidth = 124)
         {
             return CreateLabeledCombo(label, options, selectedIndex, out comboBox, comboWidth);
         }
@@ -1466,7 +1573,7 @@ namespace TWChatOverlay.Views.Addons
             return new Border { Child = grid };
         }
 
-        private static Border CreateLabeledCombo(string label, string[] options, int selectedIndex, out ComboBox comboBox, double comboWidth = 100)
+        private static Border CreateLabeledCombo(string label, string[] options, int selectedIndex, out ComboBox comboBox, double comboWidth = 124)
         {
             var grid = new Grid
             {
@@ -1755,11 +1862,9 @@ namespace TWChatOverlay.Views.Addons
 
         private void ComboBonusToggle_Changed(object sender, RoutedEventArgs e)
         {
-            if (ComboBonusToggle == null || ComboBonusValueText == null)
+            if (ComboBonusToggle == null)
                 return;
 
-            ComboBonusToggle.Content = ComboBonusToggle.IsChecked == true ? "ON" : "OFF";
-            ComboBonusValueText.Text = ComboBonusToggle.IsChecked == true ? "15%" : "0%";
             UpdateCategorySummaryText();
             SaveDamageCalculatorState();
         }
@@ -1885,13 +1990,11 @@ namespace TWChatOverlay.Views.Addons
                 SienaTextBox.Text = state.SienaValue.ToString("0", CultureInfo.CurrentCulture);
                 EnemyTakenDamageWeaponToggle.IsChecked = state.EnemyTakenDamageWeaponEnabled;
                 ComboBonusToggle.IsChecked = state.ComboBonusEnabled;
-                ComboBonusToggle.Content = state.ComboBonusEnabled ? "ON" : "OFF";
-                ComboBonusValueText.Text = state.ComboBonusEnabled ? "15%" : "0%";
                 if (SpecialDamageReductionTextBoxControl != null)
                     SpecialDamageReductionTextBoxControl.Text = Math.Clamp(state.SpecialDamageReductionRate, 0, 50).ToString("0", CultureInfo.CurrentCulture);
 
                 _calc.SelectedAnisVariant = state.SelectedAnaisVariant;
-                SetAnaisRadioState(_calc.SelectedAnisVariant);
+                SetAnaisVariantSelection(_calc.SelectedAnisVariant);
                 _group1.Snowman = state.Group1Snowman;
                 _group1.Illumi = state.Group1Illumi;
                 _group1.IsabelDamage = state.Group1IsabelDamage;
@@ -1925,6 +2028,8 @@ namespace TWChatOverlay.Views.Addons
                 _group11.WeaponExtraIndex = state.Group11WeaponExtraIndex;
                 _group11.TraitValue = state.Group11TraitValue;
                 _monster.SelectedIndex = state.MonsterSelectedIndex;
+                InitializeMonsterComboBox();
+                BuildInlineGroupSections();
 
                 UpdateWeakPointUi();
                 UpdateJudgementUi();
