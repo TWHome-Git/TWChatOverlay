@@ -37,7 +37,7 @@
                                TextTrimming="CharacterEllipsis"/>
                     <Button HorizontalAlignment="Right"
                             Click="CloseButton_Click"
-                            Content="닫기"
+                            Content="X"
                             Style="{StaticResource WindowCloseButtonStyle}"/>
                 </Grid>
             </Border>

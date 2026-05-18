@@ -403,6 +403,14 @@ namespace TWChatOverlay.Views.Addons
 
         private string GetSkillCriticalMultiplierText() => $"{GetTextBoxValue(CriticalMultiplierTextBox) / 100.0:0.#}";
 
+        private readonly record struct DamageRangeResult(
+            double InnerMin,
+            double InnerMax,
+            double MiddleMin,
+            double MiddleMax,
+            double MinimumDamage,
+            double MaximumDamage);
+
         private void UpdateDamageRangeText()
         {
             if (IntermediateDamageText == null || MinimumDamageText == null || MaximumDamageText == null)
@@ -419,10 +427,28 @@ namespace TWChatOverlay.Views.Addons
                 return;
             }
 
-            double monsterDefense = entry.Value.StatDefense + entry.Value.FixedDefense;
-            double monsterFixedDamageReduction = entry.Value.FixedDamageReduction;
-            double monsterAttributeFactor = GetMonsterAttributeFactor(GetTextBoxValue(ElementValueTextBox), entry.Value.AttributeValue);
-            double monsterDamageReductionFactor = GetMonsterDamageReductionFactor(entry.Value.DamageReductionRate);
+            var normalRange = CalculateDamageRange(entry.Value, 1.0);
+            var strongRange = CalculateDamageRange(entry.Value, 0.5);
+            var passiveRange = CalculateDamageRange(entry.Value, 0.85);
+
+            IntermediateDamageText.Text = $"1차 INT: {normalRange.InnerMin:N0} / {normalRange.InnerMax:N0}\n2차 INT: {normalRange.MiddleMin:N0} / {normalRange.MiddleMax:N0}";
+            MinimumDamageText.Text = $"{normalRange.MinimumDamage:N0}";
+            MaximumDamageText.Text = $"{normalRange.MaximumDamage:N0}";
+            if (MonsterSummaryText != null)
+            {
+                MonsterSummaryText.Text =
+                    $"일반 대미지 {normalRange.MinimumDamage:N0}~{normalRange.MaximumDamage:N0} | " +
+                    $"강타 대미지 {strongRange.MinimumDamage:N0}~{strongRange.MaximumDamage:N0} | " +
+                    $"방무 패시브 대미지 {passiveRange.MinimumDamage:N0}~{passiveRange.MaximumDamage:N0}";
+            }
+        }
+
+        private DamageRangeResult CalculateDamageRange(DamageReferenceData.MonsterEntry entry, double defenseMultiplier)
+        {
+            double monsterDefense = (entry.StatDefense + entry.FixedDefense) * defenseMultiplier;
+            double monsterFixedDamageReduction = entry.FixedDamageReduction;
+            double monsterAttributeFactor = GetMonsterAttributeFactor(GetTextBoxValue(ElementValueTextBox), entry.AttributeValue);
+            double monsterDamageReductionFactor = GetMonsterDamageReductionFactor(entry.DamageReductionRate);
 
             double baseCoefficientMin = _calc.CurrentFinalCoefficient + 1 - monsterDefense;
             double baseCoefficientMax = _calc.CurrentFinalCoefficient + 1 + Math.Floor(_calc.CurrentDexCorrection) - monsterDefense;
@@ -446,14 +472,10 @@ namespace TWChatOverlay.Views.Addons
             double middleMin = Math.Floor((innerMin * finalFactor * monsterDamageReductionFactor - monsterFixedDamageReduction) * specialFactor * sienaFactor * etaFactor * seriesAttackFactor * damageAmpFactor * weaponAmpFactor);
             double middleMax = Math.Floor((innerMax * finalFactor * monsterDamageReductionFactor - monsterFixedDamageReduction) * specialFactor * sienaFactor * etaFactor * seriesAttackFactor * damageAmpFactor * weaponAmpFactor);
 
-            double minimumDamage = Math.Floor(middleMin * attackDamageFactor);
-            double maximumDamage = Math.Floor(middleMax * attackDamageFactor);
+            double minimumDamage = Math.Max(1, Math.Floor(middleMin * attackDamageFactor));
+            double maximumDamage = Math.Max(1, Math.Floor(middleMax * attackDamageFactor));
 
-            IntermediateDamageText.Text = $"1차 INT: {innerMin:N0} / {innerMax:N0}\n2차 INT: {middleMin:N0} / {middleMax:N0}";
-            MinimumDamageText.Text = $"{minimumDamage:N0}";
-            MaximumDamageText.Text = $"{maximumDamage:N0}";
-            if (MonsterSummaryText != null)
-                MonsterSummaryText.Text = $"대미지 {minimumDamage:N0}~{maximumDamage:N0}";
+            return new DamageRangeResult(innerMin, innerMax, middleMin, middleMax, minimumDamage, maximumDamage);
         }
 
         private string BuildDamageFormula(bool useMaximum)
@@ -560,12 +582,29 @@ namespace TWChatOverlay.Views.Addons
             return $"{value:0.#}%";
         }
 
+        private string GetGroup11AdditionalDamageSummary()
+        {
+            double sniper = GetSniperAdditionalDamagePercent(_group11.SniperIndex);
+            double gem = _group11.GemOptionIndex switch { 0 => 0, 1 => 45, 2 => 46, 3 => 47, 4 => 48, _ => 0 };
+            double weapon = Math.Clamp(_group11.WeaponExtraIndex, 0, 100);
+            double trait = ReadTextValue(_group11.TraitValue);
+            return $"{sniper + gem + weapon + trait:0.#}%";
+        }
+
         private string GetFinalDamageSummary()
         {
             double club = ClubFinalDamageToggle?.IsChecked == true ? 5 : 0;
             double core = GetTextBoxValue(CoreSetTextBox);
             double etaFinal = GetEtaLinkFinalPercent(GetComboIndex(EtaLinkFinalDamageComboBox));
             return $"{club + core + etaFinal:0.#}%";
+        }
+
+        private string GetCriticalDamageSummary()
+        {
+            double weakPoint = WeakPointToggle?.IsChecked == true ? 40 : 0;
+            double judgement = GetComboIndex(JudgementComboBox) * 0.75;
+            double etaCrit = GetEtaLinkCriticalPercent(GetComboIndex(EtaLinkCriticalComboBox));
+            return $"{weakPoint + judgement + etaCrit:0.#}%";
         }
 
         private string GetCurrentTraitDisplayName()
@@ -1188,11 +1227,23 @@ namespace TWChatOverlay.Views.Addons
             Group11InlineHost.Children.Clear();
             Group11InlineHost.Children.Add(CreateLabeledCombo("저격 연마", new[] { "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10" }, _group11.SniperIndex, out var sniperCombo));
             Group11InlineHost.Children.Add(CreateLabeledCombo("장비 강화석 옵션", new[] { "0%", "45%", "46%", "47%", "48%" }, _group11.GemOptionIndex, out var gemCombo));
-            Group11InlineHost.Children.Add(CreateLabeledCombo("무기 부가", new[] { "0%", "18%", "19%", "20%", "21%" }, _group11.WeaponExtraIndex, out var weaponCombo));
+            Group11InlineHost.Children.Add(CreateLabeledTextBoxRow("무기 부가", _group11.WeaponExtraIndex.ToString(CultureInfo.CurrentCulture), out var weaponText));
 
             sniperCombo.SelectionChanged += (_, _) => { _group11.SniperIndex = Math.Max(0, sniperCombo.SelectedIndex); RefreshGroupSummaryTexts(); UpdateCategorySummaryText(); };
             gemCombo.SelectionChanged += (_, _) => { _group11.GemOptionIndex = Math.Max(0, gemCombo.SelectedIndex); RefreshGroupSummaryTexts(); UpdateCategorySummaryText(); };
-            weaponCombo.SelectionChanged += (_, _) => { _group11.WeaponExtraIndex = Math.Max(0, weaponCombo.SelectedIndex); RefreshGroupSummaryTexts(); UpdateCategorySummaryText(); };
+            weaponText.PreviewTextInput += NumberTextBox_PreviewTextInput;
+            weaponText.PreviewKeyDown += NumberTextBox_PreviewKeyDown;
+            DataObject.AddPastingHandler(weaponText, NumberTextBox_OnPaste);
+            weaponText.LostFocus += (_, _) =>
+            {
+                if (!double.TryParse(weaponText.Text, out double value))
+                    value = 0;
+
+                weaponText.Text = Math.Clamp(value, 0, 100).ToString("0", CultureInfo.CurrentCulture);
+                _group11.WeaponExtraIndex = (int)Math.Clamp(value, 0, 100);
+                RefreshGroupSummaryTexts();
+                UpdateCategorySummaryText();
+            };
         }
 
         private void OpenGroup5Window_Click(object sender, RoutedEventArgs e)
@@ -1234,14 +1285,16 @@ namespace TWChatOverlay.Views.Addons
 
             panel.Children.Add(CreateLabeledCombo("저격 연마", new[] { "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10" }, _group11.SniperIndex, out var sniperCombo));
             panel.Children.Add(CreateLabeledCombo("장비 강화석 옵션", new[] { "0%", "45%", "46%", "47%", "48%" }, _group11.GemOptionIndex, out var gemCombo));
-            panel.Children.Add(CreateLabeledCombo("무기 부가", new[] { "0%", "18%", "19%", "20%", "21%" }, _group11.WeaponExtraIndex, out var weaponCombo));
+            panel.Children.Add(CreateLabeledTextBoxRow("무기 부가", _group11.WeaponExtraIndex.ToString(CultureInfo.CurrentCulture), out var weaponText));
             panel.Children.Add(CreateLabeledReadOnlyValue("캐릭터 고유 값", _group11.TraitValue));
 
             AddSaveButton(panel, () =>
             {
                 _group11.SniperIndex = Math.Max(0, sniperCombo.SelectedIndex);
                 _group11.GemOptionIndex = Math.Max(0, gemCombo.SelectedIndex);
-                _group11.WeaponExtraIndex = Math.Max(0, weaponCombo.SelectedIndex);
+                if (!double.TryParse(weaponText.Text, out double weaponValue))
+                    weaponValue = 0;
+                _group11.WeaponExtraIndex = (int)Math.Clamp(weaponValue, 0, 100);
                 RefreshGroupSummaryTexts();
                 UpdateCategorySummaryText();
                 window.DialogResult = true;
@@ -1252,7 +1305,9 @@ namespace TWChatOverlay.Views.Addons
             {
                 _group11.SniperIndex = Math.Max(0, sniperCombo.SelectedIndex);
                 _group11.GemOptionIndex = Math.Max(0, gemCombo.SelectedIndex);
-                _group11.WeaponExtraIndex = Math.Max(0, weaponCombo.SelectedIndex);
+                if (!double.TryParse(weaponText.Text, out double weaponValue))
+                    weaponValue = 0;
+                _group11.WeaponExtraIndex = (int)Math.Clamp(weaponValue, 0, 100);
                 RefreshGroupSummaryTexts();
                 SaveDamageCalculatorState();
             };
@@ -1266,11 +1321,15 @@ namespace TWChatOverlay.Views.Addons
             Group2SummaryText.Text = $"{GetGroup2TotalPercent():0.#}% / 30%";
             Group4SummaryText.Text = $"{GetGroup4TotalPercent():0.#}% / 80%";
             if (Group5SummaryText != null)
-                Group5SummaryText.Text = $"계열 공격력 {GetSeriesAttackDamageSummary()}";
+                Group5SummaryText.Text = $"계열 공격력 {GetSeriesAttackDamageSummary()} / 73%";
             if (Group11SummaryText != null)
-                Group11SummaryText.Text = $"추가 대미지 {GetSniperAdditionalDamagePercent(_group11.SniperIndex):0.#}%";
+                Group11SummaryText.Text = $"추가 대미지 {GetGroup11AdditionalDamageSummary()}";
             if (Group11TraitValueText != null)
-                Group11TraitValueText.Text = _group11.TraitValue;
+                Group11TraitValueText.Text = $"{_group11.TraitValue}%";
+            if (FinalDamageSummaryText != null)
+                FinalDamageSummaryText.Text = $"최종 대미지 {GetFinalDamageSummary()}";
+            if (CriticalDamageSummaryText != null)
+                CriticalDamageSummaryText.Text = $"치명타 배율 {GetCriticalDamageSummary()}";
             UpdateMonsterSummaryText();
         }
 
@@ -1514,7 +1573,7 @@ namespace TWChatOverlay.Views.Addons
             {
                 Text = string.IsNullOrWhiteSpace(value) ? "0" : value,
                 Height = 18,
-                Width = 72,
+                Width = 50,
                 FontSize = 10,
                 Background = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(0x0D, 0x11, 0x17)),
                 Foreground = System.Windows.Media.Brushes.White,
@@ -1781,6 +1840,7 @@ namespace TWChatOverlay.Views.Addons
         private void WeakPointToggle_Changed(object sender, RoutedEventArgs e)
         {
             UpdateWeakPointUi();
+            RefreshGroupSummaryTexts();
             UpdateCategorySummaryText();
         }
 
@@ -1842,6 +1902,7 @@ namespace TWChatOverlay.Views.Addons
         private void JudgementComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             UpdateJudgementUi();
+            RefreshGroupSummaryTexts();
             UpdateCategorySummaryText();
             SaveDamageCalculatorState();
         }
@@ -1849,6 +1910,7 @@ namespace TWChatOverlay.Views.Addons
         private void EtaLinkCriticalComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             UpdateEtaLinkCriticalUi();
+            RefreshGroupSummaryTexts();
             UpdateCategorySummaryText();
             SaveDamageCalculatorState();
         }
@@ -1856,6 +1918,7 @@ namespace TWChatOverlay.Views.Addons
         private void EtaLinkFinalDamageComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             UpdateEtaLinkFinalDamageUi();
+            RefreshGroupSummaryTexts();
             UpdateCategorySummaryText();
             SaveDamageCalculatorState();
         }
@@ -1871,18 +1934,21 @@ namespace TWChatOverlay.Views.Addons
 
         private void FinalDamageOption_Changed(object sender, RoutedEventArgs e)
         {
+            RefreshGroupSummaryTexts();
             UpdateCategorySummaryText();
             SaveDamageCalculatorState();
         }
 
         private void CategoryToggle_Changed(object sender, RoutedEventArgs e)
         {
+            RefreshGroupSummaryTexts();
             UpdateCategorySummaryText();
             SaveDamageCalculatorState();
         }
 
         private void SienaTextBox_TextChanged(object sender, TextChangedEventArgs e)
         {
+            RefreshGroupSummaryTexts();
             UpdateCategorySummaryText();
             SaveDamageCalculatorState();
         }

@@ -75,7 +75,7 @@
                         <Button Content="갱신"
                                 Style="{StaticResource WindowCloseButtonStyle}"
                                 Click="Refresh_Click"/>
-                        <Button Content="닫기"
+                        <Button Content="X"
                                 Style="{StaticResource WindowCloseButtonStyle}"
                                 Click="Close_Click"/>
                     </StackPanel>

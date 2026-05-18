@@ -1275,7 +1275,7 @@ namespace TWChatOverlay.Views
             }
         }
 
-        private void Close_Click(object sender, RoutedEventArgs e) => Hide();
+        private void Close_Click(object sender, RoutedEventArgs e) => Close();
 
         private void Reset_Click(object sender, RoutedEventArgs e)
         {
