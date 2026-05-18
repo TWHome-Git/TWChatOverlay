@@ -53,6 +53,8 @@ namespace TWChatOverlay.Views
         private bool _hasCompletedInitialPresentation;
         private bool _canShowAuxiliaryWindows = true;
         private bool _isSettingsPositionMode;
+        private bool _isAddonPositionMode;
+        private int _addonPositionPreviewTabIndex = -1;
         private bool _isWizardChatPositionMode;
         private readonly DispatcherTimer _mainTabAutoHideTimer;
         private bool _isLogServiceInitialized;
@@ -135,7 +137,7 @@ namespace TWChatOverlay.Views
             InitializeComponent();
             Opacity = 0;
             IsHitTestVisible = false;
-            Topmost = false;
+            Topmost = true;
             _settingsFileMissingOnStartup = !ConfigService.SettingsFileExists();
             _pendingInitialSetupWizard = _settingsFileMissingOnStartup;
             _uiLogBatchDispatcher = new UiLogBatchDispatcher(Dispatcher, 60);
@@ -154,7 +156,7 @@ namespace TWChatOverlay.Views
             this.DataContext = _settings;
             _logAnalysisService = new LogAnalysisService(_settings);
             _logPipelineCoordinator = new MainLogPipelineCoordinator(_settings, _logAnalysisService);
-            _settingsViewModel = new SettingsViewModel(_settings, OnColorsUpdatedFromSettings, ConfirmExit, OnSettingsResetFromSettings, ApplyHotKeys);
+            _settingsViewModel = new SettingsViewModel(_settings, OnColorsUpdatedFromSettings, ConfirmExit, OnSettingsResetFromSettings, ApplyHotKeys, ExecuteManualLogReloadFromSettingsAsync);
             SettingsDisplay.DataContext = _settingsViewModel;
             SettingsDisplay.OnlyChatMode = true;
             SettingsDisplay.SetCompactMode(true);
@@ -176,7 +178,7 @@ namespace TWChatOverlay.Views
             DropItemResolver.InitializeAsync(_settings);
             _logService.OnNewLogRead += (logItem) =>
             {
-                _uiLogBatchDispatcher.Enqueue(logItem.Html, logItem.IsRealTime, ProcessUiLogBatch);
+                _uiLogBatchDispatcher.Enqueue(logItem.Html, logItem.IsRealTime, logItem.IsStartupBackfill, ProcessUiLogBatch);
             };
             _logService.InitialLogsLoaded += () =>
             {
@@ -216,7 +218,6 @@ namespace TWChatOverlay.Views
             }
             catch { }
             try { _AbandonRoadSummaryWindow?.Close(); } catch { }
-            try { _experienceWeeklyRefreshPromptWindow?.Close(); } catch { }
             try { _startupLogInitCts?.Cancel(); } catch { }
             try { _startupLogInitCts?.Dispose(); } catch { }
             try { _logService?.Dispose(); } catch { }
@@ -239,7 +240,7 @@ namespace TWChatOverlay.Views
         public SettingsViewModel SettingsViewModelInstance => _settingsViewModel;
         public bool IsDailyWeeklyVisible => _dailyWeeklyContentOverlay?.IsVisible == true;
         public bool IsItemCalendarVisible => _itemCalendarWindow?.IsVisible == true;
-        public bool IsSettingsPositionMode => _isSettingsPositionMode;
+        public bool IsSettingsPositionMode => _isSettingsPositionMode || _isAddonPositionMode;
 
         private void BuffTrackerService_PropertyChanged(object? sender, PropertyChangedEventArgs e)
         {
@@ -329,10 +330,6 @@ namespace TWChatOverlay.Views
                         case HotKeyService.TOGGLE_SETTINGS_ID:
                             TriggerMenuButton("BtnSettings");
                             break;
-                        case HotKeyService.TOGGLE_ALWAYS_VISIBLE_ID:
-                            _settings.AlwaysVisible = !_settings.AlwaysVisible;
-                            AppLogger.Info($"AlwaysVisible toggled to {_settings.AlwaysVisible}.");
-                            break;
                         case HotKeyService.TOGGLE_DAILY_WEEKLY_CONTENT_ID:
                             TriggerMenuButton("BtnDailyWeekly");
                             break;
@@ -367,7 +364,6 @@ namespace TWChatOverlay.Views
                     ShowDailyWeeklyWindow();
 
                 Dispatcher.BeginInvoke(new Action(CompleteInitialPresentation), DispatcherPriority.ApplicationIdle);
-                Dispatcher.BeginInvoke(new Action(TryShowWeeklyExperienceRefreshPrompt), DispatcherPriority.ApplicationIdle);
 
                 AppLogger.Info("Native services initialized successfully.");
             }
@@ -512,7 +508,8 @@ namespace TWChatOverlay.Views
                 if (_isLogServiceInitialized || _startupLogInitRunning)
                     return;
 
-                _ = RunDeferredLogInitializationAsync(isFirstRun: true);
+                _readableLogArchiveService.ClearArchiveLogsAndResetCheckpoint();
+                _ = RunDeferredLogInitializationAsync(isFirstRun: false);
             }), DispatcherPriority.Background);
         }
 
@@ -721,9 +718,9 @@ namespace TWChatOverlay.Views
             _startupLoadingWindow = null;
         }
 
-        private async Task RunDeferredLogInitializationAsync(bool isFirstRun)
+        private async Task RunDeferredLogInitializationAsync(bool isFirstRun, bool force = false)
         {
-            if (_startupLogInitRunning || _isLogServiceInitialized)
+            if (_startupLogInitRunning || (_isLogServiceInitialized && !force))
                 return;
 
             _startupLogInitRunning = true;
@@ -813,7 +810,54 @@ namespace TWChatOverlay.Views
                 _restartRequestedAfterWizardCompletion = false;
                 AppLogger.Warn("Failed to restart after initial setup wizard completion.", ex);
                 RevealMainUiAfterWizard();
-                Dispatcher.BeginInvoke(new Action(TryShowWeeklyExperienceRefreshPrompt), DispatcherPriority.ApplicationIdle);
+            }
+        }
+
+        private async Task<bool> ExecuteManualLogReloadFromSettingsAsync()
+        {
+            bool restartLogService = false;
+            try
+            {
+                if (_startupLogInitRunning)
+                {
+                    AppLogger.Info("Manual log reload skipped because startup log initialization is already running.");
+                    return false;
+                }
+
+                if (string.IsNullOrWhiteSpace(_settings.ChatLogFolderPath) || !Directory.Exists(_settings.ChatLogFolderPath))
+                {
+                    AppLogger.Warn($"Manual log reload skipped because chat log folder path is invalid. Path='{_settings.ChatLogFolderPath}'");
+                    return false;
+                }
+
+                if (_isLogServiceInitialized && _logService != null)
+                {
+                    restartLogService = true;
+                    _logService.Stop();
+                }
+
+                _readableLogArchiveService.ClearArchiveLogsAndResetCheckpoint();
+                await RunDeferredLogInitializationAsync(isFirstRun: false, force: true).ConfigureAwait(true);
+                return !_settings.StartupLogReadCanceled;
+            }
+            catch (Exception ex)
+            {
+                AppLogger.Warn("Manual log reload request failed.", ex);
+                return false;
+            }
+            finally
+            {
+                if (restartLogService && _logService != null)
+                {
+                    try
+                    {
+                        _logService.Start();
+                    }
+                    catch (Exception ex)
+                    {
+                        AppLogger.Warn("Failed to restart log service after manual log reload.", ex);
+                    }
+                }
             }
         }
 

@@ -9,7 +9,6 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Text.Json;
 using System.Threading.Tasks;
-using System.Diagnostics;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
@@ -104,9 +103,19 @@ namespace TWChatOverlay.Views
             ,"티로로스의 계략을 막아내었습니다. 잠시 후 기억의 숲 전초기지로 이동됩니다."
         };
 
+        private enum HiddenChatContinuationFamily
+        {
+            None,
+            Normal,
+            Club
+        }
+
+        private HiddenChatContinuationFamily _pendingHiddenChatContinuationFamily = HiddenChatContinuationFamily.None;
+        private string? _pendingHiddenChatContinuationTimestamp;
+
         #region Log Processing
 
-        private void ProcessUiLogBatch(IReadOnlyList<(string Html, bool IsRealTime)> batch)
+        private void ProcessUiLogBatch(IReadOnlyList<(string Html, bool IsRealTime, bool IsStartupBackfill)> batch)
         {
             if (batch.Count == 0) return;
 
@@ -121,7 +130,7 @@ namespace TWChatOverlay.Views
             {
                 foreach (var item in batch)
                 {
-                    var context = CreateLogPipelineContext(item.Html, item.IsRealTime, deferUiScroll: true);
+                    var context = CreateLogPipelineContext(item.Html, item.IsRealTime, item.IsStartupBackfill, deferUiScroll: true);
                     ProcessLogPipelineContext(context);
                 }
             }
@@ -139,11 +148,12 @@ namespace TWChatOverlay.Views
             }
         }
 
-        private UnifiedLogPipelineContext CreateLogPipelineContext(string html, bool isRealTime, bool deferUiScroll)
+        private UnifiedLogPipelineContext CreateLogPipelineContext(string html, bool isRealTime, bool isStartupBackfill, bool deferUiScroll)
         {
             var context = new UnifiedLogPipelineContext(
                 html,
                 isRealTime,
+                isStartupBackfill,
                 deferUiScroll,
                 1,
                 false);
@@ -182,11 +192,21 @@ namespace TWChatOverlay.Views
                 (analysis.ShouldRunDailyWeeklyContent || isContentCompletionRelevant))
                 _dailyWeeklyContentOverlay.ProcessLog(analysis);
 
-            foreach (string tabName in analysis.BufferTabs)
-                AddToBuffer(tabName, parseResult);
+            bool suppressChatLine = ShouldHideChatLine(parseResult);
+
+            if (!suppressChatLine)
+            {
+                foreach (string tabName in analysis.BufferTabs)
+                    AddToBuffer(tabName, parseResult);
+            }
 
             if (context.IsRealTime)
             {
+                if (!context.IsStartupBackfill && parseResult.IsReflectionPatternAlert)
+                {
+                    NotificationService.PlayAlert("Reflection.wav");
+                }
+
                 if (pipelineAnalysis.Toast is { HasTrackedItemDrop: true, ShouldShowItemDropToast: true } toastAnalysis)
                 {
                     ItemDropToastService.Show(
@@ -197,12 +217,14 @@ namespace TWChatOverlay.Views
 
                 if (parseResult.Category == ChatCategory.Shout)
                 {
+                    bool allowLiveShoutActions = !context.IsStartupBackfill;
+
                     if (!isActualShout)
                     {
                         AppLogger.Debug($"Skipped shout toast for non-shout formatted line: '{parseResult.FormattedText}'");
                     }
 
-                    if (_settings.AutoCopyShoutNickname && isActualShout)
+                    if (_settings.AutoCopyShoutNickname && isActualShout && allowLiveShoutActions)
                     {
                         string? shoutNickname = GetShoutNicknameForClipboard(parseResult);
                         if (!string.IsNullOrWhiteSpace(shoutNickname))
@@ -215,7 +237,7 @@ namespace TWChatOverlay.Views
                         }
                     }
 
-                    if (_settings.ShowShoutToastPopup && isActualShout && IsTalesWeaverWindowActive())
+                    if (_settings.ShowShoutToastPopup && isActualShout && allowLiveShoutActions)
                         ShoutToastService.Show(parseResult.FormattedText, _settings);
                 }
             }
@@ -266,7 +288,9 @@ namespace TWChatOverlay.Views
             {
                 if (_logAnalysisService.ShouldRenderToTab(parseResult, _currentTabTag))
                 {
-                    if (!analysis.ShouldShowEtosDirection && !ShouldSuppressOverlayText(parseResult))
+                    bool suppressOverlayText = suppressChatLine || !string.IsNullOrWhiteSpace(parseResult.EtosImagePath);
+
+                    if (!analysis.ShouldShowEtosDirection && !suppressOverlayText)
                         AddToUI(parseResult, isRealTime: context.IsRealTime, deferScroll: context.DeferUiScroll);
                 }
             }
@@ -286,43 +310,115 @@ namespace TWChatOverlay.Views
             => !string.IsNullOrWhiteSpace(formattedText) &&
                ShoutToastSourceRegex.IsMatch(formattedText);
 
-        private static bool IsTalesWeaverWindowActive()
+        private void ResetHiddenChatContinuationState()
         {
-            IntPtr hwnd = NativeMethods.GetForegroundWindow();
-            if (hwnd == IntPtr.Zero || !NativeMethods.IsWindow(hwnd))
-                return false;
+            _pendingHiddenChatContinuationFamily = HiddenChatContinuationFamily.None;
+            _pendingHiddenChatContinuationTimestamp = null;
+        }
 
-            try
+        private static HiddenChatContinuationFamily GetHiddenChatContinuationFamily(ChatCategory category)
+            => category switch
             {
-                _ = NativeMethods.GetWindowThreadProcessId(hwnd, out uint pid);
-                if (pid != 0)
-                {
-                    using Process process = Process.GetProcessById((int)pid);
-                    string processName = process.ProcessName;
-                    if (!string.IsNullOrWhiteSpace(processName) &&
-                        processName.Contains("TalesWeaver", StringComparison.OrdinalIgnoreCase))
-                    {
-                        return true;
-                    }
-                }
-            }
-            catch
+                ChatCategory.Normal or ChatCategory.NormalSelf => HiddenChatContinuationFamily.Normal,
+                ChatCategory.Club => HiddenChatContinuationFamily.Club,
+                _ => HiddenChatContinuationFamily.None
+            };
+
+        private static bool TrySplitTimestampAndBody(string formattedText, out string timestamp, out string body)
+        {
+            timestamp = string.Empty;
+            body = string.Empty;
+
+            if (string.IsNullOrWhiteSpace(formattedText))
+                return false;
+
+            int closingBracketIndex = formattedText.IndexOf(']');
+            if (closingBracketIndex < 0)
             {
-                // Fall back to title-based detection.
+                body = formattedText.Trim();
+                return false;
             }
 
-            int len = NativeMethods.GetWindowTextLength(hwnd);
-            if (len <= 0)
+            int openingBracketIndex = formattedText.LastIndexOf('[', closingBracketIndex);
+            if (openingBracketIndex < 0)
+                openingBracketIndex = 0;
+
+            timestamp = formattedText.Substring(openingBracketIndex, closingBracketIndex - openingBracketIndex + 1).Trim();
+            body = closingBracketIndex + 1 < formattedText.Length
+                ? formattedText.Substring(closingBracketIndex + 1)
+                : string.Empty;
+            return true;
+        }
+
+        private bool ShouldHideChatLine(LogParser.ParseResult parseResult)
+        {
+            if (parseResult == null || string.IsNullOrWhiteSpace(parseResult.FormattedText))
                 return false;
 
-            var sb = new StringBuilder(len + 1);
-            _ = NativeMethods.GetWindowText(hwnd, sb, sb.Capacity);
-            string title = sb.ToString();
-            if (string.IsNullOrWhiteSpace(title))
+            if (IsContinuationOfHiddenChat(parseResult))
+                return true;
+
+            string text = parseResult.FormattedText;
+            bool isHiddenClub = parseResult.Category == ChatCategory.Club &&
+                                !_settings.ShowClubBoss &&
+                                IgnoredChatMessageService.IsIgnoredClubMessage(text);
+
+            bool isHiddenNormal = (parseResult.Category == ChatCategory.Normal ||
+                                   parseResult.Category == ChatCategory.NormalSelf) &&
+                                  IgnoredChatMessageService.IsIgnoredNormalMessage(text);
+
+            if (!isHiddenClub && !isHiddenNormal)
                 return false;
 
-            return title.Contains("TalesWeaver", StringComparison.OrdinalIgnoreCase) ||
-                   title.Contains("테일즈위버", StringComparison.Ordinal);
+            TrackHiddenChatContinuation(parseResult);
+            return true;
+        }
+
+        private bool IsContinuationOfHiddenChat(LogParser.ParseResult parseResult)
+        {
+            if (_pendingHiddenChatContinuationFamily == HiddenChatContinuationFamily.None)
+                return false;
+
+            if (!parseResult.HasLeadingBodyWhitespace)
+            {
+                ResetHiddenChatContinuationState();
+                return false;
+            }
+
+            if (!TrySplitTimestampAndBody(parseResult.FormattedText, out string timestamp, out _))
+            {
+                ResetHiddenChatContinuationState();
+                return false;
+            }
+
+            HiddenChatContinuationFamily family = GetHiddenChatContinuationFamily(parseResult.Category);
+            if (family != _pendingHiddenChatContinuationFamily ||
+                !string.Equals(timestamp, _pendingHiddenChatContinuationTimestamp, StringComparison.Ordinal))
+            {
+                ResetHiddenChatContinuationState();
+                return false;
+            }
+
+            return true;
+        }
+
+        private void TrackHiddenChatContinuation(LogParser.ParseResult parseResult)
+        {
+            HiddenChatContinuationFamily family = GetHiddenChatContinuationFamily(parseResult.Category);
+            if (family == HiddenChatContinuationFamily.None)
+            {
+                ResetHiddenChatContinuationState();
+                return;
+            }
+
+            if (!TrySplitTimestampAndBody(parseResult.FormattedText, out string timestamp, out _))
+            {
+                ResetHiddenChatContinuationState();
+                return;
+            }
+
+            _pendingHiddenChatContinuationFamily = family;
+            _pendingHiddenChatContinuationTimestamp = timestamp;
         }
 
         private bool ShouldSuppressOverlayText(LogParser.ParseResult parseResult)
@@ -341,19 +437,7 @@ namespace TWChatOverlay.Views
                 text.Contains("에토스", StringComparison.Ordinal))
                 return true;
 
-            if (parseResult.Category == ChatCategory.Club &&
-                !_settings.ShowClubBoss &&
-                IgnoredChatMessageService.IsIgnoredClubMessage(text))
-            {
-                return true;
-            }
-
-            if (parseResult.Category == ChatCategory.Normal || parseResult.Category == ChatCategory.NormalSelf)
-            {
-                return IgnoredChatMessageService.IsIgnoredNormalMessage(text);
-            }
-
-            return false;
+            return ShouldHideChatLine(parseResult);
         }
 
         private static bool IsContentCompletionRelevantLog(string? formattedText)
@@ -508,11 +592,14 @@ namespace TWChatOverlay.Views
 
         private string ApplyEtaDecorations(string text, LogParser.ParseResult log)
         {
-            if (string.IsNullOrWhiteSpace(text) || string.IsNullOrWhiteSpace(log.SenderId))
+            string lookupSenderId = log.RawSenderId ?? log.SenderId ?? string.Empty;
+            string displaySenderId = log.SenderId ?? log.RawSenderId ?? string.Empty;
+
+            if (string.IsNullOrWhiteSpace(text) || lookupSenderId.Length == 0 || displaySenderId.Length == 0)
                 return text;
             if (!_settings.ShowEtaLevel && !_settings.ShowEtaCharacter)
                 return text;
-            if (!EtaProfileResolver.TryGetProfile(log.SenderId, out var profile))
+            if (!EtaProfileResolver.TryGetProfile(lookupSenderId, out var profile))
                 return text;
 
             string suffix = string.Empty;
@@ -527,16 +614,16 @@ namespace TWChatOverlay.Views
             {
                 return Regex.Replace(
                     text,
-                    $@"\[{Regex.Escape(log.SenderId)}\]\s*$",
-                    $"[{log.SenderId}{suffix}]");
+                    $@"\[{Regex.Escape(displaySenderId)}\]\s*$",
+                    $"[{displaySenderId}{suffix}]");
             }
 
             int colon = text.IndexOf(':');
             if (colon <= 0) return text;
             string left = text.Substring(0, colon);
-            int idx = left.LastIndexOf(log.SenderId, StringComparison.Ordinal);
+            int idx = left.LastIndexOf(displaySenderId, StringComparison.Ordinal);
             if (idx < 0) return text;
-            return text.Substring(0, idx + log.SenderId.Length) + suffix + text.Substring(idx + log.SenderId.Length);
+            return text.Substring(0, idx + displaySenderId.Length) + suffix + text.Substring(idx + displaySenderId.Length);
         }
 
         private void ScrollLogDisplayToEndAfterLayout()
@@ -571,6 +658,7 @@ namespace TWChatOverlay.Views
 
                 bool shouldAutoScroll = ChatDisplay?.IsAutoScrollEnabled == true;
 
+                ResetHiddenChatContinuationState();
                 LogDisplay.BeginChange();
                 try
                 {

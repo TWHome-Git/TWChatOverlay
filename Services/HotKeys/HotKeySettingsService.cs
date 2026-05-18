@@ -14,7 +14,6 @@ namespace TWChatOverlay.Services
             nameof(ChatSettings.ExitHotKey),
             nameof(ChatSettings.ToggleOverlayHotKey),
             nameof(ChatSettings.ToggleAddonHotKey),
-            nameof(ChatSettings.ToggleAlwaysVisibleHotKey),
             nameof(ChatSettings.ToggleDailyWeeklyContentHotKey),
             nameof(ChatSettings.ToggleEtaRankingHotKey),
             nameof(ChatSettings.ToggleCoefficientHotKey),
@@ -94,7 +93,6 @@ namespace TWChatOverlay.Services
             nameof(ChatSettings.ExitHotKey) => settings.ExitHotKey,
             nameof(ChatSettings.ToggleOverlayHotKey) => settings.ToggleOverlayHotKey,
             nameof(ChatSettings.ToggleAddonHotKey) => settings.ToggleAddonHotKey,
-            nameof(ChatSettings.ToggleAlwaysVisibleHotKey) => settings.ToggleAlwaysVisibleHotKey,
             nameof(ChatSettings.ToggleDailyWeeklyContentHotKey) => settings.ToggleDailyWeeklyContentHotKey,
             nameof(ChatSettings.ToggleEtaRankingHotKey) => settings.ToggleEtaRankingHotKey,
             nameof(ChatSettings.ToggleCoefficientHotKey) => settings.ToggleCoefficientHotKey,
@@ -116,9 +114,6 @@ namespace TWChatOverlay.Services
                     break;
                 case nameof(ChatSettings.ToggleAddonHotKey):
                     settings.ToggleAddonHotKey = value;
-                    break;
-                case nameof(ChatSettings.ToggleAlwaysVisibleHotKey):
-                    settings.ToggleAlwaysVisibleHotKey = value;
                     break;
                 case nameof(ChatSettings.ToggleDailyWeeklyContentHotKey):
                     settings.ToggleDailyWeeklyContentHotKey = value;

@@ -89,10 +89,8 @@ namespace TWChatOverlay.Views
             if (e.ButtonState == MouseButtonState.Pressed)
             {
                 DragMove();
-                SyncMarginsFromWindowPosition(this.Left, this.Top);
-                _settings.UpdatePositionDisplay(_settings.LineMarginLeft, _settings.LineMargin);
                 ChatWindowHub.TryApplyMagneticSnap(this);
-                PersistSettings();
+                PersistCurrentMainWindowPosition();
             }
         }
 
@@ -114,17 +112,9 @@ namespace TWChatOverlay.Views
                 {
                     _stickyService?.UpdatePositionImmediately();
                 }
-                else if (e.PropertyName == nameof(_settings.AlwaysVisible))
-                {
-                    _stickyService?.UpdatePositionImmediately();
-                    ApplyAbandonRoadSummaryWindowVisibility();
-                }
                 else if (e.PropertyName == nameof(_settings.ShowDailyWeeklyContentOverlay))
                 {
-                    if (_settings.ShowDailyWeeklyContentOverlay)
-                        ShowDailyWeeklyWindow();
-                    else
-                        CloseDailyWeeklyWindow();
+                    ApplyDailyWeeklyWindowVisibility();
                 }
                 else if (e.PropertyName == nameof(_settings.ShowEtosDirectionAlert) && !_settings.ShowEtosDirectionAlert)
                 {
@@ -150,10 +140,6 @@ namespace TWChatOverlay.Views
                 else if (e.PropertyName == nameof(_settings.ShowItemDropHelperWindow))
                 {
                     ApplyItemDropHelperWindowSettings();
-                }
-                else if (e.PropertyName == nameof(_settings.ShowDailyWeeklyContentOverlay))
-                {
-                    ApplyDailyWeeklyWindowVisibility();
                 }
                 else if (e.PropertyName == nameof(_settings.ShowBuffTrackerWindow))
                 {
@@ -192,8 +178,8 @@ namespace TWChatOverlay.Views
                 }
                 else if (e.PropertyName == nameof(_settings.ShowAbandonRoadSummaryWindow))
                 {
-                    if (_settings.ShowAbandonRoadSummaryWindow && _isSettingsPositionMode)
-                        ShowAbandonRoadSummaryWindow(previewMode: _isSettingsPositionMode);
+                    if (_settings.ShowAbandonRoadSummaryWindow && _isAddonPositionMode)
+                        ShowAbandonRoadSummaryWindow(previewMode: _isAddonPositionMode);
                     else if (_AbandonRoadSummaryWindow != null)
                     {
                         try { _AbandonRoadSummaryWindow.Close(); } catch { }
@@ -208,7 +194,6 @@ namespace TWChatOverlay.Views
                 else if (e.PropertyName == nameof(_settings.ExitHotKey) ||
                          e.PropertyName == nameof(_settings.ToggleOverlayHotKey) ||
                          e.PropertyName == nameof(_settings.ToggleAddonHotKey) ||
-                         e.PropertyName == nameof(_settings.ToggleAlwaysVisibleHotKey) ||
                          e.PropertyName == nameof(_settings.ToggleDailyWeeklyContentHotKey) ||
                          e.PropertyName == nameof(_settings.ToggleEtaRankingHotKey) ||
                          e.PropertyName == nameof(_settings.ToggleCoefficientHotKey) ||

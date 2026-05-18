@@ -7,10 +7,11 @@ namespace TWChatOverlay.Services
     /// </summary>
     public sealed class UnifiedLogPipelineContext
     {
-        public UnifiedLogPipelineContext(string rawHtml, bool isRealTime, bool deferUiScroll, int effectiveSourceSlot, bool isSourceSplitEnabled)
+        public UnifiedLogPipelineContext(string rawHtml, bool isRealTime, bool isStartupBackfill, bool deferUiScroll, int effectiveSourceSlot, bool isSourceSplitEnabled)
         {
             RawHtml = rawHtml ?? string.Empty;
             IsRealTime = isRealTime;
+            IsStartupBackfill = isStartupBackfill;
             DeferUiScroll = deferUiScroll;
             EffectiveSourceSlot = effectiveSourceSlot;
             IsSourceSplitEnabled = isSourceSplitEnabled;
@@ -19,6 +20,8 @@ namespace TWChatOverlay.Services
         public string RawHtml { get; }
 
         public bool IsRealTime { get; }
+
+        public bool IsStartupBackfill { get; }
 
         public bool DeferUiScroll { get; }
 

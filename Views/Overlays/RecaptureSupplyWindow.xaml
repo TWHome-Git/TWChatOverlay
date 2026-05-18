@@ -31,29 +31,25 @@
                   MouseLeftButtonDown="TitleBar_MouseLeftButtonDown">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="24"/>
+                    <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
 
                 <TextBlock Grid.Column="0"
-                           Text=" 보급품 탈환"
+                           Text="보급품 탈환"
                            Foreground="White"
                            FontSize="14"
                            FontWeight="SemiBold"
+                           HorizontalAlignment="Center"
+                           TextAlignment="Center"
                            VerticalAlignment="Center"/>
 
                 <Button x:Name="CloseButton"
                         Grid.Column="1"
-                        Width="16"
-                        Height="20"
-                        HorizontalAlignment="Center"
+                        HorizontalAlignment="Right"
                         VerticalAlignment="Center"
                         Click="CloseButton_Click"
                         Content="X"
-                        Background="#33FFFFFF"
-                        BorderBrush="#55FFFFFF"
-                        BorderThickness="1"
-                        Foreground="White"
-                        Cursor="Hand"/>
+                        Style="{StaticResource WindowCloseButtonStyle}"/>
             </Grid>
 
             <Border Grid.Row="1"

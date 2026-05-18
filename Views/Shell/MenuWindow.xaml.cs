@@ -1,5 +1,6 @@
-﻿using System;
+using System;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
@@ -406,6 +407,7 @@ namespace TWChatOverlay.Views
                 if (existingHost != null && existingHost.IsVisible && string.Equals(existingHost.Title, "설정", StringComparison.Ordinal))
                 {
                     SetMainSettingsPositionMode(false);
+                    SetMainAddonPositionMode(false);
                     existingHost.Close();
                     return;
                 }
@@ -436,6 +438,7 @@ namespace TWChatOverlay.Views
 
                 host.Show();
                 host.ShowHostContent(settingsView, "설정");
+                SetMainAddonPositionMode(false);
                 SetMainSettingsPositionMode(true);
 
                 try { if (_activeSubmenuButton != null) SetButtonActive(_activeSubmenuButton, false); } catch { }
@@ -485,6 +488,9 @@ namespace TWChatOverlay.Views
             {
                 host.Show();
                 host.ShowHostContent(content, title);
+                bool isAddonSettingsView = content is AddonView;
+                SetMainAddonPositionMode(isAddonSettingsView);
+                SetMainSettingsPositionMode(false);
 
                 try { if (_activeSubmenuButton != null) SetButtonActive(_activeSubmenuButton, false); } catch { }
 
@@ -536,6 +542,7 @@ namespace TWChatOverlay.Views
         private void Host_Closed(object? sender, EventArgs e)
         {
             try { SetMainSettingsPositionMode(false); } catch { }
+            try { SetMainAddonPositionMode(false); } catch { }
             try { if (_activeSubmenuButton != null) SetButtonActive(_activeSubmenuButton, false); } catch { }
             _activeSubmenuButton = null;
         }
@@ -547,6 +554,18 @@ namespace TWChatOverlay.Views
                 if (window is MainWindow main)
                 {
                     main.SetSettingsPositionMode(isEnabled);
+                    return;
+                }
+            }
+        }
+
+        private static void SetMainAddonPositionMode(bool isEnabled)
+        {
+            foreach (Window window in Application.Current.Windows)
+            {
+                if (window is MainWindow main)
+                {
+                    main.SetAddonPositionMode(isEnabled);
                     return;
                 }
             }
@@ -577,8 +596,11 @@ namespace TWChatOverlay.Views
             Drawing.Icon trayIcon;
             try
             {
-                string exePath = Process.GetCurrentProcess().MainModule?.FileName ?? string.Empty;
-                trayIcon = !string.IsNullOrWhiteSpace(exePath)
+                string? exePath = Environment.ProcessPath;
+                if (string.IsNullOrWhiteSpace(exePath) || !System.IO.File.Exists(exePath))
+                    exePath = Process.GetCurrentProcess().MainModule?.FileName;
+
+                trayIcon = !string.IsNullOrWhiteSpace(exePath) && System.IO.File.Exists(exePath)
                     ? Drawing.Icon.ExtractAssociatedIcon(exePath) ?? Drawing.SystemIcons.Application
                     : Drawing.SystemIcons.Application;
             }

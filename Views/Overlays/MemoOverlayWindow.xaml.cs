@@ -3,6 +3,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Interop;
+using System.Windows.Input;
 using TWChatOverlay.Services;
 using TWChatOverlay.Models;
 
@@ -30,6 +31,24 @@ namespace TWChatOverlay.Views
             MemoTextBox.TextChanged += MemoTextBox_TextChanged;
             Application.Current.Exit += Current_Exit;
             Closed += MemoOverlayWindow_Closed;
+        }
+
+        private void TitleBar_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            if (e.ButtonState == MouseButtonState.Pressed)
+            {
+                try
+                {
+                    DragMove();
+                }
+                catch { }
+            }
+        }
+
+        private void CloseButton_Click(object sender, RoutedEventArgs e)
+        {
+            try { _textOnly?.Close(); } catch { }
+            Close();
         }
 
         private void MemoOverlayWindow_Loaded(object sender, RoutedEventArgs e)

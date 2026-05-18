@@ -38,6 +38,7 @@ namespace TWChatOverlay.Models
             _showExperienceLimitAlertWindow = false;
             _showDailyWeeklyContentOverlay = false;
             _showEtosDirectionAlert = false;
+            _enableReflectionPatternAlert = false;
             _enableAbandonRoadCountAlert = false;
             _showAbandonRoadSummaryWindow = false;
             _enableCravingPleasureCountAlert = false;
@@ -58,6 +59,7 @@ namespace TWChatOverlay.Models
             _itemDropAlertVolume = 0.1;
             _highlightAlertVolume = 1.0;
             _magicCircleAlertVolume = 1.0;
+            _reflectionPatternAlertVolume = 1.0;
             _expBuffAlertVolume = 1.0;
             _bossAlertVolume = 1.0;
             _alwaysVisible = false;

@@ -8,12 +8,23 @@ namespace TWChatOverlay.Services.LogAnalysis
     public sealed class AlertLogAnalyzer
     {
         private const string MagicCircleKeyword = "몬스터가 남아있으면 다음 웨이브로 넘어가지 않습니다.";
+        private static readonly (string Sender, string Message)[] ReflectionPatternAlertMessages =
+        {
+            ("키메라", "모두 되돌려주마."),
+            ("심연의 제2사도", "절제와 균형의 중심에서 빗나간 힘은 칼날이 되어 돌아오지.")
+        };
 
         public void Analyze(LogLineContext context)
         {
             var settings = context.Settings;
-            if (settings == null || (!settings.UseAlertColor && !settings.UseAlertSound && !settings.UseMagicCircleAlert))
+            if (settings == null || (!settings.UseAlertColor &&
+                                     !settings.UseAlertSound &&
+                                     !settings.UseMagicCircleAlert &&
+                                     !settings.EnableReflectionPatternAlert))
                 return;
+
+            if (settings.EnableReflectionPatternAlert && IsReflectionPatternAlertMessage(context))
+                context.Result.IsReflectionPatternAlert = true;
 
             if (settings.UseMagicCircleAlert &&
                 (context.Result.Category == ChatCategory.System ||
@@ -61,6 +72,32 @@ namespace TWChatOverlay.Services.LogAnalysis
             return keywordInput.Split(new[] { ' ', '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries)
                 .Where(static keyword => keyword.StartsWith("@"))
                 .ToList();
+        }
+
+        private static bool IsReflectionPatternAlertMessage(LogLineContext context)
+        {
+            if (context.Result.Category != ChatCategory.Normal &&
+                context.Result.Category != ChatCategory.NormalSelf)
+            {
+                return false;
+            }
+
+            if (string.IsNullOrWhiteSpace(context.Result.SenderId) || string.IsNullOrWhiteSpace(context.MessageOnly))
+                return false;
+
+            string sender = context.Result.SenderId.Trim();
+            string message = context.MessageOnly.Trim();
+
+            foreach (var pattern in ReflectionPatternAlertMessages)
+            {
+                if (sender.Equals(pattern.Sender, StringComparison.Ordinal) &&
+                    message.Contains(pattern.Message, StringComparison.Ordinal))
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
     }
 }

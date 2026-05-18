@@ -38,10 +38,8 @@ namespace TWChatOverlay.Views
                 this.Height = newHeight;
                 _settings.WindowHeight = newHeight;
             }
-            SyncMarginsFromWindowPosition(this.Left, this.Top);
-            _settings.UpdatePositionDisplay(_settings.LineMarginLeft, _settings.LineMargin);
             ChatWindowHub.TryApplyMagneticSnap(this);
-            PersistSettings();
+            PersistCurrentMainWindowPosition();
         }
 
         private void LeftResize_DragDelta(object sender, DragDeltaEventArgs e)
@@ -53,10 +51,8 @@ namespace TWChatOverlay.Views
                 this.Width = newWidth;
                 _settings.WindowWidth = newWidth;
             }
-            SyncMarginsFromWindowPosition(this.Left, this.Top);
-            _settings.UpdatePositionDisplay(_settings.LineMarginLeft, _settings.LineMargin);
             ChatWindowHub.TryApplyMagneticSnap(this);
-            PersistSettings();
+            PersistCurrentMainWindowPosition();
         }
 
         private void RightResize_DragDelta(object sender, DragDeltaEventArgs e)
@@ -67,10 +63,8 @@ namespace TWChatOverlay.Views
                 this.Width = newWidth;
                 _settings.WindowWidth = newWidth;
             }
-            SyncMarginsFromWindowPosition(this.Left, this.Top);
-            _settings.UpdatePositionDisplay(_settings.LineMarginLeft, _settings.LineMargin);
             ChatWindowHub.TryApplyMagneticSnap(this);
-            PersistSettings();
+            PersistCurrentMainWindowPosition();
         }
 
         #endregion

@@ -7,8 +7,37 @@
         MinWidth="700"
         MinHeight="460"
         WindowStartupLocation="CenterScreen"
-        Background="#0D1117">
+        Background="#0D1117"
+        WindowStyle="None"
+        ResizeMode="NoResize">
     <Window.Resources>
+        <Style x:Key="TitleBarButtonStyle" TargetType="Button">
+            <Setter Property="Width" Value="34"/>
+            <Setter Property="Height" Value="24"/>
+            <Setter Property="Margin" Value="0,0,4,0"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="#8B949E"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="Focusable" Value="False"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" CornerRadius="4">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#30363D"/>
+                    <Setter Property="Foreground" Value="White"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
         <Style TargetType="Button">
             <Setter Property="Background" Value="#30363D"/>
             <Setter Property="Foreground" Value="White"/>
@@ -40,7 +69,28 @@
         </Style>
     </Window.Resources>
 
-    <Grid Margin="20">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="32"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <Border Grid.Row="0"
+                Background="#161B22"
+                BorderBrush="#30363D"
+                BorderThickness="0,0,0,1"
+                MouseLeftButtonDown="TitleBar_MouseLeftButtonDown"
+                Cursor="SizeAll">
+            <StackPanel Orientation="Horizontal"
+                        HorizontalAlignment="Right"
+                        VerticalAlignment="Center"
+                        Margin="0,0,6,0">
+                <Button Content="-" Click="MinimizeButton_Click" Style="{StaticResource TitleBarButtonStyle}"/>
+                <Button Content="X" Click="CloseButton_Click" Style="{StaticResource WindowCloseButtonStyle}" Margin="0"/>
+            </StackPanel>
+        </Border>
+
+        <Grid Grid.Row="1" Margin="20">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
@@ -77,10 +127,14 @@
                 <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
 
-            <Button x:Name="SkipButton" Grid.Column="0" Width="110" Height="34" HorizontalAlignment="Left" Content="나중에" Click="SkipButton_Click"/>
+            <Button x:Name="SkipButton" Grid.Column="0" Width="110" Height="34" HorizontalAlignment="Left" Content="건너뛰기" Click="SkipButton_Click"/>
             <Button x:Name="PrevButton" Grid.Column="1" Width="110" Height="34" Margin="8,0,0,0" Content="이전" Click="PrevButton_Click"/>
             <Button x:Name="NextButton" Grid.Column="2" Width="110" Height="34" Margin="8,0,0,0" Content="다음" Click="NextButton_Click"/>
             <Button x:Name="FinishButton" Grid.Column="3" Width="110" Height="34" Margin="8,0,0,0" Content="완료" Click="FinishButton_Click" Visibility="Collapsed"/>
         </Grid>
     </Grid>
+    </Grid>
 </Window>
+
+
+

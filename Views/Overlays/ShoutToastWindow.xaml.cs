@@ -21,7 +21,6 @@ namespace TWChatOverlay.Views
         private const double ScreenEdgePadding = 16;
         private const double BaseToastWidth = 420;
         private readonly DispatcherTimer _lifetimeTimer;
-        private readonly DispatcherTimer _foregroundTimer;
         private ChatSettings _settings;
         private bool _isClosing;
         private bool _isPreviewMode;
@@ -48,11 +47,6 @@ namespace TWChatOverlay.Views
                 StartCloseAnimation();
             };
 
-            _foregroundTimer = new DispatcherTimer
-            {
-                Interval = TimeSpan.FromMilliseconds(120)
-            };
-            _foregroundTimer.Tick += (_, _) => ApplyForegroundTopmostState();
         }
 
         public void SetSettings(ChatSettings settings)
@@ -67,13 +61,11 @@ namespace TWChatOverlay.Views
             RefreshMousePassthroughStyle(forceInteractive: isPreview);
             if (isPreview)
             {
-                _foregroundTimer.Stop();
                 ApplyTopmostState(true);
             }
             else if (IsVisible)
             {
-                ApplyForegroundTopmostState();
-                _foregroundTimer.Start();
+                ApplyTopmostState(true);
             }
         }
 
@@ -95,7 +87,7 @@ namespace TWChatOverlay.Views
             Show();
             UpdateLayout();
             Left = ClampLeftToWorkArea(centerX - (ActualWidth / 2.0));
-            ApplyForegroundTopmostState();
+            ApplyTopmostState(true);
 
             BeginAnimation(TopProperty, new DoubleAnimation
             {
@@ -113,7 +105,6 @@ namespace TWChatOverlay.Views
             _lifetimeTimer.Stop();
             _lifetimeTimer.Interval = TimeSpan.FromSeconds(Math.Max(1, Math.Min(300, durationSeconds)));
             _lifetimeTimer.Start();
-            _foregroundTimer.Start();
         }
 
         public void ShowPreview(double targetLeft, double targetTop)
@@ -162,7 +153,6 @@ namespace TWChatOverlay.Views
         protected override void OnClosed(EventArgs e)
         {
             _lifetimeTimer.Stop();
-            _foregroundTimer.Stop();
             SyncPositionToSettings(saveImmediately: true);
             base.OnClosed(e);
         }
@@ -243,17 +233,6 @@ namespace TWChatOverlay.Views
         {
             ToastText.FontSize = _settings.ShoutToastFontSize;
             ApplyLayoutConstraints();
-        }
-
-        private void ApplyForegroundTopmostState()
-        {
-            if (_isPreviewMode)
-            {
-                ApplyTopmostState(true);
-                return;
-            }
-
-            ApplyTopmostState(OverlayHelper.IsForegroundTalesWeaverWindow());
         }
 
         private void ApplyTopmostState(bool shouldTopmost)

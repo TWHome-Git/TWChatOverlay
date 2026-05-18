@@ -14,7 +14,8 @@ namespace TWChatOverlay.Services
 {
     public sealed record LogFeedItem(
         string Html,
-        bool IsRealTime);
+        bool IsRealTime,
+        bool IsStartupBackfill);
 
     public sealed class LogPipelineCheckpoint
     {
@@ -156,7 +157,7 @@ namespace TWChatOverlay.Services
                     {
                         // Startup backfill must flow through the same real-time pipeline
                         // so content/abandon/exp/item/shout analyzers are not skipped.
-                        ReadLog(isRealTimeOverride: true);
+                        ReadLog(isRealTimeOverride: true, isStartupBackfill: true);
                     }
 
                     AppLogger.Info($"Log file ready: {_logPath}, resume position={_lastPosition}.");
@@ -222,7 +223,7 @@ namespace TWChatOverlay.Services
         /// <summary>
         /// ?ㅼ떆媛꾩쑝濡?異붽???濡쒓렇瑜?利앸텇?쇰줈 ?쎌뒿?덈떎.
         /// </summary>
-        public void ReadLog(bool? isRealTimeOverride = null)
+        public void ReadLog(bool? isRealTimeOverride = null, bool isStartupBackfill = false)
         {
             lock (_lockObj)
             {
@@ -272,7 +273,8 @@ namespace TWChatOverlay.Services
                     string newContent = DecodeIncrementalBytes(buffer, totalRead);
                     ProcessIncrementalContent(
                         newContent,
-                        isRealTimeOverride ?? _experienceService.IsReady);
+                        isRealTimeOverride ?? _experienceService.IsReady,
+                        isStartupBackfill);
                     SaveCheckpoint();
                 }
                 catch (Exception ex)
@@ -297,7 +299,7 @@ namespace TWChatOverlay.Services
         /// <summary>
         /// ?쎌뼱???먮Ц HTML??<br> ?쒓렇 ?⑥쐞濡?遺꾨━???대깽?몃? 諛쒖깮?쒗궢?덈떎.
         /// </summary>
-        private void ProcessRawContent(string content, bool isRealTime, int takeLastCount = -1)
+        private void ProcessRawContent(string content, bool isRealTime, int takeLastCount = -1, bool isStartupBackfill = false)
         {
             if (string.IsNullOrWhiteSpace(content)) return;
 
@@ -322,7 +324,7 @@ namespace TWChatOverlay.Services
                 if (!string.IsNullOrWhiteSpace(logTimeText))
                     _lastLogTimeText = logTimeText;
 
-                OnNewLogRead?.Invoke(new LogFeedItem(normalized, isRealTime));
+                OnNewLogRead?.Invoke(new LogFeedItem(normalized, isRealTime, isStartupBackfill));
             }
         }
 
@@ -348,7 +350,7 @@ namespace TWChatOverlay.Services
             return charsUsed <= 0 ? string.Empty : new string(chars, 0, charsUsed);
         }
 
-        private void ProcessIncrementalContent(string content, bool isRealTime)
+        private void ProcessIncrementalContent(string content, bool isRealTime, bool isStartupBackfill)
         {
             if (string.IsNullOrEmpty(content))
                 return;
@@ -363,7 +365,7 @@ namespace TWChatOverlay.Services
 
             string readyContent = combined.Substring(0, completeEnd);
             _pendingRawContent = completeEnd < combined.Length ? combined.Substring(completeEnd) : string.Empty;
-            ProcessRawContent(readyContent, isRealTime);
+            ProcessRawContent(readyContent, isRealTime, isStartupBackfill: isStartupBackfill);
         }
 
         private static int FindLastCompleteLogBoundary(string content)

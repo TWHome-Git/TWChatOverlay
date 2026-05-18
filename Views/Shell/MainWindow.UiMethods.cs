@@ -79,7 +79,7 @@ namespace TWChatOverlay.Views
 
             if (forceRealTime)
             {
-                _uiLogBatchDispatcher.Enqueue(payload, true, ProcessUiLogBatch);
+                _uiLogBatchDispatcher.Enqueue(payload, true, false, ProcessUiLogBatch);
                 return;
             }
 
@@ -181,11 +181,8 @@ namespace TWChatOverlay.Views
             var preset = _settings.GetLastSelectedPreset();
             if (preset == null) return;
 
-            if (preset.HasMarginData)
-            {
-                _settings.LineMarginLeft = preset.LineMarginLeft;
-                _settings.LineMargin = preset.LineMargin;
-            }
+            _settings.LineMarginLeft = preset.Left;
+            _settings.LineMargin = preset.Top;
 
             _settings.UpdatePositionDisplay(_settings.LineMarginLeft, _settings.LineMargin);
         }

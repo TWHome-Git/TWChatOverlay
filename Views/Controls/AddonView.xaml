@@ -14,7 +14,10 @@
     </UserControl.Resources>
     <ScrollViewer VerticalScrollBarVisibility="Auto" Style="{StaticResource OverlayScrollViewerStyle}">
         <Border Background="#F51E1E1E" Padding="15">
-            <TabControl Style="{StaticResource SettingsTabControlStyle}" Margin="0,1,0,0">
+            <TabControl x:Name="AddonTabControl"
+                        Style="{StaticResource SettingsTabControlStyle}"
+                        Margin="0,1,0,0"
+                        SelectionChanged="AddonTabControl_SelectionChanged">
                 <TabItem Header="키워드 알림" Style="{StaticResource SettingsTabItemStyle}" Margin="0,0,0,0">
                     <StackPanel Margin="8">
                         <Border Style="{StaticResource SettingsBorderStyle}">
@@ -81,7 +84,7 @@
                                           IsChecked="{Binding EnableExperienceLimitAlert, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                           Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
 
-                                <TextBlock Text="* 설정 창을 열면 알림 위치를 드래그로 조정할 수 있습니다."
+                                <TextBlock Text="* 추가 기능 창에서 알림 위치를 드래그로 조정할 수 있습니다."
                                            Foreground="#888"
                                            FontSize="11"
                                            Margin="0,6,0,15"/>
@@ -207,6 +210,25 @@
                                 <Border Height="1"
                                         Background="#333"
                                         Margin="0,14,0,14"/>
+                                <CheckBox Content="반사 패턴 알림"
+                                          IsChecked="{Binding EnableReflectionPatternAlert}"
+                                          Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
+                                <StackPanel Margin="6,6,0,8">
+                                    <TextBlock Text="{Binding ReflectionPatternAlertVolumePercent, StringFormat=반사 패턴 알림 볼륨: {0:F0}%}"
+                                               Foreground="White"
+                                               FontSize="12"
+                                               Margin="0,0,0,6"/>
+                                    <Slider Minimum="0"
+                                            Maximum="100"
+                                            TickFrequency="10"
+                                            IsSnapToTickEnabled="True"
+                                            Tag="Reflection.wav"
+                                            ValueChanged="PreviewSoundSlider_ValueChanged"
+                                            Value="{Binding ReflectionPatternAlertVolumePercent, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                </StackPanel>
+                                <Border Height="1"
+                                        Background="#333"
+                                        Margin="0,14,0,14"/>
 
                                 <TextBlock Style="{StaticResource SectionHeaderStyle}"><Run Text="던전 카운터"/></TextBlock>
                                 <CheckBox Content="어밴던로드 횟수 알리미"
@@ -238,7 +260,7 @@
                                 <TextBlock Text="* 1초부터 300초까지 입력할 수 있습니다."
                                            Style="{StaticResource HintTextStyle}"/>
 
-                                <TextBlock Text="* 설정 창을 열면 드래그로 알림 위치를 옮길 수 있습니다."
+                                <TextBlock Text="* 추가 기능 창에서 드래그로 알림 위치를 옮길 수 있습니다."
                                            Style="{StaticResource HintTextStyle}"/>
                             </StackPanel>
                         </Border>
@@ -393,7 +415,7 @@
                                                Style="{StaticResource HintTextStyle}"/>
                                 </StackPanel>
 
-                                <TextBlock Text="* 설정 창을 열면 드래그로 알림 위치를 옮길 수 있습니다."
+                                <TextBlock Text="* 추가 기능 창에서 드래그로 알림 위치를 옮길 수 있습니다."
                                            Style="{StaticResource HintTextStyle}"/>
                             </StackPanel>
                         </Border>
@@ -432,7 +454,7 @@
 
                                 <TextBlock Text="* 버프 추적 알림은 실제 버프 시간 추적을 켜고 끕니다."
                                            Style="{StaticResource HintTextStyle}"/>
-                                <TextBlock Text="* 설정 창을 열면 드래그로 알림 위치를 옮길 수 있습니다."
+                                <TextBlock Text="* 추가 기능 창에서 드래그로 알림 위치를 옮길 수 있습니다."
                                            Style="{StaticResource HintTextStyle}"/>
                             </StackPanel>
                         </Border>

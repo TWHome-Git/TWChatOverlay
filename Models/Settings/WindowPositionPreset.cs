@@ -24,13 +24,13 @@
         public double Top { get; set; }
 
         /// <summary>
-        /// 게임 창 기준 X 오프셋(LineMarginLeft)
+        /// 오버레이 X 좌표(LineMarginLeft)
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyOrder(5)]
         public double LineMarginLeft { get; set; }
 
         /// <summary>
-        /// 게임 창 하단 기준 Y 오프셋(LineMargin)
+        /// 오버레이 Y 좌표(LineMargin)
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyOrder(6)]
         public double LineMargin { get; set; }

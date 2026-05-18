@@ -146,8 +146,8 @@ namespace TWChatOverlay.Services
                     var result = new List<string>();
                     foreach (Match match in TargetLineRegex.Matches(html))
                     {
-                        string id = match.Groups["name"].Value.Trim();
-                        if (string.IsNullOrWhiteSpace(id))
+                        string id = match.Groups["name"].Value;
+                        if (id.Length == 0)
                             continue;
                         if (!result.Contains(id, StringComparer.Ordinal))
                             result.Add(id);

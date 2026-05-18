@@ -71,8 +71,9 @@
 
                         <Button Grid.Column="1"
                                 Content="X"
-                                Width="34"
-                                Style="{StaticResource TabActionButtonStyle}"
+                                Style="{StaticResource WindowCloseButtonStyle}"
+                                HorizontalAlignment="Right"
+                                VerticalAlignment="Center"
                                 ToolTip="채팅창 끄기"
                                 Click="CloseChat_Click"/>
                     </Grid>

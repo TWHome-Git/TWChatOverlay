@@ -17,13 +17,11 @@ namespace TWChatOverlay.Views
             _hotKeyService.Unregister(HotKeyService.EXIT_HOTKEY_ID);
             _hotKeyService.Unregister(HotKeyService.TOGGLE_OVERLAY_ID);
             _hotKeyService.Unregister(HotKeyService.TOGGLE_ADDON_ID);
-            _hotKeyService.Unregister(HotKeyService.TOGGLE_ALWAYS_VISIBLE_ID);
             _hotKeyService.Unregister(HotKeyService.TOGGLE_DAILY_WEEKLY_CONTENT_ID);
 
             RegisterHotKeyOptional(HotKeyService.EXIT_HOTKEY_ID, _settings.ExitHotKey);
             RegisterHotKeyOptional(HotKeyService.TOGGLE_OVERLAY_ID, _settings.ToggleOverlayHotKey);
             RegisterHotKeyOptional(HotKeyService.TOGGLE_ADDON_ID, _settings.ToggleAddonHotKey);
-            RegisterHotKeyOptional(HotKeyService.TOGGLE_ALWAYS_VISIBLE_ID, _settings.ToggleAlwaysVisibleHotKey);
             RegisterHotKeyOptional(HotKeyService.TOGGLE_DAILY_WEEKLY_CONTENT_ID, _settings.ToggleDailyWeeklyContentHotKey);
 
             _hotKeyService.Unregister(HotKeyService.TOGGLE_ETA_RANKING_ID);

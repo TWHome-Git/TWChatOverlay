@@ -19,6 +19,7 @@ namespace TWChatOverlay
             public bool IsSuccess { get; set; } = false;
             public bool IsHighlight { get; set; } = false;
             public bool IsMagicCircleAlert { get; set; } = false;
+            public bool IsReflectionPatternAlert { get; set; } = false;
             public long GainedExp { get; set; } = 0;
             public string? EtosImagePath { get; set; } = null;
             public bool IsTrackedItemDrop { get; set; } = false;
@@ -26,6 +27,8 @@ namespace TWChatOverlay
             public ItemDropGrade TrackedItemGrade { get; set; } = ItemDropGrade.Normal;
             public int TrackedItemCount { get; set; } = 1;
             public string? SenderId { get; set; } = null;
+            public string? RawSenderId { get; set; } = null;
+            public bool HasLeadingBodyWhitespace { get; set; } = false;
         }
 
         public static ParseResult ParseLine(string html, ChatSettings settings)

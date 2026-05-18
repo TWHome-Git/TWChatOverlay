@@ -31,23 +31,27 @@
                     CornerRadius="10"
                     Padding="10"
                     MouseLeftButtonDown="TitleBar_MouseLeftButtonDown">
-                <DockPanel LastChildFill="True">
-                    <Button DockPanel.Dock="Right"
-                            Content="닫기"
-                            Width="48"
-                            Height="28"
-                            Click="Close_Click"/>
-                    <StackPanel>
+                <Grid>
+                    <StackPanel HorizontalAlignment="Center"
+                                VerticalAlignment="Center">
                         <TextBlock Text="어밴던로드 주간 합계"
                                    Foreground="White"
                                    FontSize="16"
-                                   FontWeight="Bold"/>
+                                   FontWeight="Bold"
+                                   HorizontalAlignment="Center"
+                                   TextAlignment="Center"/>
                         <TextBlock Text="{Binding WeekText}"
                                    Foreground="#C9D1D9"
                                    FontSize="12"
-                                   Margin="0,2,0,0"/>
+                                   Margin="0,2,0,0"
+                                   HorizontalAlignment="Center"
+                                   TextAlignment="Center"/>
                     </StackPanel>
-                </DockPanel>
+                    <Button HorizontalAlignment="Right"
+                            Click="Close_Click"
+                            Content="닫기"
+                            Style="{StaticResource WindowCloseButtonStyle}"/>
+                </Grid>
             </Border>
 
             <Border Grid.Row="1"
