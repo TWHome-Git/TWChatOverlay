@@ -118,6 +118,10 @@ namespace TWChatOverlay.Views
             _settings.PropertyChanged += Settings_PropertyChanged;
             ChatWindowHub.BuffersChanged += ChatWindowHub_BuffersChanged;
             AttachToMainWindow();
+            Activated += (_, _) => Dispatcher.BeginInvoke(new Action(EnsureCloneTopmost), DispatcherPriority.Background);
+            Deactivated += (_, _) => Dispatcher.BeginInvoke(new Action(EnsureCloneTopmost), DispatcherPriority.Background);
+            StateChanged += (_, _) => Dispatcher.BeginInvoke(new Action(EnsureCloneTopmost), DispatcherPriority.Background);
+            IsVisibleChanged += (_, _) => Dispatcher.BeginInvoke(new Action(EnsureCloneTopmost), DispatcherPriority.Background);
             _tabAutoHideTimer.Tick += (_, _) => HideCloneTabs();
 
             ApplySizeFromMainWindow();
@@ -218,6 +222,8 @@ namespace TWChatOverlay.Views
 
             bool shouldTopmost = _mainWindow.Topmost;
             Topmost = shouldTopmost;
+            if (shouldTopmost)
+                EnsureCloneTopmost();
         }
 
         private void HandleLocationChanged()
@@ -643,6 +649,24 @@ namespace TWChatOverlay.Views
 
             if (mainWindow.Height > 0)
                 Height = mainWindow.Height;
+        }
+
+        private void EnsureCloneTopmost()
+        {
+            if (!IsVisible || _mainWindow == null || !_mainWindow.IsVisible || _mainWindow.WindowState == WindowState.Minimized)
+                return;
+
+            try
+            {
+                if (!_mainWindow.Topmost)
+                    return;
+
+                Topmost = true;
+                TopmostWindowHelper.BringToTopmost(this);
+            }
+            catch
+            {
+            }
         }
     }
 }

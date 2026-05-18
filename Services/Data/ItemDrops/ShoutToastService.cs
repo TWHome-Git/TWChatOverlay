@@ -1,6 +1,7 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Media;
 using TWChatOverlay.Models;
@@ -38,6 +39,14 @@ namespace TWChatOverlay.Services
                 double top = topBase + ((ToastHeight + Gap) * (ActiveToasts.Count - 1 + previewOffset));
                 toast.ShowAnimated(left, top, settings.ShoutToastDurationSeconds);
             }));
+        }
+
+        public static void Show(LogParser.ParseResult parseResult, ChatSettings settings)
+        {
+            if (parseResult == null || settings == null || !settings.ShowShoutToastPopup)
+                return;
+
+            Show(BuildMessageWithEta(parseResult), settings);
         }
 
         public static void ShowPositionPreview(ChatSettings settings, bool force = false)
@@ -213,6 +222,49 @@ namespace TWChatOverlay.Services
             catch { }
 
             return new FontFamily("Malgun Gothic");
+        }
+
+        private static string BuildMessageWithEta(LogParser.ParseResult parseResult)
+        {
+            string message = parseResult.FormattedText ?? string.Empty;
+            string lookupSenderId = parseResult.RawSenderId ?? parseResult.SenderId ?? string.Empty;
+            string displaySenderId = parseResult.SenderId ?? parseResult.RawSenderId ?? string.Empty;
+
+            if (string.IsNullOrWhiteSpace(message) || lookupSenderId.Length == 0 || displaySenderId.Length == 0)
+                return message;
+            if (!EtaProfileResolver.TryGetProfile(lookupSenderId, out var profile))
+                return message;
+
+            string suffix = $"[{profile.Level}]";
+
+            if (Regex.IsMatch(message, $@"\[{Regex.Escape(displaySenderId)}\]\s*$"))
+            {
+                return Regex.Replace(
+                    message,
+                    $@"\[{Regex.Escape(displaySenderId)}\]\s*$",
+                    $"[{displaySenderId}{suffix}]");
+            }
+
+            int closingBracketIndex = message.IndexOf(']');
+            if (closingBracketIndex < 0 || closingBracketIndex + 1 >= message.Length)
+                return message;
+
+            string body = message[(closingBracketIndex + 1)..].TrimStart();
+            int colon = body.IndexOf(':');
+            if (colon <= 0)
+                return message;
+
+            string left = body.Substring(0, colon);
+            int idx = left.LastIndexOf(displaySenderId, StringComparison.Ordinal);
+            if (idx < 0)
+                return message;
+
+            int bodySenderIndex = message.IndexOf(left, StringComparison.Ordinal);
+            if (bodySenderIndex < 0)
+                return message;
+
+            int insertIndex = bodySenderIndex + idx + displaySenderId.Length;
+            return message.Substring(0, insertIndex) + suffix + message.Substring(insertIndex);
         }
     }
 }

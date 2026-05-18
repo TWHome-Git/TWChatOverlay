@@ -308,7 +308,6 @@ namespace TWChatOverlay.Services
 
             return null;
         }
-
         private sealed class EtaRankingRow
         {
             [JsonPropertyName("CharacterCode")]

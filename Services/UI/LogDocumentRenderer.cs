@@ -99,12 +99,30 @@ namespace TWChatOverlay.Services
                     $"[{displaySenderId}{suffix}]");
             }
 
-            int colon = text.IndexOf(':');
+            if (!TrySplitTimestampAndBody(text, out string body))
+                return text;
+
+            int colon = body.IndexOf(':');
             if (colon <= 0) return text;
-            string left = text.Substring(0, colon);
+            string left = body.Substring(0, colon);
             int idx = left.LastIndexOf(displaySenderId, StringComparison.Ordinal);
             if (idx < 0) return text;
-            return text.Substring(0, idx + displaySenderId.Length) + suffix + text.Substring(idx + displaySenderId.Length);
+            int bodySenderIndex = text.IndexOf(left, StringComparison.Ordinal);
+            if (bodySenderIndex < 0) return text;
+
+            int insertIndex = bodySenderIndex + idx + displaySenderId.Length;
+            return text.Substring(0, insertIndex) + suffix + text.Substring(insertIndex);
+        }
+
+        private static bool TrySplitTimestampAndBody(string text, out string body)
+        {
+            body = string.Empty;
+            int closingBracketIndex = text.IndexOf(']');
+            if (closingBracketIndex < 0 || closingBracketIndex + 1 >= text.Length)
+                return false;
+
+            body = text[(closingBracketIndex + 1)..].TrimStart();
+            return body.Length > 0;
         }
     }
 }

@@ -238,7 +238,7 @@ namespace TWChatOverlay.Views
                     }
 
                     if (_settings.ShowShoutToastPopup && isActualShout && allowLiveShoutActions)
-                        ShoutToastService.Show(parseResult.FormattedText, _settings);
+                        ShoutToastService.Show(parseResult, _settings);
                 }
             }
 
@@ -288,9 +288,9 @@ namespace TWChatOverlay.Views
             {
                 if (_logAnalysisService.ShouldRenderToTab(parseResult, _currentTabTag))
                 {
-                    bool suppressOverlayText = suppressChatLine || !string.IsNullOrWhiteSpace(parseResult.EtosImagePath);
+                    bool suppressOverlayText = suppressChatLine || !string.IsNullOrWhiteSpace(parseResult.EtosImagePath) || ShouldSuppressEtosChatLine(parseResult);
 
-                    if (!analysis.ShouldShowEtosDirection && !suppressOverlayText)
+                    if (!suppressOverlayText)
                         AddToUI(parseResult, isRealTime: context.IsRealTime, deferScroll: context.DeferUiScroll);
                 }
             }
@@ -309,6 +309,31 @@ namespace TWChatOverlay.Views
         private static bool IsActualShoutSource(string? formattedText)
             => !string.IsNullOrWhiteSpace(formattedText) &&
                ShoutToastSourceRegex.IsMatch(formattedText);
+
+        private static bool ShouldSuppressEtosChatLine(LogParser.ParseResult parseResult)
+        {
+            if (parseResult == null || string.IsNullOrWhiteSpace(parseResult.FormattedText))
+                return false;
+
+            if (parseResult.Category is not (ChatCategory.Normal or ChatCategory.NormalSelf or ChatCategory.Team))
+                return false;
+
+            return IsEtosEtosSender(parseResult);
+        }
+
+        private static bool IsEtosEtosSender(LogParser.ParseResult parseResult)
+        {
+            if (parseResult == null)
+                return false;
+
+            string sender = parseResult.SenderId ?? parseResult.RawSenderId ?? string.Empty;
+            if (string.IsNullOrWhiteSpace(sender))
+                return false;
+
+            string lower = sender.ToLowerInvariant();
+            return lower.Contains("수색대장") &&
+                   lower.Contains("에토스");
+        }
 
         private void ResetHiddenChatContinuationState()
         {
@@ -379,6 +404,24 @@ namespace TWChatOverlay.Views
             if (_pendingHiddenChatContinuationFamily == HiddenChatContinuationFamily.None)
                 return false;
 
+            if (_pendingHiddenChatContinuationFamily == HiddenChatContinuationFamily.Club)
+            {
+                if (!TrySplitTimestampAndBody(parseResult.FormattedText, out string clubTimestamp, out _))
+                {
+                    ResetHiddenChatContinuationState();
+                    return false;
+                }
+
+                if (parseResult.Category != ChatCategory.Club ||
+                    !string.Equals(clubTimestamp, _pendingHiddenChatContinuationTimestamp, StringComparison.Ordinal))
+                {
+                    ResetHiddenChatContinuationState();
+                    return false;
+                }
+
+                return true;
+            }
+
             if (!parseResult.HasLeadingBodyWhitespace)
             {
                 ResetHiddenChatContinuationState();
@@ -430,11 +473,10 @@ namespace TWChatOverlay.Views
             if (!string.IsNullOrWhiteSpace(parseResult.EtosImagePath))
                 return true;
 
-            string text = parseResult.FormattedText;
             if ((parseResult.Category == ChatCategory.Normal ||
                  parseResult.Category == ChatCategory.NormalSelf ||
                  parseResult.Category == ChatCategory.Team) &&
-                text.Contains("에토스", StringComparison.Ordinal))
+                IsEtosEtosSender(parseResult))
                 return true;
 
             return ShouldHideChatLine(parseResult);
@@ -618,12 +660,30 @@ namespace TWChatOverlay.Views
                     $"[{displaySenderId}{suffix}]");
             }
 
-            int colon = text.IndexOf(':');
+            if (!TrySplitTimestampAndBody(text, out string body))
+                return text;
+
+            int colon = body.IndexOf(':');
             if (colon <= 0) return text;
-            string left = text.Substring(0, colon);
+            string left = body.Substring(0, colon);
             int idx = left.LastIndexOf(displaySenderId, StringComparison.Ordinal);
             if (idx < 0) return text;
-            return text.Substring(0, idx + displaySenderId.Length) + suffix + text.Substring(idx + displaySenderId.Length);
+            int bodySenderIndex = text.IndexOf(left, StringComparison.Ordinal);
+            if (bodySenderIndex < 0) return text;
+
+            int insertIndex = bodySenderIndex + idx + displaySenderId.Length;
+            return text.Substring(0, insertIndex) + suffix + text.Substring(insertIndex);
+        }
+
+        private static bool TrySplitTimestampAndBody(string text, out string body)
+        {
+            body = string.Empty;
+            int closingBracketIndex = text.IndexOf(']');
+            if (closingBracketIndex < 0 || closingBracketIndex + 1 >= text.Length)
+                return false;
+
+            body = text[(closingBracketIndex + 1)..].TrimStart();
+            return body.Length > 0;
         }
 
         private void ScrollLogDisplayToEndAfterLayout()
