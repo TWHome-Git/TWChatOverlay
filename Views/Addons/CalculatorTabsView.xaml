@@ -1,4 +1,4 @@
-<UserControl x:Class="TWChatOverlay.Views.Addons.CalculatorTabsView"
+﻿<UserControl x:Class="TWChatOverlay.Views.Addons.CalculatorTabsView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -28,7 +28,7 @@
                     Background="Transparent"
                     BorderThickness="0"
                     SelectionChanged="CalculatorTabControl_SelectionChanged">
-            <TabItem Header="기존 계수 계산기" Tag="Coefficient" Style="{StaticResource CalculatorTabItemStyle}" Margin="0,0,0,0"/>
+            <TabItem Header="계수 계산기" Tag="Coefficient" Style="{StaticResource CalculatorTabItemStyle}" Margin="0,0,0,0"/>
             <TabItem Header="대미지 계산기" Tag="Damage" Style="{StaticResource CalculatorTabItemStyle}" Margin="0,0,0,0"/>
         </TabControl>
 

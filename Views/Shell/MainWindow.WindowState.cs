@@ -524,7 +524,7 @@ namespace TWChatOverlay.Views
                 }
                 else if (_dailyWeeklyContentOverlay?.IsVisible == true)
                 {
-                    _dailyWeeklyContentOverlay.Hide();
+                    CloseDailyWeeklyWindow();
                 }
             }
             catch (Exception ex)

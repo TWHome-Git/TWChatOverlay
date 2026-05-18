@@ -22,7 +22,7 @@
                 <Setter Property="Margin" Value="0,0,0,8"/>
             </Style>
             <Style x:Key="FieldLabelStyle" TargetType="TextBlock">
-                <Setter Property="Foreground" Value="#8B949E"/>
+                <Setter Property="Foreground" Value="White"/>
                 <Setter Property="FontSize" Value="12"/>
                 <Setter Property="VerticalAlignment" Value="Center"/>
             </Style>
@@ -53,7 +53,7 @@
                 <Setter Property="Margin" Value="0,0,0,8"/>
             </Style>
             <Style x:Key="SectionLabelStyle" TargetType="TextBlock">
-                <Setter Property="Foreground" Value="#8B949E"/>
+                <Setter Property="Foreground" Value="White"/>
                 <Setter Property="FontSize" Value="12"/>
                 <Setter Property="VerticalAlignment" Value="Center"/>
             </Style>
@@ -175,9 +175,10 @@
                                           SelectionChanged="MonsterSelectComboBox_SelectionChanged"/>
                                 <TextBlock x:Name="MonsterSummaryText"
                                            Margin="14,0,0,0"
-                                           Style="{StaticResource FieldLabelStyle}"
+                                           Foreground="#FFDE59"
+                                           FontWeight="SemiBold"
                                            VerticalAlignment="Center"
-                                           Text="대미지 -"/>
+                                           Text="일반 대미지 - | 강타 대미지 - | 방무 패시브 대미지 -"/>
                             </WrapPanel>
 
                             <StackPanel Visibility="Collapsed">
@@ -206,15 +207,15 @@
                                     <ColumnDefinition Width="1*"/>
                                     <ColumnDefinition Width="1.1*"/>
                                     <ColumnDefinition Width="1.1*"/>
-                                    <ColumnDefinition Width="1.05*"/>
+                                    <ColumnDefinition Width="1.1*"/>
                                 </Grid.ColumnDefinitions>
 
                                 <Border Grid.Column="0" Style="{StaticResource SectionCardStyle}" Margin="0,0,8,0">
                                     <StackPanel>
-                                        <TextBlock Style="{StaticResource SectionTitleStyle}" Text="스킬 정보"/>
+                                        <TextBlock Style="{StaticResource SectionTitleStyle}" Text="기본 정보"/>
                                         <Grid Margin="0,4,0,0">
                                             <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="130"/>
+                                                <ColumnDefinition Width="100"/>
                                                 <ColumnDefinition Width="*"/>
                                             </Grid.ColumnDefinitions>
                                             <Grid.RowDefinitions>
@@ -239,7 +240,7 @@
                                                      LostFocus="NumberTextBox_LostFocus"
                                                      TextChanged="BasicOption_TextChanged"/>
 
-                                            <TextBlock Grid.Row="1" Grid.Column="0" Style="{StaticResource SectionLabelStyle}" Text="크리배율" Margin="0,6,0,0"/>
+                                            <TextBlock Grid.Row="1" Grid.Column="0" Style="{StaticResource SectionLabelStyle}" Text="크리 배율" Margin="0,6,0,0"/>
                                             <TextBox x:Name="CriticalMultiplierTextBox"
                                                      Grid.Row="1"
                                                      Grid.Column="1"
@@ -354,19 +355,19 @@
 
                             <Grid Margin="0,0,0,0">
                                 <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="1.2*"/>
+                                    <ColumnDefinition Width="1.3*"/>
                                     <ColumnDefinition Width="0.8*"/>
-                                    <ColumnDefinition Width="1.2*"/>
-                                    <ColumnDefinition Width="1.0*"/>
+                                    <ColumnDefinition Width="1.1*"/>
+                                    <ColumnDefinition Width="1.1*"/>
                                 </Grid.ColumnDefinitions>
 
                                 <Border Grid.Column="0" Style="{StaticResource SectionCardStyle}" Margin="0,0,8,8">
                                     <StackPanel>
-                                        <TextBlock Style="{StaticResource SectionTitleStyle}" Text="기본 정보"/>
+                                        <TextBlock Style="{StaticResource SectionTitleStyle}" Text="추가 정보"/>
 
                                         <Grid Margin="0,4,0,0">
                                             <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="160"/>
+                                                <ColumnDefinition Width="150"/>
                                                 <ColumnDefinition Width="*"/>
                                             </Grid.ColumnDefinitions>
                                             <Grid.RowDefinitions>
@@ -422,7 +423,7 @@
 
                                         <TextBlock x:Name="Group5SummaryText"
                                                    Margin="0,10,0,4"
-                                                   Foreground="White"
+                                                   Foreground="#FFDE59"
                                                    FontSize="12"
                                                    FontWeight="SemiBold"
                                                    Text="계열 공격력 0%"/>
@@ -430,7 +431,7 @@
 
                                         <TextBlock x:Name="Group11SummaryText"
                                                    Margin="0,10,0,4"
-                                                   Foreground="White"
+                                                   Foreground="#FFDE59"
                                                    FontSize="12"
                                                    FontWeight="SemiBold"
                                                    Text="추가 대미지 0%"/>
@@ -464,18 +465,24 @@
                                         </StackPanel>
 
                                         <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
-                                            <TextBlock Text="캐릭터 고유 값 " Foreground="#8B949E" FontSize="12" VerticalAlignment="Center"/>
-                                            <TextBlock x:Name="Group11TraitValueText" Text="0" Foreground="White" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                            <TextBlock Text="추가 대미지 " Foreground="#8B949E" FontSize="12" VerticalAlignment="Center"/>
+                                            <TextBlock x:Name="Group11TraitValueText" Text="0%" Foreground="White" FontWeight="SemiBold" VerticalAlignment="Center"/>
                                         </StackPanel>
                                     </StackPanel>
                                 </Border>
 
-                                <Border Grid.Column="2" Style="{StaticResource SectionCardStyle}" Margin="0,0,8,8">
+                                <Border Grid.Column="2" Style="{StaticResource SectionCardStyle}" Margin="0,0,8,8" MinHeight="210">
                                     <StackPanel>
                                         <TextBlock Style="{StaticResource SectionTitleStyle}" Text="최종 대미지"/>
+                                        <TextBlock x:Name="FinalDamageSummaryText"
+                                                   Margin="0,2,0,6"
+                                                   Foreground="#FFDE59"
+                                                   FontSize="12"
+                                                   FontWeight="SemiBold"
+                                                   Text="최종 대미지 0%"/>
                                         <Grid Margin="0,4,0,0">
                                             <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="160"/>
+                                                <ColumnDefinition Width="100"/>
                                                 <ColumnDefinition Width="*"/>
                                             </Grid.ColumnDefinitions>
                                             <Grid.RowDefinitions>
@@ -539,12 +546,18 @@
                                     </StackPanel>
                                 </Border>
 
-                                <Border Grid.Column="3" Style="{StaticResource SectionCardStyle}" Margin="0,0,0,8">
+                                <Border Grid.Column="3" Style="{StaticResource SectionCardStyle}" Margin="0,0,0,8" MinHeight="210">
                                     <StackPanel>
                                         <TextBlock Style="{StaticResource SectionTitleStyle}" Text="치명타 배율"/>
+                                        <TextBlock x:Name="CriticalDamageSummaryText"
+                                                   Margin="0,2,0,6"
+                                                   Foreground="#FFDE59"
+                                                   FontSize="12"
+                                                   FontWeight="SemiBold"
+                                                   Text="치명타 배율 0%"/>
                                         <Grid Margin="0,4,0,0">
                                             <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="160"/>
+                                                <ColumnDefinition Width="100"/>
                                                 <ColumnDefinition Width="*"/>
                                             </Grid.ColumnDefinitions>
                                             <Grid.RowDefinitions>
@@ -574,6 +587,7 @@
                                                       Margin="0,8,0,0"
                                                       Style="{StaticResource CompactInlineComboStyle}"
                                                       HorizontalAlignment="Right"
+                                                      Width="80"
                                                       SelectedIndex="0"
                                                       SelectionChanged="JudgementComboBox_SelectionChanged"/>
 
@@ -584,6 +598,7 @@
                                                       Margin="0,8,0,0"
                                                       Style="{StaticResource CompactInlineComboStyle}"
                                                       HorizontalAlignment="Right"
+                                                      Width="80"
                                                       SelectedIndex="0"
                                                       SelectionChanged="EtaLinkCriticalComboBox_SelectionChanged"/>
                                         </Grid>
