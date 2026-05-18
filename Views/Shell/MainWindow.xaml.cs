@@ -190,7 +190,11 @@ namespace TWChatOverlay.Views
             };
             this.Deactivated += (s, e) => ReleaseMouseForce();
             this.Activated += (s, e) => ReleaseMouseForce();
+            this.Activated += (_, _) => Dispatcher.BeginInvoke(new Action(EnsureMainWindowTopmost), DispatcherPriority.Background);
+            this.Deactivated += (_, _) => Dispatcher.BeginInvoke(new Action(EnsureMainWindowTopmost), DispatcherPriority.Background);
             this.StateChanged += MainWindow_StateChanged;
+            this.StateChanged += (_, _) => Dispatcher.BeginInvoke(new Action(EnsureMainWindowTopmost), DispatcherPriority.Background);
+            this.IsVisibleChanged += (_, _) => Dispatcher.BeginInvoke(new Action(EnsureMainWindowTopmost), DispatcherPriority.Background);
             this.Closed += MainWindow_Closed;
             AppLogger.Info("Main window initialized.");
 
@@ -884,6 +888,22 @@ namespace TWChatOverlay.Views
             catch (Exception ex)
             {
                 AppLogger.Warn("Display prewarm failed.", ex);
+            }
+        }
+
+        private void EnsureMainWindowTopmost()
+        {
+            if (!IsVisible || WindowState == WindowState.Minimized)
+                return;
+
+            try
+            {
+                Topmost = true;
+                TopmostWindowHelper.BringToTopmost(this);
+            }
+            catch (Exception ex)
+            {
+                AppLogger.Warn("Failed to reassert main window topmost state.", ex);
             }
         }
 

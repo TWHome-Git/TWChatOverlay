@@ -109,12 +109,12 @@ namespace TWChatOverlay.Services.LogAnalysis
             if (colonIndex <= 0)
                 return null;
 
-            string leftPart = chatContent.Substring(0, colonIndex);
+            string leftPart = chatContent.Substring(0, colonIndex).TrimEnd();
             int nameStart = leftPart.LastIndexOf(']');
             nameStart = nameStart >= 0 ? nameStart + 1 : 0;
 
             string userId = leftPart.Substring(nameStart);
-            return userId.Length == 0 ? null : userId;
+            return string.IsNullOrWhiteSpace(userId) ? null : userId;
         }
 
         private static bool IsIgnoredNormalMessage(string rawContent)
