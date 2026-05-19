@@ -53,6 +53,8 @@ namespace TWChatOverlay.Models
         public double SkillMultiplier { get; set; }
         public double CriticalMultiplier { get; set; }
         public double HitCount { get; set; } = 1;
+        public double MiddleDelay { get; set; } = 1;
+        public double SienaMiddleDelay { get; set; }
         public double EtaLevel { get; set; } = 1;
         public double EtaAwakeningDamageIncrease { get; set; }
         public double ElementValue { get; set; } = 210;

@@ -16,7 +16,8 @@
             double DamageAmplification,
             double AttackPower,
             double AdditionalDamage,
-            double SkillReduction);
+            double SkillReduction,
+            double SkillDelay);
 
         public sealed record DamageReferenceSet(
             EtaLevelEntry[] EtaLevels,
@@ -176,28 +177,28 @@
 
         public static readonly CharacterModifierEntry[] CharacterModifierEntries =
         {
-            // 적이 받는 피해 증가, 공격 피해량 증가, 추가 피해량, 능력치 감소
-            new("아나이스 마법", 0, 3, 0, 0),
-            new("아나이스 비호", 20, 23, 0, 0),
-            new("아나이스 파괴", 10, 3, 0, 0),
-            new("예프넨", 10, 0, 0, 0),
-            new("이자크", 5, 5, 0, 0),
-            new("이스핀", 15, 8, 0, 10),
-            new("이솔렛", 0, 20, 0, 20),
-            new("클로에", 10, 7, 30, 10),
-            new("시벨린", 10, 15, 0, 10),
-            new("조슈아", 10, 3, 20, 20),
-            new("티치엘", 0, 20, 0, 20),
-            new("나야트레이", 5, 0, 0, 10),
-            new("녹턴", 5, 5, 10, 0),
-            new("벤야", 10, 10, 0, 10),
-            new("보리스", 0, 3, 10, 0),
-            new("막시민", 10, 5, 0, 10),
-            new("밀라", 10, 2, 0, 20),
-            new("란지에", 20, 13, 0, 0),
-            new("리체", 15, 0, 0, 0),
-            new("루시안", 5, 5, 0, 0),
-            new("로아미니", 20, 23, 0, 25),
+            // 적이 받는 피해 증가, 공격 피해량 증가, 추가 피해량, 능력치 감소, 중 딜레이 감소
+            new("아나이스 마법", 0, 3, 0, 0, 0),
+            new("아나이스 비호", 20, 23, 0, 0, 5),
+            new("아나이스 파괴", 10, 3, 0, 0, 0),
+            new("예프넨", 10, 0, 0, 0, 0),
+            new("이자크", 5, 5, 0, 0, 0),
+            new("이스핀", 15, 8, 0, 10, 0),
+            new("이솔렛", 0, 20, 0, 20, 5),
+            new("클로에", 10, 7, 30, 10, 0),
+            new("시벨린", 10, 15, 0, 10, 0),
+            new("조슈아", 10, 3, 20, 20, 0),
+            new("티치엘", 0, 20, 0, 20, 0),
+            new("나야트레이", 5, 0, 0, 10, 0),
+            new("녹턴", 5, 5, 10, 0, 0),
+            new("벤야", 10, 10, 0, 10, 0),
+            new("보리스", 0, 3, 10, 0, 10),
+            new("막시민", 10, 5, 0, 10, 0),
+            new("밀라", 10, 2, 0, 20, 5),
+            new("란지에", 20, 13, 0, 0, 0),
+            new("리체", 15, 0, 0, 0, 0),
+            new("루시안", 5, 5, 0, 0, 0),
+            new("로아미니", 20, 23, 0, 25, 0),
         };
 
         public static readonly DamageReferenceSet Default = new(EtaLevels, MonsterEntries, CharacterModifierEntries);

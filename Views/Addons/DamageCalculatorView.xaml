@@ -69,6 +69,18 @@
                 <Setter Property="Padding" Value="10,4"/>
                 <Setter Property="HorizontalAlignment" Value="Left"/>
             </Style>
+            <Style x:Key="DamageDetailTextStyle" TargetType="TextBlock">
+                <Setter Property="Foreground" Value="#C9D1D9"/>
+                <Setter Property="FontSize" Value="12"/>
+                <Setter Property="FontWeight" Value="SemiBold"/>
+                <Setter Property="VerticalAlignment" Value="Center"/>
+            </Style>
+            <Style x:Key="DamageDetailValueStyle" TargetType="TextBlock">
+                <Setter Property="FontSize" Value="12"/>
+                <Setter Property="FontWeight" Value="SemiBold"/>
+                <Setter Property="VerticalAlignment" Value="Center"/>
+                <Setter Property="HorizontalAlignment" Value="Right"/>
+            </Style>
             <Style x:Key="SectionSmallButtonStyle" TargetType="Button" BasedOn="{StaticResource SimButtonStyle}">
                 <Setter Property="Width" Value="96"/>
                 <Setter Property="Height" Value="32"/>
@@ -138,6 +150,7 @@
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto"/>
                                 <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
                             </Grid.RowDefinitions>
 
                             <WrapPanel Grid.Row="0"
@@ -161,7 +174,7 @@
                                     </ComboBox>
                                 </StackPanel>
                                 <TextBlock Style="{StaticResource FieldLabelStyle}" Text="최종 계수" Margin="0,0,6,0"/>
-                                <TextBlock x:Name="TotalCoefficientText" Foreground="#58A6FF" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                <TextBlock x:Name="TotalCoefficientText" Foreground="#FFDE59" FontWeight="SemiBold" VerticalAlignment="Center"/>
                             </WrapPanel>
 
                             <WrapPanel Grid.Row="1"
@@ -178,8 +191,63 @@
                                            Foreground="#FFDE59"
                                            FontWeight="SemiBold"
                                            VerticalAlignment="Center"
+                                           TextWrapping="Wrap"
+                                           Visibility="Collapsed"
                                            Text="일반 대미지 - | 강타 대미지 - | 방무 패시브 대미지 -"/>
                             </WrapPanel>
+
+                            <Grid Grid.Row="2"
+                                  Margin="0,10,0,0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+
+                                <TextBlock x:Name="NormalDamageText"
+                                           Grid.Row="0"
+                                           Grid.Column="0"
+                                           Style="{StaticResource DamageDetailTextStyle}"
+                                           Text="일반 대미지 : -"/>
+                                <TextBlock x:Name="NormalDpsText"
+                                           Grid.Row="0"
+                                           Grid.Column="1"
+                                           Style="{StaticResource DamageDetailValueStyle}"
+                                           Foreground="#58A6FF"
+                                           Text="일반 DPS -"/>
+
+                                <TextBlock x:Name="StrongDamageText"
+                                           Grid.Row="1"
+                                           Grid.Column="0"
+                                           Margin="0,6,0,0"
+                                           Style="{StaticResource DamageDetailTextStyle}"
+                                           Text="강타 대미지 : -"/>
+                                <TextBlock x:Name="StrongDpsText"
+                                           Grid.Row="1"
+                                           Grid.Column="1"
+                                           Margin="0,6,0,0"
+                                           Style="{StaticResource DamageDetailValueStyle}"
+                                           Foreground="#8B949E"
+                                           Text="강타 DPS 미정"/>
+
+                                <TextBlock x:Name="PassiveDamageText"
+                                           Grid.Row="2"
+                                           Grid.Column="0"
+                                           Margin="0,6,0,0"
+                                           Style="{StaticResource DamageDetailTextStyle}"
+                                           Text="방무 대미지 : -"/>
+                                <TextBlock x:Name="PassiveDpsText"
+                                           Grid.Row="2"
+                                           Grid.Column="1"
+                                           Margin="0,6,0,0"
+                                           Style="{StaticResource DamageDetailValueStyle}"
+                                           Foreground="#8B949E"
+                                           Text="방무 DPS 미정"/>
+                            </Grid>
 
                             <StackPanel Visibility="Collapsed">
                                 <TextBlock x:Name="TotalPrimaryText"/>
@@ -460,13 +528,18 @@
                                         </StackPanel>
 
                                         <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
-                                            <TextBlock Text="능력치 감소 " Foreground="#8B949E" FontSize="12" VerticalAlignment="Center"/>
+                                            <TextBlock Text="적 능력치 감소 " Foreground="#8B949E" FontSize="12" VerticalAlignment="Center"/>
                                             <TextBlock x:Name="TraitStatReductionValueText" Text="0%" Foreground="White" FontWeight="SemiBold" VerticalAlignment="Center"/>
                                         </StackPanel>
 
                                         <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
                                             <TextBlock Text="추가 피해량 " Foreground="#8B949E" FontSize="12" VerticalAlignment="Center"/>
                                             <TextBlock x:Name="AdditionalDamageTraitValueText" Text="0%" Foreground="White" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                        </StackPanel>
+
+                                        <StackPanel Orientation="Horizontal" Margin="0,0,0,0">
+                                            <TextBlock Text="중 딜레이 감소 " Foreground="#8B949E" FontSize="12" VerticalAlignment="Center"/>
+                                            <TextBlock x:Name="TraitSkillDelayValueText" Text="0%" Foreground="White" FontWeight="SemiBold" VerticalAlignment="Center"/>
                                         </StackPanel>
                                     </StackPanel>
                                 </Border>
@@ -480,12 +553,16 @@
                                                    FontSize="12"
                                                    FontWeight="SemiBold"
                                                    Text="최종 대미지 0%"/>
+                                        <TextBlock Style="{StaticResource SectionTitleStyle}"
+                                                   Text="시에나"
+                                                   Margin="0,0,0,4"/>
                                         <Grid Margin="0,4,0,0">
                                             <Grid.ColumnDefinitions>
                                                 <ColumnDefinition Width="100"/>
                                                 <ColumnDefinition Width="*"/>
                                             </Grid.ColumnDefinitions>
                                             <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto"/>
                                                 <RowDefinition Height="Auto"/>
                                                 <RowDefinition Height="Auto"/>
                                                 <RowDefinition Height="Auto"/>
@@ -542,6 +619,22 @@
                                                      Style="{StaticResource InlineTextBoxStyle}"
                                                      HorizontalAlignment="Right"
                                                      TextChanged="SienaTextBox_TextChanged"/>
+
+                                            <TextBlock Grid.Row="4" Grid.Column="0" Foreground="White" Text="중 딜레이 감소" VerticalAlignment="Center" Margin="0,8,0,0"/>
+                                            <TextBox x:Name="SienaMiddleDelayTextBox"
+                                                     Grid.Row="4"
+                                                     Grid.Column="1"
+                                                     Width="50"
+                                                     Margin="0,8,0,0"
+                                                     Text="0"
+                                                     MaxLength="2"
+                                                     Style="{StaticResource InlineTextBoxStyle}"
+                                                     HorizontalAlignment="Right"
+                                                     PreviewTextInput="SienaMiddleDelayTextBox_PreviewTextInput"
+                                                     PreviewKeyDown="NumberTextBox_PreviewKeyDown"
+                                                     DataObject.Pasting="SienaMiddleDelayTextBox_OnPaste"
+                                                     LostFocus="SienaMiddleDelayTextBox_LostFocus"
+                                                     TextChanged="SienaMiddleDelayTextBox_TextChanged"/>
                                         </Grid>
                                     </StackPanel>
                                 </Border>
