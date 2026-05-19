@@ -55,6 +55,7 @@ namespace TWChatOverlay
             EtaProfileResolver.InitializeAsync();
             BlacklistService.Initialize();
             _ = RecaptureSupplyAlertService.PreloadAsync();
+            SecondaryWindowTopmostRefreshService.Initialize();
             base.OnStartup(e);
             AppLogger.Info("Core services initialized.");
 

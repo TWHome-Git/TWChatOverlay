@@ -1,6 +1,6 @@
 ﻿using System;
-using System.Globalization;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -19,9 +19,10 @@ namespace TWChatOverlay.Views.Addons
     {
         private sealed class DamageCalculationValues
         {
-            public double Group3TraitAttackDamageValue { get; set; }
+            public double TraitAttackDamageValue { get; set; }
             public DamageReferenceData.CharacterModifierEntry? SelectedModifier { get; set; }
             public double TraitEnemyTakenDamagePercent { get; set; }
+            public double TraitAdditionalDamagePercent { get; set; }
             public string SelectedAnisVariant { get; set; } = "마법";
             public double EtaAwakeningDamageIncrease { get; set; }
             public double CurrentStatCoefficient { get; set; }
@@ -36,11 +37,11 @@ namespace TWChatOverlay.Views.Addons
         private readonly CoefficientCalculatorView? _coefficientView;
         private bool _subscribed;
 
-        private readonly Group1State _group1 = new();
-        private readonly Group2State _group2 = new();
-        private readonly Group4State _group4 = new();
-        private readonly Group5State _group5 = new();
-        private readonly Group11State _group11 = new();
+        private readonly AttackDamage1FactorState _attackDamage1FactorState = new();
+        private readonly AttackDamage2FactorState _attackDamage2FactorState = new();
+        private readonly AdditionalFactorState _additionalFactorState = new();
+        private readonly SeriesAttackDamageState _seriesAttackDamageState = new();
+        private readonly AdditionalDamageState _additionalDamageState = new();
         private readonly MonsterState _monster = new();
         private readonly DamageCalculationValues _calc = new();
         private bool _isRestoringDamageState;
@@ -68,7 +69,7 @@ namespace TWChatOverlay.Views.Addons
                 _calc.HitCount = 1;
                 LoadDamageCalculatorState();
                 ApplySnapshot(CoefficientDamageBaseSnapshot.Empty);
-                RefreshGroupSummaryTexts();
+                RefreshDamageSummaryTexts();
             }
             finally
             {
@@ -244,7 +245,7 @@ namespace TWChatOverlay.Views.Addons
 
         private string GetAttackDamageFactor()
         {
-            double total = GetGroup1TotalPercent() + GetGroup2TotalPercent() + GetGroup3TotalPercent() + GetGroup4TotalPercent();
+            double total = GetAttackDamage1FactorValue() + GetAttackDamage2FactorValue() + GetAttackDamage3FactorValue() + AddtionalFactor();
             return $"1 + {total:0.#}% = {1 + total / 100:0.##}";
         }
 
@@ -267,66 +268,66 @@ namespace TWChatOverlay.Views.Addons
             return level * 4.0;
         }
 
-        private string GetGroup1DamageSummary()
+        private string GetAttackDamage1FactorSummary()
         {
             double value = 0;
-            if (_group1.Snowman) value += 20;
-            if (_group1.Illumi) value += 10;
-            if (_group1.IsabelDamage) value += 10;
-            if (_group1.IsabelSpecial) value += 10;
-            if (_group1.IsabelBattle) value += 10;
-            value += ReadTextValue(_group1.EtcValue);
+            if (_attackDamage1FactorState.Snowman) value += 20;
+            if (_attackDamage1FactorState.Illumi) value += 10;
+            if (_attackDamage1FactorState.IsabelDamage) value += 10;
+            if (_attackDamage1FactorState.IsabelSpecial) value += 10;
+            if (_attackDamage1FactorState.IsabelBattle) value += 10;
+            value += ReadTextValue(_attackDamage1FactorState.EtcValue);
             return $"{value:0.#}%";
         }
 
-        private string GetGroup2DamageSummary()
+        private string GetAttackDamage2FactorSummary()
         {
             double value = 0;
-            if (_group2.Gaegakbi) value += 5;
-            if (_group2.ClubTypeP) value += 5;
-            if (_group2.ExplorePoint) value += 5;
-            if (_group2.TwPower) value += 5;
-            if (_group2.Ham) value += 10;
-            if (_group2.Event) value += 10;
-            value += ReadTextValue(_group2.EtcValue);
+            if (_attackDamage2FactorState.Awakening) value += 5;
+            if (_attackDamage2FactorState.ClubTypeP) value += 5;
+            if (_attackDamage2FactorState.ExplorePoint) value += 5;
+            if (_attackDamage2FactorState.TwPower) value += 5;
+            if (_attackDamage2FactorState.Ham) value += 10;
+            if (_attackDamage2FactorState.Event) value += 10;
+            value += ReadTextValue(_attackDamage2FactorState.EtcValue);
             return $"{value:0.#}%";
         }
 
-        private string GetGroup3DamageSummary()
+        private string GetTraitAttackDamageSummary()
         {
-            return $"{_calc.Group3TraitAttackDamageValue:0.#}%";
+            return $"{_calc.TraitAttackDamageValue:0.#}%";
         }
 
-        private void UpdateGroup3SummaryText(string? selectedModifierText)
+        private void UpdateTraitAttackDamageSummaryText(string? selectedModifierText)
         {
-            if (Group3DamageSummaryText != null)
-                Group3DamageSummaryText.Text = $"{_calc.Group3TraitAttackDamageValue:0.#}%";
+            if (TraitAttackDamageSummaryText != null)
+                TraitAttackDamageSummaryText.Text = $"{_calc.TraitAttackDamageValue:0.#}%";
 
             if (SelectedModifierText != null)
                 SelectedModifierText.Text = selectedModifierText ?? string.Empty;
         }
 
-        private string GetGroup4DamageSummary()
+        private string GetAdditionalFactorSummary()
         {
             double value = 0;
-            if (_group4.TitleDamage) value += 20;
-            value += _group4.WeaponAbilityIndex switch { 0 => 0, 1 => 9, 2 => 10, 3 => 11, _ => 0 };
-            if (_group4.Fever) value += 10;
-            value += _group4.WristAbilityIndex switch { 0 => 0, 1 => 9, 2 => 10, 3 => 11, _ => 0 };
-            value += _group4.HandAbilityIndex switch { 0 => 0, 1 => 7, 2 => 8, 3 => 9, _ => 0 };
-            value += _group4.LunariaAbilityIndex switch { 0 => 0, 1 => 1, 2 => 2, 3 => 3, 4 => 4, 5 => 5, 6 => 6, 7 => 7, 8 => 8, 9 => 9, 10 => 10, _ => 0 };
-            value += _group4.DeepRuneIndex switch { 0 => 0, 1 => 3, 2 => 6, 3 => 9, _ => 0 };
-            value += ReadTextValue(_group4.EtcValue);
+            if (_additionalFactorState.TitleDamage) value += 20;
+            value += _additionalFactorState.WeaponAbilityIndex switch { 0 => 0, 1 => 9, 2 => 10, 3 => 11, _ => 0 };
+            if (_additionalFactorState.Fever) value += 10;
+            value += _additionalFactorState.WristAbilityIndex switch { 0 => 0, 1 => 9, 2 => 10, 3 => 11, _ => 0 };
+            value += _additionalFactorState.HandAbilityIndex switch { 0 => 0, 1 => 7, 2 => 8, 3 => 9, _ => 0 };
+            value += _additionalFactorState.LunariaAbilityIndex switch { 0 => 0, 1 => 1, 2 => 2, 3 => 3, 4 => 4, 5 => 5, 6 => 6, 7 => 7, 8 => 8, 9 => 9, 10 => 10, _ => 0 };
+            value += _additionalFactorState.DeepRuneIndex switch { 0 => 0, 1 => 3, 2 => 6, 3 => 9, _ => 0 };
+            value += ReadTextValue(_additionalFactorState.EtcValue);
             return $"{value:0.#}%";
         }
 
-        private string GetGroup4CombinedSummary()
+        private string GetAttackDamageCombinedSummary()
         {
             double total = 0;
-            total += ReadTextValue(GetGroup1DamageSummary().TrimEnd('%'));
-            total += ReadTextValue(GetGroup2DamageSummary().TrimEnd('%'));
-            total += ReadTextValue(GetGroup3DamageSummary().TrimEnd('%'));
-            total += ReadTextValue(GetGroup4DamageSummary().TrimEnd('%'));
+            total += ReadTextValue(GetAttackDamage1FactorSummary().TrimEnd('%'));
+            total += ReadTextValue(GetAttackDamage2FactorSummary().TrimEnd('%'));
+            total += ReadTextValue(GetTraitAttackDamageSummary().TrimEnd('%'));
+            total += ReadTextValue(GetAdditionalFactorSummary().TrimEnd('%'));
             return $"{total:0.#}%";
         }
 
@@ -529,66 +530,67 @@ namespace TWChatOverlay.Views.Addons
 
         private double GetAttackDamageFactorValue()
         {
-            double total = GetGroup1TotalPercent() + GetGroup2TotalPercent() + GetGroup3TotalPercent() + GetGroup4TotalPercent();
+            double total = GetAttackDamage1FactorValue() + GetAttackDamage2FactorValue() + GetAttackDamage3FactorValue() + AddtionalFactor();
             return 1 + total / 100.0;
         }
 
-        private double GetGroup1TotalPercent()
+        private double GetAttackDamage1FactorValue()
         {
             double value = 0;
-            if (_group1.Snowman) value += 20;
-            if (_group1.Illumi) value += 10;
-            if (_group1.IsabelDamage) value += 10;
-            if (_group1.IsabelSpecial) value += 10;
-            if (_group1.IsabelBattle) value += 10;
-            return Math.Min(value + ReadTextValue(_group1.EtcValue), 50);
+            if (_attackDamage1FactorState.Snowman) value += 20;
+            if (_attackDamage1FactorState.Illumi) value += 10;
+            if (_attackDamage1FactorState.IsabelDamage) value += 10;
+            if (_attackDamage1FactorState.IsabelSpecial) value += 10;
+            if (_attackDamage1FactorState.IsabelBattle) value += 10;
+            return Math.Min(value + ReadTextValue(_attackDamage1FactorState.EtcValue), 50);
         }
 
-        private double GetGroup2TotalPercent()
+        private double GetAttackDamage2FactorValue()
         {
             double value = 0;
-            if (_group2.Gaegakbi) value += 5;
-            if (_group2.ClubTypeP) value += 5;
-            if (_group2.ExplorePoint) value += 5;
-            if (_group2.TwPower) value += 5;
-            if (_group2.Ham) value += 10;
-            if (_group2.Event) value += 10;
-            return Math.Min(value + ReadTextValue(_group2.EtcValue), 30);
+            if (_attackDamage2FactorState.Awakening) value += 5;
+            if (_attackDamage2FactorState.ClubTypeP) value += 5;
+            if (_attackDamage2FactorState.ExplorePoint) value += 5;
+            if (_attackDamage2FactorState.TwPower) value += 5;
+            if (_attackDamage2FactorState.Ham) value += 10;
+            if (_attackDamage2FactorState.Event) value += 10;
+            return Math.Min(value + ReadTextValue(_attackDamage2FactorState.EtcValue), 30);
         }
 
-        private double GetGroup3TotalPercent()
+        private double GetAttackDamage3FactorValue()
         {
-            return Math.Min(_calc.Group3TraitAttackDamageValue, 65);
+            return Math.Min(_calc.TraitAttackDamageValue, 65);
         }
 
-        private double GetGroup4TotalPercent()
+        private double AddtionalFactor()
         {
             double value = 0;
-            if (_group4.TitleDamage) value += 20;
-            value += _group4.WeaponAbilityIndex switch { 0 => 0, 1 => 9, 2 => 10, 3 => 11, _ => 0 };
-            if (_group4.Fever) value += 10;
-            value += _group4.WristAbilityIndex switch { 0 => 0, 1 => 9, 2 => 10, 3 => 11, _ => 0 };
-            value += _group4.HandAbilityIndex switch { 0 => 0, 1 => 7, 2 => 8, 3 => 9, _ => 0 };
-            value += _group4.LunariaAbilityIndex switch { 0 => 0, 1 => 1, 2 => 2, 3 => 3, 4 => 4, 5 => 5, 6 => 6, 7 => 7, 8 => 8, 9 => 9, 10 => 10, _ => 0 };
-            value += _group4.DeepRuneIndex switch { 0 => 0, 1 => 3, 2 => 6, 3 => 9, _ => 0 };
-            return Math.Min(value + ReadTextValue(_group4.EtcValue), 80);
+            if (_additionalFactorState.TitleDamage) value += 20;
+            value += _additionalFactorState.WeaponAbilityIndex switch { 0 => 0, 1 => 9, 2 => 10, 3 => 11, _ => 0 };
+            if (_additionalFactorState.Fever) value += 10;
+            value += _additionalFactorState.WristAbilityIndex switch { 0 => 0, 1 => 9, 2 => 10, 3 => 11, _ => 0 };
+            value += _additionalFactorState.HandAbilityIndex switch { 0 => 0, 1 => 7, 2 => 8, 3 => 9, _ => 0 };
+            value += _additionalFactorState.LunariaAbilityIndex switch { 0 => 0, 1 => 1, 2 => 2, 3 => 3, 4 => 4, 5 => 5, 6 => 6, 7 => 7, 8 => 8, 9 => 9, 10 => 10, _ => 0 };
+            value += _additionalFactorState.DeepRuneIndex switch { 0 => 0, 1 => 3, 2 => 6, 3 => 9, _ => 0 };
+            return Math.Min(value + ReadTextValue(_additionalFactorState.EtcValue), 80);
         }
 
         private string GetSeriesAttackDamageSummary()
         {
-            double value = _group5.ArtifactIndex switch { 0 => 15, 1 => 20, 2 => 30, 3 => 35, _ => 15 };
-            value += _group5.WristExtraIndex switch { 0 => 25, 1 => 26, 2 => 27, 3 => 28, _ => 25 };
-            value += _group5.LunariaExtraIndex;
+            double value = _seriesAttackDamageState.ArtifactIndex switch { 0 => 15, 1 => 20, 2 => 30, 3 => 35, _ => 15 };
+            value += _seriesAttackDamageState.WristExtraIndex switch { 0 => 25, 1 => 26, 2 => 27, 3 => 28, _ => 25 };
+            value += _seriesAttackDamageState.LunariaExtraIndex;
             return $"{value:0.#}%";
         }
 
-        private string GetGroup11AdditionalDamageSummary()
+        private string GetAdditionalDamageSummary()
         {
-            double sniper = GetSniperAdditionalDamagePercent(_group11.SniperIndex);
-            double gem = _group11.GemOptionIndex switch { 0 => 0, 1 => 45, 2 => 46, 3 => 47, 4 => 48, _ => 0 };
-            double weapon = Math.Clamp(_group11.WeaponExtraIndex, 0, 100);
-            double trait = ReadTextValue(_group11.TraitValue);
-            return $"{sniper + gem + weapon + trait:0.#}%";
+            double sniper = GetSniperAdditionalDamagePercent(_additionalDamageState.SniperIndex);
+            double gem = _additionalDamageState.GemOptionIndex switch { 0 => 0, 1 => 45, 2 => 46, 3 => 47, 4 => 48, _ => 0 };
+            double weapon = Math.Clamp(_additionalDamageState.WeaponExtraIndex, 0, 100);
+            double trait = ReadTextValue(_additionalDamageState.TraitValue);
+            double characterTraitAdditionalDamage = _calc.TraitAdditionalDamagePercent;
+            return $"{sniper + gem + weapon + trait + characterTraitAdditionalDamage:0.#}%";
         }
 
         private string GetFinalDamageSummary()
@@ -615,12 +617,12 @@ namespace TWChatOverlay.Views.Addons
             return _calc.SelectedModifier.Value.Name;
         }
 
-        private enum AttackGroupKind
+        private enum AttackDamageSectionKind
         {
-            Group1,
-            Group2,
-            Group3,
-            Group4
+            AttackDamage1Factor,
+            AttackDamage2Factor,
+            TraitAttackDamage,
+            AdditionalFactor
         }
 
         private static string BoolPercent(bool value, double percent) => value ? $"{percent:0.#}%" : "0%";
@@ -655,14 +657,14 @@ namespace TWChatOverlay.Views.Addons
             return entries[index];
         }
 
-        private void UpdateGroup2State()
+        private void UpdateAttackDamage2FactorState()
         {
-            _group2.Gaegakbi = _group2.Gaegakbi;
-            _group2.ClubTypeP = _group2.ClubTypeP;
-            _group2.ExplorePoint = _group2.ExplorePoint;
-            _group2.TwPower = _group2.TwPower;
-            _group2.Ham = _group2.Ham;
-            _group2.Event = _group2.Event;
+            _attackDamage2FactorState.Awakening = _attackDamage2FactorState.Awakening;
+            _attackDamage2FactorState.ClubTypeP = _attackDamage2FactorState.ClubTypeP;
+            _attackDamage2FactorState.ExplorePoint = _attackDamage2FactorState.ExplorePoint;
+            _attackDamage2FactorState.TwPower = _attackDamage2FactorState.TwPower;
+            _attackDamage2FactorState.Ham = _attackDamage2FactorState.Ham;
+            _attackDamage2FactorState.Event = _attackDamage2FactorState.Event;
         }
 
         private void ApplyCharacterModifier(string characterName, string calculatorTypeName)
@@ -670,11 +672,14 @@ namespace TWChatOverlay.Views.Addons
             if (string.IsNullOrWhiteSpace(characterName))
             {
                 _calc.SelectedModifier = null;
-                _calc.Group3TraitAttackDamageValue = 0;
+                _calc.TraitAttackDamageValue = 0;
+                _calc.TraitEnemyTakenDamagePercent = 0;
+                _calc.TraitAdditionalDamagePercent = 0;
                 AnaisVariantPanel.Visibility = Visibility.Collapsed;
                 TraitEnemyTakenDamageValueText.Text = "0";
                 TraitStatReductionValueText.Text = "0";
-                UpdateGroup3SummaryText("특성 값 없음");
+                UpdateTraitAttackDamageSummaryText("특성 값 없음");
+                UpdateCharacterTraitAdditionalDamageText();
                 return;
             }
 
@@ -721,19 +726,23 @@ namespace TWChatOverlay.Views.Addons
 
             if (_calc.SelectedModifier == null)
             {
-                _calc.Group3TraitAttackDamageValue = 0;
+                _calc.TraitAttackDamageValue = 0;
                 TraitEnemyTakenDamageValueText.Text = "0";
                 TraitStatReductionValueText.Text = "0";
                 _calc.TraitEnemyTakenDamagePercent = 0;
-                UpdateGroup3SummaryText("특성 값 없음");
+                _calc.TraitAdditionalDamagePercent = 0;
+                UpdateTraitAttackDamageSummaryText("특성 값 없음");
+                UpdateCharacterTraitAdditionalDamageText();
                 return;
             }
 
             _calc.TraitEnemyTakenDamagePercent = _calc.SelectedModifier.Value.DamageAmplification;
             TraitEnemyTakenDamageValueText.Text = $"{_calc.TraitEnemyTakenDamagePercent:0.##}%";
             TraitStatReductionValueText.Text = $"{_calc.SelectedModifier.Value.SkillReduction:0.##}%";
-            _calc.Group3TraitAttackDamageValue = _calc.SelectedModifier.Value.AttackPower;
-            UpdateGroup3SummaryText(GetCurrentTraitDisplayName());
+            _calc.TraitAdditionalDamagePercent = _calc.SelectedModifier.Value.AdditionalDamage;
+            _calc.TraitAttackDamageValue = _calc.SelectedModifier.Value.AttackPower;
+            UpdateTraitAttackDamageSummaryText(GetCurrentTraitDisplayName());
+            UpdateCharacterTraitAdditionalDamageText();
         }
 
         private static DamageReferenceData.CharacterModifierEntry? ResolveModifier(string modifierName, bool isAnais, bool isMagicDefense)
@@ -843,22 +852,22 @@ namespace TWChatOverlay.Views.Addons
             SaveDamageCalculatorState();
         }
 
-        private void OpenGroup1Window_Click(object sender, RoutedEventArgs e)
+        private void OpenAttackDamage1FactorWindow_Click(object sender, RoutedEventArgs e)
         {
-            OpenUnifiedGroupSettingsWindow();
+            OpenAttackDamageSettingsWindow();
         }
 
-        private void OpenGroup2Window_Click(object sender, RoutedEventArgs e)
+        private void OpenAttackDamage2FactorWindow_Click(object sender, RoutedEventArgs e)
         {
-            OpenUnifiedGroupSettingsWindow();
+            OpenAttackDamageSettingsWindow();
         }
 
-        private void OpenGroup4Window_Click(object sender, RoutedEventArgs e)
+        private void OpenAdditionalFactorWindow_Click(object sender, RoutedEventArgs e)
         {
-            OpenUnifiedGroupSettingsWindow();
+            OpenAttackDamageSettingsWindow();
         }
 
-        private void OpenUnifiedGroupSettingsWindow()
+        private void OpenAttackDamageSettingsWindow()
         {
             var window = CreateSettingsWindow("공격 피해량 설정");
             window.Topmost = true;
@@ -875,34 +884,34 @@ namespace TWChatOverlay.Views.Addons
             outerGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
             root.Children.Add(outerGrid);
 
-            var group1Panel = CreateGroupPanel(AttackGroupKind.Group1, "공격 피해량(이자벨)", "50%", out var group1Save);
-            var group2Panel = CreateGroupPanel(AttackGroupKind.Group2, "공격 피해량(일반)", "30%", out var group2Save);
-            var group3Panel = CreateGroupPanel(AttackGroupKind.Group3, "공격 피해량(스킬)", "65%", out var group3Save);
-            var group4Panel = CreateGroupPanel(AttackGroupKind.Group4, "공격 피해량(캐릭터)", "80%", out var group4Save);
+            var attackDamage1FactorPanel = CreateAttackDamageSectionPanel(AttackDamageSectionKind.AttackDamage1Factor, "공격 피해량(이자벨)", "50%", out var attackDamage1FactorSave);
+            var attackDamage2FactorPanel = CreateAttackDamageSectionPanel(AttackDamageSectionKind.AttackDamage2Factor, "공격 피해량(일반)", "30%", out var attackDamage2FactorSave);
+            var traitAttackDamagePanel = CreateAttackDamageSectionPanel(AttackDamageSectionKind.TraitAttackDamage, "공격 피해량(스킬)", "65%", out var traitAttackDamageSave);
+            var additionalFactorPanel = CreateAttackDamageSectionPanel(AttackDamageSectionKind.AdditionalFactor, "공격 피해량(캐릭터)", "80%", out var additionalFactorSave);
 
-            Grid.SetColumn(group1Panel, 0);
-            Grid.SetColumn(group2Panel, 1);
-            Grid.SetColumn(group3Panel, 2);
-            Grid.SetColumn(group4Panel, 3);
-            outerGrid.Children.Add(group1Panel);
-            outerGrid.Children.Add(group2Panel);
-            outerGrid.Children.Add(group3Panel);
-            outerGrid.Children.Add(group4Panel);
+            Grid.SetColumn(attackDamage1FactorPanel, 0);
+            Grid.SetColumn(attackDamage2FactorPanel, 1);
+            Grid.SetColumn(traitAttackDamagePanel, 2);
+            Grid.SetColumn(additionalFactorPanel, 3);
+            outerGrid.Children.Add(attackDamage1FactorPanel);
+            outerGrid.Children.Add(attackDamage2FactorPanel);
+            outerGrid.Children.Add(traitAttackDamagePanel);
+            outerGrid.Children.Add(additionalFactorPanel);
 
             window.Closing += (_, _) =>
             {
-                group1Save();
-                group2Save();
-                group3Save();
-                group4Save();
-                RefreshGroupSummaryTexts();
+                attackDamage1FactorSave();
+                attackDamage2FactorSave();
+                traitAttackDamageSave();
+                additionalFactorSave();
+                RefreshDamageSummaryTexts();
                 SaveDamageCalculatorState();
             };
 
             window.ShowDialog();
         }
 
-        private Border CreateGroupPanel(AttackGroupKind kind, string displayTitle, string subtitle, out Action saveAction)
+        private Border CreateAttackDamageSectionPanel(AttackDamageSectionKind kind, string displayTitle, string subtitle, out Action saveAction)
         {
             var border = new Border
             {
@@ -950,98 +959,98 @@ namespace TWChatOverlay.Views.Addons
                 }):0.#}% / {subtitle}";
             }
 
-            void RefreshGroup1Subtitle() => RefreshSubtitle(GetGroup1TotalPercent());
-            void RefreshGroup2Subtitle() => RefreshSubtitle(GetGroup2TotalPercent());
-            void RefreshGroup3Subtitle() => RefreshSubtitle(GetGroup3TotalPercent());
-            void RefreshGroup4Subtitle() => RefreshSubtitle(GetGroup4TotalPercent());
+            void RefreshAttackDamage1FactorSubtitle() => RefreshSubtitle(GetAttackDamage1FactorValue());
+            void RefreshAttackDamage2FactorSubtitle() => RefreshSubtitle(GetAttackDamage2FactorValue());
+            void RefreshTraitAttackDamageSubtitle() => RefreshSubtitle(GetAttackDamage3FactorValue());
+            void RefreshAdditionalFactorSubtitle() => RefreshSubtitle(AddtionalFactor());
 
             saveAction = () => { };
-            if (kind == AttackGroupKind.Group1)
+            if (kind == AttackDamageSectionKind.AttackDamage1Factor)
             {
-                var snowmanToggle = CreateToggle("눈사람 (20%)", _group1.Snowman);
-                var illumiToggle = CreateToggle("일루미 (10%)", _group1.Illumi);
+                var snowmanToggle = CreateToggle("눈사람 (20%)", _attackDamage1FactorState.Snowman);
+                var illumiToggle = CreateToggle("일루미 (10%)", _attackDamage1FactorState.Illumi);
                 snowmanToggle.Checked += (_, _) => illumiToggle.IsChecked = false;
                 illumiToggle.Checked += (_, _) => snowmanToggle.IsChecked = false;
-                snowmanToggle.Checked += (_, _) => { _group1.Snowman = true; _group1.Illumi = false; RefreshGroup1Subtitle(); RefreshGroupSummaryTexts(); UpdateCategorySummaryText(); };
-                snowmanToggle.Unchecked += (_, _) => { _group1.Snowman = false; RefreshGroup1Subtitle(); RefreshGroupSummaryTexts(); UpdateCategorySummaryText(); };
-                illumiToggle.Checked += (_, _) => { _group1.Illumi = true; _group1.Snowman = false; RefreshGroup1Subtitle(); RefreshGroupSummaryTexts(); UpdateCategorySummaryText(); };
-                illumiToggle.Unchecked += (_, _) => { _group1.Illumi = false; RefreshGroup1Subtitle(); RefreshGroupSummaryTexts(); UpdateCategorySummaryText(); };
-                var isabelDamageToggle = CreateToggle("이자벨 대미지 (10%)", _group1.IsabelDamage);
-                var isabelSpecialToggle = CreateToggle("이자벨 특선 대미지 (10%)", _group1.IsabelSpecial);
-                var isabelBattleToggle = CreateToggle("이자벨 전투 (10%)", _group1.IsabelBattle);
-                isabelDamageToggle.Checked += (_, _) => { _group1.IsabelDamage = true; RefreshGroup1Subtitle(); RefreshGroupSummaryTexts(); UpdateCategorySummaryText(); };
-                isabelDamageToggle.Unchecked += (_, _) => { _group1.IsabelDamage = false; RefreshGroup1Subtitle(); RefreshGroupSummaryTexts(); UpdateCategorySummaryText(); };
-                isabelSpecialToggle.Checked += (_, _) => { _group1.IsabelSpecial = true; RefreshGroup1Subtitle(); RefreshGroupSummaryTexts(); UpdateCategorySummaryText(); };
-                isabelSpecialToggle.Unchecked += (_, _) => { _group1.IsabelSpecial = false; RefreshGroup1Subtitle(); RefreshGroupSummaryTexts(); UpdateCategorySummaryText(); };
-                isabelBattleToggle.Checked += (_, _) => { _group1.IsabelBattle = true; RefreshGroup1Subtitle(); RefreshGroupSummaryTexts(); UpdateCategorySummaryText(); };
-                isabelBattleToggle.Unchecked += (_, _) => { _group1.IsabelBattle = false; RefreshGroup1Subtitle(); RefreshGroupSummaryTexts(); UpdateCategorySummaryText(); };
+                snowmanToggle.Checked += (_, _) => { _attackDamage1FactorState.Snowman = true; _attackDamage1FactorState.Illumi = false; RefreshAttackDamage1FactorSubtitle(); RefreshDamageSummaryTexts(); UpdateCategorySummaryText(); };
+                snowmanToggle.Unchecked += (_, _) => { _attackDamage1FactorState.Snowman = false; RefreshAttackDamage1FactorSubtitle(); RefreshDamageSummaryTexts(); UpdateCategorySummaryText(); };
+                illumiToggle.Checked += (_, _) => { _attackDamage1FactorState.Illumi = true; _attackDamage1FactorState.Snowman = false; RefreshAttackDamage1FactorSubtitle(); RefreshDamageSummaryTexts(); UpdateCategorySummaryText(); };
+                illumiToggle.Unchecked += (_, _) => { _attackDamage1FactorState.Illumi = false; RefreshAttackDamage1FactorSubtitle(); RefreshDamageSummaryTexts(); UpdateCategorySummaryText(); };
+                var isabelDamageToggle = CreateToggle("이자벨 대미지 (10%)", _attackDamage1FactorState.IsabelDamage);
+                var isabelSpecialToggle = CreateToggle("이자벨 특선 대미지 (10%)", _attackDamage1FactorState.IsabelSpecial);
+                var isabelBattleToggle = CreateToggle("이자벨 전투 (10%)", _attackDamage1FactorState.IsabelBattle);
+                isabelDamageToggle.Checked += (_, _) => { _attackDamage1FactorState.IsabelDamage = true; RefreshAttackDamage1FactorSubtitle(); RefreshDamageSummaryTexts(); UpdateCategorySummaryText(); };
+                isabelDamageToggle.Unchecked += (_, _) => { _attackDamage1FactorState.IsabelDamage = false; RefreshAttackDamage1FactorSubtitle(); RefreshDamageSummaryTexts(); UpdateCategorySummaryText(); };
+                isabelSpecialToggle.Checked += (_, _) => { _attackDamage1FactorState.IsabelSpecial = true; RefreshAttackDamage1FactorSubtitle(); RefreshDamageSummaryTexts(); UpdateCategorySummaryText(); };
+                isabelSpecialToggle.Unchecked += (_, _) => { _attackDamage1FactorState.IsabelSpecial = false; RefreshAttackDamage1FactorSubtitle(); RefreshDamageSummaryTexts(); UpdateCategorySummaryText(); };
+                isabelBattleToggle.Checked += (_, _) => { _attackDamage1FactorState.IsabelBattle = true; RefreshAttackDamage1FactorSubtitle(); RefreshDamageSummaryTexts(); UpdateCategorySummaryText(); };
+                isabelBattleToggle.Unchecked += (_, _) => { _attackDamage1FactorState.IsabelBattle = false; RefreshAttackDamage1FactorSubtitle(); RefreshDamageSummaryTexts(); UpdateCategorySummaryText(); };
                 panel.Children.Add(CreateLabeledToggleRow("눈사람 (20%)", snowmanToggle));
                 panel.Children.Add(CreateLabeledToggleRow("일루미 (10%)", illumiToggle));
                 panel.Children.Add(CreateLabeledToggleRow("이자벨 대미지 (10%)", isabelDamageToggle));
                 panel.Children.Add(CreateLabeledToggleRow("이자벨 특선 대미지 (10%)", isabelSpecialToggle));
                 panel.Children.Add(CreateLabeledToggleRow("이자벨 전투 (10%)", isabelBattleToggle));
-                panel.Children.Add(CreateLabeledTextBoxRow("기타", _group1.EtcValue, out var etcText));
-                etcText.TextChanged += (_, _) => { _group1.EtcValue = etcText.Text.Trim(); RefreshGroup1Subtitle(); RefreshGroupSummaryTexts(); UpdateCategorySummaryText(); };
-                RefreshGroup1Subtitle();
+                panel.Children.Add(CreateLabeledTextBoxRow("기타", _attackDamage1FactorState.EtcValue, out var etcText));
+                etcText.TextChanged += (_, _) => { _attackDamage1FactorState.EtcValue = etcText.Text.Trim(); RefreshAttackDamage1FactorSubtitle(); RefreshDamageSummaryTexts(); UpdateCategorySummaryText(); };
+                RefreshAttackDamage1FactorSubtitle();
                 saveAction = () =>
                 {
-                    _group1.Snowman = snowmanToggle.IsChecked == true;
-                    _group1.Illumi = illumiToggle.IsChecked == true;
-                    _group1.IsabelDamage = isabelDamageToggle.IsChecked == true;
-                    _group1.IsabelSpecial = isabelSpecialToggle.IsChecked == true;
-                    _group1.IsabelBattle = isabelBattleToggle.IsChecked == true;
-                    _group1.EtcValue = etcText.Text.Trim();
-                    RefreshGroup1Subtitle();
+                    _attackDamage1FactorState.Snowman = snowmanToggle.IsChecked == true;
+                    _attackDamage1FactorState.Illumi = illumiToggle.IsChecked == true;
+                    _attackDamage1FactorState.IsabelDamage = isabelDamageToggle.IsChecked == true;
+                    _attackDamage1FactorState.IsabelSpecial = isabelSpecialToggle.IsChecked == true;
+                    _attackDamage1FactorState.IsabelBattle = isabelBattleToggle.IsChecked == true;
+                    _attackDamage1FactorState.EtcValue = etcText.Text.Trim();
+                    RefreshAttackDamage1FactorSubtitle();
                     UpdateCategorySummaryText();
                 };
             }
-            else if (kind == AttackGroupKind.Group2)
+            else if (kind == AttackDamageSectionKind.AttackDamage2Factor)
             {
-                var gaegakbiToggle = CreateToggle("개각비 (5%)", _group2.Gaegakbi);
-                var clubTypePToggle = CreateToggle("클럽 Type-P (5%)", _group2.ClubTypeP);
-                var exploreToggle = CreateToggle("탐험 포인트 공증 (5%)", _group2.ExplorePoint);
-                var twPowerToggle = CreateToggle("테일즈위버 기운 (5%)", _group2.TwPower);
-                var hamToggle = CreateToggle("괴력의 햄 (10%)", _group2.Ham);
-                var eventToggle = CreateToggle("이벤트 (10%)", _group2.Event);
-                gaegakbiToggle.Checked += (_, _) => { _group2.Gaegakbi = true; RefreshGroup2Subtitle(); RefreshGroupSummaryTexts(); UpdateCategorySummaryText(); };
-                gaegakbiToggle.Unchecked += (_, _) => { _group2.Gaegakbi = false; RefreshGroup2Subtitle(); RefreshGroupSummaryTexts(); UpdateCategorySummaryText(); };
-                clubTypePToggle.Checked += (_, _) => { _group2.ClubTypeP = true; RefreshGroup2Subtitle(); RefreshGroupSummaryTexts(); UpdateCategorySummaryText(); };
-                clubTypePToggle.Unchecked += (_, _) => { _group2.ClubTypeP = false; RefreshGroup2Subtitle(); RefreshGroupSummaryTexts(); UpdateCategorySummaryText(); };
-                exploreToggle.Checked += (_, _) => { _group2.ExplorePoint = true; RefreshGroup2Subtitle(); RefreshGroupSummaryTexts(); UpdateCategorySummaryText(); };
-                exploreToggle.Unchecked += (_, _) => { _group2.ExplorePoint = false; RefreshGroup2Subtitle(); RefreshGroupSummaryTexts(); UpdateCategorySummaryText(); };
-                twPowerToggle.Checked += (_, _) => { _group2.TwPower = true; RefreshGroup2Subtitle(); RefreshGroupSummaryTexts(); UpdateCategorySummaryText(); };
-                twPowerToggle.Unchecked += (_, _) => { _group2.TwPower = false; RefreshGroup2Subtitle(); RefreshGroupSummaryTexts(); UpdateCategorySummaryText(); };
-                hamToggle.Checked += (_, _) => { _group2.Ham = true; RefreshGroup2Subtitle(); RefreshGroupSummaryTexts(); UpdateCategorySummaryText(); };
-                hamToggle.Unchecked += (_, _) => { _group2.Ham = false; RefreshGroup2Subtitle(); RefreshGroupSummaryTexts(); UpdateCategorySummaryText(); };
-                eventToggle.Checked += (_, _) => { _group2.Event = true; RefreshGroup2Subtitle(); RefreshGroupSummaryTexts(); UpdateCategorySummaryText(); };
-                eventToggle.Unchecked += (_, _) => { _group2.Event = false; RefreshGroup2Subtitle(); RefreshGroupSummaryTexts(); UpdateCategorySummaryText(); };
-                panel.Children.Add(CreateLabeledToggleRow("개각비 (5%)", gaegakbiToggle));
+                var awakeningToggle = CreateToggle("개각비 (5%)", _attackDamage2FactorState.Awakening);
+                var clubTypePToggle = CreateToggle("클럽 Type-P (5%)", _attackDamage2FactorState.ClubTypeP);
+                var exploreToggle = CreateToggle("탐험 포인트 공증 (5%)", _attackDamage2FactorState.ExplorePoint);
+                var twPowerToggle = CreateToggle("테일즈위버 기운 (5%)", _attackDamage2FactorState.TwPower);
+                var hamToggle = CreateToggle("괴력의 햄 (10%)", _attackDamage2FactorState.Ham);
+                var eventToggle = CreateToggle("이벤트 (10%)", _attackDamage2FactorState.Event);
+                awakeningToggle.Checked += (_, _) => { _attackDamage2FactorState.Awakening = true; RefreshAttackDamage2FactorSubtitle(); RefreshDamageSummaryTexts(); UpdateCategorySummaryText(); };
+                awakeningToggle.Unchecked += (_, _) => { _attackDamage2FactorState.Awakening = false; RefreshAttackDamage2FactorSubtitle(); RefreshDamageSummaryTexts(); UpdateCategorySummaryText(); };
+                clubTypePToggle.Checked += (_, _) => { _attackDamage2FactorState.ClubTypeP = true; RefreshAttackDamage2FactorSubtitle(); RefreshDamageSummaryTexts(); UpdateCategorySummaryText(); };
+                clubTypePToggle.Unchecked += (_, _) => { _attackDamage2FactorState.ClubTypeP = false; RefreshAttackDamage2FactorSubtitle(); RefreshDamageSummaryTexts(); UpdateCategorySummaryText(); };
+                exploreToggle.Checked += (_, _) => { _attackDamage2FactorState.ExplorePoint = true; RefreshAttackDamage2FactorSubtitle(); RefreshDamageSummaryTexts(); UpdateCategorySummaryText(); };
+                exploreToggle.Unchecked += (_, _) => { _attackDamage2FactorState.ExplorePoint = false; RefreshAttackDamage2FactorSubtitle(); RefreshDamageSummaryTexts(); UpdateCategorySummaryText(); };
+                twPowerToggle.Checked += (_, _) => { _attackDamage2FactorState.TwPower = true; RefreshAttackDamage2FactorSubtitle(); RefreshDamageSummaryTexts(); UpdateCategorySummaryText(); };
+                twPowerToggle.Unchecked += (_, _) => { _attackDamage2FactorState.TwPower = false; RefreshAttackDamage2FactorSubtitle(); RefreshDamageSummaryTexts(); UpdateCategorySummaryText(); };
+                hamToggle.Checked += (_, _) => { _attackDamage2FactorState.Ham = true; RefreshAttackDamage2FactorSubtitle(); RefreshDamageSummaryTexts(); UpdateCategorySummaryText(); };
+                hamToggle.Unchecked += (_, _) => { _attackDamage2FactorState.Ham = false; RefreshAttackDamage2FactorSubtitle(); RefreshDamageSummaryTexts(); UpdateCategorySummaryText(); };
+                eventToggle.Checked += (_, _) => { _attackDamage2FactorState.Event = true; RefreshAttackDamage2FactorSubtitle(); RefreshDamageSummaryTexts(); UpdateCategorySummaryText(); };
+                eventToggle.Unchecked += (_, _) => { _attackDamage2FactorState.Event = false; RefreshAttackDamage2FactorSubtitle(); RefreshDamageSummaryTexts(); UpdateCategorySummaryText(); };
+                panel.Children.Add(CreateLabeledToggleRow("개각비 (5%)", awakeningToggle));
                 panel.Children.Add(CreateLabeledToggleRow("클럽 Type-P (5%)", clubTypePToggle));
                 panel.Children.Add(CreateLabeledToggleRow("탐험 포인트 공증 (5%)", exploreToggle));
                 panel.Children.Add(CreateLabeledToggleRow("테일즈위버 기운 (5%)", twPowerToggle));
                 panel.Children.Add(CreateLabeledToggleRow("괴력의 햄 (10%)", hamToggle));
                 panel.Children.Add(CreateLabeledToggleRow("이벤트 (10%)", eventToggle));
-                panel.Children.Add(CreateLabeledTextBoxRow("기타", _group2.EtcValue, out var etcText));
-                etcText.TextChanged += (_, _) => { _group2.EtcValue = etcText.Text.Trim(); RefreshGroup2Subtitle(); RefreshGroupSummaryTexts(); UpdateCategorySummaryText(); };
-                RefreshGroup2Subtitle();
+                panel.Children.Add(CreateLabeledTextBoxRow("기타", _attackDamage2FactorState.EtcValue, out var etcText));
+                etcText.TextChanged += (_, _) => { _attackDamage2FactorState.EtcValue = etcText.Text.Trim(); RefreshAttackDamage2FactorSubtitle(); RefreshDamageSummaryTexts(); UpdateCategorySummaryText(); };
+                RefreshAttackDamage2FactorSubtitle();
                 saveAction = () =>
                 {
-                    _group2.Gaegakbi = gaegakbiToggle.IsChecked == true;
-                    _group2.ClubTypeP = clubTypePToggle.IsChecked == true;
-                    _group2.ExplorePoint = exploreToggle.IsChecked == true;
-                    _group2.TwPower = twPowerToggle.IsChecked == true;
-                    _group2.Ham = hamToggle.IsChecked == true;
-                    _group2.Event = eventToggle.IsChecked == true;
-                    _group2.EtcValue = etcText.Text.Trim();
-                    RefreshGroup2Subtitle();
+                    _attackDamage2FactorState.Awakening = awakeningToggle.IsChecked == true;
+                    _attackDamage2FactorState.ClubTypeP = clubTypePToggle.IsChecked == true;
+                    _attackDamage2FactorState.ExplorePoint = exploreToggle.IsChecked == true;
+                    _attackDamage2FactorState.TwPower = twPowerToggle.IsChecked == true;
+                    _attackDamage2FactorState.Ham = hamToggle.IsChecked == true;
+                    _attackDamage2FactorState.Event = eventToggle.IsChecked == true;
+                    _attackDamage2FactorState.EtcValue = etcText.Text.Trim();
+                    RefreshAttackDamage2FactorSubtitle();
                     UpdateCategorySummaryText();
                 };
             }
-            else if (kind == AttackGroupKind.Group3)
+            else if (kind == AttackDamageSectionKind.TraitAttackDamage)
             {
                 var trait = new TextBlock
                 {
-                    Text = $"{GetCurrentTraitDisplayName()} : {_calc.Group3TraitAttackDamageValue:0.#}%",
+                    Text = $"{GetCurrentTraitDisplayName()} : {_calc.TraitAttackDamageValue:0.#}%",
                     Foreground = System.Windows.Media.Brushes.White,
                     FontWeight = FontWeights.SemiBold,
                     HorizontalAlignment = HorizontalAlignment.Left,
@@ -1049,43 +1058,43 @@ namespace TWChatOverlay.Views.Addons
                     TextAlignment = TextAlignment.Left
                 };
                 panel.Children.Add(trait);
-                RefreshGroup3Subtitle();
+                RefreshTraitAttackDamageSubtitle();
                 saveAction = () => { };
             }
             else
             {
-                var titleToggle = CreateToggle("칭호 (20%)", _group4.TitleDamage);
-                var feverToggle = CreateToggle("피버 (10%)", _group4.Fever);
-                titleToggle.Checked += (_, _) => { _group4.TitleDamage = true; RefreshGroup4Subtitle(); RefreshGroupSummaryTexts(); UpdateCategorySummaryText(); };
-                titleToggle.Unchecked += (_, _) => { _group4.TitleDamage = false; RefreshGroup4Subtitle(); RefreshGroupSummaryTexts(); UpdateCategorySummaryText(); };
-                feverToggle.Checked += (_, _) => { _group4.Fever = true; RefreshGroup4Subtitle(); RefreshGroupSummaryTexts(); UpdateCategorySummaryText(); };
-                feverToggle.Unchecked += (_, _) => { _group4.Fever = false; RefreshGroup4Subtitle(); RefreshGroupSummaryTexts(); UpdateCategorySummaryText(); };
+                var titleToggle = CreateToggle("칭호 (20%)", _additionalFactorState.TitleDamage);
+                var feverToggle = CreateToggle("피버 (10%)", _additionalFactorState.Fever);
+                titleToggle.Checked += (_, _) => { _additionalFactorState.TitleDamage = true; RefreshAdditionalFactorSubtitle(); RefreshDamageSummaryTexts(); UpdateCategorySummaryText(); };
+                titleToggle.Unchecked += (_, _) => { _additionalFactorState.TitleDamage = false; RefreshAdditionalFactorSubtitle(); RefreshDamageSummaryTexts(); UpdateCategorySummaryText(); };
+                feverToggle.Checked += (_, _) => { _additionalFactorState.Fever = true; RefreshAdditionalFactorSubtitle(); RefreshDamageSummaryTexts(); UpdateCategorySummaryText(); };
+                feverToggle.Unchecked += (_, _) => { _additionalFactorState.Fever = false; RefreshAdditionalFactorSubtitle(); RefreshDamageSummaryTexts(); UpdateCategorySummaryText(); };
                 panel.Children.Add(CreateLabeledToggleRow("칭호 (20%)", titleToggle));
                 panel.Children.Add(CreateLabeledToggleRow("피버 (10%)", feverToggle));
-                panel.Children.Add(CreateLabeledComboRow("무기 어빌리티", new[] { "없음 (0%)", "심연 (9%)", "상실 (10%)", "야성 (11%)" }, _group4.WeaponAbilityIndex, out var weaponAbilityCombo));
-                panel.Children.Add(CreateLabeledComboRow("손목 어빌리티", new[] { "없음 (0%)", "심연 (9%)", "상실 (10%)", "야성 (11%)" }, _group4.WristAbilityIndex, out var wristCombo, 100));
-                panel.Children.Add(CreateLabeledComboRow("손 어빌리티", new[] { "없음 (0%)", "심연 (7%)", "상실 (8%)", "야성 (9%)" }, _group4.HandAbilityIndex, out var handCombo));
-                panel.Children.Add(CreateLabeledComboRow("루나리아 어빌리티", new[] { "0%", "1%", "2%", "3%", "4%", "5%", "6%", "7%", "8%", "9%", "10%" }, _group4.LunariaAbilityIndex, out var lunariaCombo));
-                panel.Children.Add(CreateLabeledComboRow("심화 룬", new[] { "0렙 (0%)", "1렙 (3%)", "2렙 (6%)", "3렙 (9%)" }, _group4.DeepRuneIndex, out var deepRuneCombo));
-                panel.Children.Add(CreateLabeledTextBoxRow("기타", _group4.EtcValue, out var etcText));
-                wristCombo.SelectionChanged += (_, _) => { _group4.WristAbilityIndex = Math.Max(0, wristCombo.SelectedIndex); RefreshGroup4Subtitle(); RefreshGroupSummaryTexts(); UpdateCategorySummaryText(); };
-                weaponAbilityCombo.SelectionChanged += (_, _) => { _group4.WeaponAbilityIndex = Math.Max(0, weaponAbilityCombo.SelectedIndex); RefreshGroup4Subtitle(); RefreshGroupSummaryTexts(); UpdateCategorySummaryText(); };
-                handCombo.SelectionChanged += (_, _) => { _group4.HandAbilityIndex = Math.Max(0, handCombo.SelectedIndex); RefreshGroup4Subtitle(); RefreshGroupSummaryTexts(); UpdateCategorySummaryText(); };
-                lunariaCombo.SelectionChanged += (_, _) => { _group4.LunariaAbilityIndex = Math.Max(0, lunariaCombo.SelectedIndex); RefreshGroup4Subtitle(); RefreshGroupSummaryTexts(); UpdateCategorySummaryText(); };
-                deepRuneCombo.SelectionChanged += (_, _) => { _group4.DeepRuneIndex = Math.Max(0, deepRuneCombo.SelectedIndex); RefreshGroup4Subtitle(); RefreshGroupSummaryTexts(); UpdateCategorySummaryText(); };
-                etcText.TextChanged += (_, _) => { _group4.EtcValue = etcText.Text.Trim(); RefreshGroup4Subtitle(); RefreshGroupSummaryTexts(); UpdateCategorySummaryText(); };
-                RefreshGroup4Subtitle();
+                panel.Children.Add(CreateLabeledComboRow("무기 어빌리티", new[] { "없음 (0%)", "심연 (9%)", "상실 (10%)", "야성 (11%)" }, _additionalFactorState.WeaponAbilityIndex, out var weaponAbilityCombo));
+                panel.Children.Add(CreateLabeledComboRow("손목 어빌리티", new[] { "없음 (0%)", "심연 (9%)", "상실 (10%)", "야성 (11%)" }, _additionalFactorState.WristAbilityIndex, out var wristCombo, 100));
+                panel.Children.Add(CreateLabeledComboRow("손 어빌리티", new[] { "없음 (0%)", "심연 (7%)", "상실 (8%)", "야성 (9%)" }, _additionalFactorState.HandAbilityIndex, out var handCombo));
+                panel.Children.Add(CreateLabeledComboRow("루나리아 어빌리티", new[] { "0%", "1%", "2%", "3%", "4%", "5%", "6%", "7%", "8%", "9%", "10%" }, _additionalFactorState.LunariaAbilityIndex, out var lunariaCombo));
+                panel.Children.Add(CreateLabeledComboRow("심화 룬", new[] { "0렙 (0%)", "1렙 (3%)", "2렙 (6%)", "3렙 (9%)" }, _additionalFactorState.DeepRuneIndex, out var deepRuneCombo));
+                panel.Children.Add(CreateLabeledTextBoxRow("기타", _additionalFactorState.EtcValue, out var etcText));
+                wristCombo.SelectionChanged += (_, _) => { _additionalFactorState.WristAbilityIndex = Math.Max(0, wristCombo.SelectedIndex); RefreshAdditionalFactorSubtitle(); RefreshDamageSummaryTexts(); UpdateCategorySummaryText(); };
+                weaponAbilityCombo.SelectionChanged += (_, _) => { _additionalFactorState.WeaponAbilityIndex = Math.Max(0, weaponAbilityCombo.SelectedIndex); RefreshAdditionalFactorSubtitle(); RefreshDamageSummaryTexts(); UpdateCategorySummaryText(); };
+                handCombo.SelectionChanged += (_, _) => { _additionalFactorState.HandAbilityIndex = Math.Max(0, handCombo.SelectedIndex); RefreshAdditionalFactorSubtitle(); RefreshDamageSummaryTexts(); UpdateCategorySummaryText(); };
+                lunariaCombo.SelectionChanged += (_, _) => { _additionalFactorState.LunariaAbilityIndex = Math.Max(0, lunariaCombo.SelectedIndex); RefreshAdditionalFactorSubtitle(); RefreshDamageSummaryTexts(); UpdateCategorySummaryText(); };
+                deepRuneCombo.SelectionChanged += (_, _) => { _additionalFactorState.DeepRuneIndex = Math.Max(0, deepRuneCombo.SelectedIndex); RefreshAdditionalFactorSubtitle(); RefreshDamageSummaryTexts(); UpdateCategorySummaryText(); };
+                etcText.TextChanged += (_, _) => { _additionalFactorState.EtcValue = etcText.Text.Trim(); RefreshAdditionalFactorSubtitle(); RefreshDamageSummaryTexts(); UpdateCategorySummaryText(); };
+                RefreshAdditionalFactorSubtitle();
                 saveAction = () =>
                 {
-                    _group4.TitleDamage = titleToggle.IsChecked == true;
-                    _group4.Fever = feverToggle.IsChecked == true;
-                    _group4.WristAbilityIndex = Math.Max(0, wristCombo.SelectedIndex);
-                    _group4.WeaponAbilityIndex = Math.Max(0, weaponAbilityCombo.SelectedIndex);
-                    _group4.HandAbilityIndex = Math.Max(0, handCombo.SelectedIndex);
-                    _group4.LunariaAbilityIndex = Math.Max(0, lunariaCombo.SelectedIndex);
-                    _group4.DeepRuneIndex = Math.Max(0, deepRuneCombo.SelectedIndex);
-                    _group4.EtcValue = etcText.Text.Trim();
-                    RefreshGroup4Subtitle();
+                    _additionalFactorState.TitleDamage = titleToggle.IsChecked == true;
+                    _additionalFactorState.Fever = feverToggle.IsChecked == true;
+                    _additionalFactorState.WristAbilityIndex = Math.Max(0, wristCombo.SelectedIndex);
+                    _additionalFactorState.WeaponAbilityIndex = Math.Max(0, weaponAbilityCombo.SelectedIndex);
+                    _additionalFactorState.HandAbilityIndex = Math.Max(0, handCombo.SelectedIndex);
+                    _additionalFactorState.LunariaAbilityIndex = Math.Max(0, lunariaCombo.SelectedIndex);
+                    _additionalFactorState.DeepRuneIndex = Math.Max(0, deepRuneCombo.SelectedIndex);
+                    _additionalFactorState.EtcValue = etcText.Text.Trim();
+                    RefreshAdditionalFactorSubtitle();
                     UpdateCategorySummaryText();
                 };
             }
@@ -1093,144 +1102,144 @@ namespace TWChatOverlay.Views.Addons
             return border;
         }
 
-        private void BuildInlineGroupSections()
+        private void BuildDamageInlineSections()
         {
-            BuildGroup1InlineSection();
-            BuildGroup2InlineSection();
-            BuildGroup4InlineSection();
-            BuildGroup5InlineSection();
-            BuildGroup11InlineSection();
+            BuildAttackDamage1FactorInlineSection();
+            BuildAttackDamage2FactorInlineSection();
+            BuildAdditionalFactorInlineSection();
+            BuildSeriesAttackDamageInlineSection();
+            BuildAdditionalDamageInlineSection();
         }
 
-        private void BuildGroup1InlineSection()
+        private void BuildAttackDamage1FactorInlineSection()
         {
-            if (Group1InlineHost == null)
+            if (AttackDamage1FactorInlineHost == null)
                 return;
 
-            Group1InlineHost.Children.Clear();
+            AttackDamage1FactorInlineHost.Children.Clear();
 
-            var snowmanToggle = CreateToggle("눈사람 (20%)", _group1.Snowman);
-            var illumiToggle = CreateToggle("일루미 (10%)", _group1.Illumi);
+            var snowmanToggle = CreateToggle("눈사람 (20%)", _attackDamage1FactorState.Snowman);
+            var illumiToggle = CreateToggle("일루미 (10%)", _attackDamage1FactorState.Illumi);
             snowmanToggle.Checked += (_, _) => illumiToggle.IsChecked = false;
             illumiToggle.Checked += (_, _) => snowmanToggle.IsChecked = false;
-            snowmanToggle.Checked += (_, _) => { _group1.Snowman = true; _group1.Illumi = false; RefreshGroupSummaryTexts(); UpdateCategorySummaryText(); };
-            snowmanToggle.Unchecked += (_, _) => { _group1.Snowman = false; RefreshGroupSummaryTexts(); UpdateCategorySummaryText(); };
-            illumiToggle.Checked += (_, _) => { _group1.Illumi = true; _group1.Snowman = false; RefreshGroupSummaryTexts(); UpdateCategorySummaryText(); };
-            illumiToggle.Unchecked += (_, _) => { _group1.Illumi = false; RefreshGroupSummaryTexts(); UpdateCategorySummaryText(); };
+            snowmanToggle.Checked += (_, _) => { _attackDamage1FactorState.Snowman = true; _attackDamage1FactorState.Illumi = false; RefreshDamageSummaryTexts(); UpdateCategorySummaryText(); };
+            snowmanToggle.Unchecked += (_, _) => { _attackDamage1FactorState.Snowman = false; RefreshDamageSummaryTexts(); UpdateCategorySummaryText(); };
+            illumiToggle.Checked += (_, _) => { _attackDamage1FactorState.Illumi = true; _attackDamage1FactorState.Snowman = false; RefreshDamageSummaryTexts(); UpdateCategorySummaryText(); };
+            illumiToggle.Unchecked += (_, _) => { _attackDamage1FactorState.Illumi = false; RefreshDamageSummaryTexts(); UpdateCategorySummaryText(); };
 
-            var isabelDamageToggle = CreateToggle("이자벨 대미지 (10%)", _group1.IsabelDamage);
-            var isabelSpecialToggle = CreateToggle("이자벨 특선 대미지 (10%)", _group1.IsabelSpecial);
-            var isabelBattleToggle = CreateToggle("이자벨 전투 (10%)", _group1.IsabelBattle);
-            isabelDamageToggle.Checked += (_, _) => { _group1.IsabelDamage = true; RefreshGroupSummaryTexts(); UpdateCategorySummaryText(); };
-            isabelDamageToggle.Unchecked += (_, _) => { _group1.IsabelDamage = false; RefreshGroupSummaryTexts(); UpdateCategorySummaryText(); };
-            isabelSpecialToggle.Checked += (_, _) => { _group1.IsabelSpecial = true; RefreshGroupSummaryTexts(); UpdateCategorySummaryText(); };
-            isabelSpecialToggle.Unchecked += (_, _) => { _group1.IsabelSpecial = false; RefreshGroupSummaryTexts(); UpdateCategorySummaryText(); };
-            isabelBattleToggle.Checked += (_, _) => { _group1.IsabelBattle = true; RefreshGroupSummaryTexts(); UpdateCategorySummaryText(); };
-            isabelBattleToggle.Unchecked += (_, _) => { _group1.IsabelBattle = false; RefreshGroupSummaryTexts(); UpdateCategorySummaryText(); };
+            var isabelDamageToggle = CreateToggle("이자벨 대미지 (10%)", _attackDamage1FactorState.IsabelDamage);
+            var isabelSpecialToggle = CreateToggle("이자벨 특선 대미지 (10%)", _attackDamage1FactorState.IsabelSpecial);
+            var isabelBattleToggle = CreateToggle("이자벨 전투 (10%)", _attackDamage1FactorState.IsabelBattle);
+            isabelDamageToggle.Checked += (_, _) => { _attackDamage1FactorState.IsabelDamage = true; RefreshDamageSummaryTexts(); UpdateCategorySummaryText(); };
+            isabelDamageToggle.Unchecked += (_, _) => { _attackDamage1FactorState.IsabelDamage = false; RefreshDamageSummaryTexts(); UpdateCategorySummaryText(); };
+            isabelSpecialToggle.Checked += (_, _) => { _attackDamage1FactorState.IsabelSpecial = true; RefreshDamageSummaryTexts(); UpdateCategorySummaryText(); };
+            isabelSpecialToggle.Unchecked += (_, _) => { _attackDamage1FactorState.IsabelSpecial = false; RefreshDamageSummaryTexts(); UpdateCategorySummaryText(); };
+            isabelBattleToggle.Checked += (_, _) => { _attackDamage1FactorState.IsabelBattle = true; RefreshDamageSummaryTexts(); UpdateCategorySummaryText(); };
+            isabelBattleToggle.Unchecked += (_, _) => { _attackDamage1FactorState.IsabelBattle = false; RefreshDamageSummaryTexts(); UpdateCategorySummaryText(); };
 
-            Group1InlineHost.Children.Add(CreateLabeledToggleRow("눈사람 (20%)", snowmanToggle));
-            Group1InlineHost.Children.Add(CreateLabeledToggleRow("일루미 (10%)", illumiToggle));
-            Group1InlineHost.Children.Add(CreateLabeledToggleRow("이자벨 대미지 (10%)", isabelDamageToggle));
-            Group1InlineHost.Children.Add(CreateLabeledToggleRow("이자벨 특선 대미지 (10%)", isabelSpecialToggle));
-            Group1InlineHost.Children.Add(CreateLabeledToggleRow("이자벨 전투 (10%)", isabelBattleToggle));
-            Group1InlineHost.Children.Add(CreateLabeledTextBoxRow("기타", _group1.EtcValue, out var etcText));
-            etcText.TextChanged += (_, _) => { _group1.EtcValue = etcText.Text.Trim(); RefreshGroupSummaryTexts(); UpdateCategorySummaryText(); };
+            AttackDamage1FactorInlineHost.Children.Add(CreateLabeledToggleRow("눈사람 (20%)", snowmanToggle));
+            AttackDamage1FactorInlineHost.Children.Add(CreateLabeledToggleRow("일루미 (10%)", illumiToggle));
+            AttackDamage1FactorInlineHost.Children.Add(CreateLabeledToggleRow("이자벨 대미지 (10%)", isabelDamageToggle));
+            AttackDamage1FactorInlineHost.Children.Add(CreateLabeledToggleRow("이자벨 특선 대미지 (10%)", isabelSpecialToggle));
+            AttackDamage1FactorInlineHost.Children.Add(CreateLabeledToggleRow("이자벨 전투 (10%)", isabelBattleToggle));
+            AttackDamage1FactorInlineHost.Children.Add(CreateLabeledTextBoxRow("기타", _attackDamage1FactorState.EtcValue, out var etcText));
+            etcText.TextChanged += (_, _) => { _attackDamage1FactorState.EtcValue = etcText.Text.Trim(); RefreshDamageSummaryTexts(); UpdateCategorySummaryText(); };
         }
 
-        private void BuildGroup2InlineSection()
+        private void BuildAttackDamage2FactorInlineSection()
         {
-            if (Group2InlineHost == null)
+            if (AttackDamage2FactorInlineHost == null)
                 return;
 
-            Group2InlineHost.Children.Clear();
+            AttackDamage2FactorInlineHost.Children.Clear();
 
-            var gaegakbiToggle = CreateToggle("개각비 (5%)", _group2.Gaegakbi);
-            var clubTypePToggle = CreateToggle("클럽 Type-P (5%)", _group2.ClubTypeP);
-            var exploreToggle = CreateToggle("탐험 포인트 공증 (5%)", _group2.ExplorePoint);
-            var twPowerToggle = CreateToggle("테일즈위버 기운 (5%)", _group2.TwPower);
-            var hamToggle = CreateToggle("괴력의 햄 (10%)", _group2.Ham);
-            var eventToggle = CreateToggle("이벤트 (10%)", _group2.Event);
-            gaegakbiToggle.Checked += (_, _) => { _group2.Gaegakbi = true; RefreshGroupSummaryTexts(); UpdateCategorySummaryText(); };
-            gaegakbiToggle.Unchecked += (_, _) => { _group2.Gaegakbi = false; RefreshGroupSummaryTexts(); UpdateCategorySummaryText(); };
-            clubTypePToggle.Checked += (_, _) => { _group2.ClubTypeP = true; RefreshGroupSummaryTexts(); UpdateCategorySummaryText(); };
-            clubTypePToggle.Unchecked += (_, _) => { _group2.ClubTypeP = false; RefreshGroupSummaryTexts(); UpdateCategorySummaryText(); };
-            exploreToggle.Checked += (_, _) => { _group2.ExplorePoint = true; RefreshGroupSummaryTexts(); UpdateCategorySummaryText(); };
-            exploreToggle.Unchecked += (_, _) => { _group2.ExplorePoint = false; RefreshGroupSummaryTexts(); UpdateCategorySummaryText(); };
-            twPowerToggle.Checked += (_, _) => { _group2.TwPower = true; RefreshGroupSummaryTexts(); UpdateCategorySummaryText(); };
-            twPowerToggle.Unchecked += (_, _) => { _group2.TwPower = false; RefreshGroupSummaryTexts(); UpdateCategorySummaryText(); };
-            hamToggle.Checked += (_, _) => { _group2.Ham = true; RefreshGroupSummaryTexts(); UpdateCategorySummaryText(); };
-            hamToggle.Unchecked += (_, _) => { _group2.Ham = false; RefreshGroupSummaryTexts(); UpdateCategorySummaryText(); };
-            eventToggle.Checked += (_, _) => { _group2.Event = true; RefreshGroupSummaryTexts(); UpdateCategorySummaryText(); };
-            eventToggle.Unchecked += (_, _) => { _group2.Event = false; RefreshGroupSummaryTexts(); UpdateCategorySummaryText(); };
+            var awakeningToggle = CreateToggle("개각비 (5%)", _attackDamage2FactorState.Awakening);
+            var clubTypePToggle = CreateToggle("클럽 Type-P (5%)", _attackDamage2FactorState.ClubTypeP);
+            var exploreToggle = CreateToggle("탐험 포인트 공증 (5%)", _attackDamage2FactorState.ExplorePoint);
+            var twPowerToggle = CreateToggle("테일즈위버 기운 (5%)", _attackDamage2FactorState.TwPower);
+            var hamToggle = CreateToggle("괴력의 햄 (10%)", _attackDamage2FactorState.Ham);
+            var eventToggle = CreateToggle("이벤트 (10%)", _attackDamage2FactorState.Event);
+            awakeningToggle.Checked += (_, _) => { _attackDamage2FactorState.Awakening = true; RefreshDamageSummaryTexts(); UpdateCategorySummaryText(); };
+            awakeningToggle.Unchecked += (_, _) => { _attackDamage2FactorState.Awakening = false; RefreshDamageSummaryTexts(); UpdateCategorySummaryText(); };
+            clubTypePToggle.Checked += (_, _) => { _attackDamage2FactorState.ClubTypeP = true; RefreshDamageSummaryTexts(); UpdateCategorySummaryText(); };
+            clubTypePToggle.Unchecked += (_, _) => { _attackDamage2FactorState.ClubTypeP = false; RefreshDamageSummaryTexts(); UpdateCategorySummaryText(); };
+            exploreToggle.Checked += (_, _) => { _attackDamage2FactorState.ExplorePoint = true; RefreshDamageSummaryTexts(); UpdateCategorySummaryText(); };
+            exploreToggle.Unchecked += (_, _) => { _attackDamage2FactorState.ExplorePoint = false; RefreshDamageSummaryTexts(); UpdateCategorySummaryText(); };
+            twPowerToggle.Checked += (_, _) => { _attackDamage2FactorState.TwPower = true; RefreshDamageSummaryTexts(); UpdateCategorySummaryText(); };
+            twPowerToggle.Unchecked += (_, _) => { _attackDamage2FactorState.TwPower = false; RefreshDamageSummaryTexts(); UpdateCategorySummaryText(); };
+            hamToggle.Checked += (_, _) => { _attackDamage2FactorState.Ham = true; RefreshDamageSummaryTexts(); UpdateCategorySummaryText(); };
+            hamToggle.Unchecked += (_, _) => { _attackDamage2FactorState.Ham = false; RefreshDamageSummaryTexts(); UpdateCategorySummaryText(); };
+            eventToggle.Checked += (_, _) => { _attackDamage2FactorState.Event = true; RefreshDamageSummaryTexts(); UpdateCategorySummaryText(); };
+            eventToggle.Unchecked += (_, _) => { _attackDamage2FactorState.Event = false; RefreshDamageSummaryTexts(); UpdateCategorySummaryText(); };
 
-            Group2InlineHost.Children.Add(CreateLabeledToggleRow("개각비 (5%)", gaegakbiToggle));
-            Group2InlineHost.Children.Add(CreateLabeledToggleRow("클럽 Type-P (5%)", clubTypePToggle));
-            Group2InlineHost.Children.Add(CreateLabeledToggleRow("탐험 포인트 공증 (5%)", exploreToggle));
-            Group2InlineHost.Children.Add(CreateLabeledToggleRow("테일즈위버 기운 (5%)", twPowerToggle));
-            Group2InlineHost.Children.Add(CreateLabeledToggleRow("괴력의 햄 (10%)", hamToggle));
-            Group2InlineHost.Children.Add(CreateLabeledToggleRow("이벤트 (10%)", eventToggle));
-            Group2InlineHost.Children.Add(CreateLabeledTextBoxRow("기타", _group2.EtcValue, out var etcText));
-            etcText.TextChanged += (_, _) => { _group2.EtcValue = etcText.Text.Trim(); RefreshGroupSummaryTexts(); UpdateCategorySummaryText(); };
+            AttackDamage2FactorInlineHost.Children.Add(CreateLabeledToggleRow("개각비 (5%)", awakeningToggle));
+            AttackDamage2FactorInlineHost.Children.Add(CreateLabeledToggleRow("클럽 Type-P (5%)", clubTypePToggle));
+            AttackDamage2FactorInlineHost.Children.Add(CreateLabeledToggleRow("탐험 포인트 공증 (5%)", exploreToggle));
+            AttackDamage2FactorInlineHost.Children.Add(CreateLabeledToggleRow("테일즈위버 기운 (5%)", twPowerToggle));
+            AttackDamage2FactorInlineHost.Children.Add(CreateLabeledToggleRow("괴력의 햄 (10%)", hamToggle));
+            AttackDamage2FactorInlineHost.Children.Add(CreateLabeledToggleRow("이벤트 (10%)", eventToggle));
+            AttackDamage2FactorInlineHost.Children.Add(CreateLabeledTextBoxRow("기타", _attackDamage2FactorState.EtcValue, out var etcText));
+            etcText.TextChanged += (_, _) => { _attackDamage2FactorState.EtcValue = etcText.Text.Trim(); RefreshDamageSummaryTexts(); UpdateCategorySummaryText(); };
         }
 
-        private void BuildGroup4InlineSection()
+        private void BuildAdditionalFactorInlineSection()
         {
-            if (Group4InlineHost == null)
+            if (AdditionalFactorInlineHost == null)
                 return;
 
-            Group4InlineHost.Children.Clear();
+            AdditionalFactorInlineHost.Children.Clear();
 
-            var titleToggle = CreateToggle("칭호 (20%)", _group4.TitleDamage);
-            var feverToggle = CreateToggle("피버 (10%)", _group4.Fever);
-            titleToggle.Checked += (_, _) => { _group4.TitleDamage = true; RefreshGroupSummaryTexts(); UpdateCategorySummaryText(); };
-            titleToggle.Unchecked += (_, _) => { _group4.TitleDamage = false; RefreshGroupSummaryTexts(); UpdateCategorySummaryText(); };
-            feverToggle.Checked += (_, _) => { _group4.Fever = true; RefreshGroupSummaryTexts(); UpdateCategorySummaryText(); };
-            feverToggle.Unchecked += (_, _) => { _group4.Fever = false; RefreshGroupSummaryTexts(); UpdateCategorySummaryText(); };
+            var titleToggle = CreateToggle("칭호 (20%)", _additionalFactorState.TitleDamage);
+            var feverToggle = CreateToggle("피버 (10%)", _additionalFactorState.Fever);
+            titleToggle.Checked += (_, _) => { _additionalFactorState.TitleDamage = true; RefreshDamageSummaryTexts(); UpdateCategorySummaryText(); };
+            titleToggle.Unchecked += (_, _) => { _additionalFactorState.TitleDamage = false; RefreshDamageSummaryTexts(); UpdateCategorySummaryText(); };
+            feverToggle.Checked += (_, _) => { _additionalFactorState.Fever = true; RefreshDamageSummaryTexts(); UpdateCategorySummaryText(); };
+            feverToggle.Unchecked += (_, _) => { _additionalFactorState.Fever = false; RefreshDamageSummaryTexts(); UpdateCategorySummaryText(); };
 
-            Group4InlineHost.Children.Add(CreateLabeledToggleRow("칭호 (20%)", titleToggle));
-            Group4InlineHost.Children.Add(CreateLabeledToggleRow("피버 (10%)", feverToggle));
-            Group4InlineHost.Children.Add(CreateLabeledComboRow("무기 어빌리티", new[] { "없음 (0%)", "심연 (9%)", "상실 (10%)", "야성 (11%)" }, _group4.WeaponAbilityIndex, out var weaponAbilityCombo));
-            Group4InlineHost.Children.Add(CreateLabeledComboRow("손목 어빌리티", new[] { "없음 (0%)", "심연 (9%)", "상실 (10%)", "야성 (11%)" }, _group4.WristAbilityIndex, out var wristCombo));
-            Group4InlineHost.Children.Add(CreateLabeledComboRow("손 어빌리티", new[] { "없음 (0%)", "심연 (7%)", "상실 (8%)", "야성 (9%)" }, _group4.HandAbilityIndex, out var handCombo));
-            Group4InlineHost.Children.Add(CreateLabeledComboRow("루나리아 어빌리티", new[] { "0%", "1%", "2%", "3%", "4%", "5%", "6%", "7%", "8%", "9%", "10%" }, _group4.LunariaAbilityIndex, out var lunariaCombo));
-            Group4InlineHost.Children.Add(CreateLabeledComboRow("심화 룬", new[] { "0렙 (0%)", "1렙 (3%)", "2렙 (6%)", "3렙 (9%)" }, _group4.DeepRuneIndex, out var deepRuneCombo));
-            Group4InlineHost.Children.Add(CreateLabeledTextBoxRow("기타", _group4.EtcValue, out var etcText));
+            AdditionalFactorInlineHost.Children.Add(CreateLabeledToggleRow("칭호 (20%)", titleToggle));
+            AdditionalFactorInlineHost.Children.Add(CreateLabeledToggleRow("피버 (10%)", feverToggle));
+            AdditionalFactorInlineHost.Children.Add(CreateLabeledComboRow("무기 어빌리티", new[] { "없음 (0%)", "심연 (9%)", "상실 (10%)", "야성 (11%)" }, _additionalFactorState.WeaponAbilityIndex, out var weaponAbilityCombo));
+            AdditionalFactorInlineHost.Children.Add(CreateLabeledComboRow("손목 어빌리티", new[] { "없음 (0%)", "심연 (9%)", "상실 (10%)", "야성 (11%)" }, _additionalFactorState.WristAbilityIndex, out var wristCombo));
+            AdditionalFactorInlineHost.Children.Add(CreateLabeledComboRow("손 어빌리티", new[] { "없음 (0%)", "심연 (7%)", "상실 (8%)", "야성 (9%)" }, _additionalFactorState.HandAbilityIndex, out var handCombo));
+            AdditionalFactorInlineHost.Children.Add(CreateLabeledComboRow("루나리아 어빌리티", new[] { "0%", "1%", "2%", "3%", "4%", "5%", "6%", "7%", "8%", "9%", "10%" }, _additionalFactorState.LunariaAbilityIndex, out var lunariaCombo));
+            AdditionalFactorInlineHost.Children.Add(CreateLabeledComboRow("심화 룬", new[] { "0렙 (0%)", "1렙 (3%)", "2렙 (6%)", "3렙 (9%)" }, _additionalFactorState.DeepRuneIndex, out var deepRuneCombo));
+            AdditionalFactorInlineHost.Children.Add(CreateLabeledTextBoxRow("기타", _additionalFactorState.EtcValue, out var etcText));
 
-            wristCombo.SelectionChanged += (_, _) => { _group4.WristAbilityIndex = Math.Max(0, wristCombo.SelectedIndex); RefreshGroupSummaryTexts(); UpdateCategorySummaryText(); };
-            weaponAbilityCombo.SelectionChanged += (_, _) => { _group4.WeaponAbilityIndex = Math.Max(0, weaponAbilityCombo.SelectedIndex); RefreshGroupSummaryTexts(); UpdateCategorySummaryText(); };
-            handCombo.SelectionChanged += (_, _) => { _group4.HandAbilityIndex = Math.Max(0, handCombo.SelectedIndex); RefreshGroupSummaryTexts(); UpdateCategorySummaryText(); };
-            lunariaCombo.SelectionChanged += (_, _) => { _group4.LunariaAbilityIndex = Math.Max(0, lunariaCombo.SelectedIndex); RefreshGroupSummaryTexts(); UpdateCategorySummaryText(); };
-            deepRuneCombo.SelectionChanged += (_, _) => { _group4.DeepRuneIndex = Math.Max(0, deepRuneCombo.SelectedIndex); RefreshGroupSummaryTexts(); UpdateCategorySummaryText(); };
-            etcText.TextChanged += (_, _) => { _group4.EtcValue = etcText.Text.Trim(); RefreshGroupSummaryTexts(); UpdateCategorySummaryText(); };
+            wristCombo.SelectionChanged += (_, _) => { _additionalFactorState.WristAbilityIndex = Math.Max(0, wristCombo.SelectedIndex); RefreshDamageSummaryTexts(); UpdateCategorySummaryText(); };
+            weaponAbilityCombo.SelectionChanged += (_, _) => { _additionalFactorState.WeaponAbilityIndex = Math.Max(0, weaponAbilityCombo.SelectedIndex); RefreshDamageSummaryTexts(); UpdateCategorySummaryText(); };
+            handCombo.SelectionChanged += (_, _) => { _additionalFactorState.HandAbilityIndex = Math.Max(0, handCombo.SelectedIndex); RefreshDamageSummaryTexts(); UpdateCategorySummaryText(); };
+            lunariaCombo.SelectionChanged += (_, _) => { _additionalFactorState.LunariaAbilityIndex = Math.Max(0, lunariaCombo.SelectedIndex); RefreshDamageSummaryTexts(); UpdateCategorySummaryText(); };
+            deepRuneCombo.SelectionChanged += (_, _) => { _additionalFactorState.DeepRuneIndex = Math.Max(0, deepRuneCombo.SelectedIndex); RefreshDamageSummaryTexts(); UpdateCategorySummaryText(); };
+            etcText.TextChanged += (_, _) => { _additionalFactorState.EtcValue = etcText.Text.Trim(); RefreshDamageSummaryTexts(); UpdateCategorySummaryText(); };
         }
 
-        private void BuildGroup5InlineSection()
+        private void BuildSeriesAttackDamageInlineSection()
         {
-            if (Group5InlineHost == null)
+            if (SeriesAttackDamageInlineHost == null)
                 return;
 
-            Group5InlineHost.Children.Clear();
-            Group5InlineHost.Children.Add(CreateLabeledCombo("아티팩트", new[] { "프시키 (15%)", "아크론 (20%)", "이클립스 (30%)", "에테리얼 (35%)" }, _group5.ArtifactIndex, out var artifactCombo));
-            Group5InlineHost.Children.Add(CreateLabeledCombo("손목 부가", new[] { "25%", "26%", "27%", "28%" }, _group5.WristExtraIndex, out var wristCombo));
-            Group5InlineHost.Children.Add(CreateLabeledCombo("루나리아 부가", new[] { "0%", "1%", "2%", "3%", "4%", "5%", "6%", "7%", "8%", "9%", "10%" }, _group5.LunariaExtraIndex, out var lunariaCombo));
+            SeriesAttackDamageInlineHost.Children.Clear();
+            SeriesAttackDamageInlineHost.Children.Add(CreateLabeledCombo("아티팩트", new[] { "프시키 (15%)", "아크론 (20%)", "이클립스 (30%)", "에테리얼 (35%)" }, _seriesAttackDamageState.ArtifactIndex, out var artifactCombo));
+            SeriesAttackDamageInlineHost.Children.Add(CreateLabeledCombo("손목 부가", new[] { "25%", "26%", "27%", "28%" }, _seriesAttackDamageState.WristExtraIndex, out var wristCombo));
+            SeriesAttackDamageInlineHost.Children.Add(CreateLabeledCombo("루나리아 부가", new[] { "0%", "1%", "2%", "3%", "4%", "5%", "6%", "7%", "8%", "9%", "10%" }, _seriesAttackDamageState.LunariaExtraIndex, out var lunariaCombo));
 
-            artifactCombo.SelectionChanged += (_, _) => { _group5.ArtifactIndex = Math.Max(0, artifactCombo.SelectedIndex); RefreshGroupSummaryTexts(); UpdateCategorySummaryText(); };
-            wristCombo.SelectionChanged += (_, _) => { _group5.WristExtraIndex = Math.Max(0, wristCombo.SelectedIndex); RefreshGroupSummaryTexts(); UpdateCategorySummaryText(); };
-            lunariaCombo.SelectionChanged += (_, _) => { _group5.LunariaExtraIndex = Math.Max(0, lunariaCombo.SelectedIndex); RefreshGroupSummaryTexts(); UpdateCategorySummaryText(); };
+            artifactCombo.SelectionChanged += (_, _) => { _seriesAttackDamageState.ArtifactIndex = Math.Max(0, artifactCombo.SelectedIndex); RefreshDamageSummaryTexts(); UpdateCategorySummaryText(); };
+            wristCombo.SelectionChanged += (_, _) => { _seriesAttackDamageState.WristExtraIndex = Math.Max(0, wristCombo.SelectedIndex); RefreshDamageSummaryTexts(); UpdateCategorySummaryText(); };
+            lunariaCombo.SelectionChanged += (_, _) => { _seriesAttackDamageState.LunariaExtraIndex = Math.Max(0, lunariaCombo.SelectedIndex); RefreshDamageSummaryTexts(); UpdateCategorySummaryText(); };
         }
 
-        private void BuildGroup11InlineSection()
+        private void BuildAdditionalDamageInlineSection()
         {
-            if (Group11InlineHost == null)
+            if (AdditionalDamageInlineHost == null)
                 return;
 
-            Group11InlineHost.Children.Clear();
-            Group11InlineHost.Children.Add(CreateLabeledCombo("저격 연마", new[] { "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10" }, _group11.SniperIndex, out var sniperCombo));
-            Group11InlineHost.Children.Add(CreateLabeledCombo("장비 강화석 옵션", new[] { "0%", "45%", "46%", "47%", "48%" }, _group11.GemOptionIndex, out var gemCombo));
-            Group11InlineHost.Children.Add(CreateLabeledTextBoxRow("무기 부가", _group11.WeaponExtraIndex.ToString(CultureInfo.CurrentCulture), out var weaponText));
+            AdditionalDamageInlineHost.Children.Clear();
+            AdditionalDamageInlineHost.Children.Add(CreateLabeledCombo("저격 연마", new[] { "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10" }, _additionalDamageState.SniperIndex, out var sniperCombo));
+            AdditionalDamageInlineHost.Children.Add(CreateLabeledCombo("장비 강화석 옵션", new[] { "0%", "45%", "46%", "47%", "48%" }, _additionalDamageState.GemOptionIndex, out var gemCombo));
+            AdditionalDamageInlineHost.Children.Add(CreateLabeledTextBoxRow("무기 부가", _additionalDamageState.WeaponExtraIndex.ToString(CultureInfo.CurrentCulture), out var weaponText));
 
-            sniperCombo.SelectionChanged += (_, _) => { _group11.SniperIndex = Math.Max(0, sniperCombo.SelectedIndex); RefreshGroupSummaryTexts(); UpdateCategorySummaryText(); };
-            gemCombo.SelectionChanged += (_, _) => { _group11.GemOptionIndex = Math.Max(0, gemCombo.SelectedIndex); RefreshGroupSummaryTexts(); UpdateCategorySummaryText(); };
+            sniperCombo.SelectionChanged += (_, _) => { _additionalDamageState.SniperIndex = Math.Max(0, sniperCombo.SelectedIndex); RefreshDamageSummaryTexts(); UpdateCategorySummaryText(); };
+            gemCombo.SelectionChanged += (_, _) => { _additionalDamageState.GemOptionIndex = Math.Max(0, gemCombo.SelectedIndex); RefreshDamageSummaryTexts(); UpdateCategorySummaryText(); };
             weaponText.PreviewTextInput += NumberTextBox_PreviewTextInput;
             weaponText.PreviewKeyDown += NumberTextBox_PreviewKeyDown;
             DataObject.AddPastingHandler(weaponText, NumberTextBox_OnPaste);
@@ -1240,27 +1249,27 @@ namespace TWChatOverlay.Views.Addons
                     value = 0;
 
                 weaponText.Text = Math.Clamp(value, 0, 100).ToString("0", CultureInfo.CurrentCulture);
-                _group11.WeaponExtraIndex = (int)Math.Clamp(value, 0, 100);
-                RefreshGroupSummaryTexts();
+                _additionalDamageState.WeaponExtraIndex = (int)Math.Clamp(value, 0, 100);
+                RefreshDamageSummaryTexts();
                 UpdateCategorySummaryText();
             };
         }
 
-        private void OpenGroup5Window_Click(object sender, RoutedEventArgs e)
+        private void OpenSeriesAttackDamageWindow_Click(object sender, RoutedEventArgs e)
         {
-            var window = CreateSettingsWindow("그룹5 설정 (상한 73%)");
+            var window = CreateSettingsWindow("계열 공격력 설정 (상한 73%)");
             var panel = CreateWindowRootPanel(window);
 
-            panel.Children.Add(CreateLabeledCombo("아티팩트", new[] { "프시키 (15%)", "아크론 (20%)", "이클립스 (30%)", "에테리얼 (35%)" }, _group5.ArtifactIndex, out var artifactCombo));
-            panel.Children.Add(CreateLabeledCombo("손목 부가", new[] { "25%", "26%", "27%", "28%" }, _group5.WristExtraIndex, out var wristCombo));
-            panel.Children.Add(CreateLabeledCombo("루나리아 부가", new[] { "0%", "1%", "2%", "3%", "4%", "5%", "6%", "7%", "8%", "9%", "10%" }, _group5.LunariaExtraIndex, out var lunariaCombo));
+            panel.Children.Add(CreateLabeledCombo("아티팩트", new[] { "프시키 (15%)", "아크론 (20%)", "이클립스 (30%)", "에테리얼 (35%)" }, _seriesAttackDamageState.ArtifactIndex, out var artifactCombo));
+            panel.Children.Add(CreateLabeledCombo("손목 부가", new[] { "25%", "26%", "27%", "28%" }, _seriesAttackDamageState.WristExtraIndex, out var wristCombo));
+            panel.Children.Add(CreateLabeledCombo("루나리아 부가", new[] { "0%", "1%", "2%", "3%", "4%", "5%", "6%", "7%", "8%", "9%", "10%" }, _seriesAttackDamageState.LunariaExtraIndex, out var lunariaCombo));
 
             AddSaveButton(panel, () =>
             {
-                _group5.ArtifactIndex = Math.Max(0, artifactCombo.SelectedIndex);
-                _group5.WristExtraIndex = Math.Max(0, wristCombo.SelectedIndex);
-                _group5.LunariaExtraIndex = Math.Max(0, lunariaCombo.SelectedIndex);
-                RefreshGroupSummaryTexts();
+                _seriesAttackDamageState.ArtifactIndex = Math.Max(0, artifactCombo.SelectedIndex);
+                _seriesAttackDamageState.WristExtraIndex = Math.Max(0, wristCombo.SelectedIndex);
+                _seriesAttackDamageState.LunariaExtraIndex = Math.Max(0, lunariaCombo.SelectedIndex);
+                RefreshDamageSummaryTexts();
                 UpdateCategorySummaryText();
                 window.DialogResult = true;
                 window.Close();
@@ -1268,34 +1277,34 @@ namespace TWChatOverlay.Views.Addons
 
             window.Closing += (_, _) =>
             {
-                _group5.ArtifactIndex = Math.Max(0, artifactCombo.SelectedIndex);
-                _group5.WristExtraIndex = Math.Max(0, wristCombo.SelectedIndex);
-                _group5.LunariaExtraIndex = Math.Max(0, lunariaCombo.SelectedIndex);
-                RefreshGroupSummaryTexts();
+                _seriesAttackDamageState.ArtifactIndex = Math.Max(0, artifactCombo.SelectedIndex);
+                _seriesAttackDamageState.WristExtraIndex = Math.Max(0, wristCombo.SelectedIndex);
+                _seriesAttackDamageState.LunariaExtraIndex = Math.Max(0, lunariaCombo.SelectedIndex);
+                RefreshDamageSummaryTexts();
                 SaveDamageCalculatorState();
             };
 
             window.ShowDialog();
         }
 
-        private void OpenGroup11Window_Click(object sender, RoutedEventArgs e)
+        private void OpenAdditionalDamageWindow_Click(object sender, RoutedEventArgs e)
         {
-            var window = CreateSettingsWindow("그룹11 설정 - 추가 피해");
+            var window = CreateSettingsWindow("추가 피해량 설정");
             var panel = CreateWindowRootPanel(window);
 
-            panel.Children.Add(CreateLabeledCombo("저격 연마", new[] { "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10" }, _group11.SniperIndex, out var sniperCombo));
-            panel.Children.Add(CreateLabeledCombo("장비 강화석 옵션", new[] { "0%", "45%", "46%", "47%", "48%" }, _group11.GemOptionIndex, out var gemCombo));
-            panel.Children.Add(CreateLabeledTextBoxRow("무기 부가", _group11.WeaponExtraIndex.ToString(CultureInfo.CurrentCulture), out var weaponText));
-            panel.Children.Add(CreateLabeledReadOnlyValue("캐릭터 고유 값", _group11.TraitValue));
+            panel.Children.Add(CreateLabeledCombo("저격 연마", new[] { "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10" }, _additionalDamageState.SniperIndex, out var sniperCombo));
+            panel.Children.Add(CreateLabeledCombo("장비 강화석 옵션", new[] { "0%", "45%", "46%", "47%", "48%" }, _additionalDamageState.GemOptionIndex, out var gemCombo));
+            panel.Children.Add(CreateLabeledTextBoxRow("무기 부가", _additionalDamageState.WeaponExtraIndex.ToString(CultureInfo.CurrentCulture), out var weaponText));
+            panel.Children.Add(CreateLabeledReadOnlyValue("캐릭터 고유 값", _additionalDamageState.TraitValue));
 
             AddSaveButton(panel, () =>
             {
-                _group11.SniperIndex = Math.Max(0, sniperCombo.SelectedIndex);
-                _group11.GemOptionIndex = Math.Max(0, gemCombo.SelectedIndex);
+                _additionalDamageState.SniperIndex = Math.Max(0, sniperCombo.SelectedIndex);
+                _additionalDamageState.GemOptionIndex = Math.Max(0, gemCombo.SelectedIndex);
                 if (!double.TryParse(weaponText.Text, out double weaponValue))
                     weaponValue = 0;
-                _group11.WeaponExtraIndex = (int)Math.Clamp(weaponValue, 0, 100);
-                RefreshGroupSummaryTexts();
+                _additionalDamageState.WeaponExtraIndex = (int)Math.Clamp(weaponValue, 0, 100);
+                RefreshDamageSummaryTexts();
                 UpdateCategorySummaryText();
                 window.DialogResult = true;
                 window.Close();
@@ -1303,34 +1312,50 @@ namespace TWChatOverlay.Views.Addons
 
             window.Closing += (_, _) =>
             {
-                _group11.SniperIndex = Math.Max(0, sniperCombo.SelectedIndex);
-                _group11.GemOptionIndex = Math.Max(0, gemCombo.SelectedIndex);
+                _additionalDamageState.SniperIndex = Math.Max(0, sniperCombo.SelectedIndex);
+                _additionalDamageState.GemOptionIndex = Math.Max(0, gemCombo.SelectedIndex);
                 if (!double.TryParse(weaponText.Text, out double weaponValue))
                     weaponValue = 0;
-                _group11.WeaponExtraIndex = (int)Math.Clamp(weaponValue, 0, 100);
-                RefreshGroupSummaryTexts();
+                _additionalDamageState.WeaponExtraIndex = (int)Math.Clamp(weaponValue, 0, 100);
+                RefreshDamageSummaryTexts();
                 SaveDamageCalculatorState();
             };
 
             window.ShowDialog();
         }
 
-        private void RefreshGroupSummaryTexts()
+        private void RefreshDamageSummaryTexts()
         {
-            Group1SummaryText.Text = $"{GetGroup1TotalPercent():0.#}% / 50%";
-            Group2SummaryText.Text = $"{GetGroup2TotalPercent():0.#}% / 30%";
-            Group4SummaryText.Text = $"{GetGroup4TotalPercent():0.#}% / 80%";
-            if (Group5SummaryText != null)
-                Group5SummaryText.Text = $"계열 공격력 {GetSeriesAttackDamageSummary()} / 73%";
-            if (Group11SummaryText != null)
-                Group11SummaryText.Text = $"추가 대미지 {GetGroup11AdditionalDamageSummary()}";
-            if (Group11TraitValueText != null)
-                Group11TraitValueText.Text = $"{_group11.TraitValue}%";
+            AttackDamage1FactorSummaryText.Text = $"{GetAttackDamage1FactorValue():0.#}% / 50%";
+            AttackDamage2FactorSummaryText.Text = $"{GetAttackDamage2FactorValue():0.#}% / 30%";
+            AdditionalFactorSummaryText.Text = $"{AddtionalFactor():0.#}% / 80%";
+            if (SeriesAttackDamageSummaryText != null)
+                SeriesAttackDamageSummaryText.Text = $"계열 공격력 {GetSeriesAttackDamageSummary()} / 73%";
+            if (AdditionalDamageSummaryText != null)
+                AdditionalDamageSummaryText.Text = $"추가 피해량 {GetAdditionalDamageSummary()}";
+            if (AdditionalDamageTraitValueText != null)
+                AdditionalDamageTraitValueText.Text = GetCharacterTraitAdditionalDamageText();
             if (FinalDamageSummaryText != null)
                 FinalDamageSummaryText.Text = $"최종 대미지 {GetFinalDamageSummary()}";
             if (CriticalDamageSummaryText != null)
                 CriticalDamageSummaryText.Text = $"치명타 배율 {GetCriticalDamageSummary()}";
             UpdateMonsterSummaryText();
+        }
+
+        private void UpdateCharacterTraitAdditionalDamageText()
+        {
+            if (AdditionalDamageTraitValueText == null)
+                return;
+
+            AdditionalDamageTraitValueText.Text = GetCharacterTraitAdditionalDamageText();
+        }
+
+        private string GetCharacterTraitAdditionalDamageText()
+        {
+            if (_calc.SelectedModifier == null)
+                return "0%";
+
+            return $"{_calc.SelectedModifier.Value.AdditionalDamage:0.#}%";
         }
 
         private void UpdateMonsterSummaryText()
@@ -1772,7 +1797,7 @@ namespace TWChatOverlay.Views.Addons
             return names[index];
         }
 
-        private sealed class Group1State
+        private sealed class AttackDamage1FactorState
         {
             public bool Snowman { get; set; }
             public bool Illumi { get; set; }
@@ -1782,9 +1807,9 @@ namespace TWChatOverlay.Views.Addons
             public string EtcValue { get; set; } = "0";
         }
 
-        private sealed class Group2State
+        private sealed class AttackDamage2FactorState
         {
-            public bool Gaegakbi { get; set; }
+            public bool Awakening { get; set; }
             public bool ClubTypeP { get; set; }
             public bool ExplorePoint { get; set; }
             public bool TwPower { get; set; }
@@ -1793,7 +1818,7 @@ namespace TWChatOverlay.Views.Addons
             public string EtcValue { get; set; } = "0";
         }
 
-        private sealed class Group4State
+        private sealed class AdditionalFactorState
         {
             public bool TitleDamage { get; set; }
             public bool Fever { get; set; }
@@ -1805,14 +1830,14 @@ namespace TWChatOverlay.Views.Addons
             public string EtcValue { get; set; } = "0";
         }
 
-        private sealed class Group5State
+        private sealed class SeriesAttackDamageState
         {
             public int ArtifactIndex { get; set; }
             public int WristExtraIndex { get; set; }
             public int LunariaExtraIndex { get; set; }
         }
 
-        private sealed class Group11State
+        private sealed class AdditionalDamageState
         {
             public int SniperIndex { get; set; }
             public int GemOptionIndex { get; set; }
@@ -1840,7 +1865,7 @@ namespace TWChatOverlay.Views.Addons
         private void WeakPointToggle_Changed(object sender, RoutedEventArgs e)
         {
             UpdateWeakPointUi();
-            RefreshGroupSummaryTexts();
+            RefreshDamageSummaryTexts();
             UpdateCategorySummaryText();
         }
 
@@ -1902,7 +1927,7 @@ namespace TWChatOverlay.Views.Addons
         private void JudgementComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             UpdateJudgementUi();
-            RefreshGroupSummaryTexts();
+            RefreshDamageSummaryTexts();
             UpdateCategorySummaryText();
             SaveDamageCalculatorState();
         }
@@ -1910,7 +1935,7 @@ namespace TWChatOverlay.Views.Addons
         private void EtaLinkCriticalComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             UpdateEtaLinkCriticalUi();
-            RefreshGroupSummaryTexts();
+            RefreshDamageSummaryTexts();
             UpdateCategorySummaryText();
             SaveDamageCalculatorState();
         }
@@ -1918,7 +1943,7 @@ namespace TWChatOverlay.Views.Addons
         private void EtaLinkFinalDamageComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             UpdateEtaLinkFinalDamageUi();
-            RefreshGroupSummaryTexts();
+            RefreshDamageSummaryTexts();
             UpdateCategorySummaryText();
             SaveDamageCalculatorState();
         }
@@ -1934,21 +1959,21 @@ namespace TWChatOverlay.Views.Addons
 
         private void FinalDamageOption_Changed(object sender, RoutedEventArgs e)
         {
-            RefreshGroupSummaryTexts();
+            RefreshDamageSummaryTexts();
             UpdateCategorySummaryText();
             SaveDamageCalculatorState();
         }
 
         private void CategoryToggle_Changed(object sender, RoutedEventArgs e)
         {
-            RefreshGroupSummaryTexts();
+            RefreshDamageSummaryTexts();
             UpdateCategorySummaryText();
             SaveDamageCalculatorState();
         }
 
         private void SienaTextBox_TextChanged(object sender, TextChangedEventArgs e)
         {
-            RefreshGroupSummaryTexts();
+            RefreshDamageSummaryTexts();
             UpdateCategorySummaryText();
             SaveDamageCalculatorState();
         }
@@ -2061,48 +2086,48 @@ namespace TWChatOverlay.Views.Addons
 
                 _calc.SelectedAnisVariant = state.SelectedAnaisVariant;
                 SetAnaisVariantSelection(_calc.SelectedAnisVariant);
-                _group1.Snowman = state.Group1Snowman;
-                _group1.Illumi = state.Group1Illumi;
-                _group1.IsabelDamage = state.Group1IsabelDamage;
-                _group1.IsabelSpecial = state.Group1IsabelSpecial;
-                _group1.IsabelBattle = state.Group1IsabelBattle;
-                _group1.EtcValue = state.Group1EtcValue;
+                _attackDamage1FactorState.Snowman = state.AttackDamage1FactorSnowman;
+                _attackDamage1FactorState.Illumi = state.AttackDamage1FactorIllumi;
+                _attackDamage1FactorState.IsabelDamage = state.AttackDamage1FactorIsabelDamage;
+                _attackDamage1FactorState.IsabelSpecial = state.AttackDamage1FactorIsabelSpecial;
+                _attackDamage1FactorState.IsabelBattle = state.AttackDamage1FactorIsabelBattle;
+                _attackDamage1FactorState.EtcValue = state.AttackDamage1FactorEtcValue;
 
-                _group2.Gaegakbi = state.Group2Gaegakbi;
-                _group2.ClubTypeP = state.Group2ClubTypeP;
-                _group2.ExplorePoint = state.Group2ExplorePoint;
-                _group2.TwPower = state.Group2TwPower;
-                _group2.Ham = state.Group2Ham;
-                _group2.Event = state.Group2Event;
-                _group2.EtcValue = state.Group2EtcValue;
+                _attackDamage2FactorState.Awakening = state.AttackDamage2FactorAwakening;
+                _attackDamage2FactorState.ClubTypeP = state.AttackDamage2FactorClubTypeP;
+                _attackDamage2FactorState.ExplorePoint = state.AttackDamage2FactorExplorePoint;
+                _attackDamage2FactorState.TwPower = state.AttackDamage2FactorTwPower;
+                _attackDamage2FactorState.Ham = state.AttackDamage2FactorHam;
+                _attackDamage2FactorState.Event = state.AttackDamage2FactorEvent;
+                _attackDamage2FactorState.EtcValue = state.AttackDamage2FactorEtcValue;
 
-                _group4.TitleDamage = state.Group4TitleDamage;
-                _group4.Fever = state.Group4Fever;
-                _group4.WeaponAbilityIndex = state.Group4WeaponAbilityIndex;
-                _group4.WristAbilityIndex = state.Group4WristAbilityIndex;
-                _group4.HandAbilityIndex = state.Group4HandAbilityIndex;
-                _group4.LunariaAbilityIndex = state.Group4LunariaAbilityIndex;
-                _group4.DeepRuneIndex = state.Group4DeepRuneIndex;
-                _group4.EtcValue = state.Group4EtcValue;
+                _additionalFactorState.TitleDamage = state.AdditionalFactorTitleDamage;
+                _additionalFactorState.Fever = state.AdditionalFactorFever;
+                _additionalFactorState.WeaponAbilityIndex = state.AdditionalFactorWeaponAbilityIndex;
+                _additionalFactorState.WristAbilityIndex = state.AdditionalFactorWristAbilityIndex;
+                _additionalFactorState.HandAbilityIndex = state.AdditionalFactorHandAbilityIndex;
+                _additionalFactorState.LunariaAbilityIndex = state.AdditionalFactorLunariaAbilityIndex;
+                _additionalFactorState.DeepRuneIndex = state.AdditionalFactorDeepRuneIndex;
+                _additionalFactorState.EtcValue = state.AdditionalFactorEtcValue;
 
-                _group5.ArtifactIndex = state.Group5ArtifactIndex;
-                _group5.WristExtraIndex = state.Group5WristExtraIndex;
-                _group5.LunariaExtraIndex = state.Group5LunariaExtraIndex;
+                _seriesAttackDamageState.ArtifactIndex = state.SeriesAttackDamageArtifactIndex;
+                _seriesAttackDamageState.WristExtraIndex = state.SeriesAttackDamageWristExtraIndex;
+                _seriesAttackDamageState.LunariaExtraIndex = state.SeriesAttackDamageLunariaExtraIndex;
 
-                _group11.SniperIndex = state.Group11SniperIndex;
-                _group11.GemOptionIndex = state.Group11GemOptionIndex;
-                _group11.WeaponExtraIndex = state.Group11WeaponExtraIndex;
-                _group11.TraitValue = state.Group11TraitValue;
+                _additionalDamageState.SniperIndex = state.AdditionalDamageSniperIndex;
+                _additionalDamageState.GemOptionIndex = state.AdditionalDamageGemOptionIndex;
+                _additionalDamageState.WeaponExtraIndex = state.AdditionalDamageWeaponExtraIndex;
+                _additionalDamageState.TraitValue = state.AdditionalDamageTraitValue;
                 _monster.SelectedIndex = state.MonsterSelectedIndex;
                 InitializeMonsterComboBox();
-                BuildInlineGroupSections();
+                BuildDamageInlineSections();
 
                 UpdateWeakPointUi();
                 UpdateJudgementUi();
                 UpdateEtaLinkCriticalUi();
                 UpdateEtaLinkFinalDamageUi();
                 UpdateEtaUi();
-                RefreshGroupSummaryTexts();
+                RefreshDamageSummaryTexts();
                 UpdateMonsterSummaryText();
             }
             finally
@@ -2142,38 +2167,38 @@ namespace TWChatOverlay.Views.Addons
             state.SpecialDamageReductionRate = Math.Clamp(GetTextBoxValue(SpecialDamageReductionTextBoxControl), 0, 50);
             state.SelectedAnaisVariant = _calc.SelectedAnisVariant;
 
-            state.Group1Snowman = _group1.Snowman;
-            state.Group1Illumi = _group1.Illumi;
-            state.Group1IsabelDamage = _group1.IsabelDamage;
-            state.Group1IsabelSpecial = _group1.IsabelSpecial;
-            state.Group1IsabelBattle = _group1.IsabelBattle;
-            state.Group1EtcValue = _group1.EtcValue;
+            state.AttackDamage1FactorSnowman = _attackDamage1FactorState.Snowman;
+            state.AttackDamage1FactorIllumi = _attackDamage1FactorState.Illumi;
+            state.AttackDamage1FactorIsabelDamage = _attackDamage1FactorState.IsabelDamage;
+            state.AttackDamage1FactorIsabelSpecial = _attackDamage1FactorState.IsabelSpecial;
+            state.AttackDamage1FactorIsabelBattle = _attackDamage1FactorState.IsabelBattle;
+            state.AttackDamage1FactorEtcValue = _attackDamage1FactorState.EtcValue;
 
-            state.Group2Gaegakbi = _group2.Gaegakbi;
-            state.Group2ClubTypeP = _group2.ClubTypeP;
-            state.Group2ExplorePoint = _group2.ExplorePoint;
-            state.Group2TwPower = _group2.TwPower;
-            state.Group2Ham = _group2.Ham;
-            state.Group2Event = _group2.Event;
-            state.Group2EtcValue = _group2.EtcValue;
+            state.AttackDamage2FactorAwakening = _attackDamage2FactorState.Awakening;
+            state.AttackDamage2FactorClubTypeP = _attackDamage2FactorState.ClubTypeP;
+            state.AttackDamage2FactorExplorePoint = _attackDamage2FactorState.ExplorePoint;
+            state.AttackDamage2FactorTwPower = _attackDamage2FactorState.TwPower;
+            state.AttackDamage2FactorHam = _attackDamage2FactorState.Ham;
+            state.AttackDamage2FactorEvent = _attackDamage2FactorState.Event;
+            state.AttackDamage2FactorEtcValue = _attackDamage2FactorState.EtcValue;
 
-            state.Group4TitleDamage = _group4.TitleDamage;
-            state.Group4Fever = _group4.Fever;
-            state.Group4WeaponAbilityIndex = _group4.WeaponAbilityIndex;
-            state.Group4WristAbilityIndex = _group4.WristAbilityIndex;
-            state.Group4HandAbilityIndex = _group4.HandAbilityIndex;
-            state.Group4LunariaAbilityIndex = _group4.LunariaAbilityIndex;
-            state.Group4DeepRuneIndex = _group4.DeepRuneIndex;
-            state.Group4EtcValue = _group4.EtcValue;
+            state.AdditionalFactorTitleDamage = _additionalFactorState.TitleDamage;
+            state.AdditionalFactorFever = _additionalFactorState.Fever;
+            state.AdditionalFactorWeaponAbilityIndex = _additionalFactorState.WeaponAbilityIndex;
+            state.AdditionalFactorWristAbilityIndex = _additionalFactorState.WristAbilityIndex;
+            state.AdditionalFactorHandAbilityIndex = _additionalFactorState.HandAbilityIndex;
+            state.AdditionalFactorLunariaAbilityIndex = _additionalFactorState.LunariaAbilityIndex;
+            state.AdditionalFactorDeepRuneIndex = _additionalFactorState.DeepRuneIndex;
+            state.AdditionalFactorEtcValue = _additionalFactorState.EtcValue;
 
-            state.Group5ArtifactIndex = _group5.ArtifactIndex;
-            state.Group5WristExtraIndex = _group5.WristExtraIndex;
-            state.Group5LunariaExtraIndex = _group5.LunariaExtraIndex;
+            state.SeriesAttackDamageArtifactIndex = _seriesAttackDamageState.ArtifactIndex;
+            state.SeriesAttackDamageWristExtraIndex = _seriesAttackDamageState.WristExtraIndex;
+            state.SeriesAttackDamageLunariaExtraIndex = _seriesAttackDamageState.LunariaExtraIndex;
 
-            state.Group11SniperIndex = _group11.SniperIndex;
-            state.Group11GemOptionIndex = _group11.GemOptionIndex;
-            state.Group11WeaponExtraIndex = _group11.WeaponExtraIndex;
-            state.Group11TraitValue = _group11.TraitValue;
+            state.AdditionalDamageSniperIndex = _additionalDamageState.SniperIndex;
+            state.AdditionalDamageGemOptionIndex = _additionalDamageState.GemOptionIndex;
+            state.AdditionalDamageWeaponExtraIndex = _additionalDamageState.WeaponExtraIndex;
+            state.AdditionalDamageTraitValue = _additionalDamageState.TraitValue;
             state.MonsterSelectedIndex = _monster.SelectedIndex;
 
             var cloned = CloneDamageState(state);
@@ -2240,34 +2265,34 @@ namespace TWChatOverlay.Views.Addons
                 ComboBonusEnabled = state.ComboBonusEnabled,
                 SpecialDamageReductionRate = state.SpecialDamageReductionRate,
                 SelectedAnaisVariant = state.SelectedAnaisVariant,
-                Group1Snowman = state.Group1Snowman,
-                Group1Illumi = state.Group1Illumi,
-                Group1IsabelDamage = state.Group1IsabelDamage,
-                Group1IsabelSpecial = state.Group1IsabelSpecial,
-                Group1IsabelBattle = state.Group1IsabelBattle,
-                Group1EtcValue = state.Group1EtcValue,
-                Group2Gaegakbi = state.Group2Gaegakbi,
-                Group2ClubTypeP = state.Group2ClubTypeP,
-                Group2ExplorePoint = state.Group2ExplorePoint,
-                Group2TwPower = state.Group2TwPower,
-                Group2Ham = state.Group2Ham,
-                Group2Event = state.Group2Event,
-                Group2EtcValue = state.Group2EtcValue,
-                Group4TitleDamage = state.Group4TitleDamage,
-                Group4Fever = state.Group4Fever,
-                Group4WeaponAbilityIndex = state.Group4WeaponAbilityIndex,
-                Group4WristAbilityIndex = state.Group4WristAbilityIndex,
-                Group4HandAbilityIndex = state.Group4HandAbilityIndex,
-                Group4LunariaAbilityIndex = state.Group4LunariaAbilityIndex,
-                Group4DeepRuneIndex = state.Group4DeepRuneIndex,
-                Group4EtcValue = state.Group4EtcValue,
-                Group5ArtifactIndex = state.Group5ArtifactIndex,
-                Group5WristExtraIndex = state.Group5WristExtraIndex,
-                Group5LunariaExtraIndex = state.Group5LunariaExtraIndex,
-                Group11SniperIndex = state.Group11SniperIndex,
-                Group11GemOptionIndex = state.Group11GemOptionIndex,
-                Group11WeaponExtraIndex = state.Group11WeaponExtraIndex,
-                Group11TraitValue = state.Group11TraitValue,
+                AttackDamage1FactorSnowman = state.AttackDamage1FactorSnowman,
+                AttackDamage1FactorIllumi = state.AttackDamage1FactorIllumi,
+                AttackDamage1FactorIsabelDamage = state.AttackDamage1FactorIsabelDamage,
+                AttackDamage1FactorIsabelSpecial = state.AttackDamage1FactorIsabelSpecial,
+                AttackDamage1FactorIsabelBattle = state.AttackDamage1FactorIsabelBattle,
+                AttackDamage1FactorEtcValue = state.AttackDamage1FactorEtcValue,
+                AttackDamage2FactorAwakening = state.AttackDamage2FactorAwakening,
+                AttackDamage2FactorClubTypeP = state.AttackDamage2FactorClubTypeP,
+                AttackDamage2FactorExplorePoint = state.AttackDamage2FactorExplorePoint,
+                AttackDamage2FactorTwPower = state.AttackDamage2FactorTwPower,
+                AttackDamage2FactorHam = state.AttackDamage2FactorHam,
+                AttackDamage2FactorEvent = state.AttackDamage2FactorEvent,
+                AttackDamage2FactorEtcValue = state.AttackDamage2FactorEtcValue,
+                AdditionalFactorTitleDamage = state.AdditionalFactorTitleDamage,
+                AdditionalFactorFever = state.AdditionalFactorFever,
+                AdditionalFactorWeaponAbilityIndex = state.AdditionalFactorWeaponAbilityIndex,
+                AdditionalFactorWristAbilityIndex = state.AdditionalFactorWristAbilityIndex,
+                AdditionalFactorHandAbilityIndex = state.AdditionalFactorHandAbilityIndex,
+                AdditionalFactorLunariaAbilityIndex = state.AdditionalFactorLunariaAbilityIndex,
+                AdditionalFactorDeepRuneIndex = state.AdditionalFactorDeepRuneIndex,
+                AdditionalFactorEtcValue = state.AdditionalFactorEtcValue,
+                SeriesAttackDamageArtifactIndex = state.SeriesAttackDamageArtifactIndex,
+                SeriesAttackDamageWristExtraIndex = state.SeriesAttackDamageWristExtraIndex,
+                SeriesAttackDamageLunariaExtraIndex = state.SeriesAttackDamageLunariaExtraIndex,
+                AdditionalDamageSniperIndex = state.AdditionalDamageSniperIndex,
+                AdditionalDamageGemOptionIndex = state.AdditionalDamageGemOptionIndex,
+                AdditionalDamageWeaponExtraIndex = state.AdditionalDamageWeaponExtraIndex,
+                AdditionalDamageTraitValue = state.AdditionalDamageTraitValue,
                 MonsterSelectedIndex = state.MonsterSelectedIndex
             };
         }

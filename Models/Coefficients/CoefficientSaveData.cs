@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-
 namespace TWChatOverlay.Models
 {
     /// <summary>
@@ -70,38 +69,62 @@ namespace TWChatOverlay.Models
         public double SpecialDamageReductionRate { get; set; }
 
         public string SelectedAnaisVariant { get; set; } = "마법";
-        public bool Group1Snowman { get; set; }
-        public bool Group1Illumi { get; set; }
-        public bool Group1IsabelDamage { get; set; }
-        public bool Group1IsabelSpecial { get; set; }
-        public bool Group1IsabelBattle { get; set; }
-        public string Group1EtcValue { get; set; } = "0";
 
-        public bool Group2Gaegakbi { get; set; }
-        public bool Group2ClubTypeP { get; set; }
-        public bool Group2ExplorePoint { get; set; }
-        public bool Group2TwPower { get; set; }
-        public bool Group2Ham { get; set; }
-        public bool Group2Event { get; set; }
-        public string Group2EtcValue { get; set; } = "0";
+        public bool AttackDamage1FactorSnowman { get; set; }
 
-        public bool Group4TitleDamage { get; set; }
-        public bool Group4Fever { get; set; }
-        public int Group4WeaponAbilityIndex { get; set; }
-        public int Group4WristAbilityIndex { get; set; }
-        public int Group4HandAbilityIndex { get; set; }
-        public int Group4LunariaAbilityIndex { get; set; }
-        public int Group4DeepRuneIndex { get; set; }
-        public string Group4EtcValue { get; set; } = "0";
+        public bool AttackDamage1FactorIllumi { get; set; }
 
-        public int Group5ArtifactIndex { get; set; }
-        public int Group5WristExtraIndex { get; set; }
-        public int Group5LunariaExtraIndex { get; set; }
+        public bool AttackDamage1FactorIsabelDamage { get; set; }
 
-        public int Group11SniperIndex { get; set; }
-        public int Group11GemOptionIndex { get; set; }
-        public int Group11WeaponExtraIndex { get; set; }
-        public string Group11TraitValue { get; set; } = "0";
+        public bool AttackDamage1FactorIsabelSpecial { get; set; }
+
+        public bool AttackDamage1FactorIsabelBattle { get; set; }
+
+        public string AttackDamage1FactorEtcValue { get; set; } = "0";
+
+        public bool AttackDamage2FactorAwakening { get; set; }
+
+        public bool AttackDamage2FactorClubTypeP { get; set; }
+
+        public bool AttackDamage2FactorExplorePoint { get; set; }
+
+        public bool AttackDamage2FactorTwPower { get; set; }
+
+        public bool AttackDamage2FactorHam { get; set; }
+
+        public bool AttackDamage2FactorEvent { get; set; }
+
+        public string AttackDamage2FactorEtcValue { get; set; } = "0";
+
+        public bool AdditionalFactorTitleDamage { get; set; }
+
+        public bool AdditionalFactorFever { get; set; }
+
+        public int AdditionalFactorWeaponAbilityIndex { get; set; }
+
+        public int AdditionalFactorWristAbilityIndex { get; set; }
+
+        public int AdditionalFactorHandAbilityIndex { get; set; }
+
+        public int AdditionalFactorLunariaAbilityIndex { get; set; }
+
+        public int AdditionalFactorDeepRuneIndex { get; set; }
+
+        public string AdditionalFactorEtcValue { get; set; } = "0";
+
+        public int SeriesAttackDamageArtifactIndex { get; set; }
+
+        public int SeriesAttackDamageWristExtraIndex { get; set; }
+
+        public int SeriesAttackDamageLunariaExtraIndex { get; set; }
+
+        public int AdditionalDamageSniperIndex { get; set; }
+
+        public int AdditionalDamageGemOptionIndex { get; set; }
+
+        public int AdditionalDamageWeaponExtraIndex { get; set; }
+
+        public string AdditionalDamageTraitValue { get; set; } = "0";
         public int MonsterSelectedIndex { get; set; }
     }
 }

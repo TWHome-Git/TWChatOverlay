@@ -8,10 +8,11 @@ namespace TWChatOverlay.Services.LogAnalysis
     public sealed class AlertLogAnalyzer
     {
         private const string MagicCircleKeyword = "몬스터가 남아있으면 다음 웨이브로 넘어가지 않습니다.";
+        private const string ReflectionPatternEndAlertSender = "심연의 제2사도";
+        private const string ReflectionPatternEndAlertMessage = "절제와 균형의 중심에서 빗나간 힘은 칼날이 되어 돌아오지.";
         private static readonly (string Sender, string Message)[] ReflectionPatternAlertMessages =
         {
-            ("키메라", "모두 되돌려주마."),
-            ("심연의 제2사도", "절제와 균형의 중심에서 빗나간 힘은 칼날이 되어 돌아오지.")
+            (ReflectionPatternEndAlertSender, ReflectionPatternEndAlertMessage)
         };
 
         public void Analyze(LogLineContext context)
@@ -24,7 +25,11 @@ namespace TWChatOverlay.Services.LogAnalysis
                 return;
 
             if (settings.EnableReflectionPatternAlert && IsReflectionPatternAlertMessage(context))
+            {
                 context.Result.IsReflectionPatternAlert = true;
+                if (IsReflectionPatternEndAlertMessage(context))
+                    context.Result.IsReflectionPatternEndAlert = true;
+            }
 
             if (settings.UseMagicCircleAlert &&
                 (context.Result.Category == ChatCategory.System ||
@@ -98,6 +103,21 @@ namespace TWChatOverlay.Services.LogAnalysis
             }
 
             return false;
+        }
+
+        private static bool IsReflectionPatternEndAlertMessage(LogLineContext context)
+        {
+            if (context.Result.Category != ChatCategory.Normal &&
+                context.Result.Category != ChatCategory.NormalSelf)
+            {
+                return false;
+            }
+
+            if (string.IsNullOrWhiteSpace(context.Result.SenderId) || string.IsNullOrWhiteSpace(context.MessageOnly))
+                return false;
+
+            return context.Result.SenderId.Trim().Equals(ReflectionPatternEndAlertSender, StringComparison.Ordinal) &&
+                   context.MessageOnly.Trim().Contains(ReflectionPatternEndAlertMessage, StringComparison.Ordinal);
         }
     }
 }

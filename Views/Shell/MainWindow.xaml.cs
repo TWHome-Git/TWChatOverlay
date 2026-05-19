@@ -224,6 +224,7 @@ namespace TWChatOverlay.Views
             try { _AbandonRoadSummaryWindow?.Close(); } catch { }
             try { _startupLogInitCts?.Cancel(); } catch { }
             try { _startupLogInitCts?.Dispose(); } catch { }
+            try { CancelPendingReflectionEndAlerts(); } catch { }
             try { _logService?.Dispose(); } catch { }
             try { _expService?.Stop(); } catch { }
             try { _buffTrackerService?.Dispose(); } catch { }
@@ -888,6 +889,20 @@ namespace TWChatOverlay.Views
             catch (Exception ex)
             {
                 AppLogger.Warn("Display prewarm failed.", ex);
+            }
+        }
+
+        internal void RequestTopmostRefresh()
+        {
+            if (Dispatcher.HasShutdownStarted || Dispatcher.HasShutdownFinished)
+                return;
+
+            try
+            {
+                Dispatcher.BeginInvoke(new Action(EnsureMainWindowTopmost), DispatcherPriority.Background);
+            }
+            catch
+            {
             }
         }
 

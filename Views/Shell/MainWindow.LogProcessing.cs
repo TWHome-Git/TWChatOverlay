@@ -112,6 +112,8 @@ namespace TWChatOverlay.Views
 
         private HiddenChatContinuationFamily _pendingHiddenChatContinuationFamily = HiddenChatContinuationFamily.None;
         private string? _pendingHiddenChatContinuationTimestamp;
+        private readonly object _reflectionEndAlertTimerLock = new();
+        private readonly HashSet<DispatcherTimer> _reflectionEndAlertTimers = new();
 
         #region Log Processing
 
@@ -205,6 +207,8 @@ namespace TWChatOverlay.Views
                 if (!context.IsStartupBackfill && parseResult.IsReflectionPatternAlert)
                 {
                     NotificationService.PlayAlert("Reflection.wav");
+                    if (parseResult.IsReflectionPatternEndAlert)
+                        ScheduleReflectionEndAlert();
                 }
 
                 if (pipelineAnalysis.Toast is { HasTrackedItemDrop: true, ShouldShowItemDropToast: true } toastAnalysis)
@@ -469,6 +473,10 @@ namespace TWChatOverlay.Views
             if (parseResult == null || string.IsNullOrWhiteSpace(parseResult.FormattedText))
                 return false;
 
+            // 반사 패턴 알림 트리거 문구는 알림 소리만 울리고 채팅에는 남기지 않는다.
+            if (parseResult.IsReflectionPatternAlert)
+                return true;
+
             // 에토스 방향 알림 트리거 문구는 방향 오버레이만 표시하고 일반 채팅 오버레이에는 노출하지 않음.
             if (!string.IsNullOrWhiteSpace(parseResult.EtosImagePath))
                 return true;
@@ -480,6 +488,53 @@ namespace TWChatOverlay.Views
                 return true;
 
             return ShouldHideChatLine(parseResult);
+        }
+
+        private void ScheduleReflectionEndAlert()
+        {
+            var timer = new DispatcherTimer
+            {
+                Interval = TimeSpan.FromSeconds(8)
+            };
+
+            EventHandler? tickHandler = null;
+            tickHandler = (_, _) =>
+            {
+                timer.Tick -= tickHandler;
+                timer.Stop();
+
+                lock (_reflectionEndAlertTimerLock)
+                {
+                    _reflectionEndAlertTimers.Remove(timer);
+                }
+
+                if (!Dispatcher.HasShutdownStarted && !Dispatcher.HasShutdownFinished)
+                {
+                    NotificationService.PlayAlert("ReflectionEnd.wav");
+                }
+            };
+
+            timer.Tick += tickHandler;
+
+            lock (_reflectionEndAlertTimerLock)
+            {
+                _reflectionEndAlertTimers.Add(timer);
+            }
+
+            timer.Start();
+        }
+
+        private void CancelPendingReflectionEndAlerts()
+        {
+            lock (_reflectionEndAlertTimerLock)
+            {
+                foreach (DispatcherTimer timer in _reflectionEndAlertTimers)
+                {
+                    try { timer.Stop(); } catch { }
+                }
+
+                _reflectionEndAlertTimers.Clear();
+            }
         }
 
         private static bool IsContentCompletionRelevantLog(string? formattedText)
