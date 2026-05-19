@@ -69,6 +69,7 @@ namespace TWChatOverlay.Views
         private string _statusText = string.Empty;
         private int _loadProgressValue;
         private string _monthlyAbandonSeedText = string.Empty;
+        private string _monthlyExperienceEssenceSeedText = string.Empty;
         private int _loadVersion;
         private DispatcherTimer? _midnightTimer;
 
@@ -101,6 +102,18 @@ namespace TWChatOverlay.Views
                     return;
                 _monthlyAbandonSeedText = value;
                 OnPropertyChanged(nameof(MonthlyAbandonSeedText));
+            }
+        }
+
+        public string MonthlyExperienceEssenceSeedText
+        {
+            get => _monthlyExperienceEssenceSeedText;
+            private set
+            {
+                if (_monthlyExperienceEssenceSeedText == value)
+                    return;
+                _monthlyExperienceEssenceSeedText = value;
+                OnPropertyChanged(nameof(MonthlyExperienceEssenceSeedText));
             }
         }
 
@@ -187,6 +200,7 @@ namespace TWChatOverlay.Views
                 MonthlySummary.Clear();
                 MonthlyAbandonSummary.Clear();
                 MonthlyAbandonSeedText = "어밴던로드 누적 합계: 0 Seed";
+                MonthlyExperienceEssenceSeedText = "경험의 정수 누적 합계: 0개";
                 SetLoadingState(false, "로그를 불러오지 못했습니다.");
                 return;
             }
@@ -543,6 +557,13 @@ namespace TWChatOverlay.Views
             MonthlySummary.Clear();
             foreach (var entry in summary)
                 MonthlySummary.Add(entry);
+            RefreshMonthlyExperienceEssenceSummary();
+        }
+
+        private void RefreshMonthlyExperienceEssenceSummary()
+        {
+            long totalExperienceEssenceCount = Days.Sum(day => (long)day.ExperienceEssenceCount);
+            MonthlyExperienceEssenceSeedText = $"경험의 정수 누적 합계: {totalExperienceEssenceCount:N0}개";
         }
 
         private void CacheTodaySnapshots(DateTime monthStart, IReadOnlyList<ItemLogSnapshotEntry> snapshots)
@@ -699,6 +720,7 @@ namespace TWChatOverlay.Views
                 if (day != null)
                 {
                     day.ExperienceEssenceCount += gain;
+                    RefreshMonthlyExperienceEssenceSummary();
                     return;
                 }
 
