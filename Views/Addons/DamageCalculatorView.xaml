@@ -6,7 +6,7 @@
              mc:Ignorable="d">
     <Grid Background="#161B22" Margin="0,8,0,0">
         <Grid.Resources>
-            <Style x:Key="GroupBorderStyle" TargetType="Border">
+            <Style x:Key="DamageSectionBorderStyle" TargetType="Border">
                 <Setter Property="Background" Value="#111821"/>
                 <Setter Property="BorderBrush" Value="#30363D"/>
                 <Setter Property="BorderThickness" Value="1"/>
@@ -15,7 +15,7 @@
                 <Setter Property="Margin" Value="0,0,8,8"/>
                 <Setter Property="MinHeight" Value="340"/>
             </Style>
-            <Style x:Key="GroupTitleStyle" TargetType="TextBlock">
+            <Style x:Key="DamageSectionTitleStyle" TargetType="TextBlock">
                 <Setter Property="Foreground" Value="#58A6FF"/>
                 <Setter Property="FontSize" Value="15"/>
                 <Setter Property="FontWeight" Value="SemiBold"/>
@@ -93,7 +93,7 @@
             <Style x:Key="SkillInfoTextBoxStyle" TargetType="TextBox" BasedOn="{StaticResource InlineTextBoxStyle}">
                 <Setter Property="Width" Value="64"/>
             </Style>
-            <Style x:Key="GroupOpenButtonStyle" TargetType="Button" BasedOn="{StaticResource SimButtonStyle}">
+            <Style x:Key="DamageSettingsOpenButtonStyle" TargetType="Button" BasedOn="{StaticResource SimButtonStyle}">
                 <Setter Property="Width" Value="96"/>
                 <Setter Property="Height" Value="32"/>
                 <Setter Property="Padding" Value="10,4"/>
@@ -316,39 +316,39 @@
                                 <Border Grid.Column="1" Style="{StaticResource SectionCardStyle}" Margin="0,0,8,0">
                                     <StackPanel>
                                         <TextBlock Style="{StaticResource SectionTitleStyle}" Text="공격 피해량(이자벨)"/>
-                                        <TextBlock x:Name="Group1SummaryText"
+                                        <TextBlock x:Name="AttackDamage1FactorSummaryText"
                                                    Foreground="#FFDE59"
                                                    FontSize="13"
                                                    FontWeight="SemiBold"
                                                    Margin="0,0,0,6"
                                                    Text="0% / 50%"/>
-                                        <StackPanel x:Name="Group1InlineHost"/>
+                                        <StackPanel x:Name="AttackDamage1FactorInlineHost"/>
                                     </StackPanel>
                                 </Border>
 
                                 <Border Grid.Column="2" Style="{StaticResource SectionCardStyle}" Margin="0,0,8,0">
                                     <StackPanel>
                                         <TextBlock Style="{StaticResource SectionTitleStyle}" Text="공격 피해량(일반)"/>
-                                        <TextBlock x:Name="Group2SummaryText"
+                                        <TextBlock x:Name="AttackDamage2FactorSummaryText"
                                                    Foreground="#FFDE59"
                                                    FontSize="13"
                                                    FontWeight="SemiBold"
                                                    Margin="0,0,0,6"
                                                    Text="0% / 30%"/>
-                                        <StackPanel x:Name="Group2InlineHost"/>
+                                        <StackPanel x:Name="AttackDamage2FactorInlineHost"/>
                                     </StackPanel>
                                 </Border>
 
                                 <Border Grid.Column="3" Style="{StaticResource SectionCardStyle}" Margin="0">
                                     <StackPanel>
                                         <TextBlock Style="{StaticResource SectionTitleStyle}" Text="공격 피해량(캐릭터)"/>
-                                        <TextBlock x:Name="Group4SummaryText"
+                                        <TextBlock x:Name="AdditionalFactorSummaryText"
                                                    Foreground="#FFDE59"
                                                    FontSize="13"
                                                    FontWeight="SemiBold"
                                                    Margin="0,0,0,6"
                                                    Text="0% / 80%"/>
-                                        <StackPanel x:Name="Group4InlineHost"/>
+                                        <StackPanel x:Name="AdditionalFactorInlineHost"/>
                                     </StackPanel>
                                 </Border>
                             </Grid>
@@ -421,21 +421,21 @@
                                             </CheckBox>
                                         </Grid>
 
-                                        <TextBlock x:Name="Group5SummaryText"
+                                        <TextBlock x:Name="SeriesAttackDamageSummaryText"
                                                    Margin="0,10,0,4"
                                                    Foreground="#FFDE59"
                                                    FontSize="12"
                                                    FontWeight="SemiBold"
                                                    Text="계열 공격력 0%"/>
-                                        <StackPanel x:Name="Group5InlineHost"/>
+                                        <StackPanel x:Name="SeriesAttackDamageInlineHost"/>
 
-                                        <TextBlock x:Name="Group11SummaryText"
+                                        <TextBlock x:Name="AdditionalDamageSummaryText"
                                                    Margin="0,10,0,4"
                                                    Foreground="#FFDE59"
                                                    FontSize="12"
                                                    FontWeight="SemiBold"
-                                                   Text="추가 대미지 0%"/>
-                                        <StackPanel x:Name="Group11InlineHost"/>
+                                                   Text="추가 피해량 0%"/>
+                                        <StackPanel x:Name="AdditionalDamageInlineHost"/>
                                     </StackPanel>
                                 </Border>
 
@@ -451,7 +451,7 @@
 
                                         <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
                                             <TextBlock Text="공격 피해량(스킬) " Foreground="#8B949E" FontSize="12" VerticalAlignment="Center"/>
-                                            <TextBlock x:Name="Group3DamageSummaryText" Foreground="White" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center" Text="0%"/>
+                                            <TextBlock x:Name="TraitAttackDamageSummaryText" Foreground="White" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center" Text="0%"/>
                                         </StackPanel>
 
                                         <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
@@ -465,8 +465,8 @@
                                         </StackPanel>
 
                                         <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
-                                            <TextBlock Text="추가 대미지 " Foreground="#8B949E" FontSize="12" VerticalAlignment="Center"/>
-                                            <TextBlock x:Name="Group11TraitValueText" Text="0%" Foreground="White" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                            <TextBlock Text="추가 피해량 " Foreground="#8B949E" FontSize="12" VerticalAlignment="Center"/>
+                                            <TextBlock x:Name="AdditionalDamageTraitValueText" Text="0%" Foreground="White" FontWeight="SemiBold" VerticalAlignment="Center"/>
                                         </StackPanel>
                                     </StackPanel>
                                 </Border>

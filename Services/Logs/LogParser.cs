@@ -20,6 +20,7 @@ namespace TWChatOverlay
             public bool IsHighlight { get; set; } = false;
             public bool IsMagicCircleAlert { get; set; } = false;
             public bool IsReflectionPatternAlert { get; set; } = false;
+            public bool IsReflectionPatternEndAlert { get; set; } = false;
             public long GainedExp { get; set; } = 0;
             public string? EtosImagePath { get; set; } = null;
             public bool IsTrackedItemDrop { get; set; } = false;

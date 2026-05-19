@@ -176,7 +176,7 @@
 
         public static readonly CharacterModifierEntry[] CharacterModifierEntries =
         {
-            // 적이 받는 피해 증가, 공격 피해량 증가, 추가 대미지, 능력치 감소
+            // 적이 받는 피해 증가, 공격 피해량 증가, 추가 피해량, 능력치 감소
             new("아나이스 마법", 0, 3, 0, 0),
             new("아나이스 비호", 20, 23, 0, 0),
             new("아나이스 파괴", 10, 3, 0, 0),
