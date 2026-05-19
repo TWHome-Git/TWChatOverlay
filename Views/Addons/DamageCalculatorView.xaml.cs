@@ -7,6 +7,8 @@ using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Documents;
+using System.Windows.Media;
 using TWChatOverlay.Models;
 using TWChatOverlay.Services;
 
@@ -45,12 +47,24 @@ namespace TWChatOverlay.Views.Addons
         private readonly MonsterState _monster = new();
         private readonly DamageCalculationValues _calc = new();
         private bool _isRestoringDamageState;
+        private bool _isNormalizingSienaMiddleDelayText;
         private readonly CoefficientSaveData _saveData = CoefficientDataService.Load();
         private DamageCalculatorSaveState _damageState = new();
         private string _currentDamageStateKey = string.Empty;
         private static bool _appExitHooked;
 
+        private static readonly Brush _anaisHighlightBrush = CreateFrozenBrush(Color.FromRgb(0x58, 0xA6, 0xFF));
+        private static readonly Brush _magicDefenseHighlightBrush = CreateFrozenBrush(Color.FromRgb(0xFF, 0xDE, 0x59));
+        private static readonly Brush _summaryLabelBrush = CreateFrozenBrush(Color.FromRgb(0xC9, 0xD1, 0xD9));
+
         private TextBox? SpecialDamageReductionTextBoxControl => FindName("SpecialDamageReductionTextBox") as TextBox;
+
+        private static Brush CreateFrozenBrush(Color color)
+        {
+            var brush = new SolidColorBrush(color);
+            brush.Freeze();
+            return brush;
+        }
 
         public DamageCalculatorView()
         {
@@ -155,7 +169,7 @@ namespace TWChatOverlay.Views.Addons
                 SaveDamageCalculatorState();
                 _currentDamageStateKey = snapshotKey;
                 _damageState = LoadDamageStateForKey(snapshotKey);
-                LoadDamageCalculatorState();
+                LoadDamageCalculatorState(false);
             }
 
             CharacterNameText.Text = snapshot.CharacterName;
@@ -167,6 +181,7 @@ namespace TWChatOverlay.Views.Addons
 
             UpdateCoefficientBreakdown(snapshot);
             ApplyCharacterModifier(snapshot.CharacterName, snapshot.CalculatorTypeName);
+            UpdateHeaderHighlightColors(snapshot.CharacterName, snapshot.CalculatorTypeName);
             UpdateWeakPointUi();
             UpdateCategorySummaryText();
             UpdateDamageRangeText();
@@ -414,17 +429,15 @@ namespace TWChatOverlay.Views.Addons
 
         private void UpdateDamageRangeText()
         {
-            if (IntermediateDamageText == null || MinimumDamageText == null || MaximumDamageText == null)
-                return;
-
             var entry = GetSelectedMonsterEntry(_monster.SelectedIndex);
             if (entry == null)
             {
-                IntermediateDamageText.Text = "-";
-                MinimumDamageText.Text = "-";
-                MaximumDamageText.Text = "-";
-                if (MonsterSummaryText != null)
-                    MonsterSummaryText.Text = "대미지 -";
+                SetInlineMetricText(NormalDamageText, "일반 대미지 : ", "-", _summaryLabelBrush);
+                SetInlineMetricText(NormalDpsText, "일반 DPS ", "-", _summaryLabelBrush);
+                SetInlineMetricText(StrongDamageText, "강타 대미지 : ", "-", _summaryLabelBrush);
+                SetInlineMetricText(StrongDpsText, "강타 DPS ", "미정", _summaryLabelBrush);
+                SetInlineMetricText(PassiveDamageText, "방무 대미지 : ", "-", _summaryLabelBrush);
+                SetInlineMetricText(PassiveDpsText, "방무 DPS ", "미정", _summaryLabelBrush);
                 return;
             }
 
@@ -432,16 +445,32 @@ namespace TWChatOverlay.Views.Addons
             var strongRange = CalculateDamageRange(entry.Value, 0.5);
             var passiveRange = CalculateDamageRange(entry.Value, 0.85);
 
-            IntermediateDamageText.Text = $"1차 INT: {normalRange.InnerMin:N0} / {normalRange.InnerMax:N0}\n2차 INT: {normalRange.MiddleMin:N0} / {normalRange.MiddleMax:N0}";
-            MinimumDamageText.Text = $"{normalRange.MinimumDamage:N0}";
-            MaximumDamageText.Text = $"{normalRange.MaximumDamage:N0}";
-            if (MonsterSummaryText != null)
+            double normalAverageDamage = CalculateDisplayedAverageDamage(normalRange.MinimumDamage, normalRange.MaximumDamage);
+            double strongAverageDamage = CalculateDisplayedAverageDamage(strongRange.MinimumDamage, strongRange.MaximumDamage);
+            double passiveAverageDamage = CalculateDisplayedAverageDamage(passiveRange.MinimumDamage, passiveRange.MaximumDamage);
+
+            SetInlineMetricText(NormalDamageText, "일반 대미지 : ", $"{normalAverageDamage:N0}", _magicDefenseHighlightBrush);
+            SetInlineMetricText(NormalDpsText, "일반 DPS ", $"{CalculateGeneralDps(normalRange, entry.Value):N0}", _magicDefenseHighlightBrush);
+            SetInlineMetricText(StrongDamageText, "강타 대미지 : ", $"{strongAverageDamage:N0}", _magicDefenseHighlightBrush);
+            SetInlineMetricText(StrongDpsText, "강타 DPS ", "미정", _summaryLabelBrush);
+            SetInlineMetricText(PassiveDamageText, "방무 대미지 : ", $"{passiveAverageDamage:N0}", _magicDefenseHighlightBrush);
+            SetInlineMetricText(PassiveDpsText, "방무 DPS ", "미정", _summaryLabelBrush);
+        }
+
+        private static void SetInlineMetricText(TextBlock? textBlock, string label, string value, Brush valueBrush)
+        {
+            if (textBlock == null)
+                return;
+
+            textBlock.Inlines.Clear();
+            textBlock.Inlines.Add(new Run(label)
             {
-                MonsterSummaryText.Text =
-                    $"일반 대미지 {normalRange.MinimumDamage:N0}~{normalRange.MaximumDamage:N0} | " +
-                    $"강타 대미지 {strongRange.MinimumDamage:N0}~{strongRange.MaximumDamage:N0} | " +
-                    $"방무 패시브 대미지 {passiveRange.MinimumDamage:N0}~{passiveRange.MaximumDamage:N0}";
-            }
+                Foreground = _summaryLabelBrush
+            });
+            textBlock.Inlines.Add(new Run(value)
+            {
+                Foreground = valueBrush
+            });
         }
 
         private DamageRangeResult CalculateDamageRange(DamageReferenceData.MonsterEntry entry, double defenseMultiplier)
@@ -482,6 +511,59 @@ namespace TWChatOverlay.Views.Addons
         private string BuildDamageFormula(bool useMaximum)
         {
             return "-";
+        }
+
+        private static double CalculateDisplayedAverageDamage(double minimumDamage, double maximumDamage)
+        {
+            return Math.Floor((minimumDamage + maximumDamage) / 2.0);
+        }
+
+        private double GetAdditionalDamagePercentValue()
+        {
+            return ReadTextValue(GetAdditionalDamageSummary().TrimEnd('%'));
+        }
+
+        private double GetAdditionalDamageFactorValue()
+        {
+            return 1 + GetAdditionalDamagePercentValue() / 100.0;
+        }
+
+        private double CalculateGeneralDps(DamageRangeResult normalRange, DamageReferenceData.MonsterEntry entry)
+        {
+            double averageDamage = (normalRange.MinimumDamage + normalRange.MaximumDamage) / 2.0;
+            double hitDamage = Math.Floor(averageDamage * Math.Max(1, _calc.HitCount));
+            double additionalDamageFactor = GetAdditionalDamageFactorValue();
+            double totalDamage = hitDamage * additionalDamageFactor;
+
+            if (!entry.Name.Contains("키메라", StringComparison.Ordinal))
+            {
+                double weaponAdditionalDamage = Math.Max(0, GetTextBoxValue(WeaponAdditionalDamageTextBox));
+                totalDamage += weaponAdditionalDamage * additionalDamageFactor;
+            }
+
+            return Math.Floor(totalDamage);
+        }
+
+        private void UpdateHeaderHighlightColors(string characterName, string calculatorTypeName)
+        {
+            if (CharacterNameText != null)
+            {
+                CharacterNameText.Foreground = string.Equals(characterName, "아나이스", StringComparison.Ordinal)
+                    ? _anaisHighlightBrush
+                    : Brushes.White;
+            }
+
+            if (CalculatorTypeText != null)
+            {
+                bool isMagicDefense = calculatorTypeName.Contains("마법방어", StringComparison.Ordinal) ||
+                                      calculatorTypeName.Contains("신성", StringComparison.Ordinal);
+                CalculatorTypeText.Foreground = isMagicDefense
+                    ? _magicDefenseHighlightBrush
+                    : Brushes.White;
+            }
+
+            if (TotalCoefficientText != null)
+                TotalCoefficientText.Foreground = _magicDefenseHighlightBrush;
         }
 
         private double GetGlobalCriticalMultiplierValue()
@@ -675,11 +757,14 @@ namespace TWChatOverlay.Views.Addons
                 _calc.TraitAttackDamageValue = 0;
                 _calc.TraitEnemyTakenDamagePercent = 0;
                 _calc.TraitAdditionalDamagePercent = 0;
+                _additionalDamageState.TraitValue = "0%";
                 AnaisVariantPanel.Visibility = Visibility.Collapsed;
                 TraitEnemyTakenDamageValueText.Text = "0";
                 TraitStatReductionValueText.Text = "0";
+                if (TraitSkillDelayValueText != null)
+                    TraitSkillDelayValueText.Text = "0%";
                 UpdateTraitAttackDamageSummaryText("특성 값 없음");
-                UpdateCharacterTraitAdditionalDamageText();
+                RefreshDamageSummaryTexts();
                 return;
             }
 
@@ -731,8 +816,11 @@ namespace TWChatOverlay.Views.Addons
                 TraitStatReductionValueText.Text = "0";
                 _calc.TraitEnemyTakenDamagePercent = 0;
                 _calc.TraitAdditionalDamagePercent = 0;
+                _additionalDamageState.TraitValue = "0%";
+                if (TraitSkillDelayValueText != null)
+                    TraitSkillDelayValueText.Text = "0%";
                 UpdateTraitAttackDamageSummaryText("특성 값 없음");
-                UpdateCharacterTraitAdditionalDamageText();
+                RefreshDamageSummaryTexts();
                 return;
             }
 
@@ -740,9 +828,12 @@ namespace TWChatOverlay.Views.Addons
             TraitEnemyTakenDamageValueText.Text = $"{_calc.TraitEnemyTakenDamagePercent:0.##}%";
             TraitStatReductionValueText.Text = $"{_calc.SelectedModifier.Value.SkillReduction:0.##}%";
             _calc.TraitAdditionalDamagePercent = _calc.SelectedModifier.Value.AdditionalDamage;
+            _additionalDamageState.TraitValue = GetCharacterTraitAdditionalDamageText();
+            if (TraitSkillDelayValueText != null)
+                TraitSkillDelayValueText.Text = $"{_calc.SelectedModifier.Value.SkillDelay:0.##}%";
             _calc.TraitAttackDamageValue = _calc.SelectedModifier.Value.AttackPower;
             UpdateTraitAttackDamageSummaryText(GetCurrentTraitDisplayName());
-            UpdateCharacterTraitAdditionalDamageText();
+            RefreshDamageSummaryTexts();
         }
 
         private static DamageReferenceData.CharacterModifierEntry? ResolveModifier(string modifierName, bool isAnais, bool isMagicDefense)
@@ -1333,8 +1424,9 @@ namespace TWChatOverlay.Views.Addons
                 SeriesAttackDamageSummaryText.Text = $"계열 공격력 {GetSeriesAttackDamageSummary()} / 73%";
             if (AdditionalDamageSummaryText != null)
                 AdditionalDamageSummaryText.Text = $"추가 피해량 {GetAdditionalDamageSummary()}";
-            if (AdditionalDamageTraitValueText != null)
-                AdditionalDamageTraitValueText.Text = GetCharacterTraitAdditionalDamageText();
+            UpdateCharacterTraitAdditionalDamageText();
+            UpdateCharacterTraitReductionText();
+            UpdateCharacterTraitSkillDelayText();
             if (FinalDamageSummaryText != null)
                 FinalDamageSummaryText.Text = $"최종 대미지 {GetFinalDamageSummary()}";
             if (CriticalDamageSummaryText != null)
@@ -1344,10 +1436,28 @@ namespace TWChatOverlay.Views.Addons
 
         private void UpdateCharacterTraitAdditionalDamageText()
         {
+            string traitText = GetCharacterTraitAdditionalDamageText();
+            _additionalDamageState.TraitValue = traitText;
             if (AdditionalDamageTraitValueText == null)
                 return;
 
-            AdditionalDamageTraitValueText.Text = GetCharacterTraitAdditionalDamageText();
+            AdditionalDamageTraitValueText.Text = traitText;
+        }
+
+        private void UpdateCharacterTraitReductionText()
+        {
+            if (TraitStatReductionValueText == null)
+                return;
+
+            TraitStatReductionValueText.Text = GetCharacterTraitSkillReductionText();
+        }
+
+        private void UpdateCharacterTraitSkillDelayText()
+        {
+            if (TraitSkillDelayValueText == null)
+                return;
+
+            TraitSkillDelayValueText.Text = GetCharacterTraitSkillDelayText();
         }
 
         private string GetCharacterTraitAdditionalDamageText()
@@ -1356,6 +1466,22 @@ namespace TWChatOverlay.Views.Addons
                 return "0%";
 
             return $"{_calc.SelectedModifier.Value.AdditionalDamage:0.#}%";
+        }
+
+        private string GetCharacterTraitSkillReductionText()
+        {
+            if (_calc.SelectedModifier == null)
+                return "0%";
+
+            return $"{_calc.SelectedModifier.Value.SkillReduction:0.#}%";
+        }
+
+        private string GetCharacterTraitSkillDelayText()
+        {
+            if (_calc.SelectedModifier == null)
+                return "0%";
+
+            return $"{_calc.SelectedModifier.Value.SkillDelay:0.#}%";
         }
 
         private void UpdateMonsterSummaryText()
@@ -1906,6 +2032,87 @@ namespace TWChatOverlay.Views.Addons
             UpdateCategorySummaryText();
         }
 
+        private void SienaMiddleDelayTextBox_PreviewTextInput(object sender, TextCompositionEventArgs e)
+        {
+            if (sender is not TextBox textBox)
+            {
+                e.Handled = true;
+                return;
+            }
+
+            e.Handled = !IsValidSienaMiddleDelayText(GetProposedText(textBox, e.Text));
+        }
+
+        private void SienaMiddleDelayTextBox_OnPaste(object sender, DataObjectPastingEventArgs e)
+        {
+            if (sender is not TextBox textBox || !e.SourceDataObject.GetDataPresent(DataFormats.Text))
+            {
+                e.CancelCommand();
+                return;
+            }
+
+            string text = e.SourceDataObject.GetData(DataFormats.Text) as string ?? string.Empty;
+            if (!IsValidSienaMiddleDelayText(GetProposedText(textBox, text)))
+                e.CancelCommand();
+        }
+
+        private void SienaMiddleDelayTextBox_LostFocus(object sender, RoutedEventArgs e)
+        {
+            NormalizeSienaMiddleDelayTextBox();
+            SaveDamageCalculatorState();
+        }
+
+        private void SienaMiddleDelayTextBox_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            if (_isRestoringDamageState)
+                return;
+
+            NormalizeSienaMiddleDelayTextBox();
+            SaveDamageCalculatorState();
+        }
+
+        private void NormalizeSienaMiddleDelayTextBox()
+        {
+            if (SienaMiddleDelayTextBox == null || _isNormalizingSienaMiddleDelayText)
+                return;
+
+            _isNormalizingSienaMiddleDelayText = true;
+            try
+            {
+                if (!int.TryParse(SienaMiddleDelayTextBox.Text, NumberStyles.Integer, CultureInfo.CurrentCulture, out int value))
+                    value = 0;
+
+                value = Math.Clamp(value, 0, 16);
+                string normalized = value.ToString("0", CultureInfo.CurrentCulture);
+                if (SienaMiddleDelayTextBox.Text != normalized)
+                    SienaMiddleDelayTextBox.Text = normalized;
+            }
+            finally
+            {
+                _isNormalizingSienaMiddleDelayText = false;
+            }
+        }
+
+        private static string GetProposedText(TextBox textBox, string newText)
+        {
+            string currentText = textBox.Text ?? string.Empty;
+            int selectionStart = Math.Clamp(textBox.SelectionStart, 0, currentText.Length);
+            int selectionLength = Math.Clamp(textBox.SelectionLength, 0, currentText.Length - selectionStart);
+            string proposedText = currentText.Remove(selectionStart, selectionLength);
+            return proposedText.Insert(selectionStart, newText);
+        }
+
+        private static bool IsValidSienaMiddleDelayText(string text)
+        {
+            if (string.IsNullOrWhiteSpace(text))
+                return true;
+
+            if (!int.TryParse(text, NumberStyles.Integer, CultureInfo.CurrentCulture, out int value))
+                return false;
+
+            return value is >= 0 and <= 16;
+        }
+
         private void SyncBasicOptionValues()
         {
             _calc.SkillMultiplier = ReadNumber(SkillMultiplierTextBox, 0);
@@ -2054,10 +2261,11 @@ namespace TWChatOverlay.Views.Addons
             EtaLevelTextBox.ToolTip = $"계수: {_calc.EtaAwakeningDamageIncrease:0.##}";
         }
 
-        private void LoadDamageCalculatorState()
+        private void LoadDamageCalculatorState(bool refreshSummaries = true)
         {
             _isRestoringDamageState = true;
             var state = _damageState;
+            state.MiddleDelay = 1;
 
             try
             {
@@ -2066,6 +2274,8 @@ namespace TWChatOverlay.Views.Addons
                 SkillMultiplierTextBox.Text = state.SkillMultiplier.ToString("0", CultureInfo.CurrentCulture);
                 CriticalMultiplierTextBox.Text = state.CriticalMultiplier.ToString("0", CultureInfo.CurrentCulture);
                 HitCountTextBox.Text = Math.Max(1, state.HitCount).ToString("0", CultureInfo.CurrentCulture);
+                if (SienaMiddleDelayTextBox != null)
+                    SienaMiddleDelayTextBox.Text = Math.Clamp(state.SienaMiddleDelay, 0, 16).ToString("0", CultureInfo.CurrentCulture);
                 EtaLevelTextBox.Text = Math.Clamp(state.EtaLevel, 1, 100).ToString("0", CultureInfo.CurrentCulture);
                 ElementValueTextBox.Text = state.ElementValue.ToString("0", CultureInfo.CurrentCulture);
 
@@ -2127,8 +2337,12 @@ namespace TWChatOverlay.Views.Addons
                 UpdateEtaLinkCriticalUi();
                 UpdateEtaLinkFinalDamageUi();
                 UpdateEtaUi();
-                RefreshDamageSummaryTexts();
-                UpdateMonsterSummaryText();
+
+                if (refreshSummaries)
+                {
+                    RefreshDamageSummaryTexts();
+                    UpdateMonsterSummaryText();
+                }
             }
             finally
             {
@@ -2152,6 +2366,8 @@ namespace TWChatOverlay.Views.Addons
             state.SkillMultiplier = GetTextBoxValue(SkillMultiplierTextBox);
             state.CriticalMultiplier = GetTextBoxValue(CriticalMultiplierTextBox);
             state.HitCount = GetTextBoxValue(HitCountTextBox);
+            state.MiddleDelay = 1;
+            state.SienaMiddleDelay = Math.Clamp(GetTextBoxValue(SienaMiddleDelayTextBox), 0, 16);
             state.EtaLevel = GetTextBoxValue(EtaLevelTextBox);
             state.EtaAwakeningDamageIncrease = _calc.EtaAwakeningDamageIncrease;
             state.ElementValue = GetTextBoxValue(ElementValueTextBox);
@@ -2251,6 +2467,8 @@ namespace TWChatOverlay.Views.Addons
                 SkillMultiplier = state.SkillMultiplier,
                 CriticalMultiplier = state.CriticalMultiplier,
                 HitCount = state.HitCount,
+                MiddleDelay = 1,
+                SienaMiddleDelay = Math.Clamp(state.SienaMiddleDelay, 0, 16),
                 EtaLevel = state.EtaLevel,
                 EtaAwakeningDamageIncrease = state.EtaAwakeningDamageIncrease,
                 ElementValue = state.ElementValue,
