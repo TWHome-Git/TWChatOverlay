@@ -218,7 +218,8 @@
                                            Grid.Column="1"
                                            Style="{StaticResource DamageDetailValueStyle}"
                                            Foreground="#58A6FF"
-                                           Text="일반 DPS -"/>
+                                           Text="일반 DPS -"
+                                           Visibility="Collapsed"/>
 
                                 <TextBlock x:Name="StrongDamageText"
                                            Grid.Row="1"
@@ -232,7 +233,8 @@
                                            Margin="0,6,0,0"
                                            Style="{StaticResource DamageDetailValueStyle}"
                                            Foreground="#8B949E"
-                                           Text="강타 DPS 미정"/>
+                                           Text="강타 DPS 미정"
+                                           Visibility="Collapsed"/>
 
                                 <TextBlock x:Name="PassiveDamageText"
                                            Grid.Row="2"
@@ -246,7 +248,8 @@
                                            Margin="0,6,0,0"
                                            Style="{StaticResource DamageDetailValueStyle}"
                                            Foreground="#8B949E"
-                                           Text="방무 DPS 미정"/>
+                                           Text="방무 DPS 미정"
+                                           Visibility="Collapsed"/>
                             </Grid>
 
                             <StackPanel Visibility="Collapsed">

@@ -8,7 +8,7 @@ using System.Windows.Media;
 namespace TWChatOverlay.Models
 {
     /// <summary>
-    /// 던전 클리어 추적 항목 — 단순 토글, 카운트, 그룹(하위 항목 포함)을 통합 처리합니다.
+    /// 던전 클리어 추적 항목 — 단순 토글, 카운트, 그룹(하위 항목 포함)을 통합 처리
     /// </summary>
     public class DailyWeeklyContentLog : INotifyPropertyChanged
     {

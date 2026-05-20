@@ -494,7 +494,7 @@ namespace TWChatOverlay.Views
         {
             var timer = new DispatcherTimer
             {
-                Interval = TimeSpan.FromSeconds(8)
+                Interval = TimeSpan.FromSeconds(7)
             };
 
             EventHandler? tickHandler = null;

@@ -17,6 +17,7 @@ namespace TWChatOverlay.Services
             "서클릿의 사제, 마티아",
             "소매의 사제, 체리아",
             "선봉대장, 로카고스",
+            "심연의 제2사도",
             "경보 장치",
             "신조",
             "붉은 프토마",
@@ -42,7 +43,8 @@ namespace TWChatOverlay.Services
         {
             new(@"^(?:\[[^\]]+\]\s*)?(SP|MP|Fever|HP)가\s*\d+%\s*회복되었습니다\.?$", RegexOptions.Compiled),
             new(@"^(?:\[[^\]]+\]\s*)?체력이\s*\d+%\s*회복되었습니다\.?$", RegexOptions.Compiled),
-            new(@"남은\s*공격\s*횟수\s*:\s*\d+", RegexOptions.Compiled)
+            new(@"남은\s*공격\s*횟수\s*:\s*\d+", RegexOptions.Compiled),
+            new(@"절제와\s*균형의\s*중심에서\s*빗나간\s*힘은\s*칼날이\s*되어\s*돌아오지\.?", RegexOptions.Compiled)
         };
 
         public static bool IsIgnoredNormalMessage(string message)
