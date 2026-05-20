@@ -177,7 +177,7 @@ namespace TWChatOverlay
             EtaProfileResolver.DeleteCache();
             NotificationService.DeleteCachedAudioFiles();
             _mutex?.ReleaseMutex();
-            _mutex?.Dispose();
+            _mutex?.Dispose();     
             AppLogger.Info("Application shutdown completed.");
             base.OnExit(e);
         }
