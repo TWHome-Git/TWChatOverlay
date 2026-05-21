@@ -48,14 +48,6 @@
                            FontSize="13" 
                            FontWeight="Bold"
                            VerticalAlignment="Center"/>
-
-                <TextBlock Text="{Binding LastGainedExpDisplay}" 
-                           Foreground="#00FF00" 
-                           FontSize="11" 
-                           Margin="8,1,0,0"
-                           FontWeight="SemiBold"
-                           VerticalAlignment="Center"
-                           Visibility="{Binding HasLastExp, Converter={StaticResource BooleanToVisibilityConverter}}"/>
             </StackPanel>
         </DockPanel>
     </Border>

@@ -11,6 +11,7 @@ namespace TWChatOverlay.Models
     {
         private long _lastGainedExp;
         private long _totalExp;
+        private int _gainCount;
         private DateTime _startTime = DateTime.Now;
         private bool _isFrozen;
         private string _frozenTotalExpDisplay = string.Empty;
@@ -18,6 +19,21 @@ namespace TWChatOverlay.Models
         public string LastGainedExpDisplay => _lastGainedExp > 0 ? $"+{FormatExp(_lastGainedExp)}" : string.Empty;
 
         public bool HasLastExp => _lastGainedExp > 0;
+
+        public int GainCount
+        {
+            get => _gainCount;
+            set
+            {
+                if (_gainCount == value) return;
+                _gainCount = value;
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(GainCountDisplay));
+                OnPropertyChanged(nameof(TotalExpDisplay));
+            }
+        }
+
+        public string GainCountDisplay => $"{GainCount:N0}회";
 
         public long LastGainedExp
         {
@@ -48,9 +64,13 @@ namespace TWChatOverlay.Models
         {
             get
             {
+                string countPart = $"[{GainCount:N0}]";
+
                 if (_isFrozen)
                 {
-                    return _frozenTotalExpDisplay;
+                    return string.IsNullOrWhiteSpace(_frozenTotalExpDisplay)
+                        ? countPart
+                        : $"{_frozenTotalExpDisplay} {countPart}";
                 }
 
                 string currentExp = FormatExp(_totalExp);
@@ -59,11 +79,11 @@ namespace TWChatOverlay.Models
 
                 if (_totalExp == 0 || elapsed.TotalSeconds < 30)
                 {
-                    return "   측정 대기 중...   ";
+                    return $"측정 대기 중... {countPart}";
                 }
 
                 long expPerHour = (long)(_totalExp / hours);
-                return $"{currentExp} | {FormatExp(expPerHour)}/h";
+                return $"{currentExp} | {FormatExp(expPerHour)}/h {countPart}";
             }
         }
 
@@ -94,6 +114,7 @@ namespace TWChatOverlay.Models
             UnfreezeTotalExpDisplay();
             LastGainedExp = 0;
             TotalExp = 0;
+            GainCount = 0;
             ResetStartTime();
         }
 
@@ -101,17 +122,7 @@ namespace TWChatOverlay.Models
 
         private string BuildTotalExpDisplay()
         {
-            string currentExp = FormatExp(_totalExp);
-            TimeSpan elapsed = DateTime.Now - _startTime;
-            double hours = elapsed.TotalHours;
-
-            if (_totalExp == 0 || elapsed.TotalSeconds < 30)
-            {
-                return "   측정 대기 중...   ";
-            }
-
-            long expPerHour = (long)(_totalExp / hours);
-            return $"{currentExp} | {FormatExp(expPerHour)}/h";
+            return TotalExpDisplay;
         }
 
         private static string FormatExp(long value)
