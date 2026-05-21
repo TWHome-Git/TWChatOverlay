@@ -105,7 +105,7 @@
 3. 테일즈위버 게임 설정에서 **설정 -> 게임 -> 채팅 로그 -> ON**으로 변경합니다.
 4. `TWChatOverlay.exe` 파일을 실행합니다.
 
-### 2. 초기 마법사 설정
+### 2. 초기 설정 마법사
 1. 테일즈위버 채팅로그 폴더 지정
 
    <img width="760" height="520" alt="image" src="https://github.com/user-attachments/assets/7790d86e-0fa3-4f3a-bfca-114eabda7d3f" />
