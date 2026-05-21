@@ -21,10 +21,14 @@
     * 매일 오전 11시 ~ 12시 사이 자동 업데이트 ( `앱 재시작 필요` )
 
 ### 3. 계산기 및 시뮬레이터
-* **계수 계산기**: 캐릭터 장비 스탯 및 장비 강화 스탯 기반의 계수 계산
-  
+* **계산기**: 캐릭터 장비 스탯 및 장비 강화 스탯 기반의 계수 계산
+   * 계수 계산기
 <img width="640" height="480" alt="image" src="https://github.com/user-attachments/assets/eec5e003-64da-4336-884d-accc1474c1c1" />
+   
+   * 대미지 계산기
+<img width="640" height="480" alt="image" src="https://github.com/user-attachments/assets/d7d8e2a5-968e-4313-9e62-38d6285bba79" />
 
+     
 * **강화 시뮬레이터**:
     * 인크립트 강화 시뮬레이션
     <img width="640" height="480" alt="image" src="https://github.com/user-attachments/assets/80f0d2a5-5302-44fe-8685-f8f3f79d1353" />
