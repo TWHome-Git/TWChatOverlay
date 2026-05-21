@@ -14,7 +14,7 @@
 * **경험치 추적**: 실시간 획득 경험치 및 시간당 효율 계산
 
 ### 2. 에타 순위표 및 검색
-<img width="640" height="480" alt="image" src="https://github.com/user-attachments/assets/6c91d0a9-130e-4bcd-a114-c6a2b1f9a8e9" />
+<img width="640" height="480" alt="image" src="https://github.com/user-attachments/assets/b1a1bacc-02d7-4687-a3a2-230354f15534" />
 
 * **데이터 조회**: 캐릭터 검색 및 랭킹 데이터 확인
     * 내부 캐시 검색 방식을 사용하여 공식 홈페이지보다 빠른 조회 가능
@@ -22,29 +22,29 @@
 
 ### 3. 계산기 및 시뮬레이터
 * **계수 계산기**: 캐릭터 장비 스탯 및 장비 강화 스탯 기반의 계수 계산
-<img width="640" height="480" alt="image" src="https://github.com/user-attachments/assets/e7a787d8-c29a-4962-9bf9-ffe7c4efef1b" />
+  
+<img width="640" height="480" alt="image" src="https://github.com/user-attachments/assets/eec5e003-64da-4336-884d-accc1474c1c1" />
 
 * **강화 시뮬레이터**:
     * 인크립트 강화 시뮬레이션
-    <img width="640" height="480" alt="image" src="https://github.com/user-attachments/assets/d000196f-966f-4130-8dc7-df9aa04dfcdb" />
+    <img width="640" height="480" alt="image" src="https://github.com/user-attachments/assets/80f0d2a5-5302-44fe-8685-f8f3f79d1353" />
 
     * 코어 강화 기대값 시뮬레이션
-    <img width="640" height="480" alt="image" src="https://github.com/user-attachments/assets/2ba4ce3b-f24a-4051-b690-e16a9a6f0248" />
+    <img width="640" height="480" alt="image" src="https://github.com/user-attachments/assets/f97245d5-2ab3-411a-ad88-5dda1a70f2d3" />
 
     * 렐릭 강화 기대값 시뮬레이션**
-    <img width="640" height="480" alt="image" src="https://github.com/user-attachments/assets/713c946f-2048-4f40-99ed-b2459b51b6b3" />
-
+    <img width="640" height="480" alt="image" src="https://github.com/user-attachments/assets/4d3a178c-9d4b-44ef-970f-2046aacb5f73" />
 
 
 ### 4. 장비 DB 및 제작 재료 확인
-<img width="640" height="480" alt="image" src="https://github.com/user-attachments/assets/7a2536fd-9ce2-48cf-b048-a0412883a1b2" />
+<img width="640" height="480" alt="image" src="https://github.com/user-attachments/assets/91c2a3f4-e9c3-4666-81b4-3958ee82af24" />
 
 * **데이터 조회**: 장비 능력치 및 제작에 필요한 재료 확인
     * *주의: 일본 테일즈위키를 기반으로 업데이트되어 최신 정보 반영이 다소 늦을 수 있음*
 
 ### 5. 컨텐츠 및 특수 알림
 * **컨텐츠 추적**: 일일/주간 숙제 완료 여부 자동 체크리스트
-<img width="280" height="540" alt="image" src="https://github.com/user-attachments/assets/33a591b7-2f8f-4d5d-b3af-7056d365ef65" />
+<img width="414" height="885" alt="image" src="https://github.com/user-attachments/assets/4c06dc6b-f8d8-4b47-ac91-be340aea01f2" />
   
 * **전투 및 필드 알림**:
     * 키워드 알림
@@ -74,18 +74,18 @@
     * 필드 보스 알림
       
 * **아이템 획득 알림**:
+   - 레어 획득 시 알림
   
   <img width="400" height="180" alt="image" src="https://github.com/user-attachments/assets/948eb84e-c20a-40d6-912a-1255ed2d9ddf" />
 
-    * 레어 획득 시 알림
-
-  <img width="638" height="205" alt="image" src="https://github.com/user-attachments/assets/b25441c1-06f4-4e59-8953-93e5227da729" />
+   - 수익 월별 통계
   
-    * 레어 주간 통계
- 
-  <img width="640" height="426" alt="image" src="https://github.com/user-attachments/assets/4e7a5a95-5d96-4f9f-9256-2cf4cfcf4b0d" />
+  <img width="640" height="480" alt="image" src="https://github.com/user-attachments/assets/14cf6610-7626-495b-a282-d4894de0e6f3" />
+   
+   - 아이템 필터
 
-    * 아이템 필터
+  <img width="640" height="426" alt="image" src="https://github.com/user-attachments/assets/4e7a5a95-5d96-4f9f-9256-2cf4cfcf4b0d" />
+   
       
 * **버프 알림 (참고용)**:
   
@@ -105,9 +105,50 @@
 3. 테일즈위버 게임 설정에서 **설정 -> 게임 -> 채팅 로그 -> ON**으로 변경합니다.
 4. `TWChatOverlay.exe` 파일을 실행합니다.
 
-### 2. 경로 설정
-* 테일즈위버 설치 경로가 기본값과 다른 경우:
-    * **톱니바퀴 아이콘 -> 프로그램 설정 -> 로그 경로 설정**에서 직접 지정
+### 2. 초기 마법사 설정
+1. 테일즈위버 채팅로그 폴더 지정
+
+   <img width="760" height="520" alt="image" src="https://github.com/user-attachments/assets/7790d86e-0fa3-4f3a-bfca-114eabda7d3f" />
+   
+2. 채팅창 위치 설정
+
+    <img width="760" height="520" alt="image" src="https://github.com/user-attachments/assets/7c948285-0d54-4e4e-87de-794691063313" />
+3. 채팅창 옵션 설정
+
+    <img width="760" height="520" alt="image" src="https://github.com/user-attachments/assets/7be69844-3402-40f2-acba-d3ae11867482" />
+    
+4. 외치기 창 설정
+
+   <img width="760" height="520" alt="image" src="https://github.com/user-attachments/assets/73ef2add-dc6e-46fc-a48c-f411ba75c956" />
+   
+5. 키워드 알림 설정
+
+    <img width="760" height="520" alt="image" src="https://github.com/user-attachments/assets/b3264293-d02b-4317-8284-efbc909fc0e4" />
+    
+6. 경험치 추적 알림 설정
+
+   <img width="760" height="520" alt="image" src="https://github.com/user-attachments/assets/c00f80d7-d198-4cda-95f4-b088d1c860ed" />
+   
+7. 던전 도우미 설정
+   
+   <img width="760" height="520" alt="image" src="https://github.com/user-attachments/assets/a7f61805-25f8-4617-a5c4-f6363fea4b78" />
+   
+8. 아이템 획득 알림 설정
+  
+   <img width="760" height="520" alt="image" src="https://github.com/user-attachments/assets/37598ea3-cf20-49f4-8dd9-48f0ea87a6d7" />
+   
+9. 버프 추적 설정
+  
+   <img width="760" height="520" alt="image" src="https://github.com/user-attachments/assets/2d8a59b7-b936-4141-9883-df34aff94929" />
+   
+10. 필드 보스 알림 설정
+    
+      <img width="760" height="520" alt="image" src="https://github.com/user-attachments/assets/acdcaa48-772b-4163-a185-acb6d8ca9a36" />
+   
+11. 일간/주간 컨텐츠 추적 설정
+    
+      <img width="760" height="520" alt="image" src="https://github.com/user-attachments/assets/2c854eaa-5bf7-429e-a02c-b37001548d2b" />
+
 
 ### 3. 사전 요구 사항
 * 테일즈위버 설치 경로의 `ChatLog` 폴더에 대한 접근 권한
