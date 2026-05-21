@@ -913,8 +913,7 @@ namespace TWChatOverlay.Views
 
             try
             {
-                Topmost = true;
-                TopmostWindowHelper.BringToTopmost(this);
+                TopmostWindowHelper.EnsureTopmost(this);
             }
             catch (Exception ex)
             {

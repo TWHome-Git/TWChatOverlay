@@ -209,20 +209,22 @@ namespace TWChatOverlay.Views
             if (!_isStateReady || _isApplyingLoadedState)
                 return;
 
+            _settings ??= ResolveSharedSettings();
+            if (_settings == null)
+                return;
+
             string text = MemoTextBox?.Text ?? string.Empty;
-            ChatSettings snapshot = ConfigService.Load();
             double left = (_isOverlayMode && _textOnly?.IsVisible == true) ? _textOnly.Left : Left;
             double top = (_isOverlayMode && _textOnly?.IsVisible == true) ? _textOnly.Top : Top;
-            snapshot.MemoOverlayWindowLeft = left;
-            snapshot.MemoOverlayWindowTop = top;
-            snapshot.MemoOverlayText = text;
-            snapshot.MemoOverlayTextOnlyMode = _isOverlayMode;
-            snapshot.MemoOverlayFontSize = MemoTextBox?.FontSize ?? 20.0;
-            snapshot.MemoOverlayBold = MemoTextBox?.FontWeight == FontWeights.Bold;
-            snapshot.MemoOverlayItalic = MemoTextBox?.FontStyle == FontStyles.Italic;
-            snapshot.MemoOverlayColorKey = _selectedColorKey;
-            ConfigService.Save(snapshot);
-            _settings = snapshot;
+            _settings.MemoOverlayWindowLeft = left;
+            _settings.MemoOverlayWindowTop = top;
+            _settings.MemoOverlayText = text;
+            _settings.MemoOverlayTextOnlyMode = _isOverlayMode;
+            _settings.MemoOverlayFontSize = MemoTextBox?.FontSize ?? 20.0;
+            _settings.MemoOverlayBold = MemoTextBox?.FontWeight == FontWeights.Bold;
+            _settings.MemoOverlayItalic = MemoTextBox?.FontStyle == FontStyles.Italic;
+            _settings.MemoOverlayColorKey = _selectedColorKey;
+            ConfigService.Save(_settings);
         }
 
         private static ChatSettings ResolveSharedSettings()

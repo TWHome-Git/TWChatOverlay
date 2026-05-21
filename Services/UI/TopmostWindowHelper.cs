@@ -6,6 +6,14 @@ namespace TWChatOverlay.Services
 {
     public static class TopmostWindowHelper
     {
+        public static void EnsureTopmost(Window? window)
+        {
+            if (window == null || window.Topmost)
+                return;
+
+            BringToTopmost(window);
+        }
+
         public static void BringToTopmost(Window? window)
         {
             if (window == null)
@@ -13,8 +21,8 @@ namespace TWChatOverlay.Services
 
             try
             {
-                window.Topmost = false;
-                window.Topmost = true;
+                if (!window.Topmost)
+                    window.Topmost = true;
 
                 IntPtr hwnd = new WindowInteropHelper(window).EnsureHandle();
                 NativeMethods.SetWindowPos(

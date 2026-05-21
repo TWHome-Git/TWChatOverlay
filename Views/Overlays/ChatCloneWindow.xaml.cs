@@ -661,8 +661,7 @@ namespace TWChatOverlay.Views
                 if (!_mainWindow.Topmost)
                     return;
 
-                Topmost = true;
-                TopmostWindowHelper.BringToTopmost(this);
+                TopmostWindowHelper.EnsureTopmost(this);
             }
             catch
             {

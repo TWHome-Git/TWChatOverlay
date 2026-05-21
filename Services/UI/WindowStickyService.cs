@@ -135,10 +135,7 @@ namespace TWChatOverlay.Services
 
         private void ApplyTopmost()
         {
-            if (!_overlayWindow.Topmost)
-            {
-                _overlayWindow.Topmost = true;
-            }
+            TopmostWindowHelper.EnsureTopmost(_overlayWindow);
         }
 
         private void NotifyAuxiliaryWindowVisibilityChanged(bool canShow)
