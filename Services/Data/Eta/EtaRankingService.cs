@@ -19,6 +19,7 @@ namespace TWChatOverlay.Services
     {
         private const string EtaRankingUrl = "https://raw.githubusercontent.com/TWHome-Git/TWHomeDB/main/eta_ranking.json";
         private static readonly TimeSpan CacheTtl = TimeSpan.FromHours(6);
+        private const int RefreshAnchorHourLocal = 10;
 
         private static readonly HttpClient HttpClient = new()
         {
@@ -30,7 +31,7 @@ namespace TWChatOverlay.Services
             EtaRankingUrl,
             CacheTtl,
             HttpClient,
-            refreshAnchorHourLocal: 11,
+            refreshAnchorHourLocal: RefreshAnchorHourLocal,
             forceRemoteCheckOnFirstCall: true);
 
         private static readonly Dictionary<int, string> CharacterNameByCode = new()
@@ -129,7 +130,7 @@ namespace TWChatOverlay.Services
                 return false;
 
             DateTime now = DateTime.Now;
-            DateTime cycleDate = now.Hour >= 11 ? now.Date : now.Date.AddDays(-1);
+            DateTime cycleDate = now.Hour >= RefreshAnchorHourLocal ? now.Date : now.Date.AddDays(-1);
             return _payloadDateLocal.Value.Date == cycleDate;
         }
 
