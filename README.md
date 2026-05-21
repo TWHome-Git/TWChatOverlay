@@ -155,96 +155,44 @@
 
 ### 4. 메뉴 소개
 * 메인메뉴
+  
+<img width="711" height="618" alt="image" src="https://github.com/user-attachments/assets/c5c64a7e-e35e-4105-a25f-944503936933" />
 
-<table>
-  <tr>
-    <td valign="top">
-      <img src="https://github.com/user-attachments/assets/81396a08-6c03-4741-bbba-09f19a21d4b3" width="60" height="600" alt="Main Menu">
-    </td>
-    <td valign="top">
-      <table>
-        <tbody>
-          <tr>
-            <td><b>+ / -</b></td>
-            <td><b>드래그 및 최소화</b>: 왼쪽 버튼으로 위치 이동, 오른쪽 버튼으로 창 최소화</td>
-          </tr>
-          <tr>
-            <td><b>1</b></td>
-            <td><b>채팅창 토글</b>: 게임 내 채팅창 오버레이 보이기/숨기기</td>
-          </tr>
-          <tr>
-            <td><b>2</b></td>
-            <td><b>에타 순위</b>: 에타 랭킹 정보 확인</td>
-          </tr>
-          <tr>
-            <td><b>3</b></td>
-            <td><b>계수 계산기</b>: 장비 및 강화 스탯 계수 계산</td>
-          </tr>
-          <tr>
-            <td><b>4</b></td>
-            <td><b>장비 DB</b>: 장비 아이템 정보 조회</td>
-          </tr>
-          <tr>
-            <td><b>5</b></td>
-            <td><b>컨텐츠 추적</b>: 일일/주간 컨텐츠 추적창</td>
-          </tr>
-          <tr>
-            <td><b>6</b></td>
-            <td><b>시뮬레이터</b>: 인크 및 코어 시뮬레이터</td>
-          </tr>
-          <tr>
-            <td><b>7</b></td>
-            <td><b>추가 기능</b>: 추가 기능 설정</td>
-          </tr>
-          <tr>
-            <td><b>8</b></td>
-            <td><b>앱 설정</b>: 앱 설정</td>
-          </tr>
-          <tr>
-            <td><b>9</b></td>
-            <td><b>종료</b>: TWChatOverlay 프로그램 종료</td>
-          </tr>
-        </tbody>
-      </table>
-    </td>
-  </tr>
-</table>
 
 ### 5. 앱 기본 설정
 <img width="36" height="37" alt="image" src="https://github.com/user-attachments/assets/e4c17df7-84cf-439f-bd31-409199219bc8" />
 
 
 * 오버레이 창 위치 설정
-   - 설정창을 열었을 때, 각종 오버레이의 창 위치를 드래그해서 변경가능
-<img width="640" height="320" alt="image" src="https://github.com/user-attachments/assets/640e8ca9-0db6-4146-8029-394ec337195e" />
-
+   - 설정 혹은 추가기능에 맞는 설정창을 열었을 때, 각종 오버레이의 창 위치를 드래그해서 변경가능
 
 * 채팅창 설정
    - 채팅 필터 및 색상, 폰트 설정 가능
    - 채팅 필터가 설정된 채팅을 기본 탭에서 보여줌
-<img width="640" height="341" alt="image" src="https://github.com/user-attachments/assets/aff84f81-1122-46bb-a0e3-cf23a85ed67b" />
+<img width="640" height="480" alt="image" src="https://github.com/user-attachments/assets/796fa456-5f36-450d-9495-c08816489c3e" />
 
 
 * 프로그램 설정
    - 채팅창 위치 및 항상 위 속성, 로그 경로 설정
-<img width="640" height="401" alt="image" src="https://github.com/user-attachments/assets/be014c96-69e5-4814-abbd-466170728fbf" />
+<img width="640" height="480" alt="image" src="https://github.com/user-attachments/assets/4fa15731-8bc1-4214-87b1-e963db99a731" />
 
 
 * 단축키 설정
    - 각종 단축키 설정
    - 기존에 윈도우 혹은 다른 프로그램에서 사용하는 단축키는 등록이 제한됨
-<img width="640" height="416" alt="image" src="https://github.com/user-attachments/assets/a0e88728-4d8b-4d43-9eec-5422e79f8e7d" />
+<img width="640" height="480" alt="image" src="https://github.com/user-attachments/assets/e95cd70d-6a5f-4d60-8f27-1b577ddf27a6" />
 
 ---
-### 6. 앱 기능 설정
-<img width="36" height="37" alt="image" src="https://github.com/user-attachments/assets/0167fc67-4f0b-452a-83e0-dc4d45fb03c2" />
+### 6. 추가 기능 설정
+<img width="40" height="40" alt="image" src="https://github.com/user-attachments/assets/3c99fca6-3598-4341-825d-aab276227476" />
 
 * 키워드 알림
    - 색상 강조 : 키워드 확인 시, 오버레이 창의 채팅 하이라이트 ON/OFF
    - 알림음 재생 : 키워드 확인 시, 알림음 재생 ON/OFF
    - 알림 키워드 입력 : ex) @단어1 @단어2 등록 시, 단어1, 단어2 채팅창 메세지 확인 시, 알림
      
-<img width="640" height="337" alt="image" src="https://github.com/user-attachments/assets/38c90595-0667-4a09-ad7d-f9ec7220904d" />
+<img width="640" height="480" alt="image" src="https://github.com/user-attachments/assets/708de74d-cea5-427f-be11-cbad17ed1e9b" />
+
 
 * 경험치 추적
    - 경험치 추적기능 활성화 : 오버레이 상단에 누적 경험치 및 시간당 획득한 경험치, 현재 획득 경험치 디스플레이
@@ -252,39 +200,42 @@
       - ** 주의사항 : 퀘스트 경험치는 미적용 될 수도 있음 **
    - 저효율 알림 활성화 : 기준치 미만의 경험치 획득 시, 알림음 재생 ON/OFF
 
-<img width="640" height="480" alt="image" src="https://github.com/user-attachments/assets/9d83989a-e378-486f-a1bd-91da2108a154" />
+<img width="640" height="480" alt="image" src="https://github.com/user-attachments/assets/ea930186-df4f-4d58-8665-dac8bff36955" />
 
 
 * 던전 도우미
-   - 마법진 경고 : 마법진 발생 시, 알림
+   - 웨이브 종료 알림 : 룬 경험치 던전, 테시스 코어 던전 웨이브 종료 시, 알림
      
    - 에토스 방향 알림 : 에토스 방향 디스플레이 ON/OFF
+
+   - 반사 패턴 알림 : 어비스 2사도 반사 패턴 알림 ON/OFF
 
    - 던전 카운터
       - 어밴던로드 횟수 알리미 : 현재 진행한 단계를 보여줌
       - 갈망하는 즐거움 횟수 알리미 : 보스방 진입 시, 현재 에너지량을 보여줌
       - 창 지속시간 : 창이 표기된 후, 사라질 때까지의 시간
  
-<img width="640" height="365" alt="image" src="https://github.com/user-attachments/assets/d0fd1e95-2d3a-4bbb-a59d-e27581ab798a" />
+<img width="640" height="480" alt="image" src="https://github.com/user-attachments/assets/b1a405b9-4ea2-487b-86d1-8df6ad5f99fa" />
 
 
 * 아이템 획득 알림
    - 아이템 획득 알림 : 아이템 획득 알림 디스플레이 ON/OFF
    - 사용자 정의 필터 : 기본 필터에서 사용자가 원하는 아이템 목록을 추가/제거
       - 적용 버튼 시, 적용되며 저장 및 불러오기 기능은 업데이트 혹은 다른 환경에서 같은 필터를 쉽게 설정할 수 있음
-      - 
-<img width="640" height="480" alt="image" src="https://github.com/user-attachments/assets/43d4cf83-b361-4304-b0be-21b72a001d79" />
-     
+        
+<img width="640" height="480" alt="image" src="https://github.com/user-attachments/assets/a387c8af-887d-4b55-9220-6af67d923d41" />
+
 
  * 버프 추적
    - 버프 추적 알림 : 버프 추적 디스플레이 ON/OFF
   
-<img width="640" height="480" alt="image" src="https://github.com/user-attachments/assets/35665d60-9360-4fd5-b68f-1430a75af2b0" />
+<img width="640" height="480" alt="image" src="https://github.com/user-attachments/assets/d20e9fe2-e95e-4153-b310-022e51280034" />
+
 
  * 필드 보스 알림
    - 필드 보스 알림 ON/OFF
 
-<img width="640" height="480" alt="image" src="https://github.com/user-attachments/assets/e2330e2f-162c-4d5e-ac70-00ad39e2e50f" />
+<img width="640" height="480" alt="image" src="https://github.com/user-attachments/assets/b05d01fc-039f-4dbc-8115-96940bf60328" />
 
 
 
