@@ -198,6 +198,8 @@ namespace TWChatOverlay.Models
                 ["실반 코어 마스터"] = new() { IsEnabled = true },
                 ["루미너스 코어 마스터"] = new() { IsEnabled = true },
                 ["최후의 결전"] = new() { IsEnabled = true },
+                ["에타 일일 도전 과제"] = new() { IsEnabled = true },
+                ["에타의 의지 퀘스트"] = new() { IsEnabled = true },
                 ["필멸의 땅"] = new() { IsEnabled = true },
                 ["카디프"] = new() { IsEnabled = true },
                 ["오를란느"] = new() { IsEnabled = true },

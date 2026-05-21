@@ -92,6 +92,8 @@ namespace TWChatOverlay.Views
         private const string FollowingJoyHardItemName = "추종하는 환희(어려움)";
         private const string GazingSorrowHardItemName = "응시하는 슬픔(어려움)";
         private const string AfterimageOfJoyItemName = "환희의 잔상";
+        private const string EtaDailyChallengeItemName = "에타 일일 도전 과제";
+        private const string EtaWillQuestItemName = "에타의 의지 퀘스트";
 
         private const string LokagosCoreMasterItemName = "로카고스 코어 마스터";
         private const string EthosCoreMasterItemName = "에토스 코어 마스터";
@@ -177,6 +179,8 @@ namespace TWChatOverlay.Views
         private const string FollowingJoyHardLogKeyword = "레이티아 퇴치 보상으로 레이티아 보상 상자 (어려움) 1개, 루비코나 코어 상자 30개";
         private const string GazingSorrowHardLogKeyword = "설계자 퇴치 보상으로 설계자 보상 상자 (어려움) 1개, 루비코나 코어 상자 30개";
         private const string AfterimageOfJoyLogKeyword = "[환희의 레이티아 보상 상자] 아이템을 1개 획득하였습니다.";
+        private const string EtaDailyChallengeLogKeyword = "[에타의 의지 레벨업 상자]을(를) 1개 습득했습니다.";
+        private const string EtaWillQuestLogKeyword = "[루이나 및 제네로 일반 상자]을(를) 1개 습득했습니다.";
 
         private const string EclipseSubjugationLogKeyword = "이클립스 보스 토벌전 클리어 횟수:";
         private const string SupplyRetrievalLogKeyword = "보급품 탈환 클리어 횟수:";
@@ -511,6 +515,8 @@ namespace TWChatOverlay.Views
                 ,new() { Name = FollowingJoyHardItemName, AllowCountOverMax = true, DefaultMaxCount = 1, MaxCount = 1, LogKeyword = FollowingJoyHardLogKeyword }
                 ,new() { Name = GazingSorrowHardItemName, AllowCountOverMax = true, DefaultMaxCount = 1, MaxCount = 1, LogKeyword = GazingSorrowHardLogKeyword }
                 ,new() { Name = AfterimageOfJoyItemName, AllowCountOverMax = true, DefaultMaxCount = 1, MaxCount = 1, LogKeyword = AfterimageOfJoyLogKeyword }
+                ,new() { Name = EtaDailyChallengeItemName, AllowCountOverMax = true, DefaultMaxCount = 1, MaxCount = 1, LogKeyword = EtaDailyChallengeLogKeyword }
+                ,new() { Name = EtaWillQuestItemName, AllowCountOverMax = true, DefaultMaxCount = 1, MaxCount = 1, LogKeyword = EtaWillQuestLogKeyword }
             };
 
             var weeklyGroup = new DailyWeeklyContentLog { Name = WeeklyContentsGroupName, Children = weeklyItems };
@@ -1277,9 +1283,9 @@ namespace TWChatOverlay.Views
 
         private void Close_Click(object sender, RoutedEventArgs e) => Close();
 
-        private void Reset_Click(object sender, RoutedEventArgs e)
+        private async void Reset_Click(object sender, RoutedEventArgs e)
         {
-            _ = RefreshCurrentWeekContentLogAsync();
+            await RefreshCurrentWeekContentLogAsync();
         }
 
         private async Task RefreshCurrentWeekContentLogAsync()
@@ -1293,9 +1299,6 @@ namespace TWChatOverlay.Views
                 string? weekDir = Path.GetDirectoryName(weekPath);
                 if (!string.IsNullOrWhiteSpace(weekDir))
                     Directory.CreateDirectory(weekDir);
-
-                if (File.Exists(weekPath))
-                    File.Delete(weekPath);
 
                 var keywords = TrackItems
                     .Where(i => !string.IsNullOrWhiteSpace(i.LogKeyword))
@@ -1324,7 +1327,8 @@ namespace TWChatOverlay.Views
                         continue;
 
                     string raw;
-                    using (var sr = new StreamReader(path, Encoding.GetEncoding(949)))
+                    using (var fs = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete))
+                    using (var sr = new StreamReader(fs, Encoding.GetEncoding(949), detectEncodingFromByteOrderMarks: true))
                         raw = await sr.ReadToEndAsync();
 
                     foreach (string part in Regex.Split(raw, @"</?br\s*>|\r?\n", RegexOptions.IgnoreCase))
@@ -1350,7 +1354,7 @@ namespace TWChatOverlay.Views
                     }
                 }
 
-                using (var fs = new FileStream(weekPath, FileMode.CreateNew, FileAccess.Write, FileShare.Read))
+                using (var fs = new FileStream(weekPath, FileMode.Create, FileAccess.Write, FileShare.Read))
                 {
                     byte[] bom = new UTF8Encoding(encoderShouldEmitUTF8Identifier: true).GetPreamble();
                     if (bom.Length > 0)
@@ -1373,7 +1377,11 @@ namespace TWChatOverlay.Views
                         await writer.WriteLineAsync(line);
                 }
                 _scanCache.IsDirty = true;
-                await ScanHistoricalLogsAsync();
+                var snapshot = await EnsureScanCacheAsync(forceRescan: true);
+                ApplySnapshot(snapshot);
+                OnPropertyChanged(nameof(ProgressDisplay));
+                OnPropertyChanged(nameof(DailyProgressDisplay));
+                OnPropertyChanged(nameof(WeeklyProgressDisplay));
             }
             catch (Exception ex)
             {
