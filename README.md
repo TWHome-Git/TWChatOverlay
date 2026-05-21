@@ -159,7 +159,7 @@
 <table>
   <tr>
     <td valign="top">
-      <img src="https://github.com/user-attachments/assets/3fd67dfd-21ec-4059-a031-1dc2959a7dda" width="60" height="375" alt="Main Menu">
+      <img src="https://github.com/user-attachments/assets/81396a08-6c03-4741-bbba-09f19a21d4b3" width="60" height="600" alt="Main Menu">
     </td>
     <td valign="top">
       <table>
