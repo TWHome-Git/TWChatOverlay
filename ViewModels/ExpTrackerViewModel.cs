@@ -14,6 +14,7 @@ namespace TWChatOverlay.ViewModels
 
         private string _totalExpDisplay = string.Empty;
         private string _lastGainedExpDisplay = string.Empty;
+        private string _gainCountDisplay = string.Empty;
         private bool _hasLastExp;
 
         public ICommand ResetExpCommand { get; }
@@ -28,6 +29,12 @@ namespace TWChatOverlay.ViewModels
         {
             get => _lastGainedExpDisplay;
             set => SetProperty(ref _lastGainedExpDisplay, value);
+        }
+
+        public string GainCountDisplay
+        {
+            get => _gainCountDisplay;
+            set => SetProperty(ref _gainCountDisplay, value);
         }
 
         public bool HasLastExp
@@ -62,6 +69,7 @@ namespace TWChatOverlay.ViewModels
         {
             TotalExpDisplay = _expService.SessionState.TotalExpDisplay;
             LastGainedExpDisplay = _expService.SessionState.LastGainedExpDisplay;
+            GainCountDisplay = _expService.SessionState.GainCountDisplay;
             HasLastExp = _expService.SessionState.HasLastExp;
         }
     }

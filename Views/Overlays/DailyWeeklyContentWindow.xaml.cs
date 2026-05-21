@@ -131,7 +131,7 @@ namespace TWChatOverlay.Views
         private const string LokagosLogKeyword = "이클립스 보스전(로카고스) 클리어 횟수:";
         private const string EthosLogKeyword = "이클립스 보스전(에토스) 클리어 횟수:";
         private const string CheriaLogKeyword = "이클립스 보스전(체리아) 클리어 횟수:";
-        private const string MatiaLogKeyword = "이클립스 보스전(마티아 ) 클리어 횟수:";
+        private const string MatiaLogKeyword = "이클립스 보스전(마티아) 클리어 횟수:";
         private const string TyrorosLogKeyword = "이클립스 보스전(티로로스) 클리어 횟수:";
         private const string LycosLogKeyword = "이클립스 보스전(라이코스) 클리어 횟수:";
 
@@ -1294,6 +1294,9 @@ namespace TWChatOverlay.Views
                 if (!string.IsNullOrWhiteSpace(weekDir))
                     Directory.CreateDirectory(weekDir);
 
+                if (File.Exists(weekPath))
+                    File.Delete(weekPath);
+
                 var keywords = TrackItems
                     .Where(i => !string.IsNullOrWhiteSpace(i.LogKeyword))
                     .Select(i => i.LogKeyword!)
@@ -1347,7 +1350,28 @@ namespace TWChatOverlay.Views
                     }
                 }
 
-                await File.WriteAllLinesAsync(weekPath, lines, new UTF8Encoding(false));
+                using (var fs = new FileStream(weekPath, FileMode.CreateNew, FileAccess.Write, FileShare.Read))
+                {
+                    byte[] bom = new UTF8Encoding(encoderShouldEmitUTF8Identifier: true).GetPreamble();
+                    if (bom.Length > 0)
+                        await fs.WriteAsync(bom);
+
+                    using var writer = new StreamWriter(fs, new UTF8Encoding(encoderShouldEmitUTF8Identifier: false));
+                    await writer.WriteLineAsync("<!doctype html>");
+                    await writer.WriteLineAsync("<html lang=\"ko\">");
+                    await writer.WriteLineAsync("<head>");
+                    await writer.WriteLineAsync("  <meta charset=\"utf-8\" />");
+                    await writer.WriteLineAsync($"  <title>{ISOWeek.GetYear(today)}-W{ISOWeek.GetWeekOfYear(today):00}</title>");
+                    await writer.WriteLineAsync("  <style>");
+                    await writer.WriteLineAsync("    body{background:#111;color:#eee;font-family:'Malgun Gothic',sans-serif;font-size:13px;line-height:1.45;padding:12px;}");
+                    await writer.WriteLineAsync("    .log{margin:2px 0;padding:2px 0;border-bottom:1px solid rgba(255,255,255,.06);}");
+                    await writer.WriteLineAsync("    .summary{margin:2px 0;padding:4px 0;color:#9ad3ff;font-weight:600;border-bottom:1px dashed rgba(154,211,255,.35);}");
+                    await writer.WriteLineAsync("  </style>");
+                    await writer.WriteLineAsync("</head>");
+                    await writer.WriteLineAsync("<body>");
+                    foreach (string line in lines)
+                        await writer.WriteLineAsync(line);
+                }
                 _scanCache.IsDirty = true;
                 await ScanHistoricalLogsAsync();
             }

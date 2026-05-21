@@ -47,6 +47,7 @@ namespace TWChatOverlay.Views
 
         private void CloseButton_Click(object sender, RoutedEventArgs e)
         {
+            PersistState();
             try { _textOnly?.Close(); } catch { }
             Close();
         }
@@ -142,7 +143,13 @@ namespace TWChatOverlay.Views
                         PersistState();
                     }
                 };
-                _textOnly.Closed += (_, _) => _textOnly = null;
+                _textOnly.Closed += (_, _) =>
+                {
+                    if (_isOverlayMode)
+                        PersistState();
+
+                    _textOnly = null;
+                };
             }
 
             if (MemoTextBox == null)

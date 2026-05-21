@@ -64,6 +64,7 @@ namespace TWChatOverlay.Services
 
             SessionState.LastGainedExp = gained;
             SessionState.TotalExp += gained;
+            SessionState.GainCount += 1;
             _lastExpAt = DateTime.Now;
 
             if (!_isReady || (DateTime.Now - _startTime).TotalSeconds < 5)
