@@ -22,10 +22,10 @@
 
 ### 3. 계산기 및 시뮬레이터
 * **계산기**: 캐릭터 장비 스탯 및 장비 강화 스탯 기반의 계수 계산
-   - 계수 계산기
+      - 계수 계산기
 <img width="640" height="480" alt="image" src="https://github.com/user-attachments/assets/eec5e003-64da-4336-884d-accc1474c1c1" />
    
-   - 대미지 계산기
+      - 대미지 계산기
 <img width="640" height="480" alt="image" src="https://github.com/user-attachments/assets/d7d8e2a5-968e-4313-9e62-38d6285bba79" />
 
      
@@ -36,7 +36,7 @@
     * 코어 강화 기대값 시뮬레이션
     <img width="640" height="480" alt="image" src="https://github.com/user-attachments/assets/f97245d5-2ab3-411a-ad88-5dda1a70f2d3" />
 
-    * 렐릭 강화 기대값 시뮬레이션**
+    * 렐릭 강화 기대값 시뮬레이션
     <img width="640" height="480" alt="image" src="https://github.com/user-attachments/assets/4d3a178c-9d4b-44ef-970f-2046aacb5f73" />
 
 
