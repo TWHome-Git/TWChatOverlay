@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 namespace TWChatOverlay.Models
@@ -36,6 +36,7 @@ namespace TWChatOverlay.Models
             _showExpTracker = false;
             _expTrackerWindowLeft = null;
             _expTrackerWindowTop = null;
+            _expTrackerWindowRight = null;
             _enableExperienceLimitAlert = false;
             _showExperienceLimitAlertWindow = false;
             _showDailyWeeklyContentOverlay = false;
@@ -236,3 +237,7 @@ namespace TWChatOverlay.Models
         }
     }
 }
+
+
+
+

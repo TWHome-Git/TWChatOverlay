@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
@@ -292,7 +292,7 @@ namespace TWChatOverlay.Views
                 _expTrackerWindow.Closed += (_, _) => _expTrackerWindow = null;
             }
 
-            _expTrackerWindow.ApplyStoredPosition(_settings.ExpTrackerWindowLeft, _settings.ExpTrackerWindowTop);
+            _expTrackerWindow.ApplyStoredPosition(_settings.ExpTrackerWindowLeft, _settings.ExpTrackerWindowTop, _settings.ExpTrackerWindowRight);
             _expTrackerWindow.ApplyPositionMode(IsSettingsPositionMode);
 
             if (!_expTrackerWindow.IsVisible)
@@ -997,3 +997,4 @@ namespace TWChatOverlay.Views
 
     }
 }
+

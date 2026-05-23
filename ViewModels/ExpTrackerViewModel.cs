@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Windows.Input;
 using TWChatOverlay.Models;
 using TWChatOverlay.Services;
@@ -34,8 +34,16 @@ namespace TWChatOverlay.ViewModels
         public string GainCountDisplay
         {
             get => _gainCountDisplay;
-            set => SetProperty(ref _gainCountDisplay, value);
+            set
+            {
+                if (!SetProperty(ref _gainCountDisplay, value))
+                    return;
+
+                OnPropertyChanged(nameof(ShowGainCountDisplay));
+            }
         }
+
+        public bool ShowGainCountDisplay => !string.IsNullOrWhiteSpace(_gainCountDisplay);
 
         public bool HasLastExp
         {
