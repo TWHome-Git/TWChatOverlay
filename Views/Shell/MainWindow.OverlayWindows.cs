@@ -235,8 +235,6 @@ namespace TWChatOverlay.Views
         {
             if (WindowState == WindowState.Minimized)
             {
-                if (_dailyWeeklyContentOverlay?.IsVisible == true)
-                    _dailyWeeklyContentOverlay.Hide();
                 if (_itemCalendarWindow?.IsVisible == true)
                     _itemCalendarWindow.Hide();
                 if (_AbandonRoadSummaryWindow?.IsVisible == true)
@@ -246,7 +244,7 @@ namespace TWChatOverlay.Views
                 return;
             }
 
-            if (_settings.ShowDailyWeeklyContentOverlay && _canShowAuxiliaryWindows)
+            if (_settings.ShowDailyWeeklyContentOverlay)
             {
                 if (_dailyWeeklyContentOverlay != null && !_dailyWeeklyContentOverlay.IsVisible)
                     _dailyWeeklyContentOverlay.Show();
