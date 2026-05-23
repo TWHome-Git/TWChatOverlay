@@ -33,7 +33,7 @@ namespace TWChatOverlay.Models
             }
         }
 
-        public string GainCountDisplay => $"{GainCount:N0}회";
+        public string GainCountDisplay => $"{GainCount:N0}마리";
 
         public long LastGainedExp
         {
@@ -64,13 +64,11 @@ namespace TWChatOverlay.Models
         {
             get
             {
-                string countPart = $"[{GainCount:N0}]";
-
                 if (_isFrozen)
                 {
                     return string.IsNullOrWhiteSpace(_frozenTotalExpDisplay)
-                        ? countPart
-                        : $"{_frozenTotalExpDisplay} {countPart}";
+                        ? "측정 중지"
+                        : _frozenTotalExpDisplay;
                 }
 
                 string currentExp = FormatExp(_totalExp);
@@ -79,11 +77,11 @@ namespace TWChatOverlay.Models
 
                 if (_totalExp == 0 || elapsed.TotalSeconds < 30)
                 {
-                    return $"측정 대기 중... {countPart}";
+                    return $"{currentExp} | -/h";
                 }
 
                 long expPerHour = (long)(_totalExp / hours);
-                return $"{currentExp} | {FormatExp(expPerHour)}/h {countPart}";
+                return $"{currentExp} | {FormatExp(expPerHour)}/h";
             }
         }
 

@@ -196,7 +196,7 @@ namespace TWChatOverlay.Views
         private const string RelicWeeklyClearToken2 = "주간 무료 클리어 횟수";
         private const string FreeClearCountKeyword = "오늘 무료 클리어 횟수 : 1/1 회";
         private const string MiningSiteLogKeyword = "숨겨진 구역으로 이동할 수 있는 포탈이 맵 중앙";
-        private const string DimensionalGapLogKeyword = "차원의 틈 봉인에 성공하였";
+        private const string DimensionalGapLogKeyword = "지하요새의 망령 클리어 횟수:";
         private const string AbyssalTreasuryLogKeyword = "심연의 보물창고 입장 횟수:";
         private const string CravingPleasureLogKeyword = "남은 에너지는";
         private const string VestigeLogKeyword = "[성난 빅테디의 별사탕] 아이템을 획득하였습니다.";
@@ -612,7 +612,10 @@ namespace TWChatOverlay.Views
             foreach (var item in TrackItems)
             {
                 if (!_settings.DungeonItemConfigs.TryGetValue(item.Name, out var config))
-                    continue;
+                {
+                    config = new DungeonItemConfig { IsEnabled = true };
+                    _settings.DungeonItemConfigs[item.Name] = config;
+                }
 
                 item.IsEnabled = config.IsEnabled;
                 int configured = config.RequiredCount > 0 ? config.RequiredCount : item.DefaultMaxCount;

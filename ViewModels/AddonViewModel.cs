@@ -357,9 +357,19 @@ namespace TWChatOverlay.ViewModels
             if (!TryParseExpEokValue(_experienceLimitTotalExp, out long totalExp))
                 return;
 
+            ApplyExperienceLimitState(totalExp, _experienceLimitTotalExp);
+        }
+
+        public void ApplyExperienceLimitStateFromSettings()
+        {
+            ApplyExperienceLimitState(_settings.ExperienceLimitTotalExp, FormatExpEokValue(_settings.ExperienceLimitTotalExp));
+        }
+
+        private void ApplyExperienceLimitState(long totalExp, string inputEokText)
+        {
             _settings.ExperienceLimitTotalExp = totalExp;
             _settings.ExperienceLimitStateInitialized = true;
-            AppLogger.Info($"Applied manual total exp from eok input. InputEok='{_experienceLimitTotalExp}', TotalExp={totalExp:N0}");
+            AppLogger.Info($"Applied manual total exp from eok input. InputEok='{inputEokText}', TotalExp={totalExp:N0}");
             SaveSettings();
             _ = ExperienceAlertWindowService.ApplyStateSnapshot(new ExperienceAlertStateSnapshot
             {

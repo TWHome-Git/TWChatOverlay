@@ -230,6 +230,11 @@
                                           Foreground="#C9D1D9"
                                           Checked="HasDustToggle_Changed"
                                           Unchecked="HasDustToggle_Changed"/>
+                                <TextBlock x:Name="DustStateTextBlock"
+                                           Text="가루 미보유"
+                                           Foreground="#8B949E"
+                                           FontSize="11"
+                                           Margin="22,2,0,4"/>
                                 <StackPanel x:Name="BoxPricePanel">
                                     <TextBlock Text="상자 가격" Foreground="#8B949E" FontSize="11" Margin="0,6,0,0"/>
                                     <TextBox x:Name="BoxPriceTextBox"

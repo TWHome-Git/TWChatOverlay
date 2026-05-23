@@ -522,9 +522,9 @@ namespace TWChatOverlay.Views
             var reflectionVol = new Slider { Minimum = 0, Maximum = 100, TickFrequency = 10, IsSnapToTickEnabled = true };
             reflectionVol.SetBinding(Slider.ValueProperty, new Binding(nameof(ChatSettings.ReflectionPatternAlertVolumePercent)) { Source = _settings, Mode = BindingMode.TwoWay });
             panel.Children.Add(reflectionVol);
-            panel.Children.Add(CreateCheckRow("어밴던로드 횟수 알리미", nameof(ChatSettings.EnableAbandonRoadCountAlert)));
-            panel.Children.Add(CreateCheckRow("어밴던로드 누적 금액 알리미", nameof(ChatSettings.ShowAbandonRoadSummaryWindow)));
-            panel.Children.Add(CreateCheckRow("갈망하는 즐거움 횟수 알리미", nameof(ChatSettings.EnableCravingPleasureCountAlert)));
+            panel.Children.Add(CreateCheckRow("어밴던로드 횟수 알림", nameof(ChatSettings.EnableAbandonRoadCountAlert)));
+            panel.Children.Add(CreateCheckRow("어밴던로드 누적 금액 알림", nameof(ChatSettings.ShowAbandonRoadSummaryWindow)));
+            panel.Children.Add(CreateCheckRow("갈망하는 즐거움 횟수 알림", nameof(ChatSettings.EnableCravingPleasureCountAlert)));
             panel.Children.Add(new TextBlock { Text = "던전 카운터 지속시간(초)", Foreground = Brushes.White, Margin = new Thickness(0, 8, 0, 4) });
             var dur = new TextBox { Height = 30, VerticalContentAlignment = VerticalAlignment.Center };
             dur.SetBinding(TextBox.TextProperty, new Binding(nameof(ChatSettings.AbandonRoadCountAlertDurationSeconds)) { Source = _settings, Mode = BindingMode.TwoWay, UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged });
@@ -733,6 +733,8 @@ namespace TWChatOverlay.Views
                 ("혼란한 대지", "혼란한 대지"),
                 ("색을 잃은 땅", "색을 잃은 땅"),
                 ("채굴장", "채굴장"),
+                ("에타 일일 도전 과제", "에타 일일 도전 과제"),
+                ("에타의 의지 퀘스트", "에타의 의지 퀘스트"),
                 ("갈망하는 즐거움", "갈망하는 즐거움"),
                 ("추종하는 환희(일반)", "추종하는 환희(일반)"),
                 ("추종하는 환희(어려움)", "추종하는 환희(어려움)"),
@@ -832,7 +834,10 @@ namespace TWChatOverlay.Views
             {
                 string resolvedKey = ResolveDungeonConfigKey(key);
                 if (!_settings.DungeonItemConfigs.TryGetValue(resolvedKey, out var cfg))
-                    continue;
+                {
+                    cfg = new DungeonItemConfig { IsEnabled = true };
+                    _settings.DungeonItemConfigs[resolvedKey] = cfg;
+                }
 
                 var cb = new CheckBox
                 {
@@ -939,11 +944,6 @@ namespace TWChatOverlay.Views
                 "아페티리아" => _settings.DungeonItemConfigs.ContainsKey("아페티리아") ? "아페티리아" : key,
                 "아페티리아 어려움" => _settings.DungeonItemConfigs.ContainsKey("아페티리아") ? "아페티리아" : key,
                 "아페티리아 일반" => _settings.DungeonItemConfigs.ContainsKey("아페티리아") ? "아페티리아" : key,
-                "추종하는 환희(일반)" => _settings.DungeonItemConfigs.ContainsKey("아페티리아 일반") ? "아페티리아 일반" : key,
-                "추종하는 환희(어려움)" => _settings.DungeonItemConfigs.ContainsKey("아페티리아 어려움") ? "아페티리아 어려움" : key,
-                "응시하는 슬픔(일반)" => _settings.DungeonItemConfigs.ContainsKey("카디프") ? "카디프" : key,
-                "응시하는 슬픔(어려움)" => _settings.DungeonItemConfigs.ContainsKey("오를란느") ? "오를란느" : key,
-                "환희의 잔상" => _settings.DungeonItemConfigs.ContainsKey("필멸의 땅") ? "필멸의 땅" : key,
                 _ => key
             };
         }
@@ -1117,6 +1117,7 @@ namespace TWChatOverlay.Views
                 _mainWindow?.ShowWizardStepPreviewWindows(-1);
                 SetPositionPreview(false);
                 SaveMainWindowPositionToPreset1();
+                ApplyExperienceLimitStateFromWizard();
                 ConfigService.Save(_settings);
             }
             catch
@@ -1125,6 +1126,11 @@ namespace TWChatOverlay.Views
 
             WizardFinished?.Invoke(this, true);
             Close();
+        }
+
+        private void ApplyExperienceLimitStateFromWizard()
+        {
+            _addonViewModel.ApplyExperienceLimitStateFromSettings();
         }
 
         protected override void OnClosed(EventArgs e)

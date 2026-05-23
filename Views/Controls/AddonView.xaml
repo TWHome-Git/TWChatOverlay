@@ -231,13 +231,13 @@
                                         Margin="0,14,0,14"/>
 
                                 <TextBlock Style="{StaticResource SectionHeaderStyle}"><Run Text="던전 카운터"/></TextBlock>
-                                <CheckBox Content="어밴던로드 횟수 알리미"
+                                <CheckBox Content="어밴던로드 횟수 알림"
                                           IsChecked="{Binding EnableAbandonRoadCountAlert, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                           Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
-                                <CheckBox Content="어밴던로드 누적 금액 알리미"
+                                <CheckBox Content="어밴던로드 누적 금액 알림"
                                           IsChecked="{Binding ShowAbandonRoadSummaryWindow, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                           Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
-                                <CheckBox Content="갈망하는 즐거움 횟수 알리미"
+                                <CheckBox Content="갈망하는 즐거움 횟수 알림"
                                           IsChecked="{Binding EnableCravingPleasureCountAlert, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                           Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
                                 <StackPanel Orientation="Horizontal" Margin="0,10,0,0">

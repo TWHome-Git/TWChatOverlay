@@ -118,7 +118,10 @@ namespace TWChatOverlay.Views
                 }
                 else if (e.PropertyName == nameof(_settings.ShowEtosDirectionAlert) && !_settings.ShowEtosDirectionAlert)
                 {
-                    SubAddonWindow.Instance?.HideAlert();
+                    if (_isInitialSetupWizardRunning)
+                        SubAddonWindow.Instance?.ApplyPositionPreviewVisibility(true);
+                    else
+                        SubAddonWindow.Instance?.HideAlert();
                 }
                 else if (e.PropertyName == nameof(_settings.ShowEtosHelperWindow) && !_settings.ShowEtosHelperWindow)
                 {
@@ -135,7 +138,15 @@ namespace TWChatOverlay.Views
                 else if (e.PropertyName == nameof(_settings.ShowEtosDirectionAlert) ||
                          e.PropertyName == nameof(_settings.ShowEtosHelperWindow))
                 {
-                    ApplySubAddonWindowSettings();
+                    if (_isInitialSetupWizardRunning)
+                    {
+                        ApplySubAddonWindowSettings();
+                        SubAddonWindow.Instance?.ApplyPositionPreviewVisibility(true);
+                    }
+                    else
+                    {
+                        ApplySubAddonWindowSettings();
+                    }
                 }
                 else if (e.PropertyName == nameof(_settings.ShowItemDropHelperWindow))
                 {
@@ -178,7 +189,11 @@ namespace TWChatOverlay.Views
                 }
                 else if (e.PropertyName == nameof(_settings.ShowAbandonRoadSummaryWindow))
                 {
-                    if (_settings.ShowAbandonRoadSummaryWindow && _isAddonPositionMode)
+                    if (_isInitialSetupWizardRunning)
+                    {
+                        ShowAbandonRoadSummaryWindow(previewMode: true, restartLifetime: false, activateWindow: false, forcePreview: true);
+                    }
+                    else if (_settings.ShowAbandonRoadSummaryWindow && _isAddonPositionMode)
                         ShowAbandonRoadSummaryWindow(previewMode: _isAddonPositionMode);
                     else if (_AbandonRoadSummaryWindow != null)
                     {
