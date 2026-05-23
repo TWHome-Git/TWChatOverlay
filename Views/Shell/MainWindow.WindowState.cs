@@ -510,7 +510,7 @@ namespace TWChatOverlay.Views
             {
                 bool shouldShow = !_isWizardChatPositionMode &&
                                   _settings.ShowDailyWeeklyContentOverlay &&
-                                  _canShowAuxiliaryWindows;
+                                  true;
 
                 if (shouldShow)
                 {
