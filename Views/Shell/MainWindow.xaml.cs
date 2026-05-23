@@ -686,6 +686,8 @@ namespace TWChatOverlay.Views
                     await Task.Run(() => _logService.Start()).ConfigureAwait(false);
                     _startLogServiceWhenInitialized = false;
                 }
+
+                Dispatcher.BeginInvoke(new Action(RequestRefreshLogDisplay), DispatcherPriority.Background);
             }
 
             UpdateStartupLoadingProgress(100, "초기화가 완료되었습니다.");
@@ -746,6 +748,19 @@ namespace TWChatOverlay.Views
             _startupLoadingWindow.Show();
             _startupLoadingWindow.SetCancelEnabled(true);
             _startupLoadingWindow.UpdateProgress(5, "초기화 진행중...");
+            if (LogDisplay != null)
+            {
+                LogDisplay.BeginChange();
+                try
+                {
+                    LogDisplay.Document.Blocks.Clear();
+                }
+                finally
+                {
+                    LogDisplay.EndChange();
+                    LogDisplay.UpdateLayout();
+                }
+            }
         }
 
         private void UpdateStartupLoadingProgress(double value, string statusText)

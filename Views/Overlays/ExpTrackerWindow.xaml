@@ -3,10 +3,11 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:views="clr-namespace:TWChatOverlay.Views"
         Title="Experience Tracker"
-        Width="240"
+        Width="420"
         Height="42"
         MinWidth="220"
         MinHeight="42"
+        MaxWidth="420"
         WindowStyle="None"
         AllowsTransparency="True"
         Background="Transparent"
@@ -16,7 +17,7 @@
     <Grid Margin="0">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
         <Border x:Name="DragBar"
                 Grid.Row="0"

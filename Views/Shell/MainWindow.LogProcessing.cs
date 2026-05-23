@@ -182,16 +182,17 @@ namespace TWChatOverlay.Views
             var parseResult = analysis.Parsed;
             bool isActualShout = parseResult.Category == ChatCategory.Shout && IsActualShoutSource(parseResult.FormattedText);
             bool isContentCompletionRelevant = IsContentCompletionRelevantLog(parseResult.FormattedText);
+            bool shouldRunLiveUiEffects = context.IsRealTime && !context.IsStartupBackfill;
 
             _buffTrackerService.ProcessLog(analysis);
 
             if (analysis.HasExperienceGain) _expService.AddExp(parseResult.GainedExp);
 
-            if (context.IsRealTime)
+            if (shouldRunLiveUiEffects)
                 _experienceEssenceAlertService.Process(analysis);
 
             if (!context.HandledDailyWeeklyCountLog &&
-                context.IsRealTime &&
+                shouldRunLiveUiEffects &&
                 _dailyWeeklyContentOverlay != null &&
                 (analysis.ShouldRunDailyWeeklyContent || isContentCompletionRelevant))
                 _dailyWeeklyContentOverlay.ProcessLog(analysis);
@@ -204,9 +205,9 @@ namespace TWChatOverlay.Views
                     AddToBuffer(tabName, parseResult);
             }
 
-            if (context.IsRealTime)
+            if (shouldRunLiveUiEffects)
             {
-                if (!context.IsStartupBackfill && parseResult.IsReflectionPatternAlert)
+                if (parseResult.IsReflectionPatternAlert)
                 {
                     NotificationService.PlayAlert("Reflection.wav");
                     if (parseResult.IsReflectionPatternEndAlert)
@@ -223,7 +224,7 @@ namespace TWChatOverlay.Views
 
                 if (parseResult.Category == ChatCategory.Shout)
                 {
-                    bool allowLiveShoutActions = !context.IsStartupBackfill;
+                    bool allowLiveShoutActions = true;
 
                     if (!isActualShout)
                     {
@@ -290,7 +291,7 @@ namespace TWChatOverlay.Views
                 }
             }
 
-            if (context.IsRealTime)
+            if (shouldRunLiveUiEffects)
             {
                 if (_logAnalysisService.ShouldRenderToTab(parseResult, _currentTabTag))
                 {
@@ -301,7 +302,7 @@ namespace TWChatOverlay.Views
                 }
             }
 
-            if (analysis.ShouldShowEtosDirection)
+            if (analysis.ShouldShowEtosDirection && shouldRunLiveUiEffects)
             {
                 try
                 {
@@ -762,7 +763,7 @@ namespace TWChatOverlay.Views
 
         private void RequestRefreshLogDisplay()
         {
-            if (LogDisplay == null || _isRefreshLogDisplayScheduled) return;
+            if (LogDisplay == null || _isRefreshLogDisplayScheduled || !_isLogServiceInitialized) return;
 
             _isRefreshLogDisplayScheduled = true;
 
