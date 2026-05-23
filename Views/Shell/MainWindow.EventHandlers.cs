@@ -152,6 +152,10 @@ namespace TWChatOverlay.Views
                 {
                     ApplyItemDropHelperWindowSettings();
                 }
+                else if (e.PropertyName == nameof(_settings.ShowExpTracker))
+                {
+                    RefreshExpTrackerWindow();
+                }
                 else if (e.PropertyName == nameof(_settings.ShowBuffTrackerWindow))
                 {
                     ApplyBuffTrackerHelperWindowSettings();

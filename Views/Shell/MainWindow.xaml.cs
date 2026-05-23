@@ -36,6 +36,8 @@ namespace TWChatOverlay.Views
         private DailyWeeklyContentWindow? _dailyWeeklyContentOverlay;
         private ItemCalendarWindow? _itemCalendarWindow;
         private AbandonRoadSummaryWindow? _AbandonRoadSummaryWindow;
+        private ExpTrackerWindow? _expTrackerWindow;
+        private ExpTrackerViewModel? _expTrackerViewModel;
         private ExperienceService _expService;
         private HotKeyService? _hotKeyService;
         private WindowStickyService? _stickyService;
@@ -162,6 +164,9 @@ namespace TWChatOverlay.Views
             SettingsDisplay.SetCompactMode(true);
 
             _expService = new ExperienceService(_settings);
+            _expTrackerViewModel = new ExpTrackerViewModel(_expService, _settings);
+            _expService.SessionState.PropertyChanged += ExpSessionState_PropertyChanged;
+            _expTrackerViewModel.UpdateDisplay();
             _experienceEssenceAlertService = new ExperienceEssenceAlertService(_settings);
             ExperienceAlertWindowService.ConfigureStateBridge(
                 () => _experienceEssenceAlertService.GetStateSnapshot(),
@@ -172,7 +177,6 @@ namespace TWChatOverlay.Views
             _messengerLogWatcherService.Start();
             _buffTrackerService = new BuffTrackerService(_settings);
             _buffTrackerService.PropertyChanged += BuffTrackerService_PropertyChanged;
-            ExpTrackerPanel.DataContext = _expService.SessionState;
             _logService = new LogService(_expService, _settings);
             TryLoadTestDropItemJsonForSession();
             DropItemResolver.InitializeAsync(_settings);
@@ -213,6 +217,7 @@ namespace TWChatOverlay.Views
             try { _buffTrackerService.PropertyChanged -= BuffTrackerService_PropertyChanged; } catch { }
             try { BuffTrackerWindow.Instance?.Close(); } catch { }
             try { BuffTrackerHelperWindow.Instance?.Close(); } catch { }
+            try { CloseExpTrackerWindow(); } catch { }
             try
             {
                 foreach (Window window in Application.Current.Windows.OfType<ChatCloneWindow>().ToList())
@@ -225,6 +230,7 @@ namespace TWChatOverlay.Views
             try { _startupLogInitCts?.Cancel(); } catch { }
             try { _startupLogInitCts?.Dispose(); } catch { }
             try { CancelPendingReflectionEndAlerts(); } catch { }
+            try { _expService.SessionState.PropertyChanged -= ExpSessionState_PropertyChanged; } catch { }
             try { _logService?.Dispose(); } catch { }
             try { _expService?.Stop(); } catch { }
             try { _buffTrackerService?.Dispose(); } catch { }
@@ -246,6 +252,58 @@ namespace TWChatOverlay.Views
         public bool IsDailyWeeklyVisible => _dailyWeeklyContentOverlay?.IsVisible == true;
         public bool IsItemCalendarVisible => _itemCalendarWindow?.IsVisible == true;
         public bool IsSettingsPositionMode => _isSettingsPositionMode || _isAddonPositionMode;
+
+        private void ExpSessionState_PropertyChanged(object? sender, PropertyChangedEventArgs e)
+        {
+            _expTrackerViewModel?.UpdateDisplay();
+            if (e.PropertyName == nameof(ExpSessionState.TotalExpDisplay) ||
+                e.PropertyName == nameof(ExpSessionState.GainCountDisplay) ||
+                e.PropertyName == nameof(ExpSessionState.HasLastExp) ||
+                e.PropertyName == nameof(ExpSessionState.LastGainedExpDisplay))
+            {
+                Dispatcher.BeginInvoke(new Action(RefreshExpTrackerWindow), DispatcherPriority.Background);
+            }
+        }
+
+        private void RefreshExpTrackerWindow()
+        {
+            if (_settings.ShowExpTracker)
+            {
+                ShowExpTrackerWindow();
+            }
+            else
+            {
+                CloseExpTrackerWindow();
+            }
+        }
+
+        private void ShowExpTrackerWindow()
+        {
+            if (_expTrackerWindow == null || !_expTrackerWindow.IsLoaded)
+            {
+                _expTrackerWindow = new ExpTrackerWindow(_expTrackerViewModel)
+                {
+                    WindowStartupLocation = WindowStartupLocation.Manual
+                };
+                if (IsLoaded)
+                    _expTrackerWindow.Owner = this;
+                if (_expTrackerViewModel != null)
+                    _expTrackerWindow.DataContext = _expTrackerViewModel;
+                _expTrackerWindow.Closed += (_, _) => _expTrackerWindow = null;
+            }
+
+            _expTrackerWindow.ApplyStoredPosition(_settings.ExpTrackerWindowLeft, _settings.ExpTrackerWindowTop);
+            _expTrackerWindow.ApplyPositionMode(IsSettingsPositionMode);
+
+            if (!_expTrackerWindow.IsVisible)
+                _expTrackerWindow.Show();
+        }
+
+        private void CloseExpTrackerWindow()
+        {
+            try { _expTrackerWindow?.Close(); } catch { }
+            _expTrackerWindow = null;
+        }
 
         private void BuffTrackerService_PropertyChanged(object? sender, PropertyChangedEventArgs e)
         {

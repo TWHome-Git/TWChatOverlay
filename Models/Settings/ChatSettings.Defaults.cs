@@ -34,6 +34,8 @@ namespace TWChatOverlay.Models
             _useAlertSound = false;
             _useMagicCircleAlert = false;
             _showExpTracker = false;
+            _expTrackerWindowLeft = null;
+            _expTrackerWindowTop = null;
             _enableExperienceLimitAlert = false;
             _showExperienceLimitAlertWindow = false;
             _showDailyWeeklyContentOverlay = false;

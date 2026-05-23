@@ -40,6 +40,7 @@ namespace TWChatOverlay.Views
 
             _isSettingsPositionMode = isEnabled;
             ApplyPositionModeWindows();
+            RefreshExpTrackerWindow();
         }
 
         public void SetAddonPositionMode(bool isEnabled)
@@ -53,6 +54,7 @@ namespace TWChatOverlay.Views
                 CloseAddonPositionPreviewWindows(savePositions: true, restoreNormalWindows: true);
             }
             ApplyPositionModeWindows();
+            RefreshExpTrackerWindow();
         }
 
         public void SetAddonPositionPreviewTabIndex(int tabIndex)
@@ -507,7 +509,6 @@ namespace TWChatOverlay.Views
             try
             {
                 bool shouldShow = !_isWizardChatPositionMode &&
-                                  !IsSettingsPositionMode &&
                                   _settings.ShowDailyWeeklyContentOverlay &&
                                   _canShowAuxiliaryWindows;
 
