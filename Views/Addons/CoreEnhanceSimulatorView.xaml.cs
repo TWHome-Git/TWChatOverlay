@@ -117,6 +117,7 @@ namespace TWChatOverlay.Views.Addons
         private void HasDustToggle_Changed(object sender, RoutedEventArgs e)
         {
             UpdateBoxPriceVisibility();
+            UpdateDustStateText();
         }
 
         private void ApplyModeUi()
@@ -158,6 +159,16 @@ namespace TWChatOverlay.Views.Addons
             bool useTicket = UseTicketToggle?.IsChecked == true;
             bool hasDust = HasDustToggle?.IsChecked == true;
             BoxPricePanel.Visibility = (!useTicket && !hasDust) ? Visibility.Visible : Visibility.Collapsed;
+        }
+
+        private void UpdateDustStateText()
+        {
+            if (DustStateTextBlock == null)
+                return;
+
+            DustStateTextBlock.Text = HasDustToggle?.IsChecked == true
+                ? "가루 보유"
+                : "가루 미보유";
         }
 
         private void UpdateResultColumns(bool useTicket)

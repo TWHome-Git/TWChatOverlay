@@ -612,7 +612,7 @@
                                                       SelectedIndex="0"
                                                       SelectionChanged="EtaLinkFinalDamageComboBox_SelectionChanged"/>
 
-                                            <TextBlock Grid.Row="3" Grid.Column="0" Foreground="White" Text="공격력 증가" VerticalAlignment="Center" Margin="0,10,0,0"/>
+                                            <TextBlock Grid.Row="3" Grid.Column="0" Foreground="White" Text="시에나" VerticalAlignment="Center" Margin="0,10,0,0"/>
                                             <TextBox x:Name="SienaTextBox"
                                                      Grid.Row="3"
                                                      Grid.Column="1"

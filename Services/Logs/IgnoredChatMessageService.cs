@@ -43,6 +43,7 @@ namespace TWChatOverlay.Services
         {
             new(@"^(?:\[[^\]]+\]\s*)?(SP|MP|Fever|HP)가\s*\d+%\s*회복되었습니다\.?$", RegexOptions.Compiled),
             new(@"^(?:\[[^\]]+\]\s*)?체력이\s*\d+%\s*회복되었습니다\.?$", RegexOptions.Compiled),
+            new(@"^3분 후 자동으로 퇴장합니다\.$", RegexOptions.Compiled),
             new(@"남은\s*공격\s*횟수\s*:\s*\d+", RegexOptions.Compiled),
             new(@"절제와\s*균형의\s*중심에서\s*빗나간\s*힘은\s*칼날이\s*되어\s*돌아오지\.?", RegexOptions.Compiled)
         };
