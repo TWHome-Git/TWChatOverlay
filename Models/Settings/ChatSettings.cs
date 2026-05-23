@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
@@ -81,6 +81,7 @@ namespace TWChatOverlay.Models
         private double? _dailyWeeklyContentOverlayHeight = 540.0;
         private double? _expTrackerWindowLeft = null;
         private double? _expTrackerWindowTop = null;
+        private double? _expTrackerWindowRight = null;
         private double? _subAddonWindowLeft = 0.0;
         private double? _subAddonWindowTop = 0.0;
         private double? _itemDropWindowLeft = 0.0;
@@ -454,6 +455,17 @@ namespace TWChatOverlay.Models
             {
                 if (_expTrackerWindowTop == value) return;
                 _expTrackerWindowTop = value;
+                OnPropertyChanged();
+            }
+        }
+        [JsonPropertyOrder(28)]
+        public double? ExpTrackerWindowRight
+        {
+            get => _expTrackerWindowRight;
+            set
+            {
+                if (_expTrackerWindowRight == value) return;
+                _expTrackerWindowRight = value;
                 OnPropertyChanged();
             }
         }
@@ -1342,3 +1354,7 @@ namespace TWChatOverlay.Models
         #endregion
     }
 }
+
+
+
+

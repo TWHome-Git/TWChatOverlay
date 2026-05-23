@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 using TWChatOverlay.Models;
+using TWChatOverlay.Services;
 
 namespace TWChatOverlay.Services.LogAnalysis
 {
@@ -95,19 +96,20 @@ namespace TWChatOverlay.Services.LogAnalysis
                     if (TryUpdateDetail(item, text, out int? count) && count.HasValue)
                         break;
 
-                    item.Mark();
+                    MarkAndLog(item, "Primary keyword", text);
                     break;
                 }
 
                 if (text.Contains(item.LogKeyword, StringComparison.Ordinal))
                 {
                     _pendingDoubleKeyword.Add(item);
+                    AppLogger.Debug($"[DailyWeekly] Pending two-step primary matched. Item='{item.Name}', PendingCount={_pendingDoubleKeyword.Count}, Text='{text}'");
                 }
                 else if (_pendingDoubleKeyword.Contains(item) &&
                          text.Contains(item.LogKeyword2, StringComparison.Ordinal))
                 {
                     _pendingDoubleKeyword.Remove(item);
-                    item.Mark();
+                    MarkAndLog(item, "Secondary keyword", text);
                 }
             }
         }
@@ -149,7 +151,7 @@ namespace TWChatOverlay.Services.LogAnalysis
                     _pendingMercurialSingleEntry = false;
                     _pendingMercurialRewardExpSeen = false;
                     _pendingMercurialRewardSeedSeen = false;
-                    _trackItems.FirstOrDefault(static item => item.Name == MercurialCaveItemName)?.Mark();
+                    MarkAndLog(_trackItems.FirstOrDefault(static item => item.Name == MercurialCaveItemName), "Mercurial single completion", text);
                     return true;
                 }
             }
@@ -181,7 +183,7 @@ namespace TWChatOverlay.Services.LogAnalysis
             if (abyssRewardMatch.Success &&
                 _pendingAbyssFloor != null)
             {
-                FindAbyssItemByFloor(_trackItems, _pendingAbyssFloor)?.Mark();
+                MarkAndLog(FindAbyssItemByFloor(_trackItems, _pendingAbyssFloor), $"Abyss reward floor {_pendingAbyssFloor}", text);
                 _pendingAbyssFloor = null;
                 return true;
             }
@@ -189,14 +191,14 @@ namespace TWChatOverlay.Services.LogAnalysis
             var sinjoRewardMatch = SinjoRewardRegex.Match(text);
             if (sinjoRewardMatch.Success && int.TryParse(sinjoRewardMatch.Groups[1].Value, out _))
             {
-                _trackItems.FirstOrDefault(static item => item.Name == NestOfShinjoHardItemName)?.Mark();
+                MarkAndLog(_trackItems.FirstOrDefault(static item => item.Name == NestOfShinjoHardItemName), "Sinjo reward", text);
                 return true;
             }
 
             var catacombsRewardMatch = CatacombsRewardRegex.Match(text);
             if (catacombsRewardMatch.Success && int.TryParse(catacombsRewardMatch.Groups[1].Value, out _))
             {
-                _trackItems.FirstOrDefault(static item => item.Name == CatacombsHellModeItemName)?.Mark();
+                MarkAndLog(_trackItems.FirstOrDefault(static item => item.Name == CatacombsHellModeItemName), "Catacombs reward", text);
                 return true;
             }
 
@@ -297,6 +299,7 @@ namespace TWChatOverlay.Services.LogAnalysis
 
                 item.SetCount(value);
                 count = value;
+                AppLogger.Debug($"[DailyWeekly] Detail count updated. Item='{item.Name}', Kind={detailKind}, Value={value}, Text='{text}'");
                 return true;
             }
 
@@ -379,6 +382,18 @@ namespace TWChatOverlay.Services.LogAnalysis
         {
             value = 0;
             return match.Success && int.TryParse(match.Groups[1].Value, out value);
+        }
+
+        private static void MarkAndLog(DailyWeeklyContentLog? item, string reason, string text)
+        {
+            if (item == null)
+                return;
+
+            item.Mark();
+            string state = item.HasCount
+                ? $"Count={item.CurrentCount}/{item.MaxCount}"
+                : $"Cleared={item.IsCleared}";
+            AppLogger.Debug($"[DailyWeekly] Content confirmed. Item='{item.Name}', Reason='{reason}', State={state}, Text='{text}'");
         }
 
         private void SetAccumulatedCount(DailyWeeklyContentLog? item, int rawCount)

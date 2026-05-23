@@ -193,9 +193,19 @@ namespace TWChatOverlay.Views
 
             if (!context.HandledDailyWeeklyCountLog &&
                 shouldRunLiveUiEffects &&
-                _dailyWeeklyContentOverlay != null &&
+                _settings.ShowDailyWeeklyContentOverlay &&
                 (analysis.ShouldRunDailyWeeklyContent || isContentCompletionRelevant))
-                _dailyWeeklyContentOverlay.ProcessLog(analysis);
+            {
+                if (parseResult.FormattedText.Contains("남은 공격 횟수 : 1", StringComparison.Ordinal) ||
+                    parseResult.FormattedText.Contains("[경험의 정수] 아이템을 획득하였습니다.", StringComparison.Ordinal))
+                {
+                    AppLogger.Debug($"[DailyWeekly] Realtime dispatch. StartupBackfill={context.IsStartupBackfill}, OverlayExists={_dailyWeeklyContentOverlay != null}, OverlayVisible={_dailyWeeklyContentOverlay?.IsVisible == true}, Text='{parseResult.FormattedText}'");
+                }
+
+                EnsureDailyWeeklyWindowForRealtimeProcessing();
+
+                _dailyWeeklyContentOverlay?.ProcessLog(analysis);
+            }
 
             bool suppressChatLine = ShouldHideChatLine(parseResult);
 
@@ -569,7 +579,23 @@ namespace TWChatOverlay.Views
             if (OrlyRemainingAttackOneRegex.IsMatch(text))
                 return true;
 
+            if (text.Contains("[경험의 정수] 아이템을 획득하였습니다.", StringComparison.Ordinal))
+                return true;
+
             return false;
+        }
+
+        private void EnsureDailyWeeklyWindowForRealtimeProcessing()
+        {
+            if (_dailyWeeklyContentOverlay != null && _dailyWeeklyContentOverlay.IsLoaded)
+                return;
+
+            _dailyWeeklyContentOverlay = new DailyWeeklyContentWindow(_settings);
+            _dailyWeeklyContentOverlay.Closed += (_, _) =>
+            {
+                _dailyWeeklyContentOverlay = null;
+                try { DailyWeeklyVisibilityChanged?.Invoke(this, false); } catch { }
+            };
         }
 
         private static bool IsMercurialSeedCompletionLog(string text)

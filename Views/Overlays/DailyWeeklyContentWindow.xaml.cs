@@ -1107,10 +1107,10 @@ namespace TWChatOverlay.Views
 
         public void ProcessLog(LogAnalysisResult analysis)
         {
-            if (!analysis.ShouldRunDailyWeeklyContent)
+            if (!analysis.IsSuccess || string.IsNullOrWhiteSpace(analysis.Parsed.FormattedText))
                 return;
 
-            _dailyWeeklyLogAnalyzer.Process(analysis);
+            _dailyWeeklyLogAnalyzer.Process(analysis.Parsed.FormattedText);
             UpdateCacheAfterRealtimeProcess(wasAppliedToCurrentView: true);
         }
 
@@ -1136,12 +1136,13 @@ namespace TWChatOverlay.Views
                 return false;
 
             item.Mark();
+            AppLogger.Debug($"[DailyWeekly] Content confirmed. Item='{item.Name}', Reason='AbandonRoad', Count={count}, Text='{text}'");
             return true;
         }
 
         private bool TryProcessCravingPleasureLog(string text)
         {
-            if (!TryExtractCravingPleasureCount(text, out _))
+            if (!TryExtractCravingPleasureCount(text, out int count))
                 return false;
 
             DailyWeeklyContentLog? item = TrackItems.FirstOrDefault(i => i.Name == CravingPleasureItemName);
@@ -1149,6 +1150,7 @@ namespace TWChatOverlay.Views
                 return false;
 
             item.Mark();
+            AppLogger.Debug($"[DailyWeekly] Content confirmed. Item='{item.Name}', Reason='CravingPleasure', UsedCount={count}, Text='{text}'");
             return true;
         }
 

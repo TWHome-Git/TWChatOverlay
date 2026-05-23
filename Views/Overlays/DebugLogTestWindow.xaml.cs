@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.ObjectModel;
 using System.Windows;
 using System.Windows.Controls;
@@ -102,19 +102,19 @@ namespace TWChatOverlay.Views
                 return;
             }
 
-            foreach (Window window in Application.Current.Windows)
-            {
-                if (window is MainWindow mainWindow)
-                {
-                    mainWindow.InjectDebugLogText(rawText, _selectedCategory);
-                    AddRecentLog(_selectedCategory, rawText);
-                    DebugLogInputTextBox?.Clear();
-                    return;
-                }
-            }
-
-            MessageBox.Show("메인 윈도우를 찾을 수 없어 테스트 로그를 주입하지 못했습니다.", "주입 실패", MessageBoxButton.OK, MessageBoxImage.Warning);
+            if (InjectDebugLogPayload(rawText, _selectedCategory))
+                DebugLogInputTextBox?.Clear();
         }
+
+        private void CoreDungeonTwoLineTestButton_Click(object sender, RoutedEventArgs e)
+            => InjectTwoLineDebugLog(
+                "보스 몬스터를 퇴치하세요.",
+                "던전을 클리어 하였습니다. 곧 마을로 돌아가게 됩니다.");
+
+        private void OrlyDefenseTwoLineTestButton_Click(object sender, RoutedEventArgs e)
+            => InjectTwoLineDebugLog(
+                "남은 공격 횟수 : 1",
+                "[경험의 정수] 아이템을 획득하였습니다.");
 
         private void LoadSampleLogs()
         {
@@ -172,6 +172,57 @@ namespace TWChatOverlay.Views
 
             while (_recentLogs.Count > 12)
                 _recentLogs.RemoveAt(_recentLogs.Count - 1);
+        }
+
+        private void InjectTwoLineDebugLog(string firstLine, string secondLine)
+        {
+            SelectCategory(DebugLogCategory.System);
+            string rawText = string.Join(Environment.NewLine, firstLine, secondLine);
+            InjectDebugLogPayload(rawText, DebugLogCategory.System);
+        }
+
+        private bool InjectDebugLogPayload(string rawText, DebugLogCategory category)
+        {
+            if (Application.Current == null)
+            {
+                MessageBox.Show("애플리케이션을 찾을 수 없어 테스트 로그를 주입하지 못했습니다.", "주입 실패", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return false;
+            }
+
+            MainWindow? mainWindow = null;
+            foreach (Window window in Application.Current.Windows)
+            {
+                if (window is MainWindow foundMainWindow)
+                {
+                    mainWindow = foundMainWindow;
+                    break;
+                }
+            }
+
+            if (mainWindow == null)
+            {
+                MessageBox.Show("메인 윈도우를 찾을 수 없어 테스트 로그를 주입하지 못했습니다.", "주입 실패", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return false;
+            }
+
+            string[] lines = rawText
+                .Replace("\r\n", "\n", StringComparison.Ordinal)
+                .Replace("\r", "\n", StringComparison.Ordinal)
+                .Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+            if (lines.Length == 0)
+            {
+                MessageBox.Show("테스트할 로그 텍스트를 입력해주세요.", "입력 필요", MessageBoxButton.OK, MessageBoxImage.Information);
+                return false;
+            }
+
+            foreach (string line in lines)
+            {
+                mainWindow.InjectDebugLogText(line, category);
+                AddRecentLog(category, line);
+            }
+
+            return true;
         }
 
         private void RecentLogsListBox_MouseDoubleClick(object sender, MouseButtonEventArgs e)

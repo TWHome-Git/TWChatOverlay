@@ -195,6 +195,45 @@
                             Click="InjectDebugLogButton_Click"
                             Style="{StaticResource SecondaryButtonStyle}"
                             FontSize="12"/>
+
+                    <Border Margin="0,12,0,0"
+                            Background="#1A1F27"
+                            BorderBrush="#33404E"
+                            BorderThickness="1"
+                            CornerRadius="8"
+                            Padding="10">
+                        <StackPanel>
+                            <TextBlock Text="2줄 컨텐츠 테스트 프리셋"
+                                       Foreground="#E9EEF6"
+                                       FontSize="12"
+                                       FontWeight="SemiBold"
+                                       Margin="0,0,0,4"/>
+                            <TextBlock Text="두 줄짜리 완료 로그를 순서대로 넣어 체크 흐름을 검증합니다."
+                                       Foreground="#AAB3BD"
+                                       FontSize="11"
+                                       Margin="0,0,0,8"/>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <Button Grid.Column="0"
+                                        Content="코어 던전 완료"
+                                        Height="34"
+                                        Margin="0,0,6,0"
+                                        Click="CoreDungeonTwoLineTestButton_Click"
+                                        Style="{StaticResource SecondaryButtonStyle}"
+                                        FontSize="12"/>
+                                <Button Grid.Column="1"
+                                        Content="오를리 완료"
+                                        Height="34"
+                                        Margin="6,0,0,0"
+                                        Click="OrlyDefenseTwoLineTestButton_Click"
+                                        Style="{StaticResource SecondaryButtonStyle}"
+                                        FontSize="12"/>
+                            </Grid>
+                        </StackPanel>
+                    </Border>
                 </StackPanel>
             </Border>
 
