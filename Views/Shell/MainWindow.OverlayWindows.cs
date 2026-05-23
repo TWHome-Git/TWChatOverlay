@@ -241,6 +241,8 @@ namespace TWChatOverlay.Views
                     _itemCalendarWindow.Hide();
                 if (_AbandonRoadSummaryWindow?.IsVisible == true)
                     _AbandonRoadSummaryWindow.Hide();
+                if (_expTrackerWindow?.IsVisible == true)
+                    _expTrackerWindow.Hide();
                 return;
             }
 
@@ -253,6 +255,7 @@ namespace TWChatOverlay.Views
             if (_itemCalendarWindow != null && !_itemCalendarWindow.IsVisible)
                 _itemCalendarWindow.Show();
 
+            RefreshExpTrackerWindow();
             ApplyAbandonRoadSummaryWindowVisibility();
         }
 

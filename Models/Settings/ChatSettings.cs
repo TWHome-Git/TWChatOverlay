@@ -79,6 +79,8 @@ namespace TWChatOverlay.Models
         private double? _dailyWeeklyContentOverlayTop = 0.0;
         private double? _dailyWeeklyContentOverlayWidth = 280.0;
         private double? _dailyWeeklyContentOverlayHeight = 540.0;
+        private double? _expTrackerWindowLeft = null;
+        private double? _expTrackerWindowTop = null;
         private double? _subAddonWindowLeft = 0.0;
         private double? _subAddonWindowTop = 0.0;
         private double? _itemDropWindowLeft = 0.0;
@@ -429,6 +431,30 @@ namespace TWChatOverlay.Models
 
                 OnPropertyChanged();
                 OnPropertyChanged(nameof(IsExpAlarmEnabled));
+            }
+        }
+
+        [JsonPropertyOrder(26)]
+        public double? ExpTrackerWindowLeft
+        {
+            get => _expTrackerWindowLeft;
+            set
+            {
+                if (_expTrackerWindowLeft == value) return;
+                _expTrackerWindowLeft = value;
+                OnPropertyChanged();
+            }
+        }
+
+        [JsonPropertyOrder(27)]
+        public double? ExpTrackerWindowTop
+        {
+            get => _expTrackerWindowTop;
+            set
+            {
+                if (_expTrackerWindowTop == value) return;
+                _expTrackerWindowTop = value;
+                OnPropertyChanged();
             }
         }
         [JsonPropertyOrder(24)]

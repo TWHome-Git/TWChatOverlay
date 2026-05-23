@@ -157,7 +157,6 @@ namespace TWChatOverlay.Views
             if (Owner == null)
                 Owner = _mainWindow;
 
-            _mainWindow.OverlayVisibilityChanged += MainWindow_OverlayVisibilityChanged;
             _mainWindow.StateChanged += MainWindow_StateChanged;
             _mainWindow.IsVisibleChanged += MainWindow_IsVisibleChanged;
             _mainWindow.Activated += MainWindow_ActivatedOrDeactivated;
@@ -169,7 +168,6 @@ namespace TWChatOverlay.Views
             if (_mainWindow == null)
                 return;
 
-            _mainWindow.OverlayVisibilityChanged -= MainWindow_OverlayVisibilityChanged;
             _mainWindow.StateChanged -= MainWindow_StateChanged;
             _mainWindow.IsVisibleChanged -= MainWindow_IsVisibleChanged;
             _mainWindow.Activated -= MainWindow_ActivatedOrDeactivated;
@@ -180,11 +178,6 @@ namespace TWChatOverlay.Views
         private void MainWindow_ActivatedOrDeactivated(object? sender, EventArgs e)
         {
             Dispatcher.BeginInvoke(new Action(SyncVisibilityWithMainWindow), DispatcherPriority.Background);
-        }
-
-        private void MainWindow_OverlayVisibilityChanged(object? sender, bool isVisible)
-        {
-            Dispatcher.BeginInvoke(new Action(SyncVisibilityWithMainWindow), System.Windows.Threading.DispatcherPriority.Background);
         }
 
         private void MainWindow_StateChanged(object? sender, EventArgs e)
@@ -205,10 +198,8 @@ namespace TWChatOverlay.Views
             ApplySizeFromMainWindow();
 
             bool shouldBeVisible =
-                _mainWindow.IsVisible &&
                 _mainWindow.WindowState != WindowState.Minimized &&
-                _mainWindow.IsOverlayVisible &&
-                _mainWindow.Visibility == Visibility.Visible;
+                _mainWindow.Visibility != Visibility.Hidden;
 
             if (shouldBeVisible)
             {
