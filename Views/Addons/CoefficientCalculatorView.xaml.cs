@@ -139,11 +139,14 @@ namespace TWChatOverlay.Views.Addons
         private TextBlock? _summarySecondaryValue;
         private TextBlock? _summarySecondaryEnchantLabel;
         private TextBlock? _summarySecondaryEnchantValue;
+        private TextBlock? _summaryHitLabel;
+        private TextBlock? _summaryHitValue;
         private TextBlock? _summaryTotalValue;
         private DataGridTextColumn? _primaryValueColumn;
         private DataGridTextColumn? _primaryEnchantColumn;
         private DataGridTextColumn? _secondaryValueColumn;
         private DataGridTextColumn? _secondaryEnchantColumn;
+        private DataGridTextColumn? _hitColumn;
         private TextBlock? _rightPrimaryHeader;
         private TextBlock? _rightSecondaryHeader;
         private CheckBox? _avatarMainEnhanceCheckBox;
@@ -225,7 +228,7 @@ namespace TWChatOverlay.Views.Addons
                 row.RecalculateCoefficient();
             }
 
-            if (e.PropertyName is nameof(CalculatorSlotRow.Coefficient) or nameof(CalculatorSlotRow.AttackValue) or nameof(CalculatorSlotRow.AttackEnchant) or nameof(CalculatorSlotRow.DefenseValue) or nameof(CalculatorSlotRow.DefenseEnchant) or nameof(CalculatorSlotRow.PrimaryStatValue) or nameof(CalculatorSlotRow.SecondaryStatValue))
+            if (e.PropertyName is nameof(CalculatorSlotRow.Coefficient) or nameof(CalculatorSlotRow.AttackValue) or nameof(CalculatorSlotRow.AttackEnchant) or nameof(CalculatorSlotRow.DefenseValue) or nameof(CalculatorSlotRow.DefenseEnchant) or nameof(CalculatorSlotRow.HitValue) or nameof(CalculatorSlotRow.PrimaryStatValue) or nameof(CalculatorSlotRow.SecondaryStatValue))
             {
                 RecalculateTotalCoefficient();
             }
@@ -444,7 +447,7 @@ namespace TWChatOverlay.Views.Addons
             var scrollViewer = new ScrollViewer
             {
                 VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
-                HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled
+                HorizontalScrollBarVisibility = ScrollBarVisibility.Auto
             };
             var contentGrid = new Grid();
             contentGrid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
@@ -711,6 +714,16 @@ namespace TWChatOverlay.Views.Addons
             secondaryEnchantCellStyle.Setters.Add(new Setter(ToolTipService.BetweenShowDelayProperty, 0));
             secondaryEnchantCellStyle.Setters.Add(new Setter(ToolTipService.ShowDurationProperty, 3000));
 
+            var hitDisplayStyle = new Style(typeof(TextBlock), textDisplayStyle);
+            hitDisplayStyle.Setters.Add(new Setter(FrameworkElement.ToolTipProperty, new Binding(nameof(CalculatorSlotRow.HitMaxHintText))));
+            var hitEditStyle = new Style(typeof(TextBox), textEditStyle);
+            hitEditStyle.Setters.Add(new Setter(FrameworkElement.ToolTipProperty, new Binding(nameof(CalculatorSlotRow.HitMaxHintText))));
+            var hitCellStyle = new Style(typeof(DataGridCell), cellStyle);
+            hitCellStyle.Setters.Add(new Setter(FrameworkElement.ToolTipProperty, new Binding(nameof(CalculatorSlotRow.HitMaxHintText))));
+            hitCellStyle.Setters.Add(new Setter(ToolTipService.InitialShowDelayProperty, 0));
+            hitCellStyle.Setters.Add(new Setter(ToolTipService.BetweenShowDelayProperty, 0));
+            hitCellStyle.Setters.Add(new Setter(ToolTipService.ShowDurationProperty, 3000));
+
             var coreExcludeDisplayStyle = new Style(typeof(TextBlock), textDisplayStyle);
             coreExcludeDisplayStyle.Triggers.Add(new DataTrigger
             {
@@ -755,6 +768,8 @@ namespace TWChatOverlay.Views.Addons
 
             var zeroFallback = new DoubleZeroFallbackConverter();
 
+            equipmentTemplateColumn.Width = 160;
+
             _primaryValueColumn = new DataGridTextColumn
             {
                 Header = "공격력",
@@ -793,20 +808,31 @@ namespace TWChatOverlay.Views.Addons
                 CellStyle = secondaryEnchantCellStyle
             };
             _slotGrid.Columns.Add(_secondaryEnchantColumn);
+            _hitColumn = new DataGridTextColumn
+            {
+                Header = "명중",
+                Binding = new Binding(nameof(CalculatorSlotRow.HitValue)) { Converter = zeroFallback, Mode = BindingMode.TwoWay, UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged },
+                Width = 60,
+                ElementStyle = hitDisplayStyle,
+                EditingElementStyle = hitEditStyle,
+                CellStyle = hitCellStyle
+            };
+            _slotGrid.Columns.Add(_hitColumn);
             _slotGrid.Columns.Add(new DataGridTextColumn
             {
                 Header = "계수",
                 Binding = new Binding(nameof(CalculatorSlotRow.Coefficient)) { Converter = zeroFallback },
-                Width = 120,
+                Width = 96,
                 IsReadOnly = true,
                 ElementStyle = textDisplayStyle
             });
 
             var rightTableGrid = new Grid();
-            rightTableGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(55) });
+            rightTableGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(48) });
+            rightTableGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(52) });
             rightTableGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
             rightTableGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
-            rightTableGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(120) });
+            rightTableGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(56) });
             foreach (int h in new[] { 26, 26, 28, 26, 26, 26, 26, 26, 26 })
                 rightTableGrid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(h) });
 
@@ -867,48 +893,51 @@ namespace TWChatOverlay.Views.Addons
             var rBrd = new Thickness(0, 0, 0, 1);
 
             RtCell(0, 0, bgDarkest, cBrd);
+            RtCell(0, 1, bgDarkest, cBrd).Child = RtHdr("명중");
             var primaryStatHeader = RtHdr("주스탯");
             BindDarkTooltip(primaryStatHeader, _accessoryRows[0], nameof(CalculatorSlotRow.PrimaryStatMaxHint));
-            var primaryHeaderCell = RtCell(0, 1, bgDarkest, cBrd);
+            var primaryHeaderCell = RtCell(0, 2, bgDarkest, cBrd);
             BindDarkTooltip(primaryHeaderCell, _accessoryRows[0], nameof(CalculatorSlotRow.PrimaryStatMaxHint));
             primaryHeaderCell.Child = primaryStatHeader;
             var secondaryStatHeader = RtHdr("부스탯");
             BindDarkTooltip(secondaryStatHeader, _accessoryRows[0], nameof(CalculatorSlotRow.SecondaryStatMaxHint));
-            var secondaryHeaderCell = RtCell(0, 2, bgDarkest, cBrd);
+            var secondaryHeaderCell = RtCell(0, 3, bgDarkest, cBrd);
             BindDarkTooltip(secondaryHeaderCell, _accessoryRows[0], nameof(CalculatorSlotRow.SecondaryStatMaxHint));
             secondaryHeaderCell.Child = secondaryStatHeader;
-            RtCell(0, 3, bgDarkest, rBrd).Child = RtHdr("계수");
+            RtCell(0, 4, bgDarkest, rBrd).Child = RtHdr("계수");
 
             RtCell(1, 0, bgRowAlt, cBrd).Child = RtLbl("스탯");
+            RtCell(1, 1, bgDarkest, cBrd);
             var statMRInput = RtInput();
             statMRInput.SetBinding(TextBox.TextProperty, new Binding(nameof(CalculatorSlotRow.PrimaryStatValue)) { Source = _accessoryRows[0], Converter = zeroFallback, Mode = BindingMode.TwoWay, UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged });
             BindDarkTooltip(statMRInput, _accessoryRows[0], nameof(CalculatorSlotRow.PrimaryStatMaxHint));
-            var primaryInputCell = RtCell(1, 1, System.Windows.Media.Brushes.Transparent, cBrd);
+            var primaryInputCell = RtCell(1, 2, System.Windows.Media.Brushes.Transparent, cBrd);
             BindDarkTooltip(primaryInputCell, _accessoryRows[0], nameof(CalculatorSlotRow.PrimaryStatMaxHint));
             primaryInputCell.Child = statMRInput;
             var statINTInput = RtInput();
             statINTInput.SetBinding(TextBox.TextProperty, new Binding(nameof(CalculatorSlotRow.SecondaryStatValue)) { Source = _accessoryRows[0], Converter = zeroFallback, Mode = BindingMode.TwoWay, UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged });
             BindDarkTooltip(statINTInput, _accessoryRows[0], nameof(CalculatorSlotRow.SecondaryStatMaxHint));
-            var secondaryInputCell = RtCell(1, 2, System.Windows.Media.Brushes.Transparent, cBrd);
+            var secondaryInputCell = RtCell(1, 3, System.Windows.Media.Brushes.Transparent, cBrd);
             BindDarkTooltip(secondaryInputCell, _accessoryRows[0], nameof(CalculatorSlotRow.SecondaryStatMaxHint));
             secondaryInputCell.Child = statINTInput;
             var statCoeffVal = RtVal();
             statCoeffVal.SetBinding(TextBlock.TextProperty, new Binding(nameof(CalculatorSlotRow.Coefficient)) { Source = _accessoryRows[0], Converter = zeroFallback });
-            RtCell(1, 3, System.Windows.Media.Brushes.Transparent, rBrd).Child = statCoeffVal;
+            RtCell(1, 4, System.Windows.Media.Brushes.Transparent, rBrd).Child = statCoeffVal;
 
             RtCell(2, 0, bgRowAlt, cBrd).Child = RtLbl("덱스");
             _dexInputTextBox = RtInput();
             _dexInputTextBox.Width = 90;
             _dexInputTextBox.Text = "0";
             _dexInputTextBox.TextChanged += DexInputTextBox_TextChanged;
-            RtCell(2, 1, bgDarkest, cBrd, 3).Child = _dexInputTextBox;
+            RtCell(2, 1, bgDarkest, cBrd, 4).Child = _dexInputTextBox;
 
             RtCell(3, 0, bgDarkest, cBrd);
+            RtCell(3, 1, bgDarkest, cBrd);
             _rightPrimaryHeader = RtHdr("공격력");
-            RtCell(3, 1, bgDarkest, cBrd).Child = _rightPrimaryHeader;
+            RtCell(3, 2, bgDarkest, cBrd).Child = _rightPrimaryHeader;
             _rightSecondaryHeader = RtHdr("보조공격력");
-            RtCell(3, 2, bgDarkest, cBrd).Child = _rightSecondaryHeader;
-            RtCell(3, 3, bgDarkest, rBrd);
+            RtCell(3, 3, bgDarkest, cBrd).Child = _rightSecondaryHeader;
+            RtCell(3, 4, bgDarkest, rBrd);
 
             (string name, int idx)[] midSlots = { ("아바타", 1), ("커프", 2), ("렐릭", 3) };
             foreach (var (slotName, slotIdx) in midSlots)
@@ -916,36 +945,41 @@ namespace TWChatOverlay.Views.Addons
                 int gr = 3 + slotIdx;
                 var accRow = _accessoryRows[slotIdx];
                 RtCell(gr, 0, bgRowAlt, cBrd).Child = RtLbl(slotName, slotName.Length > 2 ? 10 : 11);
+                var hit = RtInput();
+                hit.SetBinding(TextBox.TextProperty, new Binding(nameof(CalculatorSlotRow.HitValue)) { Source = accRow, Converter = zeroFallback, Mode = BindingMode.TwoWay, UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged });
+                RtCell(gr, 1, System.Windows.Media.Brushes.Transparent, cBrd).Child = hit;
                 var col1 = RtInput();
                 col1.SetBinding(TextBox.TextProperty, new Binding(nameof(CalculatorSlotRow.AccessoryValue1)) { Source = accRow, Converter = zeroFallback, Mode = BindingMode.TwoWay, UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged });
-                RtCell(gr, 1, System.Windows.Media.Brushes.Transparent, cBrd).Child = col1;
+                RtCell(gr, 2, System.Windows.Media.Brushes.Transparent, cBrd).Child = col1;
                 var col2 = RtInput();
                 col2.SetBinding(TextBox.TextProperty, new Binding(nameof(CalculatorSlotRow.AccessoryValue2)) { Source = accRow, Converter = zeroFallback, Mode = BindingMode.TwoWay, UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged });
-                RtCell(gr, 2, System.Windows.Media.Brushes.Transparent, cBrd).Child = col2;
+                RtCell(gr, 3, System.Windows.Media.Brushes.Transparent, cBrd).Child = col2;
                 var cv = RtVal();
                 cv.SetBinding(TextBlock.TextProperty, new Binding(nameof(CalculatorSlotRow.Coefficient)) { Source = accRow, Converter = zeroFallback });
-                RtCell(gr, 3, System.Windows.Media.Brushes.Transparent, rBrd).Child = cv;
+                RtCell(gr, 4, System.Windows.Media.Brushes.Transparent, rBrd).Child = cv;
             }
 
             // Row 7: 칭호
             RtCell(7, 0, bgRowAlt, cBrd).Child = RtLbl("칭호");
+            RtCell(7, 1, bgDarkest, cBrd);
             var titleInput = RtInput();
             titleInput.SetBinding(TextBox.TextProperty, new Binding(nameof(CalculatorSlotRow.TitleValue)) { Source = _accessoryRows[4], Converter = zeroFallback, Mode = BindingMode.TwoWay, UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged });
-            RtCell(7, 1, System.Windows.Media.Brushes.Transparent, cBrd).Child = titleInput;
-            RtCell(7, 2, bgDarkest, cBrd);
+            RtCell(7, 2, System.Windows.Media.Brushes.Transparent, cBrd).Child = titleInput;
+            RtCell(7, 3, bgDarkest, cBrd);
             var titleCoeffVal = RtVal();
             titleCoeffVal.SetBinding(TextBlock.TextProperty, new Binding(nameof(CalculatorSlotRow.Coefficient)) { Source = _accessoryRows[4], Converter = zeroFallback });
-            RtCell(7, 3, System.Windows.Media.Brushes.Transparent, rBrd).Child = titleCoeffVal;
+            RtCell(7, 4, System.Windows.Media.Brushes.Transparent, rBrd).Child = titleCoeffVal;
 
             // Row 8: 코어
             RtCell(8, 0, bgRowAlt, new Thickness(0, 0, 1, 0)).Child = RtLbl("코어");
+            RtCell(8, 1, bgDarkest, new Thickness(0, 0, 1, 0));
             var coreInput = RtInput();
             coreInput.SetBinding(TextBox.TextProperty, new Binding(nameof(CalculatorSlotRow.CoreValue)) { Source = _accessoryRows[5], Converter = zeroFallback, Mode = BindingMode.TwoWay, UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged });
-            RtCell(8, 1, System.Windows.Media.Brushes.Transparent, new Thickness(0, 0, 1, 0)).Child = coreInput;
-            RtCell(8, 2, bgDarkest, new Thickness(0, 0, 1, 0));
+            RtCell(8, 2, System.Windows.Media.Brushes.Transparent, new Thickness(0, 0, 1, 0)).Child = coreInput;
+            RtCell(8, 3, bgDarkest, new Thickness(0, 0, 1, 0));
             var coreCoeffVal = RtVal();
             coreCoeffVal.SetBinding(TextBlock.TextProperty, new Binding(nameof(CalculatorSlotRow.Coefficient)) { Source = _accessoryRows[5], Converter = zeroFallback });
-            RtCell(8, 3, System.Windows.Media.Brushes.Transparent, new Thickness(0)).Child = coreCoeffVal;
+            RtCell(8, 4, System.Windows.Media.Brushes.Transparent, new Thickness(0)).Child = coreCoeffVal;
 
             var rightTableBorder = new Border
             {
@@ -989,7 +1023,7 @@ namespace TWChatOverlay.Views.Addons
             rightPanel.Children.Add(checkboxPanel);
 
             var summaryGrid = new Grid { Margin = new Thickness(0, 6, 0, 0) };
-            for (int sc = 0; sc < 10; sc++)
+            for (int sc = 0; sc < 12; sc++)
                 summaryGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = sc % 2 == 0 ? new GridLength(1, GridUnitType.Star) : new GridLength(55) });
             summaryGrid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(26) });
 
@@ -999,7 +1033,7 @@ namespace TWChatOverlay.Views.Addons
                 {
                     Background = bgDarkest,
                     BorderBrush = borderDark,
-                    BorderThickness = new Thickness(0, 0, c < 9 ? 1 : 0, 0)
+                    BorderThickness = new Thickness(0, 0, c < 11 ? 1 : 0, 0)
                 };
                 Grid.SetRow(b, 0); Grid.SetColumn(b, c);
                 summaryGrid.Children.Add(b);
@@ -1032,9 +1066,13 @@ namespace TWChatOverlay.Views.Addons
             SumCell(6).Child = _summarySecondaryEnchantLabel;
             _summarySecondaryEnchantValue = SumTxt("0", true);
             SumCell(7).Child = _summarySecondaryEnchantValue;
-            SumCell(8).Child = SumTxt("계수");
+            _summaryHitLabel = SumTxt("명중");
+            SumCell(8).Child = _summaryHitLabel;
+            _summaryHitValue = SumTxt("0", true);
+            SumCell(9).Child = _summaryHitValue;
+            SumCell(10).Child = SumTxt("계수");
             _summaryTotalValue = SumTxt("0", true);
-            SumCell(9).Child = _summaryTotalValue;
+            SumCell(11).Child = _summaryTotalValue;
 
             var summaryBorder = new Border
             {
@@ -1131,8 +1169,21 @@ namespace TWChatOverlay.Views.Addons
             foreach (var row in _slotRows)
             {
                 row.CurrentType = type;
+                row.AttackValue = 0;
+                row.AttackEnchant = 0;
+                row.DefenseValue = 0;
+                row.DefenseEnchant = 0;
+                row.HitValue = 0;
+                row.PrimaryStatValue = 0;
+                row.SecondaryStatValue = 0;
+                row.AttackEnchantMaxHintText = "MAX : -";
+                row.DefenseEnchantMaxHintText = "MAX : -";
+                row.HitMaxHintText = "MAX : -";
+
                 if (row.SlotName.Contains("어빌리티"))
                 {
+                    row.EquipmentCandidates = new List<string> { "수동 입력" };
+                    row.SelectedEquipmentName = "";
                     row.RecalculateCoefficient();
                 }
                 else
@@ -1147,6 +1198,13 @@ namespace TWChatOverlay.Views.Addons
             foreach (var row in _accessoryRows)
             {
                 row.CurrentType = type;
+                row.AttackValue = 0;
+                row.AttackEnchant = 0;
+                row.DefenseValue = 0;
+                row.DefenseEnchant = 0;
+                row.HitValue = 0;
+                row.PrimaryStatValue = 0;
+                row.SecondaryStatValue = 0;
                 if (row.SlotName is "스탯" or "아바타" or "커프" or "칭호" or "코어" or "렐릭")
                 {
                     switch (row.SlotName)
@@ -1154,20 +1212,28 @@ namespace TWChatOverlay.Views.Addons
                         case "아바타":
                             row.AccessoryValue1 = 15;
                             row.AccessoryValue2 = 15;
+                            row.HitValue = 15;
                             break;
                         case "커프":
                             row.AccessoryValue1 = 50;
                             row.AccessoryValue2 = 50;
+                            row.HitValue = 50;
                             break;
                         case "렐릭":
                             row.AccessoryValue1 = 17;
                             row.AccessoryValue2 = 17;
+                            row.HitValue = 17;
                             break;
                         case "칭호":
                             row.TitleValue = 50;
+                            row.HitValue = 0;
                             break;
                         case "코어":
                             row.CoreValue = 120;
+                            row.HitValue = 0;
+                            break;
+                        case "스탯":
+                            row.HitValue = 0;
                             break;
                     }
                     row.RecalculateCoefficient();
@@ -1212,6 +1278,7 @@ namespace TWChatOverlay.Views.Addons
                     AttackEnchant = row.AttackEnchant,
                     DefenseValue = row.DefenseValue,
                     DefenseEnchant = row.DefenseEnchant,
+                    HitValue = row.HitValue,
                     PrimaryStatValue = row.PrimaryStatValue,
                     SecondaryStatValue = row.SecondaryStatValue
                 });
@@ -1226,6 +1293,7 @@ namespace TWChatOverlay.Views.Addons
                     AttackEnchant = row.AccessoryValue2,
                     DefenseValue = row.TitleValue,
                     DefenseEnchant = row.DefenseEnchant,
+                    HitValue = row.HitValue,
                     PrimaryStatValue = row.PrimaryStatValue,
                     SecondaryStatValue = row.SecondaryStatValue
                 });
@@ -1245,47 +1313,49 @@ namespace TWChatOverlay.Views.Addons
             string key = $"{_selectedCharacterName}::{GetSelectedCalculatorType()}";
             _lastSaveKey = key;
 
-            if (!_saveData.Entries.TryGetValue(key, out var snapshots))
-                return;
-
-            var snapshotMap = new Dictionary<string, CoefficientSlotSnapshot>();
-            foreach (var s in snapshots)
-                snapshotMap[s.SlotName] = s;
-
-            foreach (var row in _slotRows)
+            if (_saveData.Entries.TryGetValue(key, out var snapshots))
             {
-                if (!snapshotMap.TryGetValue(row.SlotName, out var snap)) continue;
+                var snapshotMap = new Dictionary<string, CoefficientSlotSnapshot>();
+                foreach (var s in snapshots)
+                    snapshotMap[s.SlotName] = s;
 
-                if (!string.IsNullOrEmpty(snap.SelectedEquipment) && row.EquipmentCandidates.Contains(snap.SelectedEquipment))
+                foreach (var row in _slotRows)
                 {
-                    row.SelectedEquipmentName = snap.SelectedEquipment;
-                    ApplyEquipmentToRow(row);
+                    if (!snapshotMap.TryGetValue(row.SlotName, out var snap)) continue;
+
+                    if (!string.IsNullOrEmpty(snap.SelectedEquipment) && row.EquipmentCandidates.Contains(snap.SelectedEquipment))
+                    {
+                        row.SelectedEquipmentName = snap.SelectedEquipment;
+                        ApplyEquipmentToRow(row);
+                    }
+
+                    row.AttackEnchant = snap.AttackEnchant;
+                    row.DefenseEnchant = snap.DefenseEnchant;
+
+                    if (row.SelectedEquipmentName == "수동 입력" || row.SlotName.Contains("어빌리티"))
+                    {
+                        row.AttackValue = snap.AttackValue;
+                        row.DefenseValue = snap.DefenseValue;
+                        row.HitValue = snap.HitValue;
+                    }
+
+                    row.PrimaryStatValue = snap.PrimaryStatValue;
+                    row.SecondaryStatValue = snap.SecondaryStatValue;
+                    row.RecalculateCoefficient();
                 }
 
-                row.AttackEnchant = snap.AttackEnchant;
-                row.DefenseEnchant = snap.DefenseEnchant;
-
-                if (row.SelectedEquipmentName == "수동 입력" || row.SlotName.Contains("어빌리티"))
+                foreach (var row in _accessoryRows)
                 {
-                    row.AttackValue = snap.AttackValue;
-                    row.DefenseValue = snap.DefenseValue;
+                    if (!snapshotMap.TryGetValue(row.SlotName, out var snap)) continue;
+                    row.AccessoryValue1 = snap.AttackValue;
+                    row.AccessoryValue2 = snap.AttackEnchant;
+                    row.TitleValue = snap.DefenseValue;
+                    row.DefenseEnchant = snap.DefenseEnchant;
+                    row.HitValue = snap.HitValue;
+                    row.PrimaryStatValue = snap.PrimaryStatValue;
+                    row.SecondaryStatValue = snap.SecondaryStatValue;
+                    row.RecalculateCoefficient();
                 }
-
-                row.PrimaryStatValue = snap.PrimaryStatValue;
-                row.SecondaryStatValue = snap.SecondaryStatValue;
-                row.RecalculateCoefficient();
-            }
-
-            foreach (var row in _accessoryRows)
-            {
-                if (!snapshotMap.TryGetValue(row.SlotName, out var snap)) continue;
-                row.AccessoryValue1 = snap.AttackValue;
-                row.AccessoryValue2 = snap.AttackEnchant;
-                row.TitleValue = snap.DefenseValue;
-                row.DefenseEnchant = snap.DefenseEnchant;
-                row.PrimaryStatValue = snap.PrimaryStatValue;
-                row.SecondaryStatValue = snap.SecondaryStatValue;
-                row.RecalculateCoefficient();
             }
 
             if (_saveData.AvatarEnhancementEntries.TryGetValue(key, out var avatarEnhancement))
@@ -1345,15 +1415,28 @@ namespace TWChatOverlay.Views.Addons
             {
                 row.AttackValue = 0;
                 row.DefenseValue = 0;
+                row.HitValue = 0;
                 row.PrimaryStatValue = 0;
                 row.SecondaryStatValue = 0;
                 row.AttackEnchantMaxHintText = "MAX : -";
                 row.DefenseEnchantMaxHintText = "MAX : -";
+                row.HitMaxHintText = "MAX : -";
                 return;
             }
 
             var item = _allEquipments.FirstOrDefault(x => string.Equals(x.Name, row.SelectedEquipmentName, StringComparison.Ordinal));
-            if (item == null) return;
+            if (item == null)
+            {
+                row.AttackValue = 0;
+                row.DefenseValue = 0;
+                row.HitValue = 0;
+                row.PrimaryStatValue = 0;
+                row.SecondaryStatValue = 0;
+                row.AttackEnchantMaxHintText = "MAX : -";
+                row.DefenseEnchantMaxHintText = "MAX : -";
+                row.HitMaxHintText = "MAX : -";
+                return;
+            }
 
             var type = GetSelectedCalculatorType();
             var (primaryStat, secondaryStat, primaryLimit, secondaryLimit) = type switch
@@ -1369,10 +1452,12 @@ namespace TWChatOverlay.Views.Addons
 
             row.AttackValue = primaryStat;
             row.DefenseValue = secondaryStat;
+            row.HitValue = item.Dex.Max;
             row.PrimaryStatValue = 0;
             row.SecondaryStatValue = 0;
             row.AttackEnchantMaxHintText = primaryLimit > 0 ? $"MAX : {Math.Max(0, primaryLimit - primaryStat)}" : "MAX : -";
             row.DefenseEnchantMaxHintText = secondaryLimit > 0 ? $"MAX : {Math.Max(0, secondaryLimit - secondaryStat)}" : "MAX : -";
+            row.HitMaxHintText = item.Dex.Limit > 0 ? $"MAX : {Math.Max(0, item.Dex.Limit - item.Dex.Max)}" : "MAX : -";
             UpdateStatLimitHintsFromSelectedWeapon();
         }
 
@@ -1474,6 +1559,7 @@ namespace TWChatOverlay.Views.Addons
             if (_summaryPrimaryEnchantValue != null) _summaryPrimaryEnchantValue.Text = totals.PrimaryEnchantSum.ToString("F0");
             if (_summarySecondaryValue != null) _summarySecondaryValue.Text = totals.SecondarySum.ToString("F0");
             if (_summarySecondaryEnchantValue != null) _summarySecondaryEnchantValue.Text = totals.SecondaryEnchantSum.ToString("F0");
+            if (_summaryHitValue != null) _summaryHitValue.Text = totals.HitSum.ToString("F0");
             if (_summaryTotalValue != null) _summaryTotalValue.Text = totals.TotalCoefficient.ToString("F2");
             if (_contentSummaryValue != null) _contentSummaryValue.Text = totals.TotalPrimarySum.ToString("F0");
 
@@ -1481,7 +1567,7 @@ namespace TWChatOverlay.Views.Addons
             NotifySnapshotChanged();
         }
 
-        private (double PrimaryBaseSum, double PrimaryEnchantSum, double SecondarySum, double SecondaryEnchantSum, double TotalPrimarySum, double TotalCoefficient) CalculateTotalMetrics()
+        private (double PrimaryBaseSum, double PrimaryEnchantSum, double SecondarySum, double SecondaryEnchantSum, double HitSum, double TotalPrimarySum, double TotalCoefficient) CalculateTotalMetrics()
         {
             var avatarRow = GetAccessoryRow("아바타");
             var cuffRow = GetAccessoryRow("커프");
@@ -1514,6 +1600,8 @@ namespace TWChatOverlay.Views.Addons
                 _slotRows.Sum(x => x.DefenseEnchant)
                 + avatarSubEnhanceBonus;
 
+            double hitSum = _slotRows.Sum(x => x.HitValue) + _accessoryRows.Sum(x => x.HitValue);
+
             double baseTotal = _slotRows.Sum(x => x.Coefficient) + _accessoryRows.Sum(x => x.Coefficient);
             double bonusCoefficient = CalculateAvatarEnhancementBonusCoefficient(avatarMainEnhanceBonus, avatarSubEnhanceBonus);
             double totalCoefficient = baseTotal + bonusCoefficient;
@@ -1523,6 +1611,7 @@ namespace TWChatOverlay.Views.Addons
                 primaryEnchantSum,
                 secondarySum,
                 secondaryEnchantSum,
+                hitSum,
                 primaryBaseSum + primaryEnchantSum,
                 totalCoefficient
             );
@@ -1549,6 +1638,7 @@ namespace TWChatOverlay.Views.Addons
                     AttackEnchant = row.AttackEnchant,
                     DefenseValue = row.DefenseValue,
                     DefenseEnchant = row.DefenseEnchant,
+                    HitValue = row.HitValue,
                     PrimaryStatValue = row.PrimaryStatValue,
                     SecondaryStatValue = row.SecondaryStatValue,
                     Coefficient = row.Coefficient
@@ -1564,6 +1654,7 @@ namespace TWChatOverlay.Views.Addons
                     AttackEnchant = row.AttackEnchant,
                     DefenseValue = row.DefenseValue,
                     DefenseEnchant = row.DefenseEnchant,
+                    HitValue = row.HitValue,
                     PrimaryStatValue = row.PrimaryStatValue,
                     SecondaryStatValue = row.SecondaryStatValue,
                     Coefficient = row.Coefficient
@@ -1938,6 +2029,8 @@ namespace TWChatOverlay.Views.Addons
             private string _secondaryStatMaxHint = "MAX -";
             private string _attackEnchantMaxHintText = "MAX : -";
             private string _defenseEnchantMaxHintText = "MAX : -";
+            private double _hitValue;
+            private string _hitMaxHintText = "MAX : -";
             private List<string> _equipmentCandidates = new() { "수동 입력" };
 
             public CalculatorSlotRow(string slotName)
@@ -1962,6 +2055,7 @@ namespace TWChatOverlay.Views.Addons
             public bool CanEditPrimaryEnchant => SlotName is "아바타" or "커프" or "렐릭" or "코어";
             public bool CanEditSecondaryBase => SlotName == "칭호";
             public bool CanEditSecondaryEnchant => false;
+            public bool CanEditHit => !IsAccessorySlot && !IsCoreSlot && !IsStatRow && !IsAvatarRow && !IsTitleRow;
             public bool CanEditMR => SlotName == "스탯";
             public bool CanEditINT => SlotName == "스탯";
 
@@ -2053,6 +2147,16 @@ namespace TWChatOverlay.Views.Addons
                 set { _defenseEnchant = value; RecalculateCoefficient(); OnPropertyChanged(); }
             }
 
+            public double HitValue
+            {
+                get => _hitValue;
+                set
+                {
+                    _hitValue = value;
+                    OnPropertyChanged();
+                }
+            }
+
             public double PrimaryStatValue
             {
                 get => _primaryStatValue;
@@ -2115,6 +2219,17 @@ namespace TWChatOverlay.Views.Addons
                 {
                     if (_defenseEnchantMaxHintText == value) return;
                     _defenseEnchantMaxHintText = value;
+                    OnPropertyChanged();
+                }
+            }
+
+            public string HitMaxHintText
+            {
+                get => _hitMaxHintText;
+                set
+                {
+                    if (_hitMaxHintText == value) return;
+                    _hitMaxHintText = value;
                     OnPropertyChanged();
                 }
             }
