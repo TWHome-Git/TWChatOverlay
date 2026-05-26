@@ -14,8 +14,8 @@
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
     </Window.Resources>
-    
-    <Grid Margin="0, 30, 0, 0">
+
+    <Grid Margin="0">
         <!-- Main Border -->
         <Border x:Name="OuterEdge" Background="Transparent" Padding="5">
             <Border x:Name="MainBorder" TextElement.FontFamily="{Binding CurrentFont, RelativeSource={RelativeSource AncestorType=Window}}"
