@@ -17,7 +17,8 @@
         Background="Transparent"
         ResizeMode="NoResize"
         Loaded="Window_Loaded">
-    <Grid Margin="0,30,0,0">
+
+    <Grid Margin="0">
         <Border Background="Transparent" Padding="5">
             <Border x:Name="MainBorder"
                     TextElement.FontFamily="{Binding CurrentFont, RelativeSource={RelativeSource AncestorType=Window}}"

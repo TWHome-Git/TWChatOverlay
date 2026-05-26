@@ -10,7 +10,7 @@ namespace TWChatOverlay.Services
     public static class ChatWindowHub
     {
         private const double SnapInsetX = 5.0;
-        private const double SnapInsetTop = 35.0;
+        private const double SnapInsetTop = 5.0;
         private const double SnapInsetBottom = 5.0;
         public static LogTabBufferStore SharedLogBuffers { get; } = new(200);
 
