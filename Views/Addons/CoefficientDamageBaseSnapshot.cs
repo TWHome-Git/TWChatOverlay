@@ -39,6 +39,7 @@ namespace TWChatOverlay.Views.Addons
         public double AttackEnchant { get; init; }
         public double DefenseValue { get; init; }
         public double DefenseEnchant { get; init; }
+        public double HitValue { get; init; }
         public double PrimaryStatValue { get; init; }
         public double SecondaryStatValue { get; init; }
         public double Coefficient { get; init; }

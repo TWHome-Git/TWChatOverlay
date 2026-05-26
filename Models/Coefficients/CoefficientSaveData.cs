@@ -26,6 +26,7 @@ namespace TWChatOverlay.Models
         public double AttackEnchant { get; set; }
         public double DefenseValue { get; set; }
         public double DefenseEnchant { get; set; }
+        public double HitValue { get; set; }
         public double AccessoryValue1 { get; set; }
         public double AccessoryValue2 { get; set; }
         public double TitleValue { get; set; }
