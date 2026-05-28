@@ -61,6 +61,7 @@ namespace TWChatOverlay.Views
         private readonly DispatcherTimer _mainTabAutoHideTimer;
         private bool _isLogServiceInitialized;
         private bool _startLogServiceWhenInitialized;
+        private bool _hasRestoredChatCloneWindows;
 
         private bool _isOverlayVisible = true;
         /// <summary>
@@ -153,6 +154,7 @@ namespace TWChatOverlay.Views
             {
                 _pendingInitialSetupWizard = true;
             }
+            _currentTabTag = NormalizeMainTabTag(_settings.MainWindowChatTabTag);
             _ = IgnoredChatMessageService.EnsureLoadedAsync();
             ApplyStartupPreset();
             this.DataContext = _settings;
@@ -212,6 +214,12 @@ namespace TWChatOverlay.Views
         {
             
             try { _mainTabAutoHideTimer.Stop(); } catch { }
+            try
+            {
+                _settings.MainWindowChatTabTag = _currentTabTag;
+            }
+            catch { }
+            try { ChatWindowHub.BeginShutdown(); } catch { }
             try { ExperienceAlertWindowService.SaveCurrentPosition(_settings); } catch { }
             try { DungeonCountDisplayWindowService.SaveCurrentPosition(_settings); } catch { }
             try { _buffTrackerService.PropertyChanged -= BuffTrackerService_PropertyChanged; } catch { }
@@ -246,6 +254,7 @@ namespace TWChatOverlay.Views
             try { _bossAlarmSchedulerService?.Stop(); } catch { }
             try { _messengerLogWatcherService?.Dispose(); } catch { }
             try { _hotKeyService?.Dispose(); } catch { }
+            try { ConfigService.Save(_settings); } catch { }
         }
 
         public SettingsViewModel SettingsViewModelInstance => _settingsViewModel;
@@ -426,6 +435,8 @@ namespace TWChatOverlay.Views
                 if (_settings.ShowDailyWeeklyContentOverlay)
                     ShowDailyWeeklyWindow();
 
+                ApplyMainTabState(_currentTabTag, persistSettings: false, refreshLogDisplay: false);
+
                 Dispatcher.BeginInvoke(new Action(CompleteInitialPresentation), DispatcherPriority.ApplicationIdle);
 
                 AppLogger.Info("Native services initialized successfully.");
@@ -465,6 +476,7 @@ namespace TWChatOverlay.Views
                 Visibility = Visibility.Visible;
                 _stickyService?.UpdatePositionImmediately();
                 EnsureMenuWindowVisible();
+                RestoreSavedChatCloneWindows();
             }
 
         }
@@ -590,6 +602,7 @@ namespace TWChatOverlay.Views
             Visibility = Visibility.Visible;
             _stickyService?.UpdatePositionImmediately();
             EnsureMenuWindowVisible();
+            RestoreSavedChatCloneWindows();
         }
 
         private void EnsureMenuWindowVisible()
@@ -997,4 +1010,3 @@ namespace TWChatOverlay.Views
 
     }
 }
-

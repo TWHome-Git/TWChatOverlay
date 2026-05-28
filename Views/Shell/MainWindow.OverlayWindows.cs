@@ -53,6 +53,9 @@ namespace TWChatOverlay.Views
                 Opacity = 1;
                 IsHitTestVisible = true;
                 Visibility = Visibility.Visible;
+                ApplyMainTabState(_currentTabTag, persistSettings: false, refreshLogDisplay: false);
+                RestoreSavedChatCloneWindows();
+                SyncChatCloneWindowsVisibility();
                 CompleteInitialPresentation();
             }
             else
@@ -60,10 +63,39 @@ namespace TWChatOverlay.Views
                 IsHitTestVisible = false;
                 Visibility = Visibility.Collapsed;
                 Opacity = 0;
+                SyncChatCloneWindowsVisibility();
             }
 
             ApplyAbandonRoadSummaryWindowVisibility();
             PersistSettings();
+        }
+
+        private void RestoreSavedChatCloneWindows()
+        {
+            if (_hasRestoredChatCloneWindows)
+                return;
+
+            _hasRestoredChatCloneWindows = true;
+
+            if (_settings.ChatCloneWindow1IsOpen)
+                ChatCloneWindow.TryRestore(_settings, 1);
+
+            if (_settings.ChatCloneWindow2IsOpen)
+                ChatCloneWindow.TryRestore(_settings, 2);
+        }
+
+        private void SyncChatCloneWindowsVisibility()
+        {
+            foreach (ChatCloneWindow clone in Application.Current.Windows.OfType<ChatCloneWindow>().ToList())
+            {
+                try
+                {
+                    clone.RefreshVisibilityFromMainWindow();
+                }
+                catch
+                {
+                }
+            }
         }
 
         private void ShowDailyWeeklyWindow()

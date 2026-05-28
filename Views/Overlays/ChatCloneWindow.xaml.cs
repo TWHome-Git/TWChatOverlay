@@ -96,19 +96,50 @@ namespace TWChatOverlay.Views
             if (!ChatWindowHub.CanOpenClone)
                 return false;
 
-            var window = new ChatCloneWindow(settings);
-            window.Show();
-            return true;
+            return TryCreateAndShow(settings, null);
         }
 
-        public ChatCloneWindow(ChatSettings settings)
+        public static bool TryRestore(ChatSettings settings, int slot)
+        {
+            if (slot < 1 || slot > 2)
+                return false;
+
+            return TryCreateAndShow(settings, slot);
+        }
+
+        private static bool TryCreateAndShow(ChatSettings settings, int? preferredSlot)
+        {
+            if (settings == null)
+                throw new ArgumentNullException(nameof(settings));
+
+            ChatCloneWindow? window = null;
+            try
+            {
+                window = new ChatCloneWindow(settings, preferredSlot);
+                window.Show();
+                return true;
+            }
+            catch (Exception ex)
+            {
+                AppLogger.Warn("Failed to open chat clone window.", ex);
+                try { window?.Close(); } catch { }
+                return false;
+            }
+        }
+
+        public ChatCloneWindow(ChatSettings settings, int? preferredSlot = null)
         {
             InitializeComponent();
             _settings = settings ?? throw new ArgumentNullException(nameof(settings));
 
-            int? slot = ChatWindowHub.RegisterClone();
+            int? slot = ChatWindowHub.RegisterClone(preferredSlot);
             if (slot == null)
+            {
+                if (preferredSlot.HasValue)
+                    throw new InvalidOperationException($"Chat window slot {preferredSlot.Value} is not available.");
+
                 throw new InvalidOperationException("No chat window slot is available.");
+            }
 
             _slot = slot.Value;
 
@@ -124,19 +155,39 @@ namespace TWChatOverlay.Views
             IsVisibleChanged += (_, _) => Dispatcher.BeginInvoke(new Action(EnsureCloneTopmost), DispatcherPriority.Background);
             _tabAutoHideTimer.Tick += (_, _) => HideCloneTabs();
 
+            _currentTabTag = NormalizeTabTag(GetStoredTabTag());
+
             ApplySizeFromMainWindow();
             ApplyDefaultFontSettings();
             ApplyEffectiveFont();
             ApplyStoredPosition();
             ApplyDefaultPositionIfNeeded();
-            SetSettingsMode(false);
+            ApplyTabState(_currentTabTag, persistSettings: false, refreshLogDisplay: false);
         }
 
         private void ChatCloneWindow_Closed(object? sender, EventArgs e)
         {
             try
             {
+                if (!ChatWindowHub.IsShuttingDown)
+                    SaveOpenStateToSettings(false);
+            }
+            catch
+            {
+            }
+
+            try
+            {
                 SavePositionToSettings();
+            }
+            catch
+            {
+            }
+
+            try
+            {
+                SaveTabStateToSettings();
+                ConfigService.Save(_settings);
             }
             catch
             {
@@ -198,8 +249,9 @@ namespace TWChatOverlay.Views
             ApplySizeFromMainWindow();
 
             bool shouldBeVisible =
+                _mainWindow.IsOverlayVisible &&
                 _mainWindow.WindowState != WindowState.Minimized &&
-                _mainWindow.Visibility != Visibility.Hidden;
+                _mainWindow.Visibility == Visibility.Visible;
 
             if (shouldBeVisible)
             {
@@ -215,6 +267,11 @@ namespace TWChatOverlay.Views
             Topmost = shouldTopmost;
             if (shouldTopmost)
                 EnsureCloneTopmost();
+        }
+
+        internal void RefreshVisibilityFromMainWindow()
+        {
+            SyncVisibilityWithMainWindow();
         }
 
         private void HandleLocationChanged()
@@ -262,6 +319,15 @@ namespace TWChatOverlay.Views
                     OnPropertyChanged(nameof(SelectedFontSize));
                     ApplyEffectiveFont();
                 }), System.Windows.Threading.DispatcherPriority.Background);
+            }
+            else if (e.PropertyName == GetTabTagSettingPropertyName())
+            {
+                string normalizedTabTag = NormalizeTabTag(GetStoredTabTag());
+                if (!string.Equals(_currentTabTag, normalizedTabTag, StringComparison.Ordinal))
+                {
+                    Dispatcher.BeginInvoke(new Action(() => ApplyTabState(normalizedTabTag, persistSettings: false, refreshLogDisplay: false)),
+                        System.Windows.Threading.DispatcherPriority.Background);
+                }
             }
             else if (e.PropertyName != null && e.PropertyName.StartsWith("Show", StringComparison.Ordinal))
             {
@@ -355,16 +421,100 @@ namespace TWChatOverlay.Views
                 return;
 
             string tabTag = btn.Tag.ToString() ?? string.Empty;
-            if (string.Equals(tabTag, "Settings", StringComparison.Ordinal))
-            {
-                SetSettingsMode(true);
-                return;
-            }
+            ApplyTabState(tabTag);
+        }
 
-            _currentTabTag = tabTag;
-            SetSettingsMode(false);
-            ShowCloneTabsTemporarily();
-            RefreshLogDisplay();
+        private void ApplyTabState(string tabTag, bool persistSettings = true, bool refreshLogDisplay = true)
+        {
+            string normalizedTabTag = NormalizeTabTag(tabTag);
+            _currentTabTag = normalizedTabTag;
+
+            if (persistSettings)
+                SaveTabStateToSettings(normalizedTabTag);
+
+            UpdateTabSelection(normalizedTabTag);
+
+            bool isSettingsMode = string.Equals(normalizedTabTag, "Settings", StringComparison.Ordinal);
+            SetSettingsMode(isSettingsMode);
+
+            if (refreshLogDisplay && !isSettingsMode)
+                RefreshLogDisplay();
+        }
+
+        private void UpdateTabSelection(string tabTag)
+        {
+            if (MainTabPanel == null)
+                return;
+
+            foreach (var radioButton in FindVisualDescendants<RadioButton>(MainTabPanel))
+            {
+                bool isSelected = string.Equals(radioButton.Tag?.ToString(), tabTag, StringComparison.Ordinal);
+                if (radioButton.IsChecked != isSelected)
+                    radioButton.IsChecked = isSelected;
+            }
+        }
+
+        private string GetStoredTabTag()
+            => _slot == 1 ? _settings.ChatCloneWindow1TabTag : _settings.ChatCloneWindow2TabTag;
+
+        private string GetTabTagSettingPropertyName()
+            => _slot == 1 ? nameof(ChatSettings.ChatCloneWindow1TabTag) : nameof(ChatSettings.ChatCloneWindow2TabTag);
+
+        private void SaveTabStateToSettings(string? tabTag = null)
+        {
+            string normalized = NormalizeTabTag(tabTag ?? _currentTabTag);
+
+            if (_slot == 1)
+                _settings.ChatCloneWindow1TabTag = normalized;
+            else
+                _settings.ChatCloneWindow2TabTag = normalized;
+
+            ConfigService.SaveDeferred(_settings);
+        }
+
+        private void SaveOpenStateToSettings(bool isOpen)
+        {
+            if (_slot == 1)
+                _settings.ChatCloneWindow1IsOpen = isOpen;
+            else
+                _settings.ChatCloneWindow2IsOpen = isOpen;
+
+            ConfigService.SaveDeferred(_settings);
+        }
+
+        private static string NormalizeTabTag(string? tabTag)
+        {
+            if (string.Equals(tabTag, "General", StringComparison.OrdinalIgnoreCase))
+                return "General";
+            if (string.Equals(tabTag, "Team", StringComparison.OrdinalIgnoreCase))
+                return "Team";
+            if (string.Equals(tabTag, "Club", StringComparison.OrdinalIgnoreCase))
+                return "Club";
+            if (string.Equals(tabTag, "Shout", StringComparison.OrdinalIgnoreCase))
+                return "Shout";
+            if (string.Equals(tabTag, "System", StringComparison.OrdinalIgnoreCase))
+                return "System";
+            if (string.Equals(tabTag, "Settings", StringComparison.OrdinalIgnoreCase))
+                return "Settings";
+
+            return "General";
+        }
+
+        private static IEnumerable<T> FindVisualDescendants<T>(DependencyObject root) where T : DependencyObject
+        {
+            if (root == null)
+                yield break;
+
+            int count = VisualTreeHelper.GetChildrenCount(root);
+            for (int i = 0; i < count; i++)
+            {
+                DependencyObject child = VisualTreeHelper.GetChild(root, i);
+                if (child is T match)
+                    yield return match;
+
+                foreach (T descendant in FindVisualDescendants<T>(child))
+                    yield return descendant;
+            }
         }
 
         private void SetSettingsMode(bool isSettingsMode)
@@ -576,10 +726,13 @@ namespace TWChatOverlay.Views
                 return;
 
             _isInitialized = true;
+            SaveOpenStateToSettings(true);
             ApplySizeFromMainWindow();
+            ApplyTabState(_currentTabTag, persistSettings: false, refreshLogDisplay: false);
             RefreshLogDisplay();
             SyncVisibilityWithMainWindow();
-            ShowCloneTabsTemporarily();
+            if (!_isSettingsMode)
+                ShowCloneTabsTemporarily();
         }
 
         private void MainBorder_MouseEnter(object sender, MouseEventArgs e)

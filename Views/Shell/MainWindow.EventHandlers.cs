@@ -33,37 +33,9 @@ namespace TWChatOverlay.Views
         {
             if (sender is not RadioButton btn || btn.Tag == null) return;
 
-            _currentTabTag = btn.Tag.ToString() ?? string.Empty;
-            AppLogger.Debug($"Switched log tab to '{_currentTabTag}'.");
-
-            var displayState = _tabDisplayStateResolver.Resolve(_currentTabTag);
-            var logDisplay = LogDisplay;
-
-            if (logDisplay != null)
-            {
-                logDisplay.Visibility = displayState.IsLogVisible ? Visibility.Visible : Visibility.Collapsed;
-            }
-            SettingsDisplay.Visibility = displayState.IsSettingsVisible ? Visibility.Visible : Visibility.Collapsed;
-
-            bool isSettingsTab = displayState.IsSettingsTab;
-            DragBar.Visibility = isSettingsTab ? Visibility.Visible : Visibility.Collapsed;
-            DragBarRow.Height = isSettingsTab ? new GridLength(25) : new GridLength(0);
-            SetSettingsPositionMode(isSettingsTab);
-
-            if (_stickyService != null)
-            {
-                if (isSettingsTab)
-                {
-                    _stickyService.SetPositionTrackingEnabled(false);
-                }
-                else
-                {
-                    _stickyService.SetPositionTrackingEnabled(true);
-                    _stickyService.UpdatePositionImmediately();
-                }
-            }
-
-            if (logDisplay?.Visibility == Visibility.Visible) RequestRefreshLogDisplay();
+            string tabTag = btn.Tag.ToString() ?? string.Empty;
+            AppLogger.Debug($"Switched log tab to '{tabTag}'.");
+            ApplyMainTabState(tabTag);
         }
 
         private void AddChatWindow_Click(object sender, RoutedEventArgs e)
@@ -71,7 +43,7 @@ namespace TWChatOverlay.Views
             if (ChatCloneWindow.TryOpen(_settings))
                 return;
 
-            MessageBox.Show("채팅창은 최대 3개까지 열 수 있습니다.", "채팅창 제한", MessageBoxButton.OK, MessageBoxImage.Information);
+            MessageBox.Show("채팅창은 최대 2개까지 열 수 있습니다.", "채팅창 제한", MessageBoxButton.OK, MessageBoxImage.Information);
         }
 
         private void MainBorder_MouseEnter(object sender, MouseEventArgs e)
@@ -222,6 +194,12 @@ namespace TWChatOverlay.Views
                 {
                     ApplyHotKeys();
                 }
+                else if (e.PropertyName == nameof(_settings.MainWindowChatTabTag))
+                {
+                    string normalizedTabTag = NormalizeMainTabTag(_settings.MainWindowChatTabTag);
+                    if (!string.Equals(_currentTabTag, normalizedTabTag, StringComparison.Ordinal))
+                        ApplyMainTabState(normalizedTabTag, persistSettings: false, refreshLogDisplay: false);
+                }
                 else if (e.PropertyName != null && e.PropertyName.StartsWith("Show"))
                 {
                     RequestRefreshLogDisplay();
@@ -229,6 +207,88 @@ namespace TWChatOverlay.Views
 
                 PersistSettings();
             });
+        }
+
+        private void ApplyMainTabState(string tabTag, bool persistSettings = true, bool refreshLogDisplay = true)
+        {
+            string normalizedTabTag = NormalizeMainTabTag(tabTag);
+            _currentTabTag = normalizedTabTag;
+
+            if (persistSettings && !string.Equals(_settings.MainWindowChatTabTag, normalizedTabTag, StringComparison.Ordinal))
+            {
+                _settings.MainWindowChatTabTag = normalizedTabTag;
+                PersistSettings();
+            }
+
+            UpdateMainTabSelection(normalizedTabTag);
+
+            var displayState = _tabDisplayStateResolver.Resolve(normalizedTabTag);
+            var logDisplay = LogDisplay;
+
+            if (logDisplay != null)
+            {
+                logDisplay.Visibility = displayState.IsLogVisible ? Visibility.Visible : Visibility.Collapsed;
+            }
+
+            if (SettingsDisplay != null)
+                SettingsDisplay.Visibility = displayState.IsSettingsVisible ? Visibility.Visible : Visibility.Collapsed;
+
+            bool isSettingsTab = displayState.IsSettingsTab;
+            if (DragBar != null)
+                DragBar.Visibility = isSettingsTab ? Visibility.Visible : Visibility.Collapsed;
+            if (DragBarRow != null)
+                DragBarRow.Height = isSettingsTab ? new GridLength(25) : new GridLength(0);
+
+            SetSettingsPositionMode(isSettingsTab);
+
+            if (_stickyService != null)
+            {
+                if (isSettingsTab)
+                {
+                    _stickyService.SetPositionTrackingEnabled(false);
+                }
+                else
+                {
+                    _stickyService.SetPositionTrackingEnabled(true);
+                    _stickyService.UpdatePositionImmediately();
+                }
+            }
+
+            if (refreshLogDisplay && logDisplay?.Visibility == Visibility.Visible)
+                RequestRefreshLogDisplay();
+        }
+
+        private void UpdateMainTabSelection(string tabTag)
+        {
+            if (MainTabPanel == null)
+                return;
+
+            foreach (var radioButton in MainTabPanel.Children.OfType<RadioButton>())
+            {
+                bool isSelected = string.Equals(radioButton.Tag?.ToString(), tabTag, StringComparison.Ordinal);
+                if (radioButton.IsChecked != isSelected)
+                    radioButton.IsChecked = isSelected;
+            }
+        }
+
+        private static string NormalizeMainTabTag(string? tabTag)
+        {
+            if (string.Equals(tabTag, "Basic", StringComparison.OrdinalIgnoreCase))
+                return "Basic";
+            if (string.Equals(tabTag, "General", StringComparison.OrdinalIgnoreCase))
+                return "General";
+            if (string.Equals(tabTag, "Team", StringComparison.OrdinalIgnoreCase))
+                return "Team";
+            if (string.Equals(tabTag, "Club", StringComparison.OrdinalIgnoreCase))
+                return "Club";
+            if (string.Equals(tabTag, "Shout", StringComparison.OrdinalIgnoreCase))
+                return "Shout";
+            if (string.Equals(tabTag, "System", StringComparison.OrdinalIgnoreCase))
+                return "System";
+            if (string.Equals(tabTag, "Settings", StringComparison.OrdinalIgnoreCase))
+                return "Settings";
+
+            return "Basic";
         }
 
         #endregion
