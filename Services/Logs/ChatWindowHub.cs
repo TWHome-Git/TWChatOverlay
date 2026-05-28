@@ -21,11 +21,26 @@ namespace TWChatOverlay.Services
         private static DispatcherTimer? _bufferNotificationTimer;
         private static bool _isBufferNotificationPending;
 
+        public static bool IsShuttingDown { get; private set; }
         public static bool CanOpenClone => OpenSlots.Count < 2;
         public static IReadOnlyCollection<int> OpenCloneSlots => OpenSlots.ToList().AsReadOnly();
 
-        public static int? RegisterClone()
+        public static void BeginShutdown()
         {
+            IsShuttingDown = true;
+        }
+
+        public static int? RegisterClone(int? preferredSlot = null)
+        {
+            if (preferredSlot.HasValue)
+            {
+                int slot = preferredSlot.Value;
+                if (slot < 1 || slot > 2)
+                    return null;
+
+                return OpenSlots.Add(slot) ? slot : null;
+            }
+
             for (int slot = 1; slot <= 2; slot++)
             {
                 if (OpenSlots.Add(slot))

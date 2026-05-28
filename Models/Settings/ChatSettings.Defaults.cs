@@ -77,6 +77,7 @@ namespace TWChatOverlay.Models
             _toggleEquipmentDbHotKey = "";
             _toggleEncryptHotKey = "";
             _toggleSettingsHotKey = "";
+            _mainWindowChatTabTag = "Basic";
             _dailyWeeklyContentOverlayLeft = 0.0;
             _dailyWeeklyContentOverlayTop = 0.0;
             _subAddonWindowLeft = 0.0;
@@ -101,6 +102,10 @@ namespace TWChatOverlay.Models
             _chatCloneWindow1Top = null;
             _chatCloneWindow2Left = null;
             _chatCloneWindow2Top = null;
+            _chatCloneWindow1TabTag = "General";
+            _chatCloneWindow2TabTag = "General";
+            _chatCloneWindow1IsOpen = false;
+            _chatCloneWindow2IsOpen = false;
             _chatCloneWindow1FollowMainFont = true;
             _chatCloneWindow1FontFamily = string.Empty;
             _chatCloneWindow1FontSize = null;
@@ -237,7 +242,5 @@ namespace TWChatOverlay.Models
         }
     }
 }
-
-
 
 

@@ -1018,6 +1018,8 @@ namespace TWChatOverlay.Views
             _settings.ChatCloneWindow1Top = 0.0;
             _settings.ChatCloneWindow2Left = 0.0;
             _settings.ChatCloneWindow2Top = 0.0;
+            _settings.ChatCloneWindow1IsOpen = false;
+            _settings.ChatCloneWindow2IsOpen = false;
             _settings.ShoutReplayWindowLeft = 0.0;
             _settings.ShoutReplayWindowTop = 0.0;
             _settings.MemoOverlayWindowLeft = 0.0;

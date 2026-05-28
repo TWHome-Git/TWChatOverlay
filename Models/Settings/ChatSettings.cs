@@ -75,6 +75,7 @@ namespace TWChatOverlay.Models
         private string _toggleEquipmentDbHotKey = "";
         private string _toggleEncryptHotKey = "";
         private string _toggleSettingsHotKey = "";
+        private string _mainWindowChatTabTag = "Basic";
         private double? _dailyWeeklyContentOverlayLeft = 0.0;
         private double? _dailyWeeklyContentOverlayTop = 0.0;
         private double? _dailyWeeklyContentOverlayWidth = 280.0;
@@ -106,6 +107,10 @@ namespace TWChatOverlay.Models
         private double? _chatCloneWindow1Top = null;
         private double? _chatCloneWindow2Left = null;
         private double? _chatCloneWindow2Top = null;
+        private string _chatCloneWindow1TabTag = "General";
+        private string _chatCloneWindow2TabTag = "General";
+        private bool _chatCloneWindow1IsOpen = false;
+        private bool _chatCloneWindow2IsOpen = false;
         private double? _shoutReplayWindowLeft = null;
         private double? _shoutReplayWindowTop = null;
         private double? _memoOverlayWindowLeft = null;
@@ -662,6 +667,19 @@ namespace TWChatOverlay.Models
             }
         }
 
+        [JsonPropertyOrder(38)]
+        public string MainWindowChatTabTag
+        {
+            get => _mainWindowChatTabTag;
+            set
+            {
+                string normalized = string.IsNullOrWhiteSpace(value) ? "Basic" : value;
+                if (_mainWindowChatTabTag == normalized) return;
+                _mainWindowChatTabTag = normalized;
+                OnPropertyChanged();
+            }
+        }
+
         [JsonPropertyOrder(40)]
         [JsonIgnore]
         public List<string> AvailableFonts { get; } = new() { "나눔고딕", "굴림", "사용자 설정" };
@@ -1210,6 +1228,19 @@ namespace TWChatOverlay.Models
             }
         }
 
+        [JsonPropertyOrder(95)]
+        public string ChatCloneWindow1TabTag
+        {
+            get => _chatCloneWindow1TabTag;
+            set
+            {
+                string normalized = string.IsNullOrWhiteSpace(value) ? "General" : value;
+                if (_chatCloneWindow1TabTag == normalized) return;
+                _chatCloneWindow1TabTag = normalized;
+                OnPropertyChanged();
+            }
+        }
+
         [JsonPropertyOrder(82)]
         public bool ChatCloneWindow2FollowMainFont
         {
@@ -1243,6 +1274,43 @@ namespace TWChatOverlay.Models
             {
                 if (_chatCloneWindow2FontSize == value) return;
                 _chatCloneWindow2FontSize = value;
+                OnPropertyChanged();
+            }
+        }
+
+        [JsonPropertyOrder(96)]
+        public string ChatCloneWindow2TabTag
+        {
+            get => _chatCloneWindow2TabTag;
+            set
+            {
+                string normalized = string.IsNullOrWhiteSpace(value) ? "General" : value;
+                if (_chatCloneWindow2TabTag == normalized) return;
+                _chatCloneWindow2TabTag = normalized;
+                OnPropertyChanged();
+            }
+        }
+
+        [JsonPropertyOrder(97)]
+        public bool ChatCloneWindow1IsOpen
+        {
+            get => _chatCloneWindow1IsOpen;
+            set
+            {
+                if (_chatCloneWindow1IsOpen == value) return;
+                _chatCloneWindow1IsOpen = value;
+                OnPropertyChanged();
+            }
+        }
+
+        [JsonPropertyOrder(98)]
+        public bool ChatCloneWindow2IsOpen
+        {
+            get => _chatCloneWindow2IsOpen;
+            set
+            {
+                if (_chatCloneWindow2IsOpen == value) return;
+                _chatCloneWindow2IsOpen = value;
                 OnPropertyChanged();
             }
         }
