@@ -100,8 +100,12 @@ namespace TWChatOverlay.Models
             _dungeonCountDisplayWindowTop = null;
             _chatCloneWindow1Left = null;
             _chatCloneWindow1Top = null;
+            _chatCloneWindow1Width = null;
+            _chatCloneWindow1Height = null;
             _chatCloneWindow2Left = null;
             _chatCloneWindow2Top = null;
+            _chatCloneWindow2Width = null;
+            _chatCloneWindow2Height = null;
             _chatCloneWindow1TabTag = "General";
             _chatCloneWindow2TabTag = "General";
             _chatCloneWindow1IsOpen = false;
@@ -187,6 +191,7 @@ namespace TWChatOverlay.Models
                 ["시오칸 하임 보스 토벌전"] = new() { IsEnabled = true },
                 ["시오칸 하임 오딘 전면전"] = new() { IsEnabled = true },
                 ["아페티리아 EX"] = new() { IsEnabled = true },
+                ["어비스 보스전(EX)"] = new() { IsEnabled = true },
                 ["이클립스 코어 마스터"] = new() { IsEnabled = true },
                 ["로카고스 코어 마스터"] = new() { IsEnabled = true },
                 ["에토스 코어 마스터"] = new() { IsEnabled = true },
@@ -242,5 +247,3 @@ namespace TWChatOverlay.Models
         }
     }
 }
-
-

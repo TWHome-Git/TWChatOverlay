@@ -194,8 +194,6 @@ namespace TWChatOverlay.Views
                     DungeonCountDisplayWindowService.ClosePositionPreview(_settings);
                     ShoutToastService.ClosePositionPreview(_settings);
                     MessengerEtaToastService.ClosePositionPreview(_settings);
-                    if (_dailyWeeklyContentOverlay?.IsVisible == true)
-                        _dailyWeeklyContentOverlay.Hide();
                     SubAddonWindow.Instance?.Hide();
                     ItemDropHelperWindow.Instance?.Hide();
                     BuffTrackerHelperWindow.Instance?.Hide();
@@ -204,8 +202,6 @@ namespace TWChatOverlay.Views
                 catch { }
                 return;
             }
-
-            try { ApplyDailyWeeklyWindowVisibility(); } catch { }
 
             if (_isSettingsPositionMode)
             {
@@ -233,7 +229,6 @@ namespace TWChatOverlay.Views
 
             CloseNonAddonPositionPreviewWindows(savePositions: true);
             CloseAddonPositionPreviewWindows(savePositions: true, restoreNormalWindows: true);
-            try { ApplyDailyWeeklyWindowVisibility(); } catch { }
         }
 
         private void CloseNonAddonPositionPreviewWindows(bool savePositions)
@@ -508,9 +503,7 @@ namespace TWChatOverlay.Views
         {
             try
             {
-                bool shouldShow = !_isWizardChatPositionMode &&
-                                  _settings.ShowDailyWeeklyContentOverlay &&
-                                  true;
+                bool shouldShow = _settings.ShowDailyWeeklyContentOverlay;
 
                 if (shouldShow)
                 {
@@ -523,7 +516,7 @@ namespace TWChatOverlay.Views
                     if (!_dailyWeeklyContentOverlay.IsVisible)
                         _dailyWeeklyContentOverlay.Show();
                 }
-                else if (_dailyWeeklyContentOverlay?.IsVisible == true)
+                else if (_dailyWeeklyContentOverlay != null)
                 {
                     CloseDailyWeeklyWindow();
                 }

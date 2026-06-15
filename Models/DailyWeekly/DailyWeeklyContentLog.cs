@@ -108,7 +108,8 @@ namespace TWChatOverlay.Models
                     foreach (var child in _children)
                         child.PropertyChanged += (_, e) =>
                         {
-                            if (e.PropertyName == nameof(IsCleared))
+                            if (e.PropertyName == nameof(IsCleared) ||
+                                e.PropertyName == nameof(IsEnabled))
                             {
                                 OnPropertyChanged(nameof(IsCleared));
                             }
@@ -120,7 +121,8 @@ namespace TWChatOverlay.Models
         {
             get
             {
-                if (HasChildren) return _children!.All(c => c.IsCleared);
+                if (HasChildren)
+                    return _children!.Where(c => c.IsEnabled).All(c => c.IsCleared);
                 if (HasCount)
                 {
                     int threshold = ClearThreshold > 0 ? ClearThreshold : MaxCount;

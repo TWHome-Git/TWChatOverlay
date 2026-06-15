@@ -106,6 +106,7 @@ namespace TWChatOverlay.Views
             {
                 _dailyWeeklyContentOverlay = new DailyWeeklyContentWindow(_settings);
                 shouldScanHistoricalLogs = true;
+                _dailyWeeklyContentOverlay.IsVisibleChanged += DailyWeeklyContentOverlay_IsVisibleChanged;
                 _dailyWeeklyContentOverlay.Closed += (_, _) =>
                 {
                     _dailyWeeklyContentOverlay = null;
@@ -126,6 +127,16 @@ namespace TWChatOverlay.Views
                 _ = _dailyWeeklyContentOverlay.ScanHistoricalLogsAsync();
             }
             try { DailyWeeklyVisibilityChanged?.Invoke(this, true); } catch { }
+        }
+
+        private void DailyWeeklyContentOverlay_IsVisibleChanged(object sender, DependencyPropertyChangedEventArgs e)
+        {
+            try
+            {
+                if (sender is Window window)
+                    DailyWeeklyVisibilityChanged?.Invoke(this, window.IsVisible);
+            }
+            catch { }
         }
 
         private void CloseDailyWeeklyWindow()

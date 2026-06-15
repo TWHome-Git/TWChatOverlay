@@ -105,8 +105,12 @@ namespace TWChatOverlay.Models
         private double? _dungeonCountDisplayWindowTop = null;
         private double? _chatCloneWindow1Left = null;
         private double? _chatCloneWindow1Top = null;
+        private double? _chatCloneWindow1Width = null;
+        private double? _chatCloneWindow1Height = null;
         private double? _chatCloneWindow2Left = null;
         private double? _chatCloneWindow2Top = null;
+        private double? _chatCloneWindow2Width = null;
+        private double? _chatCloneWindow2Height = null;
         private string _chatCloneWindow1TabTag = "General";
         private string _chatCloneWindow2TabTag = "General";
         private bool _chatCloneWindow1IsOpen = false;
@@ -1065,6 +1069,54 @@ namespace TWChatOverlay.Models
             {
                 if (_chatCloneWindow2Top == value) return;
                 _chatCloneWindow2Top = value;
+                OnPropertyChanged();
+            }
+        }
+
+        [JsonPropertyOrder(99)]
+        public double? ChatCloneWindow1Width
+        {
+            get => _chatCloneWindow1Width;
+            set
+            {
+                if (_chatCloneWindow1Width == value) return;
+                _chatCloneWindow1Width = value;
+                OnPropertyChanged();
+            }
+        }
+
+        [JsonPropertyOrder(100)]
+        public double? ChatCloneWindow1Height
+        {
+            get => _chatCloneWindow1Height;
+            set
+            {
+                if (_chatCloneWindow1Height == value) return;
+                _chatCloneWindow1Height = value;
+                OnPropertyChanged();
+            }
+        }
+
+        [JsonPropertyOrder(101)]
+        public double? ChatCloneWindow2Width
+        {
+            get => _chatCloneWindow2Width;
+            set
+            {
+                if (_chatCloneWindow2Width == value) return;
+                _chatCloneWindow2Width = value;
+                OnPropertyChanged();
+            }
+        }
+
+        [JsonPropertyOrder(102)]
+        public double? ChatCloneWindow2Height
+        {
+            get => _chatCloneWindow2Height;
+            set
+            {
+                if (_chatCloneWindow2Height == value) return;
+                _chatCloneWindow2Height = value;
                 OnPropertyChanged();
             }
         }
