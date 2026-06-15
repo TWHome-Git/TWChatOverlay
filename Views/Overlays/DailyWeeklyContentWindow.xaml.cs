@@ -116,6 +116,7 @@ namespace TWChatOverlay.Views
         private const string AbyssDepthOneItemName = "어비스 - 심층Ⅰ";
         private const string AbyssDepthTwoItemName = "어비스 - 심층Ⅱ";
         private const string AbyssDepthThreeItemName = "어비스 - 심층Ⅲ";
+        private const string AbyssBossExItemName = "어비스 보스전(EX)";
         private const string AbyssHellGroupName = "어비스 지옥";
         private const string RelicItemName = "렐릭";
 
@@ -144,6 +145,7 @@ namespace TWChatOverlay.Views
         private const string AbyssDepthOneLogKeyword = "어비스 - 심층Ⅰ(보스전) 플레이를 이번 주에 7회 중";
         private const string AbyssDepthTwoLogKeyword = "어비스 - 심층Ⅱ(보스전) 플레이를 이번 주에 7회 중";
         private const string AbyssDepthThreeLogKeyword = "어비스 - 심층Ⅲ(보스전) 플레이를 이번 주에 7회 중";
+        private const string AbyssBossExLogKeyword = "어비스 보스전(EX) 클리어 횟수:";
 
         private const string CleaningPartTimeJobLogKeyword = "청소 아르바이트 보상 조건을 달성하였습니다.";
         private const string PravaDefenseLogKeyword = "프라바 방어전 성공 보상으로 경험치 1000만을 획득";
@@ -261,7 +263,7 @@ namespace TWChatOverlay.Views
             $"{TrackItems.Count(i => !i.IsSubItem && i.IsEnabled && i.IsCleared)} / {TrackItems.Count(i => !i.IsSubItem && i.IsEnabled)} 완료";
 
         public string DailyProgressDisplay =>
-            $"{DailyContentItems.Count(i => !i.IsSubItem && i.IsEnabled && i.IsCleared)} / {DailyContentItems.Count(i => !i.IsSubItem && i.IsEnabled)} 완료";
+            $"{DailyContentItems.Count(i => !i.IsSubItem && i.IsEnabled && !i.IsWeekly && i.IsCleared)} / {DailyContentItems.Count(i => !i.IsSubItem && i.IsEnabled && !i.IsWeekly)} 완료";
 
         public string WeeklyProgressDisplay =>
             $"{WeeklyContentItems.Count(i => !i.IsSubItem && i.IsEnabled && i.IsCleared)} / {WeeklyContentItems.Count(i => !i.IsSubItem && i.IsEnabled)} 완료";
@@ -338,10 +340,7 @@ namespace TWChatOverlay.Views
                         OnPropertyChanged(nameof(ProgressDisplay));
                         OnPropertyChanged(nameof(DailyProgressDisplay));
                         OnPropertyChanged(nameof(WeeklyProgressDisplay));
-                        if (e.PropertyName == nameof(DailyWeeklyContentLog.IsCleared))
-                        {
-                            ReorderItems();
-                        }
+                        ReorderItems();
                     }
                 };
 
@@ -403,7 +402,8 @@ namespace TWChatOverlay.Views
                 new() { Name = LycosItemName,   IsSubItem = true, IsWeekly = true, AllowCountOverMax = true, DefaultMaxCount = 7, MaxCount = 7, LogKeyword = LycosLogKeyword },
             };
 
-            var eclipseBoss = new DailyWeeklyContentLog { Name = EclipseBossRaidItemName, Children = subBosses };
+            // Show the Eclipse boss raid group in the daily column, but keep it on the weekly reset path.
+            var eclipseBoss = new DailyWeeklyContentLog { Name = EclipseBossRaidItemName, IsWeekly = true, Children = subBosses };
 
             var AbandonItems = new DailyWeeklyContentLog[]
             {
@@ -422,6 +422,15 @@ namespace TWChatOverlay.Views
             };
 
             var abyssGroup = new DailyWeeklyContentLog { Name = AbyssHellGroupName, Children = abyssItems, IsWeekly = true };
+            var abyssBossEx = new DailyWeeklyContentLog
+            {
+                Name = AbyssBossExItemName,
+                IsWeekly = true,
+                AllowCountOverMax = true,
+                DefaultMaxCount = 7,
+                MaxCount = 7,
+                LogKeyword = AbyssBossExLogKeyword
+            };
             var eclipseCoreMasterItems = new DailyWeeklyContentLog[]
             {
                 new() { Name = LokagosCoreMasterItemName, IsSubItem = true, IsWeekly = true, AllowCountOverMax = true, DefaultMaxCount = 7, MaxCount = 7, LogKeyword = LokagosCoreMasterLogKeyword },
@@ -498,7 +507,7 @@ namespace TWChatOverlay.Views
                 IsWeekly = true,
                 Children = new[] { mercurialCoreMasterGroup, mercurialWeeklyDungeonGroup }
             };
-            var abyssRegionGroup = new DailyWeeklyContentLog { Name = WeeklyAbyssGroupName, IsRegionGroup = true, IsWeekly = true, Children = new[] { abyssCoreMasterGroup, abyssGroup, abyssalTreasury, dimensionalGap } };
+            var abyssRegionGroup = new DailyWeeklyContentLog { Name = WeeklyAbyssGroupName, IsRegionGroup = true, IsWeekly = true, Children = new[] { abyssCoreMasterGroup, abyssGroup, abyssBossEx, abyssalTreasury, dimensionalGap } };
             var eclipseRegionGroup = new DailyWeeklyContentLog { Name = WeeklyEclipseGroupName, IsRegionGroup = true, IsWeekly = true, Children = new[] { eclipseCoreMasterGroup, eclipseBoss, eclipseSubjugation, supplyRetrieval, trainingCenter, detachedForce, apetiriaEx, apetiria, finalBattle } };
             var otherRegionGroup = new DailyWeeklyContentLog { Name = WeeklyOtherGroupName, IsRegionGroup = true, IsWeekly = true, Children = new[] { coreDungeon, excavationSite, relic, cleaningPartTime, pravaDefense, vestige, orlyDefense, catacombsHell, shinjoHard, siochanBosses, siochanOdin, AbandonGroup } };
 
@@ -576,25 +585,38 @@ namespace TWChatOverlay.Views
         private void ReorderItems()
         {
             _completedItems.Clear();
-            AddCompletedFrom(DailyContentItems);
-            AddCompletedFrom(WeeklyContentItems);
+            var added = new HashSet<DailyWeeklyContentLog>(ReferenceEqualityComparer.Instance);
+            AddCompletedFrom(DailyContentItems, added);
+            AddCompletedFrom(WeeklyContentItems, added);
             OnPropertyChanged(nameof(HasCompletedItems));
         }
 
-        private void AddCompletedFrom(ObservableCollection<DailyWeeklyContentLog> source)
+        private void AddCompletedFrom(
+            ObservableCollection<DailyWeeklyContentLog> source,
+            HashSet<DailyWeeklyContentLog> added)
         {
             foreach (var item in source)
             {
                 if (item.IsSubItem) continue;
+                if (!item.IsEnabled)
+                {
+                    item.IsHidden = true;
+                    continue;
+                }
                 if (item.IsCleared)
                 {
                     item.IsHidden = true;
-                    _completedItems.Add(item);
+                    TryAddCompletedItem(item, added);
                     if (item.HasChildren)
                         foreach (var child in item.Children!)
                         {
+                            if (!child.IsEnabled)
+                            {
+                                child.IsHidden = true;
+                                continue;
+                            }
                             child.IsHidden = true;
-                            _completedItems.Add(child);
+                            TryAddCompletedItem(child, added);
                         }
                 }
                 else
@@ -602,9 +624,22 @@ namespace TWChatOverlay.Views
                     item.IsHidden = false;
                     if (item.HasChildren)
                         foreach (var child in item.Children!)
+                        {
+                            if (!child.IsEnabled)
+                            {
+                                child.IsHidden = true;
+                                continue;
+                            }
                             child.IsHidden = false;
+                        }
                 }
             }
+        }
+
+        private void TryAddCompletedItem(DailyWeeklyContentLog item, HashSet<DailyWeeklyContentLog> added)
+        {
+            if (added.Add(item))
+                _completedItems.Add(item);
         }
 
         private void ApplySettings()
@@ -1286,7 +1321,19 @@ namespace TWChatOverlay.Views
             }
         }
 
-        private void Close_Click(object sender, RoutedEventArgs e) => Close();
+        private void Close_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                PersistWindowPosition();
+            }
+            catch (Exception ex)
+            {
+                AppLogger.Warn("Failed to persist DailyWeekly window position before hiding.", ex);
+            }
+
+            _settings.ShowDailyWeeklyContentOverlay = false;
+        }
 
         private async void Reset_Click(object sender, RoutedEventArgs e)
         {

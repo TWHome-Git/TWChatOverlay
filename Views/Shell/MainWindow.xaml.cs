@@ -633,7 +633,6 @@ namespace TWChatOverlay.Views
             {
                 _canShowAuxiliaryWindows = canShow;
                 ApplyBuffTrackerWindowSettings();
-                ApplyDailyWeeklyWindowVisibility();
                 ApplyAbandonRoadSummaryWindowVisibility();
             }), DispatcherPriority.Background);
         }
@@ -653,10 +652,10 @@ namespace TWChatOverlay.Views
             try
             {
                 UpdateStartupLoadingProgress(35, "원본 로그를 읽는 중입니다.");
-                await Task.Run(async () =>
+                ReadableLogArchiveService.LogArchiveInitializationResult archiveResult = await Task.Run(async () =>
                 {
                     Func<DateTime, bool>? dateFilter = onlyToday ? (d => d.Date == DateTime.Today) : null;
-                    await _readableLogArchiveService.EnsureInitializedFromRawLogsAsync(
+                    ReadableLogArchiveService.LogArchiveInitializationResult result = await _readableLogArchiveService.EnsureInitializedFromRawLogsAsync(
                         _settings.ChatLogFolderPath,
                         _logAnalysisService,
                         IsContentCompletionRelevantLog,
@@ -670,12 +669,19 @@ namespace TWChatOverlay.Views
                         cancellationToken).ConfigureAwait(false);
 
                     _readableLogArchiveService.MigrateContentArchiveIfNeeded();
+                    return result;
                 }, cancellationToken).ConfigureAwait(false);
 
                 _AbandonWeeklySummary = _readableLogArchiveService.LoadAbandonWeeklySummary(DateTime.Today);
                 _AbandonWeeklySummaryWeekKey = GetIsoWeekKey(DateTime.Today);
                 _settings.StartupLogReadCanceled = false;
                 ConfigService.SaveDeferred(_settings);
+
+                if (archiveResult.HasTimedOutFiles)
+                {
+                    UpdateStartupLoadingProgress(85, "일부 로그 파일이 1분 이상 멈춰서 다음 파일로 넘어갔습니다.");
+                    await ShowLogReadTimeoutWarningAsync(archiveResult).ConfigureAwait(false);
+                }
             }
             catch (OperationCanceledException)
             {
@@ -845,6 +851,32 @@ namespace TWChatOverlay.Views
                     _ = Dispatcher.BeginInvoke(new Action(RestartApplicationAfterInitialSetupWizard), DispatcherPriority.Background);
                 }
             }
+        }
+
+        private Task ShowLogReadTimeoutWarningAsync(ReadableLogArchiveService.LogArchiveInitializationResult result)
+        {
+            if (!result.HasTimedOutFiles)
+                return Task.CompletedTask;
+
+            string firstFileName = Path.GetFileName(result.TimedOutFiles[0]);
+            string message;
+            if (result.TimedOutFiles.Count == 1)
+            {
+                message = $"일부 로그 파일 읽기가 1분 이상 걸려 '{firstFileName}' 파일을 건너뛰고 다음 단계로 진행했습니다.";
+            }
+            else
+            {
+                string sampleFiles = string.Join(Environment.NewLine, result.TimedOutFiles.Take(3).Select(Path.GetFileName));
+                if (result.TimedOutFiles.Count > 3)
+                    sampleFiles += $"{Environment.NewLine}... 외 {result.TimedOutFiles.Count - 3}개";
+
+                message = $"일부 로그 파일 읽기가 1분 이상 걸려 {result.TimedOutFiles.Count}개 파일을 건너뛰고 다음 단계로 진행했습니다.{Environment.NewLine}{Environment.NewLine}{sampleFiles}";
+            }
+
+            return Dispatcher.InvokeAsync(() =>
+            {
+                MessageBox.Show(this, message, "로그 읽기", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }).Task;
         }
 
         private void StartupLoadingWindow_CancelRequested(object? sender, EventArgs e)

@@ -177,21 +177,21 @@
             </Border>
         </Border>
 
-        <primitives:Thumb Height="8" VerticalAlignment="Top" Cursor="SizeNS" DragDelta="TopResize_DragDelta">
+        <primitives:Thumb Height="8" VerticalAlignment="Top" Cursor="SizeNS" DragStarted="ResizeThumb_DragStarted" DragDelta="TopResize_DragDelta" DragCompleted="ResizeThumb_DragCompleted">
             <primitives:Thumb.Template>
                 <ControlTemplate TargetType="primitives:Thumb">
                     <Border Background="Transparent" />
                 </ControlTemplate>
             </primitives:Thumb.Template>
         </primitives:Thumb>
-        <primitives:Thumb Width="8" HorizontalAlignment="Left" Cursor="SizeWE" DragDelta="LeftResize_DragDelta">
+        <primitives:Thumb Width="8" HorizontalAlignment="Left" Cursor="SizeWE" DragStarted="ResizeThumb_DragStarted" DragDelta="LeftResize_DragDelta" DragCompleted="ResizeThumb_DragCompleted">
             <primitives:Thumb.Template>
                 <ControlTemplate TargetType="primitives:Thumb">
                     <Border Background="Transparent" />
                 </ControlTemplate>
             </primitives:Thumb.Template>
         </primitives:Thumb>
-        <primitives:Thumb Width="8" HorizontalAlignment="Right" Cursor="SizeWE" DragDelta="RightResize_DragDelta">
+        <primitives:Thumb Width="8" HorizontalAlignment="Right" Cursor="SizeWE" DragStarted="ResizeThumb_DragStarted" DragDelta="RightResize_DragDelta" DragCompleted="ResizeThumb_DragCompleted">
             <primitives:Thumb.Template>
                 <ControlTemplate TargetType="primitives:Thumb">
                     <Border Background="Transparent" />
