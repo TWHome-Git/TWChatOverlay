@@ -1016,8 +1016,12 @@ namespace TWChatOverlay.Views
             _settings.MessengerToastWindowTop = 0.0;
             _settings.ChatCloneWindow1Left = 0.0;
             _settings.ChatCloneWindow1Top = 0.0;
+            _settings.ChatCloneWindow1Width = null;
+            _settings.ChatCloneWindow1Height = null;
             _settings.ChatCloneWindow2Left = 0.0;
             _settings.ChatCloneWindow2Top = 0.0;
+            _settings.ChatCloneWindow2Width = null;
+            _settings.ChatCloneWindow2Height = null;
             _settings.ChatCloneWindow1IsOpen = false;
             _settings.ChatCloneWindow2IsOpen = false;
             _settings.ShoutReplayWindowLeft = 0.0;

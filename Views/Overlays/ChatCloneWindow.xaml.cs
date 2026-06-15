@@ -23,6 +23,7 @@ namespace TWChatOverlay.Views
         private bool _isInitialized;
         private bool _isSettingsMode;
         private bool _isApplyingSnap;
+        private bool _isResizingWindow;
         private readonly DispatcherTimer _tabAutoHideTimer = new() { Interval = TimeSpan.FromSeconds(2.5) };
 
         public event PropertyChangedEventHandler? PropertyChanged;
@@ -178,6 +179,14 @@ namespace TWChatOverlay.Views
 
             try
             {
+                SaveSizeToSettings();
+            }
+            catch
+            {
+            }
+
+            try
+            {
                 SavePositionToSettings();
             }
             catch
@@ -276,7 +285,7 @@ namespace TWChatOverlay.Views
 
         private void HandleLocationChanged()
         {
-            if (_isApplyingSnap)
+            if (_isApplyingSnap || _isResizingWindow)
                 return;
 
             if (_isSettingsMode)
@@ -569,7 +578,7 @@ namespace TWChatOverlay.Views
             {
                 Height -= e.VerticalChange;
                 Top += e.VerticalChange;
-                ChatWindowHub.TryApplyMagneticSnap(this);
+                SaveSizeToSettings();
                 SyncPositionToSettings();
             }
         }
@@ -580,7 +589,7 @@ namespace TWChatOverlay.Views
             {
                 Width -= e.HorizontalChange;
                 Left += e.HorizontalChange;
-                ChatWindowHub.TryApplyMagneticSnap(this);
+                SaveSizeToSettings();
                 SyncPositionToSettings();
             }
         }
@@ -590,8 +599,29 @@ namespace TWChatOverlay.Views
             if (Width + e.HorizontalChange >= MinWidth)
             {
                 Width += e.HorizontalChange;
-                ChatWindowHub.TryApplyMagneticSnap(this);
+                SaveSizeToSettings();
                 SyncPositionToSettings();
+            }
+        }
+
+        private void ResizeThumb_DragStarted(object sender, System.Windows.Controls.Primitives.DragStartedEventArgs e)
+        {
+            _isResizingWindow = true;
+        }
+
+        private void ResizeThumb_DragCompleted(object sender, System.Windows.Controls.Primitives.DragCompletedEventArgs e)
+        {
+            _isResizingWindow = false;
+
+            try
+            {
+                _isApplyingSnap = true;
+                if (ChatWindowHub.TryApplyMagneticSnap(this))
+                    SyncPositionToSettings();
+            }
+            finally
+            {
+                _isApplyingSnap = false;
             }
         }
 
@@ -785,14 +815,62 @@ namespace TWChatOverlay.Views
         private void ApplySizeFromMainWindow()
         {
             MainWindow? mainWindow = _mainWindow ?? Application.Current.Windows.OfType<MainWindow>().FirstOrDefault();
-            if (mainWindow == null)
+            double? storedWidth = _slot == 1 ? _settings.ChatCloneWindow1Width : _settings.ChatCloneWindow2Width;
+            double? storedHeight = _slot == 1 ? _settings.ChatCloneWindow1Height : _settings.ChatCloneWindow2Height;
+
+            if (storedWidth.HasValue && storedWidth.Value > 0)
+                Width = Math.Max(MinWidth, storedWidth.Value);
+            else if (mainWindow != null && mainWindow.Width > 0)
+                Width = Math.Max(MinWidth, mainWindow.Width);
+
+            if (storedHeight.HasValue && storedHeight.Value > 0)
+                Height = Math.Max(MinHeight, storedHeight.Value);
+            else if (mainWindow != null && mainWindow.Height > 0)
+                Height = Math.Max(MinHeight, mainWindow.Height);
+        }
+
+        private void SaveSizeToSettings()
+        {
+            double width = Math.Max(MinWidth, GetCurrentWindowWidth());
+            double height = Math.Max(MinHeight, GetCurrentWindowHeight());
+
+            if (width <= 0 || height <= 0)
                 return;
 
-            if (mainWindow.Width > 0)
-                Width = mainWindow.Width;
+            if (_slot == 1)
+            {
+                _settings.ChatCloneWindow1Width = width;
+                _settings.ChatCloneWindow1Height = height;
+            }
+            else if (_slot == 2)
+            {
+                _settings.ChatCloneWindow2Width = width;
+                _settings.ChatCloneWindow2Height = height;
+            }
 
-            if (mainWindow.Height > 0)
-                Height = mainWindow.Height;
+            ConfigService.SaveDeferred(_settings);
+        }
+
+        private double GetCurrentWindowWidth()
+        {
+            if (!double.IsNaN(Width) && Width > 0)
+                return Width;
+
+            if (ActualWidth > 0)
+                return ActualWidth;
+
+            return 0;
+        }
+
+        private double GetCurrentWindowHeight()
+        {
+            if (!double.IsNaN(Height) && Height > 0)
+                return Height;
+
+            if (ActualHeight > 0)
+                return ActualHeight;
+
+            return 0;
         }
 
         private void EnsureCloneTopmost()

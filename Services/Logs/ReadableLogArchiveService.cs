@@ -17,6 +17,14 @@ namespace TWChatOverlay.Services
     {
         private sealed record SourceLogFile(string Path, DateTime Date);
 
+        public sealed record LogArchiveInitializationResult(IReadOnlyList<string> TimedOutFiles)
+        {
+            public static LogArchiveInitializationResult Empty { get; } =
+                new(Array.Empty<string>());
+
+            public bool HasTimedOutFiles => TimedOutFiles.Count > 0;
+        }
+
         private static readonly UTF8Encoding Utf8BomEncoding = new(encoderShouldEmitUTF8Identifier: true);
         private static readonly UTF8Encoding Utf8NoBomEncoding = new(encoderShouldEmitUTF8Identifier: false);
         private static readonly Regex ExpDecreaseHundredBillionRegex = new(
@@ -50,6 +58,7 @@ namespace TWChatOverlay.Services
         private const string ContentArchiveMigrationKey = "content-archive-experience-removal";
         private const int CurrentContentArchiveMigrationVersion = 1;
         private const string RawLogRebuildCheckpointKey = "raw-log-rebuild";
+        private static readonly TimeSpan SourceLogFileReadTimeout = TimeSpan.FromMinutes(1);
         private const string AbandonDaySummarySuffix = ".summary.day.json";
         private readonly Dictionary<DateTime, AbandonMonthlySummarySnapshotEntry> _abandonDayBuffer = new();
 
@@ -66,7 +75,7 @@ namespace TWChatOverlay.Services
             _stateDirectory = Path.Combine(_rootDirectory, "_state");
         }
 
-        public async Task EnsureInitializedFromRawLogsAsync(
+        public async Task<LogArchiveInitializationResult> EnsureInitializedFromRawLogsAsync(
             string chatLogFolderPath,
             LogAnalysisService logAnalysisService,
             Func<string, bool> isContentRelevant,
@@ -75,10 +84,10 @@ namespace TWChatOverlay.Services
             CancellationToken cancellationToken = default)
         {
             if (string.IsNullOrWhiteSpace(chatLogFolderPath) || !Directory.Exists(chatLogFolderPath))
-                return;
+                return LogArchiveInitializationResult.Empty;
 
             if (logAnalysisService == null || isContentRelevant == null)
-                return;
+                return LogArchiveInitializationResult.Empty;
 
             await _buildGate.WaitAsync(cancellationToken).ConfigureAwait(false);
             try
@@ -86,7 +95,7 @@ namespace TWChatOverlay.Services
                 cancellationToken.ThrowIfCancellationRequested();
                 var allSourceFiles = DiscoverSourceLogFiles(chatLogFolderPath, sourceDateFilter);
                 if (allSourceFiles.Count == 0)
-                    return;
+                    return LogArchiveInitializationResult.Empty;
 
                 DateTime? lastCompletedDate = LoadRawLogRebuildCheckpoint();
                 var sourceFiles = allSourceFiles;
@@ -180,7 +189,7 @@ namespace TWChatOverlay.Services
 
                 EnsureArchiveDirectoriesExist();
 
-                await BuildFromRawLogsAsync(
+                return await BuildFromRawLogsAsync(
                     sourceFiles,
                     logAnalysisService,
                     isContentRelevant,
@@ -319,7 +328,7 @@ namespace TWChatOverlay.Services
             }
         }
 
-        private async Task BuildFromRawLogsAsync(
+        private async Task<LogArchiveInitializationResult> BuildFromRawLogsAsync(
             IReadOnlyList<SourceLogFile> sourceFiles,
             LogAnalysisService logAnalysisService,
             Func<string, bool> isContentRelevant,
@@ -335,6 +344,7 @@ namespace TWChatOverlay.Services
             DropItemResolver.DropItemFilterSnapshot filterSnapshot = await DropItemResolver.LoadDefaultFilterSnapshotAsync().ConfigureAwait(false);
             _abandonDayBuffer.Clear();
             using var pendingArchiveWrites = new ArchiveWriteBatch();
+            var timedOutFiles = new List<string>();
             int total = sourceFiles.Count;
             DateTime? lastProcessedDate = null;
             for (int i = 0; i < sourceFiles.Count; i++)
@@ -354,7 +364,7 @@ namespace TWChatOverlay.Services
 
                 bool hasArchiveWriteTarget = writeShout || writeExp || writeItem || writeContent || writeAbandon;
 
-                ProcessSourceLinesMerged(source.Path, cancellationToken, line =>
+                SourceFileReadOutcome outcome = await ProcessSourceLinesMergedAsync(source.Path, cancellationToken, line =>
                 {
                     cancellationToken.ThrowIfCancellationRequested();
                     var analysis = logAnalysisService.Analyze(line, isRealTime: false, filterSnapshot);
@@ -385,7 +395,14 @@ namespace TWChatOverlay.Services
                                 pendingArchiveWrites);
                         }
                     }
-                });
+                }).ConfigureAwait(false);
+
+                if (outcome == SourceFileReadOutcome.TimedOut)
+                {
+                    timedOutFiles.Add(source.Path);
+                    onProgressText?.Invoke($"{logDate:yyyy-MM-dd} 처리 시간이 1분을 넘겨 다음 파일로 넘어갑니다...", i + 1, total);
+                }
+
                 lastProcessedDate = logDate;
             }
             pendingArchiveWrites.FlushAll();
@@ -393,6 +410,8 @@ namespace TWChatOverlay.Services
             RemoveExactDuplicateLinesFromArchiveFiles(pendingArchiveWrites.TouchedPaths);
             if (lastProcessedDate.HasValue)
                 SaveRawLogRebuildCheckpoint(lastProcessedDate.Value);
+
+            return new LogArchiveInitializationResult(timedOutFiles);
         }
 
         private static List<SourceLogFile> DiscoverSourceLogFiles(string chatLogFolderPath, Func<DateTime, bool>? sourceDateFilter)
@@ -898,7 +917,14 @@ namespace TWChatOverlay.Services
         }
 
 
-        private static void ProcessSourceLinesMerged(string path, CancellationToken cancellationToken, Action<string> onLine)
+        private enum SourceFileReadOutcome
+        {
+            Completed,
+            TimedOut,
+            Failed
+        }
+
+        private static async Task<SourceFileReadOutcome> ProcessSourceLinesMergedAsync(string path, CancellationToken cancellationToken, Action<string> onLine)
         {
             Encoding encoding = Encoding.GetEncoding(949);
             const int maxAttempts = 5;
@@ -908,20 +934,25 @@ namespace TWChatOverlay.Services
             {
                 try
                 {
+                    DateTime deadlineUtc = DateTime.UtcNow.Add(SourceLogFileReadTimeout);
                     using var stream = new FileStream(
                         path,
                         FileMode.Open,
                         FileAccess.Read,
                         FileShare.ReadWrite,
                         bufferSize: streamBufferSize,
-                        FileOptions.SequentialScan);
+                        FileOptions.SequentialScan | FileOptions.Asynchronous);
                     using var reader = new StreamReader(stream, encoding, detectEncodingFromByteOrderMarks: true, bufferSize: streamBufferSize);
 
                     string? pending = null;
-                    while (!reader.EndOfStream)
+                    while (true)
                     {
                         cancellationToken.ThrowIfCancellationRequested();
-                        string? raw = reader.ReadLine();
+
+                        string? raw = await ReadLineWithTimeoutAsync(reader, cancellationToken, deadlineUtc).ConfigureAwait(false);
+                        if (raw == null)
+                            break;
+
                         if (string.IsNullOrWhiteSpace(raw))
                             continue;
 
@@ -940,29 +971,61 @@ namespace TWChatOverlay.Services
                         }
 
                         onLine(pending);
+                        if (DateTime.UtcNow >= deadlineUtc)
+                            throw new TimeoutException();
                         pending = current;
                     }
 
                     if (!string.IsNullOrWhiteSpace(pending))
+                    {
                         onLine(pending);
-                    return;
+                        if (DateTime.UtcNow >= deadlineUtc)
+                            throw new TimeoutException();
+                    }
+                    return SourceFileReadOutcome.Completed;
+                }
+                catch (TimeoutException)
+                {
+                    AppLogger.Warn($"Failed to stream source chat log '{path}' because reading it took more than {SourceLogFileReadTimeout.TotalMinutes:0} minute(s). Skipping the rest of the file.");
+                    return SourceFileReadOutcome.TimedOut;
                 }
                 catch (IOException ex)
                 {
                     if (attempt == maxAttempts)
                     {
                         AppLogger.Warn($"Failed to stream source chat log '{path}' after {maxAttempts} attempts.", ex);
-                        return;
+                        return SourceFileReadOutcome.Failed;
                     }
 
-                    Thread.Sleep(120 * attempt);
+                    await Task.Delay(120 * attempt, cancellationToken).ConfigureAwait(false);
                 }
                 catch (Exception ex)
                 {
                     AppLogger.Warn($"Failed to stream source chat log '{path}'.", ex);
-                    return;
+                    return SourceFileReadOutcome.Failed;
                 }
             }
+
+            return SourceFileReadOutcome.Failed;
+        }
+
+        private static async Task<string?> ReadLineWithTimeoutAsync(
+            StreamReader reader,
+            CancellationToken cancellationToken,
+            DateTime deadlineUtc)
+        {
+            TimeSpan remaining = deadlineUtc - DateTime.UtcNow;
+            if (remaining <= TimeSpan.Zero)
+                throw new TimeoutException();
+
+            Task<string?> readTask = reader.ReadLineAsync();
+            _ = readTask.ContinueWith(
+                t => _ = t.Exception,
+                CancellationToken.None,
+                TaskContinuationOptions.OnlyOnFaulted | TaskContinuationOptions.ExecuteSynchronously,
+                TaskScheduler.Default);
+
+            return await readTask.WaitAsync(remaining, cancellationToken).ConfigureAwait(false);
         }
 
         private static bool HasUsableArchiveContent(string path)
