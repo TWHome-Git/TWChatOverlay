@@ -1,0 +1,1163 @@
+﻿{
+    "items":  [
+                  {
+                      "name":  "신조의 정수",
+                      "grade":  "Normal"
+                  },
+                  {
+                      "name":  "월광석",
+                      "grade":  "Normal"
+                  },
+                  {
+                      "name":  "안식의 매서운 칼날",
+                      "grade":  "Normal",
+                      "abbr" : "안식 어빌리티"
+                  },
+                  {
+                      "name":  "안식의 예리한 칼날",
+                      "grade":  "Normal",
+                      "abbr" : "안식 어빌리티"
+                  },
+                  {
+                      "name":  "안식의 마력 증폭",
+                      "grade":  "Normal",
+                      "abbr" : "안식 어빌리티"
+                  },
+                  {
+                      "name":  "안식의 백마법 증폭",
+                      "grade":  "Normal",
+                      "abbr" : "안식 어빌리티"
+                  },
+                  {
+                      "name":  "불사의 적중검",
+                      "grade":  "Normal",
+                      "abbr" : "안식 어빌리티"
+                  },
+                  {
+                      "name":  "불사의 치명타",
+                      "grade":  "Normal",
+                      "abbr" : "안식 어빌리티"
+                  },
+                  {
+                      "name":  "불사의 생명력",
+                      "grade":  "Normal",
+                      "abbr" : "안식 어빌리티"
+                  },
+                  {
+                      "name":  "불사의 기민함",
+                      "grade":  "Normal",
+                      "abbr" : "안식 어빌리티"
+                  },
+                  {
+                      "name":  "은월의 결정(좌)",
+                      "grade":  "Normal"
+                  },
+                  {
+                      "name":  "은월의 결정(우)",
+                      "grade":  "Normal"
+                  },
+                  {
+                      "name":  "야성의 매서운 칼날",
+                      "grade":  "Normal",
+                      "abbr" : "야성 어빌리티"
+                  },
+                  {
+                      "name":  "야성의 예리한 칼날",
+                      "grade":  "Normal",
+                      "abbr" : "야성 어빌리티"
+                  },
+                  {
+                      "name":  "야성의 마력 증폭",
+                      "grade":  "Normal",
+                      "abbr" : "야성 어빌리티"
+                  },
+                  {
+                      "name":  "야성의 백마법 증폭",
+                      "grade":  "Normal",
+                      "abbr" : "야성 어빌리티"
+                  },
+                  {
+                      "name":  "야성의 적중검",
+                      "grade":  "Normal",
+                      "abbr" : "야성 어빌리티"
+                  },
+                  {
+                      "name":  "야성의 치명타",
+                      "grade":  "Normal",
+                      "abbr" : "야성 어빌리티"
+                  },
+                  {
+                      "name":  "야성의 생명력",
+                      "grade":  "Normal",
+                      "abbr" : "야성 어빌리티"
+                  },
+                  {
+                      "name":  "야성의 기민함",
+                      "grade":  "Normal",
+                      "abbr" : "야성 어빌리티"
+                  },
+                  {
+                      "name":  "야성의 민첩함",
+                      "grade":  "Normal",
+                      "abbr" : "야성 어빌리티"
+                  },
+                  {
+                      "name":  "야성의 마법 보호(갑옷)",
+                      "grade":  "Normal",
+                      "abbr" : "야성 어빌리티"
+                  },
+                  {
+                      "name":  "야성의 마법 보호(손목)",
+                      "grade":  "Normal",
+                      "abbr" : "야성 어빌리티"
+                  },
+                  {
+                      "name":  "야성의 갑옷 연마",
+                      "grade":  "Normal",
+                      "abbr" : "야성 어빌리티"
+                  },
+                  {
+                      "name":  "상실의 매서운 칼날",
+                      "grade":  "Normal",
+                      "abbr" : "상실 어빌리티"
+                  },
+                  {
+                      "name":  "상실의 예리한 칼날",
+                      "grade":  "Normal",
+                      "abbr" : "상실 어빌리티"
+                  },
+                  {
+                      "name":  "상실의 마력 증폭",
+                      "grade":  "Normal",
+                      "abbr" : "상실 어빌리티"
+                  },
+                  {
+                      "name":  "상실의 백마법 증폭",
+                      "grade":  "Normal",
+                      "abbr" : "상실 어빌리티"
+                  },
+                  {
+                      "name":  "상실의 적중검",
+                      "grade":  "Normal",
+                      "abbr" : "상실 어빌리티"
+                  },
+                  {
+                      "name":  "상실의 치명타",
+                      "grade":  "Normal",
+                      "abbr" : "상실 어빌리티"
+                  },
+                  {
+                      "name":  "상실의 생명력",
+                      "grade":  "Normal",
+                      "abbr" : "상실 어빌리티"
+                  },
+                  {
+                      "name":  "상실의 기민함",
+                      "grade":  "Normal",
+                      "abbr" : "상실 어빌리티"
+                  },
+                  {
+                      "name":  "상실의 민첩함",
+                      "grade":  "Normal",
+                      "abbr" : "상실 어빌리티"
+                  },
+                  {
+                      "name":  "상실의 마법 보호(갑옷)",
+                      "grade":  "Normal",
+                      "abbr" : "상실 어빌리티"
+                  },
+                  {
+                      "name":  "상실의 마법 보호(손목)",
+                      "grade":  "Normal",
+                      "abbr" : "상실 어빌리티"
+                  },
+                  {
+                      "name":  "상실의 갑옷 연마",
+                      "grade":  "Normal",
+                      "abbr" : "상실 어빌리티"
+                  },
+                  {
+                      "name":  "고대 신조의 깃털",
+                      "grade":  "Normal",
+                      "abbr" : "신조의 깃털"
+                  },
+                  {
+                      "name":  "어비스 헬름",
+                      "grade":  "Rare",
+                      "abbr" : "어비스 장비"
+                  },
+                  {
+                      "name":  "어비스 아뮬렛",
+                      "grade":  "Rare",
+                      "abbr" : "어비스 장비"
+                  },
+                  {
+                      "name":  "어비스 건틀렛",
+                      "grade":  "Rare",
+                      "abbr" : "어비스 장비"
+                  },
+                  {
+                      "name":  "어비스 윙",
+                      "grade":  "Rare",
+                      "abbr" : "어비스 장비"
+                  },
+                  {
+                      "name":  "어비스 부츠",
+                      "grade":  "Rare",
+                      "abbr" : "어비스 장비"
+                  },
+                  {
+                      "name":  "어비스 리플렉트 아머",
+                      "grade":  "Rare",
+                      "abbr" : "어비스 장비"
+                  },
+                  {
+                      "name":  "어비스 로브",
+                      "grade":  "Rare",
+                      "abbr" : "어비스 장비"
+                  },
+                  {
+                      "name":  "어비스 아머",
+                      "grade":  "Rare",
+                      "abbr" : "어비스 장비"
+                  },
+                  {
+                      "name":  "어비스 슈츠",
+                      "grade":  "Rare",
+                      "abbr" : "어비스 장비"
+                  },
+                  {
+                      "name":  "어비스 메일",
+                      "grade":  "Rare",
+                      "abbr" : "어비스 장비"
+                  },
+                  {
+                      "name":  "어비스 리스트",
+                      "grade":  "Rare",
+                      "abbr" : "어비스 장비"
+                  },
+                  {
+                      "name":  "어비스 마법 탄창",
+                      "grade":  "Rare",
+                      "abbr" : "어비스 장비"
+                  },
+                  {
+                      "name":  "어비스 방패",
+                      "grade":  "Rare",
+                      "abbr" : "어비스 장비"
+                  },
+                  {
+                      "name":  "어비스 물리 탄창",
+                      "grade":  "Rare",
+                      "abbr" : "어비스 장비"
+                  },
+                  {
+                      "name":  "어비스 수정구",
+                      "grade":  "Rare",
+                      "abbr" : "어비스 장비"
+                  },
+                  {
+                      "name":  "어비스 밴드",
+                      "grade":  "Rare",
+                      "abbr" : "어비스 장비"
+                  },
+                  {
+                      "name":  "어비스 스펠북",
+                      "grade":  "Rare",
+                      "abbr" : "어비스 장비"
+                  },
+                  {
+                      "name":  "어비스 암릿",
+                      "grade":  "Rare",
+                      "abbr" : "어비스 장비"
+                  },
+                  {
+                      "name":  "어비스 펜듈럼",
+                      "grade":  "Rare",
+                      "abbr" : "어비스 장비"
+                  },
+                  {
+                      "name":  "어비스 대거",
+                      "grade":  "Rare",
+                      "abbr" : "어비스 장비"
+                  },
+                  {
+                      "name":  "어비스 나이프",
+                      "grade":  "Rare",
+                      "abbr" : "어비스 장비"
+                  },
+                  {
+                      "name":  "어비스 블레이드",
+                      "grade":  "Rare",
+                      "abbr" : "어비스 장비"
+                  },
+                  {
+                      "name":  "어비스 액스",
+                      "grade":  "Rare",
+                      "abbr" : "어비스 장비"
+                  },
+                  {
+                      "name":  "어비스 로드",
+                      "grade":  "Rare",
+                      "abbr" : "어비스 장비"
+                  },
+                  {
+                      "name":  "어비스 크리스",
+                      "grade":  "Rare",
+                      "abbr" : "어비스 장비"
+                  },
+                  {
+                      "name":  "어비스 크리스(sub)",
+                      "grade":  "Rare",
+                      "abbr" : "어비스 장비"
+                  },
+                  {
+                      "name":  "어비스 마나피스톨",
+                      "grade":  "Rare",
+                      "abbr" : "어비스 장비"
+                  },
+                  {
+                      "name":  "어비스 메이스",
+                      "grade":  "Rare",
+                      "abbr" : "어비스 장비"
+                  },
+                  {
+                      "name":  "어비스 글라디우스",
+                      "grade":  "Rare",
+                      "abbr" : "어비스 장비"
+                  },
+                  {
+                      "name":  "어비스 글라디우스(sub)",
+                      "grade":  "Rare",
+                      "abbr" : "어비스 장비"
+                  },
+                  {
+                      "name":  "어비스 피스톨",
+                      "grade":  "Rare",
+                      "abbr" : "어비스 장비"
+                  },
+                  {
+                      "name":  "어비스 스틱",
+                      "grade":  "Rare",
+                      "abbr" : "어비스 장비"
+                  },
+                  {
+                      "name":  "어비스 사이드",
+                      "grade":  "Rare",
+                      "abbr" : "어비스 장비"
+                  },
+                  {
+                      "name":  "어비스 레이피어",
+                      "grade":  "Rare",
+                      "abbr" : "어비스 장비"
+                  },
+                  {
+                      "name":  "어비스 셉터",
+                      "grade":  "Rare",
+                      "abbr" : "어비스 장비"
+                  },
+                  {
+                      "name":  "어비스 소드셰이프",
+                      "grade":  "Rare",
+                      "abbr" : "어비스 장비"
+                  },
+                  {
+                      "name":  "어비스 스몰소드",
+                      "grade":  "Rare",
+                      "abbr" : "어비스 장비"
+                  },
+                  {
+                      "name":  "어비스 스태프",
+                      "grade":  "Rare",
+                      "abbr" : "어비스 장비"
+                  },
+                  {
+                      "name":  "어비스 아밍소드",
+                      "grade":  "Rare",
+                      "abbr" : "어비스 장비"
+                  },
+                  {
+                      "name":  "어비스 완드",
+                      "grade":  "Rare",
+                      "abbr" : "어비스 장비"
+                  },
+                  {
+                      "name":  "어비스 소드",
+                      "grade":  "Rare",
+                      "abbr" : "어비스 장비"
+                  },
+                  {
+                      "name":  "어비스 스피어",
+                      "grade":  "Rare",
+                      "abbr" : "어비스 장비"
+                  },
+                  {
+                      "name":  "어비스 휩",
+                      "grade":  "Rare",
+                      "abbr" : "어비스 장비"
+                  },
+                  {
+                      "name":  "어비스 카라",
+                      "grade":  "Rare",
+                      "abbr" : "어비스 장비"
+                  },
+                  {
+                      "name":  "어비스 클로",
+                      "grade":  "Rare",
+                      "abbr" : "어비스 장비"
+                  },
+                  {
+                      "name":  "어비스 페이크소드",
+                      "grade":  "Rare",
+                      "abbr" : "어비스 장비"
+                  },
+                  {
+                      "name":  "어비스 토템",
+                      "grade":  "Rare",
+                      "abbr" : "어비스 장비"
+                  },
+                  {
+                      "name":  "어비스 시미터",
+                      "grade":  "Rare",
+                      "abbr" : "어비스 장비"
+                  },
+                  {
+                      "name":  "어비스 플레일",
+                      "grade":  "Rare",
+                      "abbr" : "어비스 장비"
+                  },
+                  {
+                      "name":  "어비스 해머",
+                      "grade":  "Rare",
+                      "abbr" : "어비스 장비"
+                  },
+                  {
+                      "name":  "어비스 핸드런처",
+                      "grade":  "Rare",
+                      "abbr" : "어비스 장비"
+                  },
+                  {
+                      "name":  "어비스 핸드벨",
+                      "grade":  "Rare",
+                      "abbr" : "어비스 장비"
+                  },
+                  {
+                      "name":  "신조의 눈물",
+                      "grade":  "Rare"
+                  },
+                  {
+                      "name":  "최상급 마정석",
+                      "grade":  "Rare"
+                  },
+                  {
+                      "name":  "장비 강화 효과 되돌리기 주문서",
+                      "grade":  "Rare",
+                      "abbr" : "되돌리기 주문서"
+                  },
+                  {
+                      "name":  "장비 강화 재설정 주문서",
+                      "grade":  "Rare" ,
+                      "abbr" : "재설정 주문서"
+                  },
+                  {
+                      "name":  "스페셜 스킬 (ⓟ 연마 강화)",
+                      "grade":  "Rare",
+                      "abbr" : "연마 강화"
+                  },
+                  {
+                      "name":  "스페셜 스킬 (ⓟ 고급 방어구 연마)",
+                      "grade":  "Rare",
+                      "abbr" : "고급 방어구 연마"
+                  },
+                  {
+                      "name":  "스페셜 스킬 (ⓟ 고급 체력 연마)",
+                      "grade":  "Rare",
+                      "abbr" : "고급 체력 연마"
+
+                  },
+                  {
+                      "name":  "룬의 결정",
+                      "grade":  "Rare"
+                  },
+                  {
+                      "name":  "고대 기사의 투구 파편",
+                      "grade":  "Rare",
+                      "abbr" : "고대 투구 파편"
+                  },
+                  {
+                      "name":  "요새 수호자의 보호구 조각",
+                      "grade":  "Rare",
+                      "abbr" : "요새 보호구 조각"
+                  },
+                  {
+                      "name":  "고대 기사의 갑옷 파편",
+                      "grade":  "Rare",
+                      "abbr" : "고대 갑옷 파편"
+                  },
+                  {
+                      "name":  "요새 문양이 새겨진 판금 조각",
+                      "grade":  "Rare",
+                      "abbr" : "요새 판금 조각"
+                  },
+                  {
+                      "name":  "고대 기사의 팬던트 파편",
+                      "grade":  "Rare",
+                      "abbr" : "고대 펜던트 파편"
+                  },
+                  {
+                      "name":  "요새 문양이 새겨진 목걸이 조각",
+                      "grade":  "Rare",
+                      "abbr" : "요새 목걸이 조각"
+                  },
+                  {
+                      "name":  "고대 기사의 방패 조각",
+                      "grade":  "Rare",
+                      "abbr" : "고대 방패 조각"
+                  },
+                  {
+                      "name":  "요새 문양이 새겨진 금속 파편",
+                      "grade":  "Rare",
+                      "abbr" : "요새 금속 파편"
+                  },
+                  {
+                      "name":  "고대 기사의 건틀렛 파편",
+                      "grade":  "Rare",
+                      "abbr" : "고대 건틀렛 파편"
+                  },
+                  {
+                      "name":  "요새 문양이 새겨진 가죽 조각",
+                      "grade":  "Rare",
+                      "abbr" : "요새 가죽 조각"
+                  },
+                  {
+                      "name":  "고대 기사의 휘장 조각",
+                      "grade":  "Rare",
+                      "abbr" : "고대 휘장 조각"
+                  },
+                  {
+                      "name":  "요새 수호자의 장식 깃털",
+                      "grade":  "Rare",
+                      "abbr" : "요새 장식 깃털"
+                  },
+                  {
+                      "name":  "고대 기사의 각갑 파편",
+                      "grade":  "Rare",
+                      "abbr" : "고대 각갑 파편"
+                  },
+                  {
+                      "name":  "요새 수호자의 부츠 조각",
+                      "grade":  "Rare",
+                      "abbr" : "요새 부츠 조각"
+                  },
+                  {
+                      "name":  "아크론 요새의 문양",
+                      "grade":  "Rare",
+                      "abbr" : "아크론 문양"
+                  },
+                  {
+                      "name":  "렐릭 부가옵션 재설정 스톤",
+                      "grade":  "Special",
+                      "abbr" : "렐릭 부가 재설정"
+                  },
+                  {
+                      "name":  "렐릭 어빌리티 매직리폼",
+                      "grade":  "Special",
+                      "abbr" : "렐릭 어빌 재설정"
+                  },
+                  {
+                      "name":  "설계자의 반지",
+                      "grade":  "Special"
+                  },
+                  {
+                      "name":  "계승의 결정체 (무기, 손목)",
+                      "grade":  "Special",
+                      "abbr" : "계승의 결정체"
+                  },
+                  {
+                      "name":  "계승의 결정체 (방어구)",
+                      "grade":  "Special",
+                      "abbr" : "계승의 결정체"
+                  },
+                  {
+                      "name":  "갤럭시 스톤",
+                      "grade":  "Special"
+                  },
+                  {
+                      "name":  "에테르 오브",
+                      "grade":  "Special"
+                  },
+                  {
+                      "name":  "에모티스",
+                      "grade":  "Special"
+                  },
+                  {
+                      "name":  "세크리드 룬스톤",
+                      "grade":  "Special"
+                  },
+                  {
+                      "name":  "세크리드 주화 주머니",
+                      "grade":  "Special",
+                      "abbr" : "세크 주머니"
+                  },
+                  {
+                      "name":  "에테르의 주사기",
+                      "grade":  "Special"
+                  },
+                  {
+                      "name":  "연금술사의 시험관",
+                      "grade":  "Special"
+                  },
+                  {
+                      "name":  "세크리드 주화 (무기)",
+                      "grade":  "Special",
+                      "abbr" : "세크리드 주화"
+                  },
+                  {
+                      "name":  "찬란한 마력의 가루",
+                      "grade":  "Special",
+                      "abbr" : "찬란한 마력 가루"
+                  },
+                  {
+                      "name":  "테네브리스 헬름",
+                      "grade":  "Special",
+                      "abbr" : "테네브리스 장비"
+                  },
+                  {
+                      "name":  "테네브리스 아뮬렛",
+                      "grade":  "Special",
+                      "abbr" : "테네브리스 장비"
+                  },
+                  {
+                      "name":  "테네브리스 건틀렛",
+                      "grade":  "Special",
+                      "abbr" : "테네브리스 장비"
+                  },
+                  {
+                      "name":  "테네브리스 윙",
+                      "grade":  "Special",
+                      "abbr" : "테네브리스 장비"
+                  },
+                  {
+                      "name":  "테네브리스 부츠",
+                      "grade":  "Special",
+                      "abbr" : "테네브리스 장비"
+                  },
+                  {
+                      "name":  "테네브리스 대거",
+                      "grade":  "Special",
+                      "abbr" : "테네브리스 장비"
+                  },
+                  {
+                      "name":  "테네브리스 나이프",
+                      "grade":  "Special",
+                      "abbr" : "테네브리스 장비"
+                  },
+                  {
+                      "name":  "테네브리스 블레이드",
+                      "grade":  "Special",
+                      "abbr" : "테네브리스 장비"
+                  },
+                  {
+                      "name":  "테네브리스 액스",
+                      "grade":  "Special",
+                      "abbr" : "테네브리스 장비"
+                  },
+                  {
+                      "name":  "테네브리스 로드",
+                      "grade":  "Special",
+                      "abbr" : "테네브리스 장비"
+                  },
+                  {
+                      "name":  "테네브리스 크리스",
+                      "grade":  "Special",
+                      "abbr" : "테네브리스 장비"
+                  },
+                  {
+                      "name":  "테네브리스 크리스(sub)",
+                      "grade":  "Special",
+                      "abbr" : "테네브리스 장비"
+                  },
+                  {
+                      "name":  "테네브리스 마나피스톨",
+                      "grade":  "Special",
+                      "abbr" : "테네브리스 장비"
+                  },
+                  {
+                      "name":  "테네브리스 메이스",
+                      "grade":  "Special",
+                      "abbr" : "테네브리스 장비"
+                  },
+                  {
+                      "name":  "테네브리스 글라디우스",
+                      "grade":  "Special",
+                      "abbr" : "테네브리스 장비"
+                  },
+                  {
+                      "name":  "테네브리스 글라디우스(sub)",
+                      "grade":  "Special",
+                      "abbr" : "테네브리스 장비"
+                  },
+                  {
+                      "name":  "테네브리스 피스톨",
+                      "grade":  "Special",
+                      "abbr" : "테네브리스 장비"
+                  },
+                  {
+                      "name":  "테네브리스 스틱",
+                      "grade":  "Special",
+                      "abbr" : "테네브리스 장비"
+                  },
+                  {
+                      "name":  "테네브리스 사이드",
+                      "grade":  "Special",
+                      "abbr" : "테네브리스 장비"
+                  },
+                  {
+                      "name":  "테네브리스 레이피어",
+                      "grade":  "Special",
+                      "abbr" : "테네브리스 장비"
+                  },
+                  {
+                      "name":  "테네브리스 셉터",
+                      "grade":  "Special",
+                      "abbr" : "테네브리스 장비"
+                  },
+                  {
+                      "name":  "테네브리스 소드셰이프",
+                      "grade":  "Special",
+                      "abbr" : "테네브리스 장비"
+                  },
+                  {
+                      "name":  "테네브리스 스몰소드",
+                      "grade":  "Special",
+                      "abbr" : "테네브리스 장비"
+                  },
+                  {
+                      "name":  "테네브리스 스태프",
+                      "grade":  "Special",
+                      "abbr" : "테네브리스 장비"
+                  },
+                  {
+                      "name":  "테네브리스 아밍소드",
+                      "grade":  "Special",
+                      "abbr" : "테네브리스 장비"
+                  },
+                  {
+                      "name":  "테네브리스 완드",
+                      "grade":  "Special",
+                      "abbr" : "테네브리스 장비"
+                  },
+                  {
+                      "name":  "테네브리스 소드",
+                      "grade":  "Special",
+                      "abbr" : "테네브리스 장비"
+                  },
+                  {
+                      "name":  "테네브리스 스피어",
+                      "grade":  "Special",
+                      "abbr" : "테네브리스 장비"
+                  },
+                  {
+                      "name":  "테네브리스 휩",
+                      "grade":  "Special",
+                      "abbr" : "테네브리스 장비"
+                  },
+                  {
+                      "name":  "테네브리스 카라",
+                      "grade":  "Special",
+                      "abbr" : "테네브리스 장비"
+                  },
+                  {
+                      "name":  "테네브리스 클로",
+                      "grade":  "Special",
+                      "abbr" : "테네브리스 장비"
+                  },
+                  {
+                      "name":  "테네브리스 페이크소드",
+                      "grade":  "Special",
+                      "abbr" : "테네브리스 장비"
+                  },
+                  {
+                      "name":  "테네브리스 토템",
+                      "grade":  "Special",
+                      "abbr" : "테네브리스 장비"
+                  },
+                  {
+                      "name":  "테네브리스 시미터",
+                      "grade":  "Special",
+                      "abbr" : "테네브리스 장비"
+                  },
+                  {
+                      "name":  "테네브리스 플레일",
+                      "grade":  "Special",
+                      "abbr" : "테네브리스 장비"
+                  },
+                  {
+                      "name":  "테네브리스 해머",
+                      "grade":  "Special",
+                      "abbr" : "테네브리스 장비"
+                  },
+                  {
+                      "name":  "테네브리스 핸드런처",
+                      "grade":  "Special",
+                      "abbr" : "테네브리스 장비"
+                  },
+                  {
+                      "name":  "테네브리스 핸드벨",
+                      "grade":  "Special",
+                      "abbr" : "테네브리스 장비"
+                  },
+                  {
+                      "name":  "이클립스 헬름",
+                      "grade":  "Special",
+                      "abbr" : "이클립스 장비"
+                  },
+                  {
+                      "name":  "이클립스 아뮬렛",
+                      "grade":  "Special",
+                      "abbr" : "이클립스 장비"
+                  },
+                  {
+                      "name":  "이클립스 건틀렛",
+                      "grade":  "Special",
+                      "abbr" : "이클립스 장비"
+                  },
+                  {
+                      "name":  "이클립스 윙",
+                      "grade":  "Special",
+                      "abbr" : "이클립스 장비"
+                  },
+                  {
+                      "name":  "이클립스 부츠",
+                      "grade":  "Special",
+                      "abbr" : "이클립스 장비"
+                  },
+                  {
+                      "name":  "이클립스 리플렉트 아머",
+                      "grade":  "Special",
+                      "abbr" : "이클립스 장비"
+                  },
+                  {
+                      "name":  "이클립스 로브",
+                      "grade":  "Special",
+                      "abbr" : "이클립스 장비"
+                  },
+                  {
+                      "name":  "이클립스 아머",
+                      "grade":  "Special",
+                      "abbr" : "이클립스 장비"
+                  },
+                  {
+                      "name":  "이클립스 슈츠",
+                      "grade":  "Special",
+                      "abbr" : "이클립스 장비"
+                  },
+                  {
+                      "name":  "이클립스 메일",
+                      "grade":  "Special",
+                      "abbr" : "이클립스 장비"
+                  },
+                  {
+                      "name":  "이클립스 리스트",
+                      "grade":  "Special",
+                      "abbr" : "이클립스 장비"
+                  },
+                  {
+                      "name":  "이클립스 마법 탄창",
+                      "grade":  "Special",
+                      "abbr" : "이클립스 장비"
+                  },
+                  {
+                      "name":  "이클립스 방패",
+                      "grade":  "Special",
+                      "abbr" : "이클립스 장비"
+                  },
+                  {
+                      "name":  "이클립스 물리 탄창",
+                      "grade":  "Special",
+                      "abbr" : "이클립스 장비"
+                  },
+                  {
+                      "name":  "이클립스 수정구",
+                      "grade":  "Special",
+                      "abbr" : "이클립스 장비"
+                  },
+                  {
+                      "name":  "이클립스 밴드",
+                      "grade":  "Special",
+                      "abbr" : "이클립스 장비"
+                  },
+                  {
+                      "name":  "이클립스 스펠북",
+                      "grade":  "Special",
+                      "abbr" : "이클립스 장비"
+                  },
+                  {
+                      "name":  "이클립스 암릿",
+                      "grade":  "Special",
+                      "abbr" : "이클립스 장비"
+                  },
+                  {
+                      "name":  "이클립스 펜듈럼",
+                      "grade":  "Special",
+                      "abbr" : "이클립스 장비"
+                  },
+                  {
+                      "name":  "이클립스 대거",
+                      "grade":  "Special",
+                      "abbr" : "이클립스 장비"
+                  },
+                  {
+                      "name":  "이클립스 나이프",
+                      "grade":  "Special",
+                      "abbr" : "이클립스 장비"
+                  },
+                  {
+                      "name":  "이클립스 블레이드",
+                      "grade":  "Special",
+                      "abbr" : "이클립스 장비"
+                  },
+                  {
+                      "name":  "이클립스 액스",
+                      "grade":  "Special",
+                      "abbr" : "이클립스 장비"
+                  },
+                  {
+                      "name":  "이클립스 로드",
+                      "grade":  "Special",
+                      "abbr" : "이클립스 장비"
+                  },
+                  {
+                      "name":  "이클립스 크리스",
+                      "grade":  "Special",
+                      "abbr" : "이클립스 장비"
+                  },
+                  {
+                      "name":  "이클립스 크리스(sub)",
+                      "grade":  "Special",
+                      "abbr" : "이클립스 장비"
+                  },
+                  {
+                      "name":  "이클립스 마나피스톨",
+                      "grade":  "Special",
+                      "abbr" : "이클립스 장비"
+                  },
+                  {
+                      "name":  "이클립스 메이스",
+                      "grade":  "Special",
+                      "abbr" : "이클립스 장비"
+                  },
+                  {
+                      "name":  "이클립스 글라디우스",
+                      "grade":  "Special",
+                      "abbr" : "이클립스 장비"
+                  },
+                  {
+                      "name":  "이클립스 글라디우스(sub)",
+                      "grade":  "Special",
+                      "abbr" : "이클립스 장비"
+                  },
+                  {
+                      "name":  "이클립스 피스톨",
+                      "grade":  "Special",
+                      "abbr" : "이클립스 장비"
+                  },
+                  {
+                      "name":  "이클립스 스틱",
+                      "grade":  "Special",
+                      "abbr" : "이클립스 장비"
+                  },
+                  {
+                      "name":  "이클립스 사이드",
+                      "grade":  "Special",
+                      "abbr" : "이클립스 장비"
+                  },
+                  {
+                      "name":  "이클립스 레이피어",
+                      "grade":  "Special",
+                      "abbr" : "이클립스 장비"
+                  },
+                  {
+                      "name":  "이클립스 셉터",
+                      "grade":  "Special",
+                      "abbr" : "이클립스 장비"
+                  },
+                  {
+                      "name":  "이클립스 소드셰이프",
+                      "grade":  "Special",
+                      "abbr" : "이클립스 장비"
+                  },
+                  {
+                      "name":  "이클립스 스몰소드",
+                      "grade":  "Special",
+                      "abbr" : "이클립스 장비"
+                  },
+                  {
+                      "name":  "이클립스 스태프",
+                      "grade":  "Special",
+                      "abbr" : "이클립스 장비"
+                  },
+                  {
+                      "name":  "이클립스 아밍소드",
+                      "grade":  "Special",
+                      "abbr" : "이클립스 장비"
+                  },
+                  {
+                      "name":  "이클립스 완드",
+                      "grade":  "Special",
+                      "abbr" : "이클립스 장비"
+                  },
+                  {
+                      "name":  "이클립스 소드",
+                      "grade":  "Special",
+                      "abbr" : "이클립스 장비"
+                  },
+                  {
+                      "name":  "이클립스 스피어",
+                      "grade":  "Special",
+                      "abbr" : "이클립스 장비"
+                  },
+                  {
+                      "name":  "이클립스 휩",
+                      "grade":  "Special",
+                      "abbr" : "이클립스 장비"
+                  },
+                  {
+                      "name":  "이클립스 카라",
+                      "grade":  "Special",
+                      "abbr" : "이클립스 장비"
+                  },
+                  {
+                      "name":  "이클립스 클로",
+                      "grade":  "Special",
+                      "abbr" : "이클립스 장비"
+                  },
+                  {
+                      "name":  "이클립스 페이크소드",
+                      "grade":  "Special",
+                      "abbr" : "이클립스 장비"
+                  },
+                  {
+                      "name":  "이클립스 토템",
+                      "grade":  "Special",
+                      "abbr" : "이클립스 장비"
+                  },
+                  {
+                      "name":  "이클립스 시미터",
+                      "grade":  "Special",
+                      "abbr" : "이클립스 장비"
+                  },
+                  {
+                      "name":  "이클립스 플레일",
+                      "grade":  "Special",
+                      "abbr" : "이클립스 장비"
+                  },
+                  {
+                      "name":  "이클립스 해머",
+                      "grade":  "Special",
+                      "abbr" : "이클립스 장비"
+                  },
+                  {
+                      "name":  "이클립스 핸드런처",
+                      "grade":  "Special",
+                      "abbr" : "이클립스 장비"
+                  },
+                  {
+                      "name":  "이클립스 핸드벨",
+                      "grade":  "Special",
+                      "abbr" : "이클립스 장비"
+                  },
+                  {
+                      "name":  "수호자의 영혼석",
+                      "grade":  "Special"
+                  },
+                  {
+                      "name":  "아크론 요새의 변환 장치",
+                      "grade":  "Special",
+                      "abbr" : "변환 장비"
+                  },
+                  {
+                      "name":  "가짜 달여왕 군단의 무구",
+                      "grade":  "Special",
+                      "abbr" : "가짜 무구"
+                  },
+                  {
+                      "name":  "가짜 달여왕 군단의 무기 파편",
+                      "grade":  "Special",
+                      "abbr" : "가짜 무기 파편"
+                  },
+                  {
+                      "name":  "가짜 달여왕 군단의 투구 장식",
+                      "grade":  "Special",
+                      "abbr" : "가짜 투구 장식"
+                  },
+                  {
+                      "name":  "가짜 달여왕 군단의 갑옷 파편",
+                      "grade":  "Special",
+                      "abbr" : "가짜 갑옷 파편"
+                  },
+                  {
+                      "name":  "가짜 달여왕 군단의 펜던트 파편",
+                      "grade":  "Special",
+                      "abbr" : "가짜 펜던트 장식"
+                  },
+                  {
+                      "name":  "가짜 달여왕 군단의 방패 조각",
+                      "grade":  "Special",
+                      "abbr" : "가짜 방패 조각"
+                  },
+                  {
+                      "name":  "가짜 달여왕 군단의 건틀렛 파편",
+                      "grade":  "Special",
+                      "abbr" : "가짜 건틀렛 파편"
+                  },
+                  {
+                      "name":  "가짜 달여왕 군단의 휘장 장식",
+                      "grade":  "Special",
+                      "abbr" : "가짜 휘장 장식"
+                  },
+                  {
+                      "name":  "가짜 달여왕 군단의 각갑 파편",
+                      "grade":  "Special",
+                      "abbr" : "가짜 각갑 파편"
+                  },
+                  {
+                      "name":  "가짜 달여왕 군단의 문양",
+                      "grade":  "Special",
+                      "abbr" : "가짜 문양"
+                  },
+                  {
+                      "name":  "스페셜 스킬 (ⓟ 저격 연마) Lv.6",
+                      "grade":  "Rare",
+                      "abbr" : "저격 연마 LV6"
+                  },
+                  {
+                      "name":  "스페셜 스킬 (ⓟ 저격 연마) Lv.7",
+                      "grade":  "Rare",
+                      "abbr" : "저격 연마 LV7"
+                  },
+                  {
+                      "name":  "스페셜 스킬 (ⓟ 저격 연마) Lv.8",
+                      "grade":  "Rare",
+                      "abbr" : "저격 연마 LV8"
+                  },
+                  {
+                      "name":  "스페셜 스킬 (ⓟ 저격 연마) Lv.9",
+                      "grade":  "Rare",
+                      "abbr" : "저격 연마 LV9"
+                  },
+                  {
+                      "name":  "스페셜 스킬 (ⓟ 저격 연마) Lv.10",
+                      "grade":  "Rare",
+                      "abbr" : "저격 연마 LV10"
+                  },
+                  {
+                      "name":  "달빛 변환 장치",
+                      "grade":  "Special"
+                  },
+                  {
+                      "name":  "에오니스 라피스",
+                      "grade":  "Special"
+                  }
+              ]
+}

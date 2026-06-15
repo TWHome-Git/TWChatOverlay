@@ -1,0 +1,45 @@
+{
+  "version": 1,
+  "bosses": [
+    {
+      "id": "Arkan",
+      "name": "아칸",
+      "category": "field",
+      "enabledByDefault": false,
+      "schedule": {
+        "type": "fixed",
+        "times": ["14:30", "21:30"]
+      }
+    },
+    {
+      "id": "Scherzendo",
+      "name": "스페르첸드",
+      "category": "field",
+      "enabledByDefault": false,
+      "schedule": {
+        "type": "fixed",
+        "times": ["01:00", "04:00", "08:00", "16:00", "19:00", "23:00"]
+      }
+    },
+    {
+      "id": "Origin of Doom",
+      "name": "파멸의 기원",
+      "category": "field",
+      "enabledByDefault": false,
+      "schedule": {
+        "type": "fixed",
+        "times": ["00:30", "11:00", "20:00"]
+      }
+    },
+    {
+      "id": "Confused Land",
+      "name": "혼란한 대지",
+      "category": "field",
+      "enabledByDefault": false,
+      "schedule": {
+        "type": "fixed",
+        "times": ["00:00", "07:00", "13:00", "18:00", "21:00"]
+      }
+    },
+  ]
+}
