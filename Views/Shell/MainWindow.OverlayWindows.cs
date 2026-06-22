@@ -56,6 +56,7 @@ namespace TWChatOverlay.Views
                 ApplyMainTabState(_currentTabTag, persistSettings: false, refreshLogDisplay: false);
                 RestoreSavedChatCloneWindows();
                 SyncChatCloneWindowsVisibility();
+                RequestRefreshLogDisplay();
                 CompleteInitialPresentation();
             }
             else
