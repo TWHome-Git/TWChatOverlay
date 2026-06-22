@@ -70,7 +70,7 @@ namespace TWChatOverlay.Services
 
             if (shouldSchedule)
             {
-                _dispatcher.BeginInvoke(new Action(() => Flush(onBatchReady)), DispatcherPriority.Render);
+                _dispatcher.BeginInvoke(new Action(() => Flush(onBatchReady)), DispatcherPriority.Background);
             }
         }
 
@@ -98,7 +98,7 @@ namespace TWChatOverlay.Services
 
             if (hasMore)
             {
-                _dispatcher.BeginInvoke(new Action(() => Flush(onBatchReady)), DispatcherPriority.Render);
+                _dispatcher.BeginInvoke(new Action(() => Flush(onBatchReady)), DispatcherPriority.Background);
             }
         }
     }

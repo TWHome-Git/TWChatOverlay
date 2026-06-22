@@ -255,6 +255,7 @@ namespace TWChatOverlay.Views
             if (_mainWindow == null)
                 return;
 
+            bool wasVisible = IsVisible;
             ApplySizeFromMainWindow();
 
             bool shouldBeVisible =
@@ -264,8 +265,11 @@ namespace TWChatOverlay.Views
 
             if (shouldBeVisible)
             {
-                if (!IsVisible)
+                if (!wasVisible)
+                {
                     Show();
+                    RefreshLogDisplay();
+                }
             }
             else if (IsVisible)
             {

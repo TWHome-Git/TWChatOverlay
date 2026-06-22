@@ -6,6 +6,7 @@ using System.Net;
 using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Windows;
 using System.Windows.Threading;
 using TWChatOverlay.Models;
@@ -36,8 +37,9 @@ namespace TWChatOverlay.Services
         private string _logPath = null!;
         private long _lastPosition;
         private readonly object _lockObj = new();
-        private readonly DispatcherTimer _pollingTimer;
+        private readonly Timer _pollingTimer;
         private bool _disposed;
+        private int _isPolling;
         private readonly ExperienceService _experienceService;
         private readonly ChatSettings _settings;
         private readonly Encoding _logEncoding;
@@ -69,24 +71,25 @@ namespace TWChatOverlay.Services
             _experienceService = experienceService;
             _settings = settings;
 
-            _pollingTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(PollingIntervalMilliseconds) };
-            _pollingTimer.Tick += (_, _) =>
-            {
-                CheckDateAndPath();
-                ReadLog();
-            };
+            _pollingTimer = new Timer(_ => PollLog(), null, Timeout.InfiniteTimeSpan, Timeout.InfiniteTimeSpan);
             AppLogger.Info("LogService initialized.");
         }
 
         public void Start()
         {
-            _pollingTimer.Start();
+            if (_disposed)
+                return;
+
+            _pollingTimer.Change(TimeSpan.Zero, TimeSpan.FromMilliseconds(PollingIntervalMilliseconds));
             AppLogger.Info("LogService polling started.");
         }
 
         public void Stop()
         {
-            _pollingTimer.Stop();
+            if (_disposed)
+                return;
+
+            _pollingTimer.Change(Timeout.InfiniteTimeSpan, Timeout.InfiniteTimeSpan);
             AppLogger.Info("LogService polling stopped.");
         }
 
@@ -96,10 +99,34 @@ namespace TWChatOverlay.Services
             _disposed = true;
 
             try { Stop(); } catch { }
+            try { _pollingTimer.Dispose(); } catch { }
             GC.SuppressFinalize(this);
         }
 
         #endregion
+
+        private void PollLog()
+        {
+            if (_disposed)
+                return;
+
+            if (Interlocked.Exchange(ref _isPolling, 1) == 1)
+                return;
+
+            try
+            {
+                CheckDateAndPath();
+                ReadLog();
+            }
+            catch (Exception ex)
+            {
+                AppLogger.Error("LogService polling failed.", ex);
+            }
+            finally
+            {
+                Interlocked.Exchange(ref _isPolling, 0);
+            }
+        }
 
         #region Path Management
 
