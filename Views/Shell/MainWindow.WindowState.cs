@@ -484,14 +484,8 @@ namespace TWChatOverlay.Views
                 if (_settings.BuffTrackerWindowTop.HasValue)
                     window.Top = _settings.BuffTrackerWindowTop.Value;
 
-                if (_canShowAuxiliaryWindows)
-                {
-                    window.ApplyVisibility();
-                }
-                else if (window.IsVisible)
-                {
-                    window.Hide();
-                }
+                // Buff tracker visibility is managed independently from the main chat overlay.
+                window.ApplyVisibility();
             }
             catch (Exception ex)
             {
@@ -604,6 +598,7 @@ namespace TWChatOverlay.Views
                 if (_settings.BuffTrackerWindowTop.HasValue)
                     helper.Top = _settings.BuffTrackerWindowTop.Value;
 
+                // Keep the helper window in sync with its own setting, not the main overlay.
                 if (_isAddonPositionMode || _settings.ShowBuffTrackerWindow)
                 {
                     if (!helper.IsVisible)
