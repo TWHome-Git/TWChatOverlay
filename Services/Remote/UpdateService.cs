@@ -1,13 +1,15 @@
-using System;
+﻿using System;
 using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
+using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Reflection;
 using System.Text.Json;
 using System.Threading.Tasks;
 using System.Windows;
+using TWChatOverlay.Views;
 
 namespace TWChatOverlay.Services
 {
@@ -25,6 +27,8 @@ namespace TWChatOverlay.Services
         private const string GitHubRepo = "TWChatOverlay";
         private static readonly string LatestReleaseUrl = $"https://api.github.com/repos/{GitHubOwner}/{GitHubRepo}/releases/latest";
 
+        private sealed record ReleaseInfo(string TagName, Version LatestVersion, string ReleaseBody, string? DownloadUrl);
+
         public static Version GetCurrentVersion()
             => Assembly.GetExecutingAssembly().GetName().Version ?? new Version(0, 0, 0);
 
@@ -39,21 +43,12 @@ namespace TWChatOverlay.Services
                 client.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue("TWChatOverlay", GetCurrentVersion().ToString()));
                 client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/vnd.github+json"));
 
-                var response = await client.GetAsync(LatestReleaseUrl).ConfigureAwait(false);
-                if (!response.IsSuccessStatusCode)
+                ReleaseInfo? release = await GetLatestReleaseInfoAsync(client).ConfigureAwait(false);
+                if (release == null)
                     return UpdateCheckResult.Failed;
 
-                string json = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
-                using var doc = JsonDocument.Parse(json);
-                var root = doc.RootElement;
-
-                string? tagName = root.GetProperty("tag_name").GetString();
-                if (string.IsNullOrWhiteSpace(tagName))
-                    return UpdateCheckResult.Failed;
-
-                Version latestVersion = ParseVersion(tagName);
                 Version currentVersion = GetCurrentVersion();
-                bool hasNewer = latestVersion > currentVersion;
+                bool hasNewer = release.LatestVersion > currentVersion;
                 bool shouldPrompt = forceInstallLatest || hasNewer;
 
                 if (!shouldPrompt)
@@ -62,30 +57,27 @@ namespace TWChatOverlay.Services
                     {
                         await InvokeOnUIAsync(() =>
                         {
-                            MessageBox.Show($"현재 버전이 최신입니다.\n현재: {currentVersion:0.0.0}", "수동 업데이트", MessageBoxButton.OK, MessageBoxImage.Information);
+                            DialogService.ShowTopmost(
+                                null,
+                                $"현재 버전이 최신입니다.\n현재: {FormatVersion(currentVersion)}",
+                                "업데이트 알림",
+                                MessageBoxButton.OK,
+                                MessageBoxImage.Information);
                             return true;
                         }).ConfigureAwait(false);
                     }
+
                     return UpdateCheckResult.NoUpdate;
                 }
 
-                string releaseBody = root.TryGetProperty("body", out var bodyEl) ? bodyEl.GetString() ?? string.Empty : string.Empty;
-                string? downloadUrl = FindZipAssetUrl(root);
-                string title = forceInstallLatest ? "수동 업데이트" : "업데이트 알림";
-                string question = forceInstallLatest
-                    ? $"최신 빌드를 다시 설치합니다.\n현재: {currentVersion:0.0.0}\n최신: {tagName}\n\n진행할까요?"
-                    : $"새 버전이 있습니다.\n현재: {currentVersion:0.0.0}\n최신: {tagName}\n\n{TruncateBody(releaseBody)}\n\n지금 업데이트할까요?";
-
-                MessageBoxResult choice = await InvokeOnUIAsync(() =>
-                    MessageBox.Show(question, title, MessageBoxButton.YesNo, MessageBoxImage.Information)).ConfigureAwait(false);
-
-                if (choice != MessageBoxResult.Yes)
+                bool confirmed = await ShowUpdatePromptAsync(currentVersion, release, forceInstallLatest).ConfigureAwait(false);
+                if (!confirmed)
                     return UpdateCheckResult.UpdateDeclined;
 
-                if (string.IsNullOrWhiteSpace(downloadUrl))
+                if (string.IsNullOrWhiteSpace(release.DownloadUrl))
                     return UpdateCheckResult.Failed;
 
-                bool applied = await DownloadAndApplyUpdateAsync(client, downloadUrl).ConfigureAwait(false);
+                bool applied = await DownloadAndApplyUpdateAsync(client, release.DownloadUrl).ConfigureAwait(false);
                 return applied ? UpdateCheckResult.UpdateApplied : UpdateCheckResult.Failed;
             }
             catch (Exception ex)
@@ -93,6 +85,69 @@ namespace TWChatOverlay.Services
                 Debug.WriteLine($"업데이트 확인 오류: {ex.Message}");
                 return UpdateCheckResult.Failed;
             }
+        }
+
+        private static async Task<ReleaseInfo?> GetLatestReleaseInfoAsync(HttpClient client)
+        {
+            using var response = await client.GetAsync(LatestReleaseUrl).ConfigureAwait(false);
+            if (!response.IsSuccessStatusCode)
+                return null;
+
+            string json = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+            using var doc = JsonDocument.Parse(json);
+            var root = doc.RootElement;
+
+            string? tagName = root.GetProperty("tag_name").GetString();
+            if (string.IsNullOrWhiteSpace(tagName))
+                return null;
+
+            Version latestVersion = ParseVersion(tagName);
+            string releaseBody = root.TryGetProperty("body", out var bodyEl) ? bodyEl.GetString() ?? string.Empty : string.Empty;
+            string? downloadUrl = FindZipAssetUrl(root);
+
+            return new ReleaseInfo(tagName.Trim(), latestVersion, releaseBody.Trim(), downloadUrl);
+        }
+
+        private static Task<bool> ShowUpdatePromptAsync(Version currentVersion, ReleaseInfo release, bool forceInstallLatest)
+        {
+            string windowTitle = forceInstallLatest ? "수동 업데이트" : "업데이트 알림";
+            string headline = forceInstallLatest
+                ? ""
+                : "GitHub Releases 본문에서 이번 버전의 변경 사항을 확인하세요.";
+            string footerHint = forceInstallLatest
+                ? "업데이트를 시작하면 앱이 잠시 종료되고 최신 파일이 다시 설치됩니다."
+                : "업데이트를 시작하면 앱이 잠시 종료되고 최신 파일이 적용됩니다.";
+            string confirmText = forceInstallLatest ? "다시 설치" : "업데이트";
+            string currentText = $"v{FormatVersion(currentVersion)}";
+            string latestText = release.TagName.StartsWith("v", StringComparison.OrdinalIgnoreCase)
+                ? release.TagName
+                : $"v{release.TagName}";
+
+            return InvokeOnUIAsync(() =>
+            {
+                var dialog = new UpdateDialogWindow(
+                    windowTitle,
+                    headline,
+                    currentText,
+                    latestText,
+                    release.ReleaseBody,
+                    footerHint,
+                    confirmText);
+
+                Window? owner = ResolveOwnerWindow();
+                if (owner != null)
+                {
+                    dialog.Owner = owner;
+                    dialog.WindowStartupLocation = WindowStartupLocation.CenterOwner;
+                }
+                else
+                {
+                    dialog.WindowStartupLocation = WindowStartupLocation.CenterScreen;
+                }
+
+                dialog.Topmost = true;
+                return dialog.ShowDialog() == true;
+            });
         }
 
         private static string? FindZipAssetUrl(JsonElement root)
@@ -172,7 +227,12 @@ namespace TWChatOverlay.Services
             {
                 await InvokeOnUIAsync(() =>
                 {
-                    MessageBox.Show($"업데이트 적용 중 오류가 발생했습니다.\n{ex.Message}", "업데이트 오류", MessageBoxButton.OK, MessageBoxImage.Error);
+                    DialogService.ShowTopmost(
+                        null,
+                        $"업데이트 적용 중 오류가 발생했습니다.\n{ex.Message}",
+                        "업데이트 오류",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Error);
                     return true;
                 }).ConfigureAwait(false);
                 return false;
@@ -183,6 +243,18 @@ namespace TWChatOverlay.Services
         {
             string cleaned = tag.TrimStart('v', 'V');
             return Version.TryParse(cleaned, out var version) ? version : new Version(0, 0, 0);
+        }
+
+        private static string FormatVersion(Version version)
+            => version.Build >= 0 ? version.ToString(3) : version.ToString(2);
+
+        private static Window? ResolveOwnerWindow()
+        {
+            return Application.Current?.Windows
+                .OfType<Window>()
+                .Where(window => window.IsVisible)
+                .OrderByDescending(window => window.IsActive)
+                .FirstOrDefault();
         }
 
         private static Task<T> InvokeOnUIAsync<T>(Func<T> func)
@@ -198,14 +270,6 @@ namespace TWChatOverlay.Services
                 catch (Exception ex) { tcs.SetException(ex); }
             });
             return tcs.Task;
-        }
-
-        private static string TruncateBody(string body)
-        {
-            if (string.IsNullOrWhiteSpace(body))
-                return string.Empty;
-            body = body.Trim();
-            return body.Length > 200 ? body.Substring(0, 200) + "..." : body;
         }
     }
 }

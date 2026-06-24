@@ -25,6 +25,7 @@ namespace TWChatOverlay.ViewModels
         private readonly Func<System.Threading.Tasks.Task<bool>>? _onManualLogReload;
         private int _selectedPresetNumber = 1;
         private bool _isManualLogReloadRunning;
+        private bool _isManualUpdateRunning;
 
         public ICommand ColorPickCommand { get; }
         public ICommand InitSettingsCommand { get; }
@@ -474,7 +475,7 @@ namespace TWChatOverlay.ViewModels
             ColorPickCommand = new RelayCommand<string?>(ExecuteColorPick);
             InitSettingsCommand = new RelayCommand<object?>(_ => ExecuteInitSettings());
             ExitAppCommand = new RelayCommand<object?>(_ => ExecuteExitApp());
-            ManualUpdateCommand = new RelayCommand<object?>(async _ => await ExecuteManualUpdateAsync());
+            ManualUpdateCommand = new RelayCommand<object?>(async _ => await ExecuteManualUpdateAsync(), _ => !_isManualUpdateRunning);
             ManualLogReloadCommand = new RelayCommand<object?>(async _ => await ExecuteManualLogReloadAsync());
             SaveOrLoadPresetCommand = new RelayCommand<string?>(ExecuteSaveOrLoadPreset);
             ApplyHotkeysCommand = new RelayCommand<object?>(_ => ExecuteApplyHotkeys());
@@ -669,6 +670,12 @@ namespace TWChatOverlay.ViewModels
 
         private async System.Threading.Tasks.Task ExecuteManualUpdateAsync()
         {
+            if (_isManualUpdateRunning)
+                return;
+
+            _isManualUpdateRunning = true;
+            CommandManager.InvalidateRequerySuggested();
+
             try
             {
                 var result = await UpdateService.CheckForUpdateAsync(forceInstallLatest: true, showNoUpdateMessage: true);
@@ -681,6 +688,11 @@ namespace TWChatOverlay.ViewModels
             {
                 AppLogger.Warn("Manual update failed.", ex);
                 MessageBox.Show("수동 업데이트 중 오류가 발생했습니다.", "수동 업데이트", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
+            finally
+            {
+                _isManualUpdateRunning = false;
+                CommandManager.InvalidateRequerySuggested();
             }
         }
 

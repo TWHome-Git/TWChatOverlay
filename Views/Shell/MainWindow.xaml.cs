@@ -706,7 +706,7 @@ namespace TWChatOverlay.Views
                     _startLogServiceWhenInitialized = false;
                 }
 
-                Dispatcher.BeginInvoke(new Action(RequestRefreshLogDisplay), DispatcherPriority.Background);
+                await Dispatcher.InvokeAsync(() => RequestRefreshLogDisplay(), DispatcherPriority.Background);
             }
 
             UpdateStartupLoadingProgress(100, "초기화가 완료되었습니다.");
