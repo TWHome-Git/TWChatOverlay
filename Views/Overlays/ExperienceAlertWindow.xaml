@@ -10,8 +10,8 @@
         ShowInTaskbar="False"
         Topmost="True"
         ShowActivated="False">
-    <Border Background="#F0202229"
-            BorderBrush="#FFF5A623"
+    <Border Background="{DynamicResource OverlayWindowBackgroundBrush}"
+            BorderBrush="{DynamicResource OverlayWarningBorderBrush}"
             BorderThickness="1.4"
             CornerRadius="10"
             Padding="14,12"

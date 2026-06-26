@@ -12,8 +12,8 @@
         Topmost="False"
         ShowActivated="False">
     <Border x:Name="RootBorder"
-            Background="#F5211C21"
-            BorderBrush="#E0FFB347"
+            Background="{DynamicResource OverlayWindowBackgroundBrush}"
+            BorderBrush="{DynamicResource OverlayShoutBorderBrush}"
             BorderThickness="1.2"
             CornerRadius="10"
             Padding="12,8"
@@ -26,13 +26,13 @@
 
             <Border Width="6"
                     CornerRadius="3"
-                    Background="#FFB347"
+                    Background="{DynamicResource OverlayShoutFillBrush}"
                     VerticalAlignment="Stretch"
                     Margin="0,0,10,0"/>
 
             <StackPanel Grid.Column="1" VerticalAlignment="Center">
                 <TextBlock Text="외치기"
-                           Foreground="#FFD39A"
+                           Foreground="{DynamicResource OverlayShoutTextBrush}"
                            FontSize="11"
                            FontWeight="SemiBold"
                            Margin="0,0,0,2"/>

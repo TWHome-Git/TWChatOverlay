@@ -788,12 +788,17 @@ namespace TWChatOverlay.Views
             }), DispatcherPriority.ContextIdle);
         }
 
-        private void RequestRefreshLogDisplay()
+        private void RequestRefreshLogDisplay(bool force = false)
         {
-            if (LogDisplay == null || _isRefreshLogDisplayScheduled || !_isLogServiceInitialized) return;
+            if (LogDisplay == null || !_isLogServiceInitialized)
+                return;
+
+            if (!force && _isRefreshLogDisplayScheduled)
+                return;
 
             _isRefreshLogDisplayScheduled = true;
 
+            // Background priority keeps the refresh draining even after the overlay was hidden for a while.
             Dispatcher.BeginInvoke(new Action(() =>
             {
                 _isRefreshLogDisplayScheduled = false;
@@ -826,7 +831,7 @@ namespace TWChatOverlay.Views
                     if (shouldAutoScroll)
                         ScrollLogDisplayToEndAfterLayout();
                 }
-            }), DispatcherPriority.Render);
+            }), DispatcherPriority.Background);
         }
 
         private static void AddMoneyLine(RichTextBox box, string label, string amountText, FontFamily family, double size, Brush brush)

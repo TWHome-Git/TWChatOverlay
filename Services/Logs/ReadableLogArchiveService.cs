@@ -37,12 +37,6 @@ namespace TWChatOverlay.Services
         private static readonly Regex DateFromFileNameRegex = new(
             @"TWChatLog_(?<y>\d{4})_(?<m>\d{2})_(?<d>\d{2})\.html$",
             RegexOptions.IgnoreCase | RegexOptions.Compiled);
-        private static readonly Regex ContentLineInnerTextRegex = new(
-            "<div\\s+class=\"log\\s+content\"[^>]*>(?<text>.*?)</div>",
-            RegexOptions.IgnoreCase | RegexOptions.Compiled);
-        private static readonly Regex TimePrefixRegex = new(
-            @"^\s*(?<time>\[[^\]]+\])\s*(?<body>.*)$",
-            RegexOptions.Compiled);
         private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.General);
 
         private readonly object _syncRoot = new();
@@ -407,7 +401,6 @@ namespace TWChatOverlay.Services
             }
             pendingArchiveWrites.FlushAll();
             FlushAbandonDayBuffer();
-            RemoveExactDuplicateLinesFromArchiveFiles(pendingArchiveWrites.TouchedPaths);
             if (lastProcessedDate.HasValue)
                 SaveRawLogRebuildCheckpoint(lastProcessedDate.Value);
 
@@ -1094,10 +1087,9 @@ namespace TWChatOverlay.Services
 
         private static void AppendHtmlLine(string path, string title, string htmlLine, ArchiveWriteBatch? pendingArchiveWrites = null)
         {
-            string dedupeKey = BuildDedupeKey(htmlLine);
             if (pendingArchiveWrites != null)
             {
-                pendingArchiveWrites.Enqueue(path, title, htmlLine, dedupeKey);
+                pendingArchiveWrites.Enqueue(path, title, htmlLine);
                 return;
             }
 
@@ -1106,59 +1098,15 @@ namespace TWChatOverlay.Services
             writer.WriteLine(htmlLine);
         }
 
-        private void RemoveExactDuplicateLinesFromArchiveFiles(IEnumerable<string> targetPaths)
-        {
-            foreach (string path in targetPaths.Distinct(StringComparer.OrdinalIgnoreCase))
-                RemoveExactDuplicateLinesInFile(path);
-        }
-
-        private static void RemoveExactDuplicateLinesInFile(string filePath)
-        {
-            if (string.IsNullOrWhiteSpace(filePath) || !File.Exists(filePath))
-                return;
-
-            try
-            {
-                string[] lines = File.ReadAllLines(filePath, Encoding.UTF8);
-                if (lines.Length <= 1)
-                    return;
-
-                var seen = new HashSet<string>(StringComparer.Ordinal);
-                var unique = new List<string>(lines.Length);
-                foreach (string line in lines)
-                {
-                    if (seen.Add(line))
-                        unique.Add(line);
-                }
-
-                if (unique.Count != lines.Length)
-                    File.WriteAllLines(filePath, unique, Utf8BomEncoding);
-            }
-            catch (Exception ex)
-            {
-                AppLogger.Warn($"Failed to remove duplicate lines from '{filePath}'.", ex);
-            }
-        }
-
         private sealed class ArchiveWriteBatch : IDisposable
         {
             private const int FlushThresholdChars = 256 * 1024;
-            private readonly Dictionary<string, HashSet<string>> _seenByPath = new(StringComparer.OrdinalIgnoreCase);
             private readonly Dictionary<string, StringBuilder> _bufferByPath = new(StringComparer.OrdinalIgnoreCase);
             private readonly Dictionary<string, StreamWriter> _writerByPath = new(StringComparer.OrdinalIgnoreCase);
             public HashSet<string> TouchedPaths { get; } = new(StringComparer.OrdinalIgnoreCase);
 
-            public void Enqueue(string path, string title, string htmlLine, string dedupeKey)
+            public void Enqueue(string path, string title, string htmlLine)
             {
-                if (!_seenByPath.TryGetValue(path, out HashSet<string>? seen))
-                {
-                    seen = new HashSet<string>(StringComparer.Ordinal);
-                    _seenByPath[path] = seen;
-                }
-
-                if (!seen.Add(dedupeKey))
-                    return;
-
                 if (!_bufferByPath.TryGetValue(path, out StringBuilder? buffer))
                 {
                     buffer = new StringBuilder(4096);
@@ -1206,29 +1154,6 @@ namespace TWChatOverlay.Services
                     writer.Dispose();
                 _writerByPath.Clear();
             }
-        }
-
-        private static string BuildDedupeKey(string htmlLine)
-        {
-            if (string.IsNullOrWhiteSpace(htmlLine))
-                return string.Empty;
-
-            Match contentMatch = ContentLineInnerTextRegex.Match(htmlLine);
-            if (contentMatch.Success)
-            {
-                string raw = WebUtility.HtmlDecode(contentMatch.Groups["text"].Value).Trim();
-                Match timeMatch = TimePrefixRegex.Match(raw);
-                if (timeMatch.Success)
-                {
-                    string time = timeMatch.Groups["time"].Value.Trim();
-                    string body = timeMatch.Groups["body"].Value.Trim();
-                    return $"content|{time}|{body}";
-                }
-
-                return $"content|{raw}";
-            }
-
-            return htmlLine.Trim();
         }
 
         private static void EnsureInitialized(string path, string title)

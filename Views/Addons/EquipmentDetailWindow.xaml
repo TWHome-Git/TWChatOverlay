@@ -7,7 +7,7 @@
         MinWidth="340"
         MinHeight="480"
         SizeToContent="Width"
-        Background="#0D1117"
+        Background="{DynamicResource OverlayShellBackgroundBrush}"
         WindowStartupLocation="CenterOwner"
         WindowStyle="None"
         ResizeMode="NoResize">
@@ -17,7 +17,7 @@
             <Setter Property="Height" Value="24"/>
             <Setter Property="Margin" Value="0,0,4,0"/>
             <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="Foreground" Value="#8B949E"/>
+            <Setter Property="Foreground" Value="{DynamicResource OverlaySubtleTextBrush}"/>
             <Setter Property="BorderThickness" Value="0"/>
             <Setter Property="FontSize" Value="12"/>
             <Setter Property="Cursor" Value="Hand"/>
@@ -34,7 +34,7 @@
             </Setter>
             <Style.Triggers>
                 <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="Background" Value="#30363D"/>
+                    <Setter Property="Background" Value="{DynamicResource OverlaySurfaceAltBackgroundBrush}"/>
                     <Setter Property="Foreground" Value="White"/>
                 </Trigger>
             </Style.Triggers>
@@ -61,8 +61,8 @@
         </Grid.RowDefinitions>
 
         <Border Grid.Row="0"
-                Background="#161B22"
-                BorderBrush="#30363D"
+                Background="{DynamicResource OverlaySurfaceBackgroundBrush}"
+                BorderBrush="{DynamicResource OverlayStrongBorderBrush}"
                 BorderThickness="0,0,0,1"
                 MouseLeftButtonDown="TitleBar_MouseLeftButtonDown"
                 Cursor="SizeAll">
@@ -84,8 +84,8 @@
 
         <Border x:Name="CraftSectionBorder"
                 Grid.Row="0"
-                Background="#1F2A38"
-                BorderBrush="#30363D"
+                Background="{DynamicResource OverlayCardBackgroundBrush}"
+                BorderBrush="{DynamicResource OverlayCardBorderBrush}"
                 BorderThickness="1"
                 CornerRadius="10"
                 Padding="12">
@@ -100,8 +100,8 @@
 
                 <StackPanel Orientation="Horizontal">
                     <Grid Width="28" Height="28" Margin="0,0,8,0">
-                        <Border Background="#050505"
-                                BorderBrush="#AA2B2B"
+                        <Border Background="{DynamicResource OverlayDangerBackgroundBrush}"
+                                BorderBrush="{DynamicResource OverlayDangerBorderBrush}"
                                 BorderThickness="1"
                                 CornerRadius="2">
                             <Border.Style>
@@ -115,8 +115,8 @@
                                 </Style>
                             </Border.Style>
                             <Grid>
-                                <Line X1="5" Y1="5" X2="23" Y2="23" Stroke="#FF3B3B" StrokeThickness="2"/>
-                                <Line X1="23" Y1="5" X2="5" Y2="23" Stroke="#FF3B3B" StrokeThickness="2"/>
+                                <Line X1="5" Y1="5" X2="23" Y2="23" Stroke="{DynamicResource OverlayDangerAccentBrush}" StrokeThickness="2"/>
+                                <Line X1="23" Y1="5" X2="5" Y2="23" Stroke="{DynamicResource OverlayDangerAccentBrush}" StrokeThickness="2"/>
                             </Grid>
                         </Border>
                         <Image Source="{Binding ImagePath, TargetNullValue={x:Null}}" Width="28" Height="28">
@@ -135,7 +135,7 @@
                     <TextBlock Text="{Binding Name}" Foreground="White" FontSize="{StaticResource TitleFontSize}" FontWeight="Bold" VerticalAlignment="Center"/>
                 </StackPanel>
 
-                <Border Grid.Row="2" BorderBrush="#30363D" BorderThickness="0,1,0,1" Padding="0,8">
+                <Border Grid.Row="2" BorderBrush="{DynamicResource OverlayStrongBorderBrush}" BorderThickness="0,1,0,1" Padding="0,8">
                     <Grid>
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto"/>
@@ -143,7 +143,7 @@
                             <RowDefinition Height="*"/>
                         </Grid.RowDefinitions>
                         <TextBlock Text="재료 가격 입력 단위: 억"
-                                   Foreground="#8B949E"
+                                   Foreground="{DynamicResource OverlaySubtleTextBrush}"
                                    FontSize="11"
                                    HorizontalAlignment="Right"/>
                         <ScrollViewer Grid.Row="2"
@@ -160,8 +160,8 @@
 
                                             <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                                                 <Grid Width="20" Height="20" Margin="0,0,6,0">
-                                                    <Border Background="#050505"
-                                                            BorderBrush="#AA2B2B"
+                                                    <Border Background="{DynamicResource OverlayDangerBackgroundBrush}"
+                                                            BorderBrush="{DynamicResource OverlayDangerBorderBrush}"
                                                             BorderThickness="1"
                                                             CornerRadius="2">
                                                         <Border.Style>
@@ -175,8 +175,8 @@
                                                             </Style>
                                                         </Border.Style>
                                                         <Grid>
-                                                            <Line X1="4" Y1="4" X2="16" Y2="16" Stroke="#FF3B3B" StrokeThickness="1.7"/>
-                                                            <Line X1="16" Y1="4" X2="4" Y2="16" Stroke="#FF3B3B" StrokeThickness="1.7"/>
+                                                            <Line X1="4" Y1="4" X2="16" Y2="16" Stroke="{DynamicResource OverlayDangerAccentBrush}" StrokeThickness="1.7"/>
+                                                            <Line X1="16" Y1="4" X2="4" Y2="16" Stroke="{DynamicResource OverlayDangerAccentBrush}" StrokeThickness="1.7"/>
                                                         </Grid>
                                                     </Border>
                                                     <Image Source="{Binding Material.ImagePath, TargetNullValue={x:Null}}" Width="20" Height="20">
@@ -203,9 +203,9 @@
                                                      Margin="10,0,0,0"
                                                      Style="{StaticResource MaterialPriceTextBoxStyle}"
                                                      FontSize="{StaticResource PriceInputFontSize}"
-                                                     Background="#0D1117"
+                                                     Background="{DynamicResource OverlayShellBackgroundBrush}"
                                                      Foreground="White"
-                                                     BorderBrush="#30363D"
+                                                     BorderBrush="{DynamicResource OverlayStrongBorderBrush}"
                                                      BorderThickness="1"
                                                      CaretBrush="White"
                                                      Text="{Binding UnitPriceText, UpdateSourceTrigger=PropertyChanged}"
@@ -225,8 +225,8 @@
 
         <Border x:Name="NoteSectionBorder"
                 Grid.Row="2"
-                Background="#1F2A38"
-                BorderBrush="#30363D"
+                Background="{DynamicResource OverlayCardBackgroundBrush}"
+                BorderBrush="{DynamicResource OverlayCardBorderBrush}"
                 BorderThickness="1"
                 CornerRadius="10"
                 Padding="12">
@@ -236,15 +236,14 @@
                     <RowDefinition Height="8"/>
                     <RowDefinition Height="*"/>
                 </Grid.RowDefinitions>
-                <TextBlock Text="비고" Foreground="#58A6FF" FontSize="{StaticResource SectionTitleFontSize}" FontWeight="Bold"/>
+                <TextBlock Text="비고" Foreground="{DynamicResource OverlayTitleAccentTextBrush}" FontSize="{StaticResource SectionTitleFontSize}" FontWeight="Bold"/>
                 <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto">
-                    <TextBlock x:Name="NoteTextBlock" Foreground="#C9D1D9" FontSize="{StaticResource NoteFontSize}" TextWrapping="Wrap"/>
+                    <TextBlock x:Name="NoteTextBlock" Foreground="{DynamicResource OverlayInfoTextBrush}" FontSize="{StaticResource NoteFontSize}" TextWrapping="Wrap"/>
                 </ScrollViewer>
             </Grid>
         </Border>
     </Grid>
     </Grid>
 </Window>
-
 
 

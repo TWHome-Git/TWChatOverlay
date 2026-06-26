@@ -10,8 +10,8 @@
         WindowStartupLocation="Manual"
         Background="Transparent"
         AllowsTransparency="True">
-    <Border Background="#E6161B22"
-            BorderBrush="#30363D"
+    <Border Background="{DynamicResource OverlayWindowBackgroundBrush}"
+            BorderBrush="{DynamicResource OverlayAccentBorderBrush}"
             BorderThickness="1"
             CornerRadius="8"
             Padding="10"
@@ -26,7 +26,7 @@
                        Margin="0,0,0,4"/>
             <TextBlock x:Name="WindowHintText"
                        Text="드래그해서 위치를 옮길 수 있습니다"
-                       Foreground="#9FB0C0"
+                       Foreground="{DynamicResource OverlayHintTextBrush}"
                        FontSize="11"
                        HorizontalAlignment="Center"
                        Margin="0,0,0,8"/>

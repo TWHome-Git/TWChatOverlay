@@ -47,9 +47,9 @@
                     Click="ScrollToBottom_Click">
                 <Button.Style>
                     <Style TargetType="Button">
-                        <Setter Property="Background" Value="#1F6FEB"/>
+                        <Setter Property="Background" Value="{DynamicResource OverlayScrollButtonBackgroundBrush}"/>
                         <Setter Property="Foreground" Value="White"/>
-                        <Setter Property="BorderBrush" Value="#3A424B"/>
+                        <Setter Property="BorderBrush" Value="{DynamicResource OverlayScrollButtonBorderBrush}"/>
                         <Setter Property="BorderThickness" Value="1"/>
                         <Setter Property="Visibility" Value="Collapsed"/>
                         <Setter Property="Template">
@@ -67,7 +67,7 @@
                                 <Setter Property="Visibility" Value="Visible"/>
                             </DataTrigger>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter Property="Background" Value="#2D74F5"/>
+                                <Setter Property="Background" Value="{DynamicResource OverlayScrollButtonHoverBrush}"/>
                             </Trigger>
                         </Style.Triggers>
                     </Style>

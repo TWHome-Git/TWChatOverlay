@@ -7,7 +7,7 @@
         MinWidth="700"
         MinHeight="460"
         WindowStartupLocation="CenterScreen"
-        Background="#0D1117"
+        Background="{DynamicResource OverlayShellBackgroundBrush}"
         WindowStyle="None"
         ResizeMode="NoResize">
     <Window.Resources>
@@ -16,7 +16,7 @@
             <Setter Property="Height" Value="24"/>
             <Setter Property="Margin" Value="0,0,4,0"/>
             <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="Foreground" Value="#8B949E"/>
+            <Setter Property="Foreground" Value="{DynamicResource OverlaySubtleTextBrush}"/>
             <Setter Property="BorderThickness" Value="0"/>
             <Setter Property="FontSize" Value="12"/>
             <Setter Property="Cursor" Value="Hand"/>
@@ -33,15 +33,15 @@
             </Setter>
             <Style.Triggers>
                 <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="Background" Value="#30363D"/>
+                    <Setter Property="Background" Value="{DynamicResource OverlaySurfaceAltBackgroundBrush}"/>
                     <Setter Property="Foreground" Value="White"/>
                 </Trigger>
             </Style.Triggers>
         </Style>
         <Style TargetType="Button">
-            <Setter Property="Background" Value="#30363D"/>
+            <Setter Property="Background" Value="{DynamicResource OverlaySurfaceAltBackgroundBrush}"/>
             <Setter Property="Foreground" Value="White"/>
-            <Setter Property="BorderBrush" Value="#555"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource OverlayStrongBorderBrush}"/>
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="Padding" Value="10,4"/>
             <Setter Property="FontSize" Value="12"/>
@@ -50,9 +50,9 @@
 
         <Style TargetType="TextBox">
             <Setter Property="Height" Value="30"/>
-            <Setter Property="Background" Value="#333"/>
+            <Setter Property="Background" Value="{DynamicResource OverlaySurfaceBackgroundBrush}"/>
             <Setter Property="Foreground" Value="White"/>
-            <Setter Property="BorderBrush" Value="#555"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource OverlayStrongBorderBrush}"/>
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="VerticalContentAlignment" Value="Center"/>
             <Setter Property="Padding" Value="8,0"/>
@@ -76,8 +76,8 @@
         </Grid.RowDefinitions>
 
         <Border Grid.Row="0"
-                Background="#161B22"
-                BorderBrush="#30363D"
+                Background="{DynamicResource OverlaySurfaceBackgroundBrush}"
+                BorderBrush="{DynamicResource OverlayStrongBorderBrush}"
                 BorderThickness="0,0,0,1"
                 MouseLeftButtonDown="TitleBar_MouseLeftButtonDown"
                 Cursor="SizeAll">
@@ -98,11 +98,11 @@
         </Grid.RowDefinitions>
 
         <StackPanel Grid.Row="0" Margin="0,0,0,14">
-            <TextBlock x:Name="TitleText" Text="초기 설정" Foreground="#58A6FF" FontSize="26" FontWeight="Bold"/>
-            <TextBlock x:Name="ProgressText" Text="1 / 5" Foreground="#8B949E" FontSize="12" Margin="0,6,0,0"/>
+            <TextBlock x:Name="TitleText" Text="초기 설정" Foreground="{DynamicResource OverlayTitleAccentTextBrush}" FontSize="26" FontWeight="Bold"/>
+            <TextBlock x:Name="ProgressText" Text="1 / 5" Foreground="{DynamicResource OverlaySubtleTextBrush}" FontSize="12" Margin="0,6,0,0"/>
         </StackPanel>
 
-        <Border Grid.Row="1" Background="#161B22" BorderBrush="#30363D" BorderThickness="1" CornerRadius="8" Padding="16">
+        <Border Grid.Row="1" Background="{DynamicResource OverlaySurfaceBackgroundBrush}" BorderBrush="{DynamicResource OverlayStrongBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="16">
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
@@ -111,8 +111,8 @@
 
                 <StackPanel Grid.Row="0">
                     <TextBlock x:Name="StepTitleText" Text="1. 채팅 로그 위치 설정" Foreground="White" FontSize="18" FontWeight="SemiBold"/>
-                    <TextBlock x:Name="StepDescText" Text="" Foreground="#C9D1D9" FontSize="13" Margin="0,0,0,0" TextWrapping="Wrap" Visibility="Collapsed"/>
-                    <TextBlock x:Name="StepDetailText" Text="" Foreground="#8B949E" FontSize="12" TextWrapping="Wrap" Visibility="Collapsed"/>
+                    <TextBlock x:Name="StepDescText" Text="" Foreground="{DynamicResource OverlayInfoTextBrush}" FontSize="13" Margin="0,0,0,0" TextWrapping="Wrap" Visibility="Collapsed"/>
+                    <TextBlock x:Name="StepDetailText" Text="" Foreground="{DynamicResource OverlaySubtleTextBrush}" FontSize="12" TextWrapping="Wrap" Visibility="Collapsed"/>
                 </StackPanel>
 
                 <ContentControl x:Name="StepContentHost" Grid.Row="1" Margin="0,6,0,0"/>
@@ -135,6 +135,4 @@
     </Grid>
     </Grid>
 </Window>
-
-
 

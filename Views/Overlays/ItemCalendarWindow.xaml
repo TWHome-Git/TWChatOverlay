@@ -26,8 +26,8 @@
         </Style>
     </Window.Resources>
 
-    <Border Background="#F21D1F23"
-            BorderBrush="#60FFFFFF"
+    <Border Background="{DynamicResource OverlayWindowBackgroundBrush}"
+            BorderBrush="{DynamicResource OverlayWindowBorderBrush}"
             BorderThickness="1"
             CornerRadius="12"
             Padding="14">
@@ -37,7 +37,7 @@
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
 
-            <Border Background="#FF2A2F38"
+            <Border Background="{DynamicResource OverlaySurfaceAltBackgroundBrush}"
                     CornerRadius="10"
                     Padding="10"
                     MouseLeftButtonDown="TitleBar_MouseLeftButtonDown">
@@ -65,7 +65,7 @@
                                 Orientation="Horizontal"
                                 VerticalAlignment="Center">
                         <TextBlock Text="{Binding StatusText}"
-                                   Foreground="#9AA4B2"
+                                   Foreground="{DynamicResource OverlaySubtleTextBrush}"
                                    FontSize="12"
                                    Margin="0,0,10,0"
                                    Width="180"
@@ -88,7 +88,7 @@
                                    FontWeight="Bold"
                                    HorizontalAlignment="Center"/>
                         <TextBlock Text="{Binding MonthText}"
-                                   Foreground="#C9D1D9"
+                                   Foreground="{DynamicResource OverlayInfoTextBrush}"
                                    FontSize="12"
                                    HorizontalAlignment="Center"
                                    Margin="0,2,0,0"/>
@@ -103,7 +103,7 @@
                 </Grid.ColumnDefinitions>
 
                 <Border Grid.Column="0"
-                        Background="#FF15181D"
+                        Background="{DynamicResource OverlayShellBackgroundBrush}"
                         CornerRadius="10"
                         Padding="10"
                         Margin="0,0,10,0">
@@ -120,8 +120,8 @@
                                             Padding="10"
                                             CornerRadius="10"
                                             BorderThickness="1"
-                                            BorderBrush="#3D4650"
-                                            Background="#FF20242B"
+                                            BorderBrush="{DynamicResource OverlayCardBorderBrush}"
+                                            Background="{DynamicResource OverlayCardBackgroundBrush}"
                                             Opacity="{Binding CellOpacity}">
                                         <Grid>
                                             <Grid.RowDefinitions>
@@ -130,7 +130,7 @@
                                             </Grid.RowDefinitions>
 
                                             <Border Background="Transparent"
-                                                    BorderBrush="#3D4650"
+                                                    BorderBrush="{DynamicResource OverlayCardBorderBrush}"
                                                     BorderThickness="1"
                                                     CornerRadius="8"
                                                     Padding="6,4">
@@ -151,7 +151,7 @@
                                                 <ItemsControl ItemsSource="{Binding Entries}">
                                                     <ItemsControl.ItemTemplate>
                                                         <DataTemplate>
-                                                            <Border Background="#2C323B"
+                                                            <Border Background="{DynamicResource OverlayCardBackgroundBrush}"
                                                                     BorderBrush="{Binding BorderBrush}"
                                                                     BorderThickness="1"
                                                                     CornerRadius="6"
@@ -176,7 +176,7 @@
                                             <TextBlock Grid.Row="1"
                                                        Margin="0,0,0,0"
                                                        VerticalAlignment="Bottom"
-                                                       Foreground="#6BB5FF"
+                                                       Foreground="{DynamicResource OverlayExpAccentBrush}"
                                                        FontSize="10"
                                                        FontWeight="SemiBold"
                                                        Text="{Binding ExperienceEssenceText}"
@@ -187,7 +187,7 @@
                             </ItemsControl.ItemTemplate>
                         </ItemsControl>
 
-                        <Border Background="#AA111317"
+                        <Border Background="{DynamicResource OverlayLoadingMaskBrush}"
                                 CornerRadius="8"
                                 Visibility="{Binding IsLoading, Converter={StaticResource BooleanToVisibilityConverter}}">
                             <StackPanel HorizontalAlignment="Center"
@@ -211,15 +211,15 @@
                 </Border>
 
                 <Border Grid.Column="1"
-                        Background="#FF15181D"
+                        Background="{DynamicResource OverlayShellBackgroundBrush}"
                         CornerRadius="10"
                         Padding="10">
                     <ScrollViewer VerticalScrollBarVisibility="Hidden"
                                   HorizontalScrollBarVisibility="Disabled"
                                   CanContentScroll="False">
                         <StackPanel>
-                            <Border Background="#20242B"
-                                    BorderBrush="#34404C"
+                            <Border Background="{DynamicResource OverlaySurfaceBackgroundBrush}"
+                                    BorderBrush="{DynamicResource OverlayCardBorderBrush}"
                                     BorderThickness="1"
                                     CornerRadius="10"
                                     Padding="9"
@@ -231,14 +231,14 @@
                                                FontWeight="SemiBold"
                                                Margin="0,0,0,8"/>
 
-                                    <Border Background="#232831"
-                                            BorderBrush="#34404C"
+                                    <Border Background="{DynamicResource OverlayCardBackgroundBrush}"
+                                            BorderBrush="{DynamicResource OverlayCardBorderBrush}"
                                             BorderThickness="1"
                                             CornerRadius="8"
                                             Padding="8,6"
                                             Margin="0,0,0,8">
                                         <TextBlock Text="{Binding MonthlyAbandonSeedText}"
-                                                   Foreground="#A5D6FF"
+                                                   Foreground="{DynamicResource OverlayExpAccentBrush}"
                                                    FontSize="11"
                                                    FontWeight="SemiBold"
                                                    TextTrimming="CharacterEllipsis"/>
@@ -247,8 +247,8 @@
                                     <ItemsControl ItemsSource="{Binding MonthlyAbandonSummary}">
                                         <ItemsControl.ItemTemplate>
                                             <DataTemplate>
-                                                <Border Background="#2C323B"
-                                                        BorderBrush="#46515B"
+                                                <Border Background="{DynamicResource OverlayCardBackgroundBrush}"
+                                                        BorderBrush="{DynamicResource OverlayStrongBorderBrush}"
                                                         BorderThickness="1"
                                                         CornerRadius="7"
                                                         Padding="7,5"
@@ -287,8 +287,8 @@
                                 </StackPanel>
                             </Border>
 
-                            <Border Background="#20242B"
-                                    BorderBrush="#34404C"
+                            <Border Background="{DynamicResource OverlaySurfaceBackgroundBrush}"
+                                    BorderBrush="{DynamicResource OverlayCardBorderBrush}"
                                     BorderThickness="1"
                                     CornerRadius="10"
                                     Padding="9">
@@ -302,7 +302,7 @@
                                     <ItemsControl ItemsSource="{Binding MonthlySummary}">
                                         <ItemsControl.ItemTemplate>
                                             <DataTemplate>
-                                                <Border Background="#2C323B"
+                                                <Border Background="{DynamicResource OverlayCardBackgroundBrush}"
                                                         BorderBrush="{Binding BorderBrush}"
                                                         BorderThickness="1"
                                                         CornerRadius="7"
@@ -316,7 +316,7 @@
                                                                    TextTrimming="CharacterEllipsis"
                                                                    DockPanel.Dock="Left"/>
                                                         <TextBlock Text="{Binding Count, StringFormat=x{0:N0}}"
-                                                                   Foreground="#DCE3EA"
+                                                                   Foreground="{DynamicResource OverlayInfoTextBrush}"
                                                                    FontSize="11"
                                                                    FontWeight="Bold"
                                                                    HorizontalAlignment="Right"
@@ -334,8 +334,8 @@
                                 </StackPanel>
                             </Border>
 
-                            <Border Background="#20242B"
-                                    BorderBrush="#34404C"
+                            <Border Background="{DynamicResource OverlaySurfaceBackgroundBrush}"
+                                    BorderBrush="{DynamicResource OverlayCardBorderBrush}"
                                     BorderThickness="1"
                                     CornerRadius="10"
                                     Padding="9"
@@ -347,8 +347,8 @@
                                                FontWeight="SemiBold"
                                                Margin="0,0,0,8"/>
 
-                                    <Border Background="#232831"
-                                            BorderBrush="#34404C"
+                                    <Border Background="{DynamicResource OverlayCardBackgroundBrush}"
+                                            BorderBrush="{DynamicResource OverlayCardBorderBrush}"
                                             BorderThickness="1"
                                             CornerRadius="8"
                                             Padding="8,6">
@@ -362,7 +362,7 @@
                                                        Margin="0,0,6,0"
                                                        VerticalAlignment="Center"/>
                                                 <TextBlock Text="{Binding MonthlyExperienceEssenceSeedText}"
-                                                           Foreground="#A5D6FF"
+                                                           Foreground="{DynamicResource OverlayExpAccentBrush}"
                                                            FontSize="11"
                                                            FontWeight="SemiBold"
                                                            TextTrimming="CharacterEllipsis"/>

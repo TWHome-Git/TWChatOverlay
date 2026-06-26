@@ -11,8 +11,8 @@
         WindowStartupLocation="Manual"
         Background="Transparent"
         AllowsTransparency="True">
-    <Border Background="#B01A1A1B"
-            BorderBrush="#FF58A6FF"
+    <Border Background="{DynamicResource OverlayWindowBackgroundBrush}"
+            BorderBrush="{DynamicResource OverlayHelperWindowBorderBrush}"
             BorderThickness="1.2"
             CornerRadius="8"
             Padding="8,6"
@@ -31,7 +31,7 @@
 
             <StackPanel Grid.Column="0" Grid.Row="0">
                 <TextBlock Text="레어"
-                           Foreground="#F8D66D"
+                           Foreground="{DynamicResource OverlayRareAccentBrush}"
                            FontSize="11"
                            FontWeight="Bold"
                            Margin="0,0,0,4"/>
@@ -39,10 +39,10 @@
                     <Border Width="28"
                             Height="28"
                             CornerRadius="8"
-                            Background="#22000000"
-                            BorderBrush="#55FFFFFF"
+                            Background="{DynamicResource OverlayBuffTileBackgroundBrush}"
+                            BorderBrush="{DynamicResource OverlayBuffTileBorderBrush}"
                             BorderThickness="1">
-                        <Rectangle Fill="#66F8D66D" Margin="4" RadiusX="3" RadiusY="3"/>
+                        <Rectangle Fill="{DynamicResource OverlayRareAccentBrush}" Opacity="0.55" Margin="4" RadiusX="3" RadiusY="3"/>
                     </Border>
                     <TextBlock Text="00:00"
                                Foreground="White"
@@ -55,7 +55,7 @@
 
             <StackPanel Grid.Column="2" Grid.Row="0">
                 <TextBlock Text="경험치"
-                           Foreground="#9DDEF7"
+                           Foreground="{DynamicResource OverlayExpAccentBrush}"
                            FontSize="11"
                            FontWeight="Bold"
                            Margin="0,0,0,4"/>
@@ -63,10 +63,10 @@
                     <Border Width="28"
                             Height="28"
                             CornerRadius="8"
-                            Background="#22000000"
-                            BorderBrush="#55FFFFFF"
+                            Background="{DynamicResource OverlayBuffTileBackgroundBrush}"
+                            BorderBrush="{DynamicResource OverlayBuffTileBorderBrush}"
                             BorderThickness="1">
-                        <Rectangle Fill="#669DDEF7" Margin="4" RadiusX="3" RadiusY="3"/>
+                        <Rectangle Fill="{DynamicResource OverlayExpAccentBrush}" Opacity="0.55" Margin="4" RadiusX="3" RadiusY="3"/>
                     </Border>
                     <TextBlock Text="00:00"
                                Foreground="White"
@@ -80,7 +80,7 @@
             <TextBlock Grid.Row="2"
                        Grid.ColumnSpan="3"
                        Text="드래그해서 실제 버프 추적 위치를 맞추세요"
-                       Foreground="#9FB0C0"
+                       Foreground="{DynamicResource OverlayHintTextBrush}"
                        FontSize="11"
                        HorizontalAlignment="Center"
                        TextAlignment="Center"/>

@@ -19,7 +19,7 @@
             <Setter Property="Height" Value="24"/>
             <Setter Property="Margin" Value="0,0,4,0"/>
             <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="Foreground" Value="#8B949E"/>
+            <Setter Property="Foreground" Value="{DynamicResource OverlaySubtleTextBrush}"/>
             <Setter Property="BorderThickness" Value="0"/>
             <Setter Property="FontSize" Value="12"/>
             <Setter Property="Cursor" Value="Hand"/>
@@ -36,16 +36,16 @@
             </Setter>
             <Style.Triggers>
                 <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="Background" Value="#30363D"/>
+                    <Setter Property="Background" Value="{DynamicResource OverlaySurfaceAltBackgroundBrush}"/>
                     <Setter Property="Foreground" Value="White"/>
                 </Trigger>
             </Style.Triggers>
         </Style>
 
         <Style x:Key="PrimaryActionButtonStyle" TargetType="Button">
-            <Setter Property="Background" Value="#58A6FF"/>
+            <Setter Property="Background" Value="{DynamicResource OverlayScrollButtonBackgroundBrush}"/>
             <Setter Property="Foreground" Value="White"/>
-            <Setter Property="BorderBrush" Value="#7F9CF5"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource OverlayScrollButtonBorderBrush}"/>
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="Padding" Value="14,8"/>
             <Setter Property="MinWidth" Value="118"/>
@@ -66,10 +66,10 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="ButtonBorder" Property="Background" Value="#6DB2FF"/>
+                                <Setter TargetName="ButtonBorder" Property="Background" Value="{DynamicResource OverlayScrollButtonHoverBrush}"/>
                             </Trigger>
                             <Trigger Property="IsPressed" Value="True">
-                                <Setter TargetName="ButtonBorder" Property="Background" Value="#3D7BF0"/>
+                                <Setter TargetName="ButtonBorder" Property="Background" Value="{DynamicResource OverlayTabSelectedBrush}"/>
                             </Trigger>
                             <Trigger Property="IsEnabled" Value="False">
                                 <Setter TargetName="ButtonBorder" Property="Opacity" Value="0.6"/>
@@ -81,7 +81,7 @@
         </Style>
 
         <Style x:Key="VersionCardTitleStyle" TargetType="TextBlock">
-            <Setter Property="Foreground" Value="#8B949E"/>
+            <Setter Property="Foreground" Value="{DynamicResource OverlaySubtleTextBrush}"/>
             <Setter Property="FontSize" Value="11"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
             <Setter Property="TextWrapping" Value="Wrap"/>
@@ -101,16 +101,16 @@
         </Style>
 
         <Style x:Key="FooterHintStyle" TargetType="TextBlock">
-            <Setter Property="Foreground" Value="#8B949E"/>
+            <Setter Property="Foreground" Value="{DynamicResource OverlaySubtleTextBrush}"/>
             <Setter Property="FontSize" Value="11"/>
             <Setter Property="TextWrapping" Value="Wrap"/>
             <Setter Property="VerticalAlignment" Value="Center"/>
         </Style>
 
         <Style x:Key="ReleaseNotesBoxStyle" TargetType="TextBox">
-            <Setter Property="Background" Value="#0D1117"/>
-            <Setter Property="Foreground" Value="#C9D1D9"/>
-            <Setter Property="BorderBrush" Value="#30363D"/>
+            <Setter Property="Background" Value="{DynamicResource OverlayShellBackgroundBrush}"/>
+            <Setter Property="Foreground" Value="{DynamicResource OverlayInfoTextBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource OverlayStrongBorderBrush}"/>
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="Padding" Value="14"/>
             <Setter Property="TextWrapping" Value="Wrap"/>
@@ -122,8 +122,8 @@
         </Style>
     </Window.Resources>
 
-    <Border Background="#0D1117"
-            BorderBrush="#30363D"
+    <Border Background="{DynamicResource OverlayShellBackgroundBrush}"
+            BorderBrush="{DynamicResource OverlayStrongBorderBrush}"
             BorderThickness="1"
             CornerRadius="14"
             SnapsToDevicePixels="True">
@@ -134,8 +134,8 @@
             </Grid.RowDefinitions>
 
             <Border Grid.Row="0"
-                    Background="#161B22"
-                    BorderBrush="#30363D"
+                    Background="{DynamicResource OverlaySurfaceBackgroundBrush}"
+                    BorderBrush="{DynamicResource OverlayStrongBorderBrush}"
                     BorderThickness="0,0,0,1"
                     CornerRadius="14,14,0,0"
                     MouseLeftButtonDown="TitleBar_MouseLeftButtonDown"
@@ -149,7 +149,7 @@
                     <TextBlock x:Name="WindowTitleText"
                                Grid.Column="0"
                                Text="업데이트 알림"
-                               Foreground="#E6EDF3"
+                               Foreground="{DynamicResource OverlayInfoTextBrush}"
                                FontSize="14"
                                FontWeight="SemiBold"
                                VerticalAlignment="Center"/>
@@ -180,14 +180,14 @@
                                FontSize="26"
                                FontWeight="Bold"/>
                     <TextBlock Text=""
-                               Foreground="#8B949E"
+                               Foreground="{DynamicResource OverlaySubtleTextBrush}"
                                FontSize="12"
                                Margin="0,6,0,0"/>
                 </StackPanel>
 
                 <Border Grid.Row="2"
-                        Background="#161B22"
-                        BorderBrush="#30363D"
+                        Background="{DynamicResource OverlaySurfaceBackgroundBrush}"
+                        BorderBrush="{DynamicResource OverlayStrongBorderBrush}"
                         BorderThickness="1"
                         CornerRadius="10"
                         Padding="14">
@@ -210,8 +210,8 @@
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
 
-                            <Border Background="#0D1117"
-                                    BorderBrush="#30363D"
+                            <Border Background="{DynamicResource OverlayShellBackgroundBrush}"
+                                    BorderBrush="{DynamicResource OverlayStrongBorderBrush}"
                                     BorderThickness="1"
                                     CornerRadius="8"
                                     Padding="12">
@@ -225,8 +225,8 @@
                             </Border>
 
                             <Border Grid.Column="2"
-                                    Background="#0D1117"
-                                    BorderBrush="#58A6FF"
+                                    Background="{DynamicResource OverlayShellBackgroundBrush}"
+                                    BorderBrush="{DynamicResource OverlayAccentBorderBrush}"
                                     BorderThickness="1"
                                     CornerRadius="8"
                                     Padding="12">
@@ -243,8 +243,8 @@
                 </Border>
 
                 <Border Grid.Row="4"
-                        Background="#161B22"
-                        BorderBrush="#30363D"
+                        Background="{DynamicResource OverlaySurfaceBackgroundBrush}"
+                        BorderBrush="{DynamicResource OverlayStrongBorderBrush}"
                         BorderThickness="1"
                         CornerRadius="10"
                         Padding="14">
@@ -260,7 +260,7 @@
                                        Style="{StaticResource SectionLabelStyle}"/>
                             <TextBlock DockPanel.Dock="Right"
                                        Text="GitHub Releases 본문"
-                                       Foreground="#58A6FF"
+                                       Foreground="{DynamicResource OverlayTitleAccentTextBrush}"
                                        FontSize="11"
                                        FontWeight="SemiBold"
                                        VerticalAlignment="Center"/>

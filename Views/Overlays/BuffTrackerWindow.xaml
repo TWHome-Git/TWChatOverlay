@@ -14,8 +14,8 @@
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
     </Window.Resources>
-    <Border Background="#B01A1A1B"
-            BorderBrush="#55FFFFFF"
+    <Border Background="{DynamicResource OverlayWindowBackgroundBrush}"
+            BorderBrush="{DynamicResource OverlayWindowBorderBrush}"
             BorderThickness="1"
             CornerRadius="8"
             Padding="8,6"
@@ -30,7 +30,7 @@
             <StackPanel Grid.Column="0"
                         Visibility="{Binding HasRareBuffs, Converter={StaticResource BooleanToVisibilityConverter}}">
                 <TextBlock Text="레어"
-                           Foreground="#F8D66D"
+                           Foreground="{DynamicResource OverlayRareAccentBrush}"
                            FontSize="11"
                            FontWeight="Bold"
                            Margin="0,0,0,4"/>
@@ -41,8 +41,8 @@
                                 <Border Width="28"
                                         Height="28"
                                         CornerRadius="8"
-                                        Background="#18000000"
-                                        BorderBrush="#55FFFFFF"
+                                        Background="{DynamicResource OverlayBuffTileBackgroundBrush}"
+                                        BorderBrush="{DynamicResource OverlayBuffTileBorderBrush}"
                                         BorderThickness="1">
                                     <Image Source="{Binding IconSource}"
                                            Stretch="Uniform"
@@ -68,7 +68,7 @@
             <StackPanel Grid.Column="2"
                         Visibility="{Binding HasExpBuffs, Converter={StaticResource BooleanToVisibilityConverter}}">
                 <TextBlock Text="경험치"
-                           Foreground="#9DDEF7"
+                           Foreground="{DynamicResource OverlayExpAccentBrush}"
                            FontSize="11"
                            FontWeight="Bold"
                            Margin="0,0,0,4"/>
@@ -79,8 +79,8 @@
                                 <Border Width="28"
                                         Height="28"
                                         CornerRadius="8"
-                                        Background="#18000000"
-                                        BorderBrush="#55FFFFFF"
+                                        Background="{DynamicResource OverlayBuffTileBackgroundBrush}"
+                                        BorderBrush="{DynamicResource OverlayBuffTileBorderBrush}"
                                         BorderThickness="1">
                                     <Image Source="{Binding IconSource}"
                                            Stretch="Uniform"
