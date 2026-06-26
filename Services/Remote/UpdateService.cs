@@ -7,6 +7,7 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Reflection;
 using System.Text.Json;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using TWChatOverlay.Views;
@@ -26,6 +27,8 @@ namespace TWChatOverlay.Services
         private const string GitHubOwner = "TWHome-Git";
         private const string GitHubRepo = "TWChatOverlay";
         private static readonly string LatestReleaseUrl = $"https://api.github.com/repos/{GitHubOwner}/{GitHubRepo}/releases/latest";
+        private static readonly TimeSpan UpdateMetadataTimeout = TimeSpan.FromSeconds(8);
+        private static readonly TimeSpan UpdateDownloadTimeout = TimeSpan.FromMinutes(15);
 
         private sealed record ReleaseInfo(string TagName, Version LatestVersion, string ReleaseBody, string? DownloadUrl);
 
@@ -37,19 +40,23 @@ namespace TWChatOverlay.Services
 
         public static async Task<UpdateCheckResult> CheckForUpdateAsync(bool forceInstallLatest, bool showNoUpdateMessage)
         {
+            var stopwatch = Stopwatch.StartNew();
             try
             {
-                using var client = new HttpClient();
-                client.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue("TWChatOverlay", GetCurrentVersion().ToString()));
-                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/vnd.github+json"));
+                AppLogger.Info($"Starting update check. ForceInstallLatest={forceInstallLatest}, ShowNoUpdateMessage={showNoUpdateMessage}");
+                using var metadataClient = CreateClient(UpdateMetadataTimeout);
 
-                ReleaseInfo? release = await GetLatestReleaseInfoAsync(client).ConfigureAwait(false);
+                ReleaseInfo? release = await GetLatestReleaseInfoAsync(metadataClient).ConfigureAwait(false);
                 if (release == null)
+                {
+                    AppLogger.Warn($"Update check returned no release metadata after {stopwatch.ElapsedMilliseconds} ms.");
                     return UpdateCheckResult.Failed;
+                }
 
                 Version currentVersion = GetCurrentVersion();
                 bool hasNewer = release.LatestVersion > currentVersion;
                 bool shouldPrompt = forceInstallLatest || hasNewer;
+                AppLogger.Info($"Update metadata loaded in {stopwatch.ElapsedMilliseconds} ms. Current={FormatVersion(currentVersion)}, Latest={release.TagName}, HasNewer={hasNewer}");
 
                 if (!shouldPrompt)
                 {
@@ -67,21 +74,37 @@ namespace TWChatOverlay.Services
                         }).ConfigureAwait(false);
                     }
 
+                    AppLogger.Info($"Update check completed with no update after {stopwatch.ElapsedMilliseconds} ms.");
                     return UpdateCheckResult.NoUpdate;
                 }
 
                 bool confirmed = await ShowUpdatePromptAsync(currentVersion, release, forceInstallLatest).ConfigureAwait(false);
                 if (!confirmed)
+                {
+                    AppLogger.Info($"Update prompt was declined after {stopwatch.ElapsedMilliseconds} ms.");
                     return UpdateCheckResult.UpdateDeclined;
+                }
 
                 if (string.IsNullOrWhiteSpace(release.DownloadUrl))
+                {
+                    AppLogger.Warn("Update metadata did not include a downloadable zip asset.");
                     return UpdateCheckResult.Failed;
+                }
 
-                bool applied = await DownloadAndApplyUpdateAsync(client, release.DownloadUrl).ConfigureAwait(false);
+                using var downloadClient = CreateClient(UpdateDownloadTimeout);
+                bool applied = await DownloadAndApplyUpdateAsync(downloadClient, release.DownloadUrl).ConfigureAwait(false);
+                AppLogger.Info($"Update apply finished with result={applied} after {stopwatch.ElapsedMilliseconds} ms.");
                 return applied ? UpdateCheckResult.UpdateApplied : UpdateCheckResult.Failed;
+            }
+            catch (OperationCanceledException ex)
+            {
+                AppLogger.Warn($"Update check timed out after {stopwatch.ElapsedMilliseconds} ms.", ex);
+                Debug.WriteLine($"업데이트 확인 타임아웃: {ex.Message}");
+                return UpdateCheckResult.Failed;
             }
             catch (Exception ex)
             {
+                AppLogger.Warn($"Update check failed after {stopwatch.ElapsedMilliseconds} ms.", ex);
                 Debug.WriteLine($"업데이트 확인 오류: {ex.Message}");
                 return UpdateCheckResult.Failed;
             }
@@ -89,11 +112,15 @@ namespace TWChatOverlay.Services
 
         private static async Task<ReleaseInfo?> GetLatestReleaseInfoAsync(HttpClient client)
         {
-            using var response = await client.GetAsync(LatestReleaseUrl).ConfigureAwait(false);
+            using var cts = new CancellationTokenSource(UpdateMetadataTimeout);
+            using var response = await client.GetAsync(LatestReleaseUrl, cts.Token).ConfigureAwait(false);
             if (!response.IsSuccessStatusCode)
+            {
+                AppLogger.Warn($"Update metadata request returned HTTP {(int)response.StatusCode}.");
                 return null;
+            }
 
-            string json = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+            string json = await response.Content.ReadAsStringAsync(cts.Token).ConfigureAwait(false);
             using var doc = JsonDocument.Parse(json);
             var root = doc.RootElement;
 
@@ -108,12 +135,23 @@ namespace TWChatOverlay.Services
             return new ReleaseInfo(tagName.Trim(), latestVersion, releaseBody.Trim(), downloadUrl);
         }
 
+        private static HttpClient CreateClient(TimeSpan timeout)
+        {
+            var client = new HttpClient
+            {
+                Timeout = timeout
+            };
+            client.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue("TWChatOverlay", GetCurrentVersion().ToString()));
+            client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/vnd.github+json"));
+            return client;
+        }
+
         private static Task<bool> ShowUpdatePromptAsync(Version currentVersion, ReleaseInfo release, bool forceInstallLatest)
         {
             string windowTitle = forceInstallLatest ? "수동 업데이트" : "업데이트 알림";
             string headline = forceInstallLatest
                 ? ""
-                : "GitHub Releases 본문에서 이번 버전의 변경 사항을 확인하세요.";
+                : "업데이트 내역";
             string footerHint = forceInstallLatest
                 ? "업데이트를 시작하면 앱이 잠시 종료되고 최신 파일이 다시 설치됩니다."
                 : "업데이트를 시작하면 앱이 잠시 종료되고 최신 파일이 적용됩니다.";

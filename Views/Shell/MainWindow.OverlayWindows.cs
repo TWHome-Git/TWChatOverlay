@@ -54,9 +54,10 @@ namespace TWChatOverlay.Views
                 IsHitTestVisible = true;
                 Visibility = Visibility.Visible;
                 ApplyMainTabState(_currentTabTag, persistSettings: false, refreshLogDisplay: false);
+                ShowMainTabsTemporarily();
                 RestoreSavedChatCloneWindows();
                 SyncChatCloneWindowsVisibility();
-                RequestRefreshLogDisplay();
+                RequestRefreshLogDisplay(force: true);
                 CompleteInitialPresentation();
             }
             else

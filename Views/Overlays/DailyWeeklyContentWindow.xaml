@@ -25,9 +25,9 @@
         <BooleanToVisibilityConverter x:Key="BoolToVis"/>
         <converters:AddValueConverter x:Key="AddValueConverter"/>
         <Style x:Key="IncrementButtonStyle" TargetType="Button">
-            <Setter Property="Background" Value="#21262D"/>
-            <Setter Property="Foreground" Value="#FFCC00"/>
-            <Setter Property="BorderBrush" Value="#30363D"/>
+            <Setter Property="Background" Value="{DynamicResource OverlayCardBackgroundBrush}"/>
+            <Setter Property="Foreground" Value="{DynamicResource OverlayRareAccentBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource OverlayStrongBorderBrush}"/>
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="FontSize" Value="14"/>
             <Setter Property="Padding" Value="0"/>
@@ -45,13 +45,13 @@
             </Setter>
             <Style.Triggers>
                 <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="Background" Value="#30363D"/>
+                    <Setter Property="Background" Value="{DynamicResource OverlaySurfaceAltBackgroundBrush}"/>
                 </Trigger>
             </Style.Triggers>
         </Style>
         <Style x:Key="SettingsButtonStyle" TargetType="Button">
             <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="Foreground" Value="#8B949E"/>
+            <Setter Property="Foreground" Value="{DynamicResource OverlaySubtleTextBrush}"/>
             <Setter Property="BorderThickness" Value="0"/>
             <Setter Property="FontSize" Value="13"/>
             <Setter Property="Template">
@@ -65,15 +65,15 @@
             </Setter>
             <Style.Triggers>
                 <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="Background" Value="#30363D"/>
-                    <Setter Property="Foreground" Value="Cyan"/>
+                    <Setter Property="Background" Value="{DynamicResource OverlaySurfaceAltBackgroundBrush}"/>
+                    <Setter Property="Foreground" Value="{DynamicResource OverlayExpAccentBrush}"/>
                 </Trigger>
             </Style.Triggers>
         </Style>
         <Style x:Key="CountButtonStyle" TargetType="Button">
-            <Setter Property="Background" Value="#21262D"/>
+            <Setter Property="Background" Value="{DynamicResource OverlayCardBackgroundBrush}"/>
             <Setter Property="Foreground" Value="White"/>
-            <Setter Property="BorderBrush" Value="#30363D"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource OverlayStrongBorderBrush}"/>
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="FontSize" Value="12"/>
             <Setter Property="Width" Value="20"/>
@@ -93,24 +93,24 @@
             </Setter>
             <Style.Triggers>
                 <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="Background" Value="#30363D"/>
+                    <Setter Property="Background" Value="{DynamicResource OverlaySurfaceAltBackgroundBrush}"/>
                 </Trigger>
             </Style.Triggers>
         </Style>
     </Window.Resources>
     <Grid>
-        <Border Margin="0,30,0,0" Background="#E00D1117" CornerRadius="8" BorderBrush="#30363D" BorderThickness="1">
+        <Border Margin="0,30,0,0" Background="{DynamicResource OverlayWindowBackgroundBrush}" CornerRadius="8" BorderBrush="{DynamicResource OverlayStrongBorderBrush}" BorderThickness="1">
             <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="34"/>
                 <RowDefinition Height="*"/>
                 <RowDefinition Height="36"/>
             </Grid.RowDefinitions>
-            <Border Grid.Row="0" Background="#161B22" CornerRadius="8,8,0,0"
+            <Border Grid.Row="0" Background="{DynamicResource OverlaySurfaceBackgroundBrush}" CornerRadius="8,8,0,0"
                     MouseLeftButtonDown="TitleBar_MouseLeftButtonDown" Cursor="SizeAll">
                 <Grid Margin="10,0,6,0">
                     <TextBlock Text="일간/주간 컨텐츠 확인"
-                               Foreground="Cyan"
+                               Foreground="{DynamicResource OverlayTitleAccentTextBrush}"
                                FontSize="13"
                                FontWeight="SemiBold"
                                HorizontalAlignment="Center"
@@ -126,7 +126,7 @@
                                 Cursor="Hand"
                                 Background="Transparent"
                                 BorderThickness="0"
-                                Foreground="#8B949E"
+                                Foreground="{DynamicResource OverlaySubtleTextBrush}"
                                 FontSize="13"
                                 Padding="0"
                                 Width="22"
@@ -148,13 +148,13 @@
                 </ScrollViewer.Style>
                 <StackPanel>
                     <DockPanel Margin="0,2,4,6" LastChildFill="False">
-                        <Border DockPanel.Dock="Left" Width="3" Background="Cyan" CornerRadius="1" Margin="0,0,6,0"/>
-                        <TextBlock DockPanel.Dock="Left" Text="일일 컨텐츠" Foreground="#C9D1D9"
+                        <Border DockPanel.Dock="Left" Width="3" Background="{DynamicResource OverlayExpAccentBrush}" CornerRadius="1" Margin="0,0,6,0"/>
+                        <TextBlock DockPanel.Dock="Left" Text="일일 컨텐츠" Foreground="{DynamicResource OverlayInfoTextBrush}"
                                    FontSize="{Binding DailyWeeklyContentFontSize, Converter={StaticResource AddValueConverter}, ConverterParameter=4}"
-                                   FontWeight="SemiBold" VerticalAlignment="Center"/>
-                        <TextBlock DockPanel.Dock="Right" Text="{Binding DailyProgressDisplay}" Foreground="#8B949E"
+                                    FontWeight="SemiBold" VerticalAlignment="Center"/>
+                        <TextBlock DockPanel.Dock="Right" Text="{Binding DailyProgressDisplay}" Foreground="{DynamicResource OverlaySubtleTextBrush}"
                                    FontSize="{Binding DailyWeeklyContentFontSize, Converter={StaticResource AddValueConverter}, ConverterParameter=3}"
-                                   VerticalAlignment="Center"/>
+                                    VerticalAlignment="Center"/>
                     </DockPanel>
                     <ItemsControl ItemsSource="{Binding DailyContentItems}">
                     <ItemsControl.ItemContainerStyle>
@@ -188,7 +188,7 @@
                                 <DockPanel LastChildFill="True">
                                     <Border DockPanel.Dock="Left" Width="16"
                                             Visibility="{Binding IsSubItem, Converter={StaticResource BoolToVis}}"/>
-                                    <TextBlock DockPanel.Dock="Left" Text="•" Foreground="#6E7681" FontSize="10"
+                                    <TextBlock DockPanel.Dock="Left" Text="•" Foreground="{DynamicResource OverlaySubtleTextBrush}" FontSize="10"
                                                VerticalAlignment="Center" Margin="0,0,4,0">
                                         <TextBlock.Style>
                                             <Style TargetType="TextBlock">
@@ -204,9 +204,9 @@
                                             </Style>
                                         </TextBlock.Style>
                                     </TextBlock>
-                                    <TextBlock DockPanel.Dock="Right"
+                                            <TextBlock DockPanel.Dock="Right"
                                                Text="{Binding VisualCountDisplay}"
-                                               Foreground="#FFCC00"
+                                               Foreground="{DynamicResource OverlayRareAccentBrush}"
                                                FontSize="{Binding DataContext.DailyWeeklyContentFontSize, RelativeSource={RelativeSource AncestorType=Window}}"
                                                VerticalAlignment="Center" Margin="4,0,0,0">
                                         <TextBlock.Style>
@@ -234,7 +234,7 @@
                                                     <DataTrigger Binding="{Binding IsRegionGroup}" Value="True">
                                                         <Setter Property="FontWeight" Value="Bold"/>
                                                         <Setter Property="FontSize" Value="{Binding DataContext.DailyWeeklyContentFontSize, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource AddValueConverter}, ConverterParameter=2}"/>
-                                                        <Setter Property="Foreground" Value="#66D9EF"/>
+                                                        <Setter Property="Foreground" Value="{DynamicResource OverlayExpAccentBrush}"/>
                                                     </DataTrigger>
                                                     <DataTrigger Binding="{Binding IsCleared}" Value="True">
                                                         <Setter Property="TextDecorations" Value="Strikethrough"/>
@@ -250,11 +250,11 @@
                     </ItemsControl>
 
                     <DockPanel Margin="0,8,4,6" LastChildFill="False">
-                        <Border DockPanel.Dock="Left" Width="3" Background="Cyan" CornerRadius="1" Margin="0,0,6,0"/>
-                        <TextBlock DockPanel.Dock="Left" Text="주간 컨텐츠" Foreground="#C9D1D9"
+                        <Border DockPanel.Dock="Left" Width="3" Background="{DynamicResource OverlayTitleAccentTextBrush}" CornerRadius="1" Margin="0,0,6,0"/>
+                        <TextBlock DockPanel.Dock="Left" Text="주간 컨텐츠" Foreground="{DynamicResource OverlayInfoTextBrush}"
                                    FontSize="{Binding DailyWeeklyContentFontSize, Converter={StaticResource AddValueConverter}, ConverterParameter=4}"
                                    FontWeight="SemiBold" VerticalAlignment="Center"/>
-                        <TextBlock DockPanel.Dock="Right" Text="{Binding WeeklyProgressDisplay}" Foreground="#8B949E"
+                        <TextBlock DockPanel.Dock="Right" Text="{Binding WeeklyProgressDisplay}" Foreground="{DynamicResource OverlaySubtleTextBrush}"
                                    FontSize="{Binding DailyWeeklyContentFontSize, Converter={StaticResource AddValueConverter}, ConverterParameter=3}"
                                    VerticalAlignment="Center"/>
                     </DockPanel>
@@ -290,7 +290,7 @@
                                     <DockPanel LastChildFill="True">
                                         <Border DockPanel.Dock="Left" Width="16"
                                                 Visibility="{Binding IsSubItem, Converter={StaticResource BoolToVis}}"/>
-                                        <TextBlock DockPanel.Dock="Left" Text="•" Foreground="#6E7681" FontSize="10"
+                                        <TextBlock DockPanel.Dock="Left" Text="•" Foreground="{DynamicResource OverlaySubtleTextBrush}" FontSize="10"
                                                    VerticalAlignment="Center" Margin="0,0,4,0">
                                             <TextBlock.Style>
                                                 <Style TargetType="TextBlock">
@@ -308,7 +308,7 @@
                                         </TextBlock>
                                         <TextBlock DockPanel.Dock="Right"
                                                    Text="{Binding VisualCountDisplay}"
-                                                   Foreground="#FFCC00"
+                                                   Foreground="{DynamicResource OverlayRareAccentBrush}"
                                                    FontSize="{Binding DataContext.DailyWeeklyContentFontSize, RelativeSource={RelativeSource AncestorType=Window}}"
                                                    VerticalAlignment="Center" Margin="4,0,0,0">
                                             <TextBlock.Style>
@@ -336,7 +336,7 @@
                                                         <DataTrigger Binding="{Binding IsRegionGroup}" Value="True">
                                                             <Setter Property="FontWeight" Value="Bold"/>
                                                             <Setter Property="FontSize" Value="{Binding DataContext.DailyWeeklyContentFontSize, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource AddValueConverter}, ConverterParameter=2}"/>
-                                                            <Setter Property="Foreground" Value="#66D9EF"/>
+                                                            <Setter Property="Foreground" Value="{DynamicResource OverlayExpAccentBrush}"/>
                                                         </DataTrigger>
                                                         <DataTrigger Binding="{Binding IsCleared}" Value="True">
                                                             <Setter Property="TextDecorations" Value="Strikethrough"/>
@@ -363,8 +363,8 @@
                                 </Style.Triggers>
                             </Style>
                         </DockPanel.Style>
-                        <Border DockPanel.Dock="Left" Width="3" Background="#4CAF50" CornerRadius="1" Margin="0,0,6,0"/>
-                        <TextBlock DockPanel.Dock="Left" Text="완료된 컨텐츠" Foreground="#4CAF50" FontSize="13" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                        <Border DockPanel.Dock="Left" Width="3" Background="{DynamicResource OverlaySuccessAccentBrush}" CornerRadius="1" Margin="0,0,6,0"/>
+                        <TextBlock DockPanel.Dock="Left" Text="완료된 컨텐츠" Foreground="{DynamicResource OverlaySuccessAccentBrush}" FontSize="13" FontWeight="SemiBold" VerticalAlignment="Center"/>
                     </DockPanel>
                     <ItemsControl ItemsSource="{Binding CompletedItems}">
                         <ItemsControl.Style>
@@ -383,7 +383,7 @@
                                     <DockPanel LastChildFill="True">
                                         <Border DockPanel.Dock="Left" Width="16"
                                                 Visibility="{Binding IsSubItem, Converter={StaticResource BoolToVis}}"/>
-                                        <TextBlock DockPanel.Dock="Left" Text="•" Foreground="#6E7681" FontSize="10"
+                                        <TextBlock DockPanel.Dock="Left" Text="•" Foreground="{DynamicResource OverlaySubtleTextBrush}" FontSize="10"
                                                    VerticalAlignment="Center" Margin="0,0,4,0">
                                             <TextBlock.Style>
                                                 <Style TargetType="TextBlock">
@@ -401,7 +401,7 @@
                                         </TextBlock>
                                         <TextBlock DockPanel.Dock="Right"
                                                    Text="{Binding VisualCountDisplay}"
-                                                   Foreground="#FFCC00" FontSize="11"
+                                                   Foreground="{DynamicResource OverlayRareAccentBrush}" FontSize="11"
                                                    VerticalAlignment="Center" Margin="4,0,0,0">
                                             <TextBlock.Style>
                                                 <Style TargetType="TextBlock">
@@ -418,7 +418,7 @@
                                             <TextBlock.Style>
                                                 <Style TargetType="TextBlock">
                                                     <Setter Property="FontSize" Value="{Binding DataContext.DailyWeeklyContentFontSize, RelativeSource={RelativeSource AncestorType=Window}}"/>
-                                                    <Setter Property="Foreground" Value="#4CAF50"/>
+                                                    <Setter Property="Foreground" Value="{DynamicResource OverlaySuccessAccentBrush}"/>
                                                     <Setter Property="TextDecorations" Value="Strikethrough"/>
                                                     <Setter Property="FontWeight" Value="Normal"/>
                                                     <Style.Triggers>
@@ -453,15 +453,15 @@
                     </Style>
                 </ScrollViewer.Style>
                 <StackPanel>
-                    <Border Margin="4,4,4,8" Padding="8,6" CornerRadius="6" Background="#121A24">
+                    <Border Margin="4,4,4,8" Padding="8,6" CornerRadius="6" Background="{DynamicResource OverlayCardBackgroundBrush}">
                         <DockPanel LastChildFill="True">
-                            <TextBlock DockPanel.Dock="Left" Text="하위 항목 폰트 크기" Foreground="#C9D1D9" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                            <TextBlock DockPanel.Dock="Right" Text="{Binding DailyWeeklyContentFontSizeDisplay}" Foreground="#C9D1D9" FontWeight="SemiBold" VerticalAlignment="Center" Margin="8,0,0,0"/>
+                            <TextBlock DockPanel.Dock="Left" Text="하위 항목 폰트 크기" Foreground="{DynamicResource OverlayInfoTextBrush}" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                            <TextBlock DockPanel.Dock="Right" Text="{Binding DailyWeeklyContentFontSizeDisplay}" Foreground="{DynamicResource OverlayInfoTextBrush}" FontWeight="SemiBold" VerticalAlignment="Center" Margin="8,0,0,0"/>
                             <Slider Minimum="10" Maximum="28" TickFrequency="1" IsSnapToTickEnabled="True"
                                     Value="{Binding DailyWeeklyContentFontSize, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
                         </DockPanel>
                     </Border>
-                    <TextBlock Text="항목 설정" Foreground="#8B949E" FontSize="11" Margin="4,4,0,6"/>
+                    <TextBlock Text="항목 설정" Foreground="{DynamicResource OverlaySubtleTextBrush}" FontSize="11" Margin="4,4,0,6"/>
                     <ItemsControl ItemsSource="{Binding TrackItems}">
                         <ItemsControl.ItemTemplate>
                         <DataTemplate DataType="{x:Type models:DailyWeeklyContentLog}">
@@ -483,7 +483,7 @@
                                                     Click="CountDown_Click" Tag="{Binding}"/>
                                             <TextBlock Text="{Binding EffectiveRequiredCount}"
                                                        Width="24" TextAlignment="Center"
-                                                       Foreground="#FFCC00" VerticalAlignment="Center" FontSize="12"/>
+                                                       Foreground="{DynamicResource OverlayRareAccentBrush}" VerticalAlignment="Center" FontSize="12"/>
                                             <Button Content="+" Style="{StaticResource CountButtonStyle}"
                                                     Click="CountUp_Click" Tag="{Binding}"/>
                                         </StackPanel>
@@ -492,7 +492,7 @@
                                                   Checked="SettingEnabled_Changed" Unchecked="SettingEnabled_Changed"
                                                   Tag="{Binding}">
                                             <CheckBox.Content>
-                                                <TextBlock Text="{Binding Name}" Foreground="#C9D1D9" FontSize="12"/>
+                                                <TextBlock Text="{Binding Name}" Foreground="{DynamicResource OverlayInfoTextBrush}" FontSize="12"/>
                                             </CheckBox.Content>
                                         </CheckBox>
                                     </DockPanel>
@@ -503,11 +503,11 @@
                 </StackPanel>
             </ScrollViewer>
 
-            <Border Grid.Row="2" Background="#161B22" CornerRadius="0,0,8,8" Padding="10,0">
+            <Border Grid.Row="2" Background="{DynamicResource OverlaySurfaceBackgroundBrush}" CornerRadius="0,0,8,8" Padding="10,0">
                 <DockPanel VerticalAlignment="Center">
                     <Button DockPanel.Dock="Right" Content="갱신" Click="Reset_Click"
-                            Width="60" Height="24" Background="#21262D" Foreground="White"
-                            BorderBrush="#30363D" BorderThickness="1" FontSize="11">
+                            Width="60" Height="24" Background="{DynamicResource OverlayCardBackgroundBrush}" Foreground="White"
+                            BorderBrush="{DynamicResource OverlayStrongBorderBrush}" BorderThickness="1" FontSize="11">
                         <Button.Resources>
                             <Style TargetType="Border">
                                 <Setter Property="CornerRadius" Value="4"/>
@@ -515,7 +515,7 @@
                         </Button.Resources>
                     </Button>
                     <TextBlock Text="{Binding ProgressDisplay}"
-                               Foreground="#888" FontSize="11" VerticalAlignment="Center"/>
+                               Foreground="{DynamicResource OverlaySubtleTextBrush}" FontSize="11" VerticalAlignment="Center"/>
                 </DockPanel>
             </Border>
 
@@ -535,11 +535,11 @@
                     </Style>
                 </Border.Style>
                 <Path Data="M 0,16 L 16,0 M 5,16 L 16,5 M 10,16 L 16,10"
-                      Stroke="#8B949E" StrokeThickness="1.5" Opacity="0.8"
+                      Stroke="{DynamicResource OverlaySubtleTextBrush}" StrokeThickness="1.5" Opacity="0.8"
                       StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
             </Border>
 
-            <Border Grid.RowSpan="3" Background="#A010131A" Panel.ZIndex="100">
+            <Border Grid.RowSpan="3" Background="{DynamicResource OverlayLoadingMaskBrush}" Panel.ZIndex="100">
                 <Border.Style>
                     <Style TargetType="Border">
                         <Setter Property="Visibility" Value="Collapsed"/>
@@ -551,9 +551,9 @@
                     </Style>
                 </Border.Style>
                 <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
-                    <Border Width="28" Height="28" BorderBrush="#00BCD4" BorderThickness="3" CornerRadius="14" Margin="0,0,0,8"/>
+                    <Border Width="28" Height="28" BorderBrush="{DynamicResource OverlayLoadingAccentBrush}" BorderThickness="3" CornerRadius="14" Margin="0,0,0,8"/>
                     <TextBlock Text="일일/주간 데이터를 불러오는 중..."
-                               Foreground="#C9D1D9"
+                               Foreground="{DynamicResource OverlayInfoTextBrush}"
                                FontSize="12"
                                HorizontalAlignment="Center"/>
                 </StackPanel>

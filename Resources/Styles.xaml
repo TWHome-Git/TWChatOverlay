@@ -26,6 +26,55 @@
     <SolidColorBrush x:Key="SuccessBrush" Color="{StaticResource SuccessColor}"/>
     <SolidColorBrush x:Key="WarningBrush" Color="{StaticResource WarningColor}"/>
 
+    <!-- Switchable overlay palette -->
+    <SolidColorBrush x:Key="OverlayWindowBackgroundBrush" Color="#F51E1E1E"/>
+    <SolidColorBrush x:Key="OverlayWindowBorderBrush" Color="#60FFFFFF"/>
+    <SolidColorBrush x:Key="OverlayHeaderBackgroundBrush" Color="#FF332255"/>
+    <SolidColorBrush x:Key="OverlayDragBarBackgroundBrush" Color="#1A1A2E"/>
+    <SolidColorBrush x:Key="OverlayDragBarTextBrush" Color="#888888"/>
+    <SolidColorBrush x:Key="OverlayTabHoverBrush" Color="#30FFFFFF"/>
+    <SolidColorBrush x:Key="OverlayTabSelectedBrush" Color="#60FFFFFF"/>
+    <SolidColorBrush x:Key="OverlayTabSelectedBorderBrush" Color="#FFFFFFFF"/>
+    <SolidColorBrush x:Key="OverlayPanelBackgroundBrush" Color="#EE1A1A1B"/>
+    <SolidColorBrush x:Key="OverlayPanelBorderBrush" Color="#55FFFFFF"/>
+    <SolidColorBrush x:Key="OverlayBuffTileBackgroundBrush" Color="#18000000"/>
+    <SolidColorBrush x:Key="OverlayBuffTileBorderBrush" Color="#55FFFFFF"/>
+    <SolidColorBrush x:Key="OverlayHelperWindowBorderBrush" Color="#FF58A6FF"/>
+    <SolidColorBrush x:Key="OverlayMutedTextBrush" Color="#A8FFFFFF"/>
+    <SolidColorBrush x:Key="OverlayHintTextBrush" Color="#9FB0C0"/>
+    <SolidColorBrush x:Key="OverlayLabelTextBrush" Color="#DCE3EA"/>
+    <SolidColorBrush x:Key="OverlayRareAccentBrush" Color="#F8D66D"/>
+    <SolidColorBrush x:Key="OverlayExpAccentBrush" Color="#9DDEF7"/>
+    <SolidColorBrush x:Key="OverlayScrollThumbBrush" Color="#30363D"/>
+    <SolidColorBrush x:Key="OverlayScrollThumbHoverBrush" Color="#484F58"/>
+    <SolidColorBrush x:Key="OverlayScrollThumbActiveBrush" Color="#1F6FEB"/>
+    <SolidColorBrush x:Key="OverlayScrollButtonBackgroundBrush" Color="#1F6FEB"/>
+    <SolidColorBrush x:Key="OverlayScrollButtonHoverBrush" Color="#2D74F5"/>
+    <SolidColorBrush x:Key="OverlayScrollButtonBorderBrush" Color="#3A424B"/>
+    <SolidColorBrush x:Key="OverlayShellBackgroundBrush" Color="#10151D"/>
+    <SolidColorBrush x:Key="OverlaySurfaceBackgroundBrush" Color="#161B22"/>
+    <SolidColorBrush x:Key="OverlaySurfaceAltBackgroundBrush" Color="#2A2F38"/>
+    <SolidColorBrush x:Key="OverlayCardBackgroundBrush" Color="#2C323B"/>
+    <SolidColorBrush x:Key="OverlayStrongBorderBrush" Color="#30363D"/>
+    <SolidColorBrush x:Key="OverlayCardBorderBrush" Color="#34404C"/>
+    <SolidColorBrush x:Key="OverlayTitleAccentTextBrush" Color="#7FDBFF"/>
+    <SolidColorBrush x:Key="OverlaySubtleTextBrush" Color="#9AA4B2"/>
+    <SolidColorBrush x:Key="OverlayInfoTextBrush" Color="#C9D1D9"/>
+    <SolidColorBrush x:Key="OverlayHighlightBackgroundBrush" Color="#22000000"/>
+    <SolidColorBrush x:Key="OverlayAccentBorderBrush" Color="#FF58A6FF"/>
+    <SolidColorBrush x:Key="OverlayWarningBorderBrush" Color="#FFF5A623"/>
+    <SolidColorBrush x:Key="OverlaySuccessAccentBrush" Color="#4CAF50"/>
+    <SolidColorBrush x:Key="OverlayDangerBackgroundBrush" Color="#050505"/>
+    <SolidColorBrush x:Key="OverlayDangerBorderBrush" Color="#AA2B2B"/>
+    <SolidColorBrush x:Key="OverlayDangerAccentBrush" Color="#FF3B3B"/>
+    <SolidColorBrush x:Key="OverlayLoadingAccentBrush" Color="#00BCD4"/>
+    <SolidColorBrush x:Key="OverlayShoutBorderBrush" Color="#E0FFB347"/>
+    <SolidColorBrush x:Key="OverlayShoutFillBrush" Color="#FFB347"/>
+    <SolidColorBrush x:Key="OverlayShoutTextBrush" Color="#FFD39A"/>
+    <SolidColorBrush x:Key="OverlayLoadingMaskBrush" Color="#AA111317"/>
+    <SolidColorBrush x:Key="MenuButtonHoverBrush" Color="#1AFFFFFF"/>
+    <SolidColorBrush x:Key="MenuButtonPressedBrush" Color="#2AFFFFFF"/>
+
     <!-- Converters (Legacy) -->
     <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
 
@@ -47,11 +96,11 @@
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="BtnBorder" Property="Background" Value="#30FFFFFF"/>
+                            <Setter TargetName="BtnBorder" Property="Background" Value="{DynamicResource OverlayTabHoverBrush}"/>
                         </Trigger>
                         <Trigger Property="IsChecked" Value="True">
-                            <Setter TargetName="BtnBorder" Property="Background" Value="#60FFFFFF"/>
-                            <Setter TargetName="BtnBorder" Property="BorderBrush" Value="White"/>
+                            <Setter TargetName="BtnBorder" Property="Background" Value="{DynamicResource OverlayTabSelectedBrush}"/>
+                            <Setter TargetName="BtnBorder" Property="BorderBrush" Value="{DynamicResource OverlayTabSelectedBorderBrush}"/>
                             <Setter Property="FontWeight" Value="Bold"/>
                         </Trigger>
                     </ControlTemplate.Triggers>
@@ -78,11 +127,11 @@
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="BtnBorder" Property="Background" Value="#30FFFFFF"/>
+                            <Setter TargetName="BtnBorder" Property="Background" Value="{DynamicResource OverlayTabHoverBrush}"/>
                         </Trigger>
                         <Trigger Property="IsPressed" Value="True">
-                            <Setter TargetName="BtnBorder" Property="Background" Value="#60FFFFFF"/>
-                            <Setter TargetName="BtnBorder" Property="BorderBrush" Value="White"/>
+                            <Setter TargetName="BtnBorder" Property="Background" Value="{DynamicResource OverlayTabSelectedBrush}"/>
+                            <Setter TargetName="BtnBorder" Property="BorderBrush" Value="{DynamicResource OverlayTabSelectedBorderBrush}"/>
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
@@ -97,8 +146,8 @@
 
     <!-- TabControl Style -->
     <Style TargetType="TabControl" x:Key="SettingsTabControlStyle">
-        <Setter Property="Background" Value="{StaticResource PrimaryBackgroundBrush}"/>
-        <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}"/>
+        <Setter Property="Background" Value="{DynamicResource PrimaryBackgroundBrush}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
         <Setter Property="BorderThickness" Value="1"/>
         <Setter Property="Padding" Value="4"/>
         <Setter Property="Template">
@@ -215,7 +264,7 @@
 
     <!-- Secondary Button Style -->
     <Style x:Key="SecondaryButtonStyle" TargetType="Button">
-        <Setter Property="Background" Value="#30FFFFFF"/>
+        <Setter Property="Background" Value="{DynamicResource OverlayTabHoverBrush}"/>
         <Setter Property="Foreground" Value="White"/>
         <Setter Property="Height" Value="32"/>
         <Setter Property="Padding" Value="15,8"/>
@@ -232,10 +281,10 @@
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter Property="Background" Value="#50FFFFFF"/>
+                            <Setter Property="Background" Value="{DynamicResource OverlayTabSelectedBrush}"/>
                         </Trigger>
                         <Trigger Property="IsPressed" Value="True">
-                            <Setter Property="Background" Value="#70FFFFFF"/>
+                            <Setter Property="Background" Value="{DynamicResource OverlayTabSelectedBorderBrush}"/>
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
@@ -374,16 +423,16 @@
 
     <!-- Hint TextBlock Style -->
     <Style x:Key="HintTextStyle" TargetType="TextBlock">
-        <Setter Property="Foreground" Value="#60FFFFFF"/>
+        <Setter Property="Foreground" Value="{DynamicResource OverlayHintTextBrush}"/>
         <Setter Property="FontSize" Value="11"/>
         <Setter Property="Margin" Value="0,5,0,0"/>
     </Style>
 
     <!-- Input TextBox Style -->
     <Style x:Key="InputTextBoxStyle" TargetType="TextBox">
-        <Setter Property="Background" Value="#333"/>
+        <Setter Property="Background" Value="{DynamicResource OverlaySurfaceBackgroundBrush}"/>
         <Setter Property="Foreground" Value="White"/>
-        <Setter Property="BorderBrush" Value="#555"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource OverlayStrongBorderBrush}"/>
         <Setter Property="Padding" Value="10"/>
         <Setter Property="FontSize" Value="14"/>
         <Setter Property="VerticalContentAlignment" Value="Center"/>
@@ -391,7 +440,7 @@
 
     <!-- Settings Border Style -->
     <Style x:Key="SettingsBorderStyle" TargetType="Border">
-        <Setter Property="BorderBrush" Value="#33FFFFFF"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource OverlayWindowBorderBrush}"/>
         <Setter Property="BorderThickness" Value="0,0,0,1"/>
         <Setter Property="Margin" Value="0,0,0,20"/>
         <Setter Property="Padding" Value="0,0,0,20"/>
@@ -612,13 +661,13 @@
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="Thumb">
-                    <Border x:Name="ThumbBorder" Background="#30363D" CornerRadius="4" Margin="2" SnapsToDevicePixels="True"/>
+                    <Border x:Name="ThumbBorder" Background="{DynamicResource OverlayScrollThumbBrush}" CornerRadius="4" Margin="2" SnapsToDevicePixels="True"/>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="ThumbBorder" Property="Background" Value="#484F58"/>
+                            <Setter TargetName="ThumbBorder" Property="Background" Value="{DynamicResource OverlayScrollThumbHoverBrush}"/>
                         </Trigger>
                         <Trigger Property="IsDragging" Value="True">
-                            <Setter TargetName="ThumbBorder" Property="Background" Value="#1F6FEB"/>
+                            <Setter TargetName="ThumbBorder" Property="Background" Value="{DynamicResource OverlayScrollThumbActiveBrush}"/>
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
@@ -669,7 +718,7 @@
 
     <Style x:Key="CategoryButtonStyle" TargetType="Button">
         <Setter Property="Background" Value="Transparent"/>
-        <Setter Property="Foreground" Value="#C9D1D9"/>
+        <Setter Property="Foreground" Value="{DynamicResource OverlayInfoTextBrush}"/>
         <Setter Property="BorderThickness" Value="0"/>
         <Setter Property="BorderBrush" Value="Transparent"/>
         <!-- remove per-button padding; template provides consistent inner padding -->
@@ -690,7 +739,7 @@
         </Setter>
         <Style.Triggers>
             <Trigger Property="IsMouseOver" Value="True">
-                <Setter Property="Background" Value="#21262D"/>
+                <Setter Property="Background" Value="{DynamicResource MenuButtonHoverBrush}"/>
                 <Setter Property="Foreground" Value="White"/>
             </Trigger>
         </Style.Triggers>

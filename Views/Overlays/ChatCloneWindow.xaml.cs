@@ -268,6 +268,7 @@ namespace TWChatOverlay.Views
                 if (!wasVisible)
                 {
                     Show();
+                    ShowCloneTabsTemporarily();
                     RefreshLogDisplay();
                 }
             }
