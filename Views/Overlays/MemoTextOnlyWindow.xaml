@@ -8,9 +8,9 @@
         ShowInTaskbar="False"
         Width="420"
         Height="540">
-    <Border x:Name="OverlayBackground" Background="#00000000" MouseLeftButtonDown="Border_MouseLeftButtonDown">
+    <Border x:Name="OverlayBackground" Background="Transparent" MouseLeftButtonDown="Border_MouseLeftButtonDown">
         <TextBlock x:Name="MemoText"
-                   Foreground="#E8EDF7"
+                   Foreground="{DynamicResource OverlayInfoTextBrush}"
                    FontSize="20"
                    TextWrapping="Wrap"
                    Margin="8"

@@ -11,8 +11,8 @@
         Topmost="True"
         ShowActivated="False"
         Opacity="0">
-    <Border Background="#F0202229"
-            BorderBrush="#FF58C7FF"
+    <Border Background="{DynamicResource OverlayWindowBackgroundBrush}"
+            BorderBrush="{DynamicResource OverlayAccentBorderBrush}"
             BorderThickness="1.2"
             CornerRadius="8"
             Padding="16,10"
@@ -24,7 +24,7 @@
             </Grid.RowDefinitions>
 
             <TextBlock Text="던전 카운트"
-                       Foreground="#FF58C7FF"
+                       Foreground="{DynamicResource OverlayTitleAccentTextBrush}"
                        FontSize="13"
                        FontWeight="SemiBold"
                        TextAlignment="Center"/>

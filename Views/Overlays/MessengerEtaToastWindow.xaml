@@ -12,8 +12,8 @@
         ShowInTaskbar="False"
         Topmost="True"
         ShowActivated="False">
-    <Border Background="#E6191C22"
-            BorderBrush="#FF58A6FF"
+    <Border Background="{DynamicResource OverlayWindowBackgroundBrush}"
+            BorderBrush="{DynamicResource OverlayAccentBorderBrush}"
             BorderThickness="1.2"
             CornerRadius="8"
             Padding="12,8"
@@ -32,7 +32,7 @@
             <Border Grid.Row="0"
                     Grid.Column="0"
                     Grid.ColumnSpan="2"
-                    Background="#22000000"
+                    Background="{DynamicResource OverlayHighlightBackgroundBrush}"
                     CornerRadius="4"
                     Padding="6,4"
                     MouseLeftButtonDown="TitleBar_MouseLeftButtonDown">
@@ -59,8 +59,8 @@
                          IsReadOnly="True"
                          IsReadOnlyCaretVisible="True"
                          BorderThickness="0"
-                         Background="#22000000"
-                         Foreground="#FFC8E6FF"
+                         Background="{DynamicResource OverlayHighlightBackgroundBrush}"
+                         Foreground="{DynamicResource OverlayInfoTextBrush}"
                          FontSize="20"
                          VerticalScrollBarVisibility="Disabled"/>
         </Grid>
