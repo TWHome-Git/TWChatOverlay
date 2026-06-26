@@ -1370,7 +1370,6 @@ namespace TWChatOverlay.Views
 
                 var parser = new LogAnalysisService(_settings);
                 var lines = new List<string>();
-                var dedupe = new HashSet<string>(StringComparer.Ordinal);
 
                 for (DateTime day = weekStart; day <= weekEnd; day = day.AddDays(1))
                 {
@@ -1396,10 +1395,6 @@ namespace TWChatOverlay.Views
                         bool match = keywords.Any(k => text.Contains(k, StringComparison.Ordinal)) ||
                                      keyword2.Any(k => text.Contains(k, StringComparison.Ordinal));
                         if (!match)
-                            continue;
-
-                        string key = $"{day:yyyy-MM-dd}|{text}";
-                        if (!dedupe.Add(key))
                             continue;
 
                         lines.Add($"<div class=\"log content\" data-date=\"{day:yyyy-MM-dd}\">{WebUtility.HtmlEncode(text)}</div>");

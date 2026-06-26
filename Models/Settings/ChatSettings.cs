@@ -711,6 +711,7 @@ namespace TWChatOverlay.Models
                 OnPropertyChanged();
             }
         }
+
         [JsonPropertyOrder(900)]
         public int LastSelectedPresetNumber
         {

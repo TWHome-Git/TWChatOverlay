@@ -11,8 +11,8 @@
         WindowStartupLocation="Manual"
         Background="Transparent"
         AllowsTransparency="True">
-    <Border Background="#A6191C22"
-            BorderBrush="#FF58A6FF"
+    <Border Background="{DynamicResource OverlayWindowBackgroundBrush}"
+            BorderBrush="{DynamicResource OverlayAccentBorderBrush}"
             BorderThickness="1.2"
             CornerRadius="8"
             Padding="12,6"
@@ -25,7 +25,7 @@
                            FontWeight="SemiBold"
                            HorizontalAlignment="Center"/>
                 <TextBlock Text="드래그해서 실제 토스트 위치를 맞추세요"
-                           Foreground="#9FB0C0"
+                           Foreground="{DynamicResource OverlayHintTextBrush}"
                            FontSize="11"
                            HorizontalAlignment="Center"/>
             </StackPanel>

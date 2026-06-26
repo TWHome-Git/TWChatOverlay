@@ -18,7 +18,7 @@
             </Grid.RowDefinitions>
 
             <Border Grid.Row="0"
-                    Background="#161B22"
+                    Background="{DynamicResource OverlaySurfaceBackgroundBrush}"
                     BorderBrush="{DynamicResource BorderBrush}"
                     BorderThickness="1"
                     CornerRadius="8"
@@ -28,7 +28,7 @@
                 <Grid>
                     <TextBlock x:Name="HeaderTitle"
                                Text="추가 기능"
-                               Foreground="#7FDBFF"
+                               Foreground="{DynamicResource OverlayTitleAccentTextBrush}"
                                FontSize="22"
                                FontWeight="Bold"
                                HorizontalAlignment="Center"
@@ -50,13 +50,13 @@
                     CornerRadius="8"
                     Padding="10">
                 <Border x:Name="HostContent"
-                        Background="#161B22"
-                        BorderBrush="#30363D"
+                        Background="{DynamicResource OverlaySurfaceBackgroundBrush}"
+                        BorderBrush="{DynamicResource OverlayStrongBorderBrush}"
                         BorderThickness="1"
                         CornerRadius="8"
                         Padding="10">
                     <TextBlock Text="표시할 화면이 없습니다."
-                               Foreground="#9AA4B2"
+                               Foreground="{DynamicResource OverlaySubtleTextBrush}"
                                HorizontalAlignment="Center"
                                VerticalAlignment="Center"/>
                 </Border>

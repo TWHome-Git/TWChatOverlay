@@ -188,11 +188,11 @@ namespace TWChatOverlay.Views
             };
             _logService.InitialLogsLoaded += () =>
             {
-                Dispatcher.BeginInvoke(new Action(RequestRefreshLogDisplay), DispatcherPriority.ApplicationIdle);
+                Dispatcher.BeginInvoke(new Action(() => RequestRefreshLogDisplay()), DispatcherPriority.ApplicationIdle);
             };
             BlacklistService.BlacklistChanged += () =>
             {
-                Dispatcher.BeginInvoke(new Action(RequestRefreshLogDisplay), DispatcherPriority.Background);
+                Dispatcher.BeginInvoke(new Action(() => RequestRefreshLogDisplay()), DispatcherPriority.Background);
             };
             this.Deactivated += (s, e) => ReleaseMouseForce();
             this.Activated += (s, e) => ReleaseMouseForce();
@@ -719,7 +719,9 @@ namespace TWChatOverlay.Views
             {
                 await Dispatcher.Yield(DispatcherPriority.ApplicationIdle);
                 UpdateStartupLoadingProgress(10, "업데이트를 확인하는 중입니다.");
+                AppLogger.Info("Startup data initialization: beginning update check.");
                 var updateResult = await UpdateService.CheckForUpdateAsync(forceInstallLatest: false, showNoUpdateMessage: false);
+                AppLogger.Info($"Startup data initialization: update check completed with result={updateResult}.");
                 if (updateResult == UpdateCheckResult.UpdateApplied)
                 {
                     return;

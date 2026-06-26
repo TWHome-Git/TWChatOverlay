@@ -12,8 +12,8 @@
         Topmost="True"
         WindowStartupLocation="CenterScreen">
     <Border x:Name="RootBorder"
-            Background="#F0181B20"
-            BorderBrush="#FF58A6FF"
+            Background="{DynamicResource OverlayWindowBackgroundBrush}"
+            BorderBrush="{DynamicResource OverlayAccentBorderBrush}"
             BorderThickness="1.4"
             CornerRadius="12"
             Padding="4">
@@ -54,7 +54,7 @@
 
             <Border Grid.Row="1"
                     Background="Transparent"
-                    BorderBrush="#26FFFFFF"
+                    BorderBrush="{DynamicResource OverlayWindowBorderBrush}"
                     BorderThickness="1"
                     CornerRadius="4"
                     Padding="4">

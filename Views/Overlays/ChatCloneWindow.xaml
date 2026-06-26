@@ -22,10 +22,10 @@
         <Border Background="Transparent" Padding="5">
             <Border x:Name="MainBorder"
                     TextElement.FontFamily="{Binding CurrentFont, RelativeSource={RelativeSource AncestorType=Window}}"
-                    Background="#F51E1E1E"
+                    Background="{DynamicResource OverlayWindowBackgroundBrush}"
                     CornerRadius="10"
                     BorderThickness="1.5"
-                    BorderBrush="#60FFFFFF"
+                    BorderBrush="{DynamicResource OverlayWindowBorderBrush}"
                     ClipToBounds="True"
                     MouseEnter="MainBorder_MouseEnter"
                     MouseMove="MainBorder_MouseMove">
@@ -38,12 +38,12 @@
 
                     <Border Grid.Row="0"
                             x:Name="DragBar"
-                            Background="#1A1A2E"
+                            Background="{DynamicResource OverlayDragBarBackgroundBrush}"
                             MouseLeftButtonDown="DragBar_MouseLeftButtonDown"
                             Visibility="Collapsed"
                             Cursor="Hand">
                         <TextBlock Text="⋮⋮ 설정에서 드래그하여 이동 ⋮⋮"
-                                   Foreground="#888"
+                                   Foreground="{DynamicResource OverlayDragBarTextBrush}"
                                    FontSize="11"
                                    TextAlignment="Center"
                                    VerticalAlignment="Center"
@@ -52,7 +52,7 @@
 
                     <Border x:Name="MainTabBackground"
                             Grid.Row="1"
-                            Background="#FF332255"
+                            Background="{DynamicResource OverlayHeaderBackgroundBrush}"
                             CornerRadius="3,3,0,0"/>
 
                     <Grid x:Name="MainTabPanel" Grid.Row="1">
@@ -95,8 +95,8 @@
                                       HorizontalScrollBarVisibility="Disabled"
                                       PreviewMouseWheel="SettingsScrollViewer_PreviewMouseWheel"
                                       Background="Transparent">
-                            <Border Background="#EE1A1A1B"
-                                    BorderBrush="#55FFFFFF"
+                            <Border Background="{DynamicResource OverlayPanelBackgroundBrush}"
+                                    BorderBrush="{DynamicResource OverlayPanelBorderBrush}"
                                     BorderThickness="1"
                                     CornerRadius="10"
                                     Margin="0,8,0,0"
@@ -116,7 +116,7 @@
                                                    FontSize="16"
                                                    FontWeight="Bold"/>
                                         <TextBlock Text="설정 탭에서는 창을 드래그해서 이동할 수 있습니다."
-                                                   Foreground="#A8FFFFFF"
+                                                   Foreground="{DynamicResource OverlayMutedTextBrush}"
                                                    FontSize="11"
                                                    Margin="0,4,0,0"/>
                                     </StackPanel>
@@ -132,7 +132,7 @@
                                             Background="Transparent">
                                         <StackPanel>
                                             <TextBlock Text="폰트"
-                                                       Foreground="#DCE3EA"
+                                                       Foreground="{DynamicResource OverlayLabelTextBrush}"
                                                        FontSize="12"
                                                        FontWeight="Bold"
                                                        Margin="0,0,0,8"/>
@@ -149,7 +149,7 @@
                                             Background="Transparent">
                                         <StackPanel>
                                             <TextBlock Text="폰트 크기"
-                                                       Foreground="#DCE3EA"
+                                                       Foreground="{DynamicResource OverlayLabelTextBrush}"
                                                        FontSize="12"
                                                        FontWeight="Bold"
                                                        Margin="0,0,0,8"/>
@@ -162,7 +162,7 @@
                                                     SmallChange="1"
                                                     LargeChange="1"/>
                                             <TextBlock Text="{Binding SelectedFontSize, RelativeSource={RelativeSource AncestorType=Window}, StringFormat=현재 크기: {0:0.#}pt}"
-                                                       Foreground="#A8FFFFFF"
+                                                       Foreground="{DynamicResource OverlayMutedTextBrush}"
                                                        FontSize="11"
                                                        Margin="0,4,0,0"/>
                                         </StackPanel>

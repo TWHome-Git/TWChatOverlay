@@ -6,12 +6,12 @@
         Width="920"
         MinHeight="420"
         MinWidth="620"
-        Background="{DynamicResource PrimaryBackgroundBrush}"
+        Background="{DynamicResource OverlayShellBackgroundBrush}"
         WindowStyle="None"
         ResizeMode="NoResize">
     <Border Margin="10"
-            Background="#10151D"
-            BorderBrush="#2B3442"
+            Background="{DynamicResource OverlayShellBackgroundBrush}"
+            BorderBrush="{DynamicResource OverlayCardBorderBrush}"
             BorderThickness="1"
             CornerRadius="8">
         <Grid>
@@ -21,8 +21,8 @@
             </Grid.RowDefinitions>
 
             <Border Grid.Row="0"
-                    Background="#161B22"
-                    BorderBrush="#30363D"
+                    Background="{DynamicResource OverlaySurfaceBackgroundBrush}"
+                    BorderBrush="{DynamicResource OverlayStrongBorderBrush}"
                     BorderThickness="0,0,0,1"
                     CornerRadius="8,8,0,0"
                     Padding="10"
@@ -30,7 +30,7 @@
                     Cursor="SizeAll">
                 <Grid>
                     <TextBlock Text="외치기 로그"
-                               Foreground="#7FDBFF"
+                               Foreground="{DynamicResource OverlayTitleAccentTextBrush}"
                                FontSize="22"
                                FontWeight="Bold"
                                HorizontalAlignment="Center"
@@ -53,14 +53,14 @@
                     <Button x:Name="BtnDate" Content="-" Width="180" Height="30" Click="Date_Click"/>
                     <Button x:Name="BtnNext" Content="&gt;" Width="34" Height="30" Margin="6,0,0,0" Click="Next_Click"/>
                     <Popup x:Name="DatePopup" PlacementTarget="{Binding ElementName=BtnDate}" Placement="Bottom" StaysOpen="False">
-                        <Border Background="#1b1f26" BorderBrush="#3a4556" BorderThickness="1" Padding="8">
+                        <Border Background="{DynamicResource OverlaySurfaceBackgroundBrush}" BorderBrush="{DynamicResource OverlayCardBorderBrush}" BorderThickness="1" Padding="8">
                             <DatePicker x:Name="DatePickerLog" SelectedDateChanged="DatePickerLog_SelectedDateChanged"/>
                         </Border>
                     </Popup>
                 </DockPanel>
 
                 <Grid Grid.Row="1" PreviewMouseDown="LogArea_PreviewMouseDown">
-                    <Border Background="#10151D" BorderBrush="#2B3442" BorderThickness="1" CornerRadius="6">
+                    <Border Background="{DynamicResource OverlayShellBackgroundBrush}" BorderBrush="{DynamicResource OverlayCardBorderBrush}" BorderThickness="1" CornerRadius="6">
                         <RichTextBox x:Name="LogRichText"
                                      IsReadOnly="True"
                                      IsDocumentEnabled="True"
@@ -72,7 +72,7 @@
                                      Padding="8"
                                      PreviewMouseWheel="LogRichText_PreviewMouseWheel"/>
                     </Border>
-                    <Border x:Name="LoadingOverlay" Background="#88000000" Visibility="Collapsed" CornerRadius="6">
+                    <Border x:Name="LoadingOverlay" Background="{DynamicResource OverlayLoadingMaskBrush}" Visibility="Collapsed" CornerRadius="6">
                         <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
                             <TextBlock Text="로딩 중.." Foreground="White" FontSize="18" HorizontalAlignment="Center"/>
                             <ProgressBar IsIndeterminate="True" Width="180" Height="12" Margin="0,10,0,0"/>

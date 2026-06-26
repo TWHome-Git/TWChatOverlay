@@ -39,7 +39,11 @@ namespace TWChatOverlay.Views
         public void SetBackgroundOpacity(double opacity)
         {
             byte alpha = (byte)Math.Clamp((int)Math.Round((opacity / 100.0) * 255.0), 0, 255);
-            MemoText.Background = new SolidColorBrush(Color.FromArgb(alpha, 0, 0, 0));
+            Color baseColor = Colors.Black;
+            if (Application.Current?.Resources["OverlayShellBackgroundBrush"] is SolidColorBrush themedBrush)
+                baseColor = themedBrush.Color;
+
+            MemoText.Background = new SolidColorBrush(Color.FromArgb(alpha, baseColor.R, baseColor.G, baseColor.B));
             OverlayBackground.Background = Brushes.Transparent;
         }
 

@@ -20,13 +20,13 @@
         </Grid.RowDefinitions>
         <Border x:Name="DragBar"
                 Grid.Row="0"
-                Background="#1A1A2E"
+                Background="{DynamicResource OverlayDragBarBackgroundBrush}"
                 Height="18"
                 Visibility="Collapsed"
                 MouseLeftButtonDown="DragBar_MouseLeftButtonDown"
                 Cursor="Hand">
             <TextBlock Text="⋮⋮ 설정에서 드래그하여 이동 ⋮⋮"
-                       Foreground="#888"
+                       Foreground="{DynamicResource OverlayDragBarTextBrush}"
                        FontSize="10"
                        TextAlignment="Center"
                        VerticalAlignment="Center"
@@ -35,7 +35,6 @@
         <views:ExpTrackerView Grid.Row="1"/>
     </Grid>
 </Window>
-
 
 
 

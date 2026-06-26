@@ -19,8 +19,8 @@
         <!-- Main Border -->
         <Border x:Name="OuterEdge" Background="Transparent" Padding="5">
             <Border x:Name="MainBorder" TextElement.FontFamily="{Binding CurrentFont, RelativeSource={RelativeSource AncestorType=Window}}"
-                    Background="#F51E1E1E" CornerRadius="10" 
-                    BorderThickness="1.5" BorderBrush="#60FFFFFF" ClipToBounds="False"
+                    Background="{DynamicResource OverlayWindowBackgroundBrush}" CornerRadius="10" 
+                    BorderThickness="1.5" BorderBrush="{DynamicResource OverlayWindowBorderBrush}" ClipToBounds="False"
                     MouseEnter="MainBorder_MouseEnter"
                     MouseMove="MainBorder_MouseMove">
                 <Grid>
@@ -33,12 +33,12 @@
                     <!-- Drag Bar (Window Move) -->
                     <Border Grid.Row="0"
                             x:Name="DragBar"
-                            Background="#1A1A2E"
+                            Background="{DynamicResource OverlayDragBarBackgroundBrush}"
                             MouseLeftButtonDown="DragBar_MouseLeftButtonDown"
                             Visibility="Collapsed"
                             Cursor="Hand">
                         <TextBlock Text="⋮⋮ 드래그하여 창 이동 ⋮⋮"
-                                   Foreground="#888"
+                                   Foreground="{DynamicResource OverlayDragBarTextBrush}"
                                    FontSize="11"
                                    TextAlignment="Center"
                                    VerticalAlignment="Center"
@@ -50,7 +50,7 @@
                             Grid.Row="2"
                             Height="42"
                             VerticalAlignment="Top"
-                            Background="#FF332255"
+                            Background="{DynamicResource OverlayHeaderBackgroundBrush}"
                             CornerRadius="3,3,0,0"
                             Visibility="Collapsed"
                             Panel.ZIndex="20"/>
