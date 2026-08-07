@@ -963,6 +963,15 @@ namespace TWChatOverlay.Services
                             continue;
                         }
 
+                        // 시스템 메시지 줄바꿈(예: 더블 리워드 "...획득하였" + "습니다.")도 병합해야
+                        // 과거 로그 스캔에서 더블 리워드 아이템 획득이 정상 집계된다.
+                        var systemMergedPair = SystemLineMergeHelper.MergeWrappedSystemLines(new[] { pending, current });
+                        if (systemMergedPair.Count == 1)
+                        {
+                            pending = systemMergedPair[0];
+                            continue;
+                        }
+
                         onLine(pending);
                         if (DateTime.UtcNow >= deadlineUtc)
                             throw new TimeoutException();

@@ -24,7 +24,7 @@ namespace TWChatOverlay.Services
     /// </summary>
     public class EquipmentService : IEquipmentService
     {
-        private const string EquipmentDataUrl = "https://raw.githubusercontent.com/TWHome-Git/TWHomeDB/main/EquipmentData.json";
+        private const string EquipmentDataUrl = RemoteEndpoints.EquipmentData;
         private static readonly string LocalEquipmentDataPath = Path.Combine(
             AppDomain.CurrentDomain.BaseDirectory,
             "Cache",
@@ -67,7 +67,7 @@ namespace TWChatOverlay.Services
 
                 if (string.IsNullOrWhiteSpace(json))
                 {
-                    Debug.WriteLine("[EquipmentService] Equipment data source not found.");
+                    AppLogger.Warn("[EquipmentService] Equipment data source not found.");
                     return new List<EquipmentModel>();
                 }
 
@@ -76,7 +76,7 @@ namespace TWChatOverlay.Services
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"[Service Error] {ex.Message}");
+                AppLogger.Warn("[EquipmentService] Equipment load failed.", ex);
                 return new List<EquipmentModel>();
             }
         }
@@ -95,7 +95,7 @@ namespace TWChatOverlay.Services
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"[EquipmentService] Local equipment data read failed: {ex.Message}");
+                AppLogger.Warn("[EquipmentService] Local equipment data read failed.", ex);
                 json = null;
                 return false;
             }
@@ -119,7 +119,7 @@ namespace TWChatOverlay.Services
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"[EquipmentService] Force refresh failed: {ex.Message}");
+                AppLogger.Warn("[EquipmentService] Force refresh failed.", ex);
                 return false;
             }
         }

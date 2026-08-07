@@ -30,7 +30,7 @@ namespace TWChatOverlay.Views
     /// <summary>
     /// 채팅 오버레이 메인 창의 UI/서비스 연동을 담당합니다.
     /// </summary>
-    public partial class MainWindow : Window
+    public partial class MainWindow : Window, IMainWindowHost, ISnapTarget
     {
         #region Fields
         private DailyWeeklyContentWindow? _dailyWeeklyContentOverlay;
@@ -123,6 +123,10 @@ namespace TWChatOverlay.Views
             set => SetValue(CurrentFontProperty, value);
         }
 
+        // IMainWindowHost: Services 계층이 View 타입 대신 인터페이스로 접근하도록 노출.
+        ChatSettings? IMainWindowHost.HostSettings => DataContext as ChatSettings;
+        void IMainWindowHost.RequestTopmostRefresh() => RequestTopmostRefresh();
+
         public static readonly DependencyProperty CurrentFontSizeProperty =
             DependencyProperty.Register("CurrentFontSize", typeof(double), typeof(MainWindow));
 
@@ -158,6 +162,12 @@ namespace TWChatOverlay.Views
             _ = IgnoredChatMessageService.EnsureLoadedAsync();
             ApplyStartupPreset();
             this.DataContext = _settings;
+            MainWindowHost.Current = this;
+            this.Closed += (_, _) =>
+            {
+                if (ReferenceEquals(MainWindowHost.Current, this))
+                    MainWindowHost.Current = null;
+            };
             _logAnalysisService = new LogAnalysisService(_settings);
             _logPipelineCoordinator = new MainLogPipelineCoordinator(_settings, _logAnalysisService);
             _settingsViewModel = new SettingsViewModel(_settings, OnColorsUpdatedFromSettings, ConfirmExit, OnSettingsResetFromSettings, ApplyHotKeys, ExecuteManualLogReloadFromSettingsAsync);
@@ -443,7 +453,7 @@ namespace TWChatOverlay.Views
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"서비스 시작 중 오류: {ex.Message}");
+                AppLogger.Warn("서비스 시작 중 오류.", ex);
             }
         }
 
@@ -720,7 +730,7 @@ namespace TWChatOverlay.Views
                 await Dispatcher.Yield(DispatcherPriority.ApplicationIdle);
                 UpdateStartupLoadingProgress(10, "업데이트를 확인하는 중입니다.");
                 AppLogger.Info("Startup data initialization: beginning update check.");
-                var updateResult = await UpdateService.CheckForUpdateAsync(forceInstallLatest: false, showNoUpdateMessage: false);
+                var updateResult = await AppServices.Get<IUpdateService>().CheckForUpdateAsync(forceInstallLatest: false, showNoUpdateMessage: false);
                 AppLogger.Info($"Startup data initialization: update check completed with result={updateResult}.");
                 if (updateResult == UpdateCheckResult.UpdateApplied)
                 {

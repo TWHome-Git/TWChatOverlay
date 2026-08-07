@@ -57,6 +57,7 @@ namespace TWChatOverlay.Views
             "숨겨진 구역으로 이동할 수 있는 포탈이 맵 중앙",
             "지하요새의 망령 클리어 횟수:",
             "심연의 보물창고 입장 횟수:",
+            "[이터널 플로어 보상 상자] 아이템을 획득하였습니다",
             "청소 아르바이트 보상 조건을 달성하였습니다.",
             "프라바 방어전 성공 보상으로 경험치 1000만을 획득",
             "이번 주 사명의 계승자 닉스 보상을",
@@ -184,10 +185,16 @@ namespace TWChatOverlay.Views
             bool isActualShout = parseResult.Category == ChatCategory.Shout && IsActualShoutSource(parseResult.FormattedText);
             bool isContentCompletionRelevant = IsContentCompletionRelevantLog(parseResult.FormattedText);
             bool shouldRunLiveUiEffects = context.IsRealTime && !context.IsStartupBackfill;
+            // 시작 시 과거 로그(tail) 표시나 테스트 주입은 화면 표시만 하고 집계/아카이브 등 부수효과는 하지 않는다.
+            // (그렇지 않으면 재실행 때마다 최근 1000줄이 재집계되어 카운트가 틀어지고, 외치기/컨텐츠 로그가 두 번씩 쌓인다.)
+            bool isHistoricalDisplayOnly = !context.IsRealTime && !context.IsStartupBackfill;
 
-            _buffTrackerService.ProcessLog(analysis);
+            if (!isHistoricalDisplayOnly)
+            {
+                _buffTrackerService.ProcessLog(analysis);
 
-            if (analysis.HasExperienceGain) _expService.AddExp(parseResult.GainedExp);
+                if (analysis.HasExperienceGain) _expService.AddExp(parseResult.GainedExp);
+            }
 
             if (shouldRunLiveUiEffects)
                 _experienceEssenceAlertService.Process(analysis);
@@ -215,6 +222,10 @@ namespace TWChatOverlay.Views
                 foreach (string tabName in analysis.BufferTabs)
                     AddToBuffer(tabName, parseResult);
             }
+
+            // 과거 로그 표시는 여기까지(버퍼 추가로 화면만 갱신). 이후 집계/토스트/아카이브는 건너뛴다.
+            if (isHistoricalDisplayOnly)
+                return;
 
             if (shouldRunLiveUiEffects)
             {
@@ -610,29 +621,10 @@ namespace TWChatOverlay.Views
         }
 
         private static bool IsConfusedOrColorlessElsoRewardLine(string text)
-        {
-            if (string.IsNullOrWhiteSpace(text))
-                return false;
-
-            bool isTargetContent =
-                text.Contains("혼란한 대지 미션에 성공하여", StringComparison.Ordinal) ||
-                text.Contains("색을 잃은 땅 미션에 성공하여", StringComparison.Ordinal);
-
-            if (!isTargetContent)
-                return false;
-
-            return text.Contains("ELSO를 획득했습니다", StringComparison.Ordinal);
-        }
+            => LogTextClassifier.IsConfusedOrColorlessElsoReward(text);
 
         private static bool IsExperienceEssenceExchangeLog(string text)
-        {
-            if (string.IsNullOrWhiteSpace(text))
-                return false;
-
-            return text.Contains(
-                "경험치 100억이 차감되고, 경험의 정수 1개를 획득 하였습니다.",
-                StringComparison.Ordinal);
-        }
+            => LogTextClassifier.IsExperienceEssenceExchange(text);
 
         private static bool ContainsAnyContentArchiveKeyword(string text)
         {
@@ -726,7 +718,8 @@ namespace TWChatOverlay.Views
                 return text;
             if (!_settings.ShowEtaLevel && !_settings.ShowEtaCharacter)
                 return text;
-            if (!EtaProfileResolver.TryGetProfile(lookupSenderId, out var profile))
+            if (!EtaProfileResolver.TryGetProfile(lookupSenderId, out var profile)
+                && !EtaProfileResolver.TryGetProfile(lookupSenderId.Trim(), out profile))
                 return text;
 
             string suffix = string.Empty;
@@ -739,10 +732,12 @@ namespace TWChatOverlay.Views
 
             if (log.Category == ChatCategory.Shout)
             {
+                // 외치기는 끝의 [보낸이] 대괄호에 접미사를 덧붙인다. 대괄호 안팎 공백 등
+                // 형식 변형에 견고하도록 발신자 문자열이 아니라 마지막 대괄호 그룹 자체를 매칭한다.
                 return Regex.Replace(
                     text,
-                    $@"\[{Regex.Escape(displaySenderId)}\]\s*$",
-                    $"[{displaySenderId}{suffix}]");
+                    @"\[(?<id>[^\[\]]+)\]\s*$",
+                    m => $"[{m.Groups["id"].Value}{suffix}]");
             }
 
             if (!TrySplitTimestampAndBody(text, out string body))
@@ -899,11 +894,7 @@ namespace TWChatOverlay.Views
         }
 
         private static string GetIsoWeekKey(DateTime date)
-        {
-            int isoYear = ISOWeek.GetYear(date);
-            int isoWeek = ISOWeek.GetWeekOfYear(date);
-            return $"{isoYear}-W{isoWeek:00}";
-        }
+            => LogTextClassifier.GetIsoWeekKey(date);
 
         #endregion
     }

@@ -23,8 +23,10 @@ namespace TWChatOverlay.Views
     public partial class ShoutReplayWindow : Window
     {
         private static readonly Regex DivLogRegex = new("<div\\s+class=\"log\\s+shout\"[^>]*>(?<text>.*?)</div>", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+        private static readonly Regex ShoutTrailingUserIdRegex = new(@"\[(?<id>[^\[\]]+)\]\s*$", RegexOptions.Compiled);
         private readonly ChatSettings _settings;
         private readonly List<DateTime> _dates = new();
+        private List<string> _currentLines = new();
         private DateTime _currentDate;
         private readonly SemaphoreSlim _loadGate = new(1, 1);
         private int _loadVersion;
@@ -125,11 +127,9 @@ namespace TWChatOverlay.Views
                     });
                 }
 
-                var document = new FlowDocument();
-                foreach (string line in parsedLines)
-                    document.Blocks.Add(new Paragraph(new Run(line)) { Margin = new Thickness(0, 0, 0, 4) });
+                _currentLines = parsedLines.Select(DecorateShoutEta).ToList();
                 if (myVersion == _loadVersion)
-                    LogRichText.Document = document;
+                    RenderLines(SearchBox.Text, scrollToBottom: true);
 
                 ApplyVisualStyle();
                 int idx = _dates.IndexOf(_currentDate);
@@ -163,6 +163,119 @@ namespace TWChatOverlay.Views
                 LogRichText.Foreground = converted as Brush ?? Brushes.Orange;
             }
             catch { LogRichText.Foreground = Brushes.Orange; }
+        }
+
+        /// <summary>
+        /// 외치기 라인 끝의 [보낸이] 대괄호에 에타 레벨/캐릭터를 덧붙인다. 메인 채팅과 동일한 방식.
+        /// 프로필이 없거나 설정이 꺼져 있으면 원본을 그대로 반환한다.
+        /// </summary>
+        private string DecorateShoutEta(string line)
+        {
+            if (!_settings.ShowEtaLevel && !_settings.ShowEtaCharacter)
+                return line;
+
+            Match m = ShoutTrailingUserIdRegex.Match(line);
+            if (!m.Success)
+                return line;
+
+            string rawId = m.Groups["id"].Value;
+            string id = rawId.Trim();
+            if (id.Length == 0)
+                return line;
+
+            if (!EtaProfileResolver.TryGetProfile(id, out var profile)
+                && !EtaProfileResolver.TryGetProfile(rawId, out profile))
+                return line;
+
+            string suffix = string.Empty;
+            if (_settings.ShowEtaLevel)
+                suffix += $"[{profile.Level}]";
+            if (_settings.ShowEtaCharacter && !string.IsNullOrWhiteSpace(profile.CharacterName))
+                suffix += $"[{profile.CharacterName}]";
+            if (suffix.Length == 0)
+                return line;
+
+            // 끝의 [보낸이] 대괄호 안 내용을 보존하며 접미사를 덧붙인다.
+            return line.Substring(0, m.Index) + $"[{rawId}{suffix}]";
+        }
+
+        /// <summary>현재 날짜의 외치기 라인을 검색어로 필터링해 렌더한다. (파일 재로드 없이 즉시)</summary>
+        /// <param name="scrollToBottom">날짜 로드처럼 최신 외치기를 보여줘야 할 때 최하단으로 스크롤.</param>
+        private void RenderLines(string? filter, bool scrollToBottom = false)
+        {
+            // InitializeComponent 도중 TextChanged가 먼저 발생할 수 있으므로 요소 생성 여부를 확인.
+            if (LogRichText is null || SearchInfo is null)
+                return;
+
+            string term = filter?.Trim() ?? string.Empty;
+            bool hasFilter = term.Length > 0;
+
+            var document = new FlowDocument();
+            int shown = 0;
+            foreach (string line in _currentLines)
+            {
+                if (hasFilter && line.IndexOf(term, StringComparison.OrdinalIgnoreCase) < 0)
+                    continue;
+
+                var para = new Paragraph { Margin = new Thickness(0, 0, 0, 4) };
+                if (hasFilter)
+                    AppendHighlighted(para, line, term);
+                else
+                    para.Inlines.Add(new Run(line));
+
+                document.Blocks.Add(para);
+                shown++;
+            }
+
+            LogRichText.Document = document;
+            SearchInfo.Text = hasFilter ? $"{shown}건" : string.Empty;
+
+            if (scrollToBottom)
+            {
+                // 레이아웃이 잡힌 뒤 최하단으로 스크롤해 가장 최근 외치기가 보이게 한다.
+                _ = Dispatcher.BeginInvoke(new Action(() => LogRichText.ScrollToEnd()), DispatcherPriority.Loaded);
+            }
+        }
+
+        /// <summary>검색어와 일치하는 부분을 강조 표시하며 라인을 추가한다.</summary>
+        private static void AppendHighlighted(Paragraph para, string line, string term)
+        {
+            int start = 0;
+            while (true)
+            {
+                int idx = line.IndexOf(term, start, StringComparison.OrdinalIgnoreCase);
+                if (idx < 0)
+                {
+                    para.Inlines.Add(new Run(line.Substring(start)));
+                    break;
+                }
+
+                if (idx > start)
+                    para.Inlines.Add(new Run(line.Substring(start, idx - start)));
+
+                para.Inlines.Add(new Run(line.Substring(idx, term.Length))
+                {
+                    Background = new SolidColorBrush(Color.FromArgb(180, 255, 220, 0)),
+                    Foreground = Brushes.Black,
+                    FontWeight = FontWeights.Bold
+                });
+
+                start = idx + term.Length;
+            }
+        }
+
+        private void SearchBox_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            RenderLines(SearchBox.Text);
+        }
+
+        private void SearchBox_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Escape)
+            {
+                SearchBox.Clear();
+                e.Handled = true;
+            }
         }
 
         private void Prev_Click(object sender, RoutedEventArgs e)

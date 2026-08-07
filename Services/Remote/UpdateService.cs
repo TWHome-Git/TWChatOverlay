@@ -24,9 +24,7 @@ namespace TWChatOverlay.Services
 
     public static class UpdateService
     {
-        private const string GitHubOwner = "TWHome-Git";
-        private const string GitHubRepo = "TWChatOverlay";
-        private static readonly string LatestReleaseUrl = $"https://api.github.com/repos/{GitHubOwner}/{GitHubRepo}/releases/latest";
+        private const string LatestReleaseUrl = RemoteEndpoints.LatestReleaseApi;
         private static readonly TimeSpan UpdateMetadataTimeout = TimeSpan.FromSeconds(8);
         private static readonly TimeSpan UpdateDownloadTimeout = TimeSpan.FromMinutes(15);
 
@@ -99,13 +97,11 @@ namespace TWChatOverlay.Services
             catch (OperationCanceledException ex)
             {
                 AppLogger.Warn($"Update check timed out after {stopwatch.ElapsedMilliseconds} ms.", ex);
-                Debug.WriteLine($"업데이트 확인 타임아웃: {ex.Message}");
                 return UpdateCheckResult.Failed;
             }
             catch (Exception ex)
             {
                 AppLogger.Warn($"Update check failed after {stopwatch.ElapsedMilliseconds} ms.", ex);
-                Debug.WriteLine($"업데이트 확인 오류: {ex.Message}");
                 return UpdateCheckResult.Failed;
             }
         }
@@ -216,13 +212,7 @@ namespace TWChatOverlay.Services
                     Directory.Delete(tempDir, true);
                 Directory.CreateDirectory(tempDir);
 
-                using (var response = await client.GetAsync(downloadUrl, HttpCompletionOption.ResponseHeadersRead).ConfigureAwait(false))
-                {
-                    response.EnsureSuccessStatusCode();
-                    await using var contentStream = await response.Content.ReadAsStreamAsync().ConfigureAwait(false);
-                    await using var fileStream = new FileStream(zipPath, FileMode.Create, FileAccess.Write, FileShare.None, 81920, true);
-                    await contentStream.CopyToAsync(fileStream).ConfigureAwait(false);
-                }
+                await DownloadZipWithRetryAsync(client, downloadUrl, zipPath).ConfigureAwait(false);
 
                 if (Directory.Exists(extractDir))
                     Directory.Delete(extractDir, true);
@@ -274,6 +264,35 @@ namespace TWChatOverlay.Services
                     return true;
                 }).ConfigureAwait(false);
                 return false;
+            }
+        }
+
+        /// <summary>
+        /// 업데이트 zip을 다운로드합니다. 네트워크 오류 시 최대 3회 재시도(1s, 2s 백오프).
+        /// 타임아웃(OperationCanceledException)은 재시도하지 않습니다.
+        /// </summary>
+        private static async Task DownloadZipWithRetryAsync(HttpClient client, string downloadUrl, string zipPath)
+        {
+            const int maxAttempts = 3;
+            for (int attempt = 1; ; attempt++)
+            {
+                try
+                {
+                    using var response = await client.GetAsync(downloadUrl, HttpCompletionOption.ResponseHeadersRead).ConfigureAwait(false);
+                    response.EnsureSuccessStatusCode();
+                    await using var contentStream = await response.Content.ReadAsStreamAsync().ConfigureAwait(false);
+                    await using var fileStream = new FileStream(zipPath, FileMode.Create, FileAccess.Write, FileShare.None, 81920, true);
+                    await contentStream.CopyToAsync(fileStream).ConfigureAwait(false);
+                    if (attempt > 1)
+                        AppLogger.Info($"Update download succeeded on attempt {attempt}/{maxAttempts}.");
+                    return;
+                }
+                catch (Exception ex) when (attempt < maxAttempts && ex is not OperationCanceledException)
+                {
+                    int delayMs = 1000 * (1 << (attempt - 1)); // 1s, 2s
+                    AppLogger.Warn($"Update download attempt {attempt}/{maxAttempts} failed; retrying in {delayMs} ms.", ex);
+                    await Task.Delay(delayMs).ConfigureAwait(false);
+                }
             }
         }
 

@@ -115,34 +115,9 @@ namespace TWChatOverlay.Services
         }
 
         private static (double Left, double Top) ResolveBasePositionFromSettings(ChatSettings settings)
-        {
-            if (settings.MessengerToastWindowLeft.HasValue && settings.MessengerToastWindowTop.HasValue)
-                return (settings.MessengerToastWindowLeft.Value, settings.MessengerToastWindowTop.Value);
+            => ToastPresentationHelper.ResolveBasePosition(
+                settings.MessengerToastWindowLeft, settings.MessengerToastWindowTop, ToastWidth, DefaultBaseTop);
 
-            var area = SystemParameters.WorkArea;
-            return (area.Left + (area.Width - ToastWidth) / 2, DefaultBaseTop);
-        }
-
-        private static FontFamily ResolveToastFont()
-        {
-            try
-            {
-                MainWindow? main = Application.Current.Windows.OfType<MainWindow>().FirstOrDefault();
-                if (main != null && main.CurrentFont != null && !string.IsNullOrWhiteSpace(main.CurrentFont.Source))
-                    return main.CurrentFont;
-            }
-            catch { }
-
-            try
-            {
-                ChatSettings settings = ConfigService.Load();
-                FontFamily configured = FontService.GetFont(settings.FontFamily);
-                if (configured != null && !string.IsNullOrWhiteSpace(configured.Source))
-                    return configured;
-            }
-            catch { }
-
-            return new FontFamily("Malgun Gothic");
-        }
+        private static FontFamily ResolveToastFont() => ToastPresentationHelper.ResolveToastFont();
     }
 }

@@ -1,9 +1,8 @@
-﻿using System.Linq;
+﻿using System;
 using System.Windows;
 using System.Windows.Documents;
 using System.Windows.Media;
 using TWChatOverlay.Models;
-using TWChatOverlay.Views;
 
 namespace TWChatOverlay.Services
 {
@@ -11,23 +10,19 @@ namespace TWChatOverlay.Services
     {
         public static FontFamily ResolveCurrentFont()
         {
-            try
-            {
-                MainWindow? mainWindow = Application.Current?.Windows
-                    .OfType<MainWindow>()
-                    .FirstOrDefault();
-
-                if (mainWindow?.CurrentFont != null)
-                    return mainWindow.CurrentFont;
-            }
-            catch { }
+            FontFamily? hostFont = MainWindowHost.Current?.CurrentFont;
+            if (hostFont != null)
+                return hostFont;
 
             try
             {
                 ChatSettings settings = ConfigService.Load();
                 return FontService.GetFont(settings.FontFamily);
             }
-            catch { }
+            catch (Exception ex)
+            {
+                AppLogger.Warn("Failed to resolve current font from settings.", ex);
+            }
 
             return new FontFamily("Malgun Gothic");
         }

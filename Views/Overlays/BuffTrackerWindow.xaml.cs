@@ -88,7 +88,7 @@ namespace TWChatOverlay.Views
             if (e.ButtonState != MouseButtonState.Pressed)
                 return;
 
-            try { DragMove(); } catch { }
+            WindowDragBehavior.BeginDrag(this, e);
         }
 
         private void ApplyMousePassthroughStyle()

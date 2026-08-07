@@ -36,6 +36,7 @@ namespace TWChatOverlay.Services
 
         private string _logPath = null!;
         private long _lastPosition;
+        private FileStream? _logStream;
         private readonly object _lockObj = new();
         private readonly Timer _pollingTimer;
         private bool _disposed;
@@ -98,8 +99,9 @@ namespace TWChatOverlay.Services
             if (_disposed) return;
             _disposed = true;
 
-            try { Stop(); } catch { }
-            try { _pollingTimer.Dispose(); } catch { }
+            try { Stop(); } catch (Exception ex) { AppLogger.Warn("Failed to stop LogService during dispose.", ex); }
+            try { _pollingTimer.Dispose(); } catch (Exception ex) { AppLogger.Warn("Failed to dispose polling timer.", ex); }
+            lock (_lockObj) { CloseStream(); }
             GC.SuppressFinalize(this);
         }
 
@@ -163,6 +165,8 @@ namespace TWChatOverlay.Services
             {
                 string today = DateTime.Now.ToString("yyyy_MM_dd");
                 _logPath = Path.Combine(_settings.ChatLogFolderPath, $"TWChatLog_{today}.html");
+                // 경로가 바뀌었으므로 기존 스트림을 닫아 새 경로로 재오픈되게 한다.
+                CloseStream();
                 _pendingRawContent = string.Empty;
                 _lastLogTimeText = string.Empty;
                 _logDecoder.Reset();
@@ -171,7 +175,10 @@ namespace TWChatOverlay.Services
                 {
                     var fileInfo = new FileInfo(_logPath);
                     long sourceLength = fileInfo.Length;
-                    bool resumedFromCheckpoint = TryRestoreCheckpoint(sourceLength);
+                    // 프로그램 시작 시에는 체크포인트로 이어읽지 않고 항상 최근 로그(tail)를 표시해,
+                    // 재실행해도 채팅창이 비지 않고 최근 과거 외치기/대화를 볼 수 있게 한다.
+                    // (같은 날 재실행 = 그날 첫 실행과 동일한 표시 동작으로 통일)
+                    bool resumedFromCheckpoint = !isInitialLoad && TryRestoreCheckpoint(sourceLength);
 
                     if (!resumedFromCheckpoint)
                     {
@@ -256,41 +263,58 @@ namespace TWChatOverlay.Services
             {
                 try
                 {
-                    if (!File.Exists(_logPath)) return;
-
-                    using var stream = new FileStream(_logPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
-                    if (stream.Length < _lastPosition)
+                    if (!File.Exists(_logPath))
                     {
+                        // 파일이 사라졌으면(예: 삭제/이동) 기존 핸들을 닫고 다음 틱에 재오픈되게 한다.
+                        CloseStream();
+                        return;
+                    }
+
+                    EnsureStreamOpen();
+
+                    long length = _logStream!.Length;
+                    if (length < _lastPosition)
+                    {
+                        // 파일이 잘렸거나 같은 이름으로 재생성됨 → 스트림을 재오픈해 새 파일 핸들을 확보한다.
+                        CloseStream();
                         _lastPosition = 0;
                         _pendingRawContent = string.Empty;
                         _logDecoder.Reset();
-                    }
-                    if (stream.Length <= _lastPosition) return;
 
-                    long bytesToRead = stream.Length - _lastPosition;
+                        if (!File.Exists(_logPath))
+                            return;
+
+                        EnsureStreamOpen();
+                        length = _logStream!.Length;
+                    }
+
+                    if (length <= _lastPosition)
+                        return;
+
+                    long bytesToRead = length - _lastPosition;
                     if (bytesToRead > int.MaxValue)
                     {
                         AppLogger.Warn($"Incremental log read is too large ({bytesToRead:N0} bytes). Resetting read position to file end.");
-                        _lastPosition = stream.Length;
+                        _lastPosition = length;
                         _pendingRawContent = string.Empty;
                         _logDecoder.Reset();
                         SaveCheckpoint();
                         return;
                     }
 
-                    stream.Seek(_lastPosition, SeekOrigin.Begin);
+                    _logStream.Seek(_lastPosition, SeekOrigin.Begin);
                     byte[] buffer = new byte[(int)bytesToRead];
                     int totalRead = 0;
                     while (totalRead < buffer.Length)
                     {
-                        int read = stream.Read(buffer, totalRead, buffer.Length - totalRead);
+                        int read = _logStream.Read(buffer, totalRead, buffer.Length - totalRead);
                         if (read <= 0)
                             break;
 
                         totalRead += read;
                     }
 
-                    _lastPosition = stream.Position;
+                    _lastPosition = _logStream.Position;
                     if (totalRead == 0)
                     {
                         SaveCheckpoint();
@@ -307,8 +331,41 @@ namespace TWChatOverlay.Services
                 catch (Exception ex)
                 {
                     AppLogger.Error("Failed to read incremental log content.", ex);
+                    // IOException 등으로 핸들이 손상되었을 수 있으니 닫아서 다음 틱에 재오픈되게 한다.
+                    CloseStream();
                 }
             }
+        }
+
+        /// <summary>
+        /// 지속 로그 스트림이 없으면 현재 경로로 연다. 매 틱 재오픈하는 대신 이 핸들을 재사용한다.
+        /// 게임 클라이언트의 로그 쓰기와 파일 교체를 막지 않도록 ReadWrite | Delete 공유로 연다.
+        /// 반드시 _lockObj를 보유한 상태에서 호출해야 한다.
+        /// </summary>
+        private void EnsureStreamOpen()
+        {
+            if (_logStream != null)
+                return;
+
+            _logStream = new FileStream(
+                _logPath,
+                FileMode.Open,
+                FileAccess.Read,
+                FileShare.ReadWrite | FileShare.Delete);
+        }
+
+        /// <summary>
+        /// 지속 로그 스트림을 닫는다. 경로 변경/파일 잘림/예외/종료 시 재오픈을 위해 호출한다.
+        /// 반드시 _lockObj를 보유한 상태(또는 Dispose)에서 호출해야 한다.
+        /// </summary>
+        private void CloseStream()
+        {
+            if (_logStream == null)
+                return;
+
+            try { _logStream.Dispose(); }
+            catch (Exception ex) { AppLogger.Warn("Failed to dispose log file stream.", ex); }
+            finally { _logStream = null; }
         }
 
         public void InjectTestContent(string content)
@@ -335,6 +392,7 @@ namespace TWChatOverlay.Services
                 .ToList();
 
             lines = ShoutLineMergeHelper.MergeWrappedShoutLines(lines);
+            lines = SystemLineMergeHelper.MergeWrappedSystemLines(lines);
 
             if (takeLastCount > 0 && lines.Count > takeLastCount)
             {

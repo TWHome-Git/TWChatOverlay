@@ -270,7 +270,9 @@ namespace TWChatOverlay.Views
 
         private double ClampLeftToWorkArea(double requestedLeft)
         {
-            var area = SystemParameters.WorkArea;
+            // 주 모니터 WorkArea가 아니라 가상 데스크톱 전체를 기준으로 클램프해야
+            // 보조 모니터에 놓인 토스트가 주 모니터로 끌려오지 않는다.
+            var area = ScreenBoundsHelper.GetVirtualDesktop();
             double width = ActualWidth > 0 ? ActualWidth : MinWidth;
             double minLeft = area.Left + ScreenEdgePadding;
             double maxLeft = area.Right - width - ScreenEdgePadding;
