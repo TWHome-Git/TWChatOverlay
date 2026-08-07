@@ -1,9 +1,7 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
-using TWChatOverlay.Views;
 
 namespace TWChatOverlay.Services
 {
@@ -38,7 +36,7 @@ namespace TWChatOverlay.Services
             if (sender is not Window window)
                 return;
 
-            if (window is MainWindow)
+            if (window is IMainWindowHost)
                 return;
 
             Attach(window);
@@ -91,11 +89,11 @@ namespace TWChatOverlay.Services
         {
             try
             {
-                var mainWindow = Application.Current?.Windows.OfType<MainWindow>().FirstOrDefault();
-                mainWindow?.RequestTopmostRefresh();
+                MainWindowHost.Current?.RequestTopmostRefresh();
             }
-            catch
+            catch (Exception ex)
             {
+                AppLogger.Warn("Failed to request main window topmost refresh.", ex);
             }
         }
     }

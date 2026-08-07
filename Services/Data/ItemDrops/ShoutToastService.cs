@@ -178,51 +178,17 @@ namespace TWChatOverlay.Services
         }
 
         private static (double Left, double Top) ResolveBasePosition(ChatSettings settings)
-        {
-            if (settings.ShoutToastWindowLeft.HasValue && settings.ShoutToastWindowTop.HasValue)
-                return (settings.ShoutToastWindowLeft.Value, settings.ShoutToastWindowTop.Value);
-
-            var area = SystemParameters.WorkArea;
-            return (area.Left + (area.Width - ToastWidth) / 2, DefaultBaseTop);
-        }
+            => ToastPresentationHelper.ResolveBasePosition(
+                settings.ShoutToastWindowLeft, settings.ShoutToastWindowTop, ToastWidth, DefaultBaseTop);
 
         private static (double Left, double Top) ResolveBasePositionFromSharedSettings()
         {
-            try
-            {
-                foreach (Window window in Application.Current.Windows)
-                {
-                    if (window is MainWindow mainWindow && mainWindow.DataContext is ChatSettings settings)
-                        return ResolveBasePosition(settings);
-                }
-            }
-            catch { }
-
-            var area = SystemParameters.WorkArea;
-            return (area.Left + (area.Width - ToastWidth) / 2, DefaultBaseTop);
+            ChatSettings? settings = ToastPresentationHelper.FindSharedSettings();
+            return ToastPresentationHelper.ResolveBasePosition(
+                settings?.ShoutToastWindowLeft, settings?.ShoutToastWindowTop, ToastWidth, DefaultBaseTop);
         }
 
-        private static FontFamily ResolveToastFont()
-        {
-            try
-            {
-                foreach (Window window in Application.Current.Windows)
-                {
-                    if (window is MainWindow mainWindow)
-                        return mainWindow.CurrentFont;
-                }
-            }
-            catch { }
-
-            try
-            {
-                var settings = ConfigService.Load();
-                return FontService.GetFont(settings.FontFamily);
-            }
-            catch { }
-
-            return new FontFamily("Malgun Gothic");
-        }
+        private static FontFamily ResolveToastFont() => ToastPresentationHelper.ResolveToastFont();
 
         private static string BuildMessageWithEta(LogParser.ParseResult parseResult)
         {

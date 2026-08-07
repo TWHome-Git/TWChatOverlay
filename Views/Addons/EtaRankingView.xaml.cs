@@ -70,7 +70,7 @@ namespace TWChatOverlay.Views.Addons
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"[EtaRankingView] ETA Ranking Load Error: {ex.Message}");
+                AppLogger.Warn("[EtaRankingView] ETA ranking load error.", ex);
             }
         }
 

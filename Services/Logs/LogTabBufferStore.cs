@@ -25,6 +25,10 @@ namespace TWChatOverlay.Services
         private readonly int _maxCountPerTab;
         private readonly int _trimThresholdPerTab;
 
+        // 버퍼는 로그 파이프라인과 UI 코드에서 접근된다. 현재는 모두 UI 스레드에서 호출되지만,
+        // 자료구조 손상을 원천 차단하기 위해 모든 접근을 이 락으로 보호한다.
+        private readonly object _sync = new();
+
         /// <summary>
         /// 탭 버퍼 저장소를 생성합니다.
         /// </summary>
@@ -36,17 +40,27 @@ namespace TWChatOverlay.Services
 
         public void Add(string tabName, LogParser.ParseResult log)
         {
-            if (!_buffers.TryGetValue(tabName, out var buffer)) return;
+            lock (_sync)
+            {
+                if (!_buffers.TryGetValue(tabName, out var buffer)) return;
 
-            buffer.Add(log);
-            TrimIfNeeded(buffer);
+                buffer.Add(log);
+                TrimIfNeeded(buffer);
+            }
         }
 
+        /// <summary>
+        /// 해당 탭 로그의 스냅샷(복사본)을 반환합니다. 라이브 리스트를 노출하지 않아
+        /// 호출자가 열거하는 동안 다른 곳에서 버퍼가 수정되어도 안전합니다.
+        /// </summary>
         public IReadOnlyList<LogParser.ParseResult> GetLogs(string tabName)
         {
-            if (_buffers.TryGetValue(tabName, out var logs))
+            lock (_sync)
             {
-                return logs;
+                if (_buffers.TryGetValue(tabName, out var logs))
+                {
+                    return logs.ToList();
+                }
             }
 
             return Array.Empty<LogParser.ParseResult>();
@@ -54,23 +68,29 @@ namespace TWChatOverlay.Services
 
         public IReadOnlyDictionary<string, IReadOnlyList<LogParser.ParseResult>> GetAllLogsSnapshot()
         {
-            var snapshot = new Dictionary<string, IReadOnlyList<LogParser.ParseResult>>(StringComparer.Ordinal);
-            foreach (var pair in _buffers)
+            lock (_sync)
             {
-                snapshot[pair.Key] = pair.Value.ToList();
+                var snapshot = new Dictionary<string, IReadOnlyList<LogParser.ParseResult>>(StringComparer.Ordinal);
+                foreach (var pair in _buffers)
+                {
+                    snapshot[pair.Key] = pair.Value.ToList();
+                }
+                return snapshot;
             }
-            return snapshot;
         }
 
         public void Replace(string tabName, IEnumerable<LogParser.ParseResult> logs)
         {
-            if (!_buffers.TryGetValue(tabName, out var buffer)) return;
-
-            buffer.Clear();
-            foreach (var log in logs)
+            lock (_sync)
             {
-                buffer.Add(log);
-                TrimIfNeeded(buffer);
+                if (!_buffers.TryGetValue(tabName, out var buffer)) return;
+
+                buffer.Clear();
+                foreach (var log in logs)
+                {
+                    buffer.Add(log);
+                    TrimIfNeeded(buffer);
+                }
             }
         }
 
@@ -85,11 +105,14 @@ namespace TWChatOverlay.Services
         {
             if (brushFactory == null) return;
 
-            foreach (var buffer in _buffers.Values)
+            lock (_sync)
             {
-                foreach (var log in buffer)
+                foreach (var buffer in _buffers.Values)
                 {
-                    log.Brush = brushFactory(log.Category);
+                    foreach (var log in buffer)
+                    {
+                        log.Brush = brushFactory(log.Category);
+                    }
                 }
             }
         }

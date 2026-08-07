@@ -23,7 +23,7 @@ namespace TWChatOverlay.Services
     /// </summary>
     public static class DropItemResolver
     {
-        private const string DropItemUrl = "https://raw.githubusercontent.com/TWHome-Git/TWHomeDB/main/DropItem.Json";
+        private const string DropItemUrl = RemoteEndpoints.DropItem;
         private static readonly TimeSpan CacheTtl = TimeSpan.FromHours(6);
 
         private static readonly HttpClient HttpClient = new()
@@ -45,6 +45,11 @@ namespace TWChatOverlay.Services
         // [아이템명] 10개를 획득하였습니다.
         private static Regex _acquireRegex = new(
             @"^\[(?<item>.+?)\](?:\s*\uC544\uC774\uD15C\uC744\s*\uD68D\uB4DD\s*\uD558\uC600\uC2B5\uB2C8\uB2E4\.?|\s*(?:\uC744\(\uB97C\)\s*)?(?:\[(?<countBracket>[\d,]+)\]|(?<countPlain>[\d,]+))\uAC1C(?:\uB97C)?\s*\uD68D\uB4DD\uD558\uC600\uC2B5\uB2C8\uB2E4\.?)$",
+            RegexOptions.Compiled);
+
+        // \uB354\uBE14 \uB9AC\uC6CC\uB4DC \uD615\uC2DD: \uB354\uBE14 \uB9AC\uC6CC\uB4DC \uCD94\uAC00 \uBCF4\uC0C1\uC73C\uB85C [\uC544\uC774\uD15C\uBA85] \uC544\uC774\uD15C\uC744 [\uC218\uB7C9]\uAC1C \uCD94\uAC00 \uD68D\uB4DD\uD558\uC600\uC2B5\uB2C8\uB2E4.
+        private static readonly Regex _doubleRewardAcquireRegex = new(
+            @"\uB354\uBE14\s*\uB9AC\uC6CC\uB4DC\s*\uCD94\uAC00\s*\uBCF4\uC0C1\uC73C\uB85C\s*\[(?<item>.+?)\]\s*\uC544\uC774\uD15C\uC744\s*\[(?<countBracket>[\d,]+)\]\s*\uAC1C\s*\uCD94\uAC00\s*\uD68D\uB4DD\uD558\uC600\uC2B5\uB2C8\uB2E4\.?",
             RegexOptions.Compiled);
 
         private static readonly SemaphoreSlim LoadLock = new(1, 1);
@@ -211,6 +216,11 @@ namespace TWChatOverlay.Services
             }
 
             var match = _acquireRegex.Match(message);
+            if (!match.Success)
+            {
+                // 더블 리워드 추가 보상 형식도 아이템 획득으로 인식한다.
+                match = _doubleRewardAcquireRegex.Match(message);
+            }
             if (!match.Success)
             {
                 return false;

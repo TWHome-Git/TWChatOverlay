@@ -70,7 +70,7 @@ namespace TWChatOverlay.Views.Addons
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"[EquipmentDbView] Data Load Error: {ex.Message}");
+                AppLogger.Warn("[EquipmentDbView] Data load error.", ex);
             }
         }
 

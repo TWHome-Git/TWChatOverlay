@@ -192,7 +192,7 @@ namespace TWChatOverlay.Services
                 if (!window.IsVisible)
                     continue;
 
-                if (window is MainWindow || window is ChatCloneWindow)
+                if (window is ISnapTarget)
                     yield return window;
             }
         }

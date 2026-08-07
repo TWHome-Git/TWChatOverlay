@@ -259,7 +259,7 @@
                             <TextBlock Text="변경 사항"
                                        Style="{StaticResource SectionLabelStyle}"/>
                             <TextBlock DockPanel.Dock="Right"
-                                       Text="GitHub Releases 본문"
+                                       Text=""
                                        Foreground="{DynamicResource OverlayTitleAccentTextBrush}"
                                        FontSize="11"
                                        FontWeight="SemiBold"
