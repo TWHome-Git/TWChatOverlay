@@ -13,7 +13,7 @@ using TWChatOverlay.Services;
 
 namespace TWChatOverlay.Views
 {
-    public partial class ChatCloneWindow : Window, INotifyPropertyChanged
+    public partial class ChatCloneWindow : Window, INotifyPropertyChanged, ISnapTarget
     {
         private readonly ChatSettings _settings;
         private readonly LogDocumentRenderer _renderer = new(200);

@@ -92,12 +92,12 @@ namespace TWChatOverlay.Services
                     }
 
                     _nextRemoteRetryUtc = now.Add(RemoteFailureBackoff);
-                    Debug.WriteLine($"[{_name}] Remote responded {(int)response.StatusCode}. Using fallback cache when available.");
+                    AppLogger.Warn($"[{_name}] Remote responded {(int)response.StatusCode}. Using fallback cache when available.");
                 }
                 catch (Exception ex)
                 {
                     _nextRemoteRetryUtc = now.Add(RemoteFailureBackoff);
-                    Debug.WriteLine($"[{_name}] Remote fetch failed: {ex.Message}");
+                    AppLogger.Warn($"[{_name}] Remote fetch failed.", ex);
                 }
             }
 
@@ -124,7 +124,7 @@ namespace TWChatOverlay.Services
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"[{_name}] Cache delete failed: {ex.Message}");
+                AppLogger.Warn($"[{_name}] Cache delete failed.", ex);
             }
         }
 
@@ -178,7 +178,7 @@ namespace TWChatOverlay.Services
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"[{_name}] Cache read failed: {ex.Message}");
+                AppLogger.Warn($"[{_name}] Cache read failed.", ex);
                 return null;
             }
         }
@@ -196,7 +196,7 @@ namespace TWChatOverlay.Services
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"[{_name}] Cache write failed: {ex.Message}");
+                AppLogger.Warn($"[{_name}] Cache write failed.", ex);
             }
         }
 

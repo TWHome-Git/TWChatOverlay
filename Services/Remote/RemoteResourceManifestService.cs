@@ -10,7 +10,7 @@ namespace TWChatOverlay.Services
 {
     public static class RemoteResourceManifestService
     {
-        private const string ManifestUrl = "https://raw.githubusercontent.com/TWHome-Git/TWHomeDB/main/manifest.json";
+        private const string ManifestUrl = RemoteEndpoints.Manifest;
         private static readonly HttpClient HttpClient = new() { Timeout = TimeSpan.FromSeconds(5) };
         private static readonly RemoteJsonCacheClient ManifestCacheClient = new(
             "RemoteResourceManifestService.Manifest",

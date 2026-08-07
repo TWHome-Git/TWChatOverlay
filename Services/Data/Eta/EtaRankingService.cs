@@ -17,7 +17,7 @@ namespace TWChatOverlay.Services
     /// </summary>
     public static class EtaRankingService
     {
-        private const string EtaRankingUrl = "https://raw.githubusercontent.com/TWHome-Git/TWHomeDB/main/eta_ranking.json";
+        private const string EtaRankingUrl = RemoteEndpoints.EtaRanking;
         private static readonly TimeSpan CacheTtl = TimeSpan.FromHours(6);
         private const int RefreshAnchorHourLocal = 10;
 
@@ -144,11 +144,11 @@ namespace TWChatOverlay.Services
             try
             {
                 CacheClient.DeleteCache();
-                Debug.WriteLine("ETA cache deleted.");
+                AppLogger.Info("ETA cache deleted.");
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"ETA cache delete failed: {ex.Message}");
+                AppLogger.Warn("ETA cache delete failed.", ex);
             }
         }
 
@@ -164,7 +164,7 @@ namespace TWChatOverlay.Services
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"ETA ranking load failed: {ex.Message}");
+                AppLogger.Warn("ETA ranking load failed.", ex);
             }
         }
 
@@ -212,7 +212,7 @@ namespace TWChatOverlay.Services
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"ETA JSON apply failed: {ex.Message}");
+                AppLogger.Warn("ETA JSON apply failed.", ex);
                 return false;
             }
         }

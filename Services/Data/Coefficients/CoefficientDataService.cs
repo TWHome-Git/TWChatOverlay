@@ -38,7 +38,7 @@ namespace TWChatOverlay.Services
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"계수 데이터 저장 중 오류 발생: {ex.Message}");
+                AppLogger.Warn("계수 데이터 저장 중 오류 발생.", ex);
             }
         }
 
@@ -61,7 +61,7 @@ namespace TWChatOverlay.Services
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"계수 데이터 로드 중 오류 발생: {ex.Message}");
+                AppLogger.Warn("계수 데이터 로드 중 오류 발생.", ex);
             }
 
             _cache = new CoefficientSaveData();

@@ -65,6 +65,7 @@ namespace TWChatOverlay.Views
         private const string MiningSiteItemName = "채굴장";
         private const string DimensionalGapItemName = "차원의 틈";
         private const string AbyssalTreasuryItemName = "심연의 보물창고";
+        private const string EternalFloorItemName = "이터널 플로어";
         private const string CravingPleasureItemName = "갈망하는 즐거움";
         private const string VestigeItemName = "베스티지";
         private const string OrlyDefenseHellItemName = "오를리 방어전 지옥";
@@ -200,6 +201,7 @@ namespace TWChatOverlay.Views
         private const string MiningSiteLogKeyword = "숨겨진 구역으로 이동할 수 있는 포탈이 맵 중앙";
         private const string DimensionalGapLogKeyword = "지하요새의 망령 클리어 횟수:";
         private const string AbyssalTreasuryLogKeyword = "심연의 보물창고 입장 횟수:";
+        private const string EternalFloorLogKeyword = "[이터널 플로어 보상 상자] 아이템을 획득하였습니다";
         private const string CravingPleasureLogKeyword = "남은 에너지는";
         private const string VestigeLogKeyword = "[성난 빅테디의 별사탕] 아이템을 획득하였습니다.";
         private const string OrlyDefenseHellEntryLogKeyword = "남은 공격 횟수 : 1";
@@ -488,6 +490,7 @@ namespace TWChatOverlay.Views
             var relic = new DailyWeeklyContentLog { Name = RelicItemName, IsWeekly = true, AllowCountOverMax = true, DefaultMaxCount = 7, MaxCount = 7, LogKeyword = RelicLogKeyword };
             var dimensionalGap = new DailyWeeklyContentLog { Name = DimensionalGapItemName, IsWeekly = true, AllowCountOverMax = true, DefaultMaxCount = 7, MaxCount = 7, LogKeyword = DimensionalGapLogKeyword };
             var abyssalTreasury = new DailyWeeklyContentLog { Name = AbyssalTreasuryItemName, IsWeekly = true, AllowCountOverMax = true, DefaultMaxCount = 7, MaxCount = 7, LogKeyword = AbyssalTreasuryLogKeyword };
+            var eternalFloor = new DailyWeeklyContentLog { Name = EternalFloorItemName, IsWeekly = true, AllowCountOverMax = true, DefaultMaxCount = 10, MaxCount = 10, LogKeyword = EternalFloorLogKeyword };
             var cleaningPartTime = new DailyWeeklyContentLog { Name = CleaningPartTimeJobItemName, IsWeekly = true, LogKeyword = CleaningPartTimeJobLogKeyword };
             var pravaDefense = new DailyWeeklyContentLog { Name = PravaDefenseItemName, IsWeekly = true, AllowCountOverMax = true, DefaultMaxCount = 5, MaxCount = 5, LogKeyword = PravaDefenseLogKeyword };
             var vestige = new DailyWeeklyContentLog { Name = VestigeItemName, IsWeekly = true, AllowCountOverMax = true, DefaultMaxCount = 7, MaxCount = 7, LogKeyword = VestigeLogKeyword };
@@ -507,7 +510,7 @@ namespace TWChatOverlay.Views
                 IsWeekly = true,
                 Children = new[] { mercurialCoreMasterGroup, mercurialWeeklyDungeonGroup }
             };
-            var abyssRegionGroup = new DailyWeeklyContentLog { Name = WeeklyAbyssGroupName, IsRegionGroup = true, IsWeekly = true, Children = new[] { abyssCoreMasterGroup, abyssGroup, abyssBossEx, abyssalTreasury, dimensionalGap } };
+            var abyssRegionGroup = new DailyWeeklyContentLog { Name = WeeklyAbyssGroupName, IsRegionGroup = true, IsWeekly = true, Children = new[] { abyssCoreMasterGroup, abyssGroup, abyssBossEx, abyssalTreasury, dimensionalGap, eternalFloor } };
             var eclipseRegionGroup = new DailyWeeklyContentLog { Name = WeeklyEclipseGroupName, IsRegionGroup = true, IsWeekly = true, Children = new[] { eclipseCoreMasterGroup, eclipseBoss, eclipseSubjugation, supplyRetrieval, trainingCenter, detachedForce, apetiriaEx, apetiria, finalBattle } };
             var otherRegionGroup = new DailyWeeklyContentLog { Name = WeeklyOtherGroupName, IsRegionGroup = true, IsWeekly = true, Children = new[] { coreDungeon, excavationSite, relic, cleaningPartTime, pravaDefense, vestige, orlyDefense, catacombsHell, shinjoHard, siochanBosses, siochanOdin, AbandonGroup } };
 
@@ -1033,7 +1036,7 @@ namespace TWChatOverlay.Views
                 }
                 catch (Exception ex)
                 {
-                    System.Diagnostics.Debug.WriteLine($"던전 로그 스캔 실패: {ex.Message}");
+                    AppLogger.Warn("던전 로그 스캔 실패.", ex);
                 }
             });
 
@@ -1190,47 +1193,13 @@ namespace TWChatOverlay.Views
         }
 
         private static bool TryExtractAbandonRoadCount(string text, out string itemName, out int count)
-        {
-            itemName = string.Empty;
-            count = 0;
-
-            Match match = AbandonRoadCountRegex.Match(text);
-            if (!match.Success || !int.TryParse(match.Groups["count"].Value, out count))
-                return false;
-
-            string region = WhiteSpaceRegex.Replace(match.Groups["region"].Value, string.Empty);
-            itemName = region switch
-            {
-                "필멸의땅" => ImmortalLandItemName,
-                "카디프" => CardiffItemName,
-                "오를란느" => OrlanneItemName,
-                _ => string.Empty
-            };
-
-            return !string.IsNullOrEmpty(itemName);
-        }
+            => DailyWeeklyLogParser.TryExtractAbandonRoadCount(text, out itemName, out count);
 
         private static bool TryExtractCravingPleasureCount(string text, out int count)
-        {
-            count = 0;
-
-            Match match = CravingPleasureEnergyRegex.Match(text);
-            if (!match.Success || !int.TryParse(match.Groups["remain"].Value, out int remain))
-                return false;
-
-            count = 21 - remain;
-            return true;
-        }
+            => DailyWeeklyLogParser.TryExtractCravingPleasureCount(text, out count);
 
         private static string NormalizeLogText(string rawLog)
-        {
-            if (string.IsNullOrWhiteSpace(rawLog))
-                return string.Empty;
-
-            string decoded = WebUtility.HtmlDecode(rawLog).Replace("&nbsp", " ");
-            decoded = HtmlTagRegex.Replace(decoded, " ");
-            return WhiteSpaceRegex.Replace(decoded, " ").Trim();
-        }
+            => DailyWeeklyLogParser.NormalizeLogText(rawLog);
 
         private async void Settings_Click(object sender, RoutedEventArgs e)
         {

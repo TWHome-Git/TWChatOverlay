@@ -178,6 +178,11 @@ namespace TWChatOverlay.Views
             PersistPosition();
         }
 
+        /// <summary>
+        /// 앱 종료 시 현재 위치를 공유 설정에 확정 저장하기 위한 안전망 진입점.
+        /// </summary>
+        public void PersistPositionNow() => PersistPosition();
+
         private void PersistPosition()
         {
             if (!_isReady || DataContext is not ExpTrackerViewModel)

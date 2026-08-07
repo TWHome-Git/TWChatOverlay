@@ -80,7 +80,8 @@ namespace TWChatOverlay.Services
                 return text;
             if (!settings.ShowEtaLevel && !settings.ShowEtaCharacter)
                 return text;
-            if (!EtaProfileResolver.TryGetProfile(lookupSenderId, out var profile))
+            if (!EtaProfileResolver.TryGetProfile(lookupSenderId, out var profile)
+                && !EtaProfileResolver.TryGetProfile(lookupSenderId.Trim(), out profile))
                 return text;
 
             string suffix = string.Empty;
@@ -93,10 +94,12 @@ namespace TWChatOverlay.Services
 
             if (log.Category == ChatCategory.Shout)
             {
+                // 외치기는 끝의 [보낸이] 대괄호에 접미사를 덧붙인다. 대괄호 안팎 공백 등
+                // 형식 변형에 견고하도록 발신자 문자열이 아니라 마지막 대괄호 그룹 자체를 매칭한다.
                 return Regex.Replace(
                     text,
-                    $@"\[{Regex.Escape(displaySenderId)}\]\s*$",
-                    $"[{displaySenderId}{suffix}]");
+                    @"\[(?<id>[^\[\]]+)\]\s*$",
+                    m => $"[{m.Groups["id"].Value}{suffix}]");
             }
 
             if (!TrySplitTimestampAndBody(text, out string body))

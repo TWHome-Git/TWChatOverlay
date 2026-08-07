@@ -11,7 +11,7 @@ namespace TWChatOverlay.Services
 {
     public sealed class BossTimerService
     {
-        private const string BossTimerUrl = "https://raw.githubusercontent.com/TWHome-Git/TWHomeDB/main/BossTimer.json";
+        private const string BossTimerUrl = RemoteEndpoints.BossTimer;
         private static readonly TimeSpan CacheTtl = TimeSpan.FromHours(6);
         private static readonly HttpClient HttpClient = new()
         {
