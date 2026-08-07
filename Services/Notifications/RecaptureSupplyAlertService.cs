@@ -27,7 +27,7 @@ namespace TWChatOverlay.Services
 
         private static readonly string CacheDirectoryPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "ImageCache");
         private static readonly string CacheFilePath = Path.Combine(CacheDirectoryPath, "RecaptureSupplies.png");
-        private static readonly string RemoteImageUrl = "https://raw.githubusercontent.com/TWHome-Git/TWHomeDB/main/Recapture%20supplies.png";
+        private static readonly string RemoteImageUrl = RemoteEndpoints.RecaptureSupplyImage;
         private static readonly object SyncRoot = new();
 
         private static Task<bool>? _preloadTask;
@@ -108,7 +108,10 @@ namespace TWChatOverlay.Services
                                 ConfigService.SaveDeferred(settings);
                             }
                         }
-                        catch { }
+                        catch (Exception ex)
+                        {
+                            AppLogger.Warn("Failed to save Recapture supply window position on close.", ex);
+                        }
 
                         _window = null;
                     };
@@ -147,7 +150,10 @@ namespace TWChatOverlay.Services
                     }
                 }
             }
-            catch { }
+            catch (Exception ex)
+            {
+                AppLogger.Warn("Failed to resolve shared settings for Recapture supply alert.", ex);
+            }
 
             return null;
         }

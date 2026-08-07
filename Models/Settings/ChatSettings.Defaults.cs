@@ -177,6 +177,7 @@ namespace TWChatOverlay.Models
                 ["채굴장"] = new() { IsEnabled = true },
                 ["차원의 틈"] = new() { IsEnabled = true },
                 ["심연의 보물창고"] = new() { IsEnabled = true },
+                ["이터널 플로어"] = new() { IsEnabled = true },
                 ["베스티지"] = new() { IsEnabled = true },
                 ["오를리 방어전 지옥"] = new() { IsEnabled = true },
                 ["갈망하는 즐거움"] = new() { IsEnabled = true },

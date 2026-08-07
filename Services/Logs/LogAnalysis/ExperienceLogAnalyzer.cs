@@ -21,6 +21,13 @@ namespace TWChatOverlay.Services.LogAnalysis
         public void Analyze(LogLineContext context)
         {
             string chatContent = context.ChatContent ?? string.Empty;
+
+            // 모든 경험치 획득/증감 메시지와 특수 보상 문자열(별동대 토벌 보상)은 "경험치"를 포함한다.
+            // 포함하지 않는 라인은 어떤 정규식도 매칭될 수 없으므로, 비싼 Regex.Replace + 정규식 매칭을
+            // 건너뛴다. 결과는 완전히 동일하며 일반 채팅(대부분)의 처리 비용만 제거한다.
+            if (!chatContent.Contains("경험치", StringComparison.Ordinal))
+                return;
+
             string normalized = Regex.Replace(chatContent, @"\s+", " ").Trim();
             if (normalized.Contains(DetachedForceExpText, StringComparison.Ordinal))
             {
@@ -48,7 +55,10 @@ namespace TWChatOverlay.Services.LogAnalysis
             string expText = expMatch.Groups["exp"].Value.Replace(",", string.Empty);
             if (long.TryParse(expText, out long expValue))
             {
-                if (expMatch.Value.Contains("감소", StringComparison.Ordinal))
+                // 감소 메시지("... 감소했습니다" / "... 줄었습니다")는 음수로 기록한다.
+                // (기존에는 "감소"만 검사해 "줄었습니다" 감소가 양수로 잘못 기록되던 버그를 수정)
+                if (expMatch.Value.Contains("감소", StringComparison.Ordinal) ||
+                    expMatch.Value.Contains("줄었", StringComparison.Ordinal))
                 {
                     expValue = -expValue;
                 }

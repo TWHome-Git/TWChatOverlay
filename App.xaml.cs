@@ -52,6 +52,7 @@ namespace TWChatOverlay
             };
 
             System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
+            AppServices.Initialize();
             EtaProfileResolver.InitializeAsync();
             BlacklistService.Initialize();
             _ = RecaptureSupplyAlertService.PreloadAsync();
@@ -165,6 +166,17 @@ namespace TWChatOverlay
                     {
                         cfg.AbandonRoadSummaryWindowLeft = Abandon.Left;
                         cfg.AbandonRoadSummaryWindowTop = Abandon.Top;
+                    }
+                    else if (w is Views.ExpTrackerWindow exp)
+                    {
+                        // ExpTracker는 스스로 SaveDeferred 하지만 종료 시 확정 저장이 없어 안전망 추가.
+                        exp.PersistPositionNow();
+                    }
+                    else if (w is Views.BuffTrackerWindow buff)
+                    {
+                        // BuffTracker는 헬퍼 창이 열렸을 때만 저장되므로 종료 시 직접 저장.
+                        if (buff.WindowState != WindowState.Minimized)
+                            cfg.SetBuffTrackerWindowPosition(buff.Left, buff.Top, false);
                     }
                 }
                 TWChatOverlay.Services.ConfigService.Save(cfg);

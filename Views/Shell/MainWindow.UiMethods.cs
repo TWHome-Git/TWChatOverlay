@@ -145,10 +145,10 @@ namespace TWChatOverlay.Views
         }
 
         private static bool IsTimestampText(string value)
-            => Regex.IsMatch(value, @"^\d{1,2}:\d{2}(?::\d{2})?$");
+            => LogTextClassifier.IsTimestampText(value);
 
         private static bool IsEtaLevelText(string value)
-            => int.TryParse(value, out int level) && level is >= 1 and <= 9999;
+            => LogTextClassifier.IsEtaLevelText(value);
 
         private static void TrySetClipboardText(string text)
         {

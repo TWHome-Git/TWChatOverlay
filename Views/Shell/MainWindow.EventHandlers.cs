@@ -273,22 +273,7 @@ namespace TWChatOverlay.Views
 
         private static string NormalizeMainTabTag(string? tabTag)
         {
-            if (string.Equals(tabTag, "Basic", StringComparison.OrdinalIgnoreCase))
-                return "Basic";
-            if (string.Equals(tabTag, "General", StringComparison.OrdinalIgnoreCase))
-                return "General";
-            if (string.Equals(tabTag, "Team", StringComparison.OrdinalIgnoreCase))
-                return "Team";
-            if (string.Equals(tabTag, "Club", StringComparison.OrdinalIgnoreCase))
-                return "Club";
-            if (string.Equals(tabTag, "Shout", StringComparison.OrdinalIgnoreCase))
-                return "Shout";
-            if (string.Equals(tabTag, "System", StringComparison.OrdinalIgnoreCase))
-                return "System";
-            if (string.Equals(tabTag, "Settings", StringComparison.OrdinalIgnoreCase))
-                return "Settings";
-
-            return "Basic";
+            return LogTextClassifier.NormalizeMainTabTag(tabTag);
         }
 
         #endregion

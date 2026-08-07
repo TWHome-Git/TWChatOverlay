@@ -35,20 +35,20 @@ namespace TWChatOverlay.Models
         private string _chatLogFolderPath = @"C:\Nexon\TalesWeaver\ChatLog";
         private string _keywordInput = "";
         private string _fontFamily = "사용자 설정";
-        private bool _useAlertColor = true;
-        private bool _useAlertSound = true;
-        private bool _useMagicCircleAlert = true;
+        private bool _useAlertColor = false;
+        private bool _useAlertSound = false;
+        private bool _useMagicCircleAlert = false;
         private bool _showExpTracker = false;
         private bool _enableExperienceLimitAlert = false;
         private bool _showExperienceLimitAlertWindow = false;
         private bool _showDailyWeeklyContentOverlay = false;
-        private bool _showEtosDirectionAlert = true;
+        private bool _showEtosDirectionAlert = false;
         private bool _enableReflectionPatternAlert = false;
         private bool _enableAbandonRoadCountAlert = false;
         private bool _showAbandonRoadSummaryWindow = false;
         private bool _enableCravingPleasureCountAlert = false;
         private bool _showDungeonCountDisplayWindow = false;
-        private bool _showItemDropAlert = true;
+        private bool _showItemDropAlert = false;
         private bool _showEtosHelperWindow = false;
         private bool _showItemDropHelperWindow = false;
         private bool _useCustomDropItemFilter = false;
@@ -147,7 +147,7 @@ namespace TWChatOverlay.Models
         private int _AbandonRoadCountAlertDurationSeconds = 30;
         private int _lastSelectedPresetNumber = 1;
 
-        private WindowPositionPreset _preset1 = new("프리셋 1 (X: 0, Y: 0)", 110, 840, 0, 0);
+        private WindowPositionPreset _preset1 = new("프리셋 1", 0, 0);
         private WindowPositionPreset _preset2 = new("프리셋 2", 0, 0);
         private WindowPositionPreset _preset3 = new("프리셋 3", 0, 0);
         #endregion
@@ -155,7 +155,7 @@ namespace TWChatOverlay.Models
         #region Properties
 
         [JsonPropertyOrder(1)]
-        public bool ShowNormal { get; set; } = false;
+        public bool ShowNormal { get; set; } = true;
         [JsonPropertyOrder(2)]
         public bool ShowShout { get; set; } = true;
         [JsonPropertyOrder(36)]
@@ -197,13 +197,13 @@ namespace TWChatOverlay.Models
         [JsonPropertyOrder(4)]
         public bool ShowWhisper { get; set; } = true;
         [JsonPropertyOrder(5)]
-        public bool ShowSystem { get; set; } = false;
+        public bool ShowSystem { get; set; } = true;
         [JsonPropertyOrder(6)]
         public bool ShowClub { get; set; } = true;
         [JsonPropertyOrder(7)]
         public bool ShowClubBoss { get; set; } = true;
         [JsonPropertyOrder(8)]
-        public bool UseKeywordAlert { get; set; } = true;
+        public bool UseKeywordAlert { get; set; } = false;
         [JsonPropertyOrder(9)]
         public bool UseAlertColor { get => _useAlertColor; set { _useAlertColor = value; OnPropertyChanged(); } }
         [JsonPropertyOrder(10)]
@@ -466,7 +466,7 @@ namespace TWChatOverlay.Models
                 _expTrackerWindowTop = value;
                 OnPropertyChanged();
             }
-        }
+        }
         [JsonPropertyOrder(28)]
         public double? ExpTrackerWindowRight
         {

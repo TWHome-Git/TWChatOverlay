@@ -678,7 +678,7 @@ namespace TWChatOverlay.ViewModels
 
             try
             {
-                var result = await UpdateService.CheckForUpdateAsync(forceInstallLatest: true, showNoUpdateMessage: true);
+                var result = await AppServices.Get<IUpdateService>().CheckForUpdateAsync(forceInstallLatest: true, showNoUpdateMessage: true);
                 if (result == UpdateCheckResult.Failed)
                 {
                     MessageBox.Show("업데이트 확인/적용 중 오류가 발생했습니다.", "수동 업데이트", MessageBoxButton.OK, MessageBoxImage.Warning);

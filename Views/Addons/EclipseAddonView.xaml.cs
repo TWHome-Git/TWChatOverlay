@@ -5,6 +5,7 @@ using System.Reflection;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media.Imaging;
+using TWChatOverlay.Services;
 
 namespace TWChatOverlay.Views.Addons
 {
@@ -36,7 +37,7 @@ namespace TWChatOverlay.Views.Addons
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"[EclipseAddonView] Failed to load resource '{imagePath}': {ex.GetType().Name}: {ex.Message}");
+                AppLogger.Warn($"[EclipseAddonView] Failed to load resource '{imagePath}'.", ex);
                 try
                 {
                     string fsPath = Path.GetFullPath(resourcePath);
@@ -50,7 +51,7 @@ namespace TWChatOverlay.Views.Addons
                 }
                 catch (Exception ex2)
                 {
-                    Debug.WriteLine($"[EclipseAddonView] Fallback filesystem load failed: {ex2.GetType().Name}: {ex2.Message}");
+                    AppLogger.Warn("[EclipseAddonView] Fallback filesystem load failed.", ex2);
                 }
 
                 DirectionImage.Source = null;
