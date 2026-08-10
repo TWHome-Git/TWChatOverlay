@@ -367,3 +367,6 @@ FodyWeavers.xsd
 
 # 스크립트 제외
 Scripts/
+
+# Claude Code 로컬 설정(개인 설정, 공유 안 함)
+.claude/settings.local.json
