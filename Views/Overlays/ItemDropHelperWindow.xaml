@@ -20,7 +20,7 @@
         <Grid>
             <StackPanel VerticalAlignment="Center">
                 <TextBlock Text="아이템 드롭 알림 위치"
-                           Foreground="White"
+                           Foreground="{DynamicResource TextBrush}"
                            FontSize="15"
                            FontWeight="SemiBold"
                            HorizontalAlignment="Center"/>

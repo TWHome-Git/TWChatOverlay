@@ -6,7 +6,7 @@
     <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
         <TextBlock x:Name="ArrowText"
                    Text="?"
-                   Foreground="#3B82F6"
+                   Foreground="{DynamicResource OverlayAccentTextBrush}"
                    FontSize="34"
                    FontWeight="Bold"
                    HorizontalAlignment="Center"

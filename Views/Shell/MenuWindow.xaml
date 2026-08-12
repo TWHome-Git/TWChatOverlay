@@ -63,12 +63,12 @@
                         IsHitTestVisible="False"
                         HorizontalAlignment="Center"
                         VerticalAlignment="Center">
-                    <Line X1="7" Y1="1" X2="7" Y2="13" Stroke="White" StrokeThickness="1.2"/>
-                    <Line X1="1" Y1="7" X2="13" Y2="7" Stroke="White" StrokeThickness="1.2"/>
-                    <Polygon Points="7,0 5.5,2.5 8.5,2.5" Fill="White"/>
-                    <Polygon Points="7,14 5.5,11.5 8.5,11.5" Fill="White"/>
-                    <Polygon Points="0,7 2.5,5.5 2.5,8.5" Fill="White"/>
-                    <Polygon Points="14,7 11.5,5.5 11.5,8.5" Fill="White"/>
+                    <Line X1="7" Y1="1" X2="7" Y2="13" Stroke="{DynamicResource TextBrush}" StrokeThickness="1.2"/>
+                    <Line X1="1" Y1="7" X2="13" Y2="7" Stroke="{DynamicResource TextBrush}" StrokeThickness="1.2"/>
+                    <Polygon Points="7,0 5.5,2.5 8.5,2.5" Fill="{DynamicResource TextBrush}"/>
+                    <Polygon Points="7,14 5.5,11.5 8.5,11.5" Fill="{DynamicResource TextBrush}"/>
+                    <Polygon Points="0,7 2.5,5.5 2.5,8.5" Fill="{DynamicResource TextBrush}"/>
+                    <Polygon Points="14,7 11.5,5.5 11.5,8.5" Fill="{DynamicResource TextBrush}"/>
                 </Canvas>
                 <Button Grid.Column="1"
                         x:Name="BtnMinimize"
@@ -81,7 +81,7 @@
                         ToolTip="트레이로 최소화"
                         Background="Transparent"
                         BorderBrush="Transparent"
-                        Foreground="White"
+                        Foreground="{DynamicResource TextBrush}"
                         Cursor="Hand"
                         FontFamily="Segoe MDL2 Assets"
                         FontSize="10"
@@ -127,7 +127,7 @@
                 <Button x:Name="BtnMemo" Width="{DynamicResource MenuIconSize}" Height="{DynamicResource MenuIconSize}" Click="OpenChild_Click" ToolTip="메모장" Style="{StaticResource MenuIconButtonStyle}" Margin="2,2,2,2" Content="M"/>
                 <!-- 10: AddonView (추가기능) -->
                 <Button x:Name="BtnAddon" Width="{DynamicResource MenuIconSize}" Height="{DynamicResource MenuIconSize}" Click="OpenChild_Click" ToolTip="추가 기능" Style="{StaticResource MenuIconButtonStyle}" Margin="2,2,2,2">
-                    <TextBlock Text="+" FontSize="22" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    <TextBlock Text="+" FontSize="22" FontWeight="Bold" Foreground="{DynamicResource TextBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                 </Button>
                 <!-- 11: Settings -->
                 <Button x:Name="BtnSettings" Width="{DynamicResource MenuIconSize}" Height="{DynamicResource MenuIconSize}" Click="OpenChild_Click" ToolTip="설정" Style="{StaticResource MenuIconButtonStyle}" Margin="2,2,2,2" HorizontalAlignment="Center">

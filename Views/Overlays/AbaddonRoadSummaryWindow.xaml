@@ -35,7 +35,7 @@
                     <StackPanel HorizontalAlignment="Center"
                                 VerticalAlignment="Center">
                         <TextBlock Text="어밴던로드 주간 합계"
-                                   Foreground="White"
+                                   Foreground="{DynamicResource TextBrush}"
                                    FontSize="16"
                                    FontWeight="Bold"
                                    HorizontalAlignment="Center"

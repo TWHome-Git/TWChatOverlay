@@ -29,7 +29,7 @@
                        TextAlignment="Center"
                        HorizontalAlignment="Center"
                        VerticalAlignment="Center"
-                       Foreground="White"
+                       Foreground="{DynamicResource TextBrush}"
                        FontSize="18"
                        FontWeight="SemiBold"/>
         </Grid>

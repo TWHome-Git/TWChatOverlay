@@ -35,7 +35,7 @@
             <Style.Triggers>
                 <Trigger Property="IsMouseOver" Value="True">
                     <Setter Property="Background" Value="{DynamicResource OverlaySurfaceAltBackgroundBrush}"/>
-                    <Setter Property="Foreground" Value="White"/>
+                    <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
                 </Trigger>
             </Style.Triggers>
         </Style>
@@ -132,7 +132,7 @@
                             </Image.Style>
                         </Image>
                     </Grid>
-                    <TextBlock Text="{Binding Name}" Foreground="White" FontSize="{StaticResource TitleFontSize}" FontWeight="Bold" VerticalAlignment="Center"/>
+                    <TextBlock Text="{Binding Name}" Foreground="{DynamicResource TextBrush}" FontSize="{StaticResource TitleFontSize}" FontWeight="Bold" VerticalAlignment="Center"/>
                 </StackPanel>
 
                 <Border Grid.Row="2" BorderBrush="{DynamicResource OverlayStrongBorderBrush}" BorderThickness="0,1,0,1" Padding="0,8">
@@ -192,7 +192,7 @@
                                                         </Image.Style>
                                                     </Image>
                                                 </Grid>
-                                                <TextBlock Foreground="White"
+                                                <TextBlock Foreground="{DynamicResource TextBrush}"
                                                            FontSize="{StaticResource MaterialNameFontSize}"
                                                            VerticalAlignment="Center"
                                                            Text="{Binding DisplayName, Mode=OneWay}"/>
@@ -204,10 +204,10 @@
                                                      Style="{StaticResource MaterialPriceTextBoxStyle}"
                                                      FontSize="{StaticResource PriceInputFontSize}"
                                                      Background="{DynamicResource OverlayShellBackgroundBrush}"
-                                                     Foreground="White"
+                                                     Foreground="{DynamicResource TextBrush}"
                                                      BorderBrush="{DynamicResource OverlayStrongBorderBrush}"
                                                      BorderThickness="1"
-                                                     CaretBrush="White"
+                                                     CaretBrush="{DynamicResource TextBrush}"
                                                      Text="{Binding UnitPriceText, UpdateSourceTrigger=PropertyChanged}"
                                                      TextChanged="MaterialPriceTextBox_TextChanged"
                                                      LostFocus="MaterialPriceTextBox_LostFocus"/>
@@ -219,7 +219,7 @@
                     </Grid>
                 </Border>
 
-                <TextBlock Grid.Row="4" x:Name="TotalCostTextBlock" Foreground="White" FontSize="{StaticResource TotalFontSize}" HorizontalAlignment="Right"/>
+                <TextBlock Grid.Row="4" x:Name="TotalCostTextBlock" Foreground="{DynamicResource TextBrush}" FontSize="{StaticResource TotalFontSize}" HorizontalAlignment="Right"/>
             </Grid>
         </Border>
 

@@ -15,7 +15,7 @@ namespace TWChatOverlay.Views.Addons
     public partial class EtaRankingView : UserControl
     {
         private static readonly SolidColorBrush ActiveBackground = new((Color)ColorConverter.ConvertFromString("#1F6FEB"));
-        private static readonly SolidColorBrush InactiveForeground = new((Color)ColorConverter.ConvertFromString("#8B949E"));
+        private static Brush InactiveForeground => ThemeBrushes.Get("OverlaySubtleTextBrush");
 
         private string _selectedEtaCategory = "전체";
         private FrameworkElement? _lastSelectedEtaControl;

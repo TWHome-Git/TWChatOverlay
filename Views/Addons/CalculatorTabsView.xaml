@@ -16,7 +16,7 @@
         </Style>
     </UserControl.Resources>
 
-    <Grid Background="#161B22" Margin="8">
+    <Grid Background="{DynamicResource OverlaySurfaceBackgroundBrush}" Margin="8">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="8"/>
@@ -33,8 +33,8 @@
         </TabControl>
 
         <Border Grid.Row="2"
-                Background="#101720"
-                BorderBrush="#2E3A4A"
+                Background="{DynamicResource OverlayShellBackgroundBrush}"
+                BorderBrush="{DynamicResource OverlayStrongBorderBrush}"
                 BorderThickness="1"
                 CornerRadius="8"
                 Padding="8">

@@ -4,11 +4,11 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              mc:Ignorable="d">
-    <Grid Background="#161B22" Margin="8">
+    <Grid Background="{DynamicResource OverlaySurfaceBackgroundBrush}" Margin="8">
         <Grid.Resources>
             <Style x:Key="CoreComboBoxItemStyle" TargetType="ComboBoxItem">
-                <Setter Property="Background" Value="#0D1625"/>
-                <Setter Property="Foreground" Value="#E6EDF3"/>
+                <Setter Property="Background" Value="{DynamicResource OverlayShellBackgroundBrush}"/>
+                <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
                 <Setter Property="Padding" Value="8,5"/>
                 <Setter Property="HorizontalContentAlignment" Value="Center"/>
                 <Setter Property="Template">
@@ -22,12 +22,12 @@
                             </Border>
                             <ControlTemplate.Triggers>
                                 <Trigger Property="IsHighlighted" Value="True">
-                                    <Setter TargetName="ItemBorder" Property="Background" Value="#1F6FEB"/>
-                                    <Setter Property="Foreground" Value="White"/>
+                                    <Setter TargetName="ItemBorder" Property="Background" Value="{DynamicResource ComboItemHoverBrush}"/>
+                                    <Setter Property="Foreground" Value="{DynamicResource ComboItemTextBrush}"/>
                                 </Trigger>
                                 <Trigger Property="IsSelected" Value="True">
-                                    <Setter TargetName="ItemBorder" Property="Background" Value="#214C35"/>
-                                    <Setter Property="Foreground" Value="White"/>
+                                    <Setter TargetName="ItemBorder" Property="Background" Value="{DynamicResource ComboItemSelectedBrush}"/>
+                                    <Setter Property="Foreground" Value="{DynamicResource ComboItemTextBrush}"/>
                                 </Trigger>
                             </ControlTemplate.Triggers>
                         </ControlTemplate>
@@ -36,9 +36,9 @@
             </Style>
 
             <Style x:Key="CoreComboBoxStyle" TargetType="ComboBox">
-                <Setter Property="Background" Value="#0D1625"/>
-                <Setter Property="Foreground" Value="#E6EDF3"/>
-                <Setter Property="BorderBrush" Value="#2E3A4A"/>
+                <Setter Property="Background" Value="{DynamicResource OverlayShellBackgroundBrush}"/>
+                <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+                <Setter Property="BorderBrush" Value="{DynamicResource OverlayStrongBorderBrush}"/>
                 <Setter Property="BorderThickness" Value="1"/>
                 <Setter Property="Padding" Value="8,0"/>
                 <Setter Property="HorizontalContentAlignment" Value="Center"/>
@@ -68,12 +68,12 @@
                                                                       Margin="{Binding Padding, RelativeSource={RelativeSource AncestorType=ComboBox}}"
                                                                       HorizontalAlignment="{Binding HorizontalContentAlignment, RelativeSource={RelativeSource AncestorType=ComboBox}}"
                                                                       VerticalAlignment="Center"
-                                                                      TextElement.Foreground="White"
+                                                                      TextElement.Foreground="{DynamicResource TextBrush}"
                                                                       Content="{Binding SelectionBoxItem, RelativeSource={RelativeSource AncestorType=ComboBox}}"
                                                                       ContentTemplate="{Binding SelectionBoxItemTemplate, RelativeSource={RelativeSource AncestorType=ComboBox}}"/>
                                                     <TextBlock Grid.Column="1"
                                                                Text="▼"
-                                                               Foreground="#8B949E"
+                                                               Foreground="{DynamicResource OverlaySubtleTextBrush}"
                                                                FontSize="9"
                                                                HorizontalAlignment="Center"
                                                                VerticalAlignment="Center"/>
@@ -81,7 +81,7 @@
                                             </Border>
                                             <ControlTemplate.Triggers>
                                                 <Trigger Property="IsMouseOver" Value="True">
-                                                    <Setter TargetName="ComboBorder" Property="BorderBrush" Value="#58A6FF"/>
+                                                    <Setter TargetName="ComboBorder" Property="BorderBrush" Value="{DynamicResource OverlayAccentBorderBrush}"/>
                                                 </Trigger>
                                             </ControlTemplate.Triggers>
                                         </ControlTemplate>
@@ -92,8 +92,8 @@
                                        PlacementTarget="{Binding RelativeSource={RelativeSource TemplatedParent}}"
                                        AllowsTransparency="True"
                                        PopupAnimation="Slide">
-                                    <Border Background="#0D1625"
-                                            BorderBrush="#2E3A4A"
+                                    <Border Background="{DynamicResource OverlayShellBackgroundBrush}"
+                                            BorderBrush="{DynamicResource OverlayStrongBorderBrush}"
                                             BorderThickness="1"
                                             MinWidth="{Binding ActualWidth, RelativeSource={RelativeSource TemplatedParent}}">
                                         <ScrollViewer MaxHeight="{TemplateBinding MaxDropDownHeight}"
@@ -116,8 +116,8 @@
         </Grid.ColumnDefinitions>
 
         <Border Grid.Column="0"
-                Background="#111821"
-                BorderBrush="#30363D"
+                Background="{DynamicResource OverlayShellBackgroundBrush}"
+                BorderBrush="{DynamicResource OverlayStrongBorderBrush}"
                 BorderThickness="1"
                 CornerRadius="8"
                 Padding="8">
@@ -136,24 +136,24 @@
                     </Grid.RowDefinitions>
 
                     <Border Grid.Row="0"
-                            Background="#0D1625"
-                            BorderBrush="#2E3A4A"
+                            Background="{DynamicResource OverlayShellBackgroundBrush}"
+                            BorderBrush="{DynamicResource OverlayStrongBorderBrush}"
                             BorderThickness="1"
                             CornerRadius="6"
                             Padding="8">
                         <StackPanel>
-                            <TextBlock Text="코어 종류" Foreground="#8B949E" FontSize="12"/>
+                            <TextBlock Text="코어 종류" Foreground="{DynamicResource OverlaySubtleTextBrush}" FontSize="12"/>
                             <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
                                 <RadioButton x:Name="MercurialAbyssRadio"
                                              Content="머큐리얼/어비스"
                                              GroupName="CoreModeGroup"
                                              Margin="0,0,16,0"
-                                             Foreground="#C9D1D9"
+                                             Foreground="{DynamicResource OverlayInfoTextBrush}"
                                              Checked="CoreModeRadio_Changed"/>
                                 <RadioButton x:Name="EclipseRubiconRadio"
                                              Content="이클립스/루비코나"
                                              GroupName="CoreModeGroup"
-                                             Foreground="#C9D1D9"
+                                             Foreground="{DynamicResource OverlayInfoTextBrush}"
                                              Checked="CoreModeRadio_Changed"/>
                             </StackPanel>
                         </StackPanel>
@@ -167,41 +167,41 @@
                         </Grid.ColumnDefinitions>
 
                         <Border Grid.Column="0"
-                                Background="#0D1625"
-                                BorderBrush="#2E3A4A"
+                                Background="{DynamicResource OverlayShellBackgroundBrush}"
+                                BorderBrush="{DynamicResource OverlayStrongBorderBrush}"
                                 BorderThickness="1"
                                 CornerRadius="6"
                                 Padding="8">
                             <StackPanel>
-                                <TextBlock Text="스탯 기준" Foreground="#8B949E" FontSize="12"/>
+                                <TextBlock Text="스탯 기준" Foreground="{DynamicResource OverlaySubtleTextBrush}" FontSize="12"/>
                                 <CheckBox x:Name="MainStatToggle"
                                           Margin="0,4,0,0"
                                           Content="주스탯"
                                           Style="{StaticResource ToggleSwitchCheckBoxStyle}"
-                                          Foreground="#C9D1D9"
+                                          Foreground="{DynamicResource OverlayInfoTextBrush}"
                                           Checked="MainStatToggle_Changed"
                                           Unchecked="MainStatToggle_Changed"/>
                                 <TextBlock x:Name="StatModeTextBlock"
                                            Margin="0,4,0,0"
-                                           Foreground="#58A6FF"
+                                           Foreground="{DynamicResource OverlayAccentTextBrush}"
                                            FontSize="12"
                                            Text="현재 주스탯"/>
                             </StackPanel>
                         </Border>
 
                         <Border Grid.Column="2"
-                                Background="#0D1625"
-                                BorderBrush="#2E3A4A"
+                                Background="{DynamicResource OverlayShellBackgroundBrush}"
+                                BorderBrush="{DynamicResource OverlayStrongBorderBrush}"
                                 BorderThickness="1"
                                 CornerRadius="6"
                                 Padding="8">
                             <StackPanel>
-                                <TextBlock Text="진화권 사용" Foreground="#8B949E" FontSize="12"/>
+                                <TextBlock Text="진화권 사용" Foreground="{DynamicResource OverlaySubtleTextBrush}" FontSize="12"/>
                                 <CheckBox x:Name="UseTicketToggle"
                                           Margin="0,4,0,0"
                                           Content="진화권 사용"
                                           Style="{StaticResource ToggleSwitchCheckBoxStyle}"
-                                          Foreground="#C9D1D9"
+                                          Foreground="{DynamicResource OverlayInfoTextBrush}"
                                           Checked="UseTicketToggle_Changed"
                                           Unchecked="UseTicketToggle_Changed"/>
                             </StackPanel>
@@ -217,8 +217,8 @@
 
                         <Border x:Name="TicketOffPanel"
                                 Grid.Column="0"
-                                Background="#0D1625"
-                                BorderBrush="#2E3A4A"
+                                Background="{DynamicResource OverlayShellBackgroundBrush}"
+                                BorderBrush="{DynamicResource OverlayStrongBorderBrush}"
                                 BorderThickness="1"
                                 CornerRadius="6"
                                 Padding="8">
@@ -227,16 +227,16 @@
                                           Margin="0,2,0,0"
                                           Content="가루 설정"
                                           Style="{StaticResource ToggleSwitchCheckBoxStyle}"
-                                          Foreground="#C9D1D9"
+                                          Foreground="{DynamicResource OverlayInfoTextBrush}"
                                           Checked="HasDustToggle_Changed"
                                           Unchecked="HasDustToggle_Changed"/>
                                 <TextBlock x:Name="DustStateTextBlock"
                                            Text="가루 미보유"
-                                           Foreground="#8B949E"
+                                           Foreground="{DynamicResource OverlaySubtleTextBrush}"
                                            FontSize="11"
                                            Margin="22,2,0,4"/>
                                 <StackPanel x:Name="BoxPricePanel">
-                                    <TextBlock Text="상자 가격" Foreground="#8B949E" FontSize="11" Margin="0,6,0,0"/>
+                                    <TextBlock Text="상자 가격" Foreground="{DynamicResource OverlaySubtleTextBrush}" FontSize="11" Margin="0,6,0,0"/>
                                     <TextBox x:Name="BoxPriceTextBox"
                                              Text="0"
                                              Height="30"
@@ -247,16 +247,16 @@
                         </Border>
 
                         <Border Grid.Column="2"
-                                Background="#0D1625"
-                                BorderBrush="#2E3A4A"
+                                Background="{DynamicResource OverlayShellBackgroundBrush}"
+                                BorderBrush="{DynamicResource OverlayStrongBorderBrush}"
                                 BorderThickness="1"
                                 CornerRadius="6"
                                 Padding="8">
                             <StackPanel>
-                                <TextBlock Text="구간 선택" Foreground="#8B949E" FontSize="12"/>
-                                <TextBlock Text="시작" Foreground="#C9D1D9" Margin="0,6,0,2"/>
+                                <TextBlock Text="구간 선택" Foreground="{DynamicResource OverlaySubtleTextBrush}" FontSize="12"/>
+                                <TextBlock Text="시작" Foreground="{DynamicResource OverlayInfoTextBrush}" Margin="0,6,0,2"/>
                                 <ComboBox x:Name="StartStageComboBox" Height="28" Style="{StaticResource CoreComboBoxStyle}"/>
-                                <TextBlock Text="목표" Foreground="#C9D1D9" Margin="0,6,0,2"/>
+                                <TextBlock Text="목표" Foreground="{DynamicResource OverlayInfoTextBrush}" Margin="0,6,0,2"/>
                                 <ComboBox x:Name="TargetStageComboBox" Height="28" Style="{StaticResource CoreComboBoxStyle}"/>
                             </StackPanel>
                         </Border>
@@ -264,14 +264,14 @@
 
                     <Border x:Name="TicketOnPanel"
                             Grid.Row="6"
-                            Background="#0D1625"
-                            BorderBrush="#2E3A4A"
+                            Background="{DynamicResource OverlayShellBackgroundBrush}"
+                            BorderBrush="{DynamicResource OverlayStrongBorderBrush}"
                             BorderThickness="1"
                             CornerRadius="6"
                             Padding="8"
                             Visibility="Collapsed">
                         <StackPanel>
-                            <TextBlock Text="진화권 가격(억)" Foreground="#8B949E" FontSize="12"/>
+                            <TextBlock Text="진화권 가격(억)" Foreground="{DynamicResource OverlaySubtleTextBrush}" FontSize="12"/>
                             <Grid Margin="0,6,0,0">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*"/>
@@ -284,19 +284,19 @@
                                 </Grid.RowDefinitions>
 
                                 <StackPanel Grid.Row="0" Grid.Column="0">
-                                    <TextBlock Text="1진화 강화권" Foreground="#C9D1D9" Margin="0,0,0,3"/>
+                                    <TextBlock Text="1진화 강화권" Foreground="{DynamicResource OverlayInfoTextBrush}" Margin="0,0,0,3"/>
                                     <TextBox x:Name="Ticket1TextBox" Text="0" Height="30" Style="{StaticResource SimTextBoxStyle}" Margin="0,0,0,6"/>
                                 </StackPanel>
                                 <StackPanel Grid.Row="0" Grid.Column="2">
-                                    <TextBlock Text="2진화 강화권" Foreground="#C9D1D9" Margin="0,0,0,3"/>
+                                    <TextBlock Text="2진화 강화권" Foreground="{DynamicResource OverlayInfoTextBrush}" Margin="0,0,0,3"/>
                                     <TextBox x:Name="Ticket2TextBox" Text="0" Height="30" Style="{StaticResource SimTextBoxStyle}" Margin="0,0,0,6"/>
                                 </StackPanel>
                                 <StackPanel Grid.Row="1" Grid.Column="0">
-                                    <TextBlock Text="3진화 강화권" Foreground="#C9D1D9" Margin="0,0,0,3"/>
+                                    <TextBlock Text="3진화 강화권" Foreground="{DynamicResource OverlayInfoTextBrush}" Margin="0,0,0,3"/>
                                     <TextBox x:Name="Ticket3TextBox" Text="0" Height="30" Style="{StaticResource SimTextBoxStyle}"/>
                                 </StackPanel>
                                 <StackPanel Grid.Row="1" Grid.Column="2">
-                                    <TextBlock Text="4진화 강화권" Foreground="#C9D1D9" Margin="0,0,0,3"/>
+                                    <TextBlock Text="4진화 강화권" Foreground="{DynamicResource OverlayInfoTextBrush}" Margin="0,0,0,3"/>
                                     <TextBox x:Name="Ticket4TextBox" Text="0" Height="30" Style="{StaticResource SimTextBoxStyle}"/>
                                 </StackPanel>
                             </Grid>
@@ -313,8 +313,8 @@
         </Border>
 
         <Border Grid.Column="2"
-                Background="#111821"
-                BorderBrush="#30363D"
+                Background="{DynamicResource OverlayShellBackgroundBrush}"
+                BorderBrush="{DynamicResource OverlayStrongBorderBrush}"
                 BorderThickness="1"
                 CornerRadius="8"
                 Padding="8">
@@ -327,10 +327,10 @@
 
                 <DataGrid x:Name="ResultGrid"
                           AutoGenerateColumns="False"
-                          Background="#0D1625"
-                          BorderBrush="#2E3A4A"
+                          Background="{DynamicResource OverlayShellBackgroundBrush}"
+                          BorderBrush="{DynamicResource OverlayStrongBorderBrush}"
                           BorderThickness="1"
-                          Foreground="#E6EDF3"
+                          Foreground="{DynamicResource TextBrush}"
                           FontSize="13"
                           HeadersVisibility="Column"
                           CanUserAddRows="False"
@@ -341,18 +341,18 @@
                           ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                           ScrollViewer.VerticalScrollBarVisibility="Auto"
                           GridLinesVisibility="Horizontal"
-                          RowBackground="#0D1625"
-                          AlternatingRowBackground="#121D2D"
-                          HorizontalGridLinesBrush="#2E3A4A"
-                          VerticalGridLinesBrush="#2E3A4A"
+                          RowBackground="{DynamicResource OverlayShellBackgroundBrush}"
+                          AlternatingRowBackground="{DynamicResource OverlaySurfaceAltBackgroundBrush}"
+                          HorizontalGridLinesBrush="{DynamicResource OverlayStrongBorderBrush}"
+                          VerticalGridLinesBrush="{DynamicResource OverlayStrongBorderBrush}"
                           ColumnHeaderHeight="28">
                     <DataGrid.Resources>
                         <Style TargetType="DataGridColumnHeader">
-                            <Setter Property="Background" Value="#1A2332"/>
-                            <Setter Property="Foreground" Value="#F0F6FC"/>
+                            <Setter Property="Background" Value="{DynamicResource OverlaySurfaceAltBackgroundBrush}"/>
+                            <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
                             <Setter Property="FontSize" Value="13"/>
                             <Setter Property="FontWeight" Value="SemiBold"/>
-                            <Setter Property="BorderBrush" Value="#2E3A4A"/>
+                            <Setter Property="BorderBrush" Value="{DynamicResource OverlayStrongBorderBrush}"/>
                             <Setter Property="BorderThickness" Value="0,0,1,1"/>
                             <Setter Property="Padding" Value="8,4"/>
                             <Setter Property="HorizontalContentAlignment" Value="Center"/>
@@ -361,7 +361,7 @@
                         <Style TargetType="DataGridCell">
                             <Setter Property="Padding" Value="8,2"/>
                             <Setter Property="BorderThickness" Value="0,0,0,1"/>
-                            <Setter Property="BorderBrush" Value="#243247"/>
+                            <Setter Property="BorderBrush" Value="{DynamicResource SeparatorBrush}"/>
                             <Setter Property="VerticalContentAlignment" Value="Center"/>
                         </Style>
                         <Style x:Key="CellTextLeftStyle" TargetType="TextBlock">
@@ -394,7 +394,7 @@
 
                 <TextBlock x:Name="SummaryTextBlock"
                            Grid.Row="2"
-                           Foreground="#D6E8FF"
+                           Foreground="{DynamicResource TextBrush}"
                            FontSize="14"
                            Margin="2,0,2,2"
                            LineHeight="22"
