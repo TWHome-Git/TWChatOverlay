@@ -19,7 +19,6 @@ namespace TWChatOverlay.Models
 
         #region Fields
 
-        private int _uiThemeVersion = 2;
         private string _normalColor = "#FFFFFF";
         private string _teamColor = "#00BFFF";
         private string _clubColor = "#00FF00";
@@ -165,9 +164,6 @@ namespace TWChatOverlay.Models
         public bool ShowEtaCharacter { get => _showEtaCharacter; set { _showEtaCharacter = value; OnPropertyChanged(); } }
         [JsonPropertyOrder(371)]
         public bool ShowTimestamp { get => _showTimestamp; set { _showTimestamp = value; OnPropertyChanged(); } }
-        /// <summary>디자인 테마 버전. 1=구버전(다크), 2=신버전(테일즈위버 스타일).</summary>
-        [JsonPropertyOrder(1)]
-        public int UiThemeVersion { get => _uiThemeVersion; set { _uiThemeVersion = value; OnPropertyChanged(); } }
         [JsonPropertyOrder(38)]
         public bool ShowShoutToastPopup { get => _showShoutToastPopup; set { _showShoutToastPopup = value; OnPropertyChanged(); } }
         [JsonPropertyOrder(39)]
