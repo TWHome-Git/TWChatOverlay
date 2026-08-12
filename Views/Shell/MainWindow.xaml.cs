@@ -398,16 +398,10 @@ namespace TWChatOverlay.Views
                             TriggerMenuButton("BtnAddon");
                             break;
                         case HotKeyService.TOGGLE_ETA_RANKING_ID:
-                            TriggerMenuButton("BtnEtaRanking");
-                            break;
                         case HotKeyService.TOGGLE_COEFFICIENT_ID:
-                            TriggerMenuButton("BtnCoefficient");
-                            break;
                         case HotKeyService.TOGGLE_EQUIPMENTDB_ID:
-                            TriggerMenuButton("BtnEquipmentDb");
-                            break;
                         case HotKeyService.TOGGLE_ENCRYPT_ID:
-                            TriggerMenuButton("BtnEncrypt");
+                            TriggerMenuButton("BtnWebDb");
                             break;
                         case HotKeyService.TOGGLE_SETTINGS_ID:
                             TriggerMenuButton("BtnSettings");
