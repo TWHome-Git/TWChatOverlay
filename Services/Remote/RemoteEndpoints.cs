@@ -15,7 +15,6 @@ namespace TWChatOverlay.Services
         public const string DropItem = DataRawBase + "DropItem.Json";
         public const string BossTimer = DataRawBase + "BossTimer.json";
         public const string EtaRanking = DataRawBase + "eta_ranking.json";
-        public const string EquipmentData = DataRawBase + "EquipmentData.json";
         public const string Manifest = DataRawBase + "manifest.json";
         public const string RecaptureSupplyImage = DataRawBase + "Recapture%20supplies.png";
 

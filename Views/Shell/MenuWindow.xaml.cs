@@ -168,9 +168,6 @@ namespace TWChatOverlay.Views
                 case "BtnChat":
                     OpenChat();
                     break;
-                case "BtnDamageCalc":
-                    OpenDamageCalculator();
-                    break;
                 case "BtnDailyWeekly":
                     try
                     {
@@ -286,11 +283,6 @@ namespace TWChatOverlay.Views
             ShowAddonViewWindow(chat, "Chat", BtnChat);
         }
 
-        private void OpenDamageCalculator()
-        {
-            var view = new Addons.CalculatorTabsView(initialSelectedIndex: 1);
-            ShowAddonViewWindow(view, "계산기", null);
-        }
 
         private void OpenAddon()
         {
