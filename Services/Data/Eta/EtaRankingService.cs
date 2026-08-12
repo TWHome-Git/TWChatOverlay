@@ -173,14 +173,23 @@ namespace TWChatOverlay.Services
             try
             {
                 var payload = JsonSerializer.Deserialize<EtaRankingPayload>(json);
-                if (payload?.Rankings == null || payload.Rankings.Count == 0)
+                if (payload == null)
+                    return false;
+
+                // 신 형식: Servers = { "서버명": [rows] }. 아이디는 서버와 무관하게 공유되므로 전 서버를 병합한다.
+                // 구 형식(Rankings 평면 배열)도 계속 지원.
+                List<EtaRankingRow> rows = payload.Servers is { Count: > 0 }
+                    ? payload.Servers.Values.Where(list => list != null).SelectMany(list => list!).ToList()
+                    : payload.Rankings ?? new List<EtaRankingRow>();
+
+                if (rows.Count == 0)
                     return false;
 
                 var next = new Dictionary<string, EtaProfileResolver.EtaProfile>(StringComparer.OrdinalIgnoreCase);
-                var rankingRows = new List<EtaProfileResolver.EtaRankingEntry>(payload.Rankings.Count);
+                var rankingRows = new List<EtaProfileResolver.EtaRankingEntry>(rows.Count);
                 int order = 0;
 
-                foreach (var row in payload.Rankings)
+                foreach (var row in rows)
                 {
                     if (string.IsNullOrWhiteSpace(row.UserId))
                         continue;
@@ -226,7 +235,10 @@ namespace TWChatOverlay.Services
             public string? CollectDate { get; set; }
 
             [JsonPropertyName("Rankings")]
-            public List<EtaRankingRow> Rankings { get; set; } = new();
+            public List<EtaRankingRow>? Rankings { get; set; }
+
+            [JsonPropertyName("Servers")]
+            public Dictionary<string, List<EtaRankingRow>>? Servers { get; set; }
         }
 
         private static DateTime? ResolvePayloadDate(string json, EtaRankingPayload payload)
