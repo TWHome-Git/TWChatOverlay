@@ -162,20 +162,14 @@ namespace TWChatOverlay.Views
 
             switch (btn.Name)
             {
-                case "BtnEtaRanking":
-                    OpenEtaRanking();
+                case "BtnWebDb":
+                    OpenTwPage();
                     break;
                 case "BtnChat":
                     OpenChat();
                     break;
-                case "BtnCoefficient":
-                    OpenCoefficientCalculator();
-                    break;
                 case "BtnDamageCalc":
                     OpenDamageCalculator();
-                    break;
-                case "BtnEquipmentDb":
-                    OpenEquipmentDb();
                     break;
                 case "BtnDailyWeekly":
                     try
@@ -231,9 +225,6 @@ namespace TWChatOverlay.Views
                 case "BtnSettings":
                     OpenSettings();
                     break;
-                case "BtnEncrypt":
-                    OpenEncryptSimulator();
-                    break;
                 case "BtnExit":
                     AppLogger.Warn("Exit requested from menu window.");
                     Application.Current.Shutdown();
@@ -274,10 +265,6 @@ namespace TWChatOverlay.Views
             }
         }
 
-        private void OpenEtaRanking()
-        {
-            OpenTwPage();
-        }
 
         private void OpenChat()
         {
@@ -299,25 +286,10 @@ namespace TWChatOverlay.Views
             ShowAddonViewWindow(chat, "Chat", BtnChat);
         }
 
-        private void OpenCoefficientCalculator()
-        {
-            OpenTwPage();
-        }
-
         private void OpenDamageCalculator()
         {
             var view = new Addons.CalculatorTabsView(initialSelectedIndex: 1);
-            ShowAddonViewWindow(view, "계산기", BtnCoefficient);
-        }
-
-        private void OpenEquipmentDb()
-        {
-            OpenTwPage();
-        }
-
-        private void OpenEncryptSimulator()
-        {
-            OpenTwPage();
+            ShowAddonViewWindow(view, "계산기", null);
         }
 
         private void OpenAddon()
