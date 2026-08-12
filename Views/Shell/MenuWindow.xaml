@@ -97,7 +97,7 @@
                 </Button>
                 <!-- 2: TW DB 홈페이지 (에타 순위 / 장비 DB / 계산기 / 시뮬레이터 통합) -->
                 <Button x:Name="BtnWebDb" Width="{DynamicResource MenuIconSize}" Height="{DynamicResource MenuIconSize}" Click="OpenChild_Click" ToolTip="TW DB 홈페이지 (에타 순위·장비 DB·계산기·시뮬레이터)" Style="{StaticResource MenuIconButtonStyle}" Margin="2,2,2,2">
-                    <TextBlock Text="DB" FontSize="15" FontWeight="Bold" Foreground="{DynamicResource TextBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    <TextBlock FontSize="10.5" FontWeight="Bold" Foreground="{DynamicResource TextBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center" LineHeight="11" LineStackingStrategy="BlockLineHeight"><Run Text="TW"/><LineBreak/><Run Text="DB"/></TextBlock>
                 </Button>
                 <!-- 3: Daily/Weekly Content -->
                 <Button x:Name="BtnDailyWeekly" Width="{DynamicResource MenuIconSize}" Height="{DynamicResource MenuIconSize}" Click="OpenChild_Click" ToolTip="DailyWeekly" Style="{StaticResource MenuIconButtonStyle}" Margin="2,2,2,2">
