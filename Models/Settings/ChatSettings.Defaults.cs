@@ -15,6 +15,7 @@ namespace TWChatOverlay.Models
 
         private void ApplyDefaultValues()
         {
+            _uiThemeVersion = 2;
             _normalColor = "#FFFFFF";
             _teamColor = "#00BFFF";
             _clubColor = "#00FF00";

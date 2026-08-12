@@ -4,7 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              mc:Ignorable="d">
-    <Grid Background="#161B22">
+    <Grid Background="{DynamicResource OverlaySurfaceBackgroundBrush}">
         <Grid.RowDefinitions>
             <RowDefinition Height="9*"/>
             <RowDefinition Height="31*"/>
@@ -22,7 +22,7 @@
                             <Button.Template>
                                 <ControlTemplate TargetType="Button">
                                     <StackPanel>
-                                        <Border x:Name="CharBorder" CornerRadius="12" BorderBrush="#30363D" BorderThickness="1" Background="#161B22">
+                                        <Border x:Name="CharBorder" CornerRadius="12" BorderBrush="{DynamicResource OverlayStrongBorderBrush}" BorderThickness="1" Background="{DynamicResource OverlaySurfaceBackgroundBrush}">
                                             <Grid ClipToBounds="True">
                                                 <Image Source="{Binding ImagePath}"
                                                        Width="150"
@@ -32,7 +32,7 @@
                                             </Grid>
                                         </Border>
                                         <TextBlock Text="{Binding Name}"
-                                                   Foreground="White"
+                                                   Foreground="{DynamicResource TextBrush}"
                                                    FontSize="14"
                                                    FontWeight="SemiBold"
                                                    HorizontalAlignment="Center"
@@ -40,8 +40,8 @@
                                     </StackPanel>
                                     <ControlTemplate.Triggers>
                                         <Trigger Property="IsMouseOver" Value="True">
-                                            <Setter TargetName="CharBorder" Property="BorderBrush" Value="#58A6FF"/>
-                                            <Setter TargetName="CharBorder" Property="Background" Value="#1C2128"/>
+                                            <Setter TargetName="CharBorder" Property="BorderBrush" Value="{DynamicResource OverlayAccentBorderBrush}"/>
+                                            <Setter TargetName="CharBorder" Property="Background" Value="{DynamicResource OverlaySurfaceAltBackgroundBrush}"/>
                                         </Trigger>
                                     </ControlTemplate.Triggers>
                                 </ControlTemplate>
@@ -52,9 +52,9 @@
             </ItemsControl>
         </ScrollViewer>
 
-        <Grid x:Name="CalculatorDetailView" Visibility="Collapsed" Background="#161B22" Grid.RowSpan="2">
+        <Grid x:Name="CalculatorDetailView" Visibility="Collapsed" Background="{DynamicResource OverlaySurfaceBackgroundBrush}" Grid.RowSpan="2">
 
-            <TextBlock x:Name="SelectedCharName" Foreground="#58A6FF" FontSize="20" HorizontalAlignment="Center" Margin="10" Visibility="Collapsed"/>
+            <TextBlock x:Name="SelectedCharName" Foreground="{DynamicResource OverlayAccentTextBrush}" FontSize="20" HorizontalAlignment="Center" Margin="10" Visibility="Collapsed"/>
         </Grid>
     </Grid>
 </UserControl>

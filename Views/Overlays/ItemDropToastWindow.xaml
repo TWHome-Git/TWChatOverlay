@@ -18,7 +18,7 @@
         <Grid>
             <TextBlock Grid.Column="0"
                        x:Name="ItemNameText"
-                       Foreground="White"
+                       Foreground="{DynamicResource TextBrush}"
                        FontSize="16"
                        FontWeight="SemiBold"
                        TextTrimming="CharacterEllipsis"

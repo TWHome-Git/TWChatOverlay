@@ -352,7 +352,7 @@ namespace TWChatOverlay.Views.Addons
             arrowBlock.SetValue(DockPanel.DockProperty, Dock.Right);
             arrowBlock.SetValue(TextBlock.TextProperty, "▾");
             arrowBlock.SetValue(TextBlock.ForegroundProperty,
-                new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(0x8B, 0x94, 0x9E)));
+                ThemeBrushes.Get("OverlaySubtleTextBrush"));
             arrowBlock.SetValue(TextBlock.FontSizeProperty, 10.0);
             arrowBlock.SetValue(FrameworkElement.VerticalAlignmentProperty, VerticalAlignment.Center);
             arrowBlock.SetValue(FrameworkElement.MarginProperty, new Thickness(4, 0, 6, 0));
@@ -395,9 +395,9 @@ namespace TWChatOverlay.Views.Addons
 
             var dropBorder = new FrameworkElementFactory(typeof(Border));
             dropBorder.SetValue(Border.BackgroundProperty,
-                new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(0x16, 0x1B, 0x22)));
+                ThemeBrushes.Get("OverlaySurfaceBackgroundBrush"));
             dropBorder.SetValue(Border.BorderBrushProperty,
-                new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(0x30, 0x36, 0x3D)));
+                ThemeBrushes.Get("OverlayStrongBorderBrush"));
             dropBorder.SetValue(Border.BorderThicknessProperty, new Thickness(1));
             dropBorder.SetBinding(FrameworkElement.MinWidthProperty,
                 new Binding("ActualWidth") { RelativeSource = new RelativeSource(RelativeSourceMode.TemplatedParent) });
@@ -418,7 +418,7 @@ namespace TWChatOverlay.Views.Addons
 
             var hoverTrigger = new Trigger { Property = UIElement.IsMouseOverProperty, Value = true };
             hoverTrigger.Setters.Add(new Setter(Border.BorderBrushProperty,
-                new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(0x58, 0xA6, 0xFF)), "MainBorder"));
+                ThemeBrushes.Get("OverlayAccentTextBrush"), "MainBorder"));
             template.Triggers.Add(hoverTrigger);
 
             return template;
@@ -455,17 +455,17 @@ namespace TWChatOverlay.Views.Addons
             contentGrid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
             scrollViewer.Content = contentGrid;
 
-            var bgDarkest = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(0x0D, 0x11, 0x17));
-            var bgRow = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(0x16, 0x1B, 0x22));
+            var bgDarkest = ThemeBrushes.Get("OverlayShellBackgroundBrush");
+            var bgRow = ThemeBrushes.Get("OverlaySurfaceBackgroundBrush");
             var bgRowAlt = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(0x1C, 0x21, 0x28));
-            var borderDark = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(0x30, 0x36, 0x3D));
-            var headerFg = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(0x8B, 0x94, 0x9E));
-            var accentBlue = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(0x58, 0xA6, 0xFF));
+            var borderDark = ThemeBrushes.Get("OverlayStrongBorderBrush");
+            var headerFg = ThemeBrushes.Get("OverlaySubtleTextBrush");
+            var accentBlue = ThemeBrushes.Get("OverlayAccentTextBrush");
             var goldenBg = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(0x26, 0x4F, 0x78));
-            var darkHeaderFg = System.Windows.Media.Brushes.White;
-            var hoverBorder = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(0x58, 0xA6, 0xFF));
+            var darkHeaderFg = ThemeBrushes.Get("TextBrush", System.Windows.Media.Brushes.White);
+            var hoverBorder = ThemeBrushes.Get("OverlayAccentTextBrush");
             var selectedRowBg = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(0x1C, 0x2D, 0x44));
-            var comboDropdownBg = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(0x16, 0x1B, 0x22));
+            var comboDropdownBg = ThemeBrushes.Get("OverlaySurfaceBackgroundBrush");
             var comboHighlight = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(0x1F, 0x6F, 0xEB));
 
             var headerGrid = new Grid { Margin = new Thickness(10, 4, 10, 4) };
@@ -494,7 +494,7 @@ namespace TWChatOverlay.Views.Addons
             backBtnTemplate.Triggers.Add(backBtnHoverTrigger);
             var backButtonStyle = new Style(typeof(Button));
             backButtonStyle.Setters.Add(new Setter(Control.TemplateProperty, backBtnTemplate));
-            backButtonStyle.Setters.Add(new Setter(Control.ForegroundProperty, System.Windows.Media.Brushes.White));
+            backButtonStyle.Setters.Add(new Setter(Control.ForegroundProperty, ThemeBrushes.Get("TextBrush", System.Windows.Media.Brushes.White)));
             backButtonStyle.Setters.Add(new Setter(Control.FontSizeProperty, 11.0));
             backButtonStyle.Setters.Add(new Setter(Control.FontWeightProperty, FontWeights.SemiBold));
             backButton.Style = backButtonStyle;
@@ -507,7 +507,7 @@ namespace TWChatOverlay.Views.Addons
             SelectedCharName.TextAlignment = TextAlignment.Center;
 
             var comboBoxItemStyle = new Style(typeof(ComboBoxItem));
-            comboBoxItemStyle.Setters.Add(new Setter(Control.ForegroundProperty, System.Windows.Media.Brushes.White));
+            comboBoxItemStyle.Setters.Add(new Setter(Control.ForegroundProperty, ThemeBrushes.Get("TextBrush", System.Windows.Media.Brushes.White)));
             comboBoxItemStyle.Setters.Add(new Setter(Control.BackgroundProperty, comboDropdownBg));
             comboBoxItemStyle.Setters.Add(new Setter(Control.PaddingProperty, new Thickness(8, 5, 8, 5)));
             comboBoxItemStyle.Setters.Add(new Setter(Control.FontSizeProperty, 12.0));
@@ -533,7 +533,7 @@ namespace TWChatOverlay.Views.Addons
             });
 
             var comboBoxStyle = new Style(typeof(ComboBox));
-            comboBoxStyle.Setters.Add(new Setter(Control.ForegroundProperty, System.Windows.Media.Brushes.White));
+            comboBoxStyle.Setters.Add(new Setter(Control.ForegroundProperty, ThemeBrushes.Get("TextBrush", System.Windows.Media.Brushes.White)));
             comboBoxStyle.Setters.Add(new Setter(Control.BackgroundProperty, bgDarkest));
             comboBoxStyle.Setters.Add(new Setter(Control.BorderBrushProperty, borderDark));
             comboBoxStyle.Setters.Add(new Setter(Control.BorderThicknessProperty, new Thickness(1)));
@@ -569,7 +569,7 @@ namespace TWChatOverlay.Views.Addons
             var typeItemTemplate = new DataTemplate();
             var typeItemTextFactory = new FrameworkElementFactory(typeof(TextBlock));
             typeItemTextFactory.SetBinding(TextBlock.TextProperty, new Binding(nameof(CalculatorTypeOption.DisplayName)));
-            typeItemTextFactory.SetValue(TextBlock.ForegroundProperty, System.Windows.Media.Brushes.White);
+            typeItemTextFactory.SetValue(TextBlock.ForegroundProperty, ThemeBrushes.Get("TextBrush", System.Windows.Media.Brushes.White));
             typeItemTextFactory.SetValue(TextBlock.TextAlignmentProperty, TextAlignment.Center);
             typeItemTextFactory.SetValue(FrameworkElement.HorizontalAlignmentProperty, HorizontalAlignment.Center);
             typeItemTemplate.VisualTree = typeItemTextFactory;
@@ -598,7 +598,7 @@ namespace TWChatOverlay.Views.Addons
                 RowHeight = 24,
                 Background = System.Windows.Media.Brushes.Transparent,
                 RowBackground = bgRow,
-                Foreground = System.Windows.Media.Brushes.White,
+                Foreground = ThemeBrushes.Get("TextBrush", System.Windows.Media.Brushes.White),
                 BorderThickness = new Thickness(0),
                 SelectionMode = DataGridSelectionMode.Single,
                 SelectionUnit = DataGridSelectionUnit.FullRow,
@@ -628,7 +628,7 @@ namespace TWChatOverlay.Views.Addons
             _slotGrid.ColumnHeaderStyle = colHeaderStyle;
 
             var rowStyle = new Style(typeof(DataGridRow));
-            rowStyle.Setters.Add(new Setter(Control.ForegroundProperty, System.Windows.Media.Brushes.White));
+            rowStyle.Setters.Add(new Setter(Control.ForegroundProperty, ThemeBrushes.Get("TextBrush", System.Windows.Media.Brushes.White)));
             rowStyle.Setters.Add(new Setter(Control.VerticalContentAlignmentProperty, VerticalAlignment.Center));
             rowStyle.Setters.Add(new Setter(Control.BorderThicknessProperty, new Thickness(0)));
             rowStyle.Triggers.Add(new Trigger
@@ -654,7 +654,7 @@ namespace TWChatOverlay.Views.Addons
 
             var cellStyle = new Style(typeof(DataGridCell));
             cellStyle.Setters.Add(new Setter(Control.BackgroundProperty, System.Windows.Media.Brushes.Transparent));
-            cellStyle.Setters.Add(new Setter(Control.ForegroundProperty, System.Windows.Media.Brushes.White));
+            cellStyle.Setters.Add(new Setter(Control.ForegroundProperty, ThemeBrushes.Get("TextBrush", System.Windows.Media.Brushes.White)));
             cellStyle.Setters.Add(new Setter(Control.BorderBrushProperty, System.Windows.Media.Brushes.Transparent));
             cellStyle.Setters.Add(new Setter(Control.BorderThicknessProperty, new Thickness(0)));
             cellStyle.Setters.Add(new Setter(FrameworkElement.VerticalAlignmentProperty, VerticalAlignment.Center));
@@ -672,17 +672,17 @@ namespace TWChatOverlay.Views.Addons
             _slotGrid.CellStyle = cellStyle;
 
             var textDisplayStyle = new Style(typeof(TextBlock));
-            textDisplayStyle.Setters.Add(new Setter(TextBlock.ForegroundProperty, System.Windows.Media.Brushes.White));
+            textDisplayStyle.Setters.Add(new Setter(TextBlock.ForegroundProperty, ThemeBrushes.Get("TextBrush", System.Windows.Media.Brushes.White)));
             textDisplayStyle.Setters.Add(new Setter(TextBlock.TextAlignmentProperty, TextAlignment.Center));
             textDisplayStyle.Setters.Add(new Setter(FrameworkElement.VerticalAlignmentProperty, VerticalAlignment.Center));
 
             var textEditStyle = new Style(typeof(TextBox));
-            textEditStyle.Setters.Add(new Setter(TextBox.ForegroundProperty, System.Windows.Media.Brushes.White));
+            textEditStyle.Setters.Add(new Setter(TextBox.ForegroundProperty, ThemeBrushes.Get("TextBrush", System.Windows.Media.Brushes.White)));
             textEditStyle.Setters.Add(new Setter(TextBox.BackgroundProperty, bgDarkest));
             textEditStyle.Setters.Add(new Setter(TextBox.BorderBrushProperty, borderDark));
             textEditStyle.Setters.Add(new Setter(TextBox.BorderThicknessProperty, new Thickness(1)));
             textEditStyle.Setters.Add(new Setter(TextBox.TextAlignmentProperty, TextAlignment.Center));
-            textEditStyle.Setters.Add(new Setter(TextBox.CaretBrushProperty, System.Windows.Media.Brushes.White));
+            textEditStyle.Setters.Add(new Setter(TextBox.CaretBrushProperty, ThemeBrushes.Get("TextBrush", System.Windows.Media.Brushes.White)));
             textEditStyle.Setters.Add(new Setter(TextBox.PaddingProperty, new Thickness(4, 2, 4, 2)));
 
             var enchantDisplayStyle = new Style(typeof(TextBlock), textDisplayStyle);
@@ -859,7 +859,7 @@ namespace TWChatOverlay.Views.Addons
             TextBlock RtLbl(string text, double fs = 11) => new()
             {
                 Text = text,
-                Foreground = System.Windows.Media.Brushes.White,
+                Foreground = ThemeBrushes.Get("TextBrush", System.Windows.Media.Brushes.White),
                 FontWeight = FontWeights.SemiBold,
                 FontSize = fs,
                 HorizontalAlignment = HorizontalAlignment.Center,
@@ -869,7 +869,7 @@ namespace TWChatOverlay.Views.Addons
             TextBox RtInput() => new()
             {
                 Background = System.Windows.Media.Brushes.Transparent,
-                Foreground = System.Windows.Media.Brushes.White,
+                Foreground = ThemeBrushes.Get("TextBrush", System.Windows.Media.Brushes.White),
                 BorderThickness = new Thickness(0),
                 FontSize = 11,
                 FontWeight = FontWeights.Bold,
@@ -996,7 +996,7 @@ namespace TWChatOverlay.Views.Addons
             _avatarMainEnhanceCheckBox = new CheckBox
             {
                 Content = "아바타 강화(주스탯)",
-                Foreground = System.Windows.Media.Brushes.White,
+                Foreground = ThemeBrushes.Get("TextBrush", System.Windows.Media.Brushes.White),
                 FontSize = 11,
                 Margin = new Thickness(0, 0, 0, 4),
                 MinHeight = 22
@@ -1004,7 +1004,7 @@ namespace TWChatOverlay.Views.Addons
             _avatarSubEnhanceCheckBox = new CheckBox
             {
                 Content = "아바타 강화(부스탯)",
-                Foreground = System.Windows.Media.Brushes.White,
+                Foreground = ThemeBrushes.Get("TextBrush", System.Windows.Media.Brushes.White),
                 FontSize = 11,
                 Margin = new Thickness(0, 0, 0, 6),
                 MinHeight = 22
@@ -1128,7 +1128,7 @@ namespace TWChatOverlay.Views.Addons
                 var diffLbl = new TextBlock
                 {
                     Text = "-",
-                    Foreground = System.Windows.Media.Brushes.White,
+                    Foreground = ThemeBrushes.Get("TextBrush", System.Windows.Media.Brushes.White),
                     FontSize = 10,
                     TextAlignment = TextAlignment.Center,
                     Margin = new Thickness(2)

@@ -72,7 +72,7 @@
         </Style>
         <Style x:Key="CountButtonStyle" TargetType="Button">
             <Setter Property="Background" Value="{DynamicResource OverlayCardBackgroundBrush}"/>
-            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
             <Setter Property="BorderBrush" Value="{DynamicResource OverlayStrongBorderBrush}"/>
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="FontSize" Value="12"/>
@@ -506,7 +506,7 @@
             <Border Grid.Row="2" Background="{DynamicResource OverlaySurfaceBackgroundBrush}" CornerRadius="0,0,8,8" Padding="10,0">
                 <DockPanel VerticalAlignment="Center">
                     <Button DockPanel.Dock="Right" Content="갱신" Click="Reset_Click"
-                            Width="60" Height="24" Background="{DynamicResource OverlayCardBackgroundBrush}" Foreground="White"
+                            Width="60" Height="24" Background="{DynamicResource OverlayCardBackgroundBrush}" Foreground="{DynamicResource TextBrush}"
                             BorderBrush="{DynamicResource OverlayStrongBorderBrush}" BorderThickness="1" FontSize="11">
                         <Button.Resources>
                             <Style TargetType="Border">

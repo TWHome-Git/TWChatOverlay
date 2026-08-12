@@ -37,7 +37,7 @@
                            FontWeight="SemiBold"
                            Margin="0,0,0,2"/>
                 <TextBlock x:Name="ToastText"
-                           Foreground="White"
+                           Foreground="{DynamicResource TextBrush}"
                            FontSize="15"
                            FontWeight="SemiBold"
                            TextWrapping="NoWrap"

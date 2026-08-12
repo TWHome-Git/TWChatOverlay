@@ -53,18 +53,11 @@ namespace TWChatOverlay.Views.Addons
         private string _currentDamageStateKey = string.Empty;
         private static bool _appExitHooked;
 
-        private static readonly Brush _anaisHighlightBrush = CreateFrozenBrush(Color.FromRgb(0x58, 0xA6, 0xFF));
-        private static readonly Brush _magicDefenseHighlightBrush = CreateFrozenBrush(Color.FromRgb(0xFF, 0xDE, 0x59));
-        private static readonly Brush _summaryLabelBrush = CreateFrozenBrush(Color.FromRgb(0xC9, 0xD1, 0xD9));
+        private static Brush _anaisHighlightBrush => ThemeBrushes.Get("OverlayAccentTextBrush");
+        private static Brush _magicDefenseHighlightBrush => ThemeBrushes.Get("OverlayRareAccentBrush");
+        private static Brush _summaryLabelBrush => ThemeBrushes.Get("TextBrush", Brushes.White);
 
         private TextBox? SpecialDamageReductionTextBoxControl => FindName("SpecialDamageReductionTextBox") as TextBox;
-
-        private static Brush CreateFrozenBrush(Color color)
-        {
-            var brush = new SolidColorBrush(color);
-            brush.Freeze();
-            return brush;
-        }
 
         public DamageCalculatorView()
         {
@@ -550,7 +543,7 @@ namespace TWChatOverlay.Views.Addons
             {
                 CharacterNameText.Foreground = string.Equals(characterName, "아나이스", StringComparison.Ordinal)
                     ? _anaisHighlightBrush
-                    : Brushes.White;
+                    : ThemeBrushes.Get("TextBrush", Brushes.White);
             }
 
             if (CalculatorTypeText != null)
@@ -559,7 +552,7 @@ namespace TWChatOverlay.Views.Addons
                                       calculatorTypeName.Contains("신성", StringComparison.Ordinal);
                 CalculatorTypeText.Foreground = isMagicDefense
                     ? _magicDefenseHighlightBrush
-                    : Brushes.White;
+                    : ThemeBrushes.Get("TextBrush", Brushes.White);
             }
 
             if (TotalCoefficientText != null)
@@ -1007,7 +1000,7 @@ namespace TWChatOverlay.Views.Addons
             var border = new Border
             {
                 Background = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(0x11, 0x18, 0x21)),
-                BorderBrush = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(0x30, 0x36, 0x3D)),
+                BorderBrush = ThemeBrushes.Get("OverlayStrongBorderBrush"),
                 BorderThickness = new Thickness(1),
                 CornerRadius = new CornerRadius(8),
                 Padding = new Thickness(8),
@@ -1030,7 +1023,7 @@ namespace TWChatOverlay.Views.Addons
             panel.Children.Add(new TextBlock
             {
                 Text = displayTitle,
-                Foreground = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(0x58, 0xA6, 0xFF)),
+                Foreground = ThemeBrushes.Get("OverlayAccentTextBrush"),
                 FontSize = 11,
                 FontWeight = FontWeights.SemiBold,
                 Margin = new Thickness(0, 0, 0, 0),
@@ -1142,7 +1135,7 @@ namespace TWChatOverlay.Views.Addons
                 var trait = new TextBlock
                 {
                     Text = $"{GetCurrentTraitDisplayName()} : {_calc.TraitAttackDamageValue:0.#}%",
-                    Foreground = System.Windows.Media.Brushes.White,
+                    Foreground = ThemeBrushes.Get("TextBrush", Brushes.White),
                     FontWeight = FontWeights.SemiBold,
                     HorizontalAlignment = HorizontalAlignment.Left,
                     Margin = new Thickness(0, 6, 0, 0),
@@ -1588,7 +1581,7 @@ namespace TWChatOverlay.Views.Addons
             var border = new Border
             {
                 Background = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(0x11, 0x18, 0x21)),
-                BorderBrush = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(0x30, 0x36, 0x3D)),
+                BorderBrush = ThemeBrushes.Get("OverlayStrongBorderBrush"),
                 BorderThickness = new Thickness(1),
                 CornerRadius = new CornerRadius(8),
                 Padding = new Thickness(12)
@@ -1616,7 +1609,7 @@ namespace TWChatOverlay.Views.Addons
                 Content = string.Empty,
                 IsChecked = isChecked,
                 Margin = new Thickness(0),
-                Foreground = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(0xC9, 0xD1, 0xD9)),
+                Foreground = ThemeBrushes.Get("TextBrush", Brushes.White),
                 HorizontalAlignment = HorizontalAlignment.Right,
                 VerticalAlignment = VerticalAlignment.Center,
                 FontSize = 11,
@@ -1640,7 +1633,7 @@ namespace TWChatOverlay.Views.Addons
             var textBlock = new TextBlock
             {
                 Text = label,
-                Foreground = System.Windows.Media.Brushes.White,
+                Foreground = ThemeBrushes.Get("TextBrush", Brushes.White),
                 FontSize = 10,
                 FontWeight = FontWeights.SemiBold,
                 VerticalAlignment = VerticalAlignment.Center,
@@ -1654,7 +1647,7 @@ namespace TWChatOverlay.Views.Addons
             {
                 Content = string.Empty,
                 IsChecked = isChecked,
-                Foreground = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(0xC9, 0xD1, 0xD9)),
+                Foreground = ThemeBrushes.Get("TextBrush", Brushes.White),
                 HorizontalAlignment = HorizontalAlignment.Right,
                 VerticalAlignment = VerticalAlignment.Center,
                 FontSize = 9.5,
@@ -1681,7 +1674,7 @@ namespace TWChatOverlay.Views.Addons
             var textBlock = new TextBlock
             {
                 Text = label,
-                Foreground = System.Windows.Media.Brushes.White,
+                Foreground = ThemeBrushes.Get("TextBrush", Brushes.White),
                 FontSize = 11,
                 FontWeight = FontWeights.SemiBold,
                 VerticalAlignment = VerticalAlignment.Center,
@@ -1710,7 +1703,7 @@ namespace TWChatOverlay.Views.Addons
             var textBlock = new TextBlock
             {
                 Text = label,
-                Foreground = System.Windows.Media.Brushes.White,
+                Foreground = ThemeBrushes.Get("TextBrush", Brushes.White),
                 FontSize = 11,
                 FontWeight = FontWeights.SemiBold,
                 VerticalAlignment = VerticalAlignment.Center,
@@ -1726,9 +1719,9 @@ namespace TWChatOverlay.Views.Addons
                 Height = 18,
                 Width = 50,
                 FontSize = 10,
-                Background = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(0x0D, 0x11, 0x17)),
-                Foreground = System.Windows.Media.Brushes.White,
-                BorderBrush = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(0x30, 0x36, 0x3D)),
+                Background = ThemeBrushes.Get("OverlayShellBackgroundBrush"),
+                Foreground = ThemeBrushes.Get("TextBrush", Brushes.White),
+                BorderBrush = ThemeBrushes.Get("OverlayStrongBorderBrush"),
                 BorderThickness = new Thickness(1),
                 Padding = new Thickness(1, 0, 1, 0),
                 HorizontalAlignment = HorizontalAlignment.Right,
@@ -1758,7 +1751,7 @@ namespace TWChatOverlay.Views.Addons
             var textBlock = new TextBlock
             {
                 Text = label,
-                Foreground = System.Windows.Media.Brushes.White,
+                Foreground = ThemeBrushes.Get("TextBrush", Brushes.White),
                 FontSize = 11,
                 FontWeight = FontWeights.SemiBold,
                 VerticalAlignment = VerticalAlignment.Center,
@@ -1771,7 +1764,7 @@ namespace TWChatOverlay.Views.Addons
             var valueBlock = new TextBlock
             {
                 Text = string.IsNullOrWhiteSpace(value) ? "0" : value,
-                Foreground = System.Windows.Media.Brushes.White,
+                Foreground = ThemeBrushes.Get("TextBrush", Brushes.White),
                 FontWeight = FontWeights.SemiBold,
                 HorizontalAlignment = HorizontalAlignment.Right,
                 VerticalAlignment = VerticalAlignment.Center,
@@ -1795,7 +1788,7 @@ namespace TWChatOverlay.Views.Addons
             var textBlock = new TextBlock
             {
                 Text = label,
-                Foreground = System.Windows.Media.Brushes.White,
+                Foreground = ThemeBrushes.Get("TextBrush", Brushes.White),
                 FontSize = 11,
                 FontWeight = FontWeights.SemiBold,
                 VerticalAlignment = VerticalAlignment.Center,
@@ -1813,9 +1806,9 @@ namespace TWChatOverlay.Views.Addons
                 IsEditable = false,
                 StaysOpenOnEdit = false,
                 IsTextSearchEnabled = false,
-                Background = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(0x0D, 0x11, 0x17)),
-                Foreground = System.Windows.Media.Brushes.White,
-                BorderBrush = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(0x30, 0x36, 0x3D)),
+                Background = ThemeBrushes.Get("OverlayShellBackgroundBrush"),
+                Foreground = ThemeBrushes.Get("TextBrush", Brushes.White),
+                BorderBrush = ThemeBrushes.Get("OverlayStrongBorderBrush"),
                 BorderThickness = new Thickness(1),
                 Padding = new Thickness(2, 0, 2, 0),
                 HorizontalContentAlignment = HorizontalAlignment.Left,
@@ -1847,7 +1840,7 @@ namespace TWChatOverlay.Views.Addons
                     var label = new TextBlock
                     {
                         Text = text,
-                        Foreground = System.Windows.Media.Brushes.White,
+                        Foreground = ThemeBrushes.Get("TextBrush", Brushes.White),
                         FontSize = 10,
                         FontWeight = FontWeights.SemiBold,
                         VerticalAlignment = VerticalAlignment.Center,

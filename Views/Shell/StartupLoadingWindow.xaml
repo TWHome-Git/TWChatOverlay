@@ -27,7 +27,7 @@
 
             <TextBlock x:Name="TitleText"
                        Text="초기화중..."
-                       Foreground="White"
+                       Foreground="{DynamicResource TextBrush}"
                        FontSize="19"
                        FontWeight="SemiBold"
                        HorizontalAlignment="Center"/>

@@ -19,7 +19,7 @@
         <StackPanel>
             <TextBlock x:Name="WindowTitleText"
                        Text="에토스 방향 안내"
-                       Foreground="White"
+                       Foreground="{DynamicResource TextBrush}"
                        FontSize="13"
                        FontWeight="Bold"
                        HorizontalAlignment="Center"

@@ -45,7 +45,7 @@
                         <Rectangle Fill="{DynamicResource OverlayRareAccentBrush}" Opacity="0.55" Margin="4" RadiusX="3" RadiusY="3"/>
                     </Border>
                     <TextBlock Text="00:00"
-                               Foreground="White"
+                               Foreground="{DynamicResource TextBrush}"
                                FontSize="12"
                                FontWeight="SemiBold"
                                VerticalAlignment="Center"
@@ -69,7 +69,7 @@
                         <Rectangle Fill="{DynamicResource OverlayExpAccentBrush}" Opacity="0.55" Margin="4" RadiusX="3" RadiusY="3"/>
                     </Border>
                     <TextBlock Text="00:00"
-                               Foreground="White"
+                               Foreground="{DynamicResource TextBrush}"
                                FontSize="12"
                                FontWeight="SemiBold"
                                VerticalAlignment="Center"

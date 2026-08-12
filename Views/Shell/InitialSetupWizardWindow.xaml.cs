@@ -152,14 +152,14 @@ namespace TWChatOverlay.Views
                 8 => BuildBuffAddonContent(),
                 9 => BuildFieldBossAddonContent(),
                 10 => BuildDailyWeeklyStepContent(),
-                _ => new TextBlock { Text = "준비 중", Foreground = System.Windows.Media.Brushes.White }
+                _ => new TextBlock { Text = "준비 중", Foreground = ThemeBrushes.Get("TextBrush", Brushes.White) }
             };
         }
 
         private UIElement BuildLogPathStepContent()
         {
             var panel = new StackPanel();
-            panel.Children.Add(new TextBlock { Text = "채팅 로그 폴더", Foreground = System.Windows.Media.Brushes.White, Margin = new Thickness(0, 0, 0, 6) });
+            panel.Children.Add(new TextBlock { Text = "채팅 로그 폴더", Foreground = ThemeBrushes.Get("TextBrush", Brushes.White), Margin = new Thickness(0, 0, 0, 6) });
 
             var row = new Grid();
             row.ColumnDefinitions.Add(new ColumnDefinition());
@@ -194,15 +194,15 @@ namespace TWChatOverlay.Views
             row.Children.Add(browseBtn);
 
             panel.Children.Add(row);
-            panel.Children.Add(new TextBlock { Text = "경로 저장은 완료 시 자동 반영됩니다.", Foreground = new System.Windows.Media.SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#8B949E")), FontSize = 12, Margin = new Thickness(0, 8, 0, 0) });
+            panel.Children.Add(new TextBlock { Text = "경로 저장은 완료 시 자동 반영됩니다.", Foreground = ThemeBrushes.Get("OverlaySubtleTextBrush"), FontSize = 12, Margin = new Thickness(0, 8, 0, 0) });
             return panel;
         }
 
         private UIElement BuildMainPositionStepContent()
         {
             var panel = new StackPanel();
-            panel.Children.Add(new TextBlock { Text = "위치 미리보기를 켜고 메인 채팅창을 원하는 위치로 드래그하세요.", Foreground = System.Windows.Media.Brushes.White });
-            panel.Children.Add(new TextBlock { Text = "다음 단계로 이동하면 현재 위치가 프리셋1로 저장됩니다.", Foreground = new System.Windows.Media.SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#8B949E")), Margin = new Thickness(0, 8, 0, 0), FontSize = 12 });
+            panel.Children.Add(new TextBlock { Text = "위치 미리보기를 켜고 메인 채팅창을 원하는 위치로 드래그하세요.", Foreground = ThemeBrushes.Get("TextBrush", Brushes.White) });
+            panel.Children.Add(new TextBlock { Text = "다음 단계로 이동하면 현재 위치가 프리셋1로 저장됩니다.", Foreground = ThemeBrushes.Get("OverlaySubtleTextBrush"), Margin = new Thickness(0, 8, 0, 0), FontSize = 12 });
             return panel;
         }
 
@@ -228,7 +228,7 @@ namespace TWChatOverlay.Views
             root.Children.Add(new TextBlock
             {
                 Text = "텍스트 폰트 및 크기",
-                Foreground = Brushes.White,
+                Foreground = ThemeBrushes.Get("TextBrush", Brushes.White),
                 FontWeight = FontWeights.SemiBold,
                 Margin = new Thickness(0, 0, 0, 6)
             });
@@ -237,26 +237,26 @@ namespace TWChatOverlay.Views
             fontGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
             fontGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
 
-            var rbNanum = new RadioButton { Content = "나눔고딕", Foreground = Brushes.White, GroupName = "WizardFontFamily" };
+            var rbNanum = new RadioButton { Content = "나눔고딕", Foreground = ThemeBrushes.Get("TextBrush", Brushes.White), GroupName = "WizardFontFamily" };
             rbNanum.IsChecked = _settings.FontFamily == "나눔고딕";
             rbNanum.Checked += (_, _) => _settings.FontFamily = "나눔고딕";
             Grid.SetColumn(rbNanum, 0);
             fontGrid.Children.Add(rbNanum);
 
-            var rbGulim = new RadioButton { Content = "굴림", Foreground = Brushes.White, GroupName = "WizardFontFamily" };
+            var rbGulim = new RadioButton { Content = "굴림", Foreground = ThemeBrushes.Get("TextBrush", Brushes.White), GroupName = "WizardFontFamily" };
             rbGulim.IsChecked = _settings.FontFamily == "굴림";
             rbGulim.Checked += (_, _) => _settings.FontFamily = "굴림";
             Grid.SetColumn(rbGulim, 1);
             fontGrid.Children.Add(rbGulim);
             root.Children.Add(fontGrid);
 
-            var rbCustom = new RadioButton { Content = "사용자 설정", Foreground = Brushes.White, GroupName = "WizardFontFamily", Margin = new Thickness(0, 0, 0, 8) };
+            var rbCustom = new RadioButton { Content = "사용자 설정", Foreground = ThemeBrushes.Get("TextBrush", Brushes.White), GroupName = "WizardFontFamily", Margin = new Thickness(0, 0, 0, 8) };
             rbCustom.IsChecked = _settings.FontFamily == "사용자 설정";
             rbCustom.Checked += (_, _) => _settings.FontFamily = "사용자 설정";
             root.Children.Add(rbCustom);
 
             var sizePanel = new StackPanel { Orientation = Orientation.Horizontal };
-            var fontSizeLabel = new TextBlock { Foreground = Brushes.White, Width = 110, VerticalAlignment = VerticalAlignment.Center };
+            var fontSizeLabel = new TextBlock { Foreground = ThemeBrushes.Get("TextBrush", Brushes.White), Width = 110, VerticalAlignment = VerticalAlignment.Center };
             fontSizeLabel.SetBinding(TextBlock.TextProperty, new Binding(nameof(ChatSettings.FontSize))
             {
                 Source = _settings,
@@ -284,7 +284,7 @@ namespace TWChatOverlay.Views
 
         private UIElement CreateCheckRow(string label, string bindingPath)
         {
-            var cb = new CheckBox { Content = label, Foreground = Brushes.White, Margin = new Thickness(0, 2, 0, 2) };
+            var cb = new CheckBox { Content = label, Foreground = ThemeBrushes.Get("TextBrush", Brushes.White), Margin = new Thickness(0, 2, 0, 2) };
             cb.SetBinding(CheckBox.IsCheckedProperty, new Binding(bindingPath) { Source = _settings, Mode = BindingMode.TwoWay });
             return cb;
         }
@@ -295,7 +295,7 @@ namespace TWChatOverlay.Views
             grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
             grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
 
-            var cb = new CheckBox { Content = label, Foreground = Brushes.White, VerticalAlignment = VerticalAlignment.Center };
+            var cb = new CheckBox { Content = label, Foreground = ThemeBrushes.Get("TextBrush", Brushes.White), VerticalAlignment = VerticalAlignment.Center };
             cb.SetBinding(CheckBox.IsCheckedProperty, new Binding(visibleBindingPath) { Source = _settings, Mode = BindingMode.TwoWay });
             grid.Children.Add(cb);
 
@@ -344,15 +344,15 @@ namespace TWChatOverlay.Views
         {
             var panel = new StackPanel();
 
-            var cbPopup = new CheckBox { Content = "외치기 팝업 ON/OFF", Foreground = System.Windows.Media.Brushes.White, Margin = new Thickness(0, 0, 0, 6) };
+            var cbPopup = new CheckBox { Content = "외치기 팝업 ON/OFF", Foreground = ThemeBrushes.Get("TextBrush", Brushes.White), Margin = new Thickness(0, 0, 0, 6) };
             cbPopup.SetBinding(CheckBox.IsCheckedProperty, new Binding(nameof(ChatSettings.ShowShoutToastPopup)) { Source = _settings, Mode = BindingMode.TwoWay });
             panel.Children.Add(cbPopup);
 
-            var cbAuto = new CheckBox { Content = "외치기 닉네임 자동복사 ON/OFF", Foreground = System.Windows.Media.Brushes.White, Margin = new Thickness(0, 0, 0, 10) };
+            var cbAuto = new CheckBox { Content = "외치기 닉네임 자동복사 ON/OFF", Foreground = ThemeBrushes.Get("TextBrush", Brushes.White), Margin = new Thickness(0, 0, 0, 10) };
             cbAuto.SetBinding(CheckBox.IsCheckedProperty, new Binding(nameof(ChatSettings.AutoCopyShoutNickname)) { Source = _settings, Mode = BindingMode.TwoWay });
             panel.Children.Add(cbAuto);
 
-            var durationLabel = new TextBlock { Foreground = System.Windows.Media.Brushes.White, FontSize = 12 };
+            var durationLabel = new TextBlock { Foreground = ThemeBrushes.Get("TextBrush", Brushes.White), FontSize = 12 };
             durationLabel.SetBinding(TextBlock.TextProperty, new Binding(nameof(ChatSettings.ShoutToastDurationSeconds))
             {
                 Source = _settings,
@@ -370,7 +370,7 @@ namespace TWChatOverlay.Views
             };
             panel.Children.Add(duration);
 
-            var fontSizeLabel = new TextBlock { Foreground = System.Windows.Media.Brushes.White, FontSize = 12 };
+            var fontSizeLabel = new TextBlock { Foreground = ThemeBrushes.Get("TextBrush", Brushes.White), FontSize = 12 };
             fontSizeLabel.SetBinding(TextBlock.TextProperty, new Binding(nameof(ChatSettings.ShoutToastFontSize))
             {
                 Source = _settings,
@@ -388,7 +388,7 @@ namespace TWChatOverlay.Views
             };
             panel.Children.Add(fontSize);
 
-            panel.Children.Add(new TextBlock { Text = "4단계에 진입하면 외치기 위치 미리보기 창이 자동으로 표시됩니다.", Foreground = new System.Windows.Media.SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#8B949E")), FontSize = 12, Margin = new Thickness(0, 10, 0, 0) });
+            panel.Children.Add(new TextBlock { Text = "4단계에 진입하면 외치기 위치 미리보기 창이 자동으로 표시됩니다.", Foreground = ThemeBrushes.Get("OverlaySubtleTextBrush"), FontSize = 12, Margin = new Thickness(0, 10, 0, 0) });
             return panel;
         }
 
@@ -408,7 +408,7 @@ namespace TWChatOverlay.Views
             panel.Children.Add(CreateCheckRow("키워드 알림 ON/OFF", nameof(ChatSettings.UseKeywordAlert)));
             panel.Children.Add(CreateCheckRow("색상 강조 ON/OFF", nameof(ChatSettings.UseAlertColor)));
             panel.Children.Add(CreateCheckRow("알림음 재생 ON/OFF", nameof(ChatSettings.UseAlertSound)));
-            var volumeLabel = new TextBlock { Foreground = Brushes.White, Margin = new Thickness(0, 8, 0, 4) };
+            var volumeLabel = new TextBlock { Foreground = ThemeBrushes.Get("TextBrush", Brushes.White), Margin = new Thickness(0, 8, 0, 4) };
             volumeLabel.SetBinding(TextBlock.TextProperty, new Binding(nameof(ChatSettings.HighlightAlertVolumePercent))
             {
                 Source = _settings,
@@ -418,7 +418,7 @@ namespace TWChatOverlay.Views
             var volume = new Slider { Minimum = 0, Maximum = 100, TickFrequency = 10, IsSnapToTickEnabled = true };
             volume.SetBinding(Slider.ValueProperty, new Binding(nameof(ChatSettings.HighlightAlertVolumePercent)) { Source = _settings, Mode = BindingMode.TwoWay });
             panel.Children.Add(volume);
-            panel.Children.Add(new TextBlock { Text = "알림 키워드(@키워드 형식)", Foreground = Brushes.White, Margin = new Thickness(0, 8, 0, 4) });
+            panel.Children.Add(new TextBlock { Text = "알림 키워드(@키워드 형식)", Foreground = ThemeBrushes.Get("TextBrush", Brushes.White), Margin = new Thickness(0, 8, 0, 4) });
             var keywordHost = new Grid { Height = 72 };
             var keywordBox = new TextBox { AcceptsReturn = true, TextWrapping = TextWrapping.Wrap };
             keywordBox.SetBinding(TextBox.TextProperty, new Binding(nameof(ChatSettings.KeywordInput)) { Source = _settings, Mode = BindingMode.TwoWay, UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged });
@@ -467,26 +467,26 @@ namespace TWChatOverlay.Views
             var panel = new StackPanel { Margin = new Thickness(8) };
             panel.Children.Add(CreateCheckRow("경험치 추적 ON/OFF", nameof(ChatSettings.ShowExpTracker)));
             panel.Children.Add(CreateCheckRow("경험치 누적 알림 ON/OFF", nameof(ChatSettings.EnableExperienceLimitAlert)));
-            panel.Children.Add(new TextBlock { Text = "현재 누적 경험치(억)", Foreground = Brushes.White, Margin = new Thickness(0, 8, 0, 4) });
+            panel.Children.Add(new TextBlock { Text = "현재 누적 경험치(억)", Foreground = ThemeBrushes.Get("TextBrush", Brushes.White), Margin = new Thickness(0, 8, 0, 4) });
             var expBox = new TextBox();
             expBox.SetBinding(TextBox.TextProperty, new Binding(nameof(ChatSettings.ExperienceLimitTotalExp)) { Source = _settings, Mode = BindingMode.TwoWay, UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged });
             panel.Children.Add(expBox);
             var expHint = new TextBlock
             {
-                Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#8B949E")),
+                Foreground = ThemeBrushes.Get("OverlaySubtleTextBrush"),
                 FontSize = 12,
                 Margin = new Thickness(0, 6, 0, 8)
             };
             expHint.Inlines.Add(new Run("캐릭터의 현재 경험치를 "));
             expHint.Inlines.Add(new Run("억")
             {
-                Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#58A6FF")),
+                Foreground = ThemeBrushes.Get("OverlayAccentTextBrush"),
                 FontWeight = FontWeights.SemiBold
             });
             expHint.Inlines.Add(new Run(" 단위로 넣어주세요."));
             panel.Children.Add(expHint);
             panel.Children.Add(CreateCheckRow("저효율 알림 ON/OFF", nameof(ChatSettings.IsExpAlarmEnabled)));
-            panel.Children.Add(new TextBlock { Text = "저효율 알림 기준(만)", Foreground = Brushes.White, Margin = new Thickness(0, 8, 0, 4) });
+            panel.Children.Add(new TextBlock { Text = "저효율 알림 기준(만)", Foreground = ThemeBrushes.Get("TextBrush", Brushes.White), Margin = new Thickness(0, 8, 0, 4) });
             var threshold = new TextBox();
             threshold.SetBinding(TextBox.TextProperty, new Binding(nameof(ChatSettings.ExpAlarmThresholdMan)) { Source = _settings, Mode = BindingMode.TwoWay, UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged });
             panel.Children.Add(threshold);
@@ -500,7 +500,7 @@ namespace TWChatOverlay.Views
         {
             var panel = new StackPanel { Margin = new Thickness(8) };
             panel.Children.Add(CreateCheckRow("웨이브 종료 알림 ON/OFF", nameof(ChatSettings.UseMagicCircleAlert)));
-            var waveVolLabel = new TextBlock { Foreground = Brushes.White, Margin = new Thickness(0, 8, 0, 4) };
+            var waveVolLabel = new TextBlock { Foreground = ThemeBrushes.Get("TextBrush", Brushes.White), Margin = new Thickness(0, 8, 0, 4) };
             waveVolLabel.SetBinding(TextBlock.TextProperty, new Binding(nameof(ChatSettings.MagicCircleAlertVolumePercent))
             {
                 Source = _settings,
@@ -512,7 +512,7 @@ namespace TWChatOverlay.Views
             panel.Children.Add(vol);
             panel.Children.Add(CreateCheckRow("에토스 방향 알림 ON/OFF", nameof(ChatSettings.ShowEtosDirectionAlert)));
             panel.Children.Add(CreateCheckRow("반사 패턴 알림 ON/OFF", nameof(ChatSettings.EnableReflectionPatternAlert)));
-            var reflectionVolLabel = new TextBlock { Foreground = Brushes.White, Margin = new Thickness(0, 8, 0, 4) };
+            var reflectionVolLabel = new TextBlock { Foreground = ThemeBrushes.Get("TextBrush", Brushes.White), Margin = new Thickness(0, 8, 0, 4) };
             reflectionVolLabel.SetBinding(TextBlock.TextProperty, new Binding(nameof(ChatSettings.ReflectionPatternAlertVolumePercent))
             {
                 Source = _settings,
@@ -525,7 +525,7 @@ namespace TWChatOverlay.Views
             panel.Children.Add(CreateCheckRow("어밴던로드 횟수 알림", nameof(ChatSettings.EnableAbandonRoadCountAlert)));
             panel.Children.Add(CreateCheckRow("어밴던로드 누적 금액 알림", nameof(ChatSettings.ShowAbandonRoadSummaryWindow)));
             panel.Children.Add(CreateCheckRow("갈망하는 즐거움 횟수 알림", nameof(ChatSettings.EnableCravingPleasureCountAlert)));
-            panel.Children.Add(new TextBlock { Text = "던전 카운터 지속시간(초)", Foreground = Brushes.White, Margin = new Thickness(0, 8, 0, 4) });
+            panel.Children.Add(new TextBlock { Text = "던전 카운터 지속시간(초)", Foreground = ThemeBrushes.Get("TextBrush", Brushes.White), Margin = new Thickness(0, 8, 0, 4) });
             var dur = new TextBox { Height = 30, VerticalContentAlignment = VerticalAlignment.Center };
             dur.SetBinding(TextBox.TextProperty, new Binding(nameof(ChatSettings.AbandonRoadCountAlertDurationSeconds)) { Source = _settings, Mode = BindingMode.TwoWay, UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged });
             panel.Children.Add(dur);
@@ -539,7 +539,7 @@ namespace TWChatOverlay.Views
         {
             var panel = new StackPanel { Margin = new Thickness(8) };
             panel.Children.Add(CreateCheckRow("아이템 획득 알림 ON/OFF", nameof(ChatSettings.ShowItemDropAlert)));
-            var itemVolLabel = new TextBlock { Foreground = Brushes.White, Margin = new Thickness(0, 8, 0, 4) };
+            var itemVolLabel = new TextBlock { Foreground = ThemeBrushes.Get("TextBrush", Brushes.White), Margin = new Thickness(0, 8, 0, 4) };
             itemVolLabel.SetBinding(TextBlock.TextProperty, new Binding(nameof(ChatSettings.ItemDropAlertVolumePercent))
             {
                 Source = _settings,
@@ -553,7 +553,7 @@ namespace TWChatOverlay.Views
             panel.Children.Add(new TextBlock
             {
                 Text = "사용자 정의 필터",
-                Foreground = Brushes.White,
+                Foreground = ThemeBrushes.Get("TextBrush", Brushes.White),
                 FontSize = 12,
                 FontWeight = FontWeights.SemiBold,
                 Margin = new Thickness(0, 8, 0, 4)
@@ -561,7 +561,7 @@ namespace TWChatOverlay.Views
             panel.Children.Add(new TextBlock
             {
                 Text = "기본 목록에서 알림 받을 항목을 사용자 정의 목록으로 옮긴 뒤 적용하세요.",
-                Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#8B949E")),
+                Foreground = ThemeBrushes.Get("OverlaySubtleTextBrush"),
                 FontSize = 12,
                 Margin = new Thickness(0, 0, 0, 6)
             });
@@ -596,8 +596,8 @@ namespace TWChatOverlay.Views
                 Converter = new BooleanToVisibilityConverter()
             });
 
-            customGrid.Children.Add(new TextBlock { Text = "기본 목록", Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#C9D1D9")), FontSize = 11, Margin = new Thickness(0, 0, 0, 4) });
-            var customLabel = new TextBlock { Text = "사용자 정의 목록", Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#C9D1D9")), FontSize = 11, Margin = new Thickness(0, 0, 0, 4) };
+            customGrid.Children.Add(new TextBlock { Text = "기본 목록", Foreground = ThemeBrushes.Get("TextBrush", Brushes.White), FontSize = 11, Margin = new Thickness(0, 0, 0, 4) });
+            var customLabel = new TextBlock { Text = "사용자 정의 목록", Foreground = ThemeBrushes.Get("TextBrush", Brushes.White), FontSize = 11, Margin = new Thickness(0, 0, 0, 4) };
             Grid.SetColumn(customLabel, 2);
             customGrid.Children.Add(customLabel);
 
@@ -605,7 +605,7 @@ namespace TWChatOverlay.Views
             {
                 SelectionMode = SelectionMode.Extended,
                 Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#111820")),
-                BorderBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#30363D")),
+                BorderBrush = ThemeBrushes.Get("OverlayStrongBorderBrush"),
                 Foreground = Brushes.White
             };
             defaultList.SetBinding(ItemsControl.ItemsSourceProperty, new Binding(nameof(AddonViewModel.DefaultDropItems)) { Source = _addonViewModel });
@@ -617,7 +617,7 @@ namespace TWChatOverlay.Views
             {
                 SelectionMode = SelectionMode.Extended,
                 Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#111820")),
-                BorderBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#30363D")),
+                BorderBrush = ThemeBrushes.Get("OverlayStrongBorderBrush"),
                 Foreground = Brushes.White
             };
             customList.SetBinding(ItemsControl.ItemsSourceProperty, new Binding(nameof(AddonViewModel.CustomDropItems)) { Source = _addonViewModel });
@@ -652,7 +652,7 @@ namespace TWChatOverlay.Views
 
             var statusText = new TextBlock
             {
-                Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#8B949E")),
+                Foreground = ThemeBrushes.Get("OverlaySubtleTextBrush"),
                 FontSize = 12
             };
             statusText.SetBinding(TextBlock.TextProperty, new Binding(nameof(AddonViewModel.CustomDropItemStatus)) { Source = _addonViewModel });
@@ -678,7 +678,7 @@ namespace TWChatOverlay.Views
             var panel = new StackPanel { Margin = new Thickness(8) };
             panel.Children.Add(CreateCheckRow("버프 추적 알림 ON/OFF", nameof(ChatSettings.EnableBuffTrackerAlert)));
             panel.Children.Add(CreateCheckRow("버프 종료 사운드 알림 ON/OFF", nameof(ChatSettings.EnableBuffTrackerEndSound)));
-            var buffVolLabel = new TextBlock { Foreground = Brushes.White, Margin = new Thickness(0, 8, 0, 4) };
+            var buffVolLabel = new TextBlock { Foreground = ThemeBrushes.Get("TextBrush", Brushes.White), Margin = new Thickness(0, 8, 0, 4) };
             buffVolLabel.SetBinding(TextBlock.TextProperty, new Binding(nameof(ChatSettings.BuffTrackerEndSoundVolumePercent))
             {
                 Source = _settings,
@@ -697,13 +697,13 @@ namespace TWChatOverlay.Views
         private UIElement BuildFieldBossAddonContentCore()
         {
             var panel = new StackPanel { Margin = new Thickness(8) };
-            panel.Children.Add(new TextBlock { Text = "필드보스 알림 항목", Foreground = Brushes.White, FontWeight = FontWeights.SemiBold, Margin = new Thickness(0, 0, 0, 6) });
+            panel.Children.Add(new TextBlock { Text = "필드보스 알림 항목", Foreground = ThemeBrushes.Get("TextBrush", Brushes.White), FontWeight = FontWeights.SemiBold, Margin = new Thickness(0, 0, 0, 6) });
             var cardsHost = new WrapPanel { Orientation = Orientation.Horizontal, ItemWidth = 210, Margin = new Thickness(0, 0, 0, 4) };
             foreach (var kv in _settings.BossAlertConfigs)
                 cardsHost.Children.Add(CreateBossAlertCard(kv.Key, kv.Value));
             panel.Children.Add(cardsHost);
 
-            var bossVolLabel = new TextBlock { Foreground = Brushes.White, Margin = new Thickness(0, 10, 0, 4) };
+            var bossVolLabel = new TextBlock { Foreground = ThemeBrushes.Get("TextBrush", Brushes.White), Margin = new Thickness(0, 10, 0, 4) };
             bossVolLabel.SetBinding(TextBlock.TextProperty, new Binding(nameof(ChatSettings.BossAlertVolumePercent))
             {
                 Source = _settings,
@@ -812,7 +812,7 @@ namespace TWChatOverlay.Views
             parent.Children.Add(new TextBlock
             {
                 Text = title,
-                Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#58A6FF")),
+                Foreground = ThemeBrushes.Get("OverlayAccentTextBrush"),
                 FontWeight = FontWeights.SemiBold,
                 Margin = new Thickness(0, 8, 0, 6)
             });
@@ -823,7 +823,7 @@ namespace TWChatOverlay.Views
             parent.Children.Add(new TextBlock
             {
                 Text = title,
-                Foreground = Brushes.White,
+                Foreground = ThemeBrushes.Get("TextBrush", Brushes.White),
                 FontWeight = FontWeights.SemiBold,
                 Margin = new Thickness(0, 6, 0, 2)
             });
@@ -843,7 +843,7 @@ namespace TWChatOverlay.Views
                 var cb = new CheckBox
                 {
                     Content = label,
-                    Foreground = Brushes.White,
+                    Foreground = ThemeBrushes.Get("TextBrush", Brushes.White),
                     Margin = new Thickness(indent, 2, 0, 2),
                     IsChecked = cfg.IsEnabled
                 };
@@ -868,7 +868,7 @@ namespace TWChatOverlay.Views
             };
 
             var panel = new StackPanel();
-            panel.Children.Add(new TextBlock { Text = ToKoreanBossName(bossName), Foreground = Brushes.White, FontWeight = FontWeights.SemiBold, Margin = new Thickness(0, 0, 0, 6) });
+            panel.Children.Add(new TextBlock { Text = ToKoreanBossName(bossName), Foreground = ThemeBrushes.Get("TextBrush", Brushes.White), FontWeight = FontWeights.SemiBold, Margin = new Thickness(0, 0, 0, 6) });
             panel.Children.Add(CreateBossAlertCheck("3분 전", config.Alert3MinutesBefore, v => config.Alert3MinutesBefore = v));
             panel.Children.Add(CreateBossAlertCheck("1분 전", config.Alert1MinuteBefore, v => config.Alert1MinuteBefore = v));
             panel.Children.Add(CreateBossAlertCheck("5초 전", config.AlertAtSpawn, v => config.AlertAtSpawn = v));
@@ -891,7 +891,7 @@ namespace TWChatOverlay.Views
 
         private UIElement CreateBossAlertCheck(string label, bool initial, Action<bool> setValue)
         {
-            var cb = new CheckBox { Content = label, Foreground = Brushes.White, Margin = new Thickness(0, 2, 0, 2), IsChecked = initial };
+            var cb = new CheckBox { Content = label, Foreground = ThemeBrushes.Get("TextBrush", Brushes.White), Margin = new Thickness(0, 2, 0, 2), IsChecked = initial };
             cb.Checked += (_, _) => setValue(true);
             cb.Unchecked += (_, _) => setValue(false);
             return cb;
@@ -954,7 +954,7 @@ namespace TWChatOverlay.Views
             parent.Children.Add(new TextBlock
             {
                 Text = topGroup,
-                Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#58A6FF")),
+                Foreground = ThemeBrushes.Get("OverlayAccentTextBrush"),
                 FontWeight = FontWeights.SemiBold,
                 Margin = new Thickness(0, 8, 0, 3)
             });
@@ -962,7 +962,7 @@ namespace TWChatOverlay.Views
             parent.Children.Add(new TextBlock
             {
                 Text = midGroup,
-                Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#8B949E")),
+                Foreground = ThemeBrushes.Get("OverlaySubtleTextBrush"),
                 FontSize = 12,
                 Margin = new Thickness(0, 0, 0, 5)
             });
@@ -975,7 +975,7 @@ namespace TWChatOverlay.Views
                 var cb = new CheckBox
                 {
                     Content = key,
-                    Foreground = Brushes.White,
+                    Foreground = ThemeBrushes.Get("TextBrush", Brushes.White),
                     Margin = new Thickness(0, 2, 0, 2),
                     IsChecked = cfg.IsEnabled
                 };

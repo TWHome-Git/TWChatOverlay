@@ -1,0 +1,140 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- ================================================================
+         신버전 테마: 테일즈위버 인게임 창 스타일
+         하늘색 그라데이션 타이틀바 + 연블루 패널 + 크림 내용 영역 + 연노랑 강조.
+         키는 Styles.xaml의 기본(구버전) 팔레트와 동일하며, 이 딕셔너리를
+         MergedDictionaries에 추가/제거하는 것으로 테마가 전환됩니다.
+         ================================================================ -->
+
+    <!-- Base palette -->
+    <SolidColorBrush x:Key="PrimaryBackgroundBrush" Color="#FAE3EEF8"/>
+    <SolidColorBrush x:Key="SecondaryBackgroundBrush" Color="#FF5F9FD0"/>
+    <SolidColorBrush x:Key="BorderBrush" Color="#FF7AA8CC"/>
+    <SolidColorBrush x:Key="TextBrush" Color="#FF1D4E7A"/>
+    <SolidColorBrush x:Key="AccentBrush" Color="#FFB5741B"/>
+    <SolidColorBrush x:Key="SuccessBrush" Color="#FF2A8A3E"/>
+    <SolidColorBrush x:Key="WarningBrush" Color="#FFC9302C"/>
+
+    <!-- Window chrome -->
+    <SolidColorBrush x:Key="OverlayWindowBackgroundBrush" Color="#FAE3EEF8"/>
+    <SolidColorBrush x:Key="OverlayWindowBorderBrush" Color="#FF7AA8CC"/>
+    <LinearGradientBrush x:Key="OverlayHeaderBackgroundBrush" StartPoint="0,0" EndPoint="0,1">
+        <GradientStop Color="#FF8EC4E8" Offset="0"/>
+        <GradientStop Color="#FF5F9FD0" Offset="1"/>
+    </LinearGradientBrush>
+    <LinearGradientBrush x:Key="OverlayDragBarBackgroundBrush" StartPoint="0,0" EndPoint="0,1">
+        <GradientStop Color="#FF8EC4E8" Offset="0"/>
+        <GradientStop Color="#FF5F9FD0" Offset="1"/>
+    </LinearGradientBrush>
+    <SolidColorBrush x:Key="OverlayDragBarTextBrush" Color="#FFFFFFFF"/>
+
+    <!-- Tabs -->
+    <SolidColorBrush x:Key="OverlayTabHoverBrush" Color="#405F9FD0"/>
+    <SolidColorBrush x:Key="OverlayTabSelectedBrush" Color="#FFAECDE6"/>
+    <SolidColorBrush x:Key="OverlayTabSelectedBorderBrush" Color="#FF5F9FD0"/>
+
+    <!-- Panels / surfaces -->
+    <SolidColorBrush x:Key="OverlayPanelBackgroundBrush" Color="#F8FFFEF2"/>
+    <SolidColorBrush x:Key="OverlayPanelBorderBrush" Color="#FF9FBFDA"/>
+    <SolidColorBrush x:Key="OverlayBuffTileBackgroundBrush" Color="#C0FFFFFF"/>
+    <SolidColorBrush x:Key="OverlayBuffTileBorderBrush" Color="#FF9FBFDA"/>
+    <SolidColorBrush x:Key="OverlayHelperWindowBorderBrush" Color="#FF5F9FD0"/>
+    <SolidColorBrush x:Key="OverlayShellBackgroundBrush" Color="#FFDCE9F5"/>
+    <SolidColorBrush x:Key="OverlaySurfaceBackgroundBrush" Color="#FFFFFEF2"/>
+    <SolidColorBrush x:Key="OverlaySurfaceAltBackgroundBrush" Color="#FFCFE3F2"/>
+    <SolidColorBrush x:Key="OverlayCardBackgroundBrush" Color="#FFF7FAFC"/>
+    <SolidColorBrush x:Key="OverlayStrongBorderBrush" Color="#FFA9C4DB"/>
+    <SolidColorBrush x:Key="OverlayCardBorderBrush" Color="#FFC8D8E8"/>
+    <SolidColorBrush x:Key="OverlayHighlightBackgroundBrush" Color="#FFFDF6C8"/>
+
+    <!-- Text -->
+    <SolidColorBrush x:Key="OverlayMutedTextBrush" Color="#FF7A95AB"/>
+    <SolidColorBrush x:Key="OverlayHintTextBrush" Color="#FF6A87A0"/>
+    <SolidColorBrush x:Key="OverlayLabelTextBrush" Color="#FF2B4A66"/>
+    <SolidColorBrush x:Key="OverlayTitleAccentTextBrush" Color="#FF1D4E7A"/>
+    <SolidColorBrush x:Key="OverlaySubtleTextBrush" Color="#FF5A7A96"/>
+    <SolidColorBrush x:Key="OverlayInfoTextBrush" Color="#FF2B4A66"/>
+    <SolidColorBrush x:Key="OverlayAccentTextBrush" Color="#FF2A6DB5"/>
+
+    <!-- Accents -->
+    <SolidColorBrush x:Key="OverlayRareAccentBrush" Color="#FFB5741B"/>
+    <SolidColorBrush x:Key="OverlayExpAccentBrush" Color="#FF2A6DB5"/>
+    <SolidColorBrush x:Key="OverlayAccentBorderBrush" Color="#FF5F9FD0"/>
+    <SolidColorBrush x:Key="OverlayWarningBorderBrush" Color="#FFE8A33D"/>
+    <SolidColorBrush x:Key="OverlaySuccessAccentBrush" Color="#FF2A8A3E"/>
+    <SolidColorBrush x:Key="OverlayDangerBackgroundBrush" Color="#FFFDECEA"/>
+    <SolidColorBrush x:Key="OverlayDangerBorderBrush" Color="#FFD9534F"/>
+    <SolidColorBrush x:Key="OverlayDangerAccentBrush" Color="#FFC9302C"/>
+    <SolidColorBrush x:Key="OverlayLoadingAccentBrush" Color="#FF2A8FB5"/>
+    <SolidColorBrush x:Key="OverlayShoutBorderBrush" Color="#FFE8A33D"/>
+    <SolidColorBrush x:Key="OverlayShoutFillBrush" Color="#FFE8A33D"/>
+    <SolidColorBrush x:Key="OverlayShoutTextBrush" Color="#FF8A5A10"/>
+    <SolidColorBrush x:Key="OverlayLoadingMaskBrush" Color="#AAE3EEF8"/>
+
+    <!-- Scrollbars -->
+    <SolidColorBrush x:Key="OverlayScrollThumbBrush" Color="#FFA8C4DC"/>
+    <SolidColorBrush x:Key="OverlayScrollThumbHoverBrush" Color="#FF8FB8D8"/>
+    <SolidColorBrush x:Key="OverlayScrollThumbActiveBrush" Color="#FF5F9FD0"/>
+    <SolidColorBrush x:Key="OverlayScrollButtonBackgroundBrush" Color="#FF5F9FD0"/>
+    <SolidColorBrush x:Key="OverlayScrollButtonHoverBrush" Color="#FF74AEDB"/>
+    <SolidColorBrush x:Key="OverlayScrollButtonBorderBrush" Color="#FF8FB8D8"/>
+
+    <!-- Menu -->
+    <SolidColorBrush x:Key="MenuButtonHoverBrush" Color="#405F9FD0"/>
+    <SolidColorBrush x:Key="MenuButtonPressedBrush" Color="#605F9FD0"/>
+
+    <!-- Chat surface: 신버전에서도 어둡게 유지 (사용자 채팅 색상 가독성) -->
+    <SolidColorBrush x:Key="ChatSurfaceBackgroundBrush" Color="#C0141C26"/>
+
+    <!-- Control brushes -->
+    <SolidColorBrush x:Key="ButtonTextBrush" Color="#FF1D4E7A"/>
+    <SolidColorBrush x:Key="SectionHeaderTextBrush" Color="#FF1D4E7A"/>
+    <SolidColorBrush x:Key="SubsectionHeaderTextBrush" Color="#FF1D4E7A"/>
+    <SolidColorBrush x:Key="InfoLabelTextBrush" Color="#FF5A7A96"/>
+    <SolidColorBrush x:Key="FieldLabelTextBrush" Color="#FF5A7A96"/>
+    <SolidColorBrush x:Key="InputFieldBackgroundBrush" Color="#FFFFFFFF"/>
+    <SolidColorBrush x:Key="InputFieldBorderBrush" Color="#FFA9C4DB"/>
+    <SolidColorBrush x:Key="SeparatorBrush" Color="#FFC8D8E8"/>
+    <SolidColorBrush x:Key="ControlBorderBrush" Color="#FF8FB8D8"/>
+    <SolidColorBrush x:Key="ControlHoverBorderBrush" Color="#FF5F9FD0"/>
+    <SolidColorBrush x:Key="TabSelectedAccentBackgroundBrush" Color="#FFAECDE6"/>
+    <SolidColorBrush x:Key="TabSelectedAccentBorderBrush" Color="#FF5F9FD0"/>
+    <SolidColorBrush x:Key="TabHoverBorderBrush" Color="#FF8FB8D8"/>
+    <SolidColorBrush x:Key="PresetCheckedBackgroundBrush" Color="#FFFDF6C8"/>
+    <SolidColorBrush x:Key="PresetCheckedBorderBrush" Color="#FFD8C888"/>
+    <SolidColorBrush x:Key="PresetSaveButtonBrush" Color="#FFC2DCEF"/>
+    <SolidColorBrush x:Key="PresetLoadButtonBrush" Color="#FFBFE3C6"/>
+    <SolidColorBrush x:Key="DangerButtonBackgroundBrush" Color="#FFEFB9B4"/>
+    <SolidColorBrush x:Key="CloseButtonBackgroundBrush" Color="#E0D9534F"/>
+    <SolidColorBrush x:Key="CloseButtonHoverBrush" Color="#FFE07A6E"/>
+    <SolidColorBrush x:Key="CloseButtonPressedBrush" Color="#FFC9302C"/>
+    <SolidColorBrush x:Key="ToggleTrackOffBrush" Color="#FFB8CCDD"/>
+    <SolidColorBrush x:Key="ToggleTrackBorderBrush" Color="#FF8FB8D8"/>
+    <SolidColorBrush x:Key="ToggleTrackHoverBorderBrush" Color="#FF5F9FD0"/>
+    <SolidColorBrush x:Key="ToggleTrackOnBrush" Color="#FF5F9FD0"/>
+    <SolidColorBrush x:Key="ToggleTrackOnBorderBrush" Color="#FF3D7EAF"/>
+    <SolidColorBrush x:Key="ToggleThumbBrush" Color="#FFFFFFFF"/>
+    <SolidColorBrush x:Key="ComboFieldBackgroundBrush" Color="#FFE7F1FF"/>
+    <SolidColorBrush x:Key="ComboFieldBorderBrush" Color="#FF6AA9FF"/>
+    <SolidColorBrush x:Key="ComboFieldHoverBorderBrush" Color="#FF5F9FD0"/>
+    <SolidColorBrush x:Key="ComboFieldOpenBorderBrush" Color="#FF3D7EAF"/>
+    <SolidColorBrush x:Key="ComboFieldTextBrush" Color="#FF1D4E7A"/>
+    <SolidColorBrush x:Key="ComboPopupBackgroundBrush" Color="#FFFFFFFF"/>
+    <SolidColorBrush x:Key="ComboItemTextBrush" Color="#FF2B4A66"/>
+    <SolidColorBrush x:Key="ComboItemHoverBrush" Color="#FFD8E8F5"/>
+    <SolidColorBrush x:Key="ComboItemSelectedBrush" Color="#FFAECDE6"/>
+    <SolidColorBrush x:Key="PresetButtonBackgroundBrush" Color="#FFEAF4FB"/>
+    <SolidColorBrush x:Key="PresetButtonHoverBrush" Color="#FFD8E8F5"/>
+    <SolidColorBrush x:Key="PresetButtonPressedBrush" Color="#FFAECDE6"/>
+    <SolidColorBrush x:Key="PresetButtonTextBrush" Color="#FF1D4E7A"/>
+    <SolidColorBrush x:Key="PresetButtonBorderBrush" Color="#FF8FB8D8"/>
+    <SolidColorBrush x:Key="SimButtonBackgroundBrush" Color="#FF5F9FD0"/>
+    <SolidColorBrush x:Key="SimButtonBorderBrush" Color="#FF3D7EAF"/>
+    <SolidColorBrush x:Key="SimButtonHoverBrush" Color="#FF74AEDB"/>
+    <SolidColorBrush x:Key="SimButtonPressedBrush" Color="#FF4A8CBF"/>
+    <SolidColorBrush x:Key="SimInputBackgroundBrush" Color="#FFFFFFFF"/>
+    <SolidColorBrush x:Key="SimInputTextBrush" Color="#FF1D4E7A"/>
+
+</ResourceDictionary>

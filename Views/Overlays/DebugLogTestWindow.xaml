@@ -105,7 +105,7 @@
                     <StackPanel HorizontalAlignment="Center"
                                 VerticalAlignment="Center">
                         <TextBlock Text="디버그 로그 테스트"
-                                   Foreground="White"
+                                   Foreground="{DynamicResource TextBrush}"
                                    FontSize="16"
                                    FontWeight="Bold"
                                    HorizontalAlignment="Center"
@@ -132,7 +132,7 @@
                     Padding="10">
                 <StackPanel>
                     <TextBlock Text="주입 패널"
-                               Foreground="White"
+                               Foreground="{DynamicResource TextBrush}"
                                FontSize="14"
                                FontWeight="SemiBold"
                                Margin="0,0,0,8"/>
@@ -182,7 +182,7 @@
                              Height="220"
                              Margin="0,0,0,8"
                              Background="{DynamicResource OverlaySurfaceBackgroundBrush}"
-                             Foreground="White"
+                             Foreground="{DynamicResource TextBrush}"
                              BorderBrush="{DynamicResource OverlayStrongBorderBrush}"
                              BorderThickness="1"
                              AcceptsReturn="True"
@@ -251,14 +251,14 @@
                     <DockPanel>
                         <TextBlock DockPanel.Dock="Top"
                                    Text="최근 주입 로그"
-                                   Foreground="White"
+                                   Foreground="{DynamicResource TextBrush}"
                                    FontSize="14"
                                    FontWeight="SemiBold"
                                    Margin="0,0,0,8"/>
                         <ListBox x:Name="RecentLogsListBox"
                                  Background="{DynamicResource OverlayCardBackgroundBrush}"
                                  BorderBrush="{DynamicResource OverlayStrongBorderBrush}"
-                                 Foreground="White"
+                                 Foreground="{DynamicResource TextBrush}"
                                  ScrollViewer.VerticalScrollBarVisibility="Auto"
                                  MouseDoubleClick="RecentLogsListBox_MouseDoubleClick"/>
                     </DockPanel>
@@ -271,14 +271,14 @@
                     <DockPanel>
                         <TextBlock DockPanel.Dock="Top"
                                    Text="샘플 문구"
-                                   Foreground="White"
+                                   Foreground="{DynamicResource TextBrush}"
                                    FontSize="14"
                                    FontWeight="SemiBold"
                                    Margin="0,0,0,8"/>
                         <ListBox x:Name="SampleLogsListBox"
                                  Background="{DynamicResource OverlayCardBackgroundBrush}"
                                  BorderBrush="{DynamicResource OverlayStrongBorderBrush}"
-                                 Foreground="White"
+                                 Foreground="{DynamicResource TextBrush}"
                                  ItemTemplate="{StaticResource SampleLogTemplate}"
                                  ScrollViewer.VerticalScrollBarVisibility="Auto"
                                  MouseDoubleClick="SampleLogsListBox_MouseDoubleClick"/>
