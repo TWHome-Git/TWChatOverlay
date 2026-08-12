@@ -13,7 +13,7 @@
         </Style>
     </UserControl.Resources>
     <ScrollViewer VerticalScrollBarVisibility="Auto" Style="{StaticResource OverlayScrollViewerStyle}">
-        <Border Background="{DynamicResource OverlayWindowBackgroundBrush}" Padding="15">
+        <Border Background="Transparent" Padding="15">
             <TabControl x:Name="AddonTabControl"
                         Style="{StaticResource SettingsTabControlStyle}"
                         Margin="0,1,0,0"

@@ -16,7 +16,7 @@
         </Style>
     </UserControl.Resources>
 
-    <Grid Background="{DynamicResource OverlaySurfaceBackgroundBrush}" Margin="8">
+    <Grid Background="Transparent" Margin="8">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="8"/>
@@ -35,10 +35,8 @@
         </TabControl>
 
         <Border Grid.Row="2"
-                Background="{DynamicResource OverlayShellBackgroundBrush}"
-                BorderBrush="{DynamicResource OverlayStrongBorderBrush}"
-                BorderThickness="1"
-                CornerRadius="8"
+                Background="Transparent"
+                BorderThickness="0"
                 Padding="8">
             <ContentControl x:Name="SimulatorContentHost"/>
         </Border>
