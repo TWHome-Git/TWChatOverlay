@@ -6,7 +6,7 @@
              mc:Ignorable="d"
              HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
 
-    <Border x:Name="RootBorder" Background="{DynamicResource PrimaryBackgroundBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0" Padding="8" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+    <Border x:Name="RootBorder" Background="Transparent" BorderThickness="0" Padding="8" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
         <Grid HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
             <Grid.RowDefinitions>
                 <RowDefinition Height="*"/>
@@ -160,24 +160,10 @@
                             <Grid Margin="8" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
                                 <Grid.RowDefinitions>
                                     <RowDefinition Height="Auto"/>
-                                    <RowDefinition Height="Auto"/>
                                     <RowDefinition Height="*"/>
                                 </Grid.RowDefinitions>
 
                                 <Border Grid.Row="0" Margin="0,0,0,12" Style="{StaticResource SettingsBorderStyle}">
-                                    <StackPanel>
-                                        <TextBlock Text="디자인" Style="{StaticResource SubsectionHeaderStyle}"/>
-                                        <StackPanel Orientation="Horizontal">
-                                            <RadioButton Content="신버전" GroupName="UiThemeOptions" IsChecked="{Binding UiThemeVersion, Converter={StaticResource EqualValueToBoolConverter}, ConverterParameter=2}" Style="{StaticResource PresetRadioButtonStyle}"/>
-                                            <RadioButton Content="구버전" GroupName="UiThemeOptions" IsChecked="{Binding UiThemeVersion, Converter={StaticResource EqualValueToBoolConverter}, ConverterParameter=1}" Style="{StaticResource PresetRadioButtonStyle}"/>
-                                        </StackPanel>
-                                        <TextBlock Text="신버전은 게임 UI와 어울리는 밝은 디자인, 구버전은 기존의 어두운 디자인입니다. 선택 즉시 모든 창에 적용됩니다."
-                                                   Style="{StaticResource HintTextStyle}"
-                                                   Margin="5,8,0,0"/>
-                                    </StackPanel>
-                                </Border>
-
-                                <Border Grid.Row="1" Margin="0,0,0,12" Style="{StaticResource SettingsBorderStyle}">
                                     <StackPanel>
                                         <TextBlock Text="위치 설정" Style="{StaticResource SubsectionHeaderStyle}"/>
                                         <StackPanel Margin="0,0,0,15">
@@ -204,7 +190,7 @@
                                     </StackPanel>
                                 </Border>
 
-                                <StackPanel Grid.Row="2" Orientation="Vertical" Margin="0,0,0,0">
+                                <StackPanel Grid.Row="1" Orientation="Vertical" Margin="0,0,0,0">
                                     <Border Style="{StaticResource SettingsBorderStyle}" Margin="0,0,0,12">
                                         <StackPanel>
                                             <TextBlock Text="로그 경로 설정" Style="{StaticResource SubsectionHeaderStyle}"/>
