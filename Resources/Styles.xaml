@@ -29,8 +29,8 @@
     <!-- Switchable overlay palette -->
     <SolidColorBrush x:Key="OverlayWindowBackgroundBrush" Color="#F51E1E1E"/>
     <SolidColorBrush x:Key="OverlayWindowBorderBrush" Color="#60FFFFFF"/>
-    <SolidColorBrush x:Key="OverlayHeaderBackgroundBrush" Color="#FF332255"/>
-    <SolidColorBrush x:Key="OverlayDragBarBackgroundBrush" Color="#1A1A2E"/>
+    <SolidColorBrush x:Key="OverlayHeaderBackgroundBrush" Color="#FF342E49"/>
+    <SolidColorBrush x:Key="OverlayDragBarBackgroundBrush" Color="#1E1E28"/>
     <SolidColorBrush x:Key="OverlayDragBarTextBrush" Color="#888888"/>
     <SolidColorBrush x:Key="OverlayTabHoverBrush" Color="#30FFFFFF"/>
     <SolidColorBrush x:Key="OverlayTabSelectedBrush" Color="#60FFFFFF"/>
@@ -51,8 +51,8 @@
     <SolidColorBrush x:Key="OverlayScrollButtonBackgroundBrush" Color="#1F6FEB"/>
     <SolidColorBrush x:Key="OverlayScrollButtonHoverBrush" Color="#2D74F5"/>
     <SolidColorBrush x:Key="OverlayScrollButtonBorderBrush" Color="#3A424B"/>
-    <SolidColorBrush x:Key="OverlayShellBackgroundBrush" Color="#10151D"/>
-    <SolidColorBrush x:Key="OverlaySurfaceBackgroundBrush" Color="#161B22"/>
+    <SolidColorBrush x:Key="OverlayShellBackgroundBrush" Color="#FF1E1E1E"/>
+    <SolidColorBrush x:Key="OverlaySurfaceBackgroundBrush" Color="#FF1E1E1E"/>
     <SolidColorBrush x:Key="OverlaySurfaceAltBackgroundBrush" Color="#2A2F38"/>
     <SolidColorBrush x:Key="OverlayCardBackgroundBrush" Color="#2C323B"/>
     <SolidColorBrush x:Key="OverlayStrongBorderBrush" Color="#30363D"/>
@@ -76,10 +76,7 @@
     <SolidColorBrush x:Key="MenuButtonPressedBrush" Color="#2AFFFFFF"/>
     <SolidColorBrush x:Key="OverlayAccentTextBrush" Color="#58A6FF"/>
 
-    <!-- Chat surface: stays dark in every theme so user-configured chat colors remain readable -->
-    <SolidColorBrush x:Key="ChatSurfaceBackgroundBrush" Color="#F51E1E1E"/>
-
-    <!-- Themeable control brushes (legacy defaults; overridden by Theme.New.xaml) -->
+    <!-- Control brushes -->
     <SolidColorBrush x:Key="ButtonTextBrush" Color="White"/>
     <SolidColorBrush x:Key="SectionHeaderTextBrush" Color="White"/>
     <SolidColorBrush x:Key="SubsectionHeaderTextBrush" Color="#CCCCCC"/>
@@ -197,11 +194,11 @@
     <Style x:Key="ChatScrollBarStyle" TargetType="ScrollBar" BasedOn="{StaticResource {x:Type ScrollBar}}"/>
     <Style x:Key="ChatScrollViewerStyle" TargetType="ScrollViewer" BasedOn="{StaticResource {x:Type ScrollViewer}}"/>
 
-    <!-- TabControl Style -->
+    <!-- TabControl Style: no frame, no own background — the host window's single color shows through -->
     <Style TargetType="TabControl" x:Key="SettingsTabControlStyle">
-        <Setter Property="Background" Value="{DynamicResource PrimaryBackgroundBrush}"/>
-        <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
-        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="BorderBrush" Value="Transparent"/>
+        <Setter Property="BorderThickness" Value="0"/>
         <Setter Property="Padding" Value="4"/>
         <Setter Property="Template">
             <Setter.Value>
@@ -491,9 +488,9 @@
         <Setter Property="VerticalContentAlignment" Value="Center"/>
     </Style>
 
-    <!-- Settings Border Style -->
+    <!-- Settings Border Style: subtle bottom separator only, no bright frame -->
     <Style x:Key="SettingsBorderStyle" TargetType="Border">
-        <Setter Property="BorderBrush" Value="{DynamicResource OverlayWindowBorderBrush}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource SeparatorBrush}"/>
         <Setter Property="BorderThickness" Value="0,0,0,1"/>
         <Setter Property="Margin" Value="0,0,0,20"/>
         <Setter Property="Padding" Value="0,0,0,20"/>
