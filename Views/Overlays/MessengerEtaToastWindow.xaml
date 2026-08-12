@@ -39,7 +39,7 @@
                 <Grid>
                     <TextBlock x:Name="TitleText"
                                Text="1:1 채팅 에타레벨 확인"
-                               Foreground="White"
+                               Foreground="{DynamicResource TextBrush}"
                                FontSize="16"
                                FontWeight="SemiBold"
                                HorizontalAlignment="Center"

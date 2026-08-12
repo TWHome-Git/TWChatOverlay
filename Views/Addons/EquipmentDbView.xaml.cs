@@ -16,7 +16,7 @@ namespace TWChatOverlay.Views.Addons
     public partial class EquipmentDbView : UserControl
     {
         private static readonly SolidColorBrush ActiveBackground = new((Color)ColorConverter.ConvertFromString("#1F6FEB"));
-        private static readonly SolidColorBrush InactiveForeground = new((Color)ColorConverter.ConvertFromString("#8B949E"));
+        private static Brush InactiveForeground => ThemeBrushes.Get("OverlaySubtleTextBrush");
 
         private readonly EquipmentService _equipmentService = new();
         private readonly DispatcherTimer _equipmentSearchDebounceTimer;

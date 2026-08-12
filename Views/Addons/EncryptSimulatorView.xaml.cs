@@ -9,6 +9,7 @@ using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Threading;
+using TWChatOverlay.Services;
 
 namespace TWChatOverlay.Views.Addons
 {
@@ -630,7 +631,7 @@ namespace TWChatOverlay.Views.Addons
             _lastCumulativeParagraph = new Paragraph
             {
                 Margin = new Thickness(0, 2, 0, 8),
-                Foreground = new SolidColorBrush(Color.FromRgb(0x8B, 0x94, 0x9E))
+                Foreground = ThemeBrushes.Get("OverlaySubtleTextBrush")
             };
 
             _lastCumulativeParagraph.Inlines.Add(new Run($"▼ 누적 합산 ({_totalAttempts:N0}회 시도) ")
@@ -643,14 +644,14 @@ namespace TWChatOverlay.Views.Addons
             _lastCumulativeParagraph.Inlines.Add(new Run("누적 비용: "));
             _lastCumulativeParagraph.Inlines.Add(new Run(FormatKoreanCost(_totalCost))
             {
-                Foreground = Brushes.White
+                Foreground = ThemeBrushes.Get("TextBrush", Brushes.White)
             });
             _lastCumulativeParagraph.Inlines.Add(new Run("  |  "));
 
             _lastCumulativeParagraph.Inlines.Add(new Run("누적 기대 비용 합: "));
             _lastCumulativeParagraph.Inlines.Add(new Run(FormatKoreanCost(displayExpectedCost))
             {
-                Foreground = Brushes.White
+                Foreground = ThemeBrushes.Get("TextBrush", Brushes.White)
             });
             _lastCumulativeParagraph.Inlines.Add(new Run("\n"));
 

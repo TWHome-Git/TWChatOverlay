@@ -37,7 +37,7 @@
             <Style.Triggers>
                 <Trigger Property="IsMouseOver" Value="True">
                     <Setter Property="Background" Value="{DynamicResource OverlaySurfaceAltBackgroundBrush}"/>
-                    <Setter Property="Foreground" Value="White"/>
+                    <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
                 </Trigger>
             </Style.Triggers>
         </Style>
@@ -88,14 +88,14 @@
         </Style>
 
         <Style x:Key="VersionCardValueStyle" TargetType="TextBlock">
-            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
             <Setter Property="FontSize" Value="18"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
             <Setter Property="TextWrapping" Value="Wrap"/>
         </Style>
 
         <Style x:Key="SectionLabelStyle" TargetType="TextBlock">
-            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
             <Setter Property="FontSize" Value="15"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
         </Style>
@@ -176,7 +176,7 @@
                 <StackPanel Grid.Row="0">
                     <TextBlock x:Name="HeadlineText"
                                Text="새 버전의 변경 사항을 확인하세요."
-                               Foreground="White"
+                               Foreground="{DynamicResource TextBrush}"
                                FontSize="26"
                                FontWeight="Bold"/>
                     <TextBlock Text=""
@@ -199,7 +199,7 @@
                         </Grid.RowDefinitions>
 
                         <TextBlock Text="버전 정보"
-                                   Foreground="White"
+                                   Foreground="{DynamicResource TextBrush}"
                                    FontSize="15"
                                    FontWeight="SemiBold"/>
 
