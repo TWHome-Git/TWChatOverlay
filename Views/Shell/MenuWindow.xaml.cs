@@ -252,10 +252,31 @@ namespace TWChatOverlay.Views
             AppLogger.Info("Opened fallback submenu window.");
         }
 
+        /// <summary>
+        /// 에타 순위/장비 DB/계산기/시뮬레이터는 웹 홈페이지(TWPage)로 통합되었습니다.
+        /// 기본 브라우저로 홈페이지를 엽니다.
+        /// </summary>
+        private static void OpenTwPage()
+        {
+            try
+            {
+                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                {
+                    FileName = Services.RemoteEndpoints.TwPageUrl,
+                    UseShellExecute = true
+                });
+                AppLogger.Info("Opened TWPage in default browser.");
+            }
+            catch (Exception ex)
+            {
+                AppLogger.Warn("Failed to open TWPage in browser.", ex);
+                try { MessageBox.Show($"홈페이지를 열 수 없습니다:\n{Services.RemoteEndpoints.TwPageUrl}", "오류", MessageBoxButton.OK, MessageBoxImage.Error); } catch { }
+            }
+        }
+
         private void OpenEtaRanking()
         {
-            var view = new Addons.EtaRankingView();
-            ShowAddonViewWindow(view, "에타 순위", BtnEtaRanking);
+            OpenTwPage();
         }
 
         private void OpenChat()
@@ -280,8 +301,7 @@ namespace TWChatOverlay.Views
 
         private void OpenCoefficientCalculator()
         {
-            var view = new Addons.CalculatorTabsView(initialSelectedIndex: 0);
-            ShowAddonViewWindow(view, "계산기", BtnCoefficient);
+            OpenTwPage();
         }
 
         private void OpenDamageCalculator()
@@ -292,14 +312,12 @@ namespace TWChatOverlay.Views
 
         private void OpenEquipmentDb()
         {
-            var view = new Addons.EquipmentDbView();
-            ShowAddonViewWindow(view, "장비 DB", BtnEquipmentDb);
+            OpenTwPage();
         }
 
         private void OpenEncryptSimulator()
         {
-            var view = new Addons.EncryptSimulatorTabsView();
-            ShowAddonViewWindow(view, "시뮬레이터", BtnEncrypt);
+            OpenTwPage();
         }
 
         private void OpenAddon()
