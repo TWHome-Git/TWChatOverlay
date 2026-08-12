@@ -32,7 +32,7 @@
             <TextBlock x:Name="MessageTextBlock"
                        Grid.Row="1"
                        Margin="0,6,0,0"
-                       Foreground="White"
+                       Foreground="{DynamicResource TextBrush}"
                        FontSize="20"
                        FontWeight="Bold"
                        TextAlignment="Center"

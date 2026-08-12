@@ -4,11 +4,11 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              mc:Ignorable="d">
-    <Grid Background="#161B22" Margin="0,8,0,0">
+    <Grid Background="{DynamicResource OverlaySurfaceBackgroundBrush}" Margin="0,8,0,0">
         <Grid.Resources>
             <Style x:Key="DamageSectionBorderStyle" TargetType="Border">
-                <Setter Property="Background" Value="#111821"/>
-                <Setter Property="BorderBrush" Value="#30363D"/>
+                <Setter Property="Background" Value="{DynamicResource OverlayShellBackgroundBrush}"/>
+                <Setter Property="BorderBrush" Value="{DynamicResource OverlayStrongBorderBrush}"/>
                 <Setter Property="BorderThickness" Value="1"/>
                 <Setter Property="CornerRadius" Value="8"/>
                 <Setter Property="Padding" Value="12"/>
@@ -16,13 +16,13 @@
                 <Setter Property="MinHeight" Value="340"/>
             </Style>
             <Style x:Key="DamageSectionTitleStyle" TargetType="TextBlock">
-                <Setter Property="Foreground" Value="#58A6FF"/>
+                <Setter Property="Foreground" Value="{DynamicResource OverlayAccentTextBrush}"/>
                 <Setter Property="FontSize" Value="15"/>
                 <Setter Property="FontWeight" Value="SemiBold"/>
                 <Setter Property="Margin" Value="0,0,0,8"/>
             </Style>
             <Style x:Key="FieldLabelStyle" TargetType="TextBlock">
-                <Setter Property="Foreground" Value="White"/>
+                <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
                 <Setter Property="FontSize" Value="12"/>
                 <Setter Property="VerticalAlignment" Value="Center"/>
             </Style>
@@ -39,26 +39,26 @@
                 <Setter Property="VerticalContentAlignment" Value="Center"/>
             </Style>
             <Style x:Key="SectionCardStyle" TargetType="Border">
-                <Setter Property="Background" Value="#111821"/>
-                <Setter Property="BorderBrush" Value="#30363D"/>
+                <Setter Property="Background" Value="{DynamicResource OverlayShellBackgroundBrush}"/>
+                <Setter Property="BorderBrush" Value="{DynamicResource OverlayStrongBorderBrush}"/>
                 <Setter Property="BorderThickness" Value="1"/>
                 <Setter Property="CornerRadius" Value="8"/>
                 <Setter Property="Padding" Value="12"/>
                 <Setter Property="Margin" Value="0,0,0,8"/>
             </Style>
             <Style x:Key="SectionTitleStyle" TargetType="TextBlock">
-                <Setter Property="Foreground" Value="#58A6FF"/>
+                <Setter Property="Foreground" Value="{DynamicResource OverlayAccentTextBrush}"/>
                 <Setter Property="FontSize" Value="15"/>
                 <Setter Property="FontWeight" Value="SemiBold"/>
                 <Setter Property="Margin" Value="0,0,0,8"/>
             </Style>
             <Style x:Key="SectionLabelStyle" TargetType="TextBlock">
-                <Setter Property="Foreground" Value="White"/>
+                <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
                 <Setter Property="FontSize" Value="12"/>
                 <Setter Property="VerticalAlignment" Value="Center"/>
             </Style>
             <Style x:Key="SectionNoteStyle" TargetType="TextBlock">
-                <Setter Property="Foreground" Value="#C9D1D9"/>
+                <Setter Property="Foreground" Value="{DynamicResource OverlayInfoTextBrush}"/>
                 <Setter Property="FontSize" Value="13"/>
                 <Setter Property="TextWrapping" Value="Wrap"/>
                 <Setter Property="Margin" Value="0,2,0,0"/>
@@ -70,7 +70,7 @@
                 <Setter Property="HorizontalAlignment" Value="Left"/>
             </Style>
             <Style x:Key="DamageDetailTextStyle" TargetType="TextBlock">
-                <Setter Property="Foreground" Value="#C9D1D9"/>
+                <Setter Property="Foreground" Value="{DynamicResource OverlayInfoTextBrush}"/>
                 <Setter Property="FontSize" Value="12"/>
                 <Setter Property="FontWeight" Value="SemiBold"/>
                 <Setter Property="VerticalAlignment" Value="Center"/>
@@ -88,8 +88,8 @@
                 <Setter Property="HorizontalAlignment" Value="Left"/>
             </Style>
             <Style x:Key="HighlightBarStyle" TargetType="Border">
-                <Setter Property="Background" Value="#0D1625"/>
-                <Setter Property="BorderBrush" Value="#2E3A4A"/>
+                <Setter Property="Background" Value="{DynamicResource OverlayShellBackgroundBrush}"/>
+                <Setter Property="BorderBrush" Value="{DynamicResource OverlayStrongBorderBrush}"/>
                 <Setter Property="BorderThickness" Value="1"/>
                 <Setter Property="CornerRadius" Value="8"/>
                 <Setter Property="Padding" Value="10"/>
@@ -113,8 +113,8 @@
             </Style>
         </Grid.Resources>
 
-        <Border Background="#111821"
-                BorderBrush="#30363D"
+        <Border Background="{DynamicResource OverlayShellBackgroundBrush}"
+                BorderBrush="{DynamicResource OverlayStrongBorderBrush}"
                 BorderThickness="1"
                 CornerRadius="8"
                 Padding="12">
@@ -123,12 +123,12 @@
                             HorizontalAlignment="Center"
                             VerticalAlignment="Center">
                     <TextBlock Text="계수 계산기의 데이터를 입력하세요."
-                               Foreground="#C9D1D9"
+                               Foreground="{DynamicResource OverlayInfoTextBrush}"
                                FontSize="18"
                                FontWeight="SemiBold"
                                TextAlignment="Center"/>
                     <TextBlock Text="캐릭터를 선택하고 계수 계산을 진행하면 대미지 계산기에 자동 반영됩니다."
-                               Foreground="#8B949E"
+                               Foreground="{DynamicResource OverlaySubtleTextBrush}"
                                FontSize="13"
                                Margin="0,10,0,0"
                                TextAlignment="Center"/>
@@ -141,8 +141,8 @@
                     </Grid.RowDefinitions>
 
                     <Border Grid.Row="0"
-                            Background="#0D1625"
-                            BorderBrush="#2E3A4A"
+                            Background="{DynamicResource OverlayShellBackgroundBrush}"
+                            BorderBrush="{DynamicResource OverlayStrongBorderBrush}"
                             BorderThickness="1"
                             CornerRadius="8"
                             Padding="12">
@@ -157,9 +157,9 @@
                                        VerticalAlignment="Center"
                                        ItemHeight="30">
                                 <TextBlock Style="{StaticResource FieldLabelStyle}" Text="캐릭터" Margin="0,0,6,0"/>
-                                <TextBlock x:Name="CharacterNameText" Foreground="White" FontWeight="SemiBold" VerticalAlignment="Center" Margin="0,0,18,0"/>
+                                <TextBlock x:Name="CharacterNameText" Foreground="{DynamicResource TextBrush}" FontWeight="SemiBold" VerticalAlignment="Center" Margin="0,0,18,0"/>
                                 <TextBlock Style="{StaticResource FieldLabelStyle}" Text="계산타입" Margin="0,0,6,0"/>
-                                <TextBlock x:Name="CalculatorTypeText" Foreground="White" FontWeight="SemiBold" VerticalAlignment="Center" Margin="0,0,12,0"/>
+                                <TextBlock x:Name="CalculatorTypeText" Foreground="{DynamicResource TextBrush}" FontWeight="SemiBold" VerticalAlignment="Center" Margin="0,0,12,0"/>
                                 <StackPanel x:Name="AnaisVariantPanel"
                                             Orientation="Horizontal"
                                             Visibility="Collapsed"
@@ -174,7 +174,7 @@
                                     </ComboBox>
                                 </StackPanel>
                                 <TextBlock Style="{StaticResource FieldLabelStyle}" Text="최종 계수" Margin="0,0,6,0"/>
-                                <TextBlock x:Name="TotalCoefficientText" Foreground="#FFDE59" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                <TextBlock x:Name="TotalCoefficientText" Foreground="{DynamicResource OverlayRareAccentBrush}" FontWeight="SemiBold" VerticalAlignment="Center"/>
                             </WrapPanel>
 
                             <WrapPanel Grid.Row="1"
@@ -188,7 +188,7 @@
                                           SelectionChanged="MonsterSelectComboBox_SelectionChanged"/>
                                 <TextBlock x:Name="MonsterSummaryText"
                                            Margin="14,0,0,0"
-                                           Foreground="#FFDE59"
+                                           Foreground="{DynamicResource OverlayRareAccentBrush}"
                                            FontWeight="SemiBold"
                                            VerticalAlignment="Center"
                                            TextWrapping="Wrap"
@@ -217,7 +217,7 @@
                                            Grid.Row="0"
                                            Grid.Column="1"
                                            Style="{StaticResource DamageDetailValueStyle}"
-                                           Foreground="#58A6FF"
+                                           Foreground="{DynamicResource OverlayAccentTextBrush}"
                                            Text="일반 DPS -"
                                            Visibility="Collapsed"/>
 
@@ -232,7 +232,7 @@
                                            Grid.Column="1"
                                            Margin="0,6,0,0"
                                            Style="{StaticResource DamageDetailValueStyle}"
-                                           Foreground="#8B949E"
+                                           Foreground="{DynamicResource OverlaySubtleTextBrush}"
                                            Text="강타 DPS 미정"
                                            Visibility="Collapsed"/>
 
@@ -247,7 +247,7 @@
                                            Grid.Column="1"
                                            Margin="0,6,0,0"
                                            Style="{StaticResource DamageDetailValueStyle}"
-                                           Foreground="#8B949E"
+                                           Foreground="{DynamicResource OverlaySubtleTextBrush}"
                                            Text="방무 DPS 미정"
                                            Visibility="Collapsed"/>
                             </Grid>
@@ -388,7 +388,7 @@
                                     <StackPanel>
                                         <TextBlock Style="{StaticResource SectionTitleStyle}" Text="공격 피해량(이자벨)"/>
                                         <TextBlock x:Name="AttackDamage1FactorSummaryText"
-                                                   Foreground="#FFDE59"
+                                                   Foreground="{DynamicResource OverlayRareAccentBrush}"
                                                    FontSize="13"
                                                    FontWeight="SemiBold"
                                                    Margin="0,0,0,6"
@@ -401,7 +401,7 @@
                                     <StackPanel>
                                         <TextBlock Style="{StaticResource SectionTitleStyle}" Text="공격 피해량(일반)"/>
                                         <TextBlock x:Name="AttackDamage2FactorSummaryText"
-                                                   Foreground="#FFDE59"
+                                                   Foreground="{DynamicResource OverlayRareAccentBrush}"
                                                    FontSize="13"
                                                    FontWeight="SemiBold"
                                                    Margin="0,0,0,6"
@@ -414,7 +414,7 @@
                                     <StackPanel>
                                         <TextBlock Style="{StaticResource SectionTitleStyle}" Text="공격 피해량(캐릭터)"/>
                                         <TextBlock x:Name="AdditionalFactorSummaryText"
-                                                   Foreground="#FFDE59"
+                                                   Foreground="{DynamicResource OverlayRareAccentBrush}"
                                                    FontSize="13"
                                                    FontWeight="SemiBold"
                                                    Margin="0,0,0,6"
@@ -447,7 +447,7 @@
                                                 <RowDefinition Height="Auto"/>
                                             </Grid.RowDefinitions>
 
-                                            <TextBlock Grid.Row="0" Grid.Column="0" Foreground="White" Text="어빌 - 전설의 스킬 공격력" VerticalAlignment="Center"/>
+                                            <TextBlock Grid.Row="0" Grid.Column="0" Foreground="{DynamicResource TextBrush}" Text="어빌 - 전설의 스킬 공격력" VerticalAlignment="Center"/>
                                             <CheckBox x:Name="HelmetAbilityToggle"
                                                       Grid.Row="0"
                                                       Grid.Column="1"
@@ -461,7 +461,7 @@
                                                 </CheckBox.LayoutTransform>
                                             </CheckBox>
 
-                                            <TextBlock Grid.Row="1" Grid.Column="0" Foreground="White" Text="부가 - 물리/마법 피해 증폭" VerticalAlignment="Center" Margin="0,6,0,0"/>
+                                            <TextBlock Grid.Row="1" Grid.Column="0" Foreground="{DynamicResource TextBrush}" Text="부가 - 물리/마법 피해 증폭" VerticalAlignment="Center" Margin="0,6,0,0"/>
                                             <CheckBox x:Name="EnemyTakenDamageWeaponToggle"
                                                       Grid.Row="1"
                                                       Grid.Column="1"
@@ -476,7 +476,7 @@
                                                 </CheckBox.LayoutTransform>
                                             </CheckBox>
 
-                                            <TextBlock Grid.Row="2" Grid.Column="0" Foreground="White" Text="콤보 보너스" VerticalAlignment="Center" Margin="0,6,0,0"/>
+                                            <TextBlock Grid.Row="2" Grid.Column="0" Foreground="{DynamicResource TextBrush}" Text="콤보 보너스" VerticalAlignment="Center" Margin="0,6,0,0"/>
                                             <CheckBox x:Name="ComboBonusToggle"
                                                       Grid.Row="2"
                                                       Grid.Column="1"
@@ -494,7 +494,7 @@
 
                                         <TextBlock x:Name="SeriesAttackDamageSummaryText"
                                                    Margin="0,10,0,4"
-                                                   Foreground="#FFDE59"
+                                                   Foreground="{DynamicResource OverlayRareAccentBrush}"
                                                    FontSize="12"
                                                    FontWeight="SemiBold"
                                                    Text="계열 공격력 0%"/>
@@ -502,7 +502,7 @@
 
                                         <TextBlock x:Name="AdditionalDamageSummaryText"
                                                    Margin="0,10,0,4"
-                                                   Foreground="#FFDE59"
+                                                   Foreground="{DynamicResource OverlayRareAccentBrush}"
                                                    FontSize="12"
                                                    FontWeight="SemiBold"
                                                    Text="추가 피해량 0%"/>
@@ -514,35 +514,35 @@
                                     <StackPanel>
                                         <TextBlock Style="{StaticResource SectionTitleStyle}" Text="캐릭터 특성"/>
                                         <TextBlock x:Name="SelectedModifierText"
-                                                   Foreground="White"
+                                                   Foreground="{DynamicResource TextBrush}"
                                                    FontSize="13"
                                                    FontWeight="SemiBold"
                                                    Margin="0,2,0,8"
                                                    Text=""/>
 
                                         <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
-                                            <TextBlock Text="공격 피해량(스킬) " Foreground="#8B949E" FontSize="12" VerticalAlignment="Center"/>
-                                            <TextBlock x:Name="TraitAttackDamageSummaryText" Foreground="White" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center" Text="0%"/>
+                                            <TextBlock Text="공격 피해량(스킬) " Foreground="{DynamicResource OverlaySubtleTextBrush}" FontSize="12" VerticalAlignment="Center"/>
+                                            <TextBlock x:Name="TraitAttackDamageSummaryText" Foreground="{DynamicResource TextBrush}" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center" Text="0%"/>
                                         </StackPanel>
 
                                         <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
-                                            <TextBlock Text="적이 받는 피해 증가 " Foreground="#8B949E" FontSize="12" VerticalAlignment="Center"/>
-                                            <TextBlock x:Name="TraitEnemyTakenDamageValueText" Text="0%" Foreground="White" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                            <TextBlock Text="적이 받는 피해 증가 " Foreground="{DynamicResource OverlaySubtleTextBrush}" FontSize="12" VerticalAlignment="Center"/>
+                                            <TextBlock x:Name="TraitEnemyTakenDamageValueText" Text="0%" Foreground="{DynamicResource TextBrush}" FontWeight="SemiBold" VerticalAlignment="Center"/>
                                         </StackPanel>
 
                                         <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
-                                            <TextBlock Text="적 능력치 감소 " Foreground="#8B949E" FontSize="12" VerticalAlignment="Center"/>
-                                            <TextBlock x:Name="TraitStatReductionValueText" Text="0%" Foreground="White" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                            <TextBlock Text="적 능력치 감소 " Foreground="{DynamicResource OverlaySubtleTextBrush}" FontSize="12" VerticalAlignment="Center"/>
+                                            <TextBlock x:Name="TraitStatReductionValueText" Text="0%" Foreground="{DynamicResource TextBrush}" FontWeight="SemiBold" VerticalAlignment="Center"/>
                                         </StackPanel>
 
                                         <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
-                                            <TextBlock Text="추가 피해량 " Foreground="#8B949E" FontSize="12" VerticalAlignment="Center"/>
-                                            <TextBlock x:Name="AdditionalDamageTraitValueText" Text="0%" Foreground="White" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                            <TextBlock Text="추가 피해량 " Foreground="{DynamicResource OverlaySubtleTextBrush}" FontSize="12" VerticalAlignment="Center"/>
+                                            <TextBlock x:Name="AdditionalDamageTraitValueText" Text="0%" Foreground="{DynamicResource TextBrush}" FontWeight="SemiBold" VerticalAlignment="Center"/>
                                         </StackPanel>
 
                                         <StackPanel Orientation="Horizontal" Margin="0,0,0,0">
-                                            <TextBlock Text="중 딜레이 감소 " Foreground="#8B949E" FontSize="12" VerticalAlignment="Center"/>
-                                            <TextBlock x:Name="TraitSkillDelayValueText" Text="0%" Foreground="White" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                            <TextBlock Text="중 딜레이 감소 " Foreground="{DynamicResource OverlaySubtleTextBrush}" FontSize="12" VerticalAlignment="Center"/>
+                                            <TextBlock x:Name="TraitSkillDelayValueText" Text="0%" Foreground="{DynamicResource TextBrush}" FontWeight="SemiBold" VerticalAlignment="Center"/>
                                         </StackPanel>
                                     </StackPanel>
                                 </Border>
@@ -552,7 +552,7 @@
                                         <TextBlock Style="{StaticResource SectionTitleStyle}" Text="최종 대미지"/>
                                         <TextBlock x:Name="FinalDamageSummaryText"
                                                    Margin="0,2,0,6"
-                                                   Foreground="#FFDE59"
+                                                   Foreground="{DynamicResource OverlayRareAccentBrush}"
                                                    FontSize="12"
                                                    FontWeight="SemiBold"
                                                    Text="최종 대미지 0%"/>
@@ -572,7 +572,7 @@
                                                 <RowDefinition Height="Auto"/>
                                             </Grid.RowDefinitions>
 
-                                            <TextBlock Grid.Row="0" Grid.Column="0" Foreground="White" Text="클럽 공격력 증가" VerticalAlignment="Center"/>
+                                            <TextBlock Grid.Row="0" Grid.Column="0" Foreground="{DynamicResource TextBrush}" Text="클럽 공격력 증가" VerticalAlignment="Center"/>
                                             <CheckBox x:Name="ClubFinalDamageToggle"
                                                       Grid.Row="0"
                                                       Grid.Column="1"
@@ -586,7 +586,7 @@
                                                 </CheckBox.LayoutTransform>
                                             </CheckBox>
 
-                                            <TextBlock Grid.Row="1" Grid.Column="0" Foreground="White" Text="코어 세트 효과" VerticalAlignment="Center" Margin="0,8,0,0"/>
+                                            <TextBlock Grid.Row="1" Grid.Column="0" Foreground="{DynamicResource TextBrush}" Text="코어 세트 효과" VerticalAlignment="Center" Margin="0,8,0,0"/>
                                             <TextBox x:Name="CoreSetTextBox"
                                                      Grid.Row="1"
                                                      Grid.Column="1"
@@ -601,7 +601,7 @@
                                                      LostFocus="NumberTextBox_LostFocus"
                                                      TextChanged="FinalDamageOption_Changed"/>
 
-                                            <TextBlock Grid.Row="2" Grid.Column="0" Foreground="White" Text="에타 - 최종 대미지" VerticalAlignment="Center" Margin="0,8,0,0"/>
+                                            <TextBlock Grid.Row="2" Grid.Column="0" Foreground="{DynamicResource TextBrush}" Text="에타 - 최종 대미지" VerticalAlignment="Center" Margin="0,8,0,0"/>
                                             <ComboBox x:Name="EtaLinkFinalDamageComboBox"
                                                       Grid.Row="2"
                                                       Grid.Column="1"
@@ -612,7 +612,7 @@
                                                       SelectedIndex="0"
                                                       SelectionChanged="EtaLinkFinalDamageComboBox_SelectionChanged"/>
 
-                                            <TextBlock Grid.Row="3" Grid.Column="0" Foreground="White" Text="시에나" VerticalAlignment="Center" Margin="0,10,0,0"/>
+                                            <TextBlock Grid.Row="3" Grid.Column="0" Foreground="{DynamicResource TextBrush}" Text="시에나" VerticalAlignment="Center" Margin="0,10,0,0"/>
                                             <TextBox x:Name="SienaTextBox"
                                                      Grid.Row="3"
                                                      Grid.Column="1"
@@ -623,7 +623,7 @@
                                                      HorizontalAlignment="Right"
                                                      TextChanged="SienaTextBox_TextChanged"/>
 
-                                            <TextBlock Grid.Row="4" Grid.Column="0" Foreground="White" Text="중 딜레이 감소" VerticalAlignment="Center" Margin="0,8,0,0"/>
+                                            <TextBlock Grid.Row="4" Grid.Column="0" Foreground="{DynamicResource TextBrush}" Text="중 딜레이 감소" VerticalAlignment="Center" Margin="0,8,0,0"/>
                                             <TextBox x:Name="SienaMiddleDelayTextBox"
                                                      Grid.Row="4"
                                                      Grid.Column="1"
@@ -647,7 +647,7 @@
                                         <TextBlock Style="{StaticResource SectionTitleStyle}" Text="치명타 배율"/>
                                         <TextBlock x:Name="CriticalDamageSummaryText"
                                                    Margin="0,2,0,6"
-                                                   Foreground="#FFDE59"
+                                                   Foreground="{DynamicResource OverlayRareAccentBrush}"
                                                    FontSize="12"
                                                    FontWeight="SemiBold"
                                                    Text="치명타 배율 0%"/>
@@ -662,7 +662,7 @@
                                                 <RowDefinition Height="Auto"/>
                                             </Grid.RowDefinitions>
 
-                                            <TextBlock Grid.Row="0" Grid.Column="0" Foreground="White" Text="약점 간파" VerticalAlignment="Center"/>
+                                            <TextBlock Grid.Row="0" Grid.Column="0" Foreground="{DynamicResource TextBrush}" Text="약점 간파" VerticalAlignment="Center"/>
                                             <CheckBox x:Name="WeakPointToggle"
                                                       Grid.Row="0"
                                                       Grid.Column="1"
@@ -676,7 +676,7 @@
                                                 </CheckBox.LayoutTransform>
                                             </CheckBox>
 
-                                            <TextBlock Grid.Row="1" Grid.Column="0" Foreground="White" Text="정의의 심판" VerticalAlignment="Center" Margin="0,8,0,0"/>
+                                            <TextBlock Grid.Row="1" Grid.Column="0" Foreground="{DynamicResource TextBrush}" Text="정의의 심판" VerticalAlignment="Center" Margin="0,8,0,0"/>
                                             <ComboBox x:Name="JudgementComboBox"
                                                       Grid.Row="1"
                                                       Grid.Column="1"
@@ -687,7 +687,7 @@
                                                       SelectedIndex="0"
                                                       SelectionChanged="JudgementComboBox_SelectionChanged"/>
 
-                                            <TextBlock Grid.Row="2" Grid.Column="0" Foreground="White" Text="에타 - 치명타 배율" VerticalAlignment="Center" Margin="0,8,0,0"/>
+                                            <TextBlock Grid.Row="2" Grid.Column="0" Foreground="{DynamicResource TextBrush}" Text="에타 - 치명타 배율" VerticalAlignment="Center" Margin="0,8,0,0"/>
                                             <ComboBox x:Name="EtaLinkCriticalComboBox"
                                                       Grid.Row="2"
                                                       Grid.Column="1"

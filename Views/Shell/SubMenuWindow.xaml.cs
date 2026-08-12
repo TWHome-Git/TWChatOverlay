@@ -97,7 +97,7 @@ namespace TWChatOverlay.Views
                     HostContent.Child = new TextBlock
                     {
                         Text = "표시할 화면이 없습니다.",
-                        Foreground = new SolidColorBrush(Color.FromRgb(154, 164, 178)),
+                        Foreground = ThemeBrushes.Get("OverlaySubtleTextBrush"),
                         HorizontalAlignment = HorizontalAlignment.Center,
                         VerticalAlignment = VerticalAlignment.Center
                     };

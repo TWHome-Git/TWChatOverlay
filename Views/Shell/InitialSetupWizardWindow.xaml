@@ -34,13 +34,13 @@
             <Style.Triggers>
                 <Trigger Property="IsMouseOver" Value="True">
                     <Setter Property="Background" Value="{DynamicResource OverlaySurfaceAltBackgroundBrush}"/>
-                    <Setter Property="Foreground" Value="White"/>
+                    <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
                 </Trigger>
             </Style.Triggers>
         </Style>
         <Style TargetType="Button">
             <Setter Property="Background" Value="{DynamicResource OverlaySurfaceAltBackgroundBrush}"/>
-            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
             <Setter Property="BorderBrush" Value="{DynamicResource OverlayStrongBorderBrush}"/>
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="Padding" Value="10,4"/>
@@ -51,7 +51,7 @@
         <Style TargetType="TextBox">
             <Setter Property="Height" Value="30"/>
             <Setter Property="Background" Value="{DynamicResource OverlaySurfaceBackgroundBrush}"/>
-            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
             <Setter Property="BorderBrush" Value="{DynamicResource OverlayStrongBorderBrush}"/>
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="VerticalContentAlignment" Value="Center"/>
@@ -59,7 +59,7 @@
         </Style>
 
         <Style TargetType="CheckBox">
-            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
             <Setter Property="Margin" Value="0,2,0,2"/>
         </Style>
 
@@ -110,7 +110,7 @@
                 </Grid.RowDefinitions>
 
                 <StackPanel Grid.Row="0">
-                    <TextBlock x:Name="StepTitleText" Text="1. 채팅 로그 위치 설정" Foreground="White" FontSize="18" FontWeight="SemiBold"/>
+                    <TextBlock x:Name="StepTitleText" Text="1. 채팅 로그 위치 설정" Foreground="{DynamicResource TextBrush}" FontSize="18" FontWeight="SemiBold"/>
                     <TextBlock x:Name="StepDescText" Text="" Foreground="{DynamicResource OverlayInfoTextBrush}" FontSize="13" Margin="0,0,0,0" TextWrapping="Wrap" Visibility="Collapsed"/>
                     <TextBlock x:Name="StepDetailText" Text="" Foreground="{DynamicResource OverlaySubtleTextBrush}" FontSize="12" TextWrapping="Wrap" Visibility="Collapsed"/>
                 </StackPanel>

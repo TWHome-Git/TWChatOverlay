@@ -22,7 +22,7 @@
         <Border Background="Transparent" Padding="5">
             <Border x:Name="MainBorder"
                     TextElement.FontFamily="{Binding CurrentFont, RelativeSource={RelativeSource AncestorType=Window}}"
-                    Background="{DynamicResource OverlayWindowBackgroundBrush}"
+                    Background="{DynamicResource ChatSurfaceBackgroundBrush}"
                     CornerRadius="10"
                     BorderThickness="1.5"
                     BorderBrush="{DynamicResource OverlayWindowBorderBrush}"
@@ -112,7 +112,7 @@
 
                                     <StackPanel Grid.Row="0">
                                         <TextBlock Text="채팅창 설정"
-                                                   Foreground="White"
+                                                   Foreground="{DynamicResource TextBrush}"
                                                    FontSize="16"
                                                    FontWeight="Bold"/>
                                         <TextBlock Text="설정 탭에서는 창을 드래그해서 이동할 수 있습니다."

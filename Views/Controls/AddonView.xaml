@@ -13,7 +13,7 @@
         </Style>
     </UserControl.Resources>
     <ScrollViewer VerticalScrollBarVisibility="Auto" Style="{StaticResource OverlayScrollViewerStyle}">
-        <Border Background="#F51E1E1E" Padding="15">
+        <Border Background="{DynamicResource OverlayWindowBackgroundBrush}" Padding="15">
             <TabControl x:Name="AddonTabControl"
                         Style="{StaticResource SettingsTabControlStyle}"
                         Margin="0,1,0,0"
@@ -33,7 +33,7 @@
                                               Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
                                     <StackPanel Margin="6,6,0,0">
                                         <TextBlock Text="{Binding HighlightAlertVolumePercent, StringFormat=키워드 알림 볼륨: {0:F0}%}"
-                                                   Foreground="White"
+                                                   Foreground="{DynamicResource TextBrush}"
                                                    FontSize="12"
                                                    Margin="0,0,0,6"/>
                                         <Slider Minimum="0"
@@ -72,12 +72,12 @@
                                           Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
 
                                 <TextBlock Text="* 활성화하면 상단에 실시간 획득량이 표시됩니다."
-                                           Foreground="#888"
+                                           Foreground="{DynamicResource FieldLabelTextBrush}"
                                            FontSize="11"
                                            Margin="0,6,0,15"/>
 
                                 <Border Height="1"
-                                        Background="#333"
+                                        Background="{DynamicResource SeparatorBrush}"
                                         Margin="0,4,0,14"/>
 
                                 <CheckBox Content="경험치 누적 알림"
@@ -85,19 +85,19 @@
                                           Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
 
                                 <TextBlock Text="* 추가 기능 창에서 알림 위치를 드래그로 조정할 수 있습니다."
-                                           Foreground="#888"
+                                           Foreground="{DynamicResource FieldLabelTextBrush}"
                                            FontSize="11"
                                            Margin="0,6,0,15"/>
 
-                                <Border Background="#181C22"
-                                        BorderBrush="#2F3640"
+                                <Border Background="{DynamicResource OverlayCardBackgroundBrush}"
+                                        BorderBrush="{DynamicResource OverlayStrongBorderBrush}"
                                         BorderThickness="1"
                                         CornerRadius="6"
                                         Padding="10"
                                         Margin="0,0,0,12">
                                     <StackPanel>
                                         <TextBlock Text="현재 누적 경험치"
-                                                   Foreground="White"
+                                                   Foreground="{DynamicResource TextBrush}"
                                                    FontSize="13"
                                                    FontWeight="SemiBold"
                                                    Margin="0,0,0,8"/>
@@ -108,7 +108,7 @@
                                                 <ColumnDefinition Width="*"/>
                                             </Grid.ColumnDefinitions>
                                             <TextBlock Text="누적(억)"
-                                                       Foreground="White"
+                                                       Foreground="{DynamicResource TextBrush}"
                                                        VerticalAlignment="Center"/>
                                             <TextBox Grid.Column="1"
                                                      Text="{Binding ExperienceLimitTotalExp, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
@@ -132,7 +132,7 @@
                                 </Border>
 
                                 <Border Height="1"
-                                        Background="#333"
+                                        Background="{DynamicResource SeparatorBrush}"
                                         Margin="0,4,0,14"/>
 
                                 <StackPanel Margin="0,0,0,0">
@@ -141,7 +141,7 @@
                                               Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
                                     <StackPanel Margin="6,6,0,8">
                                         <TextBlock Text="{Binding ExpBuffAlertVolumePercent, StringFormat=저효율 알림 볼륨: {0:F0}%}"
-                                                   Foreground="White"
+                                                   Foreground="{DynamicResource TextBrush}"
                                                    FontSize="12"
                                                    Margin="0,0,0,6"/>
                                         <Slider Minimum="0"
@@ -156,7 +156,7 @@
                                         <TextBlock Text="기준치"
                                                    Margin="0,0,5,0"
                                                    VerticalAlignment="Center"
-                                                   Foreground="White"
+                                                   Foreground="{DynamicResource TextBrush}"
                                                    FontSize="13"/>
                                         <TextBox Text="{Binding ExpAlarmThresholdMan, UpdateSourceTrigger=PropertyChanged}"
                                                  Width="60"
@@ -166,7 +166,7 @@
                                                  Style="{StaticResource InputTextBoxStyle}"/>
                                         <TextBlock Text="만 EXP 미만 시"
                                                    VerticalAlignment="Center"
-                                                   Foreground="White"
+                                                   Foreground="{DynamicResource TextBrush}"
                                                    FontSize="13"/>
                                     </StackPanel>
                                 </StackPanel>
@@ -186,7 +186,7 @@
                                           Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
                                 <StackPanel Margin="6,6,0,8">
                                     <TextBlock Text="{Binding MagicCircleAlertVolumePercent, StringFormat=웨이브 종료 알림 볼륨: {0:F0}%}"
-                                               Foreground="White"
+                                               Foreground="{DynamicResource TextBrush}"
                                                FontSize="12"
                                                Margin="0,0,0,6"/>
                                     <Slider Minimum="0"
@@ -199,7 +199,7 @@
                                 </StackPanel>
 
                                 <Border Height="1"
-                                        Background="#333"
+                                        Background="{DynamicResource SeparatorBrush}"
                                         Margin="0,10,0,14"/>
 
                                 <TextBlock Text="에토스 방향 알림" Style="{StaticResource SectionHeaderStyle}"/>
@@ -208,14 +208,14 @@
                                           IsChecked="{Binding ShowEtosDirectionAlert}"
                                           Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
                                 <Border Height="1"
-                                        Background="#333"
+                                        Background="{DynamicResource SeparatorBrush}"
                                         Margin="0,14,0,14"/>
                                 <CheckBox Content="반사 패턴 알림"
                                           IsChecked="{Binding EnableReflectionPatternAlert}"
                                           Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
                                 <StackPanel Margin="6,6,0,8">
                                     <TextBlock Text="{Binding ReflectionPatternAlertVolumePercent, StringFormat=반사 패턴 알림 볼륨: {0:F0}%}"
-                                               Foreground="White"
+                                               Foreground="{DynamicResource TextBrush}"
                                                FontSize="12"
                                                Margin="0,0,0,6"/>
                                     <Slider Minimum="0"
@@ -227,7 +227,7 @@
                                             Value="{Binding ReflectionPatternAlertVolumePercent, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
                                 </StackPanel>
                                 <Border Height="1"
-                                        Background="#333"
+                                        Background="{DynamicResource SeparatorBrush}"
                                         Margin="0,14,0,14"/>
 
                                 <TextBlock Style="{StaticResource SectionHeaderStyle}"><Run Text="던전 카운터"/></TextBlock>
@@ -244,7 +244,7 @@
                                     <TextBlock Text="창 지속시간"
                                                Margin="0,0,8,0"
                                                VerticalAlignment="Center"
-                                               Foreground="White"
+                                               Foreground="{DynamicResource TextBrush}"
                                                FontSize="13"/>
                                     <TextBox Text="{Binding AbandonRoadCountAlertDurationSeconds, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                              Width="60"
@@ -254,7 +254,7 @@
                                              Style="{StaticResource InputTextBoxStyle}"/>
                                     <TextBlock Text="초"
                                                VerticalAlignment="Center"
-                                               Foreground="White"
+                                               Foreground="{DynamicResource TextBrush}"
                                                FontSize="13"/>
                                 </StackPanel>
                                 <TextBlock Text="* 1초부터 300초까지 입력할 수 있습니다."
@@ -278,7 +278,7 @@
                                           Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
                                 <StackPanel Margin="6,6,0,8">
                                     <TextBlock Text="{Binding ItemDropAlertVolumePercent, StringFormat=아이템 획득 볼륨: {0:F0}%}"
-                                               Foreground="White"
+                                               Foreground="{DynamicResource TextBrush}"
                                                FontSize="12"
                                                Margin="0,0,0,6"/>
                                     <Slider Minimum="0"
@@ -291,7 +291,7 @@
                                 </StackPanel>
                                 <StackPanel Margin="6,10,0,8">
                                     <TextBlock Text="사용자 정의 필터"
-                                               Foreground="White"
+                                               Foreground="{DynamicResource TextBrush}"
                                                FontSize="12"
                                                FontWeight="SemiBold"
                                                Margin="0,0,0,4"/>
@@ -334,12 +334,12 @@
 
                                         <TextBlock Grid.Row="0" Grid.Column="0"
                                                    Text="기본 목록"
-                                                   Foreground="#C9D1D9"
+                                                   Foreground="{DynamicResource OverlayInfoTextBrush}"
                                                    FontSize="11"
                                                    Margin="0,0,0,4"/>
                                         <TextBlock Grid.Row="0" Grid.Column="2"
                                                    Text="사용자 정의 목록"
-                                                   Foreground="#C9D1D9"
+                                                   Foreground="{DynamicResource OverlayInfoTextBrush}"
                                                    FontSize="11"
                                                    Margin="0,0,0,4"/>
 
@@ -348,9 +348,9 @@
                                                  Grid.Column="0"
                                                  ItemsSource="{Binding DefaultDropItems}"
                                                  SelectionMode="Extended"
-                                                 Background="#111820"
-                                                 BorderBrush="#30363D"
-                                                 Foreground="White"
+                                                 Background="{DynamicResource OverlayShellBackgroundBrush}"
+                                                 BorderBrush="{DynamicResource OverlayStrongBorderBrush}"
+                                                 Foreground="{DynamicResource TextBrush}"
                                                  ScrollViewer.HorizontalScrollBarVisibility="Auto">
                                             <ListBox.ItemTemplate>
                                                 <DataTemplate>
@@ -380,9 +380,9 @@
                                                  Grid.Column="2"
                                                  ItemsSource="{Binding CustomDropItems}"
                                                  SelectionMode="Extended"
-                                                 Background="#111820"
-                                                 BorderBrush="#30363D"
-                                                 Foreground="White"
+                                                 Background="{DynamicResource OverlayShellBackgroundBrush}"
+                                                 BorderBrush="{DynamicResource OverlayStrongBorderBrush}"
+                                                 Foreground="{DynamicResource TextBrush}"
                                                  ScrollViewer.HorizontalScrollBarVisibility="Auto">
                                             <ListBox.ItemTemplate>
                                                 <DataTemplate>
@@ -439,7 +439,7 @@
                                           Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
                                 <StackPanel Margin="6,6,0,0">
                                     <TextBlock Text="{Binding BuffTrackerEndSoundVolumePercent, StringFormat=버프 종료 사운드 볼륨: {0:F0}%}"
-                                               Foreground="White"
+                                               Foreground="{DynamicResource TextBrush}"
                                                FontSize="12"
                                                Margin="0,0,0,6"/>
                                     <Slider Minimum="0"
@@ -476,17 +476,17 @@
                                         <DataTemplate>
                                             <Grid Margin="0,0,14,14">
                                                 <Border Padding="14"
-                                                        Background="#FF262626"
-                                                        BorderBrush="#404040"
+                                                        Background="{DynamicResource OverlayCardBackgroundBrush}"
+                                                        BorderBrush="{DynamicResource OverlayStrongBorderBrush}"
                                                         BorderThickness="1"
                                                         CornerRadius="10">
                                                     <StackPanel>
                                                         <TextBlock Text="{Binding Name}"
-                                                                   Foreground="White"
+                                                                   Foreground="{DynamicResource TextBrush}"
                                                                    FontSize="17"
                                                                    FontWeight="Bold"/>
                                                         <TextBlock Text="{Binding ScheduleText}"
-                                                                   Foreground="#9FB0C0"
+                                                                   Foreground="{DynamicResource OverlayHintTextBrush}"
                                                                    FontSize="11"
                                                                    Margin="0,4,0,12"
                                                                    TextWrapping="Wrap"/>
@@ -497,7 +497,7 @@
                                                                 <ColumnDefinition Width="Auto"/>
                                                             </Grid.ColumnDefinitions>
                                                             <TextBlock Text="3분 전"
-                                                                       Foreground="White"
+                                                                       Foreground="{DynamicResource TextBrush}"
                                                                        VerticalAlignment="Center"/>
                                                             <CheckBox Grid.Column="1"
                                                                       IsChecked="{Binding Alert3MinutesBefore, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
@@ -510,7 +510,7 @@
                                                                 <ColumnDefinition Width="Auto"/>
                                                             </Grid.ColumnDefinitions>
                                                             <TextBlock Text="1분 전"
-                                                                       Foreground="White"
+                                                                       Foreground="{DynamicResource TextBrush}"
                                                                        VerticalAlignment="Center"/>
                                                             <CheckBox Grid.Column="1"
                                                                       IsChecked="{Binding Alert1MinuteBefore, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
@@ -523,7 +523,7 @@
                                                                 <ColumnDefinition Width="Auto"/>
                                                             </Grid.ColumnDefinitions>
                                                             <TextBlock Text="5초 전"
-                                                                       Foreground="White"
+                                                                       Foreground="{DynamicResource TextBrush}"
                                                                        VerticalAlignment="Center"/>
                                                             <CheckBox Grid.Column="1"
                                                                       IsChecked="{Binding AlertAtSpawn, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
@@ -537,11 +537,11 @@
                                 </ItemsControl>
 
                                 <Border Height="1"
-                                        Background="#333"
+                                        Background="{DynamicResource SeparatorBrush}"
                                         Margin="0,8,0,8"/>
                                 <StackPanel Margin="6,4,0,0">
                                     <TextBlock Text="{Binding BossAlertVolumePercent, StringFormat=필드 보스 알림 볼륨: {0:F0}%}"
-                                               Foreground="White"
+                                               Foreground="{DynamicResource TextBrush}"
                                                FontSize="12"
                                                Margin="0,0,0,6"/>
                                     <Slider Minimum="0"

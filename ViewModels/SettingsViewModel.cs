@@ -55,6 +55,21 @@ namespace TWChatOverlay.ViewModels
             }
         }
 
+        public int UiThemeVersion
+        {
+            get => _settings.UiThemeVersion;
+            set
+            {
+                if (_settings.UiThemeVersion != value)
+                {
+                    _settings.UiThemeVersion = value;
+                    ThemeService.Apply(value);
+                    OnPropertyChanged();
+                    SaveSettings();
+                }
+            }
+        }
+
         public bool EnableDebugLogging
         {
             get => _settings.EnableDebugLogging;
@@ -558,6 +573,8 @@ namespace TWChatOverlay.ViewModels
             AppLogger.Warn("Resetting settings to default values.");
             _settings.ResetToDefault();
 
+            ThemeService.Apply(_settings.UiThemeVersion);
+            OnPropertyChanged(nameof(UiThemeVersion));
             OnPropertyChanged(nameof(ShowNormal));
             OnPropertyChanged(nameof(ShowTeam));
             OnPropertyChanged(nameof(ShowClub));
