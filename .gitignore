@@ -370,3 +370,9 @@ Scripts/
 
 # Claude Code 로컬 설정(개인 설정, 공유 안 함)
 .claude/settings.local.json
+
+# Claude Code 작업 규칙(개인 설정, 공유 안 함)
+CLAUDE.md
+
+# 다른 프로젝트 폴더가 딸려 들어가는 것 방지
+repos/
