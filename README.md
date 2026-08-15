@@ -1,6 +1,5 @@
 ﻿﻿﻿﻿# TWChatOverlay
-
-<img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/2c67a04f-9fc7-4bd7-8fe6-69957d972e4e" />
+<img width="1920" height="1080" alt="578941282-2c67a04f-9fc7-4bd7-8fe6-69957d972e4e" src="https://github.com/user-attachments/assets/beb6294f-6848-47e5-ac97-0696a82999f6" />
 
 **테일즈위버 채팅 로그 기반의 보조 프로그램** 실시간 채팅 로그 분석을 통해 인게임에서 놓치기 쉬운 정보들을 오버레이로 제공합니다.
 
