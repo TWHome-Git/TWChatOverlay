@@ -154,6 +154,20 @@ namespace TWChatOverlay.ViewModels
             }
         }
 
+        public bool ShowIdTag
+        {
+            get => _settings.ShowIdTag;
+            set
+            {
+                if (_settings.ShowIdTag != value)
+                {
+                    _settings.ShowIdTag = value;
+                    OnPropertyChanged();
+                    SaveSettings();
+                }
+            }
+        }
+
         public bool ShowTimestamp
         {
             get => _settings.ShowTimestamp;
@@ -591,6 +605,7 @@ namespace TWChatOverlay.ViewModels
             OnPropertyChanged(nameof(ShowSystem));
             OnPropertyChanged(nameof(ShowEtaLevel));
             OnPropertyChanged(nameof(ShowEtaCharacter));
+            OnPropertyChanged(nameof(ShowIdTag));
             OnPropertyChanged(nameof(ShowTimestamp));
             OnPropertyChanged(nameof(ShowShoutToastPopup));
             OnPropertyChanged(nameof(AutoCopyShoutNickname));

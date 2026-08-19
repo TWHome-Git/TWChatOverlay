@@ -203,6 +203,28 @@ namespace TWChatOverlay.Views
             Keyboard.ClearFocus();
         }
 
+        /// <summary>idtag.txt를 기본 텍스트 편집기로 엽니다. 저장하면 감시기가 즉시 다시 읽습니다.</summary>
+        private void OpenIdTagFile_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                string path = Services.IdTagService.FilePath;
+                if (!System.IO.File.Exists(path))
+                    Services.IdTagService.Initialize();
+
+                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                {
+                    FileName = path,
+                    UseShellExecute = true
+                });
+            }
+            catch (System.Exception ex)
+            {
+                Services.AppLogger.Warn("Failed to open idtag.txt.", ex);
+                try { MessageBox.Show($"idtag.txt를 열 수 없습니다:\n{Services.IdTagService.FilePath}", "오류", MessageBoxButton.OK, MessageBoxImage.Error); } catch { }
+            }
+        }
+
         private void HotKeyTextBox_PreviewMouseLeftButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
         {
             if (sender is TextBox tb)

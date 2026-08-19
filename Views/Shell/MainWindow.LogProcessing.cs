@@ -716,17 +716,31 @@ namespace TWChatOverlay.Views
 
             if (string.IsNullOrWhiteSpace(text) || lookupSenderId.Length == 0 || displaySenderId.Length == 0)
                 return text;
-            if (!_settings.ShowEtaLevel && !_settings.ShowEtaCharacter)
-                return text;
-            if (!EtaProfileResolver.TryGetProfile(lookupSenderId, out var profile)
-                && !EtaProfileResolver.TryGetProfile(lookupSenderId.Trim(), out profile))
+            if (!_settings.ShowEtaLevel && !_settings.ShowEtaCharacter && !_settings.ShowIdTag)
                 return text;
 
+            // 표기 순서: 아이디[에타레벨][캐릭터][태그]
             string suffix = string.Empty;
-            if (_settings.ShowEtaLevel)
-                suffix += $"[{profile.Level}]";
-            if (_settings.ShowEtaCharacter && !string.IsNullOrWhiteSpace(profile.CharacterName))
-                suffix += $"[{profile.CharacterName}]";
+
+            if (_settings.ShowEtaLevel || _settings.ShowEtaCharacter)
+            {
+                if (EtaProfileResolver.TryGetProfile(lookupSenderId, out var profile)
+                    || EtaProfileResolver.TryGetProfile(lookupSenderId.Trim(), out profile))
+                {
+                    if (_settings.ShowEtaLevel)
+                        suffix += $"[{profile.Level}]";
+                    if (_settings.ShowEtaCharacter && !string.IsNullOrWhiteSpace(profile.CharacterName))
+                        suffix += $"[{profile.CharacterName}]";
+                }
+            }
+
+            if (_settings.ShowIdTag
+                && (IdTagService.TryGetTag(lookupSenderId, out string idTag)
+                    || IdTagService.TryGetTag(displaySenderId, out idTag)))
+            {
+                suffix += $"[{idTag}]";
+            }
+
             if (string.IsNullOrEmpty(suffix))
                 return text;
 
