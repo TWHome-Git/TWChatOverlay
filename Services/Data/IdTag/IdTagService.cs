@@ -138,10 +138,9 @@ namespace TWChatOverlay.Services
             {
                 string template =
                     "# 아이디 태그 (ID Tag)" + Environment.NewLine +
-                    "# 채팅에서 아이디 뒤에 [태그]를 붙여 표시합니다. 예) 드드해[285][루시안][길드장] : 안녕" + Environment.NewLine +
+                    "# 채팅에서 아이디 뒤에 [태그]를 붙여 표시합니다. 예) 뜨뜨해[1][아나이스][드드해] : 안녕" + Environment.NewLine +
                     "# 형식: 아이디 - 태그" + Environment.NewLine +
-                    "# 예시: 드드해 - 길드장" + Environment.NewLine +
-                    "#       모쿠모 - 거래 신뢰" + Environment.NewLine +
+                    "# 예시: 뜨뜨해 - 드드해" + Environment.NewLine +
                     "# '#'으로 시작하는 줄은 무시됩니다. 파일을 저장하면 즉시 반영됩니다." + Environment.NewLine;
                 File.WriteAllText(path, template, new UTF8Encoding(false));
             }
