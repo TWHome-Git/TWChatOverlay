@@ -14,37 +14,10 @@
 * **경험치 추적**: 실시간 획득 경험치 및 시간당 효율 계산
 
 ### 2. 에타 순위표 및 검색
-<img width="640" height="480" alt="image" src="https://github.com/user-attachments/assets/b1a1bacc-02d7-4687-a3a2-230354f15534" />
-
-* **데이터 조회**: 캐릭터 검색 및 랭킹 데이터 확인
-    * 내부 캐시 검색 방식을 사용하여 공식 홈페이지보다 빠른 조회 가능
-    * 매일 오전 10시 자동 업데이트 ( `앱 재시작 필요` )
-
 ### 3. 계산기 및 시뮬레이터
-* **계산기**: 캐릭터 장비 스탯 및 장비 강화 스탯 기반의 계수 계산
-
-   * 계수 계산기
-     
-     <img width="640" height="480" alt="image" src="https://github.com/user-attachments/assets/eec5e003-64da-4336-884d-accc1474c1c1" />
- 
-     
-* **강화 시뮬레이터**:
-    * 인크립트 강화 시뮬레이션
-    <img width="640" height="480" alt="image" src="https://github.com/user-attachments/assets/80f0d2a5-5302-44fe-8685-f8f3f79d1353" />
-
-    * 코어 강화 기대값 시뮬레이션
-    <img width="640" height="480" alt="image" src="https://github.com/user-attachments/assets/f97245d5-2ab3-411a-ad88-5dda1a70f2d3" />
-
-    * 렐릭 강화 기대값 시뮬레이션
-    <img width="640" height="480" alt="image" src="https://github.com/user-attachments/assets/4d3a178c-9d4b-44ef-970f-2046aacb5f73" />
-
-
 ### 4. 장비 DB 및 제작 재료 확인
-<img width="640" height="480" alt="image" src="https://github.com/user-attachments/assets/91c2a3f4-e9c3-4666-81b4-3958ee82af24" />
-
-* **데이터 조회**: 장비 능력치 및 제작에 필요한 재료 확인
-    * *주의: 일본 테일즈위키를 기반으로 업데이트되어 최신 정보 반영이 다소 늦을 수 있음*
-
+* TW DB로 이관
+* https://twhome-git.github.io/TWPage/
 ### 5. 컨텐츠 및 특수 알림
 * **컨텐츠 추적**: 일일/주간 숙제 완료 여부 자동 체크리스트
 <img width="414" height="885" alt="image" src="https://github.com/user-attachments/assets/4c06dc6b-f8d8-4b47-ac91-be340aea01f2" />
