@@ -13,20 +13,19 @@ namespace TWChatOverlay.Services
     public static class OverlayOpacityService
     {
         /// <summary>
-        /// (리소스 키, 기본 알파 0~255) — 100%일 때의 알파. RGB는 현재 리소스 값을 그대로 유지한다.
-        /// 배경 면적을 채우는 브러시만 대상으로 하며, 각 브러시의 기본 알파에 비례해서 조절한다.
-        /// (예: 원래 반투명이던 브러시는 더 투명해지고, 불투명이던 브러시는 슬라이더 값 그대로)
+        /// 배경 면적을 채우는 리소스 브러시 키 목록. RGB는 현재 리소스 값을 그대로 유지하고
+        /// 알파만 슬라이더 값(%)에 그대로 매핑한다. 100%면 알파 255 = 뒤가 전혀 비치지 않는다.
         /// </summary>
-        private static readonly (string Key, byte BaseAlpha)[] Targets =
+        private static readonly string[] Targets =
         {
-            ("OverlayWindowBackgroundBrush",     0xF5),
-            ("OverlayPanelBackgroundBrush",      0xEE),
-            ("OverlayShellBackgroundBrush",      0xFF),
-            ("OverlaySurfaceBackgroundBrush",    0xFF),
-            ("OverlaySurfaceAltBackgroundBrush", 0xFF),
-            ("OverlayCardBackgroundBrush",       0xFF),
-            ("OverlayHeaderBackgroundBrush",     0xFF),
-            ("OverlayDragBarBackgroundBrush",    0xFF),
+            "OverlayWindowBackgroundBrush",
+            "OverlayPanelBackgroundBrush",
+            "OverlayShellBackgroundBrush",
+            "OverlaySurfaceBackgroundBrush",
+            "OverlaySurfaceAltBackgroundBrush",
+            "OverlayCardBackgroundBrush",
+            "OverlayHeaderBackgroundBrush",
+            "OverlayDragBarBackgroundBrush",
         };
 
         // 원본 RGB를 최초 1회 캡처 (알파만 바꾸고 색상은 보존)
@@ -40,9 +39,9 @@ namespace TWChatOverlay.Services
                 if (app == null) return;
 
                 double clamped = Math.Clamp(opacityPercent, 20.0, 100.0);
-                double factor = clamped / 100.0;
+                byte alpha = (byte)Math.Clamp((int)Math.Round(255.0 * (clamped / 100.0)), 0, 255);
 
-                foreach (var (key, baseAlpha) in Targets)
+                foreach (var key in Targets)
                 {
                     if (!_baseColors.TryGetValue(key, out var baseColor))
                     {
@@ -53,7 +52,6 @@ namespace TWChatOverlay.Services
                         _baseColors[key] = baseColor;
                     }
 
-                    byte alpha = (byte)Math.Round(baseAlpha * factor);
                     var brush = new SolidColorBrush(Color.FromArgb(alpha, baseColor.R, baseColor.G, baseColor.B));
                     brush.Freeze();
 
