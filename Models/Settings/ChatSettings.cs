@@ -78,6 +78,7 @@ namespace TWChatOverlay.Models
         private string _toggleSettingsHotKey = "";
         private string _toggleTrayAllHotKey = "";
         private double _overlayOpacityPercent = 96.0;
+        private readonly Dictionary<string, double> _overlayOpacityByGroup = new(StringComparer.OrdinalIgnoreCase);
         private string _mainWindowChatTabTag = "Basic";
         private double? _dailyWeeklyContentOverlayLeft = 0.0;
         private double? _dailyWeeklyContentOverlayTop = 0.0;
@@ -690,7 +691,7 @@ namespace TWChatOverlay.Models
             }
         }
 
-        /// <summary>오버레이 창 배경 불투명도(%). 20~100. 텍스트는 항상 불투명.</summary>
+        /// <summary>메인·서브 채팅창과 자동으로 뜨는 창의 통합 배경 불투명도(%). 20~100. 텍스트는 항상 불투명.</summary>
         [JsonPropertyOrder(373)]
         public double OverlayOpacityPercent
         {
@@ -702,6 +703,49 @@ namespace TWChatOverlay.Models
                 _overlayOpacityPercent = clamped;
                 OnPropertyChanged();
             }
+        }
+
+        /// <summary>따로 여는 창(달력·컨텐츠·어밴던)의 배경 불투명도(%). 키는 OverlayOpacityService의 그룹 키.</summary>
+        [JsonPropertyOrder(376)]
+        public Dictionary<string, double> OverlayOpacityByGroup
+        {
+            get => _overlayOpacityByGroup;
+            set
+            {
+                _overlayOpacityByGroup.Clear();
+                if (value != null)
+                {
+                    foreach (var pair in value)
+                    {
+                        if (string.IsNullOrWhiteSpace(pair.Key)) continue;
+                        _overlayOpacityByGroup[pair.Key] = Math.Clamp(pair.Value, 20.0, 100.0);
+                    }
+                }
+                OnPropertyChanged();
+            }
+        }
+
+        /// <summary>그룹 불투명도(%). 저장값이 없으면 메인 채팅창 값을 따른다.</summary>
+        public double GetOverlayOpacity(string group)
+        {
+            if (!string.IsNullOrEmpty(group) && _overlayOpacityByGroup.TryGetValue(group, out double stored))
+                return Math.Clamp(stored, 20.0, 100.0);
+            return OverlayOpacityPercent;
+        }
+
+        /// <summary>그룹 불투명도(%)를 저장한다. 값이 실제로 바뀌었으면 true.</summary>
+        public bool SetOverlayOpacity(string group, double percent)
+        {
+            if (string.IsNullOrEmpty(group)) return false;
+
+            double clamped = Math.Clamp(percent, 20.0, 100.0);
+            if (_overlayOpacityByGroup.TryGetValue(group, out double current)
+                && Math.Abs(current - clamped) < 0.001)
+                return false;
+
+            _overlayOpacityByGroup[group] = clamped;
+            OnPropertyChanged(nameof(OverlayOpacityByGroup));
+            return true;
         }
 
         [JsonPropertyOrder(38)]

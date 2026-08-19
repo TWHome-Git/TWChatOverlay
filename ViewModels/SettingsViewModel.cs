@@ -472,16 +472,15 @@ namespace TWChatOverlay.ViewModels
             }
         }
 
+        /// <summary>메인·서브 채팅창과 자동으로 뜨는 창을 함께 조절하는 통합 불투명도.</summary>
         public double OverlayOpacityPercent
         {
             get => _settings.OverlayOpacityPercent;
             set
             {
                 if (Math.Abs(_settings.OverlayOpacityPercent - value) < 0.001) return;
-                _settings.OverlayOpacityPercent = value;
-                OverlayOpacityService.Apply(_settings.OverlayOpacityPercent);
+                OverlayOpacityService.SetGroupOpacity(OverlayOpacityService.GroupShared, value);
                 OnPropertyChanged();
-                SaveSettings();
             }
         }
 
@@ -632,6 +631,8 @@ namespace TWChatOverlay.ViewModels
             OnPropertyChanged(nameof(ToggleSettingsHotKey));
             OnPropertyChanged(nameof(ToggleTrayAllHotKey));
             OverlayOpacityService.Apply(_settings.OverlayOpacityPercent);
+            OverlayOpacityService.ApplyToOpenWindows();
+            OverlayOpacityService.NotifyAllGroupsChanged();
             OnPropertyChanged(nameof(OverlayOpacityPercent));
 
             SaveSettings();
