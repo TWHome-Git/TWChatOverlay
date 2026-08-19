@@ -154,7 +154,7 @@ namespace TWChatOverlay.Views
             _mainTabAutoHideTimer.Tick += (_, _) => HideMainTabs();
 
             _settings = ConfigService.Load();
-            OverlayOpacityService.Apply(_settings.OverlayOpacityPercent);
+            OverlayOpacityService.Initialize(_settings);
             if (!_settings.InitialSetupWizardCompleted)
             {
                 _pendingInitialSetupWizard = true;
