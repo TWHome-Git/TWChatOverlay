@@ -190,7 +190,8 @@ namespace TWChatOverlay.Views
                          e.PropertyName == nameof(_settings.ToggleCoefficientHotKey) ||
                          e.PropertyName == nameof(_settings.ToggleEquipmentDbHotKey) ||
                          e.PropertyName == nameof(_settings.ToggleEncryptHotKey) ||
-                         e.PropertyName == nameof(_settings.ToggleSettingsHotKey))
+                         e.PropertyName == nameof(_settings.ToggleSettingsHotKey) ||
+                         e.PropertyName == nameof(_settings.ToggleTrayAllHotKey))
                 {
                     ApplyHotKeys();
                 }
