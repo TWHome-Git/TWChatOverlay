@@ -75,6 +75,8 @@ namespace TWChatOverlay.Models
         private string _toggleEquipmentDbHotKey = "";
         private string _toggleEncryptHotKey = "";
         private string _toggleSettingsHotKey = "";
+        private string _toggleTrayAllHotKey = "";
+        private double _overlayOpacityPercent = 96.0;
         private string _mainWindowChatTabTag = "Basic";
         private double? _dailyWeeklyContentOverlayLeft = 0.0;
         private double? _dailyWeeklyContentOverlayTop = 0.0;
@@ -667,6 +669,33 @@ namespace TWChatOverlay.Models
             {
                 if (_toggleSettingsHotKey == value) return;
                 _toggleSettingsHotKey = value;
+                OnPropertyChanged();
+            }
+        }
+
+        /// <summary>모든 창을 트레이로 보내기/복원 토글 단축키.</summary>
+        [JsonPropertyOrder(372)]
+        public string ToggleTrayAllHotKey
+        {
+            get => _toggleTrayAllHotKey;
+            set
+            {
+                if (_toggleTrayAllHotKey == value) return;
+                _toggleTrayAllHotKey = value;
+                OnPropertyChanged();
+            }
+        }
+
+        /// <summary>오버레이 창 배경 불투명도(%). 20~100. 텍스트는 항상 불투명.</summary>
+        [JsonPropertyOrder(373)]
+        public double OverlayOpacityPercent
+        {
+            get => _overlayOpacityPercent;
+            set
+            {
+                double clamped = Math.Clamp(value, 20.0, 100.0);
+                if (Math.Abs(_overlayOpacityPercent - clamped) < 0.001) return;
+                _overlayOpacityPercent = clamped;
                 OnPropertyChanged();
             }
         }

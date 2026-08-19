@@ -154,6 +154,7 @@ namespace TWChatOverlay.Views
             _mainTabAutoHideTimer.Tick += (_, _) => HideMainTabs();
 
             _settings = ConfigService.Load();
+            OverlayOpacityService.Apply(_settings.OverlayOpacityPercent);
             if (!_settings.InitialSetupWizardCompleted)
             {
                 _pendingInitialSetupWizard = true;
@@ -409,11 +410,15 @@ namespace TWChatOverlay.Views
                         case HotKeyService.TOGGLE_DAILY_WEEKLY_CONTENT_ID:
                             TriggerMenuButton("BtnDailyWeekly");
                             break;
+                        case HotKeyService.TOGGLE_TRAY_ALL_ID:
+                            TrayAllWindowsService.Toggle();
+                            break;
                     }
                 };
 
                 _stickyService = new WindowStickyService(this, _settings);
                 _stickyService.AuxiliaryWindowVisibilityChanged += StickyService_AuxiliaryWindowVisibilityChanged;
+                TrayAllWindowsService.TrayStateChanged += _ => _stickyService?.UpdatePositionImmediately();
                 _stickyService.Start();
                 _stickyService.UpdatePositionImmediately();
                 _bossAlarmSchedulerService = new BossAlarmSchedulerService(_settings);

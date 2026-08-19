@@ -85,6 +85,12 @@ namespace TWChatOverlay.Services
                 return;
             }
 
+            // 모든 창 트레이 중에는 자동으로 다시 띄우지 않는다 (숨김 상태 유지)
+            if (TrayAllWindowsService.IsTrayed)
+            {
+                return;
+            }
+
             ShowOverlay();
             ApplyTopmost();
 

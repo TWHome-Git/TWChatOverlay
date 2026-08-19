@@ -573,6 +573,7 @@ namespace TWChatOverlay.Views
         {
             var menu = new Forms.ContextMenuStrip();
             menu.Items.Add("열기", null, (_, _) => RestoreFromTray());
+            menu.Items.Add("모든 창 숨기기", null, (_, _) => TrayAllWindowsService.HideAll());
             menu.Items.Add("종료", null, (_, _) => Application.Current.Shutdown());
 
             Drawing.Icon trayIcon;
@@ -608,16 +609,23 @@ namespace TWChatOverlay.Views
             MinimizeToTray();
         }
 
+        /// <summary>메뉴 창을 포함한 모든 창을 트레이로 숨깁니다.</summary>
         private void MinimizeToTray()
         {
             PersistMenuWindowPosition();
-            Hide();
+            TrayAllWindowsService.HideAll();
         }
 
+        /// <summary>트레이에서 모든 창을 복원합니다. (트레이 아이콘 더블클릭 / '열기' 메뉴)</summary>
         private void RestoreFromTray()
         {
             Dispatcher.Invoke(() =>
             {
+                if (TrayAllWindowsService.IsTrayed)
+                {
+                    TrayAllWindowsService.RestoreAll();
+                }
+
                 if (!IsVisible)
                 {
                     Show();

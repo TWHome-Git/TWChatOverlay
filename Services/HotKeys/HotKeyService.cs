@@ -21,6 +21,7 @@ namespace TWChatOverlay.Services
         public const int TOGGLE_EQUIPMENTDB_ID = 9008;
         public const int TOGGLE_ENCRYPT_ID = 9009;
         public const int TOGGLE_SETTINGS_ID = 9010;
+        public const int TOGGLE_TRAY_ALL_ID = 9011;
 
         public const uint MOD_ALT = 0x0001;
         public const uint MOD_CONTROL = 0x0002;
