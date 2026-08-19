@@ -149,6 +149,8 @@ namespace TWChatOverlay.Views
             LocationChanged += (_, _) => HandleLocationChanged();
             _settings.PropertyChanged += Settings_PropertyChanged;
             ChatWindowHub.BuffersChanged += ChatWindowHub_BuffersChanged;
+            IdTagService.IdTagsChanged += IdTagService_Changed;
+            BlacklistService.BlacklistChanged += IdTagService_Changed;
             AttachToMainWindow();
             Activated += (_, _) => Dispatcher.BeginInvoke(new Action(EnsureCloneTopmost), DispatcherPriority.Background);
             Deactivated += (_, _) => Dispatcher.BeginInvoke(new Action(EnsureCloneTopmost), DispatcherPriority.Background);
@@ -203,6 +205,8 @@ namespace TWChatOverlay.Views
             }
 
             ChatWindowHub.BuffersChanged -= ChatWindowHub_BuffersChanged;
+            IdTagService.IdTagsChanged -= IdTagService_Changed;
+            BlacklistService.BlacklistChanged -= IdTagService_Changed;
             _settings.PropertyChanged -= Settings_PropertyChanged;
             DetachFromMainWindow();
             ChatWindowHub.UnregisterClone(_slot);
@@ -311,6 +315,12 @@ namespace TWChatOverlay.Views
         }
 
         private void ChatWindowHub_BuffersChanged(object? sender, EventArgs e)
+        {
+            Dispatcher.BeginInvoke(new Action(RefreshLogDisplay), System.Windows.Threading.DispatcherPriority.Background);
+        }
+
+        /// <summary>아이디 태그/블랙리스트 파일이 바뀌면 표기 접미사가 달라지므로 다시 그린다.</summary>
+        private void IdTagService_Changed()
         {
             Dispatcher.BeginInvoke(new Action(RefreshLogDisplay), System.Windows.Threading.DispatcherPriority.Background);
         }

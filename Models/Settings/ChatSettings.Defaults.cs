@@ -22,6 +22,7 @@ namespace TWChatOverlay.Models
             _shoutColor = "#FF8000";
             _showEtaLevel = true;
             _showEtaCharacter = true;
+            _showIdTag = true;
             _showShoutToastPopup = true;
             _autoCopyShoutNickname = false;
             _shoutToastDurationSeconds = 5;

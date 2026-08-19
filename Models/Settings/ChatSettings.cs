@@ -26,6 +26,7 @@ namespace TWChatOverlay.Models
         private string _shoutColor = "#FF8000";
         private bool _showEtaLevel = true;
         private bool _showEtaCharacter = true;
+        private bool _showIdTag = true;
         private bool _showTimestamp = true;
         private bool _showShoutToastPopup = true;
         private bool _autoCopyShoutNickname = false;
@@ -164,6 +165,9 @@ namespace TWChatOverlay.Models
         public bool ShowEtaLevel { get => _showEtaLevel; set { _showEtaLevel = value; OnPropertyChanged(); } }
         [JsonPropertyOrder(37)]
         public bool ShowEtaCharacter { get => _showEtaCharacter; set { _showEtaCharacter = value; OnPropertyChanged(); } }
+        /// <summary>idtag.txt에 등록된 아이디 태그를 채팅에 [태그]로 표시.</summary>
+        [JsonPropertyOrder(374)]
+        public bool ShowIdTag { get => _showIdTag; set { _showIdTag = value; OnPropertyChanged(); } }
         [JsonPropertyOrder(371)]
         public bool ShowTimestamp { get => _showTimestamp; set { _showTimestamp = value; OnPropertyChanged(); } }
         [JsonPropertyOrder(38)]
