@@ -58,9 +58,25 @@
                                     <UniformGrid Columns="2" Margin="5,8,0,0">
                                         <CheckBox Content="에타 레벨" IsChecked="{Binding ShowEtaLevel}" Foreground="{DynamicResource TextBrush}" VerticalAlignment="Center" HorizontalAlignment="Left" Margin="0,5,15,5"/>
                                         <CheckBox Content="캐릭터" IsChecked="{Binding ShowEtaCharacter}" Foreground="{DynamicResource TextBrush}" VerticalAlignment="Center" HorizontalAlignment="Left"/>
-                                        <CheckBox Content="아이디 태그" IsChecked="{Binding ShowIdTag}" Foreground="{DynamicResource TextBrush}" VerticalAlignment="Center" HorizontalAlignment="Left" Margin="0,5,15,5"
-                                                  ToolTip="실행 폴더의 idtag.txt에 '아이디 - 태그' 형식으로 적어두면 채팅에 아이디[태그]로 표시됩니다."/>
-                                        <Button Content="idtag.txt 열기" Height="24" FontSize="11" Style="{StaticResource SecondaryButtonStyle}" Click="OpenIdTagFile_Click" HorizontalAlignment="Left" Padding="10,2"/>
+                                        <StackPanel Orientation="Horizontal" Margin="0,5,15,5" VerticalAlignment="Center">
+                                            <CheckBox Content="아이디 태그" IsChecked="{Binding ShowIdTag}" Foreground="{DynamicResource TextBrush}" VerticalAlignment="Center"
+                                                      ToolTip="실행 폴더의 idtag.txt에 '아이디 - 태그' 형식으로 적어두면 채팅에 아이디[태그]로 표시됩니다."/>
+                                            <Button Click="OpenIdTagFile_Click" ToolTip="idtag.txt 편집" Cursor="Hand" Margin="8,0,0,0" Padding="0"
+                                                    Background="Transparent" BorderThickness="0" VerticalAlignment="Center">
+                                                <Button.Template>
+                                                    <ControlTemplate TargetType="Button">
+                                                        <Border x:Name="Bd" Background="Transparent" CornerRadius="4" Padding="4,1">
+                                                            <TextBlock x:Name="Txt" Text="편집" FontSize="11" Foreground="{DynamicResource OverlaySubtleTextBrush}" TextDecorations="Underline"/>
+                                                        </Border>
+                                                        <ControlTemplate.Triggers>
+                                                            <Trigger Property="IsMouseOver" Value="True">
+                                                                <Setter TargetName="Txt" Property="Foreground" Value="{DynamicResource OverlayAccentTextBrush}"/>
+                                                            </Trigger>
+                                                        </ControlTemplate.Triggers>
+                                                    </ControlTemplate>
+                                                </Button.Template>
+                                            </Button>
+                                        </StackPanel>
                                     </UniformGrid>
                                     <Border Height="1" Background="{DynamicResource SeparatorBrush}" Margin="0,10,0,10"/>
                                     <UniformGrid Columns="2" Margin="5,0,0,0">
