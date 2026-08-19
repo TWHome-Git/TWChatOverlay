@@ -16,8 +16,9 @@
 ### 2. 에타 순위표 및 검색
 ### 3. 계산기 및 시뮬레이터
 ### 4. 장비 DB 및 제작 재료 확인
-* TW DB로 이관
+* 위 항목들 TW DB로 이관
 * https://twhome-git.github.io/TWPage/
+  
 ### 5. 컨텐츠 및 특수 알림
 * **컨텐츠 추적**: 일일/주간 숙제 완료 여부 자동 체크리스트
 <img width="414" height="885" alt="image" src="https://github.com/user-attachments/assets/4c06dc6b-f8d8-4b47-ac91-be340aea01f2" />
