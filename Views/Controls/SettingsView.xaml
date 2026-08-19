@@ -190,7 +190,7 @@
                                             <TextBlock Text="{Binding OverlayOpacityPercent, StringFormat={}{0:F0}%}" Foreground="{DynamicResource TextBrush}" Width="40" DockPanel.Dock="Right" TextAlignment="Right" VerticalAlignment="Center"/>
                                             <Slider Minimum="20" Maximum="100" Value="{Binding OverlayOpacityPercent, Mode=TwoWay, FallbackValue=96}" TickFrequency="5" IsSnapToTickEnabled="True" VerticalAlignment="Center"/>
                                         </DockPanel>
-                                        <TextBlock Text="채팅창·컨텐츠·달력 등 오버레이 창의 배경 불투명도입니다. 글자는 항상 선명하게 유지됩니다."
+                                        <TextBlock Text="채팅창·컨텐츠·달력 등 오버레이 창의 배경 불투명도입니다. 100%면 뒤 화면이 전혀 비치지 않고, 낮출수록 뒤가 비칩니다. 글자는 항상 선명하게 유지됩니다."
                                                    Style="{StaticResource HintTextStyle}"/>
                                     </StackPanel>
                                 </Border>
