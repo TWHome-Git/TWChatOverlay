@@ -160,10 +160,23 @@
                             <Grid Margin="8" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
                                 <Grid.RowDefinitions>
                                     <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
                                     <RowDefinition Height="*"/>
                                 </Grid.RowDefinitions>
 
                                 <Border Grid.Row="0" Margin="0,0,0,12" Style="{StaticResource SettingsBorderStyle}">
+                                    <StackPanel>
+                                        <TextBlock Text="오버레이 투명도" Style="{StaticResource SubsectionHeaderStyle}"/>
+                                        <DockPanel>
+                                            <TextBlock Text="{Binding OverlayOpacityPercent, StringFormat={}{0:F0}%}" Foreground="{DynamicResource TextBrush}" Width="40" DockPanel.Dock="Right" TextAlignment="Right" VerticalAlignment="Center"/>
+                                            <Slider Minimum="20" Maximum="100" Value="{Binding OverlayOpacityPercent, Mode=TwoWay}" TickFrequency="5" IsSnapToTickEnabled="True" VerticalAlignment="Center"/>
+                                        </DockPanel>
+                                        <TextBlock Text="채팅창·컨텐츠·달력 등 오버레이 창의 배경 불투명도입니다. 글자는 항상 선명하게 유지됩니다."
+                                                   Style="{StaticResource HintTextStyle}"/>
+                                    </StackPanel>
+                                </Border>
+
+                                <Border Grid.Row="1" Margin="0,0,0,12" Style="{StaticResource SettingsBorderStyle}">
                                     <StackPanel>
                                         <TextBlock Text="위치 설정" Style="{StaticResource SubsectionHeaderStyle}"/>
                                         <StackPanel Margin="0,0,0,15">
@@ -190,7 +203,7 @@
                                     </StackPanel>
                                 </Border>
 
-                                <StackPanel Grid.Row="1" Orientation="Vertical" Margin="0,0,0,0">
+                                <StackPanel Grid.Row="2" Orientation="Vertical" Margin="0,0,0,0">
                                     <Border Style="{StaticResource SettingsBorderStyle}" Margin="0,0,0,12">
                                         <StackPanel>
                                             <TextBlock Text="로그 경로 설정" Style="{StaticResource SubsectionHeaderStyle}"/>
@@ -293,6 +306,12 @@
                                         <StackPanel Margin="0,0,5,10">
                                             <TextBlock Text="프로그램 종료" Foreground="{DynamicResource FieldLabelTextBrush}" FontSize="12" Margin="0,0,0,5"/>
                                             <TextBox Text="{Binding ExitHotKey, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Height="28" Background="{DynamicResource InputFieldBackgroundBrush}" Foreground="{DynamicResource TextBrush}" BorderBrush="{DynamicResource InputFieldBorderBrush}" VerticalContentAlignment="Center" TextAlignment="Center" PreviewKeyDown="HotKeyInput_PreviewKeyDown" PreviewMouseLeftButtonDown="HotKeyTextBox_PreviewMouseLeftButtonDown" IsReadOnly="True" Tag="HotKey"/>
+                                        </StackPanel>
+
+                                        <!-- 10: 모든 창 트레이 ON/OFF -->
+                                        <StackPanel Margin="5,0,0,10">
+                                            <TextBlock Text="모든 창 트레이 ON/OFF" Foreground="{DynamicResource FieldLabelTextBrush}" FontSize="12" Margin="0,0,0,5"/>
+                                            <TextBox Text="{Binding ToggleTrayAllHotKey, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Height="28" Background="{DynamicResource InputFieldBackgroundBrush}" Foreground="{DynamicResource TextBrush}" BorderBrush="{DynamicResource InputFieldBorderBrush}" VerticalContentAlignment="Center" TextAlignment="Center" PreviewKeyDown="HotKeyInput_PreviewKeyDown" PreviewMouseLeftButtonDown="HotKeyTextBox_PreviewMouseLeftButtonDown" IsReadOnly="True" Tag="HotKey"/>
                                         </StackPanel>
                                     </UniformGrid>
                                     <UniformGrid Columns="2" Margin="0,10,0,0"/>

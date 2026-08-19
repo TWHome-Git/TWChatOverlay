@@ -446,6 +446,31 @@ namespace TWChatOverlay.ViewModels
             }
         }
 
+        public string ToggleTrayAllHotKey
+        {
+            get => _settings.ToggleTrayAllHotKey;
+            set
+            {
+                if (_settings.ToggleTrayAllHotKey == value) return;
+                _settings.ToggleTrayAllHotKey = value;
+                OnPropertyChanged();
+                SaveSettings();
+            }
+        }
+
+        public double OverlayOpacityPercent
+        {
+            get => _settings.OverlayOpacityPercent;
+            set
+            {
+                if (Math.Abs(_settings.OverlayOpacityPercent - value) < 0.001) return;
+                _settings.OverlayOpacityPercent = value;
+                OverlayOpacityService.Apply(_settings.OverlayOpacityPercent);
+                OnPropertyChanged();
+                SaveSettings();
+            }
+        }
+
         public string ChatLogFolderPath
         {
             get => _settings.ChatLogFolderPath;
@@ -590,6 +615,9 @@ namespace TWChatOverlay.ViewModels
             OnPropertyChanged(nameof(ToggleEquipmentDbHotKey));
             OnPropertyChanged(nameof(ToggleEncryptHotKey));
             OnPropertyChanged(nameof(ToggleSettingsHotKey));
+            OnPropertyChanged(nameof(ToggleTrayAllHotKey));
+            OverlayOpacityService.Apply(_settings.OverlayOpacityPercent);
+            OnPropertyChanged(nameof(OverlayOpacityPercent));
 
             SaveSettings();
             _onSettingsReset?.Invoke();

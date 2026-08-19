@@ -29,12 +29,14 @@ namespace TWChatOverlay.Views
             _hotKeyService.Unregister(HotKeyService.TOGGLE_EQUIPMENTDB_ID);
             _hotKeyService.Unregister(HotKeyService.TOGGLE_ENCRYPT_ID);
             _hotKeyService.Unregister(HotKeyService.TOGGLE_SETTINGS_ID);
+            _hotKeyService.Unregister(HotKeyService.TOGGLE_TRAY_ALL_ID);
 
             RegisterHotKeyOptional(HotKeyService.TOGGLE_ETA_RANKING_ID, _settings.ToggleEtaRankingHotKey);
             RegisterHotKeyOptional(HotKeyService.TOGGLE_COEFFICIENT_ID, _settings.ToggleCoefficientHotKey);
             RegisterHotKeyOptional(HotKeyService.TOGGLE_EQUIPMENTDB_ID, _settings.ToggleEquipmentDbHotKey);
             RegisterHotKeyOptional(HotKeyService.TOGGLE_ENCRYPT_ID, _settings.ToggleEncryptHotKey);
             RegisterHotKeyOptional(HotKeyService.TOGGLE_SETTINGS_ID, _settings.ToggleSettingsHotKey);
+            RegisterHotKeyOptional(HotKeyService.TOGGLE_TRAY_ALL_ID, _settings.ToggleTrayAllHotKey);
         }
 
         private bool RegisterHotKeyOptional(int id, string? value)

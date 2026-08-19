@@ -78,7 +78,7 @@
                         VerticalAlignment="Top"
                         HorizontalAlignment="Right"
                         Click="Minimize_Click"
-                        ToolTip="트레이로 최소화"
+                        ToolTip="모든 창 트레이로 최소화"
                         Background="Transparent"
                         BorderBrush="Transparent"
                         Foreground="{DynamicResource TextBrush}"
