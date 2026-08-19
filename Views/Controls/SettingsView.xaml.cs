@@ -32,7 +32,11 @@ namespace TWChatOverlay.Views
 #endif
         }
 
-        public bool IsHotkeyInteractionActive => IsLoaded && HotkeyTab.IsSelected;
+        /// <summary>
+        /// 단축키 설정 탭이 실제로 화면에 보이며 선택된 상태인지. (이때만 전역 단축키를 억제)
+        /// 창이 숨겨진 상태(트레이 등)에서는 억제하지 않아야 트레이 복원 단축키가 동작한다.
+        /// </summary>
+        public bool IsHotkeyInteractionActive => IsLoaded && IsVisible && HotkeyTab.IsSelected;
 
         private void SettingsView_PreviewKeyDown(object? sender, KeyEventArgs e)
         {

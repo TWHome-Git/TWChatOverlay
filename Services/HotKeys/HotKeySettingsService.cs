@@ -19,7 +19,8 @@ namespace TWChatOverlay.Services
             nameof(ChatSettings.ToggleCoefficientHotKey),
             nameof(ChatSettings.ToggleEquipmentDbHotKey),
             nameof(ChatSettings.ToggleEncryptHotKey),
-            nameof(ChatSettings.ToggleSettingsHotKey)
+            nameof(ChatSettings.ToggleSettingsHotKey),
+            nameof(ChatSettings.ToggleTrayAllHotKey)
         };
 
         public static void ResolveConflict(ChatSettings settings, string targetPropertyName, string? hotKeyValue, Action<string>? onPropertyCleared)
@@ -99,6 +100,7 @@ namespace TWChatOverlay.Services
             nameof(ChatSettings.ToggleEquipmentDbHotKey) => settings.ToggleEquipmentDbHotKey,
             nameof(ChatSettings.ToggleEncryptHotKey) => settings.ToggleEncryptHotKey,
             nameof(ChatSettings.ToggleSettingsHotKey) => settings.ToggleSettingsHotKey,
+            nameof(ChatSettings.ToggleTrayAllHotKey) => settings.ToggleTrayAllHotKey,
             _ => string.Empty
         };
 
@@ -132,6 +134,9 @@ namespace TWChatOverlay.Services
                     break;
                 case nameof(ChatSettings.ToggleSettingsHotKey):
                     settings.ToggleSettingsHotKey = value;
+                    break;
+                case nameof(ChatSettings.ToggleTrayAllHotKey):
+                    settings.ToggleTrayAllHotKey = value;
                     break;
             }
         }
