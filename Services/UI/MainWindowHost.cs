@@ -22,12 +22,4 @@ namespace TWChatOverlay.Services
     {
         public static IMainWindowHost? Current { get; set; }
     }
-
-    /// <summary>
-    /// 창 스냅(자석) 대상임을 표시하는 마커 인터페이스. MainWindow와 ChatCloneWindow가 구현한다.
-    /// ChatWindowHub가 구체 View 타입 대신 이 마커로 스냅 대상을 식별한다.
-    /// </summary>
-    public interface ISnapTarget
-    {
-    }
 }

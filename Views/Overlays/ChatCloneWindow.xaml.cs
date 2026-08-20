@@ -13,7 +13,7 @@ using TWChatOverlay.Services;
 
 namespace TWChatOverlay.Views
 {
-    public partial class ChatCloneWindow : Window, INotifyPropertyChanged, ISnapTarget
+    public partial class ChatCloneWindow : Window, INotifyPropertyChanged
     {
         private readonly ChatSettings _settings;
         private readonly LogDocumentRenderer _renderer = new(200);
@@ -21,7 +21,6 @@ namespace TWChatOverlay.Views
         private MainWindow? _mainWindow;
         private string _currentTabTag = "General";
         private bool _isInitialized;
-        private bool _isApplyingSnap;
         private bool _isResizingWindow;
         private readonly DispatcherTimer _tabAutoHideTimer = new() { Interval = TimeSpan.FromSeconds(2.5) };
 
@@ -295,22 +294,8 @@ namespace TWChatOverlay.Views
 
         private void HandleLocationChanged()
         {
-            if (_isApplyingSnap || _isResizingWindow)
+            if (_isResizingWindow)
                 return;
-
-            if (UiLockService.IsUnlocked)
-            {
-                _isApplyingSnap = true;
-                try
-                {
-                    if (ChatWindowHub.TryApplyMagneticSnap(this))
-                        ApplySizeFromMainWindow();
-                }
-                finally
-                {
-                    _isApplyingSnap = false;
-                }
-            }
 
             SyncPositionToSettings();
         }
@@ -556,7 +541,6 @@ namespace TWChatOverlay.Views
             catch { }
             finally
             {
-                ChatWindowHub.TryApplyMagneticSnap(this);
                 SyncPositionToSettings();
             }
             e.Handled = true;
@@ -602,17 +586,7 @@ namespace TWChatOverlay.Views
         private void ResizeThumb_DragCompleted(object sender, System.Windows.Controls.Primitives.DragCompletedEventArgs e)
         {
             _isResizingWindow = false;
-
-            try
-            {
-                _isApplyingSnap = true;
-                if (ChatWindowHub.TryApplyMagneticSnap(this))
-                    SyncPositionToSettings();
-            }
-            finally
-            {
-                _isApplyingSnap = false;
-            }
+            SyncPositionToSettings();
         }
 
         private void ApplyStoredPosition()
