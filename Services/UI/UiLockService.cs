@@ -37,6 +37,7 @@ namespace TWChatOverlay.Services
                     _banner ??= new BannerWindow();
                     _backdrop.Show();
                     _banner.Show();
+                    RaiseOverlaysAboveBackdrop();
                 }
                 else
                 {
@@ -54,8 +55,35 @@ namespace TWChatOverlay.Services
         }
 
         /// <summary>
-        /// 전체 화면 딤 + 격자 배경. 항상 모든 창(게임 포함)의 맨 뒤에 깔려
-        /// 게임 화면을 가리지 않고, 빈 바탕 영역에만 격자가 보인다. 클릭은 통과.
+        /// 백드롭보다 우리 오버레이 창/배너가 위에 오도록 Topmost 밴드 최상단으로 재삽입한다.
+        /// (백드롭이 나중에 Show되면 같은 밴드 최상단에 끼어들어 격자가 오버레이 위에 그려짐)
+        /// </summary>
+        private static void RaiseOverlaysAboveBackdrop()
+        {
+            var app = Application.Current;
+            if (app == null) return;
+
+            const int SWP_NOMOVE = 0x0002;
+            const int SWP_NOSIZE = 0x0001;
+            const int SWP_NOACTIVATE = 0x0010;
+            var HWND_TOPMOST = new IntPtr(-1);
+
+            foreach (Window window in app.Windows)
+            {
+                if (ReferenceEquals(window, _backdrop) || !window.IsVisible)
+                    continue;
+
+                var handle = new WindowInteropHelper(window).Handle;
+                if (handle == IntPtr.Zero)
+                    continue;
+
+                NativeMethods.SetWindowPos(handle, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
+            }
+        }
+
+        /// <summary>
+        /// 전체 화면 격자 배경. 배경은 완전 투명이라 뒤 화면이 그대로 보이고,
+        /// 최상단(게임 위)에 떠서 배치 기준 격자가 보인다. 클릭은 아래 창으로 통과.
         /// </summary>
         private sealed class BackdropWindow : Window
         {
@@ -65,7 +93,7 @@ namespace TWChatOverlay.Services
                 AllowsTransparency = true;
                 ShowInTaskbar = false;
                 ShowActivated = false;
-                Topmost = false;
+                Topmost = true;
                 ResizeMode = ResizeMode.NoResize;
                 Left = SystemParameters.VirtualScreenLeft;
                 Top = SystemParameters.VirtualScreenTop;
@@ -83,66 +111,7 @@ namespace TWChatOverlay.Services
                 });
                 Content = root;
 
-                SourceInitialized += (_, _) =>
-                {
-                    MakeClickThrough();
-                    PinToBottom();
-                };
-                IsVisibleChanged += (_, e) =>
-                {
-                    if (e.NewValue is true) SendToBottom();
-                };
-            }
-
-            /// <summary>
-            /// WM_WINDOWPOSCHANGING을 가로채 z-order 변경이 생길 때마다 HWND_BOTTOM으로 강제.
-            /// 한 번 내리는 것만으로는 이후 다른 코드/OS가 다시 올릴 수 있어 항상-맨뒤로 고정한다.
-            /// </summary>
-            private void PinToBottom()
-            {
-                try
-                {
-                    var source = (HwndSource?)PresentationSource.FromVisual(this);
-                    source?.AddHook(ForceBottomHook);
-                }
-                catch (Exception ex)
-                {
-                    AppLogger.Warn("Backdrop bottom-pin hook setup failed.", ex);
-                }
-            }
-
-            private static IntPtr ForceBottomHook(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
-            {
-                const int WM_WINDOWPOSCHANGING = 0x0046;
-                if (msg == WM_WINDOWPOSCHANGING)
-                {
-                    var pos = System.Runtime.InteropServices.Marshal.PtrToStructure<NativeMethods.WINDOWPOS>(lParam);
-                    const int SWP_NOZORDER = 0x0004;
-                    pos.hwndInsertAfter = new IntPtr(1); // HWND_BOTTOM
-                    pos.flags &= ~SWP_NOZORDER;
-                    System.Runtime.InteropServices.Marshal.StructureToPtr(pos, lParam, false);
-                }
-                return IntPtr.Zero;
-            }
-
-            /// <summary>모든 창(게임 포함)의 맨 뒤로 보낸다.</summary>
-            private void SendToBottom()
-            {
-                try
-                {
-                    var handle = new WindowInteropHelper(this).Handle;
-                    if (handle == IntPtr.Zero) return;
-
-                    var HWND_BOTTOM = new IntPtr(1);
-                    const int SWP_NOMOVE = 0x0002;
-                    const int SWP_NOSIZE = 0x0001;
-                    const int SWP_NOACTIVATE = 0x0010;
-                    NativeMethods.SetWindowPos(handle, HWND_BOTTOM, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
-                }
-                catch (Exception ex)
-                {
-                    AppLogger.Warn("Backdrop send-to-bottom failed.", ex);
-                }
+                SourceInitialized += (_, _) => MakeClickThrough();
             }
 
             /// <summary>WS_EX_TRANSPARENT + WS_EX_NOACTIVATE: 모든 마우스 입력이 아래 창으로 통과.</summary>
