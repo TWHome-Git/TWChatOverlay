@@ -22,6 +22,9 @@ namespace TWChatOverlay.Services
 
         public static bool IsUnlocked { get; private set; }
 
+        /// <summary>자석 스냅 모드. 시작 시 설정에서 로드되고 배너의 토글로 바뀐다.</summary>
+        public static bool SnapEnabled { get; set; }
+
         /// <summary>현재 선택된(편집 중인) 창. 잠금 해제 모드에서만 값이 있다.</summary>
         public static Window? SelectedWindow => _selected;
 
@@ -367,6 +370,37 @@ namespace TWChatOverlay.Services
                 text.SetResourceReference(TextBlock.ForegroundProperty, "OverlayInfoTextBrush");
                 panel.Children.Add(text);
 
+                var snapButton = new Button
+                {
+                    Padding = new Thickness(12, 4, 12, 4),
+                    FontSize = 12,
+                    FontWeight = FontWeights.Bold,
+                    Cursor = Cursors.Hand,
+                    Foreground = Brushes.White,
+                    Margin = new Thickness(0, 0, 8, 0),
+                };
+                snapButton.SetResourceReference(FrameworkElement.StyleProperty, "SimButtonStyle");
+                void RefreshSnapButton() =>
+                    snapButton.Content = SnapEnabled ? "자석 ON" : "자석 OFF";
+                RefreshSnapButton();
+                snapButton.Click += (_, _) =>
+                {
+                    SnapEnabled = !SnapEnabled;
+                    RefreshSnapButton();
+                    try
+                    {
+                        var settings = ToastPresentationHelper.FindSharedSettings();
+                        if (settings != null)
+                        {
+                            settings.WindowSnapEnabled = SnapEnabled;
+                            ConfigService.SaveDeferred(settings);
+                        }
+                    }
+                    catch { }
+                };
+                IsVisibleChanged += (_, _) => RefreshSnapButton();
+                panel.Children.Add(snapButton);
+
                 var doneButton = new Button
                 {
                     Content = "완료",
@@ -397,7 +431,7 @@ namespace TWChatOverlay.Services
             {
                 double width = ActualWidth > 0 ? ActualWidth : 320;
                 Left = (SystemParameters.PrimaryScreenWidth - width) / 2.0;
-                Top = 16;
+                Top = 0;
             }
         }
 
@@ -466,7 +500,7 @@ namespace TWChatOverlay.Services
 
             private const double SideZone = 34;   // 좌우 버튼이 차지하는 폭
             private const double VertZone = 118;  // 상하 버튼 + 정보 패널이 차지하는 높이
-            private const double PanelWidth = 218;
+            private const double PanelWidth = 248;
             private const double ButtonW = 26;
             private const double ButtonH = 24;
             private const double Gap = 6;
@@ -587,7 +621,7 @@ namespace TWChatOverlay.Services
             {
                 var box = new TextBox
                 {
-                    Width = 58,
+                    Width = 64,
                     Height = 22,
                     Margin = new Thickness(0, 2, 0, 2),
                     FontSize = 11,
@@ -651,31 +685,57 @@ namespace TWChatOverlay.Services
                 double tw = Math.Max(16, target.ActualWidth);
                 double th = Math.Max(16, target.ActualHeight);
 
-                Left = target.Left - SideZone;
+                // 대상 창이 정보 패널보다 좁으면 인스펙터 창을 좌우로 더 넓혀 패널이 잘리지 않게 한다
+                double extra = Math.Max(0, (PanelWidth + 8 - (tw + SideZone * 2)) / 2);
+                double originX = SideZone + extra;
+
+                Left = target.Left - originX;
                 Top = target.Top - VertZone;
-                Width = tw + SideZone * 2;
+                Width = tw + originX * 2;
                 Height = th + VertZone * 2;
 
                 // 상하좌우 버튼: 각 변의 가운데, 창 바깥쪽에 붙인다
-                Canvas.SetLeft(_btnLeft, SideZone - ButtonW - 4);
+                Canvas.SetLeft(_btnLeft, originX - ButtonW - 4);
                 Canvas.SetTop(_btnLeft, VertZone + th / 2 - ButtonH / 2);
-                Canvas.SetLeft(_btnRight, SideZone + tw + 4);
+                Canvas.SetLeft(_btnRight, originX + tw + 4);
                 Canvas.SetTop(_btnRight, VertZone + th / 2 - ButtonH / 2);
-                Canvas.SetLeft(_btnUp, SideZone + tw / 2 - ButtonW / 2);
+                Canvas.SetLeft(_btnUp, originX + tw / 2 - ButtonW / 2);
                 Canvas.SetTop(_btnUp, VertZone - ButtonH - 4);
-                Canvas.SetLeft(_btnDown, SideZone + tw / 2 - ButtonW / 2);
+                Canvas.SetLeft(_btnDown, originX + tw / 2 - ButtonW / 2);
                 Canvas.SetTop(_btnDown, VertZone + th + 4);
 
                 // 정보 패널: 기본은 창 상단(▲ 버튼 위), 화면 위쪽에 붙어 있으면 하단(▼ 버튼 아래)
                 double panelHeight = _panel.ActualHeight > 0 ? _panel.ActualHeight : 84;
                 bool showBelow = target.Top - (ButtonH + Gap * 2 + panelHeight) < SystemParameters.VirtualScreenTop + 4;
 
-                double panelLeft = SideZone + tw / 2 - PanelWidth / 2;
+                double panelLeft = originX + tw / 2 - PanelWidth / 2;
                 panelLeft = Math.Max(2, Math.Min(Width - PanelWidth - 2, panelLeft));
                 Canvas.SetLeft(_panel, panelLeft);
                 Canvas.SetTop(_panel, showBelow
                     ? VertZone + th + 4 + ButtonH + Gap
                     : VertZone - ButtonH - 4 - Gap - panelHeight);
+
+                RaiseToTop();
+            }
+
+            /// <summary>
+            /// 다른 오버레이 창들이 Topmost 밴드 최상단으로 끼어들어도
+            /// 인스펙터(좌표·크기 패널)는 항상 그 위에 보이도록 재삽입한다.
+            /// </summary>
+            private void RaiseToTop()
+            {
+                try
+                {
+                    var handle = new WindowInteropHelper(this).Handle;
+                    if (handle == IntPtr.Zero)
+                        return;
+
+                    const int SWP_NOMOVE = 0x0002;
+                    const int SWP_NOSIZE = 0x0001;
+                    const int SWP_NOACTIVATE = 0x0010;
+                    NativeMethods.SetWindowPos(handle, new IntPtr(-1), 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
+                }
+                catch { }
             }
 
             private void ApplyPositionFromBoxes()
