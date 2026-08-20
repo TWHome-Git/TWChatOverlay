@@ -4,66 +4,139 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              mc:Ignorable="d"
-             d:DesignHeight="28" d:DesignWidth="300">
+             d:DesignHeight="56" d:DesignWidth="330">
     <UserControl.Resources>
         <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
+
+        <!-- 항목 라벨: 값보다 확실히 작고 어둡게 -->
+        <Style x:Key="ExpFieldLabelStyle" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="{DynamicResource OverlayMutedTextBrush}"/>
+            <Setter Property="FontSize" Value="10"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="Margin" Value="0,0,5,0"/>
+        </Style>
+
+        <!-- 항목 값 -->
+        <Style x:Key="ExpFieldValueStyle" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="Margin" Value="0,0,10,0"/>
+        </Style>
+
+        <!-- 초기화 버튼: 다른 창의 [닫기] 버튼과 같은 형태의 한글 텍스트 버튼 -->
+        <Style x:Key="ExpResetButtonStyle" TargetType="Button">
+            <Setter Property="Height" Value="19"/>
+            <Setter Property="MinWidth" Value="40"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="HorizontalAlignment" Value="Right"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="ButtonBorder"
+                                Background="{DynamicResource OverlayTabHoverBrush}"
+                                BorderBrush="{DynamicResource ControlBorderBrush}"
+                                BorderThickness="1"
+                                CornerRadius="4"
+                                Padding="8,0">
+                            <TextBlock Text="리셋"
+                                       FontSize="11"
+                                       Foreground="{DynamicResource ButtonTextBrush}"
+                                       HorizontalAlignment="Center"
+                                       VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="ButtonBorder" Property="Background" Value="{DynamicResource OverlayTabSelectedBrush}"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="ButtonBorder" Property="Background" Value="{DynamicResource OverlayTabSelectedBorderBrush}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
     </UserControl.Resources>
+
     <Border Background="{DynamicResource OverlayPanelBackgroundBrush}"
             CornerRadius="6"
             BorderBrush="{DynamicResource OverlayPanelBorderBrush}"
             BorderThickness="1"
-            Padding="12,5"
-            Height="66">
-        <DockPanel LastChildFill="True" VerticalAlignment="Center">
-            <Button DockPanel.Dock="Right"
-                    Foreground="{DynamicResource FieldLabelTextBrush}"
-                    FontSize="18"
-                    Margin="6,-10,0,0"
-                    Width="22"
-                    Height="22"
-                    Cursor="Hand"
-                    VerticalAlignment="Center"
-                    Command="{Binding ResetExpCommand}"
-                    Background="Transparent"
-                    BorderThickness="0">
-                <Button.Template>
-                    <ControlTemplate TargetType="Button">
-                        <Border Background="Transparent" SnapsToDevicePixels="True">
-                            <ContentPresenter HorizontalAlignment="Center"
-                                              VerticalAlignment="Center"
-                                              Content="x">
-                                <ContentPresenter.Resources>
-                                    <Style TargetType="TextBlock">
-                                        <Setter Property="Padding" Value="0,0,0,2"/>
-                                    </Style>
-                                </ContentPresenter.Resources>
-                            </ContentPresenter>
-                        </Border>
-                    </ControlTemplate>
-                </Button.Template>
-            </Button>
+            Padding="10,5,8,5"
+            Height="56">
+        <!-- 2행 x (라벨·값 두 쌍 + 우측 상태/버튼 열) -->
+        <Grid VerticalAlignment="Center">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto" MinWidth="44"/>
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
 
-            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
-                <TextBlock Text="{Binding TotalExpDisplay}"
-                           Foreground="{DynamicResource OverlayRareAccentBrush}"
-                           FontSize="21"
-                           FontWeight="Bold"
-                           VerticalAlignment="Center"/>
-                <TextBlock Text="{Binding LastGainedExpDisplay}"
-                           Foreground="{DynamicResource OverlaySuccessAccentBrush}"
-                           FontSize="17"
-                           FontWeight="SemiBold"
-                           Margin="10,1,0,0"
-                           VerticalAlignment="Center"
-                           Visibility="{Binding HasLastExp, Converter={StaticResource BooleanToVisibilityConverter}}"/>
-                <TextBlock Text="{Binding GainCountDisplay}"
-                           Foreground="{DynamicResource OverlayExpAccentBrush}"
-                           FontSize="19"
-                           FontWeight="SemiBold"
-                           Margin="8,0,0,0"
-                           VerticalAlignment="Center"
-                           Visibility="{Binding ShowGainCountDisplay, Converter={StaticResource BooleanToVisibilityConverter}}"/>
-            </StackPanel>
-        </DockPanel>
+            <!-- 1행: 누적 경험치 / 1시간 예상 -->
+            <TextBlock Grid.Row="0" Grid.Column="0"
+                       Text="누적 경험치 :"
+                       Style="{StaticResource ExpFieldLabelStyle}"/>
+            <TextBlock Grid.Row="0" Grid.Column="1"
+                       Text="{Binding TotalExpValueDisplay}"
+                       Style="{StaticResource ExpFieldValueStyle}"
+                       Foreground="{DynamicResource OverlayRareAccentBrush}"
+                       FontSize="13"
+                       FontWeight="Bold"/>
+
+            <TextBlock Grid.Row="0" Grid.Column="2"
+                       Text="1 시간 예상 :"
+                       Style="{StaticResource ExpFieldLabelStyle}"/>
+            <TextBlock Grid.Row="0" Grid.Column="3"
+                       Text="{Binding ExpPerHourDisplay}"
+                       Style="{StaticResource ExpFieldValueStyle}"
+                       Foreground="{DynamicResource OverlayAccentTextBrush}"/>
+
+            <TextBlock Grid.Row="0" Grid.Column="4"
+                       Text="중지"
+                       Foreground="{DynamicResource OverlayDangerAccentBrush}"
+                       FontSize="10"
+                       FontWeight="SemiBold"
+                       HorizontalAlignment="Right"
+                       VerticalAlignment="Center"
+                       Visibility="{Binding IsMeasurementStopped, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+
+            <!-- 구분선 -->
+            <Border Grid.Row="1" Grid.ColumnSpan="5"
+                    Height="1"
+                    Margin="0,4"
+                    Opacity="0.35"
+                    Background="{DynamicResource OverlayStrongBorderBrush}"/>
+
+            <!-- 2행: 획득 경험치 / 처치 수 -->
+            <TextBlock Grid.Row="2" Grid.Column="0"
+                       Text="획득 경험치 :"
+                       Style="{StaticResource ExpFieldLabelStyle}"/>
+            <TextBlock Grid.Row="2" Grid.Column="1"
+                       Text="{Binding LastGainedExpDisplay}"
+                       Style="{StaticResource ExpFieldValueStyle}"
+                       Foreground="{DynamicResource OverlayExpGainAccentBrush}"/>
+
+            <TextBlock Grid.Row="2" Grid.Column="2"
+                       Text="처치 수 :"
+                       Style="{StaticResource ExpFieldLabelStyle}"/>
+            <TextBlock Grid.Row="2" Grid.Column="3"
+                       Text="{Binding GainCountDisplay}"
+                       Style="{StaticResource ExpFieldValueStyle}"
+                       Foreground="{DynamicResource OverlayExpAccentBrush}"
+                       Visibility="{Binding ShowGainCountDisplay, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+
+            <Button Grid.Row="2" Grid.Column="4"
+                    Style="{StaticResource ExpResetButtonStyle}"
+                    ToolTip="경험치 측정 초기화"
+                    Command="{Binding ResetExpCommand}"/>
+        </Grid>
     </Border>
 </UserControl>

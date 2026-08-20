@@ -14,9 +14,13 @@ namespace TWChatOverlay.Models
         private int _gainCount;
         private DateTime _startTime = DateTime.Now;
         private bool _isFrozen;
-        private string _frozenTotalExpDisplay = string.Empty;
+        private string _frozenTotalValueDisplay = string.Empty;
+        private string _frozenExpPerHourDisplay = string.Empty;
 
         public string LastGainedExpDisplay => _lastGainedExp > 0 ? $"+{FormatExp(_lastGainedExp)}" : string.Empty;
+
+        /// <summary>최근 획득 경험치 — 값이 없으면 자리 표시자("-").</summary>
+        public string LastGainedExpValueDisplay => _lastGainedExp > 0 ? FormatExp(_lastGainedExp) : "-";
 
         public bool HasLastExp => _lastGainedExp > 0;
 
@@ -29,7 +33,7 @@ namespace TWChatOverlay.Models
                 _gainCount = value;
                 OnPropertyChanged();
                 OnPropertyChanged(nameof(GainCountDisplay));
-                OnPropertyChanged(nameof(TotalExpDisplay));
+                RaiseTotalDisplayChanged();
             }
         }
 
@@ -44,6 +48,7 @@ namespace TWChatOverlay.Models
                 _lastGainedExp = value;
                 OnPropertyChanged();
                 OnPropertyChanged(nameof(LastGainedExpDisplay));
+                OnPropertyChanged(nameof(LastGainedExpValueDisplay));
                 OnPropertyChanged(nameof(HasLastExp));
             }
         }
@@ -56,34 +61,53 @@ namespace TWChatOverlay.Models
                 if (_totalExp == value) return;
                 _totalExp = value;
                 OnPropertyChanged();
-                OnPropertyChanged(nameof(TotalExpDisplay));
+                RaiseTotalDisplayChanged();
             }
         }
 
-        public string TotalExpDisplay
+        /// <summary>현재까지 획득한 누적 경험치.</summary>
+        public string TotalExpValueDisplay
         {
             get
             {
                 if (_isFrozen)
                 {
-                    return string.IsNullOrWhiteSpace(_frozenTotalExpDisplay)
-                        ? "측정 중지"
-                        : _frozenTotalExpDisplay;
+                    return string.IsNullOrWhiteSpace(_frozenTotalValueDisplay)
+                        ? FormatExp(_totalExp)
+                        : _frozenTotalValueDisplay;
                 }
 
-                string currentExp = FormatExp(_totalExp);
+                return FormatExp(_totalExp);
+            }
+        }
+
+        /// <summary>1시간 예상 획득 경험치(단위 없음). 표본이 부족하면 "-".</summary>
+        public string ExpPerHourDisplay
+        {
+            get
+            {
+                if (_isFrozen)
+                {
+                    return string.IsNullOrWhiteSpace(_frozenExpPerHourDisplay)
+                        ? "-"
+                        : _frozenExpPerHourDisplay;
+                }
+
                 TimeSpan elapsed = DateTime.Now - _startTime;
                 double hours = elapsed.TotalHours;
 
-                if (_totalExp == 0 || elapsed.TotalSeconds < 30)
-                {
-                    return $"{currentExp} | -/h";
-                }
+                if (_totalExp == 0 || elapsed.TotalSeconds < 30 || hours <= 0)
+                    return "-";
 
                 long expPerHour = (long)(_totalExp / hours);
-                return $"{currentExp} | {FormatExp(expPerHour)}/h";
+                return FormatExp(expPerHour);
             }
         }
+
+        /// <summary>비활동으로 측정이 멈춘 상태인지 여부.</summary>
+        public bool IsMeasurementStopped => _isFrozen;
+
+        public string TotalExpDisplay => $"{TotalExpValueDisplay} | {ExpPerHourDisplay}/h";
 
         public void ResetStartTime() => _startTime = DateTime.Now;
 
@@ -92,9 +116,10 @@ namespace TWChatOverlay.Models
             if (_isFrozen)
                 return;
 
-            _frozenTotalExpDisplay = BuildTotalExpDisplay();
+            _frozenTotalValueDisplay = TotalExpValueDisplay;
+            _frozenExpPerHourDisplay = ExpPerHourDisplay;
             _isFrozen = true;
-            OnPropertyChanged(nameof(TotalExpDisplay));
+            RaiseTotalDisplayChanged();
         }
 
         public void UnfreezeTotalExpDisplay()
@@ -103,8 +128,9 @@ namespace TWChatOverlay.Models
                 return;
 
             _isFrozen = false;
-            _frozenTotalExpDisplay = string.Empty;
-            OnPropertyChanged(nameof(TotalExpDisplay));
+            _frozenTotalValueDisplay = string.Empty;
+            _frozenExpPerHourDisplay = string.Empty;
+            RaiseTotalDisplayChanged();
         }
 
         public void Reset()
@@ -114,13 +140,17 @@ namespace TWChatOverlay.Models
             TotalExp = 0;
             GainCount = 0;
             ResetStartTime();
+            RaiseTotalDisplayChanged();
         }
 
-        public void RefreshDisplay() => OnPropertyChanged(nameof(TotalExpDisplay));
+        public void RefreshDisplay() => RaiseTotalDisplayChanged();
 
-        private string BuildTotalExpDisplay()
+        private void RaiseTotalDisplayChanged()
         {
-            return TotalExpDisplay;
+            OnPropertyChanged(nameof(TotalExpValueDisplay));
+            OnPropertyChanged(nameof(ExpPerHourDisplay));
+            OnPropertyChanged(nameof(IsMeasurementStopped));
+            OnPropertyChanged(nameof(TotalExpDisplay));
         }
 
         private static string FormatExp(long value)

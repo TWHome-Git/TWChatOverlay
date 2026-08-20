@@ -59,11 +59,6 @@ namespace TWChatOverlay.Views
             PersistPosition();
         }
 
-        public void ApplyPositionMode(bool isEnabled)
-        {
-            DragBar.Visibility = isEnabled ? Visibility.Visible : Visibility.Collapsed;
-        }
-
         public void ApplyStoredPosition(double? left, double? top)
             => ApplyStoredPosition(left, top, null);
 
@@ -161,11 +156,7 @@ namespace TWChatOverlay.Views
             MaxWidth = maxWidth;
         }
 
-        private void DragBar_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
-            => UnlockDrag_MouseLeftButtonDown(sender, e);
-
-        // 잠금 해제 모드에서는 창 어디를 잡아도 선택+드래그 가능
-        // (DragBar는 평소 Collapsed라 창 전체(Preview)에서 받는다)
+        // 잠금 해제 모드에서는 창 어디를 잡아도 선택+드래그 가능 (창 전체 Preview에서 받는다)
         private void UnlockDrag_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
             if (!UiLockService.IsUnlocked) return;
