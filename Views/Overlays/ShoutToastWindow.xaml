@@ -19,31 +19,43 @@
             Padding="12,8"
             MouseLeftButtonDown="RootBorder_MouseLeftButtonDown">
         <Grid>
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto"/>
-                <ColumnDefinition Width="*"/>
-            </Grid.ColumnDefinitions>
+            <Grid x:Name="NormalContent">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
 
-            <Border Width="6"
-                    CornerRadius="3"
-                    Background="{DynamicResource OverlayShoutFillBrush}"
-                    VerticalAlignment="Stretch"
-                    Margin="0,0,10,0"/>
+                <Border Width="6"
+                        CornerRadius="3"
+                        Background="{DynamicResource OverlayShoutFillBrush}"
+                        VerticalAlignment="Stretch"
+                        Margin="0,0,10,0"/>
 
-            <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                <TextBlock Text="외치기"
-                           Foreground="{DynamicResource OverlayShoutTextBrush}"
-                           FontSize="11"
-                           FontWeight="SemiBold"
-                           Margin="0,0,0,2"/>
-                <TextBlock x:Name="ToastText"
-                           Foreground="{DynamicResource TextBrush}"
-                           FontSize="15"
-                           FontWeight="SemiBold"
-                           TextWrapping="NoWrap"
-                           TextTrimming="CharacterEllipsis"
-                           VerticalAlignment="Center"/>
-            </StackPanel>
+                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                    <TextBlock Text="외치기"
+                               Foreground="{DynamicResource OverlayShoutTextBrush}"
+                               FontSize="11"
+                               FontWeight="SemiBold"
+                               Margin="0,0,0,2"/>
+                    <TextBlock x:Name="ToastText"
+                               Foreground="{DynamicResource TextBrush}"
+                               FontSize="15"
+                               FontWeight="SemiBold"
+                               TextWrapping="NoWrap"
+                               TextTrimming="CharacterEllipsis"
+                               VerticalAlignment="Center"/>
+                </StackPanel>
+            </Grid>
+
+            <!-- 잠금 해제(위치 미리보기) 공통 라벨 -->
+            <TextBlock x:Name="PreviewLabel"
+                       Text="외치기 알림창"
+                       Foreground="{DynamicResource TextBrush}"
+                       FontSize="15"
+                       FontWeight="SemiBold"
+                       HorizontalAlignment="Center"
+                       VerticalAlignment="Center"
+                       Visibility="Collapsed"/>
         </Grid>
     </Border>
 </Window>
