@@ -16,6 +16,7 @@
         Topmost="True"
         Background="Transparent"
         ResizeMode="NoResize"
+        TextOptions.TextFormattingMode="Display"
         Loaded="Window_Loaded">
 
     <Grid Margin="0">
