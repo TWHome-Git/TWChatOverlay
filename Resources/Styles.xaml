@@ -374,9 +374,9 @@
                             CornerRadius="3">
                         <TextBlock x:Name="Glyph"
                                    Text="&#x2715;"
-                                   FontSize="11"
-                                   FontWeight="Normal"
-                                   Foreground="{DynamicResource OverlaySubtleTextBrush}"
+                                   FontSize="13"
+                                   FontWeight="Bold"
+                                   Foreground="{DynamicResource OverlayInfoTextBrush}"
                                    HorizontalAlignment="Center"
                                    VerticalAlignment="Center"/>
                     </Border>
