@@ -376,18 +376,6 @@ namespace TWChatOverlay.ViewModels
             }
         }
 
-        public string ToggleAddonHotKey
-        {
-            get => _settings.ToggleAddonHotKey;
-            set
-            {
-                if (_settings.ToggleAddonHotKey == value) return;
-                _settings.ToggleAddonHotKey = value;
-                OnPropertyChanged();
-                SaveSettings();
-            }
-        }
-
         public string ToggleDailyWeeklyContentHotKey
         {
             get => _settings.ToggleDailyWeeklyContentHotKey;
@@ -395,54 +383,6 @@ namespace TWChatOverlay.ViewModels
             {
                 if (_settings.ToggleDailyWeeklyContentHotKey == value) return;
                 _settings.ToggleDailyWeeklyContentHotKey = value;
-                OnPropertyChanged();
-                SaveSettings();
-            }
-        }
-
-        public string ToggleEtaRankingHotKey
-        {
-            get => _settings.ToggleEtaRankingHotKey;
-            set
-            {
-                if (_settings.ToggleEtaRankingHotKey == value) return;
-                _settings.ToggleEtaRankingHotKey = value;
-                OnPropertyChanged();
-                SaveSettings();
-            }
-        }
-
-        public string ToggleCoefficientHotKey
-        {
-            get => _settings.ToggleCoefficientHotKey;
-            set
-            {
-                if (_settings.ToggleCoefficientHotKey == value) return;
-                _settings.ToggleCoefficientHotKey = value;
-                OnPropertyChanged();
-                SaveSettings();
-            }
-        }
-
-        public string ToggleEquipmentDbHotKey
-        {
-            get => _settings.ToggleEquipmentDbHotKey;
-            set
-            {
-                if (_settings.ToggleEquipmentDbHotKey == value) return;
-                _settings.ToggleEquipmentDbHotKey = value;
-                OnPropertyChanged();
-                SaveSettings();
-            }
-        }
-
-        public string ToggleEncryptHotKey
-        {
-            get => _settings.ToggleEncryptHotKey;
-            set
-            {
-                if (_settings.ToggleEncryptHotKey == value) return;
-                _settings.ToggleEncryptHotKey = value;
                 OnPropertyChanged();
                 SaveSettings();
             }
@@ -534,7 +474,6 @@ namespace TWChatOverlay.ViewModels
                 OnPropertyChanged(nameof(LineMarginLeft));
                 OnPropertyChanged(nameof(ExitHotKey));
                 OnPropertyChanged(nameof(ToggleOverlayHotKey));
-                OnPropertyChanged(nameof(ToggleAddonHotKey));
                 OnPropertyChanged(nameof(ToggleDailyWeeklyContentHotKey));
             }
             else if (e.PropertyName == nameof(ChatSettings.LineMargin))
@@ -622,12 +561,7 @@ namespace TWChatOverlay.ViewModels
             OnPropertyChanged(nameof(LineMarginLeft));
             OnPropertyChanged(nameof(ExitHotKey));
             OnPropertyChanged(nameof(ToggleOverlayHotKey));
-            OnPropertyChanged(nameof(ToggleAddonHotKey));
             OnPropertyChanged(nameof(ToggleDailyWeeklyContentHotKey));
-            OnPropertyChanged(nameof(ToggleEtaRankingHotKey));
-            OnPropertyChanged(nameof(ToggleCoefficientHotKey));
-            OnPropertyChanged(nameof(ToggleEquipmentDbHotKey));
-            OnPropertyChanged(nameof(ToggleEncryptHotKey));
             OnPropertyChanged(nameof(ToggleSettingsHotKey));
             OnPropertyChanged(nameof(ToggleTrayAllHotKey));
             OverlayOpacityService.Apply(_settings.OverlayOpacityPercent);
@@ -667,22 +601,12 @@ namespace TWChatOverlay.ViewModels
 
                 _settings.ExitHotKey = saved.ExitHotKey;
                 _settings.ToggleOverlayHotKey = saved.ToggleOverlayHotKey;
-                _settings.ToggleAddonHotKey = saved.ToggleAddonHotKey;
                 _settings.ToggleDailyWeeklyContentHotKey = saved.ToggleDailyWeeklyContentHotKey;
-                _settings.ToggleEtaRankingHotKey = saved.ToggleEtaRankingHotKey;
-                _settings.ToggleCoefficientHotKey = saved.ToggleCoefficientHotKey;
-                _settings.ToggleEquipmentDbHotKey = saved.ToggleEquipmentDbHotKey;
-                _settings.ToggleEncryptHotKey = saved.ToggleEncryptHotKey;
                 _settings.ToggleSettingsHotKey = saved.ToggleSettingsHotKey;
 
                 OnPropertyChanged(nameof(ExitHotKey));
                 OnPropertyChanged(nameof(ToggleOverlayHotKey));
-                OnPropertyChanged(nameof(ToggleAddonHotKey));
                 OnPropertyChanged(nameof(ToggleDailyWeeklyContentHotKey));
-                OnPropertyChanged(nameof(ToggleEtaRankingHotKey));
-                OnPropertyChanged(nameof(ToggleCoefficientHotKey));
-                OnPropertyChanged(nameof(ToggleEquipmentDbHotKey));
-                OnPropertyChanged(nameof(ToggleEncryptHotKey));
                 OnPropertyChanged(nameof(ToggleSettingsHotKey));
                 AppLogger.Info("Hotkey settings reverted to last saved values.");
             }

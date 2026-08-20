@@ -48,9 +48,28 @@ namespace TWChatOverlay.Views
             ApplyPanelVisibility();
         }
 
+        /// <summary>선택된 추가 기능 내비 인덱스(AddonView 탭 인덱스). 선택이 없으면 -1.</summary>
+        private int SelectedAddonTabIndex
+        {
+            get
+            {
+                if (NavAddonKeyword.IsChecked == true) return 0;
+                if (NavAddonExp.IsChecked == true) return 1;
+                if (NavAddonDungeon.IsChecked == true) return 2;
+                if (NavAddonItem.IsChecked == true) return 3;
+                if (NavAddonBuff.IsChecked == true) return 4;
+                if (NavAddonBoss.IsChecked == true) return 5;
+                return -1;
+            }
+        }
+
+        private bool _addonEmbedInitialized;
+        private bool _addonPreviewActive;
+
         /// <summary>
         /// 선택된 내비게이션 항목의 패널만 표시한다.
         /// 컴팩트 모드(OnlyChatMode)에서는 내비게이션을 숨기고 채팅+외치기 패널을 함께 보여준다.
+        /// 추가 기능 항목은 임베드된 AddonView의 해당 탭을 보여준다.
         /// </summary>
         private void ApplyPanelVisibility()
         {
@@ -59,6 +78,8 @@ namespace TWChatOverlay.Views
             if (OnlyChatMode)
             {
                 NavColumn.Visibility = Visibility.Collapsed;
+                AddonHost.Visibility = Visibility.Collapsed;
+                SettingsScroll.Visibility = Visibility.Visible;
                 ChatPanel.Visibility = Visibility.Visible;
                 ShoutPanel.Visibility = Visibility.Visible;
                 DisplayPanel.Visibility = Visibility.Collapsed;
@@ -68,6 +89,31 @@ namespace TWChatOverlay.Views
             }
 
             NavColumn.Visibility = Visibility.Visible;
+
+            int addonTab = SelectedAddonTabIndex;
+            if (addonTab >= 0)
+            {
+                if (!_addonEmbedInitialized)
+                {
+                    AddonHost.SetEmbeddedMode();
+                    _addonEmbedInitialized = true;
+                }
+
+                SettingsScroll.Visibility = Visibility.Collapsed;
+                AddonHost.Visibility = Visibility.Visible;
+                AddonHost.ShowEmbeddedTab(addonTab);
+                _addonPreviewActive = true;
+                return;
+            }
+
+            if (_addonPreviewActive)
+            {
+                _addonPreviewActive = false;
+                AddonHost.NotifyEmbeddedHidden();
+            }
+
+            AddonHost.Visibility = Visibility.Collapsed;
+            SettingsScroll.Visibility = Visibility.Visible;
             ChatPanel.Visibility = NavChat.IsChecked == true ? Visibility.Visible : Visibility.Collapsed;
             ShoutPanel.Visibility = NavShout.IsChecked == true ? Visibility.Visible : Visibility.Collapsed;
             DisplayPanel.Visibility = NavDisplay.IsChecked == true ? Visibility.Visible : Visibility.Collapsed;

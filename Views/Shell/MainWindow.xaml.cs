@@ -399,15 +399,6 @@ namespace TWChatOverlay.Views
                         case HotKeyService.TOGGLE_OVERLAY_ID:
                             ToggleOverlayVisibility();
                             break;
-                        case HotKeyService.TOGGLE_ADDON_ID:
-                            TriggerMenuButton("BtnAddon");
-                            break;
-                        case HotKeyService.TOGGLE_ETA_RANKING_ID:
-                        case HotKeyService.TOGGLE_COEFFICIENT_ID:
-                        case HotKeyService.TOGGLE_EQUIPMENTDB_ID:
-                        case HotKeyService.TOGGLE_ENCRYPT_ID:
-                            TriggerMenuButton("BtnWebDb");
-                            break;
                         case HotKeyService.TOGGLE_SETTINGS_ID:
                             TriggerMenuButton("BtnSettings");
                             break;

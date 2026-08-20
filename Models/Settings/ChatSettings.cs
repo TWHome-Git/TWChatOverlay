@@ -68,13 +68,8 @@ namespace TWChatOverlay.Models
         private bool _enableDebugLogging = false;
         private string _exitHotKey = "";
         private string _toggleOverlayHotKey = "";
-        private string _toggleAddonHotKey = "";
         private string _toggleAlwaysVisibleHotKey = "";
         private string _toggleDailyWeeklyContentHotKey = "";
-        private string _toggleEtaRankingHotKey = "";
-        private string _toggleCoefficientHotKey = "";
-        private string _toggleEquipmentDbHotKey = "";
-        private string _toggleEncryptHotKey = "";
         private string _toggleSettingsHotKey = "";
         private string _toggleTrayAllHotKey = "";
         private double _overlayOpacityPercent = 96.0;
@@ -589,17 +584,6 @@ namespace TWChatOverlay.Models
                 OnPropertyChanged();
             }
         }
-        [JsonPropertyOrder(30)]
-        public string ToggleAddonHotKey
-        {
-            get => _toggleAddonHotKey;
-            set
-            {
-                if (_toggleAddonHotKey == value) return;
-                _toggleAddonHotKey = value;
-                OnPropertyChanged();
-            }
-        }
         [JsonPropertyOrder(31)]
         public string ToggleAlwaysVisibleHotKey
         {
@@ -619,50 +603,6 @@ namespace TWChatOverlay.Models
             {
                 if (_toggleDailyWeeklyContentHotKey == value) return;
                 _toggleDailyWeeklyContentHotKey = value;
-                OnPropertyChanged();
-            }
-        }
-        [JsonPropertyOrder(33)]
-        public string ToggleEtaRankingHotKey
-        {
-            get => _toggleEtaRankingHotKey;
-            set
-            {
-                if (_toggleEtaRankingHotKey == value) return;
-                _toggleEtaRankingHotKey = value;
-                OnPropertyChanged();
-            }
-        }
-        [JsonPropertyOrder(34)]
-        public string ToggleCoefficientHotKey
-        {
-            get => _toggleCoefficientHotKey;
-            set
-            {
-                if (_toggleCoefficientHotKey == value) return;
-                _toggleCoefficientHotKey = value;
-                OnPropertyChanged();
-            }
-        }
-        [JsonPropertyOrder(35)]
-        public string ToggleEquipmentDbHotKey
-        {
-            get => _toggleEquipmentDbHotKey;
-            set
-            {
-                if (_toggleEquipmentDbHotKey == value) return;
-                _toggleEquipmentDbHotKey = value;
-                OnPropertyChanged();
-            }
-        }
-        [JsonPropertyOrder(36)]
-        public string ToggleEncryptHotKey
-        {
-            get => _toggleEncryptHotKey;
-            set
-            {
-                if (_toggleEncryptHotKey == value) return;
-                _toggleEncryptHotKey = value;
                 OnPropertyChanged();
             }
         }

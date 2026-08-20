@@ -70,13 +70,8 @@ namespace TWChatOverlay.Models
             _enableDebugLogging = false;
             _exitHotKey = "";
             _toggleOverlayHotKey = "";
-            _toggleAddonHotKey = "";
             _toggleAlwaysVisibleHotKey = "";
             _toggleDailyWeeklyContentHotKey = "";
-            _toggleEtaRankingHotKey = "";
-            _toggleCoefficientHotKey = "";
-            _toggleEquipmentDbHotKey = "";
-            _toggleEncryptHotKey = "";
             _toggleSettingsHotKey = "";
             _toggleTrayAllHotKey = "";
             _overlayOpacityPercent = 96.0;

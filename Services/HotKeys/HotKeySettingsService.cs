@@ -13,12 +13,7 @@ namespace TWChatOverlay.Services
         {
             nameof(ChatSettings.ExitHotKey),
             nameof(ChatSettings.ToggleOverlayHotKey),
-            nameof(ChatSettings.ToggleAddonHotKey),
             nameof(ChatSettings.ToggleDailyWeeklyContentHotKey),
-            nameof(ChatSettings.ToggleEtaRankingHotKey),
-            nameof(ChatSettings.ToggleCoefficientHotKey),
-            nameof(ChatSettings.ToggleEquipmentDbHotKey),
-            nameof(ChatSettings.ToggleEncryptHotKey),
             nameof(ChatSettings.ToggleSettingsHotKey),
             nameof(ChatSettings.ToggleTrayAllHotKey)
         };
@@ -93,12 +88,7 @@ namespace TWChatOverlay.Services
         {
             nameof(ChatSettings.ExitHotKey) => settings.ExitHotKey,
             nameof(ChatSettings.ToggleOverlayHotKey) => settings.ToggleOverlayHotKey,
-            nameof(ChatSettings.ToggleAddonHotKey) => settings.ToggleAddonHotKey,
             nameof(ChatSettings.ToggleDailyWeeklyContentHotKey) => settings.ToggleDailyWeeklyContentHotKey,
-            nameof(ChatSettings.ToggleEtaRankingHotKey) => settings.ToggleEtaRankingHotKey,
-            nameof(ChatSettings.ToggleCoefficientHotKey) => settings.ToggleCoefficientHotKey,
-            nameof(ChatSettings.ToggleEquipmentDbHotKey) => settings.ToggleEquipmentDbHotKey,
-            nameof(ChatSettings.ToggleEncryptHotKey) => settings.ToggleEncryptHotKey,
             nameof(ChatSettings.ToggleSettingsHotKey) => settings.ToggleSettingsHotKey,
             nameof(ChatSettings.ToggleTrayAllHotKey) => settings.ToggleTrayAllHotKey,
             _ => string.Empty
@@ -114,23 +104,8 @@ namespace TWChatOverlay.Services
                 case nameof(ChatSettings.ToggleOverlayHotKey):
                     settings.ToggleOverlayHotKey = value;
                     break;
-                case nameof(ChatSettings.ToggleAddonHotKey):
-                    settings.ToggleAddonHotKey = value;
-                    break;
                 case nameof(ChatSettings.ToggleDailyWeeklyContentHotKey):
                     settings.ToggleDailyWeeklyContentHotKey = value;
-                    break;
-                case nameof(ChatSettings.ToggleEtaRankingHotKey):
-                    settings.ToggleEtaRankingHotKey = value;
-                    break;
-                case nameof(ChatSettings.ToggleCoefficientHotKey):
-                    settings.ToggleCoefficientHotKey = value;
-                    break;
-                case nameof(ChatSettings.ToggleEquipmentDbHotKey):
-                    settings.ToggleEquipmentDbHotKey = value;
-                    break;
-                case nameof(ChatSettings.ToggleEncryptHotKey):
-                    settings.ToggleEncryptHotKey = value;
                     break;
                 case nameof(ChatSettings.ToggleSettingsHotKey):
                     settings.ToggleSettingsHotKey = value;

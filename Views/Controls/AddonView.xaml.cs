@@ -38,6 +38,8 @@ namespace TWChatOverlay.Views
             Loaded += (_, _) =>
             {
                 _isLoaded = true;
+                if (_embeddedMode)
+                    return;
                 int tabIndex = AddonTabControl?.SelectedIndex ?? 0;
                 UpdateAddonPositionState(true, tabIndex);
             };
@@ -131,11 +133,45 @@ namespace TWChatOverlay.Views
             if (!ReferenceEquals(e.OriginalSource, AddonTabControl))
                 return;
 
-            if (!_isLoaded)
+            if (!_isLoaded || _embeddedMode)
                 return;
 
             UpdateAddonPositionState(true, AddonTabControl.SelectedIndex);
         }
+
+        #region Embedded mode (설정 창 통합)
+
+        private bool _embeddedMode;
+
+        /// <summary>
+        /// 설정 창에 임베드되어 쓰일 때 호출한다. 내부 탭 헤더를 숨기고,
+        /// 위치 미리보기 모드는 호스트(설정 창)가 표시 여부에 맞춰 제어한다.
+        /// </summary>
+        public void SetEmbeddedMode()
+        {
+            _embeddedMode = true;
+            foreach (var item in AddonTabControl.Items)
+            {
+                if (item is TabItem tabItem)
+                    tabItem.Visibility = Visibility.Collapsed;
+            }
+        }
+
+        /// <summary>임베드 상태에서 지정 탭을 표시하고 해당 탭의 위치 미리보기를 켠다.</summary>
+        public void ShowEmbeddedTab(int index)
+        {
+            if (index < 0 || index >= AddonTabControl.Items.Count)
+                return;
+
+            AddonTabControl.SelectedIndex = index;
+            UpdateAddonPositionState(true, index);
+        }
+
+        /// <summary>임베드 상태에서 추가 기능 화면이 가려질 때 위치 미리보기를 끈다.</summary>
+        public void NotifyEmbeddedHidden()
+            => UpdateAddonPositionState(false, -1);
+
+        #endregion
 
         private static void UpdateAddonPositionState(bool isEnabled, int tabIndex)
         {

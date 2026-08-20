@@ -210,9 +210,6 @@ namespace TWChatOverlay.Views
                         try { MessageBox.Show($"달력 창을 열 수 없습니다:\n{ex.Message}", "오류", MessageBoxButton.OK, MessageBoxImage.Error); } catch { }
                     }
                     break;
-                case "BtnAddon":
-                    OpenAddon();
-                    break;
                 case "BtnShoutReplay":
                     OpenShoutReplay();
                     break;
@@ -283,12 +280,6 @@ namespace TWChatOverlay.Views
             ShowAddonViewWindow(chat, "Chat", BtnChat);
         }
 
-
-        private void OpenAddon()
-        {
-            var view = new AddonView();
-            ShowAddonViewWindow(view, "추가 기능", BtnAddon);
-        }
 
         private void OpenShoutReplay()
         {

@@ -16,25 +16,15 @@ namespace TWChatOverlay.Views
 
             _hotKeyService.Unregister(HotKeyService.EXIT_HOTKEY_ID);
             _hotKeyService.Unregister(HotKeyService.TOGGLE_OVERLAY_ID);
-            _hotKeyService.Unregister(HotKeyService.TOGGLE_ADDON_ID);
             _hotKeyService.Unregister(HotKeyService.TOGGLE_DAILY_WEEKLY_CONTENT_ID);
 
             RegisterHotKeyOptional(HotKeyService.EXIT_HOTKEY_ID, _settings.ExitHotKey);
             RegisterHotKeyOptional(HotKeyService.TOGGLE_OVERLAY_ID, _settings.ToggleOverlayHotKey);
-            RegisterHotKeyOptional(HotKeyService.TOGGLE_ADDON_ID, _settings.ToggleAddonHotKey);
             RegisterHotKeyOptional(HotKeyService.TOGGLE_DAILY_WEEKLY_CONTENT_ID, _settings.ToggleDailyWeeklyContentHotKey);
 
-            _hotKeyService.Unregister(HotKeyService.TOGGLE_ETA_RANKING_ID);
-            _hotKeyService.Unregister(HotKeyService.TOGGLE_COEFFICIENT_ID);
-            _hotKeyService.Unregister(HotKeyService.TOGGLE_EQUIPMENTDB_ID);
-            _hotKeyService.Unregister(HotKeyService.TOGGLE_ENCRYPT_ID);
             _hotKeyService.Unregister(HotKeyService.TOGGLE_SETTINGS_ID);
             _hotKeyService.Unregister(HotKeyService.TOGGLE_TRAY_ALL_ID);
 
-            RegisterHotKeyOptional(HotKeyService.TOGGLE_ETA_RANKING_ID, _settings.ToggleEtaRankingHotKey);
-            RegisterHotKeyOptional(HotKeyService.TOGGLE_COEFFICIENT_ID, _settings.ToggleCoefficientHotKey);
-            RegisterHotKeyOptional(HotKeyService.TOGGLE_EQUIPMENTDB_ID, _settings.ToggleEquipmentDbHotKey);
-            RegisterHotKeyOptional(HotKeyService.TOGGLE_ENCRYPT_ID, _settings.ToggleEncryptHotKey);
             RegisterHotKeyOptional(HotKeyService.TOGGLE_SETTINGS_ID, _settings.ToggleSettingsHotKey);
             RegisterHotKeyOptional(HotKeyService.TOGGLE_TRAY_ALL_ID, _settings.ToggleTrayAllHotKey);
         }
