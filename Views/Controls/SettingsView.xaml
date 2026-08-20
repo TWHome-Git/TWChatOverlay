@@ -36,12 +36,12 @@
             </Setter>
         </Style>
 
-        <!-- 내비게이션 그룹 라벨 -->
+        <!-- 내비게이션 그룹 라벨: 상위 구분 제목이므로 항목보다 크고 굵게 -->
         <Style x:Key="SettingsNavGroupLabelStyle" TargetType="TextBlock">
-            <Setter Property="Foreground" Value="{DynamicResource OverlayHintTextBrush}"/>
-            <Setter Property="FontSize" Value="10"/>
+            <Setter Property="Foreground" Value="{DynamicResource OverlayInfoTextBrush}"/>
+            <Setter Property="FontSize" Value="13"/>
             <Setter Property="FontWeight" Value="Bold"/>
-            <Setter Property="Margin" Value="14,12,0,4"/>
+            <Setter Property="Margin" Value="14,14,0,5"/>
         </Style>
 
         <!-- 섹션 라벨: 작은 회색 구분 텍스트 -->
