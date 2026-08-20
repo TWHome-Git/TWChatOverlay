@@ -25,6 +25,13 @@ namespace TWChatOverlay.Services
         /// <summary>자석 스냅 모드. 시작 시 설정에서 로드되고 배너의 토글로 바뀐다.</summary>
         public static bool SnapEnabled { get; set; }
 
+        private static bool _isAdjustingSelected; // 인스펙터發 이동/크기 변경 중 (스냅 제외)
+        private static bool _isSnappingSelected;  // 스냅 적용 중 재진입 방지
+
+        /// <summary>잠금 해제 모드의 보조 UI(격자/배너/하이라이트/인스펙터)인지 — 스냅 대상에서 제외.</summary>
+        public static bool IsUnlockChrome(Window window)
+            => window is BackdropWindow or BannerWindow or HighlightWindow or InspectorWindow;
+
         /// <summary>현재 선택된(편집 중인) 창. 잠금 해제 모드에서만 값이 있다.</summary>
         public static Window? SelectedWindow => _selected;
 
@@ -109,6 +116,17 @@ namespace TWChatOverlay.Services
         private static void Selected_BoundsChanged(object? sender, EventArgs e)
         {
             if (_selected == null) return;
+
+            // 자석 모드: 선택한 창을 드래그하는 동안 다른 창 가장자리에 붙인다.
+            // 인스펙터의 넛지/좌표 입력(_isAdjustingSelected)은 1px 조정을 방해하므로 제외.
+            if (SnapEnabled && !_isAdjustingSelected && !_isSnappingSelected)
+            {
+                _isSnappingSelected = true;
+                try { ChatWindowHub.TryApplyMagneticSnap(_selected); }
+                catch { }
+                finally { _isSnappingSelected = false; }
+            }
+
             _highlight?.SyncTo(_selected);
             _inspector?.RefreshValues();
         }
@@ -137,6 +155,7 @@ namespace TWChatOverlay.Services
             var window = _selected;
             if (window == null) return;
 
+            _isAdjustingSelected = true;
             try
             {
                 window.Left += dx;
@@ -147,6 +166,10 @@ namespace TWChatOverlay.Services
             {
                 AppLogger.Warn("Unlock nudge failed.", ex);
             }
+            finally
+            {
+                _isAdjustingSelected = false;
+            }
         }
 
         /// <summary>인스펙터 좌표 입력으로 선택된 창을 지정 위치로 옮긴다.</summary>
@@ -155,6 +178,7 @@ namespace TWChatOverlay.Services
             var window = _selected;
             if (window == null) return;
 
+            _isAdjustingSelected = true;
             try
             {
                 if (left.HasValue)
@@ -166,6 +190,10 @@ namespace TWChatOverlay.Services
             catch (Exception ex)
             {
                 AppLogger.Warn("Unlock move failed.", ex);
+            }
+            finally
+            {
+                _isAdjustingSelected = false;
             }
         }
 
@@ -184,6 +212,7 @@ namespace TWChatOverlay.Services
             var window = _selected;
             if (window == null) return;
 
+            _isAdjustingSelected = true;
             try
             {
                 if (width.HasValue)
@@ -195,6 +224,10 @@ namespace TWChatOverlay.Services
             catch (Exception ex)
             {
                 AppLogger.Warn("Unlock resize failed.", ex);
+            }
+            finally
+            {
+                _isAdjustingSelected = false;
             }
         }
 
