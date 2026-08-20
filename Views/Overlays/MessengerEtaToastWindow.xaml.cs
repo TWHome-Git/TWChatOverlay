@@ -103,6 +103,7 @@ namespace TWChatOverlay.Views
         private void RootBorder_MouseLeftButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
         {
             if (!UiLockService.IsUnlocked) return;
+            UiLockService.Select(this);
             if (!_isPreviewMode || e.ButtonState != System.Windows.Input.MouseButtonState.Pressed)
                 return;
 
@@ -120,6 +121,7 @@ namespace TWChatOverlay.Views
         private void TitleBar_MouseLeftButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
         {
             if (!UiLockService.IsUnlocked) return;
+            UiLockService.Select(this);
             if (!_isPreviewMode || e.ButtonState != System.Windows.Input.MouseButtonState.Pressed)
                 return;
 

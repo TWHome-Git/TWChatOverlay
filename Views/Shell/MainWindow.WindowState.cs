@@ -131,6 +131,24 @@ namespace TWChatOverlay.Views
             ShoutToastService.ShowPositionPreview(_settings, force: true);
         }
 
+        /// <summary>인스펙터의 넛지/크기 입력으로 메인 창이 조정되면 즉시 저장한다.</summary>
+        private void OnUnlockWindowAdjusted(Window window)
+        {
+            if (!ReferenceEquals(window, this))
+                return;
+
+            try
+            {
+                _settings.WindowWidth = Width;
+                _settings.WindowHeight = Height;
+                PersistCurrentMainWindowPosition();
+            }
+            catch (Exception ex)
+            {
+                AppLogger.Warn("Failed to persist main window bounds after unlock adjustment.", ex);
+            }
+        }
+
         private void CloseUnlockPositionWindows()
         {
             // 위치 저장 후 미리보기 종료, 각 창의 원래 표시 상태로 복원
