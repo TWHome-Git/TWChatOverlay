@@ -524,6 +524,9 @@ namespace TWChatOverlay.Views
 
         private void CloseChat_Click(object sender, RoutedEventArgs e)
         {
+            if (!ConfirmDialogWindow.Confirm(this, "서브 채팅창을 닫을까요?", "닫기", "취소"))
+                return;
+
             Close();
         }
 
@@ -541,6 +544,7 @@ namespace TWChatOverlay.Views
             catch { }
             finally
             {
+                ChatWindowHub.TryApplyMagneticSnap(this);
                 SyncPositionToSettings();
             }
             e.Handled = true;
@@ -586,6 +590,7 @@ namespace TWChatOverlay.Views
         private void ResizeThumb_DragCompleted(object sender, System.Windows.Controls.Primitives.DragCompletedEventArgs e)
         {
             _isResizingWindow = false;
+            ChatWindowHub.TryApplyMagneticSnap(this);
             SyncPositionToSettings();
         }
 
