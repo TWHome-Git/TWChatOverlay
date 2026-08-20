@@ -154,6 +154,7 @@ namespace TWChatOverlay.Views
             _mainTabAutoHideTimer.Tick += (_, _) => HideMainTabs();
 
             _settings = ConfigService.Load();
+            UiLockService.SnapEnabled = _settings.WindowSnapEnabled;
             OverlayOpacityService.Initialize(_settings);
             if (!_settings.InitialSetupWizardCompleted)
             {

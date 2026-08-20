@@ -61,6 +61,7 @@ namespace TWChatOverlay.Views
             try
             {
                 DragMove();
+                ChatWindowHub.TryApplyMagneticSnap(this);
                 PersistCurrentMainWindowPosition();
             }
             catch { }
@@ -77,6 +78,7 @@ namespace TWChatOverlay.Views
             if (e.ButtonState == MouseButtonState.Pressed)
             {
                 DragMove();
+                ChatWindowHub.TryApplyMagneticSnap(this);
                 PersistCurrentMainWindowPosition();
             }
         }
