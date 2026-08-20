@@ -51,6 +51,7 @@ namespace TWChatOverlay.Models
         private bool _showDungeonCountDisplayWindow = false;
         private bool _showItemDropAlert = false;
         private bool _showEtosHelperWindow = false;
+        private bool _menuWindowHorizontal = false;
         private bool _showItemDropHelperWindow = false;
         private bool _useCustomDropItemFilter = false;
         private string _customDropItemJson = string.Empty;
@@ -829,6 +830,9 @@ namespace TWChatOverlay.Models
         [JsonPropertyOrder(55)]
         public double? SubMenuWindowTop { get; set; } = 0.0;
         [JsonPropertyOrder(56)]
+        /// <summary>메뉴 바 방향: false=세로형(기본), true=가로형.</summary>
+        public bool MenuWindowHorizontal { get => _menuWindowHorizontal; set { _menuWindowHorizontal = value; OnPropertyChanged(); } }
+
         public double? MenuWindowLeft { get; set; } = 0.0;
         [JsonPropertyOrder(57)]
         public double? MenuWindowTop { get; set; } = 0.0;
