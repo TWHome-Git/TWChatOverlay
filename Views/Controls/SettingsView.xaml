@@ -443,6 +443,15 @@
                                     </StackPanel>
                                 </DockPanel>
                             </Border>
+                            <Border Style="{StaticResource SettingsRowStyle}">
+                                <DockPanel>
+                                    <CheckBox DockPanel.Dock="Right" IsChecked="{Binding MenuWindowHorizontal}" Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
+                                    <StackPanel VerticalAlignment="Center">
+                                        <TextBlock Text="메뉴 바 가로형" Style="{StaticResource SettingsRowLabelStyle}"/>
+                                        <TextBlock Text="끄면 세로형 (기본)" Style="{StaticResource SettingsRowHintStyle}"/>
+                                    </StackPanel>
+                                </DockPanel>
+                            </Border>
                         </WrapPanel>
                     </StackPanel>
 

@@ -182,6 +182,20 @@ namespace TWChatOverlay.ViewModels
             }
         }
 
+        public bool MenuWindowHorizontal
+        {
+            get => _settings.MenuWindowHorizontal;
+            set
+            {
+                if (_settings.MenuWindowHorizontal != value)
+                {
+                    _settings.MenuWindowHorizontal = value;
+                    OnPropertyChanged();
+                    SaveSettings();
+                }
+            }
+        }
+
         public bool ShowShoutToastPopup
         {
             get => _settings.ShowShoutToastPopup;

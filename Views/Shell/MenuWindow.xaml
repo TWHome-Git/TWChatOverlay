@@ -2,7 +2,7 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:sys="clr-namespace:System;assembly=mscorlib"
-        Title="Menu" Height="434" Width="44" Topmost="True" ResizeMode="NoResize" WindowStyle="None" AllowsTransparency="False" ShowInTaskbar="False">
+        Title="Menu" SizeToContent="WidthAndHeight" Background="{DynamicResource PrimaryBackgroundBrush}" Topmost="True" ResizeMode="NoResize" WindowStyle="None" AllowsTransparency="False" ShowInTaskbar="False">
     <Window.Resources>
         <sys:Double x:Key="MenuIconSize">36</sys:Double>
         <sys:Double x:Key="MenuButtonSize">36</sys:Double>
@@ -38,59 +38,64 @@
             </Setter>
         </Style>
     </Window.Resources>
-    <Border Background="{DynamicResource PrimaryBackgroundBrush}" HorizontalAlignment="Center">
-        <Grid Margin="2">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="*"/>
-            </Grid.RowDefinitions>
+    <Border Background="{DynamicResource PrimaryBackgroundBrush}">
+        <StackPanel x:Name="RootPanel" Margin="2">
+            <!-- 앱 아이콘: 항상 표시. 마우스를 올리면 아래 메뉴가 펼쳐지고, 잡고 끌면 이동 -->
+            <Border x:Name="AppIconArea"
+                    Height="36"
+                    Background="Transparent"
+                    CornerRadius="8"
+                    Cursor="Hand"
+                    ToolTip="메뉴 — 마우스를 올리면 펼쳐집니다"
+                    MouseLeftButtonDown="AppIcon_MouseLeftButtonDown">
+                <Image Source="/TWChatOverlay;component/favicon.ico"
+                       Width="28" Height="28"
+                       Stretch="Uniform"
+                       HorizontalAlignment="Center"
+                       VerticalAlignment="Center"/>
+            </Border>
 
-            <Grid x:Name="DragArea"
-                  Grid.Row="0"
-                  Height="32"
-                  Background="Transparent"
-                  Cursor="SizeAll"
-                  MouseLeftButtonDown="DragArea_MouseLeftButtonDown"
-                  VerticalAlignment="Top">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="18"/>
-                </Grid.ColumnDefinitions>
+            <StackPanel x:Name="MenuBody">
 
-                <Canvas Grid.Column="0"
-                        Width="14"
-                        Height="14"
-                        IsHitTestVisible="False"
-                        HorizontalAlignment="Center"
-                        VerticalAlignment="Center">
-                    <Line X1="7" Y1="1" X2="7" Y2="13" Stroke="{DynamicResource TextBrush}" StrokeThickness="1.2"/>
-                    <Line X1="1" Y1="7" X2="13" Y2="7" Stroke="{DynamicResource TextBrush}" StrokeThickness="1.2"/>
-                    <Polygon Points="7,0 5.5,2.5 8.5,2.5" Fill="{DynamicResource TextBrush}"/>
-                    <Polygon Points="7,14 5.5,11.5 8.5,11.5" Fill="{DynamicResource TextBrush}"/>
-                    <Polygon Points="0,7 2.5,5.5 2.5,8.5" Fill="{DynamicResource TextBrush}"/>
-                    <Polygon Points="14,7 11.5,5.5 11.5,8.5" Fill="{DynamicResource TextBrush}"/>
-                </Canvas>
-                <Button Grid.Column="1"
-                        x:Name="BtnMinimize"
-                        Width="16"
-                        Height="16"
-                        Margin="0,6,2,0"
-                        VerticalAlignment="Top"
-                        HorizontalAlignment="Right"
-                        Click="Minimize_Click"
-                        ToolTip="모든 창 트레이로 최소화"
-                        Background="Transparent"
-                        BorderBrush="Transparent"
-                        Foreground="{DynamicResource TextBrush}"
-                        Cursor="Hand"
-                        FontFamily="Segoe MDL2 Assets"
-                        FontSize="10"
-                        Padding="0"
-                        Focusable="False"
-                        Content="&#xE921;"/>
-            </Grid>
+            <!-- 트레이 최소화: 한글 텍스트 버튼 (리셋/닫기 버튼과 같은 시각 언어, 세로 낮게) -->
+            <Button x:Name="BtnMinimize"
+                    Height="18"
+                    Margin="2,2,2,4"
+                    HorizontalAlignment="Stretch"
+                    Click="Minimize_Click"
+                    ToolTip="모든 창 트레이로 최소화"
+                    Cursor="Hand"
+                    Focusable="False">
+                <Button.Template>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="ButtonBorder"
+                                Background="{DynamicResource OverlayTabHoverBrush}"
+                                BorderBrush="{DynamicResource ControlBorderBrush}"
+                                BorderThickness="1"
+                                CornerRadius="4">
+                            <ContentPresenter HorizontalAlignment="Center"
+                                              VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="ButtonBorder" Property="Background" Value="{DynamicResource OverlayTabSelectedBrush}"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="ButtonBorder" Property="Background" Value="{DynamicResource OverlayTabSelectedBorderBrush}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Button.Template>
+                <TextBlock x:Name="MinimizeText"
+                           Text="최소화"
+                           FontSize="10"
+                           TextAlignment="Center"
+                           LineHeight="12"
+                           LineStackingStrategy="BlockLineHeight"
+                           Foreground="{DynamicResource ButtonTextBrush}"/>
+            </Button>
 
-            <UniformGrid Grid.Row="1" Rows="9" Columns="1" HorizontalAlignment="Center" VerticalAlignment="Stretch">
+            <UniformGrid x:Name="ButtonsGrid" Rows="9" Columns="1" HorizontalAlignment="Center" VerticalAlignment="Center">
                 <!-- 1: MainWindow ON/OFF -->
                 <Button x:Name="BtnChat" Width="{DynamicResource MenuIconSize}" Height="{DynamicResource MenuIconSize}" Click="OpenChild_Click" ToolTip="Toggle Overlay" Style="{StaticResource MenuIconButtonStyle}" Margin="2,2,2,2">
                     <Image Source="/TWChatOverlay;component/Data/images/MenuIcon/Chat.png" MaxWidth="{DynamicResource MenuIconSize}" MaxHeight="{DynamicResource MenuIconSize}" Stretch="Uniform" HorizontalAlignment="Center" VerticalAlignment="Center" />
@@ -126,6 +131,7 @@
                     <Image Source="/TWChatOverlay;component/Data/images/MenuIcon/Exit.png" MaxWidth="{DynamicResource MenuIconSize}" MaxHeight="{DynamicResource MenuIconSize}" Stretch="Uniform" HorizontalAlignment="Center" VerticalAlignment="Center" />
                 </Button>
             </UniformGrid>
-        </Grid>
+            </StackPanel>
+        </StackPanel>
     </Border>
 </Window>

@@ -14,6 +14,7 @@ namespace TWChatOverlay.Views
     public partial class MenuWindow : Window
     {
         private Button? _activeSubmenuButton;
+        private readonly System.Windows.Threading.DispatcherTimer _menuAutoHideTimer;
         private MainWindow? _subscribedMainWindow;
         private readonly Forms.NotifyIcon _notifyIcon;
         private static ShoutReplayWindow? _shoutReplayWindow;
@@ -26,6 +27,13 @@ namespace TWChatOverlay.Views
             _notifyIcon = CreateNotifyIcon();
             LocationChanged += MenuWindow_LocationChanged;
 
+            // 채팅창 탭과 같은 방식: 마우스가 올라오면 펼치고, 벗어난 채 3초가 지나면 접는다
+            _menuAutoHideTimer = new System.Windows.Threading.DispatcherTimer { Interval = TimeSpan.FromSeconds(3) };
+            _menuAutoHideTimer.Tick += (_, _) => CollapseMenuBody();
+            MouseEnter += (_, _) => ExpandMenuBodyTemporarily();
+            MouseMove += (_, _) => ExpandMenuBodyTemporarily();
+            ExpandMenuBodyTemporarily();
+
             try
             {
                 var settings = GetSharedSettings();
@@ -35,6 +43,9 @@ namespace TWChatOverlay.Views
                     Left = settings.MenuWindowLeft.Value;
                     Top = settings.MenuWindowTop.Value;
                 }
+
+                ApplyMenuOrientation(settings.MenuWindowHorizontal);
+                settings.PropertyChanged += SharedSettings_PropertyChanged;
             }
             catch (Exception ex) { AppLogger.Warn("Failed to restore menu window position.", ex); }
 
@@ -99,17 +110,88 @@ namespace TWChatOverlay.Views
             catch { }
         }
 
-        private void DragArea_MouseLeftButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        private void SharedSettings_PropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName != nameof(Models.ChatSettings.MenuWindowHorizontal))
+                return;
+
+            try
+            {
+                Dispatcher.Invoke(() => ApplyMenuOrientation(GetSharedSettings().MenuWindowHorizontal));
+            }
+            catch { }
+        }
+
+        /// <summary>메뉴 바를 세로형/가로형으로 전환한다.</summary>
+        private void ApplyMenuOrientation(bool horizontal)
+        {
+            if (RootPanel == null || MenuBody == null || ButtonsGrid == null) return;
+
+            RootPanel.Orientation = horizontal ? Orientation.Horizontal : Orientation.Vertical;
+            MenuBody.Orientation = horizontal ? Orientation.Horizontal : Orientation.Vertical;
+            ButtonsGrid.Rows = horizontal ? 1 : 9;
+            ButtonsGrid.Columns = horizontal ? 9 : 1;
+
+            if (horizontal)
+            {
+                // 가로형: 최소화 버튼을 세로쓰기(최/소/화)로 좁고 길게
+                MinimizeText.Text = "최\n소\n화";
+                BtnMinimize.Width = 18;
+                BtnMinimize.Height = double.NaN;
+                BtnMinimize.HorizontalAlignment = HorizontalAlignment.Center;
+                BtnMinimize.VerticalAlignment = VerticalAlignment.Stretch;
+                BtnMinimize.Margin = new Thickness(2, 2, 4, 2);
+            }
+            else
+            {
+                MinimizeText.Text = "최소화";
+                BtnMinimize.Width = double.NaN;
+                BtnMinimize.Height = 18;
+                BtnMinimize.HorizontalAlignment = HorizontalAlignment.Stretch;
+                BtnMinimize.VerticalAlignment = VerticalAlignment.Center;
+                BtnMinimize.Margin = new Thickness(2, 2, 2, 4);
+            }
+        }
+
+        /// <summary>메뉴 몸통을 펼치고 자동 접힘 타이머를 다시 건다.</summary>
+        private void ExpandMenuBodyTemporarily()
+        {
+            if (MenuBody == null) return;
+
+            MenuBody.Visibility = Visibility.Visible;
+            _menuAutoHideTimer.Stop();
+            _menuAutoHideTimer.Start();
+        }
+
+        /// <summary>마우스가 벗어난 상태면 메뉴 몸통을 접는다. 아직 올라가 있으면 타이머만 연장.</summary>
+        private void CollapseMenuBody()
+        {
+            if (IsMouseOver)
+            {
+                _menuAutoHideTimer.Stop();
+                _menuAutoHideTimer.Start();
+                return;
+            }
+
+            _menuAutoHideTimer.Stop();
+            if (MenuBody != null)
+                MenuBody.Visibility = Visibility.Collapsed;
+        }
+
+        /// <summary>접힌 상태에서도 아이콘을 잡고 끌면 메뉴 바를 옮길 수 있다.</summary>
+        private void AppIcon_MouseLeftButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
         {
             try
             {
                 DragMove();
             }
-            catch (Exception ex) { AppLogger.Warn("Failed to persist menu window position.", ex); }
+            catch { }
         }
 
         protected override void OnClosed(System.EventArgs e)
         {
+            try { _menuAutoHideTimer.Stop(); } catch { }
+            try { GetSharedSettings().PropertyChanged -= SharedSettings_PropertyChanged; } catch { }
             try
             {
                 _notifyIcon.Visible = false;
