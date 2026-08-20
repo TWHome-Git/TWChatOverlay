@@ -171,15 +171,17 @@ namespace TWChatOverlay.Services
                     ref snappedTop);
             }
 
+            var (movingInsetX, movingInsetTop, _) = GetSnapInsets(movingWindow);
+
             if (snappedLeft.HasValue && Math.Abs(snappedLeft.Value - movingWindow.Left) > 0.01)
             {
-                movingWindow.Left = snappedLeft.Value - SnapInsetX;
+                movingWindow.Left = snappedLeft.Value - movingInsetX;
                 changed = true;
             }
 
             if (snappedTop.HasValue && Math.Abs(snappedTop.Value - movingWindow.Top) > 0.01)
             {
-                movingWindow.Top = snappedTop.Value - SnapInsetTop;
+                movingWindow.Top = snappedTop.Value - movingInsetTop;
                 changed = true;
             }
 
@@ -196,20 +198,29 @@ namespace TWChatOverlay.Services
                 if (!window.IsVisible)
                     continue;
 
-                if (window is TWChatOverlay.Views.MainWindow or TWChatOverlay.Views.ChatCloneWindow)
-                    yield return window;
+                if (UiLockService.IsUnlockChrome(window))
+                    continue;
+
+                yield return window;
             }
         }
+
+        /// <summary>채팅창은 테두리 5px 여백을 실제 가장자리로 취급하고, 그 외 창은 창 크기 그대로.</summary>
+        private static (double X, double Top, double Bottom) GetSnapInsets(Window window)
+            => window is TWChatOverlay.Views.MainWindow or TWChatOverlay.Views.ChatCloneWindow
+                ? (SnapInsetX, SnapInsetTop, SnapInsetBottom)
+                : (0.0, 0.0, 0.0);
 
         private static Rect GetVisibleFrame(Window window)
         {
             double width = window.ActualWidth > 0 ? window.ActualWidth : window.Width;
             double height = window.ActualHeight > 0 ? window.ActualHeight : window.Height;
 
-            double visibleLeft = window.Left + SnapInsetX;
-            double visibleTop = window.Top + SnapInsetTop;
-            double visibleWidth = Math.Max(0.0, width - (SnapInsetX * 2.0));
-            double visibleHeight = Math.Max(0.0, height - SnapInsetTop - SnapInsetBottom);
+            var (insetX, insetTop, insetBottom) = GetSnapInsets(window);
+            double visibleLeft = window.Left + insetX;
+            double visibleTop = window.Top + insetTop;
+            double visibleWidth = Math.Max(0.0, width - (insetX * 2.0));
+            double visibleHeight = Math.Max(0.0, height - insetTop - insetBottom);
             return new Rect(visibleLeft, visibleTop, visibleWidth, visibleHeight);
         }
 
