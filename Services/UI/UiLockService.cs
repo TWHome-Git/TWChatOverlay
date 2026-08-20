@@ -54,7 +54,8 @@ namespace TWChatOverlay.Services
         }
 
         /// <summary>
-        /// 전체 화면 딤 + 격자 배경. WS_EX_TRANSPARENT로 모든 클릭이 아래 창으로 통과한다.
+        /// 전체 화면 딤 + 격자 배경. 항상 모든 창(게임 포함)의 맨 뒤에 깔려
+        /// 게임 화면을 가리지 않고, 빈 바탕 영역에만 격자가 보인다. 클릭은 통과.
         /// </summary>
         private sealed class BackdropWindow : Window
         {
@@ -64,7 +65,7 @@ namespace TWChatOverlay.Services
                 AllowsTransparency = true;
                 ShowInTaskbar = false;
                 ShowActivated = false;
-                Topmost = true;
+                Topmost = false;
                 ResizeMode = ResizeMode.NoResize;
                 Left = SystemParameters.VirtualScreenLeft;
                 Top = SystemParameters.VirtualScreenTop;
@@ -87,6 +88,30 @@ namespace TWChatOverlay.Services
                 Content = root;
 
                 SourceInitialized += (_, _) => MakeClickThrough();
+                IsVisibleChanged += (_, e) =>
+                {
+                    if (e.NewValue is true) SendToBottom();
+                };
+            }
+
+            /// <summary>모든 창(게임 포함)의 맨 뒤로 보낸다.</summary>
+            private void SendToBottom()
+            {
+                try
+                {
+                    var handle = new WindowInteropHelper(this).Handle;
+                    if (handle == IntPtr.Zero) return;
+
+                    var HWND_BOTTOM = new IntPtr(1);
+                    const int SWP_NOMOVE = 0x0002;
+                    const int SWP_NOSIZE = 0x0001;
+                    const int SWP_NOACTIVATE = 0x0010;
+                    NativeMethods.SetWindowPos(handle, HWND_BOTTOM, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
+                }
+                catch (Exception ex)
+                {
+                    AppLogger.Warn("Backdrop send-to-bottom failed.", ex);
+                }
             }
 
             /// <summary>WS_EX_TRANSPARENT + WS_EX_NOACTIVATE: 모든 마우스 입력이 아래 창으로 통과.</summary>
@@ -211,6 +236,9 @@ namespace TWChatOverlay.Services
 
             [System.Runtime.InteropServices.DllImport("user32.dll")]
             public static extern int SetWindowLong(IntPtr hWnd, int nIndex, int dwNewLong);
+
+            [System.Runtime.InteropServices.DllImport("user32.dll")]
+            public static extern bool SetWindowPos(IntPtr hWnd, IntPtr hWndInsertAfter, int x, int y, int cx, int cy, int flags);
         }
     }
 }
