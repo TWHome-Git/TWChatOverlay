@@ -53,10 +53,10 @@ namespace TWChatOverlay.Services
             if (settings == null || (!force && !settings.ShowExperienceLimitAlertWindow))
                 return;
 
-            ShowWindow("경험치 누적 알림 위치", settings, requireAlertEnabled: false);
+            ShowWindow("경험치 누적 알림창", settings, requireAlertEnabled: false, isPreview: true);
         }
 
-        private static void ShowWindow(string message, ChatSettings settings, bool requireAlertEnabled)
+        private static void ShowWindow(string message, ChatSettings settings, bool requireAlertEnabled, bool isPreview = false)
         {
             if (string.IsNullOrWhiteSpace(message))
                 return;
@@ -76,6 +76,7 @@ namespace TWChatOverlay.Services
                 }
 
                 _window.SetMessage(message);
+                _window.SetPreviewMode(isPreview);
                 PositionWindow(_window, settings);
 
                 if (!_window.IsVisible)

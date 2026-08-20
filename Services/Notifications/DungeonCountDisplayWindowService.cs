@@ -10,7 +10,7 @@ namespace TWChatOverlay.Services
     public static class DungeonCountDisplayWindowService
     {
         private const double DisplayWidth = 360;
-        private const double DisplayHeight = 76;
+        private const double DisplayHeight = 72;
         private const double TopOffset = 124;
         private const double Gap = 8;
         private const string PositionPreviewKey = "__dungeon_count_position_preview";
@@ -59,16 +59,18 @@ namespace TWChatOverlay.Services
 
             Application.Current.Dispatcher.BeginInvoke(new Action(() =>
             {
-                string message = "던전 카운터 위치";
+                string message = "던전 카운트 알림창";
                 if (ActiveWindowsByKey.TryGetValue(PositionPreviewKey, out DungeonCountDisplayWindow? existing) &&
                     existing.IsLoaded)
                 {
                     existing.SetSettings(settings);
                     existing.UpdateDisplay(message, durationSeconds: 0);
+                    existing.SetPreviewMode(true);
                     return;
                 }
 
                 var window = new DungeonCountDisplayWindow(message, ResolveFont(), durationSeconds: 0, settings);
+                window.SetPreviewMode(true);
                 window.Closed += (_, _) =>
                 {
                     ActiveWindows.Remove(window);

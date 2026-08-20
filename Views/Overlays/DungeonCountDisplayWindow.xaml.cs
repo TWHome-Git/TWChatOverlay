@@ -45,6 +45,13 @@ namespace TWChatOverlay.Views
             ApplyToolWindowStyle();
         }
 
+        /// <summary>위치 미리보기: 통일 라벨("던전 카운트 알림창")만 표시.</summary>
+        public void SetPreviewMode(bool isPreview)
+        {
+            NormalContent.Visibility = isPreview ? Visibility.Collapsed : Visibility.Visible;
+            PreviewLabel.Visibility = isPreview ? Visibility.Visible : Visibility.Collapsed;
+        }
+
         public void UpdateDisplay(string message, int durationSeconds)
         {
             _isClosing = false;

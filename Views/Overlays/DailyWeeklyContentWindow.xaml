@@ -118,24 +118,17 @@
                                VerticalAlignment="Center"
                                TextAlignment="Center"
                                TextTrimming="CharacterEllipsis"
-                               Margin="0,0,124,0"/>
+                               Margin="0,0,168,0"/>
                     <StackPanel HorizontalAlignment="Right"
                                 Orientation="Horizontal"
                                 VerticalAlignment="Center">
                         <views:OverlayOpacityChip GroupKey="Content" SliderWidth="52" ShowValueText="False" Margin="0,0,8,0"/>
-                        <Button Content="&#x2699;" Click="Settings_Click"
-                                Width="22" Height="22" Cursor="Hand" Margin="0,0,2,0"
-                                Style="{StaticResource SettingsButtonStyle}"/>
-                        <Button Content="X" Click="Close_Click"
-                                Cursor="Hand"
-                                Background="Transparent"
-                                BorderThickness="0"
-                                Foreground="{DynamicResource OverlaySubtleTextBrush}"
-                                FontSize="13"
-                                Padding="0"
-                                Width="22"
-                                Height="22"
-                                Margin="0,0,0,0"/>
+                        <Button Content="설정" Click="Settings_Click"
+                                Height="22" MinWidth="40" Padding="8,0" FontSize="11" Cursor="Hand" Margin="0,0,4,0"
+                                Style="{DynamicResource SecondaryButtonStyle}"/>
+                        <Button Content="닫기" Click="Close_Click"
+                                Height="22" MinWidth="40" Padding="8,0" FontSize="11" Cursor="Hand"
+                                Style="{DynamicResource SecondaryButtonStyle}"/>
                     </StackPanel>
                 </Grid>
             </Border>

@@ -58,6 +58,7 @@ namespace TWChatOverlay.Views
         public void SetPreviewMode(bool isPreview)
         {
             _isPreviewMode = isPreview;
+            ApplyPreviewVisual(isPreview);
             RefreshMousePassthroughStyle(forceInteractive: isPreview);
             if (isPreview)
             {
@@ -75,9 +76,17 @@ namespace TWChatOverlay.Views
             ApplyLayoutConstraints();
         }
 
+        // 미리보기 = 통일 라벨("외치기 알림창")만, 실제 토스트 = 기존 레이아웃
+        private void ApplyPreviewVisual(bool isPreview)
+        {
+            NormalContent.Visibility = isPreview ? Visibility.Collapsed : Visibility.Visible;
+            PreviewLabel.Visibility = isPreview ? Visibility.Visible : Visibility.Collapsed;
+        }
+
         public void ShowAnimated(double targetLeft, double targetTop, int durationSeconds = 5)
         {
             _isPreviewMode = false;
+            ApplyPreviewVisual(false);
             RefreshMousePassthroughStyle(forceInteractive: false);
 
             double centerX = targetLeft + (BaseToastWidth / 2.0);
@@ -110,6 +119,7 @@ namespace TWChatOverlay.Views
         public void ShowPreview(double targetLeft, double targetTop)
         {
             _isPreviewMode = true;
+            ApplyPreviewVisual(true);
             RefreshMousePassthroughStyle(forceInteractive: true);
             BeginAnimation(TopProperty, null);
             BeginAnimation(LeftProperty, null);

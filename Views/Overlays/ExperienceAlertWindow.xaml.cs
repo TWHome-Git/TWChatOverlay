@@ -30,6 +30,13 @@ namespace TWChatOverlay.Views
             MessageTextBlock.Text = message;
         }
 
+        /// <summary>위치 미리보기: 통일 라벨("경험치 누적 알림창")만 표시.</summary>
+        public void SetPreviewMode(bool isPreview)
+        {
+            NormalContent.Visibility = isPreview ? Visibility.Collapsed : Visibility.Visible;
+            PreviewLabel.Visibility = isPreview ? Visibility.Visible : Visibility.Collapsed;
+        }
+
         public void BringToFront()
         {
             TopmostWindowHelper.BringToTopmost(this);

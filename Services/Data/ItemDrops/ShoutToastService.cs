@@ -60,7 +60,7 @@ namespace TWChatOverlay.Services
             {
                 if (_previewToast == null || !_previewToast.IsLoaded)
                 {
-                    _previewToast = new ShoutToastWindow("외치기 토스트 위치", ResolveToastFont(), settings);
+                    _previewToast = new ShoutToastWindow("외치기 알림창", ResolveToastFont(), settings);
                     _previewToast.Closed += (_, _) =>
                     {
                         _previewToast = null;
@@ -70,7 +70,7 @@ namespace TWChatOverlay.Services
                 else
                 {
                     _previewToast.SetSettings(settings);
-                    _previewToast.SetMessage("외치기 토스트 위치");
+                    _previewToast.SetMessage("외치기 알림창");
                 }
 
                 _previewToast.SetPreviewMode(true);
@@ -144,7 +144,7 @@ namespace TWChatOverlay.Services
 
             if (_previewToast == null || !_previewToast.IsLoaded)
             {
-                _previewToast = new ShoutToastWindow("외치기 토스트 위치", ResolveToastFont(), settings);
+                _previewToast = new ShoutToastWindow("외치기 알림창", ResolveToastFont(), settings);
                 _previewToast.Closed += (_, _) => { _previewToast = null; };
             }
             else
