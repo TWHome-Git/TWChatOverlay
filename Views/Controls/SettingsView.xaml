@@ -125,7 +125,8 @@
             <views:AddonView x:Name="AddonHost" Grid.Column="1" Visibility="Collapsed"/>
 
             <ScrollViewer x:Name="SettingsScroll" Grid.Column="1" VerticalScrollBarVisibility="Auto" Style="{StaticResource OverlayScrollViewerStyle}">
-                <StackPanel Margin="16,4,16,12">
+                <!-- 폭 제한: 라벨-컨트롤 간격이 벌어지지 않도록 콘텐츠를 460~620px 범위로 유지 -->
+                <StackPanel Margin="16,4,16,12" MinWidth="460" MaxWidth="620" HorizontalAlignment="Left">
 
                     <!-- ===================== 채팅 ===================== -->
                     <StackPanel x:Name="ChatPanel">
