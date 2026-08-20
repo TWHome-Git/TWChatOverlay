@@ -52,6 +52,7 @@ namespace TWChatOverlay.Models
         private bool _showItemDropAlert = false;
         private bool _showEtosHelperWindow = false;
         private bool _menuWindowHorizontal = false;
+        private bool _windowSnapEnabled = false;
         private bool _showItemDropHelperWindow = false;
         private bool _useCustomDropItemFilter = false;
         private string _customDropItemJson = string.Empty;
@@ -830,6 +831,9 @@ namespace TWChatOverlay.Models
         [JsonPropertyOrder(55)]
         public double? SubMenuWindowTop { get; set; } = 0.0;
         [JsonPropertyOrder(56)]
+        /// <summary>잠금 해제 모드에서 채팅창끼리 가장자리에 자석처럼 붙는 스냅 기능.</summary>
+        public bool WindowSnapEnabled { get => _windowSnapEnabled; set { _windowSnapEnabled = value; OnPropertyChanged(); } }
+
         /// <summary>메뉴 바 방향: false=세로형(기본), true=가로형.</summary>
         public bool MenuWindowHorizontal { get => _menuWindowHorizontal; set { _menuWindowHorizontal = value; OnPropertyChanged(); } }
 
