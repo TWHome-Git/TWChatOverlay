@@ -72,6 +72,7 @@ namespace TWChatOverlay.Models
         private string _toggleDailyWeeklyContentHotKey = "";
         private string _toggleSettingsHotKey = "";
         private string _toggleTrayAllHotKey = "";
+        private string _toggleUnlockHotKey = "";
         private double _overlayOpacityPercent = 96.0;
         private readonly Dictionary<string, double> _overlayOpacityByGroup = new(StringComparer.OrdinalIgnoreCase);
         private string _mainWindowChatTabTag = "Basic";
@@ -627,6 +628,19 @@ namespace TWChatOverlay.Models
             {
                 if (_toggleTrayAllHotKey == value) return;
                 _toggleTrayAllHotKey = value;
+                OnPropertyChanged();
+            }
+        }
+
+        /// <summary>잠금 해제 모드 토글 단축키.</summary>
+        [JsonPropertyOrder(375)]
+        public string ToggleUnlockHotKey
+        {
+            get => _toggleUnlockHotKey;
+            set
+            {
+                if (_toggleUnlockHotKey == value) return;
+                _toggleUnlockHotKey = value;
                 OnPropertyChanged();
             }
         }

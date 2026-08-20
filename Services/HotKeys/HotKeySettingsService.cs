@@ -15,7 +15,8 @@ namespace TWChatOverlay.Services
             nameof(ChatSettings.ToggleOverlayHotKey),
             nameof(ChatSettings.ToggleDailyWeeklyContentHotKey),
             nameof(ChatSettings.ToggleSettingsHotKey),
-            nameof(ChatSettings.ToggleTrayAllHotKey)
+            nameof(ChatSettings.ToggleTrayAllHotKey),
+            nameof(ChatSettings.ToggleUnlockHotKey)
         };
 
         public static void ResolveConflict(ChatSettings settings, string targetPropertyName, string? hotKeyValue, Action<string>? onPropertyCleared)
@@ -91,6 +92,7 @@ namespace TWChatOverlay.Services
             nameof(ChatSettings.ToggleDailyWeeklyContentHotKey) => settings.ToggleDailyWeeklyContentHotKey,
             nameof(ChatSettings.ToggleSettingsHotKey) => settings.ToggleSettingsHotKey,
             nameof(ChatSettings.ToggleTrayAllHotKey) => settings.ToggleTrayAllHotKey,
+            nameof(ChatSettings.ToggleUnlockHotKey) => settings.ToggleUnlockHotKey,
             _ => string.Empty
         };
 
@@ -112,6 +114,9 @@ namespace TWChatOverlay.Services
                     break;
                 case nameof(ChatSettings.ToggleTrayAllHotKey):
                     settings.ToggleTrayAllHotKey = value;
+                    break;
+                case nameof(ChatSettings.ToggleUnlockHotKey):
+                    settings.ToggleUnlockHotKey = value;
                     break;
             }
         }

@@ -55,6 +55,7 @@ namespace TWChatOverlay.Views
             }
             else
             {
+                if (!UiLockService.IsUnlocked) return;
                 DragMove();
             }
         }

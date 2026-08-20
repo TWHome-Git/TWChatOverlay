@@ -22,7 +22,8 @@
                     Background="{DynamicResource OverlayWindowBackgroundBrush}" CornerRadius="10"
                     BorderThickness="1.5" BorderBrush="{DynamicResource OverlayWindowBorderBrush}" ClipToBounds="False"
                     MouseEnter="MainBorder_MouseEnter"
-                    MouseMove="MainBorder_MouseMove">
+                    MouseMove="MainBorder_MouseMove"
+                    PreviewMouseLeftButtonDown="MainBorder_MouseLeftButtonDown">
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition x:Name="DragBarRow" Height="0"/>

@@ -24,9 +24,11 @@ namespace TWChatOverlay.Views
 
             _hotKeyService.Unregister(HotKeyService.TOGGLE_SETTINGS_ID);
             _hotKeyService.Unregister(HotKeyService.TOGGLE_TRAY_ALL_ID);
+            _hotKeyService.Unregister(HotKeyService.TOGGLE_UNLOCK_ID);
 
             RegisterHotKeyOptional(HotKeyService.TOGGLE_SETTINGS_ID, _settings.ToggleSettingsHotKey);
             RegisterHotKeyOptional(HotKeyService.TOGGLE_TRAY_ALL_ID, _settings.ToggleTrayAllHotKey);
+            RegisterHotKeyOptional(HotKeyService.TOGGLE_UNLOCK_ID, _settings.ToggleUnlockHotKey);
         }
 
         private bool RegisterHotKeyOptional(int id, string? value)

@@ -74,6 +74,7 @@ namespace TWChatOverlay.Models
             _toggleDailyWeeklyContentHotKey = "";
             _toggleSettingsHotKey = "";
             _toggleTrayAllHotKey = "";
+            _toggleUnlockHotKey = "";
             _overlayOpacityPercent = 96.0;
             _overlayOpacityByGroup.Clear();
             _mainWindowChatTabTag = "Basic";
