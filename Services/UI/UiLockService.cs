@@ -416,16 +416,30 @@ namespace TWChatOverlay.Services
         }
 
         /// <summary>
-        /// 선택된 창의 편집 패널: 창 이름, 1px 이동 버튼(길게 누르면 반복), 가로/세로 크기 입력.
-        /// WoW 애드온의 프레임 편집 방식과 동일한 조작을 제공한다.
+        /// 선택된 창에 부착되는 편집 UI. 1px 이동 버튼이 창의 각 변 가운데(밖)에 붙고,
+        /// 정보 패널(이름/좌표/가로·세로 입력)은 창 상단에 — 창이 화면 위쪽에 붙어 있으면
+        /// 하단에 — 표시된다. 투명 영역 클릭은 아래(대상 창)로 통과한다.
         /// </summary>
         private sealed class InspectorWindow : Window
         {
             private Window? _target;
+            private readonly Canvas _canvas;
+            private readonly Border _panel;
+            private readonly System.Windows.Controls.Primitives.RepeatButton _btnUp;
+            private readonly System.Windows.Controls.Primitives.RepeatButton _btnDown;
+            private readonly System.Windows.Controls.Primitives.RepeatButton _btnLeft;
+            private readonly System.Windows.Controls.Primitives.RepeatButton _btnRight;
             private readonly TextBlock _nameText;
             private readonly TextBlock _positionText;
             private readonly TextBox _widthBox;
             private readonly TextBox _heightBox;
+
+            private const double SideZone = 34;   // 좌우 버튼이 차지하는 폭
+            private const double VertZone = 118;  // 상하 버튼 + 정보 패널이 차지하는 높이
+            private const double PanelWidth = 218;
+            private const double ButtonW = 26;
+            private const double ButtonH = 24;
+            private const double Gap = 6;
 
             private static readonly Color PanelBg = Color.FromRgb(0x10, 0x16, 0x14);
             private static readonly Color FieldBg = Color.FromRgb(0x0D, 0x12, 0x10);
@@ -443,7 +457,6 @@ namespace TWChatOverlay.Services
                 ShowActivated = false;
                 Topmost = true;
                 ResizeMode = ResizeMode.NoResize;
-                SizeToContent = SizeToContent.WidthAndHeight;
 
                 _nameText = new TextBlock
                 {
@@ -460,37 +473,14 @@ namespace TWChatOverlay.Services
                     Margin = new Thickness(8, 0, 0, 0),
                 };
 
-                var header = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 0, 0, 8) };
+                var header = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 0, 0, 6) };
                 header.Children.Add(_nameText);
                 header.Children.Add(_positionText);
-
-                // 1px 이동 십자 버튼
-                var nudgeGrid = new Grid { Margin = new Thickness(0, 0, 16, 0) };
-                for (int i = 0; i < 3; i++)
-                {
-                    nudgeGrid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
-                    nudgeGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
-                }
-                nudgeGrid.Children.Add(CreateNudgeButton("▲", 0, -1, 0, 1));
-                nudgeGrid.Children.Add(CreateNudgeButton("◀", -1, 0, 1, 0));
-                nudgeGrid.Children.Add(CreateNudgeButton("▶", 1, 0, 1, 2));
-                nudgeGrid.Children.Add(CreateNudgeButton("▼", 0, 1, 2, 1));
-                var nudgeCenter = new TextBlock
-                {
-                    Text = "1px",
-                    FontSize = 9,
-                    Foreground = new SolidColorBrush(SubTextCol),
-                    HorizontalAlignment = HorizontalAlignment.Center,
-                    VerticalAlignment = VerticalAlignment.Center,
-                };
-                Grid.SetRow(nudgeCenter, 1);
-                Grid.SetColumn(nudgeCenter, 1);
-                nudgeGrid.Children.Add(nudgeCenter);
 
                 // 가로/세로 크기 입력
                 _widthBox = CreateSizeBox();
                 _heightBox = CreateSizeBox();
-                var sizePanel = new Grid { VerticalAlignment = VerticalAlignment.Center };
+                var sizePanel = new Grid();
                 sizePanel.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
                 sizePanel.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
                 sizePanel.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
@@ -504,33 +494,33 @@ namespace TWChatOverlay.Services
                 sizePanel.Children.Add(_widthBox);
                 sizePanel.Children.Add(_heightBox);
 
-                var body = new StackPanel { Orientation = Orientation.Horizontal };
-                body.Children.Add(nudgeGrid);
-                body.Children.Add(sizePanel);
-
                 var root = new StackPanel();
                 root.Children.Add(header);
-                root.Children.Add(body);
+                root.Children.Add(sizePanel);
 
-                var panel = new Border
+                _panel = new Border
                 {
-                    Padding = new Thickness(12, 9, 12, 10),
+                    Width = PanelWidth,
+                    Padding = new Thickness(12, 8, 12, 9),
                     CornerRadius = new CornerRadius(4),
                     BorderThickness = new Thickness(1),
                     Background = new SolidColorBrush(Color.FromArgb(0xF2, PanelBg.R, PanelBg.G, PanelBg.B)),
                     BorderBrush = new SolidColorBrush(BorderCol),
                     Child = root,
                 };
-                Content = panel;
 
-                // 패널 자체도 드래그로 옮길 수 있게 (입력 컨트롤 위 클릭은 제외)
-                panel.MouseLeftButtonDown += (_, e) =>
-                {
-                    if (e.OriginalSource is System.Windows.Controls.Primitives.TextBoxBase) return;
-                    try { DragMove(); } catch { }
-                };
+                _btnUp = CreateNudgeButton("▲", 0, -1);
+                _btnDown = CreateNudgeButton("▼", 0, 1);
+                _btnLeft = CreateNudgeButton("◀", -1, 0);
+                _btnRight = CreateNudgeButton("▶", 1, 0);
 
-                Loaded += (_, _) => PositionTopCenter();
+                _canvas = new Canvas();
+                _canvas.Children.Add(_btnUp);
+                _canvas.Children.Add(_btnDown);
+                _canvas.Children.Add(_btnLeft);
+                _canvas.Children.Add(_btnRight);
+                _canvas.Children.Add(_panel);
+                Content = _canvas;
 
                 PreviewKeyDown += (_, e) =>
                 {
@@ -538,14 +528,13 @@ namespace TWChatOverlay.Services
                 };
             }
 
-            private System.Windows.Controls.Primitives.RepeatButton CreateNudgeButton(string glyph, int dx, int dy, int row, int col)
+            private System.Windows.Controls.Primitives.RepeatButton CreateNudgeButton(string glyph, int dx, int dy)
             {
                 var button = new System.Windows.Controls.Primitives.RepeatButton
                 {
                     Content = glyph,
-                    Width = 26,
-                    Height = 24,
-                    Margin = new Thickness(1),
+                    Width = ButtonW,
+                    Height = ButtonH,
                     FontSize = 10,
                     Cursor = Cursors.Hand,
                     Focusable = false,
@@ -554,10 +543,9 @@ namespace TWChatOverlay.Services
                     Foreground = new SolidColorBrush(TextCol),
                     Background = new SolidColorBrush(FieldBg),
                     BorderBrush = new SolidColorBrush(BorderCol),
+                    ToolTip = "1px 이동 (길게 누르면 반복)",
                 };
                 button.Click += (_, _) => NudgeSelected(dx, dy);
-                Grid.SetRow(button, row);
-                Grid.SetColumn(button, col);
                 return button;
             }
 
@@ -631,8 +619,43 @@ namespace TWChatOverlay.Services
                         _widthBox.Text = ((int)Math.Round(target.ActualWidth)).ToString();
                     if (!_heightBox.IsKeyboardFocused)
                         _heightBox.Text = ((int)Math.Round(target.ActualHeight)).ToString();
+
+                    RefreshLayout(target);
                 }
                 catch { }
+            }
+
+            /// <summary>대상 창의 위치·크기에 맞춰 이 창을 감싸도록 재배치한다.</summary>
+            private void RefreshLayout(Window target)
+            {
+                double tw = Math.Max(16, target.ActualWidth);
+                double th = Math.Max(16, target.ActualHeight);
+
+                Left = target.Left - SideZone;
+                Top = target.Top - VertZone;
+                Width = tw + SideZone * 2;
+                Height = th + VertZone * 2;
+
+                // 상하좌우 버튼: 각 변의 가운데, 창 바깥쪽에 붙인다
+                Canvas.SetLeft(_btnLeft, SideZone - ButtonW - 4);
+                Canvas.SetTop(_btnLeft, VertZone + th / 2 - ButtonH / 2);
+                Canvas.SetLeft(_btnRight, SideZone + tw + 4);
+                Canvas.SetTop(_btnRight, VertZone + th / 2 - ButtonH / 2);
+                Canvas.SetLeft(_btnUp, SideZone + tw / 2 - ButtonW / 2);
+                Canvas.SetTop(_btnUp, VertZone - ButtonH - 4);
+                Canvas.SetLeft(_btnDown, SideZone + tw / 2 - ButtonW / 2);
+                Canvas.SetTop(_btnDown, VertZone + th + 4);
+
+                // 정보 패널: 기본은 창 상단(▲ 버튼 위), 화면 위쪽에 붙어 있으면 하단(▼ 버튼 아래)
+                double panelHeight = _panel.ActualHeight > 0 ? _panel.ActualHeight : 84;
+                bool showBelow = target.Top - (ButtonH + Gap * 2 + panelHeight) < SystemParameters.VirtualScreenTop + 4;
+
+                double panelLeft = SideZone + tw / 2 - PanelWidth / 2;
+                panelLeft = Math.Max(2, Math.Min(Width - PanelWidth - 2, panelLeft));
+                Canvas.SetLeft(_panel, panelLeft);
+                Canvas.SetTop(_panel, showBelow
+                    ? VertZone + th + 4 + ButtonH + Gap
+                    : VertZone - ButtonH - 4 - Gap - panelHeight);
             }
 
             private void ApplySizeFromBoxes()
@@ -651,12 +674,6 @@ namespace TWChatOverlay.Services
                 RefreshValues();
             }
 
-            private void PositionTopCenter()
-            {
-                double width = ActualWidth > 0 ? ActualWidth : 260;
-                Left = (SystemParameters.PrimaryScreenWidth - width) / 2.0;
-                Top = 64;
-            }
         }
 
         private static class NativeMethods
