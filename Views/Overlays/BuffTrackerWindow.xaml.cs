@@ -72,6 +72,10 @@ namespace TWChatOverlay.Views
             if (TrayAllWindowsService.IsTrayed)
                 return;
 
+            // 잠금 해제 중에는 최대 크기 미리보기(도우미 창)가 대신 표시된다
+            if (UiLockService.IsUnlocked)
+                return;
+
             if (_settings.EnableBuffTrackerAlert && _tracker.HasAnyActiveBuffs)
             {
                 if (!IsVisible)
@@ -127,7 +131,18 @@ namespace TWChatOverlay.Views
 
         private void OnUnlockChanged(bool unlocked)
         {
-            try { Dispatcher.Invoke(ApplyMousePassthroughStyle); } catch { }
+            try
+            {
+                Dispatcher.Invoke(() =>
+                {
+                    ApplyMousePassthroughStyle();
+                    if (unlocked)
+                        Hide(); // 미리보기(도우미)가 대신 표시된다
+                    else
+                        ApplyVisibility();
+                });
+            }
+            catch { }
         }
 
         private void BringToFront()

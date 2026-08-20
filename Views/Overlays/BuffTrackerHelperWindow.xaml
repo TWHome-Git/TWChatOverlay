@@ -1,8 +1,8 @@
-﻿<Window x:Class="TWChatOverlay.Views.BuffTrackerHelperWindow"
+<Window x:Class="TWChatOverlay.Views.BuffTrackerHelperWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Width="420"
-        SizeToContent="Height"
+        SizeToContent="WidthAndHeight"
+        MaxWidth="420"
         Topmost="True"
         ShowInTaskbar="False"
         ShowActivated="False"
@@ -11,69 +11,46 @@
         WindowStartupLocation="Manual"
         Background="Transparent"
         AllowsTransparency="True">
+    <Window.Resources>
+        <!-- 실제 버프 추적창과 동일한 타일 (BuffTrackerWindow.xaml 참고) -->
+        <DataTemplate x:Key="BuffTileTemplate">
+            <StackPanel Orientation="Horizontal"
+                        Margin="0,0,12,0"
+                        ToolTip="{Binding DisplayName}">
+                <Border Width="26"
+                        Height="26"
+                        CornerRadius="5"
+                        Background="{DynamicResource OverlayBuffTileBackgroundBrush}"
+                        BorderBrush="{Binding AccentBrush}"
+                        BorderThickness="1">
+                    <Image Source="{Binding IconSource}"
+                           Stretch="Uniform"
+                           Margin="2"/>
+                </Border>
+                <TextBlock Text="{Binding RemainingText}"
+                           Foreground="{DynamicResource TextBrush}"
+                           FontSize="13"
+                           FontWeight="SemiBold"
+                           VerticalAlignment="Center"
+                           Margin="7,0,0,0"/>
+            </StackPanel>
+        </DataTemplate>
+    </Window.Resources>
+
     <Border Background="{DynamicResource OverlayWindowBackgroundBrush}"
             BorderBrush="{DynamicResource OverlayHelperWindowBorderBrush}"
             BorderThickness="1.2"
             CornerRadius="8"
-            Padding="8,6"
+            Padding="10,7"
             MouseLeftButtonDown="RootBorder_MouseLeftButtonDown">
-        <Grid>
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="16"/>
-                <ColumnDefinition Width="*"/>
-            </Grid.ColumnDefinitions>
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto"/>
-            </Grid.RowDefinitions>
-
-            <StackPanel Grid.Column="0" Grid.Row="0">
-                <TextBlock Text="레어"
-                           Foreground="{DynamicResource OverlayRareAccentBrush}"
-                           FontSize="11"
-                           FontWeight="Bold"
-                           Margin="0,0,0,4"/>
-                <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
-                    <Border Width="28"
-                            Height="28"
-                            CornerRadius="8"
-                            Background="{DynamicResource OverlayBuffTileBackgroundBrush}"
-                            BorderBrush="{DynamicResource OverlayBuffTileBorderBrush}"
-                            BorderThickness="1">
-                        <Rectangle Fill="{DynamicResource OverlayRareAccentBrush}" Opacity="0.55" Margin="4" RadiusX="3" RadiusY="3"/>
-                    </Border>
-                    <TextBlock Text="00:00"
-                               Foreground="{DynamicResource TextBrush}"
-                               FontSize="12"
-                               FontWeight="SemiBold"
-                               VerticalAlignment="Center"
-                               Margin="6,0,0,0"/>
-                </StackPanel>
-            </StackPanel>
-
-            <StackPanel Grid.Column="2" Grid.Row="0">
-                <TextBlock Text="경험치"
-                           Foreground="{DynamicResource OverlayExpAccentBrush}"
-                           FontSize="11"
-                           FontWeight="Bold"
-                           Margin="0,0,0,4"/>
-                <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
-                    <Border Width="28"
-                            Height="28"
-                            CornerRadius="8"
-                            Background="{DynamicResource OverlayBuffTileBackgroundBrush}"
-                            BorderBrush="{DynamicResource OverlayBuffTileBorderBrush}"
-                            BorderThickness="1">
-                        <Rectangle Fill="{DynamicResource OverlayExpAccentBrush}" Opacity="0.55" Margin="4" RadiusX="3" RadiusY="3"/>
-                    </Border>
-                    <TextBlock Text="00:00"
-                               Foreground="{DynamicResource TextBrush}"
-                               FontSize="12"
-                               FontWeight="SemiBold"
-                               VerticalAlignment="Center"
-                               Margin="6,0,0,0"/>
-                </StackPanel>
-            </StackPanel>
-        </Grid>
+        <!-- 모든 버프가 켜졌을 때 기준의 최대 크기 미리보기 -->
+        <ItemsControl x:Name="PreviewItems"
+                      ItemTemplate="{StaticResource BuffTileTemplate}">
+            <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <WrapPanel Orientation="Horizontal"/>
+                </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+        </ItemsControl>
     </Border>
 </Window>

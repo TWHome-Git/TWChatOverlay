@@ -15,6 +15,7 @@ namespace TWChatOverlay.Views
             InitializeComponent();
             WindowFontService.Apply(this);
             Instance = this;
+            PreviewItems.ItemsSource = BuffTrackerService.CreatePreviewItems();
             LocationChanged += (_, _) => SyncPositionToSettings();
         }
 

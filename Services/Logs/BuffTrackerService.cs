@@ -428,6 +428,26 @@ namespace TWChatOverlay.Services
             };
         }
 
+        /// <summary>위치 조정 미리보기용: 모든 버프가 켜졌을 때의 표시 목록 (레어 → 경험치 순).</summary>
+        public static List<BuffDisplayItem> CreatePreviewItems()
+        {
+            var result = new List<BuffDisplayItem>();
+            foreach (var definition in CreateDefinitions()
+                .OrderBy(d => d.Category)
+                .ThenBy(d => d.SortOrder)
+                .ThenBy(d => d.DisplayName, StringComparer.Ordinal))
+            {
+                result.Add(new BuffDisplayItem(
+                    definition.DisplayName,
+                    "30:00",
+                    definition.IconSource,
+                    definition.SortOrder,
+                    definition.Category == BuffCategory.Rare));
+            }
+
+            return result;
+        }
+
         private enum BuffCategory
         {
             Rare,
