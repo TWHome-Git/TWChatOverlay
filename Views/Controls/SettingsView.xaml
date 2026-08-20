@@ -260,6 +260,66 @@
                                 </DockPanel>
                             </Border>
                         </WrapPanel>
+
+                        <TextBlock Text="서브 채팅창 1" Style="{StaticResource SettingsSectionLabelStyle}"/>
+                        <WrapPanel>
+                            <Border Style="{StaticResource SettingsRowStyle}">
+                                <DockPanel>
+                                    <CheckBox DockPanel.Dock="Right" IsChecked="{Binding Clone1FollowMainFont}" Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
+                                    <TextBlock Text="메인 폰트 따라가기" Style="{StaticResource SettingsRowLabelStyle}"/>
+                                </DockPanel>
+                            </Border>
+                            <Border Style="{StaticResource SettingsRowStyle}">
+                                <DockPanel>
+                                    <ComboBox DockPanel.Dock="Right" Width="150" Height="26"
+                                              ItemsSource="{Binding AvailableFonts}"
+                                              SelectedItem="{Binding Clone1FontFamily, Mode=TwoWay}"
+                                              IsEnabled="{Binding Clone1FollowMainFont, Converter={StaticResource BooleanInverseConverter}}"
+                                              Style="{StaticResource DarkComboBoxStyle}"/>
+                                    <TextBlock Text="폰트" Style="{StaticResource SettingsRowLabelStyle}"/>
+                                </DockPanel>
+                            </Border>
+                            <Border Style="{StaticResource SettingsRowStyle}">
+                                <DockPanel>
+                                    <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                                        <Slider Minimum="10" Maximum="28" Value="{Binding Clone1FontSize, Mode=TwoWay}" TickFrequency="1" IsSnapToTickEnabled="True" VerticalAlignment="Center" Width="140"
+                                                IsEnabled="{Binding Clone1FollowMainFont, Converter={StaticResource BooleanInverseConverter}}"/>
+                                        <TextBlock Text="{Binding Clone1FontSize, StringFormat={}{0:F0}}" Foreground="{DynamicResource TextBrush}" Width="26" TextAlignment="Right" VerticalAlignment="Center" FontSize="12"/>
+                                    </StackPanel>
+                                    <TextBlock Text="크기" Style="{StaticResource SettingsRowLabelStyle}"/>
+                                </DockPanel>
+                            </Border>
+                        </WrapPanel>
+
+                        <TextBlock Text="서브 채팅창 2" Style="{StaticResource SettingsSectionLabelStyle}"/>
+                        <WrapPanel>
+                            <Border Style="{StaticResource SettingsRowStyle}">
+                                <DockPanel>
+                                    <CheckBox DockPanel.Dock="Right" IsChecked="{Binding Clone2FollowMainFont}" Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
+                                    <TextBlock Text="메인 폰트 따라가기" Style="{StaticResource SettingsRowLabelStyle}"/>
+                                </DockPanel>
+                            </Border>
+                            <Border Style="{StaticResource SettingsRowStyle}">
+                                <DockPanel>
+                                    <ComboBox DockPanel.Dock="Right" Width="150" Height="26"
+                                              ItemsSource="{Binding AvailableFonts}"
+                                              SelectedItem="{Binding Clone2FontFamily, Mode=TwoWay}"
+                                              IsEnabled="{Binding Clone2FollowMainFont, Converter={StaticResource BooleanInverseConverter}}"
+                                              Style="{StaticResource DarkComboBoxStyle}"/>
+                                    <TextBlock Text="폰트" Style="{StaticResource SettingsRowLabelStyle}"/>
+                                </DockPanel>
+                            </Border>
+                            <Border Style="{StaticResource SettingsRowStyle}">
+                                <DockPanel>
+                                    <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                                        <Slider Minimum="10" Maximum="28" Value="{Binding Clone2FontSize, Mode=TwoWay}" TickFrequency="1" IsSnapToTickEnabled="True" VerticalAlignment="Center" Width="140"
+                                                IsEnabled="{Binding Clone2FollowMainFont, Converter={StaticResource BooleanInverseConverter}}"/>
+                                        <TextBlock Text="{Binding Clone2FontSize, StringFormat={}{0:F0}}" Foreground="{DynamicResource TextBrush}" Width="26" TextAlignment="Right" VerticalAlignment="Center" FontSize="12"/>
+                                    </StackPanel>
+                                    <TextBlock Text="크기" Style="{StaticResource SettingsRowLabelStyle}"/>
+                                </DockPanel>
+                            </Border>
+                        </WrapPanel>
                     </StackPanel>
 
                     <!-- ===================== 외치기 ===================== -->

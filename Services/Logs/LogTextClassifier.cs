@@ -60,9 +60,6 @@ namespace TWChatOverlay.Services
                 return "Shout";
             if (string.Equals(tabTag, "System", StringComparison.OrdinalIgnoreCase))
                 return "System";
-            if (string.Equals(tabTag, "Settings", StringComparison.OrdinalIgnoreCase))
-                return "Settings";
-
             return "Basic";
         }
 

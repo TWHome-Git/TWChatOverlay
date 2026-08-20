@@ -172,9 +172,6 @@ namespace TWChatOverlay.Views
             _logAnalysisService = new LogAnalysisService(_settings);
             _logPipelineCoordinator = new MainLogPipelineCoordinator(_settings, _logAnalysisService);
             _settingsViewModel = new SettingsViewModel(_settings, OnColorsUpdatedFromSettings, ConfirmExit, OnSettingsResetFromSettings, ApplyHotKeys, ExecuteManualLogReloadFromSettingsAsync);
-            SettingsDisplay.DataContext = _settingsViewModel;
-            SettingsDisplay.OnlyChatMode = true;
-            SettingsDisplay.SetCompactMode(true);
 
             _expService = new ExperienceService(_settings);
             _expTrackerViewModel = new ExpTrackerViewModel(_expService, _settings);

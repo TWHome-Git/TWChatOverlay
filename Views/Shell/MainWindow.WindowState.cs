@@ -160,7 +160,6 @@ namespace TWChatOverlay.Views
                     IsHitTestVisible = true;
                     Visibility = Visibility.Visible;
 
-                    SettingsDisplay.Visibility = Visibility.Collapsed;
                     if (LogDisplay != null)
                         LogDisplay.Visibility = Visibility.Visible;
 

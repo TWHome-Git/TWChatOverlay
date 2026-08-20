@@ -45,7 +45,6 @@ namespace TWChatOverlay.Views
                 LogDisplay.FontFamily = nextFont;
                 LogDisplay.FontSize = _settings.FontSize;
             }
-            if (SettingsDisplay != null) SettingsDisplay.FontFamily = nextFont;
 
             foreach (Window window in Application.Current.Windows)
             {

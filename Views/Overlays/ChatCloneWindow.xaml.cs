@@ -21,7 +21,6 @@ namespace TWChatOverlay.Views
         private MainWindow? _mainWindow;
         private string _currentTabTag = "General";
         private bool _isInitialized;
-        private bool _isSettingsMode;
         private bool _isApplyingSnap;
         private bool _isResizingWindow;
         private readonly DispatcherTimer _tabAutoHideTimer = new() { Interval = TimeSpan.FromSeconds(2.5) };
@@ -297,7 +296,7 @@ namespace TWChatOverlay.Views
             if (_isApplyingSnap || _isResizingWindow)
                 return;
 
-            if (_isSettingsMode)
+            if (UiLockService.IsUnlocked)
             {
                 _isApplyingSnap = true;
                 try
@@ -458,10 +457,7 @@ namespace TWChatOverlay.Views
 
             UpdateTabSelection(normalizedTabTag);
 
-            bool isSettingsMode = string.Equals(normalizedTabTag, "Settings", StringComparison.Ordinal);
-            SetSettingsMode(isSettingsMode);
-
-            if (refreshLogDisplay && !isSettingsMode)
+            if (refreshLogDisplay)
                 RefreshLogDisplay();
         }
 
@@ -518,8 +514,6 @@ namespace TWChatOverlay.Views
                 return "Shout";
             if (string.Equals(tabTag, "System", StringComparison.OrdinalIgnoreCase))
                 return "System";
-            if (string.Equals(tabTag, "Settings", StringComparison.OrdinalIgnoreCase))
-                return "Settings";
 
             return "General";
         }
@@ -541,51 +535,9 @@ namespace TWChatOverlay.Views
             }
         }
 
-        private void SetSettingsMode(bool isSettingsMode)
-        {
-            if (_isSettingsMode == isSettingsMode)
-                return;
-
-            _isSettingsMode = isSettingsMode;
-            DragBar.Visibility = isSettingsMode ? Visibility.Visible : Visibility.Collapsed;
-            DragBarRow.Height = isSettingsMode ? new GridLength(25) : new GridLength(0);
-            ChatDisplay.Visibility = isSettingsMode ? Visibility.Collapsed : Visibility.Visible;
-            SettingsScrollViewer.Visibility = isSettingsMode ? Visibility.Visible : Visibility.Collapsed;
-            if (isSettingsMode)
-            {
-                MainTabBackground.Visibility = Visibility.Visible;
-                MainTabPanel.Visibility = Visibility.Visible;
-                _tabAutoHideTimer.Stop();
-            }
-            else
-            {
-                ShowCloneTabsTemporarily();
-            }
-        }
-
         private void CloseChat_Click(object sender, RoutedEventArgs e)
         {
             Close();
-        }
-
-        private void DragBar_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
-        {
-            if (!UiLockService.IsUnlocked) return;
-            if (e.ButtonState == MouseButtonState.Pressed)
-            {
-                try
-                {
-                    DragMove();
-                }
-                catch
-                {
-                }
-                finally
-                {
-                    ChatWindowHub.TryApplyMagneticSnap(this);
-                    SyncPositionToSettings();
-                }
-            }
         }
 
         /// <summary>잠금 해제 모드에서는 창의 아무 곳이나 잡고 드래그해 이동할 수 있다.</summary>
@@ -707,7 +659,7 @@ namespace TWChatOverlay.Views
 
         private void SavePositionToSettings()
         {
-            if (!_isSettingsMode)
+            if (!UiLockService.IsUnlocked)
                 return;
 
             if (_slot == 1)
@@ -726,7 +678,7 @@ namespace TWChatOverlay.Views
 
         private void SyncPositionToSettings()
         {
-            if (!_isSettingsMode)
+            if (!UiLockService.IsUnlocked)
                 return;
 
             SavePositionToSettings();
@@ -796,8 +748,7 @@ namespace TWChatOverlay.Views
             ApplyTabState(_currentTabTag, persistSettings: false, refreshLogDisplay: false);
             RefreshLogDisplay();
             SyncVisibilityWithMainWindow();
-            if (!_isSettingsMode)
-                ShowCloneTabsTemporarily();
+            ShowCloneTabsTemporarily();
         }
 
         private void MainBorder_MouseEnter(object sender, MouseEventArgs e)
@@ -819,12 +770,6 @@ namespace TWChatOverlay.Views
 
         private void HideCloneTabs()
         {
-            if (_isSettingsMode)
-            {
-                _tabAutoHideTimer.Stop();
-                return;
-            }
-
             if (MainBorder?.IsMouseOver == true)
             {
                 _tabAutoHideTimer.Stop();
@@ -838,13 +783,6 @@ namespace TWChatOverlay.Views
 
             MainTabBackground.Visibility = Visibility.Collapsed;
             MainTabPanel.Visibility = Visibility.Collapsed;
-        }
-
-        private void SettingsScrollViewer_PreviewMouseWheel(object sender, MouseWheelEventArgs e)
-        {
-            double offset = SettingsScrollViewer.VerticalOffset - Math.Sign(e.Delta) * 48.0;
-            SettingsScrollViewer.ScrollToVerticalOffset(Math.Max(0.0, offset));
-            e.Handled = true;
         }
 
         private void ApplySizeFromMainWindow()
