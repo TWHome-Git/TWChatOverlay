@@ -150,7 +150,31 @@ namespace TWChatOverlay.Views
             if (!IsVisible)
                 return;
 
+            // 설정 창이 열려 있는 동안에는 최상단을 양보해 설정 화면을 가리지 않는다
+            if (IsSettingsHostVisible())
+            {
+                if (Topmost)
+                    Topmost = false;
+                return;
+            }
+
             TopmostWindowHelper.BringToTopmost(this);
+        }
+
+        /// <summary>설정/서브 메뉴 호스트 창이 화면에 떠 있는지.</summary>
+        private static bool IsSettingsHostVisible()
+        {
+            try
+            {
+                foreach (Window window in Application.Current.Windows)
+                {
+                    if (window is SubMenuWindow && window.IsVisible)
+                        return true;
+                }
+            }
+            catch { }
+
+            return false;
         }
 
         private void QueueTopmostRefresh()
@@ -168,7 +192,7 @@ namespace TWChatOverlay.Views
                     _isTopmostRefreshQueued = false;
                     if (IsVisible && _settings.EnableBuffTrackerAlert && _tracker.HasAnyActiveBuffs)
                     {
-                        BringToFront();
+                        BringToFront(); // 설정 창이 닫히면 다음 틱(1초 이내)에 최상단 복귀
                     }
                 }),
                 DispatcherPriority.Background);
