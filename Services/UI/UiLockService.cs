@@ -146,6 +146,36 @@ namespace TWChatOverlay.Services
             }
         }
 
+        /// <summary>인스펙터 좌표 입력으로 선택된 창을 지정 위치로 옮긴다.</summary>
+        internal static void MoveSelected(double? left, double? top)
+        {
+            var window = _selected;
+            if (window == null) return;
+
+            try
+            {
+                if (left.HasValue)
+                    window.Left = ClampToScreen(left.Value, SystemParameters.VirtualScreenLeft, SystemParameters.VirtualScreenWidth, window.ActualWidth);
+                if (top.HasValue)
+                    window.Top = ClampToScreen(top.Value, SystemParameters.VirtualScreenTop, SystemParameters.VirtualScreenHeight, window.ActualHeight);
+                WindowAdjusted?.Invoke(window);
+            }
+            catch (Exception ex)
+            {
+                AppLogger.Warn("Unlock move failed.", ex);
+            }
+        }
+
+        /// <summary>창이 화면 밖으로 완전히 사라지지 않도록 최소 VisibleMargin 만큼은 남긴다.</summary>
+        private static double ClampToScreen(double value, double screenStart, double screenLength, double windowLength)
+        {
+            const double VisibleMargin = 40;
+            double size = windowLength > 0 ? windowLength : VisibleMargin;
+            double lower = screenStart - Math.Max(0, size - VisibleMargin);
+            double upper = screenStart + screenLength - VisibleMargin;
+            return upper < lower ? lower : Math.Max(lower, Math.Min(upper, value));
+        }
+
         internal static void ResizeSelected(double? width, double? height)
         {
             var window = _selected;
@@ -189,7 +219,7 @@ namespace TWChatOverlay.Services
                 "BuffTrackerHelperWindow" => "버프 추적",
                 "BuffTrackerWindow" => "버프 추적",
                 "ShoutToastWindow" => "외치기 팝업",
-                "MessengerEtaToastWindow" => "쪽지 알림",
+                "MessengerEtaToastWindow" => "1:1 대화 에타 표시",
                 "RecaptureSupplyWindow" => "탈환 보급 알림",
                 _ => string.IsNullOrWhiteSpace(window.Title) ? window.GetType().Name : window.Title,
             };
@@ -429,9 +459,10 @@ namespace TWChatOverlay.Services
             private readonly System.Windows.Controls.Primitives.RepeatButton _btnDown;
             private readonly System.Windows.Controls.Primitives.RepeatButton _btnLeft;
             private readonly System.Windows.Controls.Primitives.RepeatButton _btnRight;
-            private readonly TextBlock _positionText;
             private readonly TextBox _widthBox;
             private readonly TextBox _heightBox;
+            private readonly TextBox _xBox;
+            private readonly TextBox _yBox;
 
             private const double SideZone = 34;   // 좌우 버튼이 차지하는 폭
             private const double VertZone = 118;  // 상하 버튼 + 정보 패널이 차지하는 높이
@@ -457,37 +488,29 @@ namespace TWChatOverlay.Services
                 Topmost = true;
                 ResizeMode = ResizeMode.NoResize;
 
-                _positionText = new TextBlock
-                {
-                    FontSize = 11,
-                    FontWeight = FontWeights.Bold,
-                    Foreground = new SolidColorBrush(Mint),
-                    VerticalAlignment = VerticalAlignment.Center,
-                };
+                // 가로/세로 크기 + X/Y 좌표 입력 (2행 x 4열)
+                _widthBox = CreateNumberBox(ApplySizeFromBoxes);
+                _heightBox = CreateNumberBox(ApplySizeFromBoxes);
+                _xBox = CreateNumberBox(ApplyPositionFromBoxes);
+                _yBox = CreateNumberBox(ApplyPositionFromBoxes);
 
-                var header = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 0, 0, 6) };
-                header.Children.Add(_positionText);
+                var fieldPanel = new Grid { HorizontalAlignment = HorizontalAlignment.Center };
+                for (int i = 0; i < 4; i++)
+                    fieldPanel.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+                fieldPanel.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+                fieldPanel.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
 
-                // 가로/세로 크기 입력
-                _widthBox = CreateSizeBox();
-                _heightBox = CreateSizeBox();
-                var sizePanel = new Grid();
-                sizePanel.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
-                sizePanel.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
-                sizePanel.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
-                sizePanel.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
-                sizePanel.Children.Add(CreateSizeLabel("가로", 0));
-                sizePanel.Children.Add(CreateSizeLabel("세로", 1));
-                Grid.SetRow(_widthBox, 0);
-                Grid.SetColumn(_widthBox, 1);
-                Grid.SetRow(_heightBox, 1);
-                Grid.SetColumn(_heightBox, 1);
-                sizePanel.Children.Add(_widthBox);
-                sizePanel.Children.Add(_heightBox);
+                fieldPanel.Children.Add(CreateFieldLabel("가로", 0, 0, 0));
+                fieldPanel.Children.Add(CreateFieldLabel("세로", 1, 0, 0));
+                fieldPanel.Children.Add(CreateFieldLabel("X", 0, 2, 14));
+                fieldPanel.Children.Add(CreateFieldLabel("Y", 1, 2, 14));
+                fieldPanel.Children.Add(PlaceField(_widthBox, 0, 1));
+                fieldPanel.Children.Add(PlaceField(_heightBox, 1, 1));
+                fieldPanel.Children.Add(PlaceField(_xBox, 0, 3));
+                fieldPanel.Children.Add(PlaceField(_yBox, 1, 3));
 
                 var root = new StackPanel();
-                root.Children.Add(header);
-                root.Children.Add(sizePanel);
+                root.Children.Add(fieldPanel);
 
                 _panel = new Border
                 {
@@ -540,7 +563,7 @@ namespace TWChatOverlay.Services
                 return button;
             }
 
-            private TextBlock CreateSizeLabel(string text, int row)
+            private TextBlock CreateFieldLabel(string text, int row, int column, double leftMargin)
             {
                 var label = new TextBlock
                 {
@@ -548,14 +571,19 @@ namespace TWChatOverlay.Services
                     FontSize = 11,
                     Foreground = new SolidColorBrush(SubTextCol),
                     VerticalAlignment = VerticalAlignment.Center,
-                    Margin = new Thickness(0, 0, 8, 0),
+                    Margin = new Thickness(leftMargin, 0, 8, 0),
                 };
-                Grid.SetRow(label, row);
-                Grid.SetColumn(label, 0);
-                return label;
+                return PlaceField(label, row, column);
             }
 
-            private TextBox CreateSizeBox()
+            private static T PlaceField<T>(T element, int row, int column) where T : UIElement
+            {
+                Grid.SetRow(element, row);
+                Grid.SetColumn(element, column);
+                return element;
+            }
+
+            private TextBox CreateNumberBox(Action commit)
             {
                 var box = new TextBox
                 {
@@ -574,11 +602,11 @@ namespace TWChatOverlay.Services
                 {
                     if (e.Key == Key.Enter)
                     {
-                        ApplySizeFromBoxes();
+                        commit();
                         e.Handled = true;
                     }
                 };
-                box.LostFocus += (_, _) => ApplySizeFromBoxes();
+                box.LostFocus += (_, _) => commit();
                 return box;
             }
 
@@ -603,7 +631,10 @@ namespace TWChatOverlay.Services
 
                 try
                 {
-                    _positionText.Text = $"X {(int)Math.Round(target.Left)}  Y {(int)Math.Round(target.Top)}";
+                    if (!_xBox.IsKeyboardFocused)
+                        _xBox.Text = ((int)Math.Round(target.Left)).ToString();
+                    if (!_yBox.IsKeyboardFocused)
+                        _yBox.Text = ((int)Math.Round(target.Top)).ToString();
                     if (!_widthBox.IsKeyboardFocused)
                         _widthBox.Text = ((int)Math.Round(target.ActualWidth)).ToString();
                     if (!_heightBox.IsKeyboardFocused)
@@ -645,6 +676,27 @@ namespace TWChatOverlay.Services
                 Canvas.SetTop(_panel, showBelow
                     ? VertZone + th + 4 + ButtonH + Gap
                     : VertZone - ButtonH - 4 - Gap - panelHeight);
+            }
+
+            private void ApplyPositionFromBoxes()
+            {
+                var target = _target;
+                if (target == null) return;
+
+                double? left = double.TryParse(_xBox.Text, out double x) ? x : null;
+                double? top = double.TryParse(_yBox.Text, out double y) ? y : null;
+                if (left == null && top == null)
+                {
+                    RefreshValues();
+                    return;
+                }
+
+                MoveSelected(left, top);
+
+                // 화면 밖으로 나가지 않게 보정될 수 있으므로 실제 값으로 되돌려 보여준다
+                _xBox.Text = ((int)Math.Round(target.Left)).ToString();
+                _yBox.Text = ((int)Math.Round(target.Top)).ToString();
+                RefreshValues();
             }
 
             private void ApplySizeFromBoxes()
