@@ -12,7 +12,8 @@ namespace TWChatOverlay.Views
     public partial class SettingsView : UserControl
     {
         public static readonly DependencyProperty OnlyChatModeProperty =
-            DependencyProperty.Register(nameof(OnlyChatMode), typeof(bool), typeof(SettingsView), new PropertyMetadata(false));
+            DependencyProperty.Register(nameof(OnlyChatMode), typeof(bool), typeof(SettingsView),
+                new PropertyMetadata(false, (d, _) => ((SettingsView)d).ApplyPanelVisibility()));
 
         public bool OnlyChatMode
         {
@@ -27,16 +28,53 @@ namespace TWChatOverlay.Views
             Loaded += SettingsView_Loaded;
             Unloaded += SettingsView_Unloaded;
             DataContextChanged += (_, _) => SyncFontOptions();
+            _debugOptionsAllowed = false;
 #if DEBUG
-            DebugOptionsBorder.Visibility = Visibility.Visible;
+            _debugOptionsAllowed = true;
 #endif
+            ApplyPanelVisibility();
+        }
+
+        private readonly bool _debugOptionsAllowed;
+
+        /// <summary>
+        /// 단축키 화면이 실제로 보이며 선택된 상태인지. (이때만 전역 단축키를 억제)
+        /// 창이 숨겨진 상태(트레이 등)에서는 억제하지 않아야 트레이 복원 단축키가 동작한다.
+        /// </summary>
+        public bool IsHotkeyInteractionActive => IsLoaded && IsVisible && NavHotkeys.IsChecked == true && !OnlyChatMode;
+
+        private void Nav_Checked(object sender, RoutedEventArgs e)
+        {
+            ApplyPanelVisibility();
         }
 
         /// <summary>
-        /// 단축키 설정 탭이 실제로 화면에 보이며 선택된 상태인지. (이때만 전역 단축키를 억제)
-        /// 창이 숨겨진 상태(트레이 등)에서는 억제하지 않아야 트레이 복원 단축키가 동작한다.
+        /// 선택된 내비게이션 항목의 패널만 표시한다.
+        /// 컴팩트 모드(OnlyChatMode)에서는 내비게이션을 숨기고 채팅+외치기 패널을 함께 보여준다.
         /// </summary>
-        public bool IsHotkeyInteractionActive => IsLoaded && IsVisible && HotkeyTab.IsSelected;
+        private void ApplyPanelVisibility()
+        {
+            if (ChatPanel == null) return;
+
+            if (OnlyChatMode)
+            {
+                NavColumn.Visibility = Visibility.Collapsed;
+                ChatPanel.Visibility = Visibility.Visible;
+                ShoutPanel.Visibility = Visibility.Visible;
+                DisplayPanel.Visibility = Visibility.Collapsed;
+                HotkeyPanel.Visibility = Visibility.Collapsed;
+                SystemPanel.Visibility = Visibility.Collapsed;
+                return;
+            }
+
+            NavColumn.Visibility = Visibility.Visible;
+            ChatPanel.Visibility = NavChat.IsChecked == true ? Visibility.Visible : Visibility.Collapsed;
+            ShoutPanel.Visibility = NavShout.IsChecked == true ? Visibility.Visible : Visibility.Collapsed;
+            DisplayPanel.Visibility = NavDisplay.IsChecked == true ? Visibility.Visible : Visibility.Collapsed;
+            HotkeyPanel.Visibility = NavHotkeys.IsChecked == true ? Visibility.Visible : Visibility.Collapsed;
+            SystemPanel.Visibility = NavSystem.IsChecked == true ? Visibility.Visible : Visibility.Collapsed;
+            DebugOptionsBorder.Visibility = _debugOptionsAllowed ? Visibility.Visible : Visibility.Collapsed;
+        }
 
         private void SettingsView_PreviewKeyDown(object? sender, KeyEventArgs e)
         {
@@ -62,16 +100,8 @@ namespace TWChatOverlay.Views
             {
                 if (RootBorder != null)
                 {
-                    if (compact)
-                    {
-                        RootBorder.Padding = new Thickness(8);
-                        SettingsTabControl.FontSize = 12;
-                    }
-                    else
-                    {
-                        RootBorder.Padding = new Thickness(15);
-                        SettingsTabControl.FontSize = 14;
-                    }
+                    RootBorder.Padding = new Thickness(compact ? 4 : 12);
+                    FontSize = compact ? 12 : 13;
                 }
             }
             catch { }
