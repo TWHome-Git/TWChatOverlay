@@ -74,7 +74,7 @@ namespace TWChatOverlay.Views
         /// <summary>
         /// 잠금 해제 모드 진입/종료 시 위치 조정 대상 창들을 일괄 표시/복원한다.
         /// 대상: 채팅창(+서브), 어밴던로드 주간 합계, 경험치 누적 알림, 경험치 추적창,
-        /// 던전 카운터, 에토스 방향 안내, 아이템 드롭 알림, 버프 추적, 외치기 팝업.
+        /// 던전 카운터, 에토스 방향 안내, 아이템 드롭 알림, 버프 추적, 외치기 팝업, 1:1 대화 에타 표시.
         /// </summary>
         private void OnUiUnlockChanged(bool unlocked)
         {
@@ -118,17 +118,27 @@ namespace TWChatOverlay.Views
                     itemHelper.Show();
             }
 
-            // 버프 추적 위치
-            var buffHelper = BuffTrackerHelperWindow.Instance ?? CreateBuffTrackerHelperWindow();
-            if (buffHelper != null)
+            // 버프 추적 위치 — 실제 버프 추적창이 떠 있으면 그 창을 직접 옮기면 되므로 도우미를 띄우지 않는다
+            if (BuffTrackerWindow.Instance?.IsVisible == true)
             {
-                ApplyStoredPosition(buffHelper, _settings.BuffTrackerWindowLeft, _settings.BuffTrackerWindowTop);
-                if (!buffHelper.IsVisible)
-                    buffHelper.Show();
+                BuffTrackerHelperWindow.Instance?.Hide();
+            }
+            else
+            {
+                var buffHelper = BuffTrackerHelperWindow.Instance ?? CreateBuffTrackerHelperWindow();
+                if (buffHelper != null)
+                {
+                    ApplyStoredPosition(buffHelper, _settings.BuffTrackerWindowLeft, _settings.BuffTrackerWindowTop);
+                    if (!buffHelper.IsVisible)
+                        buffHelper.Show();
+                }
             }
 
             // 외치기 팝업창 위치
             ShoutToastService.ShowPositionPreview(_settings, force: true);
+
+            // 1:1 대화 에타 표시 위치
+            MessengerEtaToastService.ShowPositionPreview(_settings, force: true);
         }
 
         /// <summary>인스펙터의 넛지/크기 입력으로 메인 창이 조정되면 즉시 저장한다.</summary>
@@ -154,6 +164,7 @@ namespace TWChatOverlay.Views
             // 위치 저장 후 미리보기 종료, 각 창의 원래 표시 상태로 복원
             ShoutToastService.SaveCurrentPosition(_settings);
             ShoutToastService.ClosePositionPreview(_settings);
+            MessengerEtaToastService.ClosePositionPreview(_settings);
             CloseAddonPositionPreviewWindows(savePositions: true, restoreNormalWindows: true);
             RefreshExpTrackerWindow();
         }

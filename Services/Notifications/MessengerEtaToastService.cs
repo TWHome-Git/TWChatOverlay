@@ -73,6 +73,7 @@ namespace TWChatOverlay.Services
                 _previewToast.SetPreviewMode(true);
                 var (left, topBase) = ResolveBasePositionFromSettings(settings);
                 _previewToast.ShowAt(left, topBase);
+                RearrangeWindows(settings);
             }));
         }
 
@@ -86,6 +87,7 @@ namespace TWChatOverlay.Services
                 _previewToast.SaveCurrentPosition();
                 _previewToast.Close();
                 _previewToast = null;
+                RearrangeWindows(settings);
             }));
         }
 
@@ -101,6 +103,11 @@ namespace TWChatOverlay.Services
         {
             var alive = FileWindows.Values.ToList();
             var (left, baseTop) = ResolveBasePositionFromSettings(settings);
+
+            // 위치 미리보기가 떠 있으면 실제 창은 그 아래부터 쌓아 겹치지 않게 한다
+            if (_previewToast?.IsVisible == true)
+                baseTop += _previewToast.Height + Gap;
+
             var area = SystemParameters.WorkArea;
             for (int i = 0; i < alive.Count; i++)
             {
