@@ -110,7 +110,7 @@
             <Border Grid.Row="0" Background="{DynamicResource OverlaySurfaceBackgroundBrush}" CornerRadius="8,8,0,0"
                     MouseLeftButtonDown="TitleBar_MouseLeftButtonDown" Cursor="SizeAll">
                 <Grid Margin="10,0,6,0">
-                    <TextBlock Text="일간/주간 컨텐츠 확인"
+                    <TextBlock Text="일일/주간 컨텐츠"
                                Foreground="{DynamicResource OverlayTitleAccentTextBrush}"
                                FontSize="13"
                                FontWeight="SemiBold"

@@ -360,9 +360,11 @@
 
     <!-- Window Close Button Style: 고스트 아이콘 버튼 — 평소엔 회색 ✕, 호버 시 붉은 배경 + 흰 ✕.
          Content 값과 무관하게 통일된 ✕ 글리프를 그린다. -->
+    <!-- 창 닫기 버튼: 한글 [닫기] 텍스트 버튼 (일간/주간 컨텐츠 창과 동일한 형태).
+         텍스트는 템플릿에 고정되어 있으므로 사용처의 Content("X" 등)는 무시된다. -->
     <Style x:Key="WindowCloseButtonStyle" TargetType="Button">
-        <Setter Property="Width" Value="24"/>
-        <Setter Property="Height" Value="24"/>
+        <Setter Property="Height" Value="22"/>
+        <Setter Property="MinWidth" Value="40"/>
         <Setter Property="Cursor" Value="Hand"/>
         <Setter Property="HorizontalAlignment" Value="Right"/>
         <Setter Property="VerticalAlignment" Value="Center"/>
@@ -370,24 +372,24 @@
             <Setter.Value>
                 <ControlTemplate TargetType="Button">
                     <Border x:Name="ButtonBorder"
-                            Background="Transparent"
-                            CornerRadius="3">
+                            Background="{DynamicResource OverlayTabHoverBrush}"
+                            BorderBrush="{DynamicResource ControlBorderBrush}"
+                            BorderThickness="1"
+                            CornerRadius="4"
+                            Padding="8,0">
                         <TextBlock x:Name="Glyph"
-                                   Text="&#x2715;"
-                                   FontSize="13"
-                                   FontWeight="Bold"
-                                   Foreground="{DynamicResource OverlayInfoTextBrush}"
+                                   Text="닫기"
+                                   FontSize="11"
+                                   Foreground="{DynamicResource ButtonTextBrush}"
                                    HorizontalAlignment="Center"
                                    VerticalAlignment="Center"/>
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="ButtonBorder" Property="Background" Value="{DynamicResource OverlayDangerAccentBrush}"/>
-                            <Setter TargetName="Glyph" Property="Foreground" Value="#FFFFFFFF"/>
+                            <Setter TargetName="ButtonBorder" Property="Background" Value="{DynamicResource OverlayTabSelectedBrush}"/>
                         </Trigger>
                         <Trigger Property="IsPressed" Value="True">
-                            <Setter TargetName="ButtonBorder" Property="Background" Value="{DynamicResource OverlayDangerBorderBrush}"/>
-                            <Setter TargetName="Glyph" Property="Foreground" Value="#FFFFFFFF"/>
+                            <Setter TargetName="ButtonBorder" Property="Background" Value="{DynamicResource OverlayTabSelectedBorderBrush}"/>
                         </Trigger>
                         <Trigger Property="IsEnabled" Value="False">
                             <Setter TargetName="ButtonBorder" Property="Opacity" Value="0.5"/>
