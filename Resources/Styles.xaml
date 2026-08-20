@@ -627,9 +627,12 @@
                                       IsChecked="{Binding IsDropDownOpen, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}"
                                       ClickMode="Press"
                                       Template="{StaticResource DarkComboBoxToggleButtonTemplate}">
-                            <ContentPresenter Content="{TemplateBinding SelectionBoxItem}"
-                                              ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}"
-                                              ContentTemplateSelector="{TemplateBinding ItemTemplateSelector}"/>
+                            <!-- ContentPresenter가 문자열을 TextBlock으로 자동 생성하면 Foreground가
+                                 상속되지 않아 선택된 값이 어둡게(안 보이게) 렌더링됨 → 명시적 TextBlock 사용 -->
+                            <TextBlock Text="{TemplateBinding SelectionBoxItem}"
+                                       Foreground="{DynamicResource ComboFieldTextBrush}"
+                                       VerticalAlignment="Center"
+                                       TextTrimming="CharacterEllipsis"/>
                         </ToggleButton>
                         <Popup x:Name="PART_Popup"
                                AllowsTransparency="True"
