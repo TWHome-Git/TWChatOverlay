@@ -74,9 +74,14 @@
                                    TextTrimming="CharacterEllipsis"
                                    VerticalAlignment="Center"/>
                         <views:OverlayOpacityChip GroupKey="Calendar" SliderWidth="52" ShowValueText="False" Margin="0,0,8,0"/>
+                        <!-- 닫기 버튼과 동일한 크기/폰트 -->
                         <Button Content="갱신"
                                 Margin="0,0,6,0"
-                                Style="{StaticResource CalendarTitleButtonStyle}"
+                                Height="22"
+                                MinWidth="40"
+                                Padding="8,0"
+                                FontSize="11"
+                                Style="{DynamicResource SecondaryButtonStyle}"
                                 Click="Refresh_Click"/>
                         <Button Content="X"
                                 Style="{StaticResource WindowCloseButtonStyle}"

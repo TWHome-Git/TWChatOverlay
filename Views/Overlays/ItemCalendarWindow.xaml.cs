@@ -81,6 +81,7 @@ namespace TWChatOverlay.Views
             _ = logAnalysisService ?? throw new ArgumentNullException(nameof(logAnalysisService));
 
             InitializeComponent();
+            WindowFontService.Apply(this);
             DataContext = this;
 
             _currentMonthStart = GetMonthStart(DateTime.Today);
