@@ -73,7 +73,7 @@
                                    TextAlignment="Right"
                                    TextTrimming="CharacterEllipsis"
                                    VerticalAlignment="Center"/>
-                        <views:OverlayOpacityChip GroupKey="Calendar" Margin="0,0,10,0"/>
+                        <views:OverlayOpacityChip GroupKey="Calendar" SliderWidth="52" ShowValueText="False" Margin="0,0,8,0"/>
                         <Button Content="갱신"
                                 Style="{StaticResource WindowCloseButtonStyle}"
                                 Click="Refresh_Click"/>
