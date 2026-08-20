@@ -489,6 +489,13 @@ namespace TWChatOverlay.Views
 
         }
 
+        /// <summary>설정 창의 '설정 마법사' 항목에서 마법사를 다시 실행한다.</summary>
+        public void ShowSetupWizardOnDemand()
+        {
+            _pendingInitialSetupWizard = true;
+            TryShowInitialSetupWizardIfNeeded();
+        }
+
         private void TryShowInitialSetupWizardIfNeeded()
         {
             if (!_pendingInitialSetupWizard || _isInitialSetupWizardRunning)

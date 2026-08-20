@@ -59,6 +59,34 @@ namespace TWChatOverlay.Views
             }
         }
 
+        /// <summary>설정 마법사를 다시 실행한다. 마법사가 화면을 정리하므로 설정 창은 먼저 닫는다.</summary>
+        private void NavWizard_Click(object sender, RoutedEventArgs e)
+        {
+            var mainWindow = System.Windows.Application.Current.Windows
+                .OfType<MainWindow>()
+                .FirstOrDefault();
+
+            try { Window.GetWindow(this)?.Close(); } catch { }
+            mainWindow?.ShowSetupWizardOnDemand();
+        }
+
+        /// <summary>패치 노트(GitHub 릴리스 페이지)를 기본 브라우저로 연다.</summary>
+        private void NavPatchNotes_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                {
+                    FileName = "https://github.com/TWHome-Git/TWChatOverlay/releases",
+                    UseShellExecute = true,
+                });
+            }
+            catch (System.Exception ex)
+            {
+                Services.AppLogger.Warn("Failed to open patch notes page.", ex);
+            }
+        }
+
         /// <summary>선택된 추가 기능 내비 인덱스(위치 미리보기용 탭 인덱스). 선택이 없으면 -1.</summary>
         private int SelectedAddonTabIndex
         {
@@ -124,6 +152,7 @@ namespace TWChatOverlay.Views
                 DisplayPanel.Visibility = Visibility.Collapsed;
                 HotkeyPanel.Visibility = Visibility.Collapsed;
                 SystemPanel.Visibility = Visibility.Collapsed;
+                PresetPanel.Visibility = Visibility.Collapsed;
                 AddonKeywordPanel.Visibility = Visibility.Collapsed;
                 AddonExpPanel.Visibility = Visibility.Collapsed;
                 AddonDungeonPanel.Visibility = Visibility.Collapsed;
@@ -153,6 +182,7 @@ namespace TWChatOverlay.Views
             DisplayPanel.Visibility = NavDisplay.IsChecked == true ? Visibility.Visible : Visibility.Collapsed;
             HotkeyPanel.Visibility = NavHotkeys.IsChecked == true ? Visibility.Visible : Visibility.Collapsed;
             SystemPanel.Visibility = NavSystem.IsChecked == true ? Visibility.Visible : Visibility.Collapsed;
+            PresetPanel.Visibility = NavPresets.IsChecked == true ? Visibility.Visible : Visibility.Collapsed;
             AddonKeywordPanel.Visibility = NavAddonKeyword.IsChecked == true ? Visibility.Visible : Visibility.Collapsed;
             AddonExpPanel.Visibility = NavAddonExp.IsChecked == true ? Visibility.Visible : Visibility.Collapsed;
             AddonDungeonPanel.Visibility = NavAddonDungeon.IsChecked == true ? Visibility.Visible : Visibility.Collapsed;
