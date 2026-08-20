@@ -51,6 +51,22 @@ namespace TWChatOverlay.Views
             ShowMainTabsTemporarily();
         }
 
+        /// <summary>잠금 해제 모드에서는 창의 아무 곳이나 잡고 드래그해 이동할 수 있다. (레이아웃 변화 없음 → 위치 오차 없음)</summary>
+        private void MainBorder_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            if (!UiLockService.IsUnlocked) return;
+            if (e.ButtonState != MouseButtonState.Pressed) return;
+
+            try
+            {
+                DragMove();
+                ChatWindowHub.TryApplyMagneticSnap(this);
+                PersistCurrentMainWindowPosition();
+            }
+            catch { }
+            e.Handled = true;
+        }
+
         private void MainBorder_MouseMove(object sender, MouseEventArgs e)
         {
             ShowMainTabsTemporarily();
@@ -186,7 +202,8 @@ namespace TWChatOverlay.Views
                          e.PropertyName == nameof(_settings.ToggleOverlayHotKey) ||
                          e.PropertyName == nameof(_settings.ToggleDailyWeeklyContentHotKey) ||
                          e.PropertyName == nameof(_settings.ToggleSettingsHotKey) ||
-                         e.PropertyName == nameof(_settings.ToggleTrayAllHotKey))
+                         e.PropertyName == nameof(_settings.ToggleTrayAllHotKey) ||
+                         e.PropertyName == nameof(_settings.ToggleUnlockHotKey))
                 {
                     ApplyHotKeys();
                 }

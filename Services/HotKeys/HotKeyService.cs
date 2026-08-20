@@ -17,6 +17,7 @@ namespace TWChatOverlay.Services
         public const int TOGGLE_DAILY_WEEKLY_CONTENT_ID = 9005;
         public const int TOGGLE_SETTINGS_ID = 9010;
         public const int TOGGLE_TRAY_ALL_ID = 9011;
+        public const int TOGGLE_UNLOCK_ID = 9012;
 
         public const uint MOD_ALT = 0x0001;
         public const uint MOD_CONTROL = 0x0002;

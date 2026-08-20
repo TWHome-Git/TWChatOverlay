@@ -570,6 +570,7 @@ namespace TWChatOverlay.Views
 
         private void DragBar_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
+            if (!UiLockService.IsUnlocked) return;
             if (e.ButtonState == MouseButtonState.Pressed)
             {
                 try
@@ -585,6 +586,25 @@ namespace TWChatOverlay.Views
                     SyncPositionToSettings();
                 }
             }
+        }
+
+        /// <summary>잠금 해제 모드에서는 창의 아무 곳이나 잡고 드래그해 이동할 수 있다.</summary>
+        private void UnlockDrag_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            if (!UiLockService.IsUnlocked) return;
+            if (e.ButtonState != MouseButtonState.Pressed) return;
+
+            try
+            {
+                DragMove();
+            }
+            catch { }
+            finally
+            {
+                ChatWindowHub.TryApplyMagneticSnap(this);
+                SyncPositionToSettings();
+            }
+            e.Handled = true;
         }
 
         private void TopResize_DragDelta(object sender, System.Windows.Controls.Primitives.DragDeltaEventArgs e)

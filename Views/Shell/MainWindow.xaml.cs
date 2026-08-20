@@ -408,6 +408,9 @@ namespace TWChatOverlay.Views
                         case HotKeyService.TOGGLE_TRAY_ALL_ID:
                             TrayAllWindowsService.Toggle();
                             break;
+                        case HotKeyService.TOGGLE_UNLOCK_ID:
+                            UiLockService.Toggle();
+                            break;
                     }
                 };
 

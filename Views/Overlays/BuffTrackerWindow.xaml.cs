@@ -82,6 +82,7 @@ namespace TWChatOverlay.Views
 
         private void RootBorder_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
+            if (!UiLockService.IsUnlocked) return;
             if (!_settings.ShowBuffTrackerWindow)
                 return;
 

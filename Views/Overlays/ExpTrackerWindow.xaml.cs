@@ -163,6 +163,7 @@ namespace TWChatOverlay.Views
 
         private void DragBar_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
+            if (!UiLockService.IsUnlocked) return;
             if (e.ButtonState != MouseButtonState.Pressed)
                 return;
 

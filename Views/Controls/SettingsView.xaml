@@ -52,11 +52,19 @@
             <Setter Property="Margin" Value="0,14,0,6"/>
         </Style>
 
-        <!-- 설정 행: 아래 1px 구분선 -->
+        <!-- 설정 행(2열 배치, 절반 폭): 아래 1px 구분선 -->
         <Style x:Key="SettingsRowStyle" TargetType="Border">
             <Setter Property="BorderBrush" Value="{DynamicResource SeparatorBrush}"/>
             <Setter Property="BorderThickness" Value="0,0,0,1"/>
             <Setter Property="Padding" Value="0,7"/>
+            <Setter Property="Width" Value="296"/>
+            <Setter Property="Margin" Value="0,0,14,0"/>
+        </Style>
+
+        <!-- 전체 폭 행 -->
+        <Style x:Key="SettingsRowWideStyle" TargetType="Border" BasedOn="{StaticResource SettingsRowStyle}">
+            <Setter Property="Width" Value="606"/>
+            <Setter Property="Margin" Value="0"/>
         </Style>
 
         <!-- 행 왼쪽 라벨 -->
@@ -74,23 +82,23 @@
             <Setter Property="TextWrapping" Value="Wrap"/>
         </Style>
 
-        <!-- 볼륨 슬라이더 행의 우측 컨트롤 폭 -->
-        <Style x:Key="DropFilterButtonStyle" TargetType="Button" BasedOn="{StaticResource SecondaryButtonStyle}">
-            <Setter Property="Height" Value="26"/>
-            <Setter Property="Padding" Value="8,0"/>
-            <Setter Property="FontSize" Value="11"/>
-            <Setter Property="MinWidth" Value="34"/>
-        </Style>
-
         <!-- 행 오른쪽 입력칸 -->
         <Style x:Key="SettingsRowInputStyle" TargetType="TextBox">
             <Setter Property="Background" Value="{DynamicResource InputFieldBackgroundBrush}"/>
             <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
             <Setter Property="BorderBrush" Value="{DynamicResource InputFieldBorderBrush}"/>
             <Setter Property="Height" Value="26"/>
-            <Setter Property="Width" Value="140"/>
+            <Setter Property="Width" Value="90"/>
             <Setter Property="VerticalContentAlignment" Value="Center"/>
             <Setter Property="TextAlignment" Value="Center"/>
+        </Style>
+
+        <!-- 작은 보조 버튼 -->
+        <Style x:Key="DropFilterButtonStyle" TargetType="Button" BasedOn="{StaticResource SecondaryButtonStyle}">
+            <Setter Property="Height" Value="26"/>
+            <Setter Property="Padding" Value="8,0"/>
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="MinWidth" Value="34"/>
         </Style>
     </UserControl.Resources>
 
@@ -129,77 +137,78 @@
             </Border>
 
             <ScrollViewer x:Name="SettingsScroll" Grid.Column="1" VerticalScrollBarVisibility="Auto" Style="{StaticResource OverlayScrollViewerStyle}">
-                <!-- 폭 제한: 라벨-컨트롤 간격이 벌어지지 않도록 콘텐츠를 460~620px 범위로 유지 -->
-                <StackPanel Margin="16,4,16,12" MinWidth="460" MaxWidth="620" HorizontalAlignment="Left">
+                <StackPanel Margin="16,4,16,12" Width="620" HorizontalAlignment="Left">
 
                     <!-- ===================== 채팅 ===================== -->
                     <StackPanel x:Name="ChatPanel">
                         <TextBlock Text="채팅 필터" Style="{StaticResource SettingsSectionLabelStyle}" Margin="0,4,0,6"/>
-                        <Border Style="{StaticResource SettingsRowStyle}">
-                            <DockPanel>
-                                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
-                                    <Button Width="26" Height="14" Margin="0,0,10,0" Background="{Binding NormalColor}" Command="{Binding ColorPickCommand}" CommandParameter="Normal" Style="{StaticResource ColorPickerButtonStyle}"/>
-                                    <CheckBox IsChecked="{Binding ShowNormal}" Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
-                                </StackPanel>
-                                <TextBlock Text="일반" Style="{StaticResource SettingsRowLabelStyle}"/>
-                            </DockPanel>
-                        </Border>
-                        <Border Style="{StaticResource SettingsRowStyle}">
-                            <DockPanel>
-                                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
-                                    <Button Width="26" Height="14" Margin="0,0,10,0" Background="{Binding TeamColor}" Command="{Binding ColorPickCommand}" CommandParameter="Team" Style="{StaticResource ColorPickerButtonStyle}"/>
-                                    <CheckBox IsChecked="{Binding ShowTeam}" Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
-                                </StackPanel>
-                                <TextBlock Text="팀" Style="{StaticResource SettingsRowLabelStyle}"/>
-                            </DockPanel>
-                        </Border>
-                        <Border Style="{StaticResource SettingsRowStyle}">
-                            <DockPanel>
-                                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
-                                    <Button Width="26" Height="14" Margin="0,0,10,0" Background="{Binding ClubColor}" Command="{Binding ColorPickCommand}" CommandParameter="Club" Style="{StaticResource ColorPickerButtonStyle}"/>
-                                    <CheckBox IsChecked="{Binding ShowClub}" Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
-                                </StackPanel>
-                                <TextBlock Text="클럽" Style="{StaticResource SettingsRowLabelStyle}"/>
-                            </DockPanel>
-                        </Border>
-                        <Border Style="{StaticResource SettingsRowStyle}">
-                            <DockPanel>
-                                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
-                                    <Button Width="26" Height="14" Margin="0,0,10,0" Background="{Binding ShoutColor}" Command="{Binding ColorPickCommand}" CommandParameter="Shout" Style="{StaticResource ColorPickerButtonStyle}"/>
-                                    <CheckBox IsChecked="{Binding ShowShout}" Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
-                                </StackPanel>
-                                <TextBlock Text="외치기" Style="{StaticResource SettingsRowLabelStyle}"/>
-                            </DockPanel>
-                        </Border>
-                        <Border Style="{StaticResource SettingsRowStyle}" BorderThickness="0">
-                            <DockPanel>
-                                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
-                                    <Button Width="26" Height="14" Margin="0,0,10,0" Background="{Binding SystemColor}" Command="{Binding ColorPickCommand}" CommandParameter="System" Style="{StaticResource ColorPickerButtonStyle}"/>
-                                    <CheckBox IsChecked="{Binding ShowSystem}" Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
-                                </StackPanel>
-                                <TextBlock Text="시스템" Style="{StaticResource SettingsRowLabelStyle}"/>
-                            </DockPanel>
-                        </Border>
+                        <WrapPanel>
+                            <Border Style="{StaticResource SettingsRowStyle}">
+                                <DockPanel>
+                                    <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
+                                        <Button Width="26" Height="14" Margin="0,0,10,0" Background="{Binding NormalColor}" Command="{Binding ColorPickCommand}" CommandParameter="Normal" Style="{StaticResource ColorPickerButtonStyle}"/>
+                                        <CheckBox IsChecked="{Binding ShowNormal}" Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
+                                    </StackPanel>
+                                    <TextBlock Text="일반" Style="{StaticResource SettingsRowLabelStyle}"/>
+                                </DockPanel>
+                            </Border>
+                            <Border Style="{StaticResource SettingsRowStyle}">
+                                <DockPanel>
+                                    <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
+                                        <Button Width="26" Height="14" Margin="0,0,10,0" Background="{Binding TeamColor}" Command="{Binding ColorPickCommand}" CommandParameter="Team" Style="{StaticResource ColorPickerButtonStyle}"/>
+                                        <CheckBox IsChecked="{Binding ShowTeam}" Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
+                                    </StackPanel>
+                                    <TextBlock Text="팀" Style="{StaticResource SettingsRowLabelStyle}"/>
+                                </DockPanel>
+                            </Border>
+                            <Border Style="{StaticResource SettingsRowStyle}">
+                                <DockPanel>
+                                    <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
+                                        <Button Width="26" Height="14" Margin="0,0,10,0" Background="{Binding ClubColor}" Command="{Binding ColorPickCommand}" CommandParameter="Club" Style="{StaticResource ColorPickerButtonStyle}"/>
+                                        <CheckBox IsChecked="{Binding ShowClub}" Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
+                                    </StackPanel>
+                                    <TextBlock Text="클럽" Style="{StaticResource SettingsRowLabelStyle}"/>
+                                </DockPanel>
+                            </Border>
+                            <Border Style="{StaticResource SettingsRowStyle}">
+                                <DockPanel>
+                                    <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
+                                        <Button Width="26" Height="14" Margin="0,0,10,0" Background="{Binding ShoutColor}" Command="{Binding ColorPickCommand}" CommandParameter="Shout" Style="{StaticResource ColorPickerButtonStyle}"/>
+                                        <CheckBox IsChecked="{Binding ShowShout}" Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
+                                    </StackPanel>
+                                    <TextBlock Text="외치기" Style="{StaticResource SettingsRowLabelStyle}"/>
+                                </DockPanel>
+                            </Border>
+                            <Border Style="{StaticResource SettingsRowStyle}">
+                                <DockPanel>
+                                    <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
+                                        <Button Width="26" Height="14" Margin="0,0,10,0" Background="{Binding SystemColor}" Command="{Binding ColorPickCommand}" CommandParameter="System" Style="{StaticResource ColorPickerButtonStyle}"/>
+                                        <CheckBox IsChecked="{Binding ShowSystem}" Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
+                                    </StackPanel>
+                                    <TextBlock Text="시스템" Style="{StaticResource SettingsRowLabelStyle}"/>
+                                </DockPanel>
+                            </Border>
+                        </WrapPanel>
 
                         <TextBlock Text="아이디 표시" Style="{StaticResource SettingsSectionLabelStyle}"/>
-                        <Border Style="{StaticResource SettingsRowStyle}">
-                            <DockPanel>
-                                <CheckBox DockPanel.Dock="Right" IsChecked="{Binding ShowEtaLevel}" Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
-                                <TextBlock Text="에타 레벨" Style="{StaticResource SettingsRowLabelStyle}"/>
-                            </DockPanel>
-                        </Border>
-                        <Border Style="{StaticResource SettingsRowStyle}">
-                            <DockPanel>
-                                <CheckBox DockPanel.Dock="Right" IsChecked="{Binding ShowEtaCharacter}" Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
-                                <TextBlock Text="캐릭터" Style="{StaticResource SettingsRowLabelStyle}"/>
-                            </DockPanel>
-                        </Border>
-                        <Border Style="{StaticResource SettingsRowStyle}">
-                            <DockPanel>
-                                <CheckBox DockPanel.Dock="Right" IsChecked="{Binding ShowIdTag}" Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
-                                <StackPanel VerticalAlignment="Center">
-                                    <StackPanel Orientation="Horizontal">
-                                        <TextBlock Text="아이디 태그" Style="{StaticResource SettingsRowLabelStyle}"/>
+                        <WrapPanel>
+                            <Border Style="{StaticResource SettingsRowStyle}">
+                                <DockPanel>
+                                    <CheckBox DockPanel.Dock="Right" IsChecked="{Binding ShowEtaLevel}" Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
+                                    <TextBlock Text="에타 레벨" Style="{StaticResource SettingsRowLabelStyle}"/>
+                                </DockPanel>
+                            </Border>
+                            <Border Style="{StaticResource SettingsRowStyle}">
+                                <DockPanel>
+                                    <CheckBox DockPanel.Dock="Right" IsChecked="{Binding ShowEtaCharacter}" Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
+                                    <TextBlock Text="캐릭터" Style="{StaticResource SettingsRowLabelStyle}"/>
+                                </DockPanel>
+                            </Border>
+                            <Border Style="{StaticResource SettingsRowStyle}">
+                                <DockPanel>
+                                    <CheckBox DockPanel.Dock="Right" IsChecked="{Binding ShowIdTag}" Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
+                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                        <TextBlock Text="아이디 태그" Style="{StaticResource SettingsRowLabelStyle}" ToolTip="idtag.txt의 메모를 아이디 뒤에 [태그]로 표시"/>
                                         <Button Click="OpenIdTagFile_Click" ToolTip="idtag.txt 편집" Cursor="Hand" Margin="8,0,0,0" Padding="0" Background="Transparent" BorderThickness="0" VerticalAlignment="Center">
                                             <Button.Template>
                                                 <ControlTemplate TargetType="Button">
@@ -213,244 +222,224 @@
                                             </Button.Template>
                                         </Button>
                                     </StackPanel>
-                                    <TextBlock Text="idtag.txt의 메모를 아이디 뒤에 [태그]로 표시" Style="{StaticResource SettingsRowHintStyle}"/>
-                                </StackPanel>
-                            </DockPanel>
-                        </Border>
-                        <Border Style="{StaticResource SettingsRowStyle}">
-                            <DockPanel>
-                                <CheckBox DockPanel.Dock="Right" IsChecked="{Binding ShowClubBoss}" Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
-                                <TextBlock Text="클럽 보스" Style="{StaticResource SettingsRowLabelStyle}"/>
-                            </DockPanel>
-                        </Border>
-                        <Border Style="{StaticResource SettingsRowStyle}" BorderThickness="0">
-                            <DockPanel>
-                                <CheckBox DockPanel.Dock="Right" IsChecked="{Binding ShowTimestamp}" Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
-                                <TextBlock Text="타임 스탬프" Style="{StaticResource SettingsRowLabelStyle}"/>
-                            </DockPanel>
-                        </Border>
+                                </DockPanel>
+                            </Border>
+                            <Border Style="{StaticResource SettingsRowStyle}">
+                                <DockPanel>
+                                    <CheckBox DockPanel.Dock="Right" IsChecked="{Binding ShowClubBoss}" Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
+                                    <TextBlock Text="클럽 보스" Style="{StaticResource SettingsRowLabelStyle}"/>
+                                </DockPanel>
+                            </Border>
+                            <Border Style="{StaticResource SettingsRowStyle}">
+                                <DockPanel>
+                                    <CheckBox DockPanel.Dock="Right" IsChecked="{Binding ShowTimestamp}" Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
+                                    <TextBlock Text="타임 스탬프" Style="{StaticResource SettingsRowLabelStyle}"/>
+                                </DockPanel>
+                            </Border>
+                        </WrapPanel>
 
                         <TextBlock Text="폰트" Style="{StaticResource SettingsSectionLabelStyle}"/>
-                        <Border Style="{StaticResource SettingsRowStyle}">
-                            <DockPanel>
-                                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
-                                    <RadioButton x:Name="NanumFontOption" Content="나눔고딕" Tag="나눔고딕" GroupName="FontFamilyOptions" Width="72" Height="26" Margin="0,0,4,0" Checked="FontOption_Checked" Style="{StaticResource FontOptionButtonStyle}"/>
-                                    <RadioButton x:Name="GulimFontOption" Content="굴림" Tag="굴림" GroupName="FontFamilyOptions" Width="52" Height="26" Margin="0,0,4,0" Checked="FontOption_Checked" Style="{StaticResource FontOptionButtonStyle}"/>
-                                    <RadioButton x:Name="CustomFontOption" Content="사용자 설정" Tag="사용자 설정" GroupName="FontFamilyOptions" Width="82" Height="26" Checked="FontOption_Checked" Style="{StaticResource FontOptionButtonStyle}"/>
-                                </StackPanel>
-                                <TextBlock Text="종류" Style="{StaticResource SettingsRowLabelStyle}"/>
-                            </DockPanel>
-                        </Border>
-                        <Border Style="{StaticResource SettingsRowStyle}" BorderThickness="0">
-                            <DockPanel>
-                                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Width="220">
-                                    <Slider Minimum="10" Maximum="40" Value="{Binding FontSize}" TickFrequency="1" IsSnapToTickEnabled="True" VerticalAlignment="Center" Width="180"/>
-                                    <TextBlock Text="{Binding FontSize, StringFormat={}{0:F0}}" Foreground="{DynamicResource TextBrush}" Width="30" TextAlignment="Right" VerticalAlignment="Center" FontSize="12"/>
-                                </StackPanel>
-                                <TextBlock Text="크기" Style="{StaticResource SettingsRowLabelStyle}"/>
-                            </DockPanel>
-                        </Border>
+                        <WrapPanel>
+                            <Border Style="{StaticResource SettingsRowWideStyle}">
+                                <DockPanel>
+                                    <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                                        <RadioButton x:Name="NanumFontOption" Content="나눔고딕" Tag="나눔고딕" GroupName="FontFamilyOptions" Width="72" Height="26" Margin="0,0,4,0" Checked="FontOption_Checked" Style="{StaticResource FontOptionButtonStyle}"/>
+                                        <RadioButton x:Name="GulimFontOption" Content="굴림" Tag="굴림" GroupName="FontFamilyOptions" Width="52" Height="26" Margin="0,0,4,0" Checked="FontOption_Checked" Style="{StaticResource FontOptionButtonStyle}"/>
+                                        <RadioButton x:Name="CustomFontOption" Content="사용자 설정" Tag="사용자 설정" GroupName="FontFamilyOptions" Width="82" Height="26" Checked="FontOption_Checked" Style="{StaticResource FontOptionButtonStyle}"/>
+                                    </StackPanel>
+                                    <TextBlock Text="종류" Style="{StaticResource SettingsRowLabelStyle}"/>
+                                </DockPanel>
+                            </Border>
+                            <Border Style="{StaticResource SettingsRowStyle}" BorderThickness="0">
+                                <DockPanel>
+                                    <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                                        <Slider Minimum="10" Maximum="40" Value="{Binding FontSize}" TickFrequency="1" IsSnapToTickEnabled="True" VerticalAlignment="Center" Width="140"/>
+                                        <TextBlock Text="{Binding FontSize, StringFormat={}{0:F0}}" Foreground="{DynamicResource TextBrush}" Width="26" TextAlignment="Right" VerticalAlignment="Center" FontSize="12"/>
+                                    </StackPanel>
+                                    <TextBlock Text="크기" Style="{StaticResource SettingsRowLabelStyle}"/>
+                                </DockPanel>
+                            </Border>
+                        </WrapPanel>
                     </StackPanel>
 
                     <!-- ===================== 외치기 ===================== -->
                     <StackPanel x:Name="ShoutPanel" Visibility="Collapsed">
                         <TextBlock Text="외치기 알림" Style="{StaticResource SettingsSectionLabelStyle}" Margin="0,4,0,6"/>
-                        <Border Style="{StaticResource SettingsRowStyle}">
-                            <DockPanel>
-                                <CheckBox DockPanel.Dock="Right" IsChecked="{Binding ShowShoutToastPopup}" Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
-                                <StackPanel VerticalAlignment="Center">
-                                    <TextBlock Text="외치기 팝업" Style="{StaticResource SettingsRowLabelStyle}"/>
-                                    <TextBlock Text="외치기 로그가 들어오면 토스트 팝업 표시" Style="{StaticResource SettingsRowHintStyle}"/>
-                                </StackPanel>
-                            </DockPanel>
-                        </Border>
-                        <Border Style="{StaticResource SettingsRowStyle}">
-                            <DockPanel>
-                                <CheckBox DockPanel.Dock="Right" IsChecked="{Binding AutoCopyShoutNickname}" Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
-                                <StackPanel VerticalAlignment="Center">
-                                    <TextBlock Text="닉네임 자동복사" Style="{StaticResource SettingsRowLabelStyle}"/>
-                                    <TextBlock Text="외치기 끝의 [닉네임]을 클립보드에 복사" Style="{StaticResource SettingsRowHintStyle}"/>
-                                </StackPanel>
-                            </DockPanel>
-                        </Border>
-                        <Border Style="{StaticResource SettingsRowStyle}">
-                            <DockPanel>
-                                <TextBox DockPanel.Dock="Right" Width="70" Text="{Binding ShoutToastDurationSeconds, UpdateSourceTrigger=LostFocus}" Style="{StaticResource SettingsRowInputStyle}" PreviewTextInput="NumberOnly_PreviewTextInput" KeyDown="OffsetInput_KeyDown"/>
-                                <TextBlock Text="유지 시간(초)" Style="{StaticResource SettingsRowLabelStyle}"/>
-                            </DockPanel>
-                        </Border>
-                        <Border Style="{StaticResource SettingsRowStyle}" BorderThickness="0">
-                            <DockPanel>
-                                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Width="220">
-                                    <Slider Minimum="10" Maximum="40" Value="{Binding ShoutToastFontSize}" TickFrequency="1" IsSnapToTickEnabled="True" VerticalAlignment="Center" Width="180"/>
-                                    <TextBlock Text="{Binding ShoutToastFontSize, StringFormat={}{0:F0}}" Foreground="{DynamicResource TextBrush}" Width="30" TextAlignment="Right" VerticalAlignment="Center" FontSize="12"/>
-                                </StackPanel>
-                                <TextBlock Text="토스트 글자 크기" Style="{StaticResource SettingsRowLabelStyle}"/>
-                            </DockPanel>
-                        </Border>
+                        <WrapPanel>
+                            <Border Style="{StaticResource SettingsRowStyle}">
+                                <DockPanel>
+                                    <CheckBox DockPanel.Dock="Right" IsChecked="{Binding ShowShoutToastPopup}" Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
+                                    <TextBlock Text="외치기 팝업" Style="{StaticResource SettingsRowLabelStyle}" ToolTip="외치기 로그가 들어오면 토스트 팝업 표시"/>
+                                </DockPanel>
+                            </Border>
+                            <Border Style="{StaticResource SettingsRowStyle}">
+                                <DockPanel>
+                                    <CheckBox DockPanel.Dock="Right" IsChecked="{Binding AutoCopyShoutNickname}" Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
+                                    <TextBlock Text="닉네임 자동복사" Style="{StaticResource SettingsRowLabelStyle}" ToolTip="외치기 끝의 [닉네임]을 클립보드에 복사"/>
+                                </DockPanel>
+                            </Border>
+                            <Border Style="{StaticResource SettingsRowStyle}">
+                                <DockPanel>
+                                    <TextBox DockPanel.Dock="Right" Width="70" Text="{Binding ShoutToastDurationSeconds, UpdateSourceTrigger=LostFocus}" Style="{StaticResource SettingsRowInputStyle}" PreviewTextInput="NumberOnly_PreviewTextInput" KeyDown="OffsetInput_KeyDown"/>
+                                    <TextBlock Text="유지 시간(초)" Style="{StaticResource SettingsRowLabelStyle}"/>
+                                </DockPanel>
+                            </Border>
+                            <Border Style="{StaticResource SettingsRowStyle}">
+                                <DockPanel>
+                                    <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                                        <Slider Minimum="10" Maximum="40" Value="{Binding ShoutToastFontSize}" TickFrequency="1" IsSnapToTickEnabled="True" VerticalAlignment="Center" Width="140"/>
+                                        <TextBlock Text="{Binding ShoutToastFontSize, StringFormat={}{0:F0}}" Foreground="{DynamicResource TextBrush}" Width="26" TextAlignment="Right" VerticalAlignment="Center" FontSize="12"/>
+                                    </StackPanel>
+                                    <TextBlock Text="토스트 글자 크기" Style="{StaticResource SettingsRowLabelStyle}"/>
+                                </DockPanel>
+                            </Border>
+                        </WrapPanel>
                     </StackPanel>
 
                     <!-- ===================== 화면 ===================== -->
                     <StackPanel x:Name="DisplayPanel" Visibility="Collapsed">
                         <TextBlock Text="오버레이" Style="{StaticResource SettingsSectionLabelStyle}" Margin="0,4,0,6"/>
-                        <Border Style="{StaticResource SettingsRowStyle}" BorderThickness="0">
-                            <DockPanel>
-                                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Width="220">
-                                    <Slider Minimum="20" Maximum="100" Value="{Binding OverlayOpacityPercent, Mode=TwoWay, FallbackValue=96}" TickFrequency="5" IsSnapToTickEnabled="True" VerticalAlignment="Center" Width="180"/>
-                                    <TextBlock Text="{Binding OverlayOpacityPercent, StringFormat={}{0:F0}%}" Foreground="{DynamicResource TextBrush}" Width="34" TextAlignment="Right" VerticalAlignment="Center" FontSize="12"/>
-                                </StackPanel>
-                                <StackPanel VerticalAlignment="Center">
-                                    <TextBlock Text="투명도" Style="{StaticResource SettingsRowLabelStyle}"/>
-                                    <TextBlock Text="글자는 항상 선명하게 유지됩니다" Style="{StaticResource SettingsRowHintStyle}"/>
-                                </StackPanel>
-                            </DockPanel>
-                        </Border>
-
-                        <TextBlock Text="채팅창 위치" Style="{StaticResource SettingsSectionLabelStyle}"/>
-                        <Border Style="{StaticResource SettingsRowStyle}">
-                            <DockPanel>
-                                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
-                                    <RadioButton Content="1" IsChecked="{Binding SelectedPresetNumber, Converter={StaticResource EqualValueToBoolConverter}, ConverterParameter=1}" Width="44" Style="{StaticResource PresetRadioButtonStyle}"/>
-                                    <RadioButton Content="2" IsChecked="{Binding SelectedPresetNumber, Converter={StaticResource EqualValueToBoolConverter}, ConverterParameter=2}" Width="44" Style="{StaticResource PresetRadioButtonStyle}"/>
-                                    <RadioButton Content="3" IsChecked="{Binding SelectedPresetNumber, Converter={StaticResource EqualValueToBoolConverter}, ConverterParameter=3}" Width="44" Style="{StaticResource PresetRadioButtonStyle}"/>
-                                </StackPanel>
-                                <TextBlock Text="프리셋" Style="{StaticResource SettingsRowLabelStyle}"/>
-                            </DockPanel>
-                        </Border>
-                        <Border Style="{StaticResource SettingsRowStyle}">
-                            <DockPanel>
-                                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
-                                    <Button Content="저장" Width="70" Height="26" Padding="0" Margin="0,0,6,0" Command="{Binding SaveOrLoadPresetCommand}" CommandParameter="Save" Style="{StaticResource SecondaryButtonStyle}" FontSize="12"/>
-                                    <Button Content="불러오기" Width="70" Height="26" Padding="0" Command="{Binding SaveOrLoadPresetCommand}" CommandParameter="Load" Style="{StaticResource SecondaryButtonStyle}" FontSize="12"/>
-                                </StackPanel>
-                                <TextBlock Text="프리셋 저장/불러오기" Style="{StaticResource SettingsRowLabelStyle}"/>
-                            </DockPanel>
-                        </Border>
-                        <Border Style="{StaticResource SettingsRowStyle}">
-                            <DockPanel>
-                                <TextBox DockPanel.Dock="Right" Width="90" Text="{Binding LineMarginLeft, UpdateSourceTrigger=LostFocus}" Style="{StaticResource SettingsRowInputStyle}" PreviewTextInput="NumberOnly_PreviewTextInput" KeyDown="OffsetInput_KeyDown"/>
-                                <TextBlock Text="X 좌표 (좌우)" Style="{StaticResource SettingsRowLabelStyle}"/>
-                            </DockPanel>
-                        </Border>
-                        <Border Style="{StaticResource SettingsRowStyle}" BorderThickness="0">
-                            <DockPanel>
-                                <TextBox DockPanel.Dock="Right" Width="90" Text="{Binding LineMargin, UpdateSourceTrigger=LostFocus}" Style="{StaticResource SettingsRowInputStyle}" PreviewTextInput="NumberOnly_PreviewTextInput" KeyDown="OffsetInput_KeyDown"/>
-                                <TextBlock Text="Y 좌표 (상하)" Style="{StaticResource SettingsRowLabelStyle}"/>
-                            </DockPanel>
-                        </Border>
+                        <WrapPanel>
+                            <Border Style="{StaticResource SettingsRowStyle}">
+                                <DockPanel>
+                                    <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                                        <Slider Minimum="20" Maximum="100" Value="{Binding OverlayOpacityPercent, Mode=TwoWay, FallbackValue=96}" TickFrequency="5" IsSnapToTickEnabled="True" VerticalAlignment="Center" Width="140"/>
+                                        <TextBlock Text="{Binding OverlayOpacityPercent, StringFormat={}{0:F0}%}" Foreground="{DynamicResource TextBrush}" Width="34" TextAlignment="Right" VerticalAlignment="Center" FontSize="12"/>
+                                    </StackPanel>
+                                    <TextBlock Text="투명도" Style="{StaticResource SettingsRowLabelStyle}" ToolTip="글자는 항상 선명하게 유지됩니다"/>
+                                </DockPanel>
+                            </Border>
+                            <Border Style="{StaticResource SettingsRowStyle}">
+                                <DockPanel>
+                                    <Button DockPanel.Dock="Right" Content="잠금 해제" Width="86" Height="26" Padding="0" Foreground="White" Click="UnlockMode_Click" Style="{StaticResource SimButtonStyle}" FontSize="12"/>
+                                    <StackPanel VerticalAlignment="Center">
+                                        <TextBlock Text="잠금 해제 모드" Style="{StaticResource SettingsRowLabelStyle}"/>
+                                        <TextBlock Text="이 모드에서만 창을 드래그해 이동" Style="{StaticResource SettingsRowHintStyle}"/>
+                                    </StackPanel>
+                                </DockPanel>
+                            </Border>
+                        </WrapPanel>
                     </StackPanel>
 
                     <!-- ===================== 단축키 ===================== -->
                     <StackPanel x:Name="HotkeyPanel" Visibility="Collapsed">
                         <TextBlock Text="전역 단축키" Style="{StaticResource SettingsSectionLabelStyle}" Margin="0,4,0,2"/>
                         <TextBlock Text="칸을 클릭한 뒤 원하는 키 조합을 누르세요. Esc 또는 Delete로 해제합니다." Style="{StaticResource SettingsRowHintStyle}" Margin="0,0,0,6"/>
-                        <Border Style="{StaticResource SettingsRowStyle}">
-                            <DockPanel>
-                                <TextBox DockPanel.Dock="Right" Text="{Binding ToggleOverlayHotKey, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource SettingsRowInputStyle}" PreviewKeyDown="HotKeyInput_PreviewKeyDown" PreviewMouseLeftButtonDown="HotKeyTextBox_PreviewMouseLeftButtonDown" IsReadOnly="True" Tag="HotKey"/>
-                                <TextBlock Text="채팅창 ON/OFF" Style="{StaticResource SettingsRowLabelStyle}"/>
-                            </DockPanel>
-                        </Border>
-                        <Border Style="{StaticResource SettingsRowStyle}">
-                            <DockPanel>
-                                <TextBox DockPanel.Dock="Right" Text="{Binding ToggleDailyWeeklyContentHotKey, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource SettingsRowInputStyle}" PreviewKeyDown="HotKeyInput_PreviewKeyDown" PreviewMouseLeftButtonDown="HotKeyTextBox_PreviewMouseLeftButtonDown" IsReadOnly="True" Tag="HotKey"/>
-                                <TextBlock Text="일일/주간 콘텐츠 ON/OFF" Style="{StaticResource SettingsRowLabelStyle}"/>
-                            </DockPanel>
-                        </Border>
-                        <Border Style="{StaticResource SettingsRowStyle}">
-                            <DockPanel>
-                                <TextBox DockPanel.Dock="Right" Text="{Binding ToggleSettingsHotKey, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource SettingsRowInputStyle}" PreviewKeyDown="HotKeyInput_PreviewKeyDown" PreviewMouseLeftButtonDown="HotKeyTextBox_PreviewMouseLeftButtonDown" IsReadOnly="True" Tag="HotKey"/>
-                                <TextBlock Text="설정창 ON/OFF" Style="{StaticResource SettingsRowLabelStyle}"/>
-                            </DockPanel>
-                        </Border>
-                        <Border Style="{StaticResource SettingsRowStyle}">
-                            <DockPanel>
-                                <TextBox DockPanel.Dock="Right" Text="{Binding ToggleTrayAllHotKey, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource SettingsRowInputStyle}" PreviewKeyDown="HotKeyInput_PreviewKeyDown" PreviewMouseLeftButtonDown="HotKeyTextBox_PreviewMouseLeftButtonDown" IsReadOnly="True" Tag="HotKey"/>
-                                <TextBlock Text="모든 창 트레이 ON/OFF" Style="{StaticResource SettingsRowLabelStyle}"/>
-                            </DockPanel>
-                        </Border>
-                        <Border Style="{StaticResource SettingsRowStyle}" BorderThickness="0">
-                            <DockPanel>
-                                <TextBox DockPanel.Dock="Right" Text="{Binding ExitHotKey, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource SettingsRowInputStyle}" PreviewKeyDown="HotKeyInput_PreviewKeyDown" PreviewMouseLeftButtonDown="HotKeyTextBox_PreviewMouseLeftButtonDown" IsReadOnly="True" Tag="HotKey"/>
-                                <TextBlock Text="프로그램 종료" Style="{StaticResource SettingsRowLabelStyle}"/>
-                            </DockPanel>
-                        </Border>
+                        <WrapPanel>
+                            <Border Style="{StaticResource SettingsRowStyle}">
+                                <DockPanel>
+                                    <TextBox DockPanel.Dock="Right" Width="120" Text="{Binding ToggleOverlayHotKey, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource SettingsRowInputStyle}" PreviewKeyDown="HotKeyInput_PreviewKeyDown" PreviewMouseLeftButtonDown="HotKeyTextBox_PreviewMouseLeftButtonDown" IsReadOnly="True" Tag="HotKey"/>
+                                    <TextBlock Text="채팅창 ON/OFF" Style="{StaticResource SettingsRowLabelStyle}"/>
+                                </DockPanel>
+                            </Border>
+                            <Border Style="{StaticResource SettingsRowStyle}">
+                                <DockPanel>
+                                    <TextBox DockPanel.Dock="Right" Width="120" Text="{Binding ToggleDailyWeeklyContentHotKey, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource SettingsRowInputStyle}" PreviewKeyDown="HotKeyInput_PreviewKeyDown" PreviewMouseLeftButtonDown="HotKeyTextBox_PreviewMouseLeftButtonDown" IsReadOnly="True" Tag="HotKey"/>
+                                    <TextBlock Text="일일/주간 콘텐츠" Style="{StaticResource SettingsRowLabelStyle}"/>
+                                </DockPanel>
+                            </Border>
+                            <Border Style="{StaticResource SettingsRowStyle}">
+                                <DockPanel>
+                                    <TextBox DockPanel.Dock="Right" Width="120" Text="{Binding ToggleSettingsHotKey, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource SettingsRowInputStyle}" PreviewKeyDown="HotKeyInput_PreviewKeyDown" PreviewMouseLeftButtonDown="HotKeyTextBox_PreviewMouseLeftButtonDown" IsReadOnly="True" Tag="HotKey"/>
+                                    <TextBlock Text="설정창 ON/OFF" Style="{StaticResource SettingsRowLabelStyle}"/>
+                                </DockPanel>
+                            </Border>
+                            <Border Style="{StaticResource SettingsRowStyle}">
+                                <DockPanel>
+                                    <TextBox DockPanel.Dock="Right" Width="120" Text="{Binding ToggleTrayAllHotKey, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource SettingsRowInputStyle}" PreviewKeyDown="HotKeyInput_PreviewKeyDown" PreviewMouseLeftButtonDown="HotKeyTextBox_PreviewMouseLeftButtonDown" IsReadOnly="True" Tag="HotKey"/>
+                                    <TextBlock Text="모든 창 트레이" Style="{StaticResource SettingsRowLabelStyle}"/>
+                                </DockPanel>
+                            </Border>
+                            <Border Style="{StaticResource SettingsRowStyle}">
+                                <DockPanel>
+                                    <TextBox DockPanel.Dock="Right" Width="120" Text="{Binding ToggleUnlockHotKey, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource SettingsRowInputStyle}" PreviewKeyDown="HotKeyInput_PreviewKeyDown" PreviewMouseLeftButtonDown="HotKeyTextBox_PreviewMouseLeftButtonDown" IsReadOnly="True" Tag="HotKey"/>
+                                    <TextBlock Text="잠금 해제 모드" Style="{StaticResource SettingsRowLabelStyle}"/>
+                                </DockPanel>
+                            </Border>
+                            <Border Style="{StaticResource SettingsRowStyle}">
+                                <DockPanel>
+                                    <TextBox DockPanel.Dock="Right" Width="120" Text="{Binding ExitHotKey, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource SettingsRowInputStyle}" PreviewKeyDown="HotKeyInput_PreviewKeyDown" PreviewMouseLeftButtonDown="HotKeyTextBox_PreviewMouseLeftButtonDown" IsReadOnly="True" Tag="HotKey"/>
+                                    <TextBlock Text="프로그램 종료" Style="{StaticResource SettingsRowLabelStyle}"/>
+                                </DockPanel>
+                            </Border>
+                        </WrapPanel>
                     </StackPanel>
 
                     <!-- ===================== 시스템 ===================== -->
                     <StackPanel x:Name="SystemPanel" Visibility="Collapsed">
                         <TextBlock Text="로그" Style="{StaticResource SettingsSectionLabelStyle}" Margin="0,4,0,6"/>
-                        <Border Style="{StaticResource SettingsRowStyle}">
-                            <DockPanel>
-                                <TextBox DockPanel.Dock="Right" Width="240" Text="{Binding ChatLogFolderPath, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" Style="{StaticResource SettingsRowInputStyle}" TextAlignment="Left" Padding="5,0"/>
-                                <TextBlock Text="채팅 로그 폴더" Style="{StaticResource SettingsRowLabelStyle}"/>
-                            </DockPanel>
-                        </Border>
-                        <Border x:Name="DebugOptionsBorder" Style="{StaticResource SettingsRowStyle}" Visibility="Collapsed">
-                            <DockPanel>
-                                <CheckBox DockPanel.Dock="Right" IsChecked="{Binding EnableDebugLogging}" Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
-                                <StackPanel VerticalAlignment="Center">
-                                    <TextBlock Text="Debug.log 활성화" Style="{StaticResource SettingsRowLabelStyle}"/>
-                                    <TextBlock Text="디버그 로그를 Debug.log 파일에 기록" Style="{StaticResource SettingsRowHintStyle}"/>
-                                </StackPanel>
-                            </DockPanel>
-                        </Border>
+                        <WrapPanel>
+                            <Border Style="{StaticResource SettingsRowWideStyle}">
+                                <DockPanel>
+                                    <TextBox DockPanel.Dock="Right" Width="240" Text="{Binding ChatLogFolderPath, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" Style="{StaticResource SettingsRowInputStyle}" TextAlignment="Left" Padding="5,0"/>
+                                    <TextBlock Text="채팅 로그 폴더" Style="{StaticResource SettingsRowLabelStyle}"/>
+                                </DockPanel>
+                            </Border>
+                            <Border x:Name="DebugOptionsBorder" Style="{StaticResource SettingsRowWideStyle}" Visibility="Collapsed">
+                                <DockPanel>
+                                    <CheckBox DockPanel.Dock="Right" IsChecked="{Binding EnableDebugLogging}" Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
+                                    <TextBlock Text="Debug.log 활성화" Style="{StaticResource SettingsRowLabelStyle}" ToolTip="디버그 로그를 Debug.log 파일에 기록"/>
+                                </DockPanel>
+                            </Border>
+                        </WrapPanel>
 
                         <TextBlock Text="유지 관리" Style="{StaticResource SettingsSectionLabelStyle}"/>
-                        <Border Style="{StaticResource SettingsRowStyle}">
-                            <DockPanel>
-                                <Button DockPanel.Dock="Right" Content="실행" Width="70" Height="26" Padding="0" Command="{Binding ManualUpdateCommand}" Style="{StaticResource SecondaryButtonStyle}" FontSize="12"/>
-                                <TextBlock Text="수동 업데이트" Style="{StaticResource SettingsRowLabelStyle}"/>
-                            </DockPanel>
-                        </Border>
-                        <Border Style="{StaticResource SettingsRowStyle}">
-                            <DockPanel>
-                                <Button DockPanel.Dock="Right" Content="실행" Width="70" Height="26" Padding="0" Command="{Binding ManualLogReloadCommand}" Style="{StaticResource SecondaryButtonStyle}" FontSize="12"/>
-                                <TextBlock Text="로그 다시 읽기" Style="{StaticResource SettingsRowLabelStyle}"/>
-                            </DockPanel>
-                        </Border>
-                        <Border Style="{StaticResource SettingsRowStyle}">
-                            <DockPanel>
-                                <Button DockPanel.Dock="Right" Content="초기화" Width="70" Height="26" Padding="0" Command="{Binding InitSettingsCommand}" Style="{StaticResource SecondaryButtonStyle}" FontSize="12"/>
-                                <StackPanel VerticalAlignment="Center">
-                                    <TextBlock Text="설정 초기화" Style="{StaticResource SettingsRowLabelStyle}"/>
-                                    <TextBlock Text="모든 설정을 기본값으로 되돌립니다" Style="{StaticResource SettingsRowHintStyle}"/>
-                                </StackPanel>
-                            </DockPanel>
-                        </Border>
-                        <Border Style="{StaticResource SettingsRowStyle}" BorderThickness="0">
-                            <DockPanel>
-                                <Button DockPanel.Dock="Right" Content="종료" Width="70" Height="26" Padding="0" Command="{Binding ExitAppCommand}" Style="{StaticResource DangerButtonStyle}" FontSize="12"/>
-                                <TextBlock Text="프로그램 종료" Style="{StaticResource SettingsRowLabelStyle}"/>
-                            </DockPanel>
-                        </Border>
+                        <WrapPanel>
+                            <Border Style="{StaticResource SettingsRowStyle}">
+                                <DockPanel>
+                                    <Button DockPanel.Dock="Right" Content="실행" Width="70" Height="26" Padding="0" Command="{Binding ManualUpdateCommand}" Style="{StaticResource SecondaryButtonStyle}" FontSize="12"/>
+                                    <TextBlock Text="수동 업데이트" Style="{StaticResource SettingsRowLabelStyle}"/>
+                                </DockPanel>
+                            </Border>
+                            <Border Style="{StaticResource SettingsRowStyle}">
+                                <DockPanel>
+                                    <Button DockPanel.Dock="Right" Content="실행" Width="70" Height="26" Padding="0" Command="{Binding ManualLogReloadCommand}" Style="{StaticResource SecondaryButtonStyle}" FontSize="12"/>
+                                    <TextBlock Text="로그 다시 읽기" Style="{StaticResource SettingsRowLabelStyle}"/>
+                                </DockPanel>
+                            </Border>
+                            <Border Style="{StaticResource SettingsRowStyle}">
+                                <DockPanel>
+                                    <Button DockPanel.Dock="Right" Content="초기화" Width="70" Height="26" Padding="0" Command="{Binding InitSettingsCommand}" Style="{StaticResource SecondaryButtonStyle}" FontSize="12"/>
+                                    <TextBlock Text="설정 초기화" Style="{StaticResource SettingsRowLabelStyle}" ToolTip="모든 설정을 기본값으로 되돌립니다"/>
+                                </DockPanel>
+                            </Border>
+                            <Border Style="{StaticResource SettingsRowStyle}">
+                                <DockPanel>
+                                    <Button DockPanel.Dock="Right" Content="종료" Width="70" Height="26" Padding="0" Command="{Binding ExitAppCommand}" Style="{StaticResource DangerButtonStyle}" FontSize="12"/>
+                                    <TextBlock Text="프로그램 종료" Style="{StaticResource SettingsRowLabelStyle}"/>
+                                </DockPanel>
+                            </Border>
+                        </WrapPanel>
                     </StackPanel>
 
                     <!-- ===================== 추가 기능: 키워드 알림 ===================== -->
                     <StackPanel x:Name="AddonKeywordPanel" Visibility="Collapsed">
                         <TextBlock Text="키워드 알림" Style="{StaticResource SettingsSectionLabelStyle}" Margin="0,4,0,6"/>
-                        <Border Style="{StaticResource SettingsRowStyle}">
-                            <DockPanel>
-                                <CheckBox DockPanel.Dock="Right" IsChecked="{Binding UseAlertColor}" Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
-                                <TextBlock Text="색상 강조" Style="{StaticResource SettingsRowLabelStyle}"/>
-                            </DockPanel>
-                        </Border>
-                        <Border Style="{StaticResource SettingsRowStyle}">
-                            <DockPanel>
-                                <CheckBox DockPanel.Dock="Right" IsChecked="{Binding UseAlertSound}" Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
-                                <TextBlock Text="알림음 재생" Style="{StaticResource SettingsRowLabelStyle}"/>
-                            </DockPanel>
-                        </Border>
-                        <Border Style="{StaticResource SettingsRowStyle}" BorderThickness="0">
-                            <DockPanel>
-                                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
-                                    <Slider Width="150" Minimum="0" Maximum="100" TickFrequency="10" IsSnapToTickEnabled="True" VerticalAlignment="Center"
-                                            Tag="Highlight.wav" ValueChanged="PreviewSoundSlider_ValueChanged"
-                                            Value="{Binding HighlightAlertVolumePercent, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
-                                    <TextBlock Text="{Binding HighlightAlertVolumePercent, StringFormat={}{0:F0}%}" Foreground="{DynamicResource TextBrush}" Width="38" TextAlignment="Right" VerticalAlignment="Center" FontSize="12"/>
-                                </StackPanel>
-                                <TextBlock Text="알림 볼륨" Style="{StaticResource SettingsRowLabelStyle}"/>
-                            </DockPanel>
-                        </Border>
+                        <WrapPanel>
+                            <Border Style="{StaticResource SettingsRowStyle}">
+                                <DockPanel>
+                                    <CheckBox DockPanel.Dock="Right" IsChecked="{Binding UseAlertColor}" Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
+                                    <TextBlock Text="색상 강조" Style="{StaticResource SettingsRowLabelStyle}"/>
+                                </DockPanel>
+                            </Border>
+                            <Border Style="{StaticResource SettingsRowStyle}">
+                                <DockPanel>
+                                    <CheckBox DockPanel.Dock="Right" IsChecked="{Binding UseAlertSound}" Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
+                                    <TextBlock Text="알림음 재생" Style="{StaticResource SettingsRowLabelStyle}"/>
+                                </DockPanel>
+                            </Border>
+                            <Border Style="{StaticResource SettingsRowStyle}">
+                                <DockPanel>
+                                    <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                                        <Slider Width="120" Minimum="0" Maximum="100" TickFrequency="10" IsSnapToTickEnabled="True" VerticalAlignment="Center"
+                                                Tag="Highlight.wav" ValueChanged="PreviewSoundSlider_ValueChanged"
+                                                Value="{Binding HighlightAlertVolumePercent, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                        <TextBlock Text="{Binding HighlightAlertVolumePercent, StringFormat={}{0:F0}%}" Foreground="{DynamicResource TextBrush}" Width="34" TextAlignment="Right" VerticalAlignment="Center" FontSize="12"/>
+                                    </StackPanel>
+                                    <TextBlock Text="알림 볼륨" Style="{StaticResource SettingsRowLabelStyle}"/>
+                                </DockPanel>
+                            </Border>
+                        </WrapPanel>
 
                         <TextBlock Text="키워드" Style="{StaticResource SettingsSectionLabelStyle}"/>
                         <TextBox x:Name="KeywordBox"
@@ -458,6 +447,8 @@
                                  Style="{StaticResource InputTextBoxStyle}"
                                  AcceptsReturn="True"
                                  TextWrapping="Wrap"
+                                 Width="606"
+                                 HorizontalAlignment="Left"
                                  Height="80"/>
                         <TextBlock Text="@단어1 @단어2 형식 · 입력 즉시 적용됩니다" Style="{StaticResource SettingsRowHintStyle}" Margin="0,4,0,0"/>
                     </StackPanel>
@@ -465,161 +456,157 @@
                     <!-- ===================== 추가 기능: 경험치 추적 ===================== -->
                     <StackPanel x:Name="AddonExpPanel" Visibility="Collapsed">
                         <TextBlock Text="경험치 추적" Style="{StaticResource SettingsSectionLabelStyle}" Margin="0,4,0,6"/>
-                        <Border Style="{StaticResource SettingsRowStyle}">
-                            <DockPanel>
-                                <CheckBox DockPanel.Dock="Right" IsChecked="{Binding ShowExpTracker, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
-                                <StackPanel VerticalAlignment="Center">
-                                    <TextBlock Text="경험치 추적" Style="{StaticResource SettingsRowLabelStyle}"/>
-                                    <TextBlock Text="화면 상단에 실시간 획득량 표시" Style="{StaticResource SettingsRowHintStyle}"/>
-                                </StackPanel>
-                            </DockPanel>
-                        </Border>
-                        <Border Style="{StaticResource SettingsRowStyle}">
-                            <DockPanel>
-                                <CheckBox DockPanel.Dock="Right" IsChecked="{Binding EnableExperienceLimitAlert, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
-                                <StackPanel VerticalAlignment="Center">
+                        <WrapPanel>
+                            <Border Style="{StaticResource SettingsRowStyle}">
+                                <DockPanel>
+                                    <CheckBox DockPanel.Dock="Right" IsChecked="{Binding ShowExpTracker, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
+                                    <TextBlock Text="경험치 추적" Style="{StaticResource SettingsRowLabelStyle}" ToolTip="화면 상단에 실시간 획득량 표시"/>
+                                </DockPanel>
+                            </Border>
+                            <Border Style="{StaticResource SettingsRowStyle}">
+                                <DockPanel>
+                                    <CheckBox DockPanel.Dock="Right" IsChecked="{Binding EnableExperienceLimitAlert, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
                                     <TextBlock Text="경험치 누적 알림" Style="{StaticResource SettingsRowLabelStyle}"/>
-                                    <TextBlock Text="알림 위치는 이 화면이 열려 있는 동안 드래그로 조정" Style="{StaticResource SettingsRowHintStyle}"/>
-                                </StackPanel>
-                            </DockPanel>
-                        </Border>
-                        <Border Style="{StaticResource SettingsRowStyle}" BorderThickness="0">
-                            <DockPanel>
-                                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
-                                    <TextBox Width="110" Text="{Binding ExperienceLimitTotalExp, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                             Style="{StaticResource SettingsRowInputStyle}" HorizontalContentAlignment="Right" Margin="0,0,6,0"
-                                             PreviewTextInput="ExperienceLimitExp_PreviewTextInput" DataObject.Pasting="ExperienceLimitExp_Pasting"/>
-                                    <Button Content="적용" Width="56" Height="26" Padding="0" Command="{Binding ApplyExperienceLimitStateCommand}" Style="{StaticResource SecondaryButtonStyle}" FontSize="12"/>
-                                </StackPanel>
-                                <TextBlock Text="현재 누적 경험치(억)" Style="{StaticResource SettingsRowLabelStyle}"/>
-                            </DockPanel>
-                        </Border>
+                                </DockPanel>
+                            </Border>
+                            <Border Style="{StaticResource SettingsRowWideStyle}">
+                                <DockPanel>
+                                    <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                                        <TextBox Width="110" Text="{Binding ExperienceLimitTotalExp, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                 Style="{StaticResource SettingsRowInputStyle}" HorizontalContentAlignment="Right" Margin="0,0,6,0"
+                                                 PreviewTextInput="ExperienceLimitExp_PreviewTextInput" DataObject.Pasting="ExperienceLimitExp_Pasting"/>
+                                        <Button Content="적용" Width="56" Height="26" Padding="0" Command="{Binding ApplyExperienceLimitStateCommand}" Style="{StaticResource SecondaryButtonStyle}" FontSize="12"/>
+                                    </StackPanel>
+                                    <TextBlock Text="현재 누적 경험치(억)" Style="{StaticResource SettingsRowLabelStyle}"/>
+                                </DockPanel>
+                            </Border>
+                        </WrapPanel>
 
                         <TextBlock Text="저효율 알림" Style="{StaticResource SettingsSectionLabelStyle}"/>
-                        <Border Style="{StaticResource SettingsRowStyle}">
-                            <DockPanel>
-                                <CheckBox DockPanel.Dock="Right" IsChecked="{Binding IsExpAlarmEnabled}" Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
-                                <TextBlock Text="저효율 알림" Style="{StaticResource SettingsRowLabelStyle}"/>
-                            </DockPanel>
-                        </Border>
-                        <Border Style="{StaticResource SettingsRowStyle}">
-                            <DockPanel>
-                                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
-                                    <Slider Width="150" Minimum="0" Maximum="100" TickFrequency="10" IsSnapToTickEnabled="True" VerticalAlignment="Center"
-                                            Tag="EXPBuffCheck.wav" ValueChanged="PreviewSoundSlider_ValueChanged"
-                                            Value="{Binding ExpBuffAlertVolumePercent, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
-                                    <TextBlock Text="{Binding ExpBuffAlertVolumePercent, StringFormat={}{0:F0}%}" Foreground="{DynamicResource TextBrush}" Width="38" TextAlignment="Right" VerticalAlignment="Center" FontSize="12"/>
-                                </StackPanel>
-                                <TextBlock Text="알림 볼륨" Style="{StaticResource SettingsRowLabelStyle}"/>
-                            </DockPanel>
-                        </Border>
-                        <Border Style="{StaticResource SettingsRowStyle}" BorderThickness="0">
-                            <DockPanel>
-                                <TextBox DockPanel.Dock="Right" Width="70" Text="{Binding ExpAlarmThresholdMan, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource SettingsRowInputStyle}"/>
-                                <TextBlock Text="기준치 (만 EXP 미만 시)" Style="{StaticResource SettingsRowLabelStyle}"/>
-                            </DockPanel>
-                        </Border>
+                        <WrapPanel>
+                            <Border Style="{StaticResource SettingsRowStyle}">
+                                <DockPanel>
+                                    <CheckBox DockPanel.Dock="Right" IsChecked="{Binding IsExpAlarmEnabled}" Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
+                                    <TextBlock Text="저효율 알림" Style="{StaticResource SettingsRowLabelStyle}"/>
+                                </DockPanel>
+                            </Border>
+                            <Border Style="{StaticResource SettingsRowStyle}">
+                                <DockPanel>
+                                    <TextBox DockPanel.Dock="Right" Width="70" Text="{Binding ExpAlarmThresholdMan, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource SettingsRowInputStyle}"/>
+                                    <TextBlock Text="기준치(만 EXP 미만)" Style="{StaticResource SettingsRowLabelStyle}"/>
+                                </DockPanel>
+                            </Border>
+                            <Border Style="{StaticResource SettingsRowStyle}">
+                                <DockPanel>
+                                    <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                                        <Slider Width="120" Minimum="0" Maximum="100" TickFrequency="10" IsSnapToTickEnabled="True" VerticalAlignment="Center"
+                                                Tag="EXPBuffCheck.wav" ValueChanged="PreviewSoundSlider_ValueChanged"
+                                                Value="{Binding ExpBuffAlertVolumePercent, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                        <TextBlock Text="{Binding ExpBuffAlertVolumePercent, StringFormat={}{0:F0}%}" Foreground="{DynamicResource TextBrush}" Width="34" TextAlignment="Right" VerticalAlignment="Center" FontSize="12"/>
+                                    </StackPanel>
+                                    <TextBlock Text="알림 볼륨" Style="{StaticResource SettingsRowLabelStyle}"/>
+                                </DockPanel>
+                            </Border>
+                        </WrapPanel>
                     </StackPanel>
 
                     <!-- ===================== 추가 기능: 던전 도우미 ===================== -->
                     <StackPanel x:Name="AddonDungeonPanel" Visibility="Collapsed">
-                        <TextBlock Text="웨이브" Style="{StaticResource SettingsSectionLabelStyle}" Margin="0,4,0,6"/>
-                        <Border Style="{StaticResource SettingsRowStyle}">
-                            <DockPanel>
-                                <CheckBox DockPanel.Dock="Right" IsChecked="{Binding UseMagicCircleAlert}" Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
-                                <TextBlock Text="웨이브 종료 알림" Style="{StaticResource SettingsRowLabelStyle}"/>
-                            </DockPanel>
-                        </Border>
-                        <Border Style="{StaticResource SettingsRowStyle}" BorderThickness="0">
-                            <DockPanel>
-                                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
-                                    <Slider Width="150" Minimum="0" Maximum="100" TickFrequency="10" IsSnapToTickEnabled="True" VerticalAlignment="Center"
-                                            Tag="Wave.wav" ValueChanged="PreviewSoundSlider_ValueChanged"
-                                            Value="{Binding MagicCircleAlertVolumePercent, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
-                                    <TextBlock Text="{Binding MagicCircleAlertVolumePercent, StringFormat={}{0:F0}%}" Foreground="{DynamicResource TextBrush}" Width="38" TextAlignment="Right" VerticalAlignment="Center" FontSize="12"/>
-                                </StackPanel>
-                                <TextBlock Text="알림 볼륨" Style="{StaticResource SettingsRowLabelStyle}"/>
-                            </DockPanel>
-                        </Border>
-
-                        <TextBlock Text="에토스" Style="{StaticResource SettingsSectionLabelStyle}"/>
-                        <Border Style="{StaticResource SettingsRowStyle}">
-                            <DockPanel>
-                                <CheckBox DockPanel.Dock="Right" IsChecked="{Binding ShowEtosDirectionAlert}" Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
-                                <TextBlock Text="에토스 방향 알림" Style="{StaticResource SettingsRowLabelStyle}"/>
-                            </DockPanel>
-                        </Border>
-                        <Border Style="{StaticResource SettingsRowStyle}">
-                            <DockPanel>
-                                <CheckBox DockPanel.Dock="Right" IsChecked="{Binding EnableReflectionPatternAlert}" Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
-                                <TextBlock Text="반사 패턴 알림" Style="{StaticResource SettingsRowLabelStyle}"/>
-                            </DockPanel>
-                        </Border>
-                        <Border Style="{StaticResource SettingsRowStyle}" BorderThickness="0">
-                            <DockPanel>
-                                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
-                                    <Slider Width="150" Minimum="0" Maximum="100" TickFrequency="10" IsSnapToTickEnabled="True" VerticalAlignment="Center"
-                                            Tag="Reflection.wav" ValueChanged="PreviewSoundSlider_ValueChanged"
-                                            Value="{Binding ReflectionPatternAlertVolumePercent, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
-                                    <TextBlock Text="{Binding ReflectionPatternAlertVolumePercent, StringFormat={}{0:F0}%}" Foreground="{DynamicResource TextBrush}" Width="38" TextAlignment="Right" VerticalAlignment="Center" FontSize="12"/>
-                                </StackPanel>
-                                <TextBlock Text="반사 패턴 볼륨" Style="{StaticResource SettingsRowLabelStyle}"/>
-                            </DockPanel>
-                        </Border>
+                        <TextBlock Text="알림" Style="{StaticResource SettingsSectionLabelStyle}" Margin="0,4,0,6"/>
+                        <WrapPanel>
+                            <Border Style="{StaticResource SettingsRowStyle}">
+                                <DockPanel>
+                                    <CheckBox DockPanel.Dock="Right" IsChecked="{Binding UseMagicCircleAlert}" Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
+                                    <TextBlock Text="웨이브 종료 알림" Style="{StaticResource SettingsRowLabelStyle}"/>
+                                </DockPanel>
+                            </Border>
+                            <Border Style="{StaticResource SettingsRowStyle}">
+                                <DockPanel>
+                                    <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                                        <Slider Width="120" Minimum="0" Maximum="100" TickFrequency="10" IsSnapToTickEnabled="True" VerticalAlignment="Center"
+                                                Tag="Wave.wav" ValueChanged="PreviewSoundSlider_ValueChanged"
+                                                Value="{Binding MagicCircleAlertVolumePercent, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                        <TextBlock Text="{Binding MagicCircleAlertVolumePercent, StringFormat={}{0:F0}%}" Foreground="{DynamicResource TextBrush}" Width="34" TextAlignment="Right" VerticalAlignment="Center" FontSize="12"/>
+                                    </StackPanel>
+                                    <TextBlock Text="웨이브 볼륨" Style="{StaticResource SettingsRowLabelStyle}"/>
+                                </DockPanel>
+                            </Border>
+                            <Border Style="{StaticResource SettingsRowStyle}">
+                                <DockPanel>
+                                    <CheckBox DockPanel.Dock="Right" IsChecked="{Binding ShowEtosDirectionAlert}" Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
+                                    <TextBlock Text="에토스 방향 알림" Style="{StaticResource SettingsRowLabelStyle}"/>
+                                </DockPanel>
+                            </Border>
+                            <Border Style="{StaticResource SettingsRowStyle}">
+                                <DockPanel>
+                                    <CheckBox DockPanel.Dock="Right" IsChecked="{Binding EnableReflectionPatternAlert}" Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
+                                    <TextBlock Text="반사 패턴 알림" Style="{StaticResource SettingsRowLabelStyle}"/>
+                                </DockPanel>
+                            </Border>
+                            <Border Style="{StaticResource SettingsRowStyle}">
+                                <DockPanel>
+                                    <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                                        <Slider Width="120" Minimum="0" Maximum="100" TickFrequency="10" IsSnapToTickEnabled="True" VerticalAlignment="Center"
+                                                Tag="Reflection.wav" ValueChanged="PreviewSoundSlider_ValueChanged"
+                                                Value="{Binding ReflectionPatternAlertVolumePercent, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                        <TextBlock Text="{Binding ReflectionPatternAlertVolumePercent, StringFormat={}{0:F0}%}" Foreground="{DynamicResource TextBrush}" Width="34" TextAlignment="Right" VerticalAlignment="Center" FontSize="12"/>
+                                    </StackPanel>
+                                    <TextBlock Text="반사 패턴 볼륨" Style="{StaticResource SettingsRowLabelStyle}"/>
+                                </DockPanel>
+                            </Border>
+                        </WrapPanel>
 
                         <TextBlock Text="던전 카운터" Style="{StaticResource SettingsSectionLabelStyle}"/>
-                        <Border Style="{StaticResource SettingsRowStyle}">
-                            <DockPanel>
-                                <CheckBox DockPanel.Dock="Right" IsChecked="{Binding EnableAbandonRoadCountAlert, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
-                                <TextBlock Text="어밴던로드 횟수 알림" Style="{StaticResource SettingsRowLabelStyle}"/>
-                            </DockPanel>
-                        </Border>
-                        <Border Style="{StaticResource SettingsRowStyle}">
-                            <DockPanel>
-                                <CheckBox DockPanel.Dock="Right" IsChecked="{Binding ShowAbandonRoadSummaryWindow, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
-                                <TextBlock Text="어밴던로드 누적 금액 알림" Style="{StaticResource SettingsRowLabelStyle}"/>
-                            </DockPanel>
-                        </Border>
-                        <Border Style="{StaticResource SettingsRowStyle}">
-                            <DockPanel>
-                                <CheckBox DockPanel.Dock="Right" IsChecked="{Binding EnableCravingPleasureCountAlert, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
-                                <TextBlock Text="갈망하는 즐거움 횟수 알림" Style="{StaticResource SettingsRowLabelStyle}"/>
-                            </DockPanel>
-                        </Border>
-                        <Border Style="{StaticResource SettingsRowStyle}" BorderThickness="0">
-                            <DockPanel>
-                                <TextBox DockPanel.Dock="Right" Width="70" Text="{Binding AbandonRoadCountAlertDurationSeconds, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource SettingsRowInputStyle}"/>
-                                <StackPanel VerticalAlignment="Center">
-                                    <TextBlock Text="알림 창 지속시간(초)" Style="{StaticResource SettingsRowLabelStyle}"/>
-                                    <TextBlock Text="1~300초 · 위치는 이 화면이 열려 있는 동안 드래그로 조정" Style="{StaticResource SettingsRowHintStyle}"/>
-                                </StackPanel>
-                            </DockPanel>
-                        </Border>
+                        <WrapPanel>
+                            <Border Style="{StaticResource SettingsRowStyle}">
+                                <DockPanel>
+                                    <CheckBox DockPanel.Dock="Right" IsChecked="{Binding EnableAbandonRoadCountAlert, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
+                                    <TextBlock Text="어밴던로드 횟수" Style="{StaticResource SettingsRowLabelStyle}"/>
+                                </DockPanel>
+                            </Border>
+                            <Border Style="{StaticResource SettingsRowStyle}">
+                                <DockPanel>
+                                    <CheckBox DockPanel.Dock="Right" IsChecked="{Binding ShowAbandonRoadSummaryWindow, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
+                                    <TextBlock Text="어밴던로드 누적 금액" Style="{StaticResource SettingsRowLabelStyle}"/>
+                                </DockPanel>
+                            </Border>
+                            <Border Style="{StaticResource SettingsRowStyle}">
+                                <DockPanel>
+                                    <CheckBox DockPanel.Dock="Right" IsChecked="{Binding EnableCravingPleasureCountAlert, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
+                                    <TextBlock Text="갈망하는 즐거움 횟수" Style="{StaticResource SettingsRowLabelStyle}"/>
+                                </DockPanel>
+                            </Border>
+                            <Border Style="{StaticResource SettingsRowStyle}">
+                                <DockPanel>
+                                    <TextBox DockPanel.Dock="Right" Width="70" Text="{Binding AbandonRoadCountAlertDurationSeconds, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource SettingsRowInputStyle}"/>
+                                    <TextBlock Text="알림 창 지속시간(초)" Style="{StaticResource SettingsRowLabelStyle}" ToolTip="1~300초"/>
+                                </DockPanel>
+                            </Border>
+                        </WrapPanel>
                     </StackPanel>
 
                     <!-- ===================== 추가 기능: 아이템 알림 ===================== -->
                     <StackPanel x:Name="AddonItemPanel" Visibility="Collapsed">
                         <TextBlock Text="아이템 획득 알림" Style="{StaticResource SettingsSectionLabelStyle}" Margin="0,4,0,6"/>
-                        <Border Style="{StaticResource SettingsRowStyle}">
-                            <DockPanel>
-                                <CheckBox DockPanel.Dock="Right" IsChecked="{Binding ShowItemDropAlert}" Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
-                                <StackPanel VerticalAlignment="Center">
+                        <WrapPanel>
+                            <Border Style="{StaticResource SettingsRowStyle}">
+                                <DockPanel>
+                                    <CheckBox DockPanel.Dock="Right" IsChecked="{Binding ShowItemDropAlert}" Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
                                     <TextBlock Text="아이템 획득 알림" Style="{StaticResource SettingsRowLabelStyle}"/>
-                                    <TextBlock Text="위치는 이 화면이 열려 있는 동안 드래그로 조정" Style="{StaticResource SettingsRowHintStyle}"/>
-                                </StackPanel>
-                            </DockPanel>
-                        </Border>
-                        <Border Style="{StaticResource SettingsRowStyle}" BorderThickness="0">
-                            <DockPanel>
-                                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
-                                    <Slider Width="150" Minimum="0" Maximum="100" TickFrequency="5" IsSnapToTickEnabled="True" VerticalAlignment="Center"
-                                            Tag="drop_low.mp3" ValueChanged="PreviewSoundSlider_ValueChanged"
-                                            Value="{Binding ItemDropAlertVolumePercent, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
-                                    <TextBlock Text="{Binding ItemDropAlertVolumePercent, StringFormat={}{0:F0}%}" Foreground="{DynamicResource TextBrush}" Width="38" TextAlignment="Right" VerticalAlignment="Center" FontSize="12"/>
-                                </StackPanel>
-                                <TextBlock Text="알림 볼륨" Style="{StaticResource SettingsRowLabelStyle}"/>
-                            </DockPanel>
-                        </Border>
+                                </DockPanel>
+                            </Border>
+                            <Border Style="{StaticResource SettingsRowStyle}">
+                                <DockPanel>
+                                    <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                                        <Slider Width="120" Minimum="0" Maximum="100" TickFrequency="5" IsSnapToTickEnabled="True" VerticalAlignment="Center"
+                                                Tag="drop_low.mp3" ValueChanged="PreviewSoundSlider_ValueChanged"
+                                                Value="{Binding ItemDropAlertVolumePercent, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                        <TextBlock Text="{Binding ItemDropAlertVolumePercent, StringFormat={}{0:F0}%}" Foreground="{DynamicResource TextBrush}" Width="34" TextAlignment="Right" VerticalAlignment="Center" FontSize="12"/>
+                                    </StackPanel>
+                                    <TextBlock Text="알림 볼륨" Style="{StaticResource SettingsRowLabelStyle}"/>
+                                </DockPanel>
+                            </Border>
+                        </WrapPanel>
 
                         <TextBlock Text="알림 필터" Style="{StaticResource SettingsSectionLabelStyle}"/>
                         <TextBlock Text="기본 목록에서 알림 받을 항목을 사용자 정의 목록으로 옮긴 뒤 적용하세요." Style="{StaticResource SettingsRowHintStyle}" Margin="0,0,0,6"/>
@@ -628,7 +615,7 @@
                             <Button Content="사용자 정의" Command="{Binding SelectCustomDropFilterCommand}" Width="92" Style="{StaticResource DropFilterButtonStyle}"/>
                         </StackPanel>
 
-                        <Grid>
+                        <Grid Width="606" HorizontalAlignment="Left">
                             <Grid.Style>
                                 <Style TargetType="Grid">
                                     <Setter Property="Visibility" Value="Collapsed"/>
@@ -692,39 +679,38 @@
                     <!-- ===================== 추가 기능: 버프 추적 ===================== -->
                     <StackPanel x:Name="AddonBuffPanel" Visibility="Collapsed">
                         <TextBlock Text="버프 추적" Style="{StaticResource SettingsSectionLabelStyle}" Margin="0,4,0,6"/>
-                        <Border Style="{StaticResource SettingsRowStyle}">
-                            <DockPanel>
-                                <CheckBox DockPanel.Dock="Right" IsChecked="{Binding EnableBuffTrackerAlert}" Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
-                                <StackPanel VerticalAlignment="Center">
-                                    <TextBlock Text="버프 추적" Style="{StaticResource SettingsRowLabelStyle}"/>
-                                    <TextBlock Text="버프 시간 추적을 켜고 끕니다 · 위치는 이 화면에서 드래그로 조정" Style="{StaticResource SettingsRowHintStyle}"/>
-                                </StackPanel>
-                            </DockPanel>
-                        </Border>
-                        <Border Style="{StaticResource SettingsRowStyle}">
-                            <DockPanel>
-                                <CheckBox DockPanel.Dock="Right" IsChecked="{Binding EnableBuffTrackerEndSound}" IsEnabled="{Binding EnableBuffTrackerAlert}" Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
-                                <TextBlock Text="버프 종료 사운드" Style="{StaticResource SettingsRowLabelStyle}"/>
-                            </DockPanel>
-                        </Border>
-                        <Border Style="{StaticResource SettingsRowStyle}" BorderThickness="0">
-                            <DockPanel>
-                                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
-                                    <Slider Width="150" Minimum="0" Maximum="100" TickFrequency="10" IsSnapToTickEnabled="True" VerticalAlignment="Center"
-                                            IsEnabled="{Binding EnableBuffTrackerAlert}"
-                                            Tag="BuffCheck.wav" ValueChanged="PreviewSoundSlider_ValueChanged"
-                                            Value="{Binding BuffTrackerEndSoundVolumePercent, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
-                                    <TextBlock Text="{Binding BuffTrackerEndSoundVolumePercent, StringFormat={}{0:F0}%}" Foreground="{DynamicResource TextBrush}" Width="38" TextAlignment="Right" VerticalAlignment="Center" FontSize="12"/>
-                                </StackPanel>
-                                <TextBlock Text="종료 사운드 볼륨" Style="{StaticResource SettingsRowLabelStyle}"/>
-                            </DockPanel>
-                        </Border>
+                        <WrapPanel>
+                            <Border Style="{StaticResource SettingsRowStyle}">
+                                <DockPanel>
+                                    <CheckBox DockPanel.Dock="Right" IsChecked="{Binding EnableBuffTrackerAlert}" Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
+                                    <TextBlock Text="버프 추적" Style="{StaticResource SettingsRowLabelStyle}" ToolTip="버프 시간 추적을 켜고 끕니다"/>
+                                </DockPanel>
+                            </Border>
+                            <Border Style="{StaticResource SettingsRowStyle}">
+                                <DockPanel>
+                                    <CheckBox DockPanel.Dock="Right" IsChecked="{Binding EnableBuffTrackerEndSound}" IsEnabled="{Binding EnableBuffTrackerAlert}" Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
+                                    <TextBlock Text="버프 종료 사운드" Style="{StaticResource SettingsRowLabelStyle}"/>
+                                </DockPanel>
+                            </Border>
+                            <Border Style="{StaticResource SettingsRowStyle}">
+                                <DockPanel>
+                                    <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                                        <Slider Width="120" Minimum="0" Maximum="100" TickFrequency="10" IsSnapToTickEnabled="True" VerticalAlignment="Center"
+                                                IsEnabled="{Binding EnableBuffTrackerAlert}"
+                                                Tag="BuffCheck.wav" ValueChanged="PreviewSoundSlider_ValueChanged"
+                                                Value="{Binding BuffTrackerEndSoundVolumePercent, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                        <TextBlock Text="{Binding BuffTrackerEndSoundVolumePercent, StringFormat={}{0:F0}%}" Foreground="{DynamicResource TextBrush}" Width="34" TextAlignment="Right" VerticalAlignment="Center" FontSize="12"/>
+                                    </StackPanel>
+                                    <TextBlock Text="종료 사운드 볼륨" Style="{StaticResource SettingsRowLabelStyle}"/>
+                                </DockPanel>
+                            </Border>
+                        </WrapPanel>
                     </StackPanel>
 
                     <!-- ===================== 추가 기능: 필드 보스 ===================== -->
                     <StackPanel x:Name="AddonBossPanel" Visibility="Collapsed">
                         <TextBlock Text="필드 보스 알림" Style="{StaticResource SettingsSectionLabelStyle}" Margin="0,4,0,6"/>
-                        <ItemsControl ItemsSource="{Binding BossAlarmCards}">
+                        <ItemsControl ItemsSource="{Binding BossAlarmCards}" Width="606" HorizontalAlignment="Left">
                             <ItemsControl.ItemsPanel>
                                 <ItemsPanelTemplate>
                                     <UniformGrid Columns="3"/>
@@ -772,10 +758,10 @@
                         <Border Style="{StaticResource SettingsRowStyle}" BorderThickness="0">
                             <DockPanel>
                                 <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
-                                    <Slider Width="150" Minimum="0" Maximum="100" TickFrequency="10" IsSnapToTickEnabled="True" VerticalAlignment="Center"
+                                    <Slider Width="120" Minimum="0" Maximum="100" TickFrequency="10" IsSnapToTickEnabled="True" VerticalAlignment="Center"
                                             Tag="Arkan.wav" ValueChanged="PreviewSoundSlider_ValueChanged"
                                             Value="{Binding BossAlertVolumePercent, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
-                                    <TextBlock Text="{Binding BossAlertVolumePercent, StringFormat={}{0:F0}%}" Foreground="{DynamicResource TextBrush}" Width="38" TextAlignment="Right" VerticalAlignment="Center" FontSize="12"/>
+                                    <TextBlock Text="{Binding BossAlertVolumePercent, StringFormat={}{0:F0}%}" Foreground="{DynamicResource TextBrush}" Width="34" TextAlignment="Right" VerticalAlignment="Center" FontSize="12"/>
                                 </StackPanel>
                                 <TextBlock Text="알림 볼륨" Style="{StaticResource SettingsRowLabelStyle}"/>
                             </DockPanel>

@@ -54,6 +54,7 @@ namespace TWChatOverlay.Views
             }
             catch (Exception ex) { AppLogger.Warn("Failed to subscribe menu window to main window state.", ex); }
 
+            UiLockService.UnlockChanged += OnUnlockChanged;
             AppLogger.Info("Menu window initialized.");
         }
 
@@ -84,6 +85,20 @@ namespace TWChatOverlay.Views
             try { SetButtonActive(BtnCalendar, isVisible); } catch { }
         }
 
+        /// <summary>잠금 해제 상태에 맞춰 자물쇠 아이콘(잠김 E72E / 열림 E785)과 하이라이트를 갱신한다.</summary>
+        private void OnUnlockChanged(bool unlocked)
+        {
+            try
+            {
+                Dispatcher.Invoke(() =>
+                {
+                    UnlockGlyph.Text = unlocked ? "" : "";
+                    SetButtonActive(BtnUnlock, unlocked);
+                });
+            }
+            catch { }
+        }
+
         private void DragArea_MouseLeftButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
         {
             try
@@ -107,6 +122,7 @@ namespace TWChatOverlay.Views
             {
                 try
                 {
+                    UiLockService.UnlockChanged -= OnUnlockChanged;
                     if (_subscribedMainWindow != null)
                     {
                         _subscribedMainWindow.OverlayVisibilityChanged -= Main_OverlayVisibilityChanged;
@@ -164,6 +180,9 @@ namespace TWChatOverlay.Views
             {
                 case "BtnWebDb":
                     OpenTwPage();
+                    break;
+                case "BtnUnlock":
+                    UiLockService.Toggle();
                     break;
                 case "BtnChat":
                     OpenChat();
@@ -412,7 +431,7 @@ namespace TWChatOverlay.Views
                 host.Show();
                 host.ShowHostContent(settingsView, "설정");
                 SetMainAddonPositionMode(false);
-                SetMainSettingsPositionMode(true);
+                SetMainSettingsPositionMode(false);
 
                 try { if (_activeSubmenuButton != null) SetButtonActive(_activeSubmenuButton, false); } catch { }
                 SetButtonActive(BtnSettings, true);

@@ -64,6 +64,7 @@ namespace TWChatOverlay.Views
 
         private void TitleBar_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
+            if (!UiLockService.IsUnlocked) return;
             try
             {
                 if (e.ButtonState == MouseButtonState.Pressed)

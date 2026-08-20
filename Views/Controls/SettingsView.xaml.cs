@@ -49,6 +49,16 @@ namespace TWChatOverlay.Views
             ApplyPanelVisibility();
         }
 
+        /// <summary>잠금 해제 모드를 시작하고, 배치가 잘 보이도록 설정 창을 닫는다.</summary>
+        private void UnlockMode_Click(object sender, RoutedEventArgs e)
+        {
+            Services.UiLockService.Set(true);
+            if (!OnlyChatMode)
+            {
+                try { Window.GetWindow(this)?.Close(); } catch { }
+            }
+        }
+
         /// <summary>선택된 추가 기능 내비 인덱스(위치 미리보기용 탭 인덱스). 선택이 없으면 -1.</summary>
         private int SelectedAddonTabIndex
         {
@@ -216,12 +226,10 @@ namespace TWChatOverlay.Views
         private void SettingsView_Loaded(object sender, RoutedEventArgs e)
         {
             SyncFontOptions();
-            UpdateSettingsPositionMode(true);
         }
 
         private void SettingsView_Unloaded(object sender, RoutedEventArgs e)
         {
-            UpdateSettingsPositionMode(false);
             _itemDropPreviewTimer?.Stop();
             if (_addonPreviewActive)
             {
@@ -310,21 +318,6 @@ namespace TWChatOverlay.Views
         }
 
         #endregion
-
-        private void UpdateSettingsPositionMode(bool isEnabled)
-        {
-            if (OnlyChatMode)
-                return;
-
-            foreach (Window window in Application.Current.Windows)
-            {
-                if (window is MainWindow mainWindow)
-                {
-                    mainWindow.SetSettingsPositionMode(isEnabled);
-                    break;
-                }
-            }
-        }
 
         private void OffsetInput_KeyDown(object sender, KeyEventArgs e)
         {

@@ -412,6 +412,18 @@ namespace TWChatOverlay.ViewModels
             }
         }
 
+        public string ToggleUnlockHotKey
+        {
+            get => _settings.ToggleUnlockHotKey;
+            set
+            {
+                if (_settings.ToggleUnlockHotKey == value) return;
+                _settings.ToggleUnlockHotKey = value;
+                OnPropertyChanged();
+                SaveSettings();
+            }
+        }
+
         /// <summary>메인·서브 채팅창과 자동으로 뜨는 창을 함께 조절하는 통합 불투명도.</summary>
         public double OverlayOpacityPercent
         {
@@ -564,6 +576,7 @@ namespace TWChatOverlay.ViewModels
             OnPropertyChanged(nameof(ToggleDailyWeeklyContentHotKey));
             OnPropertyChanged(nameof(ToggleSettingsHotKey));
             OnPropertyChanged(nameof(ToggleTrayAllHotKey));
+            OnPropertyChanged(nameof(ToggleUnlockHotKey));
             OverlayOpacityService.Apply(_settings.OverlayOpacityPercent);
             OverlayOpacityService.ApplyToOpenWindows();
             OverlayOpacityService.NotifyAllGroupsChanged();
@@ -603,6 +616,7 @@ namespace TWChatOverlay.ViewModels
                 _settings.ToggleOverlayHotKey = saved.ToggleOverlayHotKey;
                 _settings.ToggleDailyWeeklyContentHotKey = saved.ToggleDailyWeeklyContentHotKey;
                 _settings.ToggleSettingsHotKey = saved.ToggleSettingsHotKey;
+                _settings.ToggleUnlockHotKey = saved.ToggleUnlockHotKey;
 
                 OnPropertyChanged(nameof(ExitHotKey));
                 OnPropertyChanged(nameof(ToggleOverlayHotKey));
