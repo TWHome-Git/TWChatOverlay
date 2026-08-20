@@ -12,25 +12,37 @@ namespace TWChatOverlay.ViewModels
     {
         private readonly ExperienceService _expService;
 
-        private string _totalExpDisplay = string.Empty;
+        private string _totalExpValueDisplay = string.Empty;
+        private string _expPerHourDisplay = string.Empty;
         private string _lastGainedExpDisplay = string.Empty;
         private string _gainCountDisplay = string.Empty;
         private bool _hasLastExp;
+        private bool _isMeasurementStopped;
 
         public ICommand ResetExpCommand { get; }
 
-        public string TotalExpDisplay
+        /// <summary>현재까지 획득한 누적 경험치</summary>
+        public string TotalExpValueDisplay
         {
-            get => _totalExpDisplay;
-            set => SetProperty(ref _totalExpDisplay, value);
+            get => _totalExpValueDisplay;
+            set => SetProperty(ref _totalExpValueDisplay, value);
         }
 
+        /// <summary>시간당 획득 경험치</summary>
+        public string ExpPerHourDisplay
+        {
+            get => _expPerHourDisplay;
+            set => SetProperty(ref _expPerHourDisplay, value);
+        }
+
+        /// <summary>최근 획득한 경험치</summary>
         public string LastGainedExpDisplay
         {
             get => _lastGainedExpDisplay;
             set => SetProperty(ref _lastGainedExpDisplay, value);
         }
 
+        /// <summary>현재까지 잡은 마리수</summary>
         public string GainCountDisplay
         {
             get => _gainCountDisplay;
@@ -49,6 +61,13 @@ namespace TWChatOverlay.ViewModels
         {
             get => _hasLastExp;
             set => SetProperty(ref _hasLastExp, value);
+        }
+
+        /// <summary>비활동으로 측정이 멈춘 상태</summary>
+        public bool IsMeasurementStopped
+        {
+            get => _isMeasurementStopped;
+            set => SetProperty(ref _isMeasurementStopped, value);
         }
 
         public ExpTrackerViewModel(ExperienceService expService, ChatSettings settings)
@@ -75,10 +94,14 @@ namespace TWChatOverlay.ViewModels
         /// </summary>
         public void UpdateDisplay()
         {
-            TotalExpDisplay = _expService.SessionState.TotalExpDisplay;
-            LastGainedExpDisplay = _expService.SessionState.LastGainedExpDisplay;
-            GainCountDisplay = _expService.SessionState.GainCountDisplay;
-            HasLastExp = _expService.SessionState.HasLastExp;
+            ExpSessionState state = _expService.SessionState;
+
+            TotalExpValueDisplay = state.TotalExpValueDisplay;
+            ExpPerHourDisplay = state.ExpPerHourDisplay;
+            LastGainedExpDisplay = state.LastGainedExpValueDisplay;
+            GainCountDisplay = state.GainCountDisplay;
+            HasLastExp = state.HasLastExp;
+            IsMeasurementStopped = state.IsMeasurementStopped;
         }
     }
 }

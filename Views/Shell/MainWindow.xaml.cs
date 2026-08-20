@@ -30,7 +30,7 @@ namespace TWChatOverlay.Views
     /// <summary>
     /// 채팅 오버레이 메인 창의 UI/서비스 연동을 담당합니다.
     /// </summary>
-    public partial class MainWindow : Window, IMainWindowHost, ISnapTarget
+    public partial class MainWindow : Window, IMainWindowHost
     {
         #region Fields
         private DailyWeeklyContentWindow? _dailyWeeklyContentOverlay;
@@ -292,6 +292,10 @@ namespace TWChatOverlay.Views
 
         private void RefreshExpTrackerWindow()
         {
+            // 트레이로 최소화된 동안에는 경험치 갱신이 창을 다시 띄우지 않게 한다
+            if (TrayAllWindowsService.IsTrayed)
+                return;
+
             if (_settings.ShowExpTracker)
             {
                 ShowExpTrackerWindow();
@@ -318,7 +322,6 @@ namespace TWChatOverlay.Views
             }
 
             _expTrackerWindow.ApplyStoredPosition(_settings.ExpTrackerWindowLeft, _settings.ExpTrackerWindowTop, _settings.ExpTrackerWindowRight);
-            _expTrackerWindow.ApplyPositionMode(IsSettingsPositionMode);
 
             if (!_expTrackerWindow.IsVisible)
                 _expTrackerWindow.Show();

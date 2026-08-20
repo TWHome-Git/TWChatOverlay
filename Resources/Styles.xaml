@@ -64,6 +64,8 @@
     <SolidColorBrush x:Key="OverlayAccentBorderBrush" Color="#FF0CD29D"/>
     <SolidColorBrush x:Key="OverlayWarningBorderBrush" Color="#FFF5A623"/>
     <SolidColorBrush x:Key="OverlaySuccessAccentBrush" Color="#FF2FBF71"/>
+    <!-- 획득 경험치: 클럽 채팅과 같은 계열의 밝은 초록 -->
+    <SolidColorBrush x:Key="OverlayExpGainAccentBrush" Color="#FF22E84A"/>
     <SolidColorBrush x:Key="OverlayDangerBackgroundBrush" Color="#FF181010"/>
     <SolidColorBrush x:Key="OverlayDangerBorderBrush" Color="#FFB03A3A"/>
     <SolidColorBrush x:Key="OverlayDangerAccentBrush" Color="#FFE05252"/>

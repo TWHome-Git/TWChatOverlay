@@ -3,10 +3,8 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:views="clr-namespace:TWChatOverlay.Views"
         Title="Experience Tracker"
-        Height="80"
-        MinWidth="180"
-        MinHeight="80"
-        SizeToContent="Width"
+        SizeToContent="WidthAndHeight"
+        MinWidth="330"
         WindowStyle="None"
         AllowsTransparency="True"
         Background="Transparent"
@@ -14,28 +12,5 @@
         ShowInTaskbar="False"
         Topmost="True"
         PreviewMouseLeftButtonDown="UnlockDrag_MouseLeftButtonDown">
-    <Grid Margin="0">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-        </Grid.RowDefinitions>
-        <Border x:Name="DragBar"
-                Grid.Row="0"
-                Background="{DynamicResource OverlayDragBarBackgroundBrush}"
-                Height="18"
-                Visibility="Collapsed"
-                MouseLeftButtonDown="DragBar_MouseLeftButtonDown"
-                Cursor="Hand">
-            <TextBlock Text="⋮⋮ 설정에서 드래그하여 이동 ⋮⋮"
-                       Foreground="{DynamicResource OverlayDragBarTextBrush}"
-                       FontSize="10"
-                       TextAlignment="Center"
-                       VerticalAlignment="Center"
-                       FontStyle="Italic"/>
-        </Border>
-        <views:ExpTrackerView Grid.Row="1"/>
-    </Grid>
+    <views:ExpTrackerView/>
 </Window>
-
-
-
