@@ -184,12 +184,7 @@ namespace TWChatOverlay.Views
                 }
                 else if (e.PropertyName == nameof(_settings.ExitHotKey) ||
                          e.PropertyName == nameof(_settings.ToggleOverlayHotKey) ||
-                         e.PropertyName == nameof(_settings.ToggleAddonHotKey) ||
                          e.PropertyName == nameof(_settings.ToggleDailyWeeklyContentHotKey) ||
-                         e.PropertyName == nameof(_settings.ToggleEtaRankingHotKey) ||
-                         e.PropertyName == nameof(_settings.ToggleCoefficientHotKey) ||
-                         e.PropertyName == nameof(_settings.ToggleEquipmentDbHotKey) ||
-                         e.PropertyName == nameof(_settings.ToggleEncryptHotKey) ||
                          e.PropertyName == nameof(_settings.ToggleSettingsHotKey) ||
                          e.PropertyName == nameof(_settings.ToggleTrayAllHotKey))
                 {

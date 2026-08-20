@@ -3,6 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:views="clr-namespace:TWChatOverlay.Views"
              mc:Ignorable="d"
              HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
 
@@ -34,6 +35,14 @@
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
+        </Style>
+
+        <!-- 내비게이션 그룹 라벨 -->
+        <Style x:Key="SettingsNavGroupLabelStyle" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="{DynamicResource OverlayHintTextBrush}"/>
+            <Setter Property="FontSize" Value="10"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Margin" Value="14,12,0,4"/>
         </Style>
 
         <!-- 섹션 라벨: 작은 회색 구분 텍스트 -->
@@ -92,16 +101,30 @@
                     BorderBrush="{DynamicResource SeparatorBrush}"
                     BorderThickness="0,0,1,0"
                     MinWidth="110">
-                <StackPanel Margin="0,8">
+                <StackPanel Margin="0,4">
+                    <TextBlock Text="기본" Style="{StaticResource SettingsNavGroupLabelStyle}"/>
                     <RadioButton x:Name="NavChat" Content="채팅" GroupName="SettingsNav" IsChecked="True" Checked="Nav_Checked" Style="{StaticResource SettingsNavItemStyle}"/>
                     <RadioButton x:Name="NavShout" Content="외치기" GroupName="SettingsNav" Checked="Nav_Checked" Style="{StaticResource SettingsNavItemStyle}"/>
                     <RadioButton x:Name="NavDisplay" Content="화면" GroupName="SettingsNav" Checked="Nav_Checked" Style="{StaticResource SettingsNavItemStyle}"/>
+
+                    <TextBlock Text="추가 기능" Style="{StaticResource SettingsNavGroupLabelStyle}"/>
+                    <RadioButton x:Name="NavAddonKeyword" Content="키워드 알림" GroupName="SettingsNav" Checked="Nav_Checked" Style="{StaticResource SettingsNavItemStyle}"/>
+                    <RadioButton x:Name="NavAddonExp" Content="경험치 추적" GroupName="SettingsNav" Checked="Nav_Checked" Style="{StaticResource SettingsNavItemStyle}"/>
+                    <RadioButton x:Name="NavAddonDungeon" Content="던전 도우미" GroupName="SettingsNav" Checked="Nav_Checked" Style="{StaticResource SettingsNavItemStyle}"/>
+                    <RadioButton x:Name="NavAddonItem" Content="아이템 알림" GroupName="SettingsNav" Checked="Nav_Checked" Style="{StaticResource SettingsNavItemStyle}"/>
+                    <RadioButton x:Name="NavAddonBuff" Content="버프 추적" GroupName="SettingsNav" Checked="Nav_Checked" Style="{StaticResource SettingsNavItemStyle}"/>
+                    <RadioButton x:Name="NavAddonBoss" Content="필드 보스" GroupName="SettingsNav" Checked="Nav_Checked" Style="{StaticResource SettingsNavItemStyle}"/>
+
+                    <TextBlock Text="관리" Style="{StaticResource SettingsNavGroupLabelStyle}"/>
                     <RadioButton x:Name="NavHotkeys" Content="단축키" GroupName="SettingsNav" Checked="Nav_Checked" Style="{StaticResource SettingsNavItemStyle}"/>
                     <RadioButton x:Name="NavSystem" Content="시스템" GroupName="SettingsNav" Checked="Nav_Checked" Style="{StaticResource SettingsNavItemStyle}"/>
                 </StackPanel>
             </Border>
 
-            <ScrollViewer Grid.Column="1" VerticalScrollBarVisibility="Auto" Style="{StaticResource OverlayScrollViewerStyle}">
+            <!-- 추가 기능(임베드): 자체 스크롤을 가지므로 설정 스크롤 밖에 배치 -->
+            <views:AddonView x:Name="AddonHost" Grid.Column="1" Visibility="Collapsed"/>
+
+            <ScrollViewer x:Name="SettingsScroll" Grid.Column="1" VerticalScrollBarVisibility="Auto" Style="{StaticResource OverlayScrollViewerStyle}">
                 <StackPanel Margin="16,4,16,12">
 
                     <!-- ===================== 채팅 ===================== -->
@@ -324,38 +347,8 @@
                         </Border>
                         <Border Style="{StaticResource SettingsRowStyle}">
                             <DockPanel>
-                                <TextBox DockPanel.Dock="Right" Text="{Binding ToggleEtaRankingHotKey, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource SettingsRowInputStyle}" PreviewKeyDown="HotKeyInput_PreviewKeyDown" PreviewMouseLeftButtonDown="HotKeyTextBox_PreviewMouseLeftButtonDown" IsReadOnly="True" Tag="HotKey"/>
-                                <TextBlock Text="TW DB (에타 랭킹)" Style="{StaticResource SettingsRowLabelStyle}"/>
-                            </DockPanel>
-                        </Border>
-                        <Border Style="{StaticResource SettingsRowStyle}">
-                            <DockPanel>
-                                <TextBox DockPanel.Dock="Right" Text="{Binding ToggleCoefficientHotKey, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource SettingsRowInputStyle}" PreviewKeyDown="HotKeyInput_PreviewKeyDown" PreviewMouseLeftButtonDown="HotKeyTextBox_PreviewMouseLeftButtonDown" IsReadOnly="True" Tag="HotKey"/>
-                                <TextBlock Text="TW DB (계산기)" Style="{StaticResource SettingsRowLabelStyle}"/>
-                            </DockPanel>
-                        </Border>
-                        <Border Style="{StaticResource SettingsRowStyle}">
-                            <DockPanel>
-                                <TextBox DockPanel.Dock="Right" Text="{Binding ToggleEquipmentDbHotKey, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource SettingsRowInputStyle}" PreviewKeyDown="HotKeyInput_PreviewKeyDown" PreviewMouseLeftButtonDown="HotKeyTextBox_PreviewMouseLeftButtonDown" IsReadOnly="True" Tag="HotKey"/>
-                                <TextBlock Text="TW DB (장비목록)" Style="{StaticResource SettingsRowLabelStyle}"/>
-                            </DockPanel>
-                        </Border>
-                        <Border Style="{StaticResource SettingsRowStyle}">
-                            <DockPanel>
-                                <TextBox DockPanel.Dock="Right" Text="{Binding ToggleEncryptHotKey, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource SettingsRowInputStyle}" PreviewKeyDown="HotKeyInput_PreviewKeyDown" PreviewMouseLeftButtonDown="HotKeyTextBox_PreviewMouseLeftButtonDown" IsReadOnly="True" Tag="HotKey"/>
-                                <TextBlock Text="TW DB (시뮬레이터)" Style="{StaticResource SettingsRowLabelStyle}"/>
-                            </DockPanel>
-                        </Border>
-                        <Border Style="{StaticResource SettingsRowStyle}">
-                            <DockPanel>
                                 <TextBox DockPanel.Dock="Right" Text="{Binding ToggleDailyWeeklyContentHotKey, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource SettingsRowInputStyle}" PreviewKeyDown="HotKeyInput_PreviewKeyDown" PreviewMouseLeftButtonDown="HotKeyTextBox_PreviewMouseLeftButtonDown" IsReadOnly="True" Tag="HotKey"/>
                                 <TextBlock Text="일일/주간 콘텐츠 ON/OFF" Style="{StaticResource SettingsRowLabelStyle}"/>
-                            </DockPanel>
-                        </Border>
-                        <Border Style="{StaticResource SettingsRowStyle}">
-                            <DockPanel>
-                                <TextBox DockPanel.Dock="Right" Text="{Binding ToggleAddonHotKey, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource SettingsRowInputStyle}" PreviewKeyDown="HotKeyInput_PreviewKeyDown" PreviewMouseLeftButtonDown="HotKeyTextBox_PreviewMouseLeftButtonDown" IsReadOnly="True" Tag="HotKey"/>
-                                <TextBlock Text="추가기능 ON/OFF" Style="{StaticResource SettingsRowLabelStyle}"/>
                             </DockPanel>
                         </Border>
                         <Border Style="{StaticResource SettingsRowStyle}">

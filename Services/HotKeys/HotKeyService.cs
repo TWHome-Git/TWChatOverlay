@@ -13,13 +13,8 @@ namespace TWChatOverlay.Services
     {
         public const int EXIT_HOTKEY_ID = 9001;
         public const int TOGGLE_OVERLAY_ID = 9002;
-        public const int TOGGLE_ADDON_ID = 9003;
         public const int TOGGLE_ALWAYS_VISIBLE_ID = 9004;
         public const int TOGGLE_DAILY_WEEKLY_CONTENT_ID = 9005;
-        public const int TOGGLE_ETA_RANKING_ID = 9006;
-        public const int TOGGLE_COEFFICIENT_ID = 9007;
-        public const int TOGGLE_EQUIPMENTDB_ID = 9008;
-        public const int TOGGLE_ENCRYPT_ID = 9009;
         public const int TOGGLE_SETTINGS_ID = 9010;
         public const int TOGGLE_TRAY_ALL_ID = 9011;
 
