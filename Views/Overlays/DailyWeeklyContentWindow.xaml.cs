@@ -37,6 +37,9 @@ namespace TWChatOverlay.Views
         private bool _pendingRescanAfterSettings = false;
         private bool _isLoading;
         private DispatcherTimer? _resetTimer;
+        private DispatcherTimer? _autoCollapseTimer;
+        private bool _isBodyCollapsed;
+        private double _expandedHeight;
         private DateTime _lastDailyResetDate;
         private DateTime _lastWeeklyResetKey;
         private DateTime _lastAbandonResetKey;
@@ -290,6 +293,55 @@ namespace TWChatOverlay.Views
                 if (_isSettingsOpen == value) return;
                 _isSettingsOpen = value;
                 OnPropertyChanged();
+
+                if (value)
+                    ExpandBody();
+                RestartAutoCollapseTimer();
+            }
+        }
+
+        /// <summary>자동 접기: 지정 시간 후 제목 표시줄만 남긴다.</summary>
+        public bool AutoCollapseEnabled
+        {
+            get => _settings.DailyWeeklyAutoCollapseEnabled;
+            set
+            {
+                if (_settings.DailyWeeklyAutoCollapseEnabled == value) return;
+                _settings.DailyWeeklyAutoCollapseEnabled = value;
+                OnPropertyChanged();
+                ConfigService.SaveDeferred(_settings);
+
+                if (value)
+                {
+                    RestartAutoCollapseTimer();
+                }
+                else
+                {
+                    _autoCollapseTimer?.Stop();
+                    ExpandBody();
+                }
+            }
+        }
+
+        public string AutoCollapseSecondsText
+        {
+            get => _settings.DailyWeeklyAutoCollapseSeconds.ToString();
+            set
+            {
+                if (!int.TryParse(value, out int seconds))
+                {
+                    OnPropertyChanged(); // 잘못된 입력은 원래 값으로 되돌려 표시
+                    return;
+                }
+
+                seconds = Math.Max(3, Math.Min(3600, seconds));
+                if (_settings.DailyWeeklyAutoCollapseSeconds != seconds)
+                {
+                    _settings.DailyWeeklyAutoCollapseSeconds = seconds;
+                    ConfigService.SaveDeferred(_settings);
+                    RestartAutoCollapseTimer();
+                }
+                OnPropertyChanged();
             }
         }
 
@@ -332,6 +384,7 @@ namespace TWChatOverlay.Views
             DataContext = this;
             this.FontFamily = FontService.GetFont(_settings.FontFamily);
             InitializeScanCache();
+            InitializeAutoCollapse();
 
             foreach (var item in TrackItems)
                 item.PropertyChanged += (_, e) =>
@@ -381,12 +434,78 @@ namespace TWChatOverlay.Views
             base.OnClosed(e);
         }
 
+        // ===== 자동 접기: 지정 시간 동안 조작이 없으면 제목 표시줄만 남긴다 =====
+
+        private void InitializeAutoCollapse()
+        {
+            _autoCollapseTimer = new DispatcherTimer();
+            _autoCollapseTimer.Tick += (_, _) => TryCollapseBody();
+
+            // 마우스가 닿으면 펼치고 타이머를 다시 건다 (메뉴 바/채팅 탭과 같은 패턴)
+            MouseEnter += (_, _) => { ExpandBody(); RestartAutoCollapseTimer(); };
+            MouseMove += (_, _) => RestartAutoCollapseTimer();
+
+            RestartAutoCollapseTimer();
+        }
+
+        private void RestartAutoCollapseTimer()
+        {
+            if (_autoCollapseTimer == null)
+                return;
+
+            _autoCollapseTimer.Stop();
+            if (!AutoCollapseEnabled)
+                return;
+
+            _autoCollapseTimer.Interval = TimeSpan.FromSeconds(Math.Max(3, _settings.DailyWeeklyAutoCollapseSeconds));
+            _autoCollapseTimer.Start();
+        }
+
+        private void TryCollapseBody()
+        {
+            // 마우스가 올라가 있거나 설정 패널이 열려 있으면 유예
+            if (IsMouseOver || IsSettingsOpen)
+            {
+                RestartAutoCollapseTimer();
+                return;
+            }
+
+            _autoCollapseTimer?.Stop();
+            CollapseBody();
+        }
+
+        private void CollapseBody()
+        {
+            if (_isBodyCollapsed || !AutoCollapseEnabled)
+                return;
+
+            _isBodyCollapsed = true;
+            _expandedHeight = Height;
+            BodyRow.Height = new GridLength(0);
+            FooterRow.Height = new GridLength(0);
+            // 상단 여백 30 + 테두리 2 + 제목 표시줄 34
+            Height = 66;
+        }
+
+        private void ExpandBody()
+        {
+            if (!_isBodyCollapsed)
+                return;
+
+            _isBodyCollapsed = false;
+            BodyRow.Height = new GridLength(1, GridUnitType.Star);
+            FooterRow.Height = new GridLength(36);
+            if (_expandedHeight > 100)
+                Height = _expandedHeight;
+        }
+
         private void PersistWindowPosition()
         {
             _settings.DailyWeeklyContentOverlayLeft = this.Left;
             _settings.DailyWeeklyContentOverlayTop = this.Top;
             _settings.DailyWeeklyContentOverlayWidth = this.Width;
-            _settings.DailyWeeklyContentOverlayHeight = this.Height;
+            // 접힌 상태에서는 펼친 높이를 저장한다
+            _settings.DailyWeeklyContentOverlayHeight = _isBodyCollapsed ? _expandedHeight : this.Height;
             ConfigService.SaveDeferred(_settings);
         }
 

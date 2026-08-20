@@ -104,8 +104,8 @@
             <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="34"/>
-                <RowDefinition Height="*"/>
-                <RowDefinition Height="36"/>
+                <RowDefinition x:Name="BodyRow" Height="*"/>
+                <RowDefinition x:Name="FooterRow" Height="36"/>
             </Grid.RowDefinitions>
             <Border Grid.Row="0" Background="{DynamicResource OverlaySurfaceBackgroundBrush}" CornerRadius="8,8,0,0"
                     MouseLeftButtonDown="TitleBar_MouseLeftButtonDown" Cursor="SizeAll">
@@ -451,8 +451,21 @@
                 </ScrollViewer.Style>
                 <StackPanel>
                     <Border Margin="4,4,4,8" Padding="8,6" CornerRadius="6" Background="{DynamicResource OverlayCardBackgroundBrush}">
+                        <StackPanel>
+                            <DockPanel LastChildFill="True">
+                                <CheckBox DockPanel.Dock="Right" IsChecked="{Binding AutoCollapseEnabled}" Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
+                                <TextBlock Text="자동 접기" Foreground="{DynamicResource OverlayInfoTextBrush}" VerticalAlignment="Center"/>
+                            </DockPanel>
+                            <DockPanel LastChildFill="True" Margin="0,6,0,0">
+                                <TextBox DockPanel.Dock="Right" Width="52" Height="22" FontSize="11" TextAlignment="Center" VerticalContentAlignment="Center"
+                                         Text="{Binding AutoCollapseSecondsText, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"/>
+                                <TextBlock Text="표시 유지 시간(초)" Foreground="{DynamicResource OverlayInfoTextBrush}" VerticalAlignment="Center"/>
+                            </DockPanel>
+                        </StackPanel>
+                    </Border>
+                    <Border Margin="4,0,4,8" Padding="8,6" CornerRadius="6" Background="{DynamicResource OverlayCardBackgroundBrush}">
                         <DockPanel LastChildFill="True">
-                            <TextBlock DockPanel.Dock="Left" Text="하위 항목 폰트 크기" Foreground="{DynamicResource OverlayInfoTextBrush}" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                            <TextBlock DockPanel.Dock="Left" Text="폰트 크기" Foreground="{DynamicResource OverlayInfoTextBrush}" VerticalAlignment="Center" Margin="0,0,8,0"/>
                             <TextBlock DockPanel.Dock="Right" Text="{Binding DailyWeeklyContentFontSizeDisplay}" Foreground="{DynamicResource OverlayInfoTextBrush}" FontWeight="SemiBold" VerticalAlignment="Center" Margin="8,0,0,0"/>
                             <Slider Minimum="10" Maximum="28" TickFrequency="1" IsSnapToTickEnabled="True"
                                     Value="{Binding DailyWeeklyContentFontSize, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>

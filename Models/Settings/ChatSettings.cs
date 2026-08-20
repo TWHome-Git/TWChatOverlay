@@ -53,6 +53,8 @@ namespace TWChatOverlay.Models
         private bool _showEtosHelperWindow = false;
         private bool _menuWindowHorizontal = false;
         private bool _windowSnapEnabled = false;
+        private bool _dailyWeeklyAutoCollapseEnabled = false;
+        private int _dailyWeeklyAutoCollapseSeconds = 10;
         private bool _showItemDropHelperWindow = false;
         private bool _useCustomDropItemFilter = false;
         private string _customDropItemJson = string.Empty;
@@ -831,6 +833,12 @@ namespace TWChatOverlay.Models
         [JsonPropertyOrder(55)]
         public double? SubMenuWindowTop { get; set; } = 0.0;
         [JsonPropertyOrder(56)]
+        /// <summary>일일/주간 컨텐츠 창 자동 접기: 지정 시간 후 제목 표시줄만 남긴다.</summary>
+        public bool DailyWeeklyAutoCollapseEnabled { get => _dailyWeeklyAutoCollapseEnabled; set { _dailyWeeklyAutoCollapseEnabled = value; OnPropertyChanged(); } }
+
+        /// <summary>자동 접기 전 표시 유지 시간(초).</summary>
+        public int DailyWeeklyAutoCollapseSeconds { get => _dailyWeeklyAutoCollapseSeconds; set { _dailyWeeklyAutoCollapseSeconds = value; OnPropertyChanged(); } }
+
         /// <summary>잠금 해제 모드에서 채팅창끼리 가장자리에 자석처럼 붙는 스냅 기능.</summary>
         public bool WindowSnapEnabled { get => _windowSnapEnabled; set { _windowSnapEnabled = value; OnPropertyChanged(); } }
 
