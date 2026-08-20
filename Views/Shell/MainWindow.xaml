@@ -60,7 +60,7 @@
                                  Grid.Row="2"
                                  Height="42"
                                  VerticalAlignment="Top"
-                                 Columns="8"
+                                 Columns="7"
                                  Visibility="Collapsed"
                                  Panel.ZIndex="21">
                         <RadioButton Content="기본" Style="{StaticResource TabButtonStyle}" IsChecked="True" Tag="Basic" Click="Tab_Click"/>
@@ -69,7 +69,6 @@
                         <RadioButton Content="클럽" Style="{StaticResource TabButtonStyle}" Tag="Club" Click="Tab_Click"/>
                         <RadioButton Content="외치기" Style="{StaticResource TabButtonStyle}" Tag="Shout" Click="Tab_Click"/>
                         <RadioButton Content="시스템" Style="{StaticResource TabButtonStyle}" Tag="System" Click="Tab_Click"/>
-                        <RadioButton Content="설정" Style="{StaticResource TabButtonStyle}" Tag="Settings" Click="Tab_Click"/>
                         <Button Content="+" Style="{StaticResource TabActionButtonStyle}" Click="AddChatWindow_Click"/>
                     </UniformGrid>
 
@@ -79,8 +78,6 @@
                     <!-- Addon View (overlay) -->
                     <!--<views:AddonView Grid.Row="2" x:Name="AddonDisplay" Visibility="Collapsed"/>-->
 
-                    <!-- Settings View (overlay) -->
-                    <views:SettingsView Grid.Row="2" x:Name="SettingsDisplay" Visibility="Collapsed"/>
                 </Grid>
             </Border>
         </Border>

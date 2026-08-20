@@ -412,6 +412,83 @@ namespace TWChatOverlay.ViewModels
             }
         }
 
+
+        public bool Clone1FollowMainFont
+        {
+            get => _settings.ChatCloneWindow1FollowMainFont;
+            set
+            {
+                if (_settings.ChatCloneWindow1FollowMainFont == value) return;
+                _settings.ChatCloneWindow1FollowMainFont = value;
+                OnPropertyChanged();
+                SaveSettings();
+            }
+        }
+
+        public string Clone1FontFamily
+        {
+            get => string.IsNullOrWhiteSpace(_settings.ChatCloneWindow1FontFamily) ? _settings.FontFamily : _settings.ChatCloneWindow1FontFamily;
+            set
+            {
+                string next = value ?? string.Empty;
+                if (_settings.ChatCloneWindow1FontFamily == next) return;
+                _settings.ChatCloneWindow1FontFamily = next;
+                OnPropertyChanged();
+                SaveSettings();
+            }
+        }
+
+        public double Clone1FontSize
+        {
+            get => _settings.ChatCloneWindow1FontSize ?? _settings.FontSize;
+            set
+            {
+                double next = System.Math.Clamp(value, 10.0, 28.0);
+                if (System.Math.Abs((_settings.ChatCloneWindow1FontSize ?? 0) - next) < 0.001) return;
+                _settings.ChatCloneWindow1FontSize = next;
+                OnPropertyChanged();
+                SaveSettings();
+            }
+        }
+
+        public bool Clone2FollowMainFont
+        {
+            get => _settings.ChatCloneWindow2FollowMainFont;
+            set
+            {
+                if (_settings.ChatCloneWindow2FollowMainFont == value) return;
+                _settings.ChatCloneWindow2FollowMainFont = value;
+                OnPropertyChanged();
+                SaveSettings();
+            }
+        }
+
+        public string Clone2FontFamily
+        {
+            get => string.IsNullOrWhiteSpace(_settings.ChatCloneWindow2FontFamily) ? _settings.FontFamily : _settings.ChatCloneWindow2FontFamily;
+            set
+            {
+                string next = value ?? string.Empty;
+                if (_settings.ChatCloneWindow2FontFamily == next) return;
+                _settings.ChatCloneWindow2FontFamily = next;
+                OnPropertyChanged();
+                SaveSettings();
+            }
+        }
+
+        public double Clone2FontSize
+        {
+            get => _settings.ChatCloneWindow2FontSize ?? _settings.FontSize;
+            set
+            {
+                double next = System.Math.Clamp(value, 10.0, 28.0);
+                if (System.Math.Abs((_settings.ChatCloneWindow2FontSize ?? 0) - next) < 0.001) return;
+                _settings.ChatCloneWindow2FontSize = next;
+                OnPropertyChanged();
+                SaveSettings();
+            }
+        }
+
         public string ToggleUnlockHotKey
         {
             get => _settings.ToggleUnlockHotKey;

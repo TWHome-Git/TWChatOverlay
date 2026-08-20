@@ -32,24 +32,10 @@
                     PreviewMouseLeftButtonDown="UnlockDrag_MouseLeftButtonDown">
                 <Grid>
                     <Grid.RowDefinitions>
-                        <RowDefinition x:Name="DragBarRow" Height="0"/>
+                        <RowDefinition Height="0"/>
                         <RowDefinition Height="0"/>
                         <RowDefinition Height="*"/>
                     </Grid.RowDefinitions>
-
-                    <Border Grid.Row="0"
-                            x:Name="DragBar"
-                            Background="{DynamicResource OverlayDragBarBackgroundBrush}"
-                            MouseLeftButtonDown="DragBar_MouseLeftButtonDown"
-                            Visibility="Collapsed"
-                            Cursor="Hand">
-                        <TextBlock Text="⋮⋮ 설정에서 드래그하여 이동 ⋮⋮"
-                                   Foreground="{DynamicResource OverlayDragBarTextBrush}"
-                                   FontSize="11"
-                                   TextAlignment="Center"
-                                   VerticalAlignment="Center"
-                                   FontStyle="Italic"/>
-                    </Border>
 
                     <!-- 탭은 채팅 영역 위에 겹쳐서 표시(오버레이). 숨겨지면 공간을 차지하지 않는다. -->
                     <Border x:Name="MainTabBackground"
@@ -66,13 +52,12 @@
                             <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
 
-                        <UniformGrid Grid.Column="0" Columns="6">
+                        <UniformGrid Grid.Column="0" Columns="5">
                             <RadioButton Content="일반" Style="{StaticResource TabButtonStyle}" IsChecked="True" Tag="General" Click="Tab_Click"/>
                             <RadioButton Content="팀" Style="{StaticResource TabButtonStyle}" Tag="Team" Click="Tab_Click"/>
                             <RadioButton Content="클럽" Style="{StaticResource TabButtonStyle}" Tag="Club" Click="Tab_Click"/>
                             <RadioButton Content="외치기" Style="{StaticResource TabButtonStyle}" Tag="Shout" Click="Tab_Click"/>
                             <RadioButton Content="시스템" Style="{StaticResource TabButtonStyle}" Tag="System" Click="Tab_Click"/>
-                            <RadioButton Content="설정" Style="{StaticResource TabButtonStyle}" Tag="Settings" Click="Tab_Click"/>
                         </UniformGrid>
 
                         <Button Grid.Column="1"
@@ -86,89 +71,6 @@
                     <Grid Grid.Row="2">
                         <views:ChatView x:Name="ChatDisplay"/>
 
-                        <ScrollViewer x:Name="SettingsScrollViewer"
-                                      Visibility="Collapsed"
-                                      VerticalScrollBarVisibility="Auto"
-                                      HorizontalScrollBarVisibility="Disabled"
-                                      PreviewMouseWheel="SettingsScrollViewer_PreviewMouseWheel"
-                                      Background="Transparent">
-                            <Border Background="{DynamicResource OverlayPanelBackgroundBrush}"
-                                    BorderBrush="{DynamicResource OverlayPanelBorderBrush}"
-                                    BorderThickness="1"
-                                    CornerRadius="10"
-                                    Margin="0,8,0,0"
-                                    Padding="14">
-                                <Grid>
-                                    <Grid.RowDefinitions>
-                                        <RowDefinition Height="Auto"/>
-                                        <RowDefinition Height="Auto"/>
-                                        <RowDefinition Height="Auto"/>
-                                        <RowDefinition Height="Auto"/>
-                                        <RowDefinition Height="Auto"/>
-                                    </Grid.RowDefinitions>
-
-                                    <StackPanel Grid.Row="0">
-                                        <TextBlock Text="채팅창 설정"
-                                                   Foreground="{DynamicResource TextBrush}"
-                                                   FontSize="16"
-                                                   FontWeight="Bold"/>
-                                        <TextBlock Text="설정 탭에서는 창을 드래그해서 이동할 수 있습니다."
-                                                   Foreground="{DynamicResource OverlayMutedTextBrush}"
-                                                   FontSize="11"
-                                                   Margin="0,4,0,0"/>
-                                    </StackPanel>
-
-                                    <CheckBox Grid.Row="1"
-                                              Margin="0,14,0,0"
-                                              Content="메인 채팅창 폰트 따라가기"
-                                              IsChecked="{Binding FollowMainFont, RelativeSource={RelativeSource AncestorType=Window}, Mode=TwoWay}"
-                                              Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
-
-                                    <Border Grid.Row="2"
-                                            Margin="0,16,0,0"
-                                            Background="Transparent">
-                                        <StackPanel>
-                                            <TextBlock Text="폰트"
-                                                       Foreground="{DynamicResource OverlayLabelTextBrush}"
-                                                       FontSize="12"
-                                                       FontWeight="Bold"
-                                                       Margin="0,0,0,8"/>
-                                            <ComboBox ItemsSource="{Binding AvailableFonts}"
-                                                      SelectedItem="{Binding SelectedFontFamily, RelativeSource={RelativeSource AncestorType=Window}, Mode=TwoWay}"
-                                                      Style="{StaticResource DarkComboBoxStyle}"
-                                                      IsEnabled="{Binding FollowMainFont, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BooleanInverseConverter}}"
-                                                      MinWidth="170"/>
-                                        </StackPanel>
-                                    </Border>
-
-                                    <Border Grid.Row="3"
-                                            Margin="0,14,0,0"
-                                            Background="Transparent">
-                                        <StackPanel>
-                                            <TextBlock Text="폰트 크기"
-                                                       Foreground="{DynamicResource OverlayLabelTextBrush}"
-                                                       FontSize="12"
-                                                       FontWeight="Bold"
-                                                       Margin="0,0,0,8"/>
-                                            <Slider Minimum="10"
-                                                    Maximum="28"
-                                                    TickFrequency="1"
-                                                    IsSnapToTickEnabled="True"
-                                                    Value="{Binding SelectedFontSize, RelativeSource={RelativeSource AncestorType=Window}, Mode=TwoWay}"
-                                                    IsEnabled="{Binding FollowMainFont, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BooleanInverseConverter}}"
-                                                    SmallChange="1"
-                                                    LargeChange="1"/>
-                                            <TextBlock Text="{Binding SelectedFontSize, RelativeSource={RelativeSource AncestorType=Window}, StringFormat=현재 크기: {0:0.#}pt}"
-                                                       Foreground="{DynamicResource OverlayMutedTextBrush}"
-                                                       FontSize="11"
-                                                       Margin="0,4,0,0"/>
-                                        </StackPanel>
-                                    </Border>
-
-                                    <Border Grid.Row="4" Height="1" Background="Transparent"/>
-                                </Grid>
-                            </Border>
-                        </ScrollViewer>
                     </Grid>
                 </Grid>
             </Border>

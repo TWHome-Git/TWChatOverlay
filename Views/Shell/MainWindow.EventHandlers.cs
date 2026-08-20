@@ -243,9 +243,6 @@ namespace TWChatOverlay.Views
                 logDisplay.Visibility = displayState.IsLogVisible ? Visibility.Visible : Visibility.Collapsed;
             }
 
-            if (SettingsDisplay != null)
-                SettingsDisplay.Visibility = displayState.IsSettingsVisible ? Visibility.Visible : Visibility.Collapsed;
-
             bool isSettingsTab = displayState.IsSettingsTab;
             if (DragBar != null)
                 DragBar.Visibility = isSettingsTab ? Visibility.Visible : Visibility.Collapsed;
