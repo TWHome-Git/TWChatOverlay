@@ -1,8 +1,8 @@
-﻿<Window x:Class="TWChatOverlay.Views.BuffTrackerWindow"
+<Window x:Class="TWChatOverlay.Views.BuffTrackerWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Width="420"
-        SizeToContent="Height"
+        SizeToContent="WidthAndHeight"
+        MaxWidth="420"
         Topmost="True"
         ShowInTaskbar="False"
         ShowActivated="False"
@@ -10,98 +10,60 @@
         ResizeMode="NoResize"
         WindowStartupLocation="Manual"
         Background="Transparent"
-        AllowsTransparency="True" Height="87.66">
+        AllowsTransparency="True">
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
+
+        <!-- 버프 타일: 아이콘(이중 테두리) + 아래 남은 시간. 판 없이 아이콘만 떠 있는 형태. -->
+        <DataTemplate x:Key="BuffTileTemplate">
+            <StackPanel Margin="3,0,3,0" ToolTip="{Binding DisplayName}">
+                <Border Background="#FF060A08"
+                        BorderBrush="#FF060A08"
+                        BorderThickness="1"
+                        CornerRadius="2">
+                    <Border BorderBrush="{Binding AccentBrush}"
+                            BorderThickness="1"
+                            CornerRadius="1"
+                            Background="{DynamicResource OverlayBuffTileBackgroundBrush}">
+                        <Image Source="{Binding IconSource}"
+                               Width="30"
+                               Height="30"
+                               Stretch="Uniform"/>
+                    </Border>
+                </Border>
+                <TextBlock Text="{Binding RemainingText}"
+                           Foreground="{DynamicResource OverlayInfoTextBrush}"
+                           FontSize="11"
+                           FontWeight="SemiBold"
+                           HorizontalAlignment="Center"
+                           Margin="0,2,0,0"/>
+            </StackPanel>
+        </DataTemplate>
     </Window.Resources>
-    <Border Background="{DynamicResource OverlayWindowBackgroundBrush}"
-            BorderBrush="{DynamicResource OverlayWindowBorderBrush}"
-            BorderThickness="1"
-            CornerRadius="8"
-            Padding="8,6"
+
+    <!-- 배경은 드래그 히트 영역 확보용 (거의 투명) -->
+    <Border Background="#01000000"
+            Padding="4"
             MouseLeftButtonDown="RootBorder_MouseLeftButtonDown">
-        <Grid>
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="16"/>
-                <ColumnDefinition Width="*"/>
-            </Grid.ColumnDefinitions>
-
-            <StackPanel Grid.Column="0"
-                        Visibility="{Binding HasRareBuffs, Converter={StaticResource BooleanToVisibilityConverter}}">
-                <TextBlock Text="레어"
-                           Foreground="{DynamicResource OverlayRareAccentBrush}"
-                           FontSize="11"
-                           FontWeight="Bold"
-                           Margin="0,0,0,4"/>
-                <ItemsControl ItemsSource="{Binding ActiveRareBuffs}">
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate>
-                            <StackPanel Orientation="Horizontal" Margin="0,0,8,4" ToolTip="{Binding DisplayName}">
-                                <Border Width="28"
-                                        Height="28"
-                                        CornerRadius="8"
-                                        Background="{DynamicResource OverlayBuffTileBackgroundBrush}"
-                                        BorderBrush="{DynamicResource OverlayBuffTileBorderBrush}"
-                                        BorderThickness="1">
-                                    <Image Source="{Binding IconSource}"
-                                           Stretch="Uniform"
-                                           Margin="2"/>
-                                </Border>
-                                <TextBlock Text="{Binding RemainingText}"
-                                           Foreground="{DynamicResource TextBrush}"
-                                           FontSize="12"
-                                           FontWeight="SemiBold"
-                                           VerticalAlignment="Center"
-                                           Margin="6,0,0,0"/>
-                            </StackPanel>
-                        </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                    <ItemsControl.ItemsPanel>
-                        <ItemsPanelTemplate>
-                            <WrapPanel Orientation="Horizontal"/>
-                        </ItemsPanelTemplate>
-                    </ItemsControl.ItemsPanel>
-                </ItemsControl>
-            </StackPanel>
-
-            <StackPanel Grid.Column="2"
-                        Visibility="{Binding HasExpBuffs, Converter={StaticResource BooleanToVisibilityConverter}}">
-                <TextBlock Text="경험치"
-                           Foreground="{DynamicResource OverlayExpAccentBrush}"
-                           FontSize="11"
-                           FontWeight="Bold"
-                           Margin="0,0,0,4"/>
-                <ItemsControl ItemsSource="{Binding ActiveExpBuffs}">
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate>
-                            <StackPanel Orientation="Horizontal" Margin="0,0,8,4" ToolTip="{Binding DisplayName}">
-                                <Border Width="28"
-                                        Height="28"
-                                        CornerRadius="8"
-                                        Background="{DynamicResource OverlayBuffTileBackgroundBrush}"
-                                        BorderBrush="{DynamicResource OverlayBuffTileBorderBrush}"
-                                        BorderThickness="1">
-                                    <Image Source="{Binding IconSource}"
-                                           Stretch="Uniform"
-                                           Margin="2"/>
-                                </Border>
-                                <TextBlock Text="{Binding RemainingText}"
-                                           Foreground="{DynamicResource TextBrush}"
-                                           FontSize="12"
-                                           FontWeight="SemiBold"
-                                           VerticalAlignment="Center"
-                                           Margin="6,0,0,0"/>
-                            </StackPanel>
-                        </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                    <ItemsControl.ItemsPanel>
-                        <ItemsPanelTemplate>
-                            <WrapPanel Orientation="Horizontal"/>
-                        </ItemsPanelTemplate>
-                    </ItemsControl.ItemsPanel>
-                </ItemsControl>
-            </StackPanel>
-        </Grid>
+        <StackPanel Orientation="Horizontal">
+            <ItemsControl ItemsSource="{Binding ActiveRareBuffs}"
+                          ItemTemplate="{StaticResource BuffTileTemplate}"
+                          Visibility="{Binding HasRareBuffs, Converter={StaticResource BooleanToVisibilityConverter}}">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <WrapPanel Orientation="Horizontal"/>
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+            </ItemsControl>
+            <ItemsControl ItemsSource="{Binding ActiveExpBuffs}"
+                          ItemTemplate="{StaticResource BuffTileTemplate}"
+                          Visibility="{Binding HasExpBuffs, Converter={StaticResource BooleanToVisibilityConverter}}">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <WrapPanel Orientation="Horizontal"/>
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+            </ItemsControl>
+        </StackPanel>
     </Border>
 </Window>

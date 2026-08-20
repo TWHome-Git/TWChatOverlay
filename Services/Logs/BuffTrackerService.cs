@@ -172,7 +172,8 @@ namespace TWChatOverlay.Services
                         definition.DisplayName,
                         FormatRemaining(pausedRemaining),
                         definition.IconSource,
-                        definition.SortOrder);
+                        definition.SortOrder,
+                        definition.Category == BuffCategory.Rare);
 
                     if (definition.Category == BuffCategory.Rare)
                         rare.Add(pausedItem);
@@ -190,7 +191,8 @@ namespace TWChatOverlay.Services
                     definition.DisplayName,
                     FormatRemaining(remaining),
                     definition.IconSource,
-                    definition.SortOrder);
+                    definition.SortOrder,
+                    definition.Category == BuffCategory.Rare);
 
                 if (definition.Category == BuffCategory.Rare)
                     rare.Add(item);
@@ -482,18 +484,24 @@ namespace TWChatOverlay.Services
 
         public sealed class BuffDisplayItem
         {
-            public BuffDisplayItem(string displayName, string remainingText, ImageSource iconSource, int sortOrder)
+            public BuffDisplayItem(string displayName, string remainingText, ImageSource iconSource, int sortOrder, bool isRare = false)
             {
                 DisplayName = displayName;
                 RemainingText = remainingText;
                 IconSource = iconSource;
                 SortOrder = sortOrder;
+                IsRare = isRare;
             }
 
             public string DisplayName { get; }
             public string RemainingText { get; }
             public ImageSource IconSource { get; }
             public int SortOrder { get; }
+            public bool IsRare { get; }
+
+            /// <summary>타일 안쪽 테두리 색: 레어=골드, 경험치=하늘색. 테마 브러시를 따른다.</summary>
+            public System.Windows.Media.Brush AccentBrush
+                => ThemeBrushes.Get(IsRare ? "OverlayRareAccentBrush" : "OverlayExpAccentBrush");
         }
 
         private static BitmapImage CreateImage(string uri)
