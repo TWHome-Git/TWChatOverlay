@@ -12,8 +12,8 @@
             CornerRadius="6"
             BorderBrush="{DynamicResource OverlayPanelBorderBrush}"
             BorderThickness="1"
-            Padding="14,6"
-            Height="91">
+            Padding="12,5"
+            Height="66">
         <DockPanel LastChildFill="True" VerticalAlignment="Center">
             <Button DockPanel.Dock="Right"
                     Foreground="{DynamicResource FieldLabelTextBrush}"
