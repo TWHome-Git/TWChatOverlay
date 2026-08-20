@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
@@ -48,7 +49,7 @@ namespace TWChatOverlay.Views
             ApplyPanelVisibility();
         }
 
-        /// <summary>선택된 추가 기능 내비 인덱스(AddonView 탭 인덱스). 선택이 없으면 -1.</summary>
+        /// <summary>선택된 추가 기능 내비 인덱스(위치 미리보기용 탭 인덱스). 선택이 없으면 -1.</summary>
         private int SelectedAddonTabIndex
         {
             get
@@ -63,13 +64,43 @@ namespace TWChatOverlay.Views
             }
         }
 
-        private bool _addonEmbedInitialized;
         private bool _addonPreviewActive;
+        private ViewModels.AddonViewModel? _addonViewModel;
+
+        /// <summary>추가 기능 패널들의 DataContext(AddonViewModel)를 준비한다.</summary>
+        private void EnsureAddonViewModel()
+        {
+            if (_addonViewModel != null) return;
+
+            var mainWindow = Application.Current?.Windows.OfType<MainWindow>().FirstOrDefault();
+            if (mainWindow?.DataContext is not Models.ChatSettings settings) return;
+
+            _addonViewModel = new ViewModels.AddonViewModel(settings);
+            AddonKeywordPanel.DataContext = _addonViewModel;
+            AddonExpPanel.DataContext = _addonViewModel;
+            AddonDungeonPanel.DataContext = _addonViewModel;
+            AddonItemPanel.DataContext = _addonViewModel;
+            AddonBuffPanel.DataContext = _addonViewModel;
+            AddonBossPanel.DataContext = _addonViewModel;
+        }
+
+        /// <summary>추가 기능 카테고리 표시 중 관련 오버레이 창의 위치 미리보기를 켜고 끈다.</summary>
+        private static void SetAddonPositionPreview(bool isEnabled, int tabIndex)
+        {
+            foreach (Window window in Application.Current.Windows)
+            {
+                if (window is MainWindow mainWindow)
+                {
+                    mainWindow.SetAddonPositionPreviewTabIndex(tabIndex);
+                    mainWindow.SetAddonPositionMode(isEnabled);
+                    return;
+                }
+            }
+        }
 
         /// <summary>
         /// 선택된 내비게이션 항목의 패널만 표시한다.
         /// 컴팩트 모드(OnlyChatMode)에서는 내비게이션을 숨기고 채팅+외치기 패널을 함께 보여준다.
-        /// 추가 기능 항목은 임베드된 AddonView의 해당 탭을 보여준다.
         /// </summary>
         private void ApplyPanelVisibility()
         {
@@ -78,13 +109,17 @@ namespace TWChatOverlay.Views
             if (OnlyChatMode)
             {
                 NavColumn.Visibility = Visibility.Collapsed;
-                AddonHost.Visibility = Visibility.Collapsed;
-                SettingsScroll.Visibility = Visibility.Visible;
                 ChatPanel.Visibility = Visibility.Visible;
                 ShoutPanel.Visibility = Visibility.Visible;
                 DisplayPanel.Visibility = Visibility.Collapsed;
                 HotkeyPanel.Visibility = Visibility.Collapsed;
                 SystemPanel.Visibility = Visibility.Collapsed;
+                AddonKeywordPanel.Visibility = Visibility.Collapsed;
+                AddonExpPanel.Visibility = Visibility.Collapsed;
+                AddonDungeonPanel.Visibility = Visibility.Collapsed;
+                AddonItemPanel.Visibility = Visibility.Collapsed;
+                AddonBuffPanel.Visibility = Visibility.Collapsed;
+                AddonBossPanel.Visibility = Visibility.Collapsed;
                 return;
             }
 
@@ -93,32 +128,27 @@ namespace TWChatOverlay.Views
             int addonTab = SelectedAddonTabIndex;
             if (addonTab >= 0)
             {
-                if (!_addonEmbedInitialized)
-                {
-                    AddonHost.SetEmbeddedMode();
-                    _addonEmbedInitialized = true;
-                }
-
-                SettingsScroll.Visibility = Visibility.Collapsed;
-                AddonHost.Visibility = Visibility.Visible;
-                AddonHost.ShowEmbeddedTab(addonTab);
+                EnsureAddonViewModel();
+                SetAddonPositionPreview(true, addonTab);
                 _addonPreviewActive = true;
-                return;
             }
-
-            if (_addonPreviewActive)
+            else if (_addonPreviewActive)
             {
                 _addonPreviewActive = false;
-                AddonHost.NotifyEmbeddedHidden();
+                SetAddonPositionPreview(false, -1);
             }
 
-            AddonHost.Visibility = Visibility.Collapsed;
-            SettingsScroll.Visibility = Visibility.Visible;
             ChatPanel.Visibility = NavChat.IsChecked == true ? Visibility.Visible : Visibility.Collapsed;
             ShoutPanel.Visibility = NavShout.IsChecked == true ? Visibility.Visible : Visibility.Collapsed;
             DisplayPanel.Visibility = NavDisplay.IsChecked == true ? Visibility.Visible : Visibility.Collapsed;
             HotkeyPanel.Visibility = NavHotkeys.IsChecked == true ? Visibility.Visible : Visibility.Collapsed;
             SystemPanel.Visibility = NavSystem.IsChecked == true ? Visibility.Visible : Visibility.Collapsed;
+            AddonKeywordPanel.Visibility = NavAddonKeyword.IsChecked == true ? Visibility.Visible : Visibility.Collapsed;
+            AddonExpPanel.Visibility = NavAddonExp.IsChecked == true ? Visibility.Visible : Visibility.Collapsed;
+            AddonDungeonPanel.Visibility = NavAddonDungeon.IsChecked == true ? Visibility.Visible : Visibility.Collapsed;
+            AddonItemPanel.Visibility = NavAddonItem.IsChecked == true ? Visibility.Visible : Visibility.Collapsed;
+            AddonBuffPanel.Visibility = NavAddonBuff.IsChecked == true ? Visibility.Visible : Visibility.Collapsed;
+            AddonBossPanel.Visibility = NavAddonBoss.IsChecked == true ? Visibility.Visible : Visibility.Collapsed;
             DebugOptionsBorder.Visibility = _debugOptionsAllowed ? Visibility.Visible : Visibility.Collapsed;
         }
 
@@ -192,7 +222,94 @@ namespace TWChatOverlay.Views
         private void SettingsView_Unloaded(object sender, RoutedEventArgs e)
         {
             UpdateSettingsPositionMode(false);
+            _itemDropPreviewTimer?.Stop();
+            if (_addonPreviewActive)
+            {
+                _addonPreviewActive = false;
+                SetAddonPositionPreview(false, -1);
+            }
         }
+
+        #region 추가 기능 핸들러 (구 AddonView에서 이식)
+
+        private System.Windows.Threading.DispatcherTimer? _itemDropPreviewTimer;
+        private string? _pendingPreviewSoundFile;
+
+        private void EnsurePreviewTimer()
+        {
+            if (_itemDropPreviewTimer != null) return;
+            _itemDropPreviewTimer = new System.Windows.Threading.DispatcherTimer
+            {
+                Interval = System.TimeSpan.FromMilliseconds(180)
+            };
+            _itemDropPreviewTimer.Tick += (_, _) =>
+            {
+                _itemDropPreviewTimer.Stop();
+                if (!string.IsNullOrWhiteSpace(_pendingPreviewSoundFile))
+                {
+                    Services.NotificationService.PlayAlert(_pendingPreviewSoundFile);
+                }
+            };
+        }
+
+        private void PreviewSoundSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        {
+            if (!IsLoaded)
+                return;
+
+            if (Equals(e.OldValue, e.NewValue))
+                return;
+
+            if (sender is not Slider slider || slider.Tag is not string soundFile || string.IsNullOrWhiteSpace(soundFile))
+                return;
+
+            // 바인딩 갱신(로드/전환)에는 반응하지 않고 직접 조작할 때만 미리듣기
+            bool isUserInteraction =
+                slider.IsMouseCaptureWithin ||
+                (slider.IsKeyboardFocusWithin &&
+                 (Keyboard.IsKeyDown(Key.Left) || Keyboard.IsKeyDown(Key.Right) || Keyboard.IsKeyDown(Key.Up) || Keyboard.IsKeyDown(Key.Down)));
+            if (!isUserInteraction)
+                return;
+
+            EnsurePreviewTimer();
+            _pendingPreviewSoundFile = soundFile;
+            _itemDropPreviewTimer!.Stop();
+            _itemDropPreviewTimer.Start();
+        }
+
+        private void MoveDropItemsToCustom_Click(object sender, RoutedEventArgs e)
+        {
+            _addonViewModel?.MoveToCustom(System.Linq.Enumerable.ToList(
+                System.Linq.Enumerable.Cast<ViewModels.DropItemFilterEntry>(DefaultDropItemsListBox.SelectedItems)));
+        }
+
+        private void MoveDropItemsToDefault_Click(object sender, RoutedEventArgs e)
+        {
+            _addonViewModel?.MoveToDefault(System.Linq.Enumerable.ToList(
+                System.Linq.Enumerable.Cast<ViewModels.DropItemFilterEntry>(CustomDropItemsListBox.SelectedItems)));
+        }
+
+        private void ExperienceLimitExp_PreviewTextInput(object sender, TextCompositionEventArgs e)
+        {
+            e.Handled = !Regex.IsMatch(e.Text, @"^[0-9,]+$");
+        }
+
+        private void ExperienceLimitExp_Pasting(object sender, System.Windows.DataObjectPastingEventArgs e)
+        {
+            if (!e.SourceDataObject.GetDataPresent(DataFormats.Text, true))
+            {
+                e.CancelCommand();
+                return;
+            }
+
+            if (e.SourceDataObject.GetData(DataFormats.Text) is not string text ||
+                !Regex.IsMatch(text, @"^[0-9,]+$"))
+            {
+                e.CancelCommand();
+            }
+        }
+
+        #endregion
 
         private void UpdateSettingsPositionMode(bool isEnabled)
         {

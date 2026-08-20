@@ -43,8 +43,19 @@ namespace TWChatOverlay.Views
                 if (settings.SubMenuWindowLeft.HasValue && settings.SubMenuWindowTop.HasValue)
                 {
                     WindowStartupLocation = WindowStartupLocation.Manual;
-                    Left = settings.SubMenuWindowLeft.Value;
-                    Top = settings.SubMenuWindowTop.Value;
+                    // 저장된 위치가 화면 밖(모니터 구성 변경 등)이면 화면 안으로 보정한다.
+                    double virtualLeft = SystemParameters.VirtualScreenLeft;
+                    double virtualTop = SystemParameters.VirtualScreenTop;
+                    double virtualRight = virtualLeft + SystemParameters.VirtualScreenWidth;
+                    double virtualBottom = virtualTop + SystemParameters.VirtualScreenHeight;
+
+                    double left = settings.SubMenuWindowLeft.Value;
+                    double top = settings.SubMenuWindowTop.Value;
+                    left = System.Math.Clamp(left, virtualLeft, System.Math.Max(virtualLeft, virtualRight - Width));
+                    top = System.Math.Clamp(top, virtualTop, System.Math.Max(virtualTop, virtualBottom - Height));
+
+                    Left = left;
+                    Top = top;
                 }
             }
             catch { }
