@@ -118,20 +118,14 @@ namespace TWChatOverlay.Views
                     itemHelper.Show();
             }
 
-            // 버프 추적 위치 — 실제 버프 추적창이 떠 있으면 그 창을 직접 옮기면 되므로 도우미를 띄우지 않는다
-            if (BuffTrackerWindow.Instance?.IsVisible == true)
+            // 버프 추적 위치 — 모든 버프가 켜진 최대 크기 미리보기(도우미)로 배치한다
+            // (실제 버프창은 잠금 해제 동안 스스로 숨는다)
+            var buffHelper = BuffTrackerHelperWindow.Instance ?? CreateBuffTrackerHelperWindow();
+            if (buffHelper != null)
             {
-                BuffTrackerHelperWindow.Instance?.Hide();
-            }
-            else
-            {
-                var buffHelper = BuffTrackerHelperWindow.Instance ?? CreateBuffTrackerHelperWindow();
-                if (buffHelper != null)
-                {
-                    ApplyStoredPosition(buffHelper, _settings.BuffTrackerWindowLeft, _settings.BuffTrackerWindowTop);
-                    if (!buffHelper.IsVisible)
-                        buffHelper.Show();
-                }
+                ApplyStoredPosition(buffHelper, _settings.BuffTrackerWindowLeft, _settings.BuffTrackerWindowTop);
+                if (!buffHelper.IsVisible)
+                    buffHelper.Show();
             }
 
             // 외치기 팝업창 위치

@@ -21,6 +21,7 @@ namespace TWChatOverlay.Views
         public ExpTrackerWindow(object? dataContext)
         {
             InitializeComponent();
+            WindowFontService.Apply(this);
             DataContext = dataContext ?? throw new ArgumentNullException(nameof(dataContext));
             Loaded += ExpTrackerWindow_Loaded;
             SizeChanged += ExpTrackerWindow_SizeChanged;
