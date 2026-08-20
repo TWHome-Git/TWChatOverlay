@@ -19,19 +19,19 @@ namespace TWChatOverlay.Views
     {
         private sealed record WizardStep(string Title, string Description, bool SupportsPositionPreview);
 
+        // 채팅창 위치 설정 단계는 잠금 해제 모드(창 편집)로 대체되어 제거됨
         private readonly List<WizardStep> _steps = new()
         {
             new("1. 채팅 로그 위치 설정", "채팅 로그 폴더를 지정합니다.", false),
-            new("2. 채팅창 위치 설정", "MainWindow 위치를 조정하고 프리셋1로 저장합니다.", true),
-            new("3. 채팅창 설정", "", false),
-            new("4. 외치기 설정", "외치기 팝업/위치/자동복사/유지시간/텍스트 크기를 설정합니다.", true),
-            new("5. 키워드 알림 설정", "키워드 알림 기능을 설정합니다.", false),
-            new("6. 경험치 추적 설정", "경험치 추적 및 누적 알림을 설정합니다.", true),
-            new("7. 던전 도우미 설정", "던전 도우미 알림 항목을 설정합니다.", true),
-            new("8. 아이템 획득 알림 설정", "아이템 획득 알림 및 필터를 설정합니다.", true),
-            new("9. 버프 추적 설정", "버프 추적 알림 및 종료 사운드를 설정합니다.", true),
-            new("10. 필드 보스 알림 설정", "필드 보스 알림을 설정합니다.", false),
-            new("11. 일간/주간 컨텐츠 추적 설정", "일간/주간 컨텐츠 체크 항목을 설정합니다.", false)
+            new("2. 채팅창 설정", "", false),
+            new("3. 외치기 설정", "외치기 팝업/위치/자동복사/유지시간/텍스트 크기를 설정합니다.", true),
+            new("4. 키워드 알림 설정", "키워드 알림 기능을 설정합니다.", false),
+            new("5. 경험치 추적 설정", "경험치 추적 및 누적 알림을 설정합니다.", true),
+            new("6. 던전 도우미 설정", "던전 도우미 알림 항목을 설정합니다.", true),
+            new("7. 아이템 획득 알림 설정", "아이템 획득 알림 및 필터를 설정합니다.", true),
+            new("8. 버프 추적 설정", "버프 추적 알림 및 종료 사운드를 설정합니다.", true),
+            new("9. 필드 보스 알림 설정", "필드 보스 알림을 설정합니다.", false),
+            new("10. 일간/주간 컨텐츠 추적 설정", "일간/주간 컨텐츠 체크 항목을 설정합니다.", false)
         };
 
         private int _stepIndex;
@@ -98,10 +98,6 @@ namespace TWChatOverlay.Views
             NextButton.Visibility = _stepIndex == _steps.Count - 1 ? Visibility.Collapsed : Visibility.Visible;
             FinishButton.Visibility = _stepIndex == _steps.Count - 1 ? Visibility.Visible : Visibility.Collapsed;
 
-            bool shouldEnablePositionPreview = _stepIndex == 1;
-            if (shouldEnablePositionPreview != _positionPreviewEnabled)
-                SetPositionPreview(shouldEnablePositionPreview);
-
             UpdateStepSpecificPreviews();
 
             StepContentHost.Content = BuildStepContent(_stepIndex);
@@ -109,7 +105,7 @@ namespace TWChatOverlay.Views
 
         private void UpdateStepSpecificPreviews()
         {
-            bool shouldShowShoutPreview = _stepIndex == 3;
+            bool shouldShowShoutPreview = _stepIndex == 2;
             if (shouldShowShoutPreview == _shoutPreviewEnabled)
             {
                 _mainWindow?.ShowWizardStepPreviewWindows(_stepIndex);
@@ -142,16 +138,15 @@ namespace TWChatOverlay.Views
             return stepIndex switch
             {
                 0 => BuildLogPathStepContent(),
-                1 => BuildMainPositionStepContent(),
-                2 => BuildChatSettingsStepContent(),
-                3 => BuildShoutSettingsStepContent(),
-                4 => BuildKeywordAddonContent(),
-                5 => BuildExperienceAddonContent(),
-                6 => BuildDungeonAddonContent(),
-                7 => BuildItemDropAddonContent(),
-                8 => BuildBuffAddonContent(),
-                9 => BuildFieldBossAddonContent(),
-                10 => BuildDailyWeeklyStepContent(),
+                1 => BuildChatSettingsStepContent(),
+                2 => BuildShoutSettingsStepContent(),
+                3 => BuildKeywordAddonContent(),
+                4 => BuildExperienceAddonContent(),
+                5 => BuildDungeonAddonContent(),
+                6 => BuildItemDropAddonContent(),
+                7 => BuildBuffAddonContent(),
+                8 => BuildFieldBossAddonContent(),
+                9 => BuildDailyWeeklyStepContent(),
                 _ => new TextBlock { Text = "준비 중", Foreground = ThemeBrushes.Get("TextBrush", Brushes.White) }
             };
         }
@@ -165,13 +160,11 @@ namespace TWChatOverlay.Views
             row.ColumnDefinitions.Add(new ColumnDefinition());
             row.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
 
+            // 색상은 창의 암시적 TextBox 스타일(테마 브러시)을 그대로 사용
             var pathBox = new TextBox
             {
                 Height = 30,
                 VerticalContentAlignment = VerticalAlignment.Center,
-                Background = new System.Windows.Media.SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#333")),
-                Foreground = System.Windows.Media.Brushes.White,
-                BorderBrush = new System.Windows.Media.SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#555")),
                 Padding = new Thickness(8, 0, 8, 0)
             };
             pathBox.SetBinding(TextBox.TextProperty, new Binding(nameof(ChatSettings.ChatLogFolderPath)) { Source = _settings, Mode = BindingMode.TwoWay, UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged });
@@ -195,14 +188,6 @@ namespace TWChatOverlay.Views
 
             panel.Children.Add(row);
             panel.Children.Add(new TextBlock { Text = "경로 저장은 완료 시 자동 반영됩니다.", Foreground = ThemeBrushes.Get("OverlaySubtleTextBrush"), FontSize = 12, Margin = new Thickness(0, 8, 0, 0) });
-            return panel;
-        }
-
-        private UIElement BuildMainPositionStepContent()
-        {
-            var panel = new StackPanel();
-            panel.Children.Add(new TextBlock { Text = "위치 미리보기를 켜고 메인 채팅창을 원하는 위치로 드래그하세요.", Foreground = ThemeBrushes.Get("TextBrush", Brushes.White) });
-            panel.Children.Add(new TextBlock { Text = "다음 단계로 이동하면 현재 위치가 프리셋1로 저장됩니다.", Foreground = ThemeBrushes.Get("OverlaySubtleTextBrush"), Margin = new Thickness(0, 8, 0, 0), FontSize = 12 });
             return panel;
         }
 
@@ -1044,11 +1029,6 @@ namespace TWChatOverlay.Views
                 LogPathConfirmed?.Invoke(this, _settings.ChatLogFolderPath ?? string.Empty);
             }
 
-            if (_stepIndex == 1)
-            {
-                SaveMainWindowPositionToPreset1();
-            }
-
             _stepIndex++;
             RenderStep();
         }
@@ -1058,15 +1038,8 @@ namespace TWChatOverlay.Views
             _positionPreviewEnabled = enabled;
             try
             {
-                if (_stepIndex == 1)
-                {
-                    _mainWindow?.SetWizardChatPositionMode(enabled);
-                }
-                else
-                {
-                    _mainWindow?.SetWizardChatPositionMode(false);
-                    _mainWindow?.SetSettingsPositionMode(enabled);
-                }
+                _mainWindow?.SetWizardChatPositionMode(false);
+                _mainWindow?.SetSettingsPositionMode(enabled);
             }
             catch (Exception ex)
             {

@@ -8,33 +8,70 @@
         Topmost="True"
         Background="Transparent"
         AllowsTransparency="True"
-        Width="360"
-        Height="160"
+        Width="380"
+        Height="180"
+        TextOptions.TextFormattingMode="Display"
         WindowStartupLocation="CenterScreen">
-    <Border CornerRadius="18" Background="{DynamicResource OverlayWindowBackgroundBrush}" BorderBrush="{DynamicResource OverlayStrongBorderBrush}" BorderThickness="1" Padding="22">
+    <Window.Resources>
+        <!-- EUI 스타일 진행 바: 어두운 트랙 + 민트 채움 -->
+        <Style x:Key="MintProgressBarStyle" TargetType="ProgressBar">
+            <Setter Property="Height" Value="6"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ProgressBar">
+                        <Grid>
+                            <Border x:Name="PART_Track"
+                                    Background="{DynamicResource InputFieldBackgroundBrush}"
+                                    BorderBrush="{DynamicResource SeparatorBrush}"
+                                    BorderThickness="1"
+                                    CornerRadius="3"/>
+                            <Border x:Name="PART_Indicator"
+                                    Background="{DynamicResource OverlayTitleAccentTextBrush}"
+                                    CornerRadius="3"
+                                    HorizontalAlignment="Left"/>
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+
+    <Border CornerRadius="4"
+            Background="{DynamicResource OverlayWindowBackgroundBrush}"
+            BorderBrush="{DynamicResource OverlayAccentBorderBrush}"
+            BorderThickness="1"
+            Padding="22,18">
         <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
-                <RowDefinition Height="16"/>
+                <RowDefinition Height="14"/>
                 <RowDefinition Height="Auto"/>
-                <RowDefinition Height="12"/>
+                <RowDefinition Height="14"/>
                 <RowDefinition Height="Auto"/>
-                <RowDefinition Height="8"/>
+                <RowDefinition Height="6"/>
                 <RowDefinition Height="Auto"/>
-                <RowDefinition Height="12"/>
+                <RowDefinition Height="14"/>
                 <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
 
-            <TextBlock x:Name="TitleText"
-                       Text="초기화중..."
-                       Foreground="{DynamicResource TextBrush}"
-                       FontSize="19"
-                       FontWeight="SemiBold"
-                       HorizontalAlignment="Center"/>
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                <Ellipse Width="8" Height="8" Fill="{DynamicResource OverlayTitleAccentTextBrush}" VerticalAlignment="Center" Margin="0,1,8,0"/>
+                <TextBlock Text="테일즈 채팅 오버레이"
+                           Foreground="{DynamicResource TextBrush}"
+                           FontSize="15"
+                           FontWeight="Bold"
+                           VerticalAlignment="Center"/>
+                <TextBlock x:Name="TitleText"
+                           Text="초기화 중"
+                           Foreground="{DynamicResource OverlayHintTextBrush}"
+                           FontSize="12"
+                           VerticalAlignment="Center"
+                           Margin="10,1,0,0"/>
+            </StackPanel>
 
             <ProgressBar Grid.Row="2"
                          x:Name="ProgressBar"
-                         Height="14"
+                         Style="{StaticResource MintProgressBarStyle}"
                          Minimum="0"
                          Maximum="100"
                          Value="0"/>
@@ -50,14 +87,17 @@
                        x:Name="DateText"
                        Text=""
                        Foreground="{DynamicResource OverlayHintTextBrush}"
-                       FontSize="12"
+                       FontSize="11"
                        HorizontalAlignment="Center"/>
 
             <Button Grid.Row="8"
                     x:Name="CancelButton"
                     Width="96"
-                    Height="28"
+                    Height="27"
+                    Padding="0"
+                    FontSize="12"
                     Content="취소"
+                    Style="{DynamicResource SecondaryButtonStyle}"
                     HorizontalAlignment="Center"
                     Click="CancelButton_Click"/>
         </Grid>

@@ -194,21 +194,22 @@ namespace TWChatOverlay.Views
 
             try
             {
+                // 인덱스는 마법사 _steps 순서와 일치 (채팅창 위치 설정 단계 제거 후 기준)
                 switch (stepIndex)
                 {
-                    case 3:
+                    case 2:
                         ShoutToastService.ShowPositionPreview(_settings, force: true);
                         break;
-                    case 5:
+                    case 4:
                         ExperienceAlertWindowService.ShowPositionPreview(_settings, force: true);
                         break;
-                    case 6:
+                    case 5:
                         DungeonCountDisplayWindowService.ShowPositionPreview(_settings, force: true);
                         ShowAbandonRoadSummaryWindow(previewMode: true, restartLifetime: false, activateWindow: false, forcePreview: true);
                         var etosHelper = SubAddonWindow.Instance ?? CreateSubAddonWindow();
                         etosHelper?.ApplyPositionPreviewVisibility(true);
                         break;
-                    case 7:
+                    case 6:
                         var itemHelper = ItemDropHelperWindow.Instance ?? CreateItemDropHelperWindow();
                         if (itemHelper != null)
                         {
@@ -217,7 +218,7 @@ namespace TWChatOverlay.Views
                                 itemHelper.Show();
                         }
                         break;
-                    case 8:
+                    case 7:
                         var buffHelper = BuffTrackerHelperWindow.Instance ?? CreateBuffTrackerHelperWindow();
                         if (buffHelper != null)
                         {
