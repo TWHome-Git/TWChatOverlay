@@ -585,7 +585,8 @@
                 <ContentPresenter Grid.Column="0"
                                   Margin="8,0,4,0"
                                   VerticalAlignment="Center"
-                                  HorizontalAlignment="Left"/>
+                                  HorizontalAlignment="Left"
+                                  TextElement.Foreground="{DynamicResource ComboFieldTextBrush}"/>
                 <TextBlock Grid.Column="1"
                            Text="▼"
                            Foreground="{DynamicResource ComboFieldTextBrush}"

@@ -461,7 +461,7 @@ namespace TWChatOverlay.Views
             {
                 host.Show();
                 host.ShowHostContent(content, title);
-                bool isAddonSettingsView = content is AddonView;
+                bool isAddonSettingsView = false; // 추가 기능은 설정 창으로 통합됨
                 SetMainAddonPositionMode(isAddonSettingsView);
                 SetMainSettingsPositionMode(false);
 
