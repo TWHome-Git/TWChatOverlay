@@ -75,10 +75,10 @@ namespace TWChatOverlay.Services
                 Focusable = false;
 
                 var root = new Grid();
-                // 살짝 회색빛 딤 — 격자가 눈에 띄도록
+                // 살짝 회색빛 딤 — 격자가 눈에 띄도록 (과하지 않게 아주 옅게)
                 root.Children.Add(new System.Windows.Shapes.Rectangle
                 {
-                    Fill = new SolidColorBrush(Color.FromArgb(0x3C, 0x18, 0x1B, 0x1A))
+                    Fill = new SolidColorBrush(Color.FromArgb(0x1E, 0x18, 0x1B, 0x1A))
                 });
                 root.Children.Add(new System.Windows.Shapes.Rectangle
                 {
@@ -87,11 +87,46 @@ namespace TWChatOverlay.Services
                 });
                 Content = root;
 
-                SourceInitialized += (_, _) => MakeClickThrough();
+                SourceInitialized += (_, _) =>
+                {
+                    MakeClickThrough();
+                    PinToBottom();
+                };
                 IsVisibleChanged += (_, e) =>
                 {
                     if (e.NewValue is true) SendToBottom();
                 };
+            }
+
+            /// <summary>
+            /// WM_WINDOWPOSCHANGING을 가로채 z-order 변경이 생길 때마다 HWND_BOTTOM으로 강제.
+            /// 한 번 내리는 것만으로는 이후 다른 코드/OS가 다시 올릴 수 있어 항상-맨뒤로 고정한다.
+            /// </summary>
+            private void PinToBottom()
+            {
+                try
+                {
+                    var source = (HwndSource?)PresentationSource.FromVisual(this);
+                    source?.AddHook(ForceBottomHook);
+                }
+                catch (Exception ex)
+                {
+                    AppLogger.Warn("Backdrop bottom-pin hook setup failed.", ex);
+                }
+            }
+
+            private static IntPtr ForceBottomHook(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
+            {
+                const int WM_WINDOWPOSCHANGING = 0x0046;
+                if (msg == WM_WINDOWPOSCHANGING)
+                {
+                    var pos = System.Runtime.InteropServices.Marshal.PtrToStructure<NativeMethods.WINDOWPOS>(lParam);
+                    const int SWP_NOZORDER = 0x0004;
+                    pos.hwndInsertAfter = new IntPtr(1); // HWND_BOTTOM
+                    pos.flags &= ~SWP_NOZORDER;
+                    System.Runtime.InteropServices.Marshal.StructureToPtr(pos, lParam, false);
+                }
+                return IntPtr.Zero;
             }
 
             /// <summary>모든 창(게임 포함)의 맨 뒤로 보낸다.</summary>
@@ -239,6 +274,18 @@ namespace TWChatOverlay.Services
 
             [System.Runtime.InteropServices.DllImport("user32.dll")]
             public static extern bool SetWindowPos(IntPtr hWnd, IntPtr hWndInsertAfter, int x, int y, int cx, int cy, int flags);
+
+            [System.Runtime.InteropServices.StructLayout(System.Runtime.InteropServices.LayoutKind.Sequential)]
+            public struct WINDOWPOS
+            {
+                public IntPtr hwnd;
+                public IntPtr hwndInsertAfter;
+                public int x;
+                public int y;
+                public int cx;
+                public int cy;
+                public int flags;
+            }
         }
     }
 }
