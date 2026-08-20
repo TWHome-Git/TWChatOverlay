@@ -127,6 +127,21 @@ namespace TWChatOverlay.Views
         {
             if (RootPanel == null || MenuBody == null || ButtonsGrid == null) return;
 
+            // 양축 SizeToContent는 WindowStyle=None+DPI 조합에서 크기를 잘못 계산하므로
+            // 방향별로 한 축만 자동, 다른 축은 고정한다
+            if (horizontal)
+            {
+                SizeToContent = SizeToContent.Width;
+                Height = 44;
+                Width = double.NaN;
+            }
+            else
+            {
+                SizeToContent = SizeToContent.Height;
+                Width = 44;
+                Height = double.NaN;
+            }
+
             RootPanel.Orientation = horizontal ? Orientation.Horizontal : Orientation.Vertical;
             MenuBody.Orientation = horizontal ? Orientation.Horizontal : Orientation.Vertical;
             ButtonsGrid.Rows = horizontal ? 1 : 9;
