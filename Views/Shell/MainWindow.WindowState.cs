@@ -71,6 +71,75 @@ namespace TWChatOverlay.Views
             }
         }
 
+        /// <summary>
+        /// 잠금 해제 모드 진입/종료 시 위치 조정 대상 창들을 일괄 표시/복원한다.
+        /// 대상: 채팅창(+서브), 어밴던로드 주간 합계, 경험치 누적 알림, 경험치 추적창,
+        /// 던전 카운터, 에토스 방향 안내, 아이템 드롭 알림, 버프 추적, 외치기 팝업.
+        /// </summary>
+        private void OnUiUnlockChanged(bool unlocked)
+        {
+            try
+            {
+                if (unlocked)
+                    ShowUnlockPositionWindows();
+                else
+                    CloseUnlockPositionWindows();
+            }
+            catch (Exception ex)
+            {
+                AppLogger.Warn("Failed to toggle unlock position windows.", ex);
+            }
+        }
+
+        private void ShowUnlockPositionWindows()
+        {
+            // 어밴던로드 주간 합계
+            ShowAbandonRoadSummaryWindow(previewMode: true, restartLifetime: false, activateWindow: false, forcePreview: true);
+
+            // 경험치 누적 알림 위치
+            ExperienceAlertWindowService.ShowPositionPreview(_settings, force: true);
+
+            // 경험치 추적창
+            ShowExpTrackerWindow();
+
+            // 던전 카운터 위치
+            DungeonCountDisplayWindowService.ShowPositionPreview(_settings, force: true);
+
+            // 에토스 방향 안내
+            var etosHelper = SubAddonWindow.Instance ?? CreateSubAddonWindow();
+            etosHelper?.ApplyPositionPreviewVisibility(true);
+
+            // 아이템 드롭 알림 위치
+            var itemHelper = ItemDropHelperWindow.Instance ?? CreateItemDropHelperWindow();
+            if (itemHelper != null)
+            {
+                ApplyStoredPosition(itemHelper, _settings.ItemDropWindowLeft, _settings.ItemDropWindowTop);
+                if (!itemHelper.IsVisible)
+                    itemHelper.Show();
+            }
+
+            // 버프 추적 위치
+            var buffHelper = BuffTrackerHelperWindow.Instance ?? CreateBuffTrackerHelperWindow();
+            if (buffHelper != null)
+            {
+                ApplyStoredPosition(buffHelper, _settings.BuffTrackerWindowLeft, _settings.BuffTrackerWindowTop);
+                if (!buffHelper.IsVisible)
+                    buffHelper.Show();
+            }
+
+            // 외치기 팝업창 위치
+            ShoutToastService.ShowPositionPreview(_settings, force: true);
+        }
+
+        private void CloseUnlockPositionWindows()
+        {
+            // 위치 저장 후 미리보기 종료, 각 창의 원래 표시 상태로 복원
+            ShoutToastService.SaveCurrentPosition(_settings);
+            ShoutToastService.ClosePositionPreview(_settings);
+            CloseAddonPositionPreviewWindows(savePositions: true, restoreNormalWindows: true);
+            RefreshExpTrackerWindow();
+        }
+
         private void ApplyPositionModeWindows()
         {
             if (_isSettingsPositionMode || _isAddonPositionMode)

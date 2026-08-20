@@ -413,6 +413,41 @@ namespace TWChatOverlay.ViewModels
         }
 
 
+        public bool Clone1Enabled
+        {
+            get => _settings.ChatCloneWindow1IsOpen;
+            set => SetCloneEnabled(1, value);
+        }
+
+        public bool Clone2Enabled
+        {
+            get => _settings.ChatCloneWindow2IsOpen;
+            set => SetCloneEnabled(2, value);
+        }
+
+        private void SetCloneEnabled(int slot, bool enabled)
+        {
+            bool current = slot == 1 ? _settings.ChatCloneWindow1IsOpen : _settings.ChatCloneWindow2IsOpen;
+            if (current == enabled) return;
+
+            if (enabled)
+            {
+                Views.ChatCloneWindow.TryRestore(_settings, slot);
+            }
+            else
+            {
+                foreach (var clone in Application.Current.Windows.OfType<Views.ChatCloneWindow>().ToList())
+                {
+                    if (clone.Slot == slot)
+                    {
+                        try { clone.Close(); } catch { }
+                    }
+                }
+            }
+
+            OnPropertyChanged(slot == 1 ? nameof(Clone1Enabled) : nameof(Clone2Enabled));
+        }
+
         public bool Clone1FollowMainFont
         {
             get => _settings.ChatCloneWindow1FollowMainFont;
@@ -572,6 +607,14 @@ namespace TWChatOverlay.ViewModels
             else if (e.PropertyName == nameof(ChatSettings.CurrentPositionDisplay))
             {
                 OnPropertyChanged(nameof(CurrentPositionDisplay));
+            }
+            else if (e.PropertyName == nameof(ChatSettings.ChatCloneWindow1IsOpen))
+            {
+                OnPropertyChanged(nameof(Clone1Enabled));
+            }
+            else if (e.PropertyName == nameof(ChatSettings.ChatCloneWindow2IsOpen))
+            {
+                OnPropertyChanged(nameof(Clone2Enabled));
             }
         }
 

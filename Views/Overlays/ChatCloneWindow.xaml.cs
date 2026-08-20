@@ -27,6 +27,8 @@ namespace TWChatOverlay.Views
 
         public event PropertyChangedEventHandler? PropertyChanged;
 
+        public int Slot => _slot;
+
         public static readonly DependencyProperty CurrentFontProperty =
             DependencyProperty.Register(nameof(CurrentFont), typeof(FontFamily), typeof(ChatCloneWindow));
 
