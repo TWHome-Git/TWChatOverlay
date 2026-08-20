@@ -35,12 +35,19 @@ namespace TWChatOverlay.Services
                     return;
                 }
 
+                // 실제 알림창이 뜨면 미리보기는 중복이므로 먼저 치운다
+                RemovePositionPreview();
+
                 var window = new DungeonCountDisplayWindow(message, ResolveFont(), durationSeconds, settings);
                 window.Closed += (_, _) =>
                 {
                     ActiveWindows.Remove(window);
                     ActiveWindowsByKey.Remove(dungeonName);
                     Rearrange();
+
+                    // 잠금 해제 중에 실제 알림이 사라지면 옮길 대상이 없어지므로 미리보기를 되살린다
+                    if (UiLockService.IsUnlocked)
+                        ShowPositionPreview(settings, force: true);
                 };
 
                 ActiveWindows.Add(window);
@@ -59,6 +66,13 @@ namespace TWChatOverlay.Services
 
             Application.Current.Dispatcher.BeginInvoke(new Action(() =>
             {
+                // 실제 알림창이 떠 있으면 그 창을 직접 옮기면 되므로 미리보기를 띄우지 않는다
+                if (HasVisibleLiveWindow())
+                {
+                    RemovePositionPreview();
+                    return;
+                }
+
                 string message = "던전 카운트 알림창";
                 if (ActiveWindowsByKey.TryGetValue(PositionPreviewKey, out DungeonCountDisplayWindow? existing) &&
                     existing.IsLoaded)
@@ -139,6 +153,35 @@ namespace TWChatOverlay.Services
             });
 
             ConfigService.Save(settings);
+        }
+
+        /// <summary>미리보기가 아닌 실제 던전 카운트 알림창이 화면에 떠 있는지.</summary>
+        private static bool HasVisibleLiveWindow()
+        {
+            ActiveWindowsByKey.TryGetValue(PositionPreviewKey, out DungeonCountDisplayWindow? preview);
+
+            foreach (DungeonCountDisplayWindow window in ActiveWindows)
+            {
+                if (!ReferenceEquals(window, preview) && window.IsVisible)
+                    return true;
+            }
+
+            return false;
+        }
+
+        /// <summary>자리 잡기용 미리보기 창을 닫고 목록에서 제거한다.</summary>
+        private static void RemovePositionPreview()
+        {
+            if (!ActiveWindowsByKey.TryGetValue(PositionPreviewKey, out DungeonCountDisplayWindow? preview))
+                return;
+
+            ActiveWindowsByKey.Remove(PositionPreviewKey);
+            ActiveWindows.Remove(preview);
+
+            if (preview.IsVisible)
+                preview.Close();
+
+            Rearrange();
         }
 
         private static void Rearrange()

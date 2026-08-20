@@ -48,7 +48,7 @@ namespace TWChatOverlay.Services
                 }
 
                 var (left, topBase) = ResolveBasePosition();
-                double top = topBase + ((ToastHeight + Gap) * (ActiveToasts.Count - 1));
+                double top = topBase + ((ToastHeight + Gap) * (ActiveToasts.Count - 1 + HelperOffset()));
                 toast.ShowAnimated(left, top);
             }));
         }
@@ -62,10 +62,14 @@ namespace TWChatOverlay.Services
                     continue;
 
                 var (_, topBase) = ResolveBasePosition();
-                double targetTop = topBase + ((ToastHeight + Gap) * i);
+                double targetTop = topBase + ((ToastHeight + Gap) * (i + HelperOffset()));
                 toast.MoveTo(targetTop);
             }
         }
+
+        /// <summary>위치 조정용 도우미 창이 보이는 동안에는 실제 토스트를 한 칸 아래로 밀어 겹치지 않게 한다.</summary>
+        private static int HelperOffset()
+            => TWChatOverlay.Views.ItemDropHelperWindow.Instance?.IsVisible == true ? 1 : 0;
 
         private static (double Left, double Top) ResolveBasePosition()
         {
