@@ -30,7 +30,7 @@
     <Border Background="{DynamicResource OverlayWindowBackgroundBrush}"
             BorderBrush="{DynamicResource OverlayWindowBorderBrush}"
             BorderThickness="1"
-            CornerRadius="12"
+            CornerRadius="4"
             Padding="14">
         <Grid>
             <Grid.RowDefinitions>
@@ -39,7 +39,7 @@
             </Grid.RowDefinitions>
 
             <Border Background="{DynamicResource OverlaySurfaceAltBackgroundBrush}"
-                    CornerRadius="10"
+                    CornerRadius="4"
                     Padding="10"
                     MouseLeftButtonDown="TitleBar_MouseLeftButtonDown">
                 <Grid>
@@ -106,7 +106,7 @@
 
                 <Border Grid.Column="0"
                         Background="{DynamicResource OverlayShellBackgroundBrush}"
-                        CornerRadius="10"
+                        CornerRadius="4"
                         Padding="10"
                         Margin="0,0,10,0">
                     <Grid>
@@ -120,7 +120,7 @@
                                 <DataTemplate>
                                     <Border Margin="4"
                                             Padding="10"
-                                            CornerRadius="10"
+                                            CornerRadius="4"
                                             BorderThickness="1"
                                             BorderBrush="{DynamicResource OverlayCardBorderBrush}"
                                             Background="{DynamicResource OverlayCardBackgroundBrush}"
@@ -134,7 +134,7 @@
                                             <Border Background="Transparent"
                                                     BorderBrush="{DynamicResource OverlayCardBorderBrush}"
                                                     BorderThickness="1"
-                                                    CornerRadius="8"
+                                                    CornerRadius="3"
                                                     Padding="6,4">
                                                 <TextBlock Text="{Binding DateLabel}"
                                                            Foreground="{DynamicResource TextBrush}"
@@ -156,7 +156,7 @@
                                                             <Border Background="{DynamicResource OverlayCardBackgroundBrush}"
                                                                     BorderBrush="{Binding BorderBrush}"
                                                                     BorderThickness="1"
-                                                                    CornerRadius="6"
+                                                                    CornerRadius="2"
                                                                     Padding="6,4"
                                                                     Margin="0,0,0,4">
                                                                 <TextBlock Text="{Binding DisplayText}"
@@ -190,7 +190,7 @@
                         </ItemsControl>
 
                         <Border Background="{DynamicResource OverlayLoadingMaskBrush}"
-                                CornerRadius="8"
+                                CornerRadius="3"
                                 Visibility="{Binding IsLoading, Converter={StaticResource BooleanToVisibilityConverter}}">
                             <StackPanel HorizontalAlignment="Center"
                                         VerticalAlignment="Center"
@@ -214,7 +214,7 @@
 
                 <Border Grid.Column="1"
                         Background="{DynamicResource OverlayShellBackgroundBrush}"
-                        CornerRadius="10"
+                        CornerRadius="4"
                         Padding="10">
                     <ScrollViewer VerticalScrollBarVisibility="Hidden"
                                   HorizontalScrollBarVisibility="Disabled"
@@ -223,7 +223,7 @@
                             <Border Background="{DynamicResource OverlaySurfaceBackgroundBrush}"
                                     BorderBrush="{DynamicResource OverlayCardBorderBrush}"
                                     BorderThickness="1"
-                                    CornerRadius="10"
+                                    CornerRadius="4"
                                     Padding="9"
                                     Margin="0,0,0,10">
                                 <StackPanel>
@@ -236,7 +236,7 @@
                                     <Border Background="{DynamicResource OverlayCardBackgroundBrush}"
                                             BorderBrush="{DynamicResource OverlayCardBorderBrush}"
                                             BorderThickness="1"
-                                            CornerRadius="8"
+                                            CornerRadius="3"
                                             Padding="8,6"
                                             Margin="0,0,0,8">
                                         <TextBlock Text="{Binding MonthlyAbandonSeedText}"
@@ -292,7 +292,7 @@
                             <Border Background="{DynamicResource OverlaySurfaceBackgroundBrush}"
                                     BorderBrush="{DynamicResource OverlayCardBorderBrush}"
                                     BorderThickness="1"
-                                    CornerRadius="10"
+                                    CornerRadius="4"
                                     Padding="9">
                                 <StackPanel>
                                     <TextBlock Text="아이템 득템 누적 합계"
@@ -339,7 +339,7 @@
                             <Border Background="{DynamicResource OverlaySurfaceBackgroundBrush}"
                                     BorderBrush="{DynamicResource OverlayCardBorderBrush}"
                                     BorderThickness="1"
-                                    CornerRadius="10"
+                                    CornerRadius="4"
                                     Padding="9"
                                     Margin="0,10,0,0">
                                 <StackPanel>
@@ -352,7 +352,7 @@
                                     <Border Background="{DynamicResource OverlayCardBackgroundBrush}"
                                             BorderBrush="{DynamicResource OverlayCardBorderBrush}"
                                             BorderThickness="1"
-                                            CornerRadius="8"
+                                            CornerRadius="3"
                                             Padding="8,6">
                                         <DockPanel LastChildFill="True">
                                             <StackPanel Orientation="Horizontal"

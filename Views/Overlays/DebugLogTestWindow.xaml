@@ -31,7 +31,7 @@
                                 Background="{TemplateBinding Background}"
                                 BorderBrush="{TemplateBinding BorderBrush}"
                                 BorderThickness="{TemplateBinding BorderThickness}"
-                                CornerRadius="8"
+                                CornerRadius="3"
                                 Padding="{TemplateBinding Padding}">
                             <ContentPresenter HorizontalAlignment="Center"
                                               VerticalAlignment="Center"/>
@@ -58,7 +58,7 @@
                     Background="{DynamicResource OverlayCardBackgroundBrush}"
                     BorderBrush="{DynamicResource OverlayStrongBorderBrush}"
                     BorderThickness="1"
-                    CornerRadius="6"
+                    CornerRadius="2"
                     Padding="8"
                     Margin="0,0,0,6">
                 <TextBlock Text="{Binding Text}"
@@ -83,7 +83,7 @@
     <Border Background="{DynamicResource OverlayWindowBackgroundBrush}"
             BorderBrush="{DynamicResource OverlayWindowBorderBrush}"
             BorderThickness="1"
-            CornerRadius="12"
+            CornerRadius="4"
             Padding="12">
         <Grid>
             <Grid.ColumnDefinitions>
@@ -97,7 +97,7 @@
 
             <Border Grid.ColumnSpan="2"
                     Background="{DynamicResource OverlaySurfaceAltBackgroundBrush}"
-                    CornerRadius="10"
+                    CornerRadius="4"
                     Padding="10"
                     Margin="0,0,0,10"
                     MouseLeftButtonDown="TitleBar_MouseLeftButtonDown">
@@ -128,7 +128,7 @@
                     Grid.Column="0"
                     Margin="0,0,10,0"
                     Background="{DynamicResource OverlayShellBackgroundBrush}"
-                    CornerRadius="10"
+                    CornerRadius="4"
                     Padding="10">
                 <StackPanel>
                     <TextBlock Text="주입 패널"
@@ -200,7 +200,7 @@
                             Background="{DynamicResource OverlayCardBackgroundBrush}"
                             BorderBrush="{DynamicResource OverlayCardBorderBrush}"
                             BorderThickness="1"
-                            CornerRadius="8"
+                            CornerRadius="3"
                             Padding="10">
                         <StackPanel>
                             <TextBlock Text="2줄 컨텐츠 테스트 프리셋"
@@ -245,7 +245,7 @@
 
                 <Border Grid.Row="0"
                         Background="{DynamicResource OverlayShellBackgroundBrush}"
-                        CornerRadius="10"
+                        CornerRadius="4"
                         Padding="10"
                         Margin="0,0,0,10">
                     <DockPanel>
@@ -266,7 +266,7 @@
 
                 <Border Grid.Row="1"
                         Background="{DynamicResource OverlayShellBackgroundBrush}"
-                        CornerRadius="10"
+                        CornerRadius="4"
                         Padding="10">
                     <DockPanel>
                         <TextBlock DockPanel.Dock="Top"
