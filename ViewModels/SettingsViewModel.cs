@@ -333,6 +333,13 @@ namespace TWChatOverlay.ViewModels
             }
         }
 
+        /// <summary>콤보박스 SelectedIndex(0-base) ↔ 프리셋 번호(1-base) 변환용.</summary>
+        public int SelectedPresetIndex
+        {
+            get => SelectedPresetNumber - 1;
+            set => SelectedPresetNumber = value + 1;
+        }
+
         public int SelectedPresetNumber
         {
             get => _selectedPresetNumber;
@@ -343,6 +350,7 @@ namespace TWChatOverlay.ViewModels
                     _selectedPresetNumber = value;
                     _settings.LastSelectedPresetNumber = value;
                     OnPropertyChanged();
+                    OnPropertyChanged(nameof(SelectedPresetIndex));
                     ApplySelectedPresetToOffsets();
                     SaveSettings();
                     AppLogger.Info($"Selected preset changed to {_selectedPresetNumber}.");
