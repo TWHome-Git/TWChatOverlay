@@ -29,6 +29,7 @@ namespace TWChatOverlay.Views
             _tracker.PropertyChanged += Tracker_PropertyChanged;
             _tracker.ActiveRareBuffs.CollectionChanged += TrackerBuffs_CollectionChanged;
             _tracker.ActiveExpBuffs.CollectionChanged += TrackerBuffs_CollectionChanged;
+            UiLockService.UnlockChanged += OnUnlockChanged;
             ApplyVisibility();
         }
 
@@ -43,6 +44,7 @@ namespace TWChatOverlay.Views
             _tracker.PropertyChanged -= Tracker_PropertyChanged;
             _tracker.ActiveRareBuffs.CollectionChanged -= TrackerBuffs_CollectionChanged;
             _tracker.ActiveExpBuffs.CollectionChanged -= TrackerBuffs_CollectionChanged;
+            UiLockService.UnlockChanged -= OnUnlockChanged;
 
             if (ReferenceEquals(Instance, this))
                 Instance = null;
@@ -66,6 +68,10 @@ namespace TWChatOverlay.Views
 
         public void ApplyVisibility()
         {
+            // 트레이로 최소화된 동안에는 버프 변화가 창을 다시 띄우지 않게 한다
+            if (TrayAllWindowsService.IsTrayed)
+                return;
+
             if (_settings.EnableBuffTrackerAlert && _tracker.HasAnyActiveBuffs)
             {
                 if (!IsVisible)
@@ -84,24 +90,44 @@ namespace TWChatOverlay.Views
         {
             if (!UiLockService.IsUnlocked) return;
             UiLockService.Select(this);
-            if (!_settings.ShowBuffTrackerWindow)
-                return;
-
             if (e.ButtonState != MouseButtonState.Pressed)
                 return;
 
             WindowDragBehavior.BeginDrag(this, e);
+
+            // 드래그가 끝난 현재 위치를 공유 설정에 저장하고 도우미 창과 동기화
+            _settings.SetBuffTrackerWindowPosition(Left, Top, notify: false);
+            var helper = BuffTrackerHelperWindow.Instance;
+            if (helper != null)
+            {
+                helper.Left = Left;
+                helper.Top = Top;
+            }
+            ConfigService.SaveDeferred(_settings);
+            e.Handled = true;
         }
 
+        /// <summary>평소에는 클릭 통과, 잠금 해제 모드에서는 잡고 끌 수 있게 통과를 해제한다.</summary>
         private void ApplyMousePassthroughStyle()
         {
             try
             {
                 IntPtr hwnd = new WindowInteropHelper(this).EnsureHandle();
-                int exStyle = NativeMethods.GetWindowLong(hwnd, NativeMethods.GWL_EXSTYLE);
-                NativeMethods.SetWindowLong(hwnd, NativeMethods.GWL_EXSTYLE, exStyle | NativeMethods.WS_EX_TRANSPARENT | NativeMethods.WS_EX_TOOLWINDOW);
+                int exStyle = NativeMethods.GetWindowLong(hwnd, NativeMethods.GWL_EXSTYLE) | NativeMethods.WS_EX_TOOLWINDOW;
+
+                if (UiLockService.IsUnlocked)
+                    exStyle &= ~NativeMethods.WS_EX_TRANSPARENT;
+                else
+                    exStyle |= NativeMethods.WS_EX_TRANSPARENT;
+
+                NativeMethods.SetWindowLong(hwnd, NativeMethods.GWL_EXSTYLE, exStyle);
             }
             catch { }
+        }
+
+        private void OnUnlockChanged(bool unlocked)
+        {
+            try { Dispatcher.Invoke(ApplyMousePassthroughStyle); } catch { }
         }
 
         private void BringToFront()

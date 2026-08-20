@@ -14,37 +14,38 @@
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
 
-        <!-- 버프 타일: 아이콘(이중 테두리) + 아래 남은 시간. 판 없이 아이콘만 떠 있는 형태. -->
+        <!-- 버프 타일: 아이콘 + 오른쪽에 남은 시간. 판 위에 올려 게임 화면과 상관없이 읽힌다. -->
         <DataTemplate x:Key="BuffTileTemplate">
-            <StackPanel Margin="3,0,3,0" ToolTip="{Binding DisplayName}">
-                <Border Background="#FF060A08"
-                        BorderBrush="#FF060A08"
-                        BorderThickness="1"
-                        CornerRadius="2">
-                    <Border BorderBrush="{Binding AccentBrush}"
-                            BorderThickness="1"
-                            CornerRadius="1"
-                            Background="{DynamicResource OverlayBuffTileBackgroundBrush}">
-                        <Image Source="{Binding IconSource}"
-                               Width="30"
-                               Height="30"
-                               Stretch="Uniform"/>
-                    </Border>
+            <StackPanel Orientation="Horizontal"
+                        Margin="0,0,12,0"
+                        ToolTip="{Binding DisplayName}">
+                <Border Width="26"
+                        Height="26"
+                        CornerRadius="5"
+                        Background="{DynamicResource OverlayBuffTileBackgroundBrush}"
+                        BorderBrush="{Binding AccentBrush}"
+                        BorderThickness="1">
+                    <Image Source="{Binding IconSource}"
+                           Stretch="Uniform"
+                           Margin="2"/>
                 </Border>
                 <TextBlock Text="{Binding RemainingText}"
-                           Foreground="{DynamicResource OverlayInfoTextBrush}"
-                           FontSize="11"
+                           Foreground="{DynamicResource TextBrush}"
+                           FontSize="13"
                            FontWeight="SemiBold"
-                           HorizontalAlignment="Center"
-                           Margin="0,2,0,0"/>
+                           VerticalAlignment="Center"
+                           Margin="7,0,0,0"/>
             </StackPanel>
         </DataTemplate>
     </Window.Resources>
 
-    <!-- 배경은 드래그 히트 영역 확보용 (거의 투명) -->
-    <Border Background="#01000000"
-            Padding="4"
+    <Border Background="{DynamicResource OverlayWindowBackgroundBrush}"
+            BorderBrush="{DynamicResource OverlayWindowBorderBrush}"
+            BorderThickness="1"
+            CornerRadius="8"
+            Padding="10,7"
             MouseLeftButtonDown="RootBorder_MouseLeftButtonDown">
+        <!-- 레어/경험치 구분은 아이콘 테두리 색(골드/하늘색)이 대신한다 — 머리글 없이 한 줄로 -->
         <StackPanel Orientation="Horizontal">
             <ItemsControl ItemsSource="{Binding ActiveRareBuffs}"
                           ItemTemplate="{StaticResource BuffTileTemplate}"

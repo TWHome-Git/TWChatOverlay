@@ -25,8 +25,6 @@
             </Grid.ColumnDefinitions>
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
-                <RowDefinition Height="8"/>
-                <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
 
             <StackPanel Grid.Column="0" Grid.Row="0">
@@ -76,14 +74,6 @@
                                Margin="6,0,0,0"/>
                 </StackPanel>
             </StackPanel>
-
-            <TextBlock Grid.Row="2"
-                       Grid.ColumnSpan="3"
-                       Text="드래그해서 실제 버프 추적 위치를 맞추세요"
-                       Foreground="{DynamicResource OverlayHintTextBrush}"
-                       FontSize="11"
-                       HorizontalAlignment="Center"
-                       TextAlignment="Center"/>
         </Grid>
     </Border>
 </Window>
