@@ -38,7 +38,6 @@ namespace TWChatOverlay.Views
                 this.Height = newHeight;
                 _settings.WindowHeight = newHeight;
             }
-            ChatWindowHub.TryApplyMagneticSnap(this);
             PersistCurrentMainWindowPosition();
         }
 
@@ -51,7 +50,6 @@ namespace TWChatOverlay.Views
                 this.Width = newWidth;
                 _settings.WindowWidth = newWidth;
             }
-            ChatWindowHub.TryApplyMagneticSnap(this);
             PersistCurrentMainWindowPosition();
         }
 
@@ -63,7 +61,6 @@ namespace TWChatOverlay.Views
                 this.Width = newWidth;
                 _settings.WindowWidth = newWidth;
             }
-            ChatWindowHub.TryApplyMagneticSnap(this);
             PersistCurrentMainWindowPosition();
         }
 
