@@ -98,7 +98,7 @@ namespace TWChatOverlay.Views
 
             Content = panel;
             VerticalAlignment = VerticalAlignment.Center;
-            ToolTip = "오버레이 투명도 (100% = 뒤가 비치지 않음)";
+            ToolTip = "오버레이 투명도";
 
             // 제목 표시줄의 창 이동(DragMove) 핸들러로 클릭이 새어나가지 않게 막는다.
             AddHandler(MouseLeftButtonDownEvent, new MouseButtonEventHandler(OnMouseLeftButtonDown), true);
@@ -174,7 +174,7 @@ namespace TWChatOverlay.Views
         {
             string percent = Math.Round(_slider.Value).ToString("F0") + "%";
             _valueText.Text = percent;
-            ToolTip = $"오버레이 투명도 {percent} (100% = 뒤가 비치지 않음)";
+            ToolTip = $"오버레이 투명도 {percent}";
         }
 
         private void OnMouseLeftButtonDown(object sender, MouseButtonEventArgs e)

@@ -162,8 +162,14 @@ namespace TWChatOverlay.Views
         }
 
         private void DragBar_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+            => UnlockDrag_MouseLeftButtonDown(sender, e);
+
+        // 잠금 해제 모드에서는 창 어디를 잡아도 선택+드래그 가능
+        // (DragBar는 평소 Collapsed라 창 전체(Preview)에서 받는다)
+        private void UnlockDrag_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
             if (!UiLockService.IsUnlocked) return;
+            UiLockService.Select(this);
             if (e.ButtonState != MouseButtonState.Pressed)
                 return;
 
@@ -177,6 +183,7 @@ namespace TWChatOverlay.Views
 
             UpdateRightAnchorFromCurrentBounds();
             PersistPosition();
+            e.Handled = true;
         }
 
         /// <summary>
