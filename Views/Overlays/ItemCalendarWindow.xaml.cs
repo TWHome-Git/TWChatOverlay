@@ -896,9 +896,9 @@ namespace TWChatOverlay.Views
         private void Close_Click(object sender, RoutedEventArgs e)
             => Close();
 
+        // 달력 창은 잠금 모드와 무관하게 항상 이동 가능
         private void TitleBar_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
-            if (!UiLockService.IsUnlocked) return;
             if (e.ButtonState == MouseButtonState.Pressed)
                 DragMove();
         }

@@ -55,7 +55,7 @@ namespace TWChatOverlay.Views
             }
             else
             {
-                if (!UiLockService.IsUnlocked) return;
+                // 메모 창은 잠금 모드와 무관하게 항상 이동 가능
                 DragMove();
             }
         }
