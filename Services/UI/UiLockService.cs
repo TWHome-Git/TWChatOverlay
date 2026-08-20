@@ -429,7 +429,6 @@ namespace TWChatOverlay.Services
             private readonly System.Windows.Controls.Primitives.RepeatButton _btnDown;
             private readonly System.Windows.Controls.Primitives.RepeatButton _btnLeft;
             private readonly System.Windows.Controls.Primitives.RepeatButton _btnRight;
-            private readonly TextBlock _nameText;
             private readonly TextBlock _positionText;
             private readonly TextBox _widthBox;
             private readonly TextBox _heightBox;
@@ -458,23 +457,15 @@ namespace TWChatOverlay.Services
                 Topmost = true;
                 ResizeMode = ResizeMode.NoResize;
 
-                _nameText = new TextBlock
+                _positionText = new TextBlock
                 {
-                    FontSize = 13,
+                    FontSize = 11,
                     FontWeight = FontWeights.Bold,
                     Foreground = new SolidColorBrush(Mint),
                     VerticalAlignment = VerticalAlignment.Center,
                 };
-                _positionText = new TextBlock
-                {
-                    FontSize = 11,
-                    Foreground = new SolidColorBrush(SubTextCol),
-                    VerticalAlignment = VerticalAlignment.Center,
-                    Margin = new Thickness(8, 0, 0, 0),
-                };
 
                 var header = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 0, 0, 6) };
-                header.Children.Add(_nameText);
                 header.Children.Add(_positionText);
 
                 // 가로/세로 크기 입력
@@ -594,8 +585,6 @@ namespace TWChatOverlay.Services
             public void SetTarget(Window target)
             {
                 _target = target;
-                _nameText.Text = GetFriendlyName(target);
-
                 // SizeToContent 창은 내용이 크기를 결정하므로 수치 입력을 막는다
                 bool canResize = target.SizeToContent == SizeToContent.Manual;
                 _widthBox.IsEnabled = canResize;
