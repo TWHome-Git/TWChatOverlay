@@ -75,14 +75,10 @@ namespace TWChatOverlay.Services
                 Focusable = false;
 
                 var root = new Grid();
-                // 살짝 회색빛 딤 — 격자가 눈에 띄도록 (과하지 않게 아주 옅게)
+                // 배경은 완전 투명, 격자만 표시
                 root.Children.Add(new System.Windows.Shapes.Rectangle
                 {
-                    Fill = new SolidColorBrush(Color.FromArgb(0x1E, 0x18, 0x1B, 0x1A))
-                });
-                root.Children.Add(new System.Windows.Shapes.Rectangle
-                {
-                    Opacity = 0.45,
+                    Opacity = 0.5,
                     Fill = CreateGridBrush()
                 });
                 Content = root;
@@ -170,8 +166,8 @@ namespace TWChatOverlay.Services
 
             private static DrawingBrush CreateGridBrush()
             {
-                var line = Color.FromArgb(0x58, 0x0C, 0xD2, 0x9D);
-                var pen = new Pen(new SolidColorBrush(line), 1);
+                var line = Color.FromArgb(0x70, 0x0C, 0xD2, 0x9D);
+                var pen = new Pen(new SolidColorBrush(line), 2);
                 var drawing = new GeometryDrawing
                 {
                     Pen = pen,
