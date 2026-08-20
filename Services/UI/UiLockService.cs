@@ -91,6 +91,7 @@ namespace TWChatOverlay.Services
             {
                 WindowStyle = WindowStyle.None;
                 AllowsTransparency = true;
+                Background = Brushes.Transparent; // 기본값(흰색)이 깔리면 화면 전체가 불투명해짐
                 ShowInTaskbar = false;
                 ShowActivated = false;
                 Topmost = true;
