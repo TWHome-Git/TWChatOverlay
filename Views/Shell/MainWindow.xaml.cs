@@ -214,6 +214,7 @@ namespace TWChatOverlay.Views
             this.StateChanged += (_, _) => Dispatcher.BeginInvoke(new Action(EnsureMainWindowTopmost), DispatcherPriority.Background);
             this.IsVisibleChanged += (_, _) => Dispatcher.BeginInvoke(new Action(EnsureMainWindowTopmost), DispatcherPriority.Background);
             this.Closed += MainWindow_Closed;
+            UiLockService.UnlockChanged += OnUiUnlockChanged;
             AppLogger.Info("Main window initialized.");
 
             ShowStartupLoadingWindow();
@@ -225,6 +226,7 @@ namespace TWChatOverlay.Views
         private void MainWindow_Closed(object? sender, EventArgs e)
         {
             
+            try { UiLockService.UnlockChanged -= OnUiUnlockChanged; } catch { }
             try { _mainTabAutoHideTimer.Stop(); } catch { }
             try
             {

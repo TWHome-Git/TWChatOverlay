@@ -265,6 +265,12 @@
                         <WrapPanel>
                             <Border Style="{StaticResource SettingsRowStyle}">
                                 <DockPanel>
+                                    <CheckBox DockPanel.Dock="Right" IsChecked="{Binding Clone1Enabled}" Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
+                                    <TextBlock Text="사용" Style="{StaticResource SettingsRowLabelStyle}"/>
+                                </DockPanel>
+                            </Border>
+                            <Border Style="{StaticResource SettingsRowStyle}">
+                                <DockPanel>
                                     <CheckBox DockPanel.Dock="Right" IsChecked="{Binding Clone1FollowMainFont}" Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
                                     <TextBlock Text="메인 폰트 따라가기" Style="{StaticResource SettingsRowLabelStyle}"/>
                                 </DockPanel>
@@ -293,6 +299,12 @@
 
                         <TextBlock Text="서브 채팅창 2" Style="{StaticResource SettingsSectionLabelStyle}"/>
                         <WrapPanel>
+                            <Border Style="{StaticResource SettingsRowStyle}">
+                                <DockPanel>
+                                    <CheckBox DockPanel.Dock="Right" IsChecked="{Binding Clone2Enabled}" Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
+                                    <TextBlock Text="사용" Style="{StaticResource SettingsRowLabelStyle}"/>
+                                </DockPanel>
+                            </Border>
                             <Border Style="{StaticResource SettingsRowStyle}">
                                 <DockPanel>
                                     <CheckBox DockPanel.Dock="Right" IsChecked="{Binding Clone2FollowMainFont}" Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
