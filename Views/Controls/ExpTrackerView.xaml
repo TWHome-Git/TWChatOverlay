@@ -9,18 +9,18 @@
         <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
     </UserControl.Resources>
     <Border Background="{DynamicResource OverlayPanelBackgroundBrush}"
-            CornerRadius="5"
+            CornerRadius="6"
             BorderBrush="{DynamicResource OverlayPanelBorderBrush}"
             BorderThickness="1"
-            Padding="10,4"
-            Height="28">
+            Padding="14,6"
+            Height="91">
         <DockPanel LastChildFill="True" VerticalAlignment="Center">
             <Button DockPanel.Dock="Right"
                     Foreground="{DynamicResource FieldLabelTextBrush}"
-                    FontSize="14"
-                    Margin="5,-8,0,0"
-                    Width="16"
-                    Height="16"
+                    FontSize="18"
+                    Margin="6,-10,0,0"
+                    Width="22"
+                    Height="22"
                     Cursor="Hand"
                     VerticalAlignment="Center"
                     Command="{Binding ResetExpCommand}"
@@ -46,21 +46,21 @@
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
                 <TextBlock Text="{Binding TotalExpDisplay}"
                            Foreground="{DynamicResource OverlayRareAccentBrush}"
-                           FontSize="13"
+                           FontSize="21"
                            FontWeight="Bold"
                            VerticalAlignment="Center"/>
                 <TextBlock Text="{Binding LastGainedExpDisplay}"
                            Foreground="{DynamicResource OverlaySuccessAccentBrush}"
-                           FontSize="11"
+                           FontSize="17"
                            FontWeight="SemiBold"
-                           Margin="8,1,0,0"
+                           Margin="10,1,0,0"
                            VerticalAlignment="Center"
                            Visibility="{Binding HasLastExp, Converter={StaticResource BooleanToVisibilityConverter}}"/>
                 <TextBlock Text="{Binding GainCountDisplay}"
                            Foreground="{DynamicResource OverlayExpAccentBrush}"
-                           FontSize="12"
+                           FontSize="19"
                            FontWeight="SemiBold"
-                           Margin="6,0,0,0"
+                           Margin="8,0,0,0"
                            VerticalAlignment="Center"
                            Visibility="{Binding ShowGainCountDisplay, Converter={StaticResource BooleanToVisibilityConverter}}"/>
             </StackPanel>
