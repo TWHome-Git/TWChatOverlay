@@ -10,7 +10,6 @@
         AllowsTransparency="True"
         Width="380"
         Height="180"
-        TextOptions.TextFormattingMode="Display"
         WindowStartupLocation="CenterScreen">
     <Window.Resources>
         <!-- EUI 스타일 진행 바: 어두운 트랙 + 민트 채움 -->

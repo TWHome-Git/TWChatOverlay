@@ -52,8 +52,6 @@ namespace TWChatOverlay.Views
                     continue;
 
                 window.FontFamily = nextFont;
-                // 채팅창과 동일한 텍스트 렌더링 모드로 통일 (굴림 등 비트맵계 폰트의 창별 이질감 방지)
-                TextOptions.SetTextFormattingMode(window, TextFormattingMode.Display);
             }
 
             // NOTE: 과거에는 여기서 MainBorder.Background를 불투명 색으로 덮어썼는데,

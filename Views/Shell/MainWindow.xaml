@@ -10,8 +10,7 @@
         MinHeight="100" MinWidth="538"
         WindowStyle="None" AllowsTransparency="True" Topmost="True"
         Background="Transparent"
-        ResizeMode="NoResize"
-        TextOptions.TextFormattingMode="Display">
+        ResizeMode="NoResize">
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
     </Window.Resources>
