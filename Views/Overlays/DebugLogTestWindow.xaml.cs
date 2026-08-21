@@ -106,16 +106,6 @@ namespace TWChatOverlay.Views
                 DebugLogInputTextBox?.Clear();
         }
 
-        private void CoreDungeonTwoLineTestButton_Click(object sender, RoutedEventArgs e)
-            => InjectTwoLineDebugLog(
-                "보스 몬스터를 퇴치하세요.",
-                "던전을 클리어 하였습니다. 곧 마을로 돌아가게 됩니다.");
-
-        private void OrlyDefenseTwoLineTestButton_Click(object sender, RoutedEventArgs e)
-            => InjectTwoLineDebugLog(
-                "남은 공격 횟수 : 1",
-                "[경험의 정수] 아이템을 획득하였습니다.");
-
         private void LoadSampleLogs()
         {
             _sampleLogs.Clear();
@@ -149,6 +139,11 @@ namespace TWChatOverlay.Views
             AddSampleText("수색대장, 에토스 : 암호는 갈퀴 모양 갈고리", DebugLogCategory.Normal);
             AddSampleText("수색대장, 에토스 : 암호는 파도", DebugLogCategory.Normal);
             AddSampleText("수색대장, 에토스 : 암호는 파도 모양 번개", DebugLogCategory.Normal);
+
+            // 2줄 컨텐츠 완료 프리셋 — 두 줄이 순서대로 주입되어 체크 흐름을 검증한다
+            AddSampleHeader("2줄 컨텐츠 테스트 프리셋", DebugLogCategory.System);
+            AddSampleText("보스 몬스터를 퇴치하세요.\n던전을 클리어 하였습니다. 곧 마을로 돌아가게 됩니다.", DebugLogCategory.System);
+            AddSampleText("남은 공격 횟수 : 1\n[경험의 정수] 아이템을 획득하였습니다.", DebugLogCategory.System);
         }
 
         private void AddSampleHeader(string text, DebugLogCategory category)
@@ -172,13 +167,6 @@ namespace TWChatOverlay.Views
 
             while (_recentLogs.Count > 12)
                 _recentLogs.RemoveAt(_recentLogs.Count - 1);
-        }
-
-        private void InjectTwoLineDebugLog(string firstLine, string secondLine)
-        {
-            SelectCategory(DebugLogCategory.System);
-            string rawText = string.Join(Environment.NewLine, firstLine, secondLine);
-            InjectDebugLogPayload(rawText, DebugLogCategory.System);
         }
 
         private bool InjectDebugLogPayload(string rawText, DebugLogCategory category)
@@ -237,15 +225,30 @@ namespace TWChatOverlay.Views
             DebugLogInputTextBox.Focus();
         }
 
+        /// <summary>샘플 더블클릭 = 해당 분류로 즉시 주입.</summary>
         private void SampleLogsListBox_MouseDoubleClick(object sender, MouseButtonEventArgs e)
         {
             if (SampleLogsListBox.SelectedItem is not DebugSampleLogItem item || item.IsHeader || string.IsNullOrWhiteSpace(item.Text))
                 return;
 
             SelectCategory(item.Category);
-            DebugLogInputTextBox.Text = item.Text;
-            DebugLogInputTextBox.CaretIndex = DebugLogInputTextBox.Text.Length;
-            DebugLogInputTextBox.Focus();
+            InjectDebugLogPayload(item.Text, item.Category);
+        }
+
+        /// <summary>샘플 행의 [복사] 버튼 — 텍스트를 클립보드로 복사.</summary>
+        private void SampleCopy_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is not Button button || button.Tag is not DebugSampleLogItem item || string.IsNullOrWhiteSpace(item.Text))
+                return;
+
+            try
+            {
+                Clipboard.SetText(item.Text);
+            }
+            catch
+            {
+                // 클립보드가 일시적으로 잠겨 있으면 무시
+            }
         }
 
         private sealed record DebugSampleLogItem(string Text, DebugLogCategory Category, bool IsHeader)
