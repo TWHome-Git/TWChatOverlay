@@ -145,7 +145,11 @@ namespace TWChatOverlay.Models
             ["달빛변환장치"] = "달빛_변환_장치.png",
             ["세크리드룬스톤"] = "세크리드_룬스톤.png",
             ["세크리드주화"] = "세크리드_주화.png",
+            ["세크주머니"] = "세크리드_주화_주머니.png",
             ["에모티스"] = "에모티스.png",
+            // 장비류는 표시명이 묶음이라 대표 아이콘(소드) 사용
+            ["어비스장비"] = "어비스_소드.png",
+            ["이클립스장비"] = "이클립스_소드.png",
             ["아크론문양"] = "아크론_요새의_문양.png",
             ["변환장비"] = "아크론_요새의_변환_장치.png",
 
@@ -223,7 +227,8 @@ namespace TWChatOverlay.Models
         {
             ItemDropGrade.Special => new SolidColorBrush(Color.FromRgb(0xFF, 0x7E, 0xDB)),
             ItemDropGrade.Rare => new SolidColorBrush(Color.FromRgb(0xFF, 0xD8, 0x4A)),
-            _ => new SolidColorBrush(Color.FromRgb(0x4E, 0x57, 0x60))
+            // 일반 등급도 테두리가 보이도록 밝은 회백색
+            _ => new SolidColorBrush(Color.FromRgb(0xB4, 0xBB, 0xC2))
         };
     }
 
