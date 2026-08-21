@@ -398,6 +398,30 @@ namespace TWChatOverlay.Models
         }
 
         /// <summary>
+        /// 아이템명(원본 또는 표시명)으로 아이콘 pack URI를 찾는다. 토스트 등 다른 화면에서도 사용.
+        /// 원본명으로 못 찾으면 줄임 표시명(abbr)으로 한 번 더 시도한다.
+        /// </summary>
+        public static string? GetIconUri(string? name)
+        {
+            if (string.IsNullOrWhiteSpace(name))
+                return null;
+
+            string? uri = ResolveIconUri(name);
+            if (uri != null)
+                return uri;
+
+            try
+            {
+                string display = DropItemResolver.GetTrackedItemDisplayName(name);
+                if (!string.Equals(display, name, StringComparison.Ordinal))
+                    return ResolveIconUri(display);
+            }
+            catch { }
+
+            return null;
+        }
+
+        /// <summary>
         /// 원본 아이템명에 전용 아이콘이 있으면 원본명을 그대로 표시하고
         /// (예: '이클립스 장비' 대신 '이클립스 부츠'), 없으면 줄임 표시명(abbr)을 쓴다.
         /// </summary>

@@ -15,16 +15,22 @@
             BorderThickness="1.2"
             CornerRadius="8"
             Padding="12,6">
-        <Grid>
-            <TextBlock Grid.Column="0"
-                       x:Name="ItemNameText"
+        <StackPanel Orientation="Horizontal"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center">
+            <Image x:Name="ItemIcon"
+                   Width="28"
+                   Height="28"
+                   Margin="0,0,8,0"
+                   Stretch="Uniform"
+                   VerticalAlignment="Center"
+                   Visibility="Collapsed"/>
+            <TextBlock x:Name="ItemNameText"
                        Foreground="{DynamicResource TextBrush}"
                        FontSize="16"
                        FontWeight="SemiBold"
                        TextTrimming="CharacterEllipsis"
-                       TextAlignment="Center"
-                       HorizontalAlignment="Center"
                        VerticalAlignment="Center"/>
-        </Grid>
+        </StackPanel>
     </Border>
 </Window>
