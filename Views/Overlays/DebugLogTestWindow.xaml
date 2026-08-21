@@ -60,11 +60,28 @@
                     BorderThickness="1"
                     CornerRadius="2"
                     Padding="8"
-                    Margin="0,0,0,6">
-                <TextBlock Text="{Binding Text}"
-                           TextWrapping="Wrap"
-                           FontSize="12"
-                           Foreground="{Binding Foreground}"/>
+                    Margin="0,0,0,6"
+                    ToolTip="더블클릭하면 바로 주입됩니다">
+                <DockPanel LastChildFill="True">
+                    <Button x:Name="CopyButton"
+                            DockPanel.Dock="Right"
+                            Content="복사"
+                            Height="20"
+                            MinWidth="36"
+                            Padding="6,0"
+                            FontSize="10"
+                            Margin="8,0,0,0"
+                            VerticalAlignment="Center"
+                            Tag="{Binding}"
+                            Click="SampleCopy_Click"
+                            Style="{DynamicResource SecondaryButtonStyle}"
+                            ToolTip="텍스트 복사"/>
+                    <TextBlock Text="{Binding Text}"
+                               TextWrapping="Wrap"
+                               FontSize="12"
+                               VerticalAlignment="Center"
+                               Foreground="{Binding Foreground}"/>
+                </DockPanel>
             </Border>
             <DataTemplate.Triggers>
                 <DataTrigger Binding="{Binding IsHeader}" Value="True">
@@ -75,6 +92,8 @@
                     <Setter TargetName="ItemBorder" Property="BorderThickness" Value="0"/>
                     <Setter TargetName="ItemBorder" Property="IsHitTestVisible" Value="False"/>
                     <Setter TargetName="ItemBorder" Property="Cursor" Value="Arrow"/>
+                    <Setter TargetName="ItemBorder" Property="ToolTip" Value="{x:Null}"/>
+                    <Setter TargetName="CopyButton" Property="Visibility" Value="Collapsed"/>
                 </DataTrigger>
             </DataTemplate.Triggers>
         </DataTemplate>
@@ -87,8 +106,8 @@
             Padding="12">
         <Grid>
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="2.1*"/>
-                <ColumnDefinition Width="1.2*"/>
+                <ColumnDefinition Width="1*"/>
+                <ColumnDefinition Width="1*"/>
             </Grid.ColumnDefinitions>
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
@@ -124,122 +143,10 @@
                 </Grid>
             </Border>
 
-            <Border Grid.Row="1"
-                    Grid.Column="0"
-                    Margin="0,0,10,0"
-                    Background="{DynamicResource OverlayShellBackgroundBrush}"
-                    CornerRadius="4"
-                    Padding="10">
-                <StackPanel>
-                    <TextBlock Text="주입 패널"
-                               Foreground="{DynamicResource TextBrush}"
-                               FontSize="14"
-                               FontWeight="SemiBold"
-                               Margin="0,0,0,8"/>
-
-                    <TextBlock Text="분류"
-                               Foreground="{DynamicResource OverlaySubtleTextBrush}"
-                               FontSize="12"
-                               Margin="0,0,0,4"/>
-                    <WrapPanel Margin="0,0,0,10">
-                        <RadioButton x:Name="NormalRadio"
-                                     Content="일반"
-                                     Tag="Normal"
-                                     GroupName="DebugCategory"
-                                     Style="{StaticResource DebugCategoryRadioStyle}"
-                                     Checked="DebugCategoryRadio_Checked"/>
-                        <RadioButton x:Name="TeamRadio"
-                                     Content="팀"
-                                     Tag="Team"
-                                     GroupName="DebugCategory"
-                                     Style="{StaticResource DebugCategoryRadioStyle}"
-                                     Checked="DebugCategoryRadio_Checked"/>
-                        <RadioButton x:Name="ClubRadio"
-                                     Content="클럽"
-                                     Tag="Club"
-                                     GroupName="DebugCategory"
-                                     Style="{StaticResource DebugCategoryRadioStyle}"
-                                     Checked="DebugCategoryRadio_Checked"/>
-                        <RadioButton x:Name="SystemRadio"
-                                     Content="시스템"
-                                     Tag="System"
-                                     GroupName="DebugCategory"
-                                     Style="{StaticResource DebugCategoryRadioStyle}"
-                                     Checked="DebugCategoryRadio_Checked"/>
-                        <RadioButton x:Name="ShoutRadio"
-                                     Content="외치기"
-                                     Tag="Shout"
-                                     GroupName="DebugCategory"
-                                     Style="{StaticResource DebugCategoryRadioStyle}"
-                                     Checked="DebugCategoryRadio_Checked"/>
-                    </WrapPanel>
-
-                    <TextBlock Text="주입할 로그"
-                               Foreground="{DynamicResource OverlaySubtleTextBrush}"
-                               FontSize="12"
-                               Margin="0,0,0,4"/>
-                    <TextBox x:Name="DebugLogInputTextBox"
-                             Height="220"
-                             Margin="0,0,0,8"
-                             Background="{DynamicResource OverlaySurfaceBackgroundBrush}"
-                             Foreground="{DynamicResource TextBrush}"
-                             BorderBrush="{DynamicResource OverlayStrongBorderBrush}"
-                             BorderThickness="1"
-                             AcceptsReturn="True"
-                             TextWrapping="Wrap"
-                             VerticalScrollBarVisibility="Auto"
-                             HorizontalScrollBarVisibility="Disabled"/>
-
-                    <Button Content="테스트 로그 주입"
-                            Height="34"
-                            Click="InjectDebugLogButton_Click"
-                            Style="{StaticResource SecondaryButtonStyle}"
-                            FontSize="12"/>
-
-                    <Border Margin="0,12,0,0"
-                            Background="{DynamicResource OverlayCardBackgroundBrush}"
-                            BorderBrush="{DynamicResource OverlayCardBorderBrush}"
-                            BorderThickness="1"
-                            CornerRadius="3"
-                            Padding="10">
-                        <StackPanel>
-                            <TextBlock Text="2줄 컨텐츠 테스트 프리셋"
-                                       Foreground="{DynamicResource OverlayInfoTextBrush}"
-                                       FontSize="12"
-                                       FontWeight="SemiBold"
-                                       Margin="0,0,0,4"/>
-                            <TextBlock Text="두 줄짜리 완료 로그를 순서대로 넣어 체크 흐름을 검증합니다."
-                                       Foreground="{DynamicResource OverlaySubtleTextBrush}"
-                                       FontSize="11"
-                                       Margin="0,0,0,8"/>
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="*"/>
-                                </Grid.ColumnDefinitions>
-                                <Button Grid.Column="0"
-                                        Content="코어 던전 완료"
-                                        Height="34"
-                                        Margin="0,0,6,0"
-                                        Click="CoreDungeonTwoLineTestButton_Click"
-                                        Style="{StaticResource SecondaryButtonStyle}"
-                                        FontSize="12"/>
-                                <Button Grid.Column="1"
-                                        Content="오를리 완료"
-                                        Height="34"
-                                        Margin="6,0,0,0"
-                                        Click="OrlyDefenseTwoLineTestButton_Click"
-                                        Style="{StaticResource SecondaryButtonStyle}"
-                                        FontSize="12"/>
-                            </Grid>
-                        </StackPanel>
-                    </Border>
-                </StackPanel>
-            </Border>
-
-            <Grid Grid.Row="1" Grid.Column="1">
+            <!-- 왼쪽: 주입 패널(그룹) + 그 아래 최근 주입 로그 -->
+            <Grid Grid.Row="1" Grid.Column="0" Margin="0,0,10,0">
                 <Grid.RowDefinitions>
-                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
                     <RowDefinition Height="*"/>
                 </Grid.RowDefinitions>
 
@@ -248,6 +155,78 @@
                         CornerRadius="4"
                         Padding="10"
                         Margin="0,0,0,10">
+                    <StackPanel>
+                        <TextBlock Text="주입 패널"
+                                   Foreground="{DynamicResource TextBrush}"
+                                   FontSize="14"
+                                   FontWeight="SemiBold"
+                                   Margin="0,0,0,8"/>
+
+                        <TextBlock Text="분류"
+                                   Foreground="{DynamicResource OverlaySubtleTextBrush}"
+                                   FontSize="12"
+                                   Margin="0,0,0,4"/>
+                        <WrapPanel Margin="0,0,0,10">
+                            <RadioButton x:Name="NormalRadio"
+                                         Content="일반"
+                                         Tag="Normal"
+                                         GroupName="DebugCategory"
+                                         Style="{StaticResource DebugCategoryRadioStyle}"
+                                         Checked="DebugCategoryRadio_Checked"/>
+                            <RadioButton x:Name="TeamRadio"
+                                         Content="팀"
+                                         Tag="Team"
+                                         GroupName="DebugCategory"
+                                         Style="{StaticResource DebugCategoryRadioStyle}"
+                                         Checked="DebugCategoryRadio_Checked"/>
+                            <RadioButton x:Name="ClubRadio"
+                                         Content="클럽"
+                                         Tag="Club"
+                                         GroupName="DebugCategory"
+                                         Style="{StaticResource DebugCategoryRadioStyle}"
+                                         Checked="DebugCategoryRadio_Checked"/>
+                            <RadioButton x:Name="SystemRadio"
+                                         Content="시스템"
+                                         Tag="System"
+                                         GroupName="DebugCategory"
+                                         Style="{StaticResource DebugCategoryRadioStyle}"
+                                         Checked="DebugCategoryRadio_Checked"/>
+                            <RadioButton x:Name="ShoutRadio"
+                                         Content="외치기"
+                                         Tag="Shout"
+                                         GroupName="DebugCategory"
+                                         Style="{StaticResource DebugCategoryRadioStyle}"
+                                         Checked="DebugCategoryRadio_Checked"/>
+                        </WrapPanel>
+
+                        <TextBlock Text="주입할 로그"
+                                   Foreground="{DynamicResource OverlaySubtleTextBrush}"
+                                   FontSize="12"
+                                   Margin="0,0,0,4"/>
+                        <TextBox x:Name="DebugLogInputTextBox"
+                                 Height="96"
+                                 Margin="0,0,0,8"
+                                 Background="{DynamicResource OverlaySurfaceBackgroundBrush}"
+                                 Foreground="{DynamicResource TextBrush}"
+                                 BorderBrush="{DynamicResource OverlayStrongBorderBrush}"
+                                 BorderThickness="1"
+                                 AcceptsReturn="True"
+                                 TextWrapping="Wrap"
+                                 VerticalScrollBarVisibility="Auto"
+                                 HorizontalScrollBarVisibility="Disabled"/>
+
+                        <Button Content="테스트 로그 주입"
+                                Height="32"
+                                Click="InjectDebugLogButton_Click"
+                                Style="{StaticResource SecondaryButtonStyle}"
+                                FontSize="12"/>
+                    </StackPanel>
+                </Border>
+
+                <Border Grid.Row="1"
+                        Background="{DynamicResource OverlayShellBackgroundBrush}"
+                        CornerRadius="4"
+                        Padding="10">
                     <DockPanel>
                         <TextBlock DockPanel.Dock="Top"
                                    Text="최근 주입 로그"
@@ -263,28 +242,37 @@
                                  MouseDoubleClick="RecentLogsListBox_MouseDoubleClick"/>
                     </DockPanel>
                 </Border>
-
-                <Border Grid.Row="1"
-                        Background="{DynamicResource OverlayShellBackgroundBrush}"
-                        CornerRadius="4"
-                        Padding="10">
-                    <DockPanel>
-                        <TextBlock DockPanel.Dock="Top"
-                                   Text="샘플 문구"
-                                   Foreground="{DynamicResource TextBrush}"
-                                   FontSize="14"
-                                   FontWeight="SemiBold"
-                                   Margin="0,0,0,8"/>
-                        <ListBox x:Name="SampleLogsListBox"
-                                 Background="{DynamicResource OverlayCardBackgroundBrush}"
-                                 BorderBrush="{DynamicResource OverlayStrongBorderBrush}"
-                                 Foreground="{DynamicResource TextBrush}"
-                                 ItemTemplate="{StaticResource SampleLogTemplate}"
-                                 ScrollViewer.VerticalScrollBarVisibility="Auto"
-                                 MouseDoubleClick="SampleLogsListBox_MouseDoubleClick"/>
-                    </DockPanel>
-                </Border>
             </Grid>
+
+            <!-- 오른쪽: 샘플 문구 (더블클릭 = 즉시 주입, 복사 버튼 = 클립보드) -->
+            <Border Grid.Row="1"
+                    Grid.Column="1"
+                    Background="{DynamicResource OverlayShellBackgroundBrush}"
+                    CornerRadius="4"
+                    Padding="10">
+                <DockPanel>
+                    <TextBlock DockPanel.Dock="Top"
+                               Text="샘플 문구"
+                               Foreground="{DynamicResource TextBrush}"
+                               FontSize="14"
+                               FontWeight="SemiBold"
+                               Margin="0,0,0,2"/>
+                    <TextBlock DockPanel.Dock="Top"
+                               Text="더블클릭하면 해당 분류로 바로 주입됩니다"
+                               Foreground="{DynamicResource OverlaySubtleTextBrush}"
+                               FontSize="11"
+                               Margin="0,0,0,8"/>
+                    <ListBox x:Name="SampleLogsListBox"
+                             Background="{DynamicResource OverlayCardBackgroundBrush}"
+                             BorderBrush="{DynamicResource OverlayStrongBorderBrush}"
+                             Foreground="{DynamicResource TextBrush}"
+                             ItemTemplate="{StaticResource SampleLogTemplate}"
+                             HorizontalContentAlignment="Stretch"
+                             ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                             ScrollViewer.VerticalScrollBarVisibility="Auto"
+                             MouseDoubleClick="SampleLogsListBox_MouseDoubleClick"/>
+                </DockPanel>
+            </Border>
         </Grid>
     </Border>
 </Window>
