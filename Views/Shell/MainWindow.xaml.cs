@@ -214,6 +214,9 @@ namespace TWChatOverlay.Views
             this.StateChanged += MainWindow_StateChanged;
             this.StateChanged += (_, _) => Dispatcher.BeginInvoke(new Action(EnsureMainWindowTopmost), DispatcherPriority.Background);
             this.IsVisibleChanged += (_, _) => Dispatcher.BeginInvoke(new Action(EnsureMainWindowTopmost), DispatcherPriority.Background);
+            // Owned 창(서브 채팅창)은 메인 창의 Closed보다 먼저 닫히므로,
+            // Closing 시점에 종료를 표시해야 "사용자가 닫음"으로 오인해 IsOpen=false를 저장하지 않는다
+            this.Closing += (_, _) => ChatWindowHub.BeginShutdown();
             this.Closed += MainWindow_Closed;
             UiLockService.UnlockChanged += OnUiUnlockChanged;
             UiLockService.WindowAdjusted += OnUnlockWindowAdjusted;
@@ -946,6 +949,7 @@ namespace TWChatOverlay.Views
                 });
 
                 AppLogger.Info("Restarting application after initial setup wizard completion.");
+                ChatWindowHub.BeginShutdown();
                 Application.Current.Shutdown();
             }
             catch (Exception ex)
