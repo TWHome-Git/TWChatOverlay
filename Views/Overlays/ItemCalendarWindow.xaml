@@ -2,6 +2,7 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:views="clr-namespace:TWChatOverlay.Views"
+        xmlns:converters="clr-namespace:TWChatOverlay.Converters"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d"
@@ -19,6 +20,7 @@
         Loaded="Window_Loaded">
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
+        <converters:AddValueConverter x:Key="AddValueConverter"/>
         <Style x:Key="CalendarTitleButtonStyle" TargetType="Button" BasedOn="{StaticResource SecondaryButtonStyle}">
             <Setter Property="Height" Value="28"/>
             <Setter Property="Padding" Value="8,4"/>
@@ -74,6 +76,22 @@
                                    TextTrimming="CharacterEllipsis"
                                    VerticalAlignment="Center"/>
                         <views:OverlayOpacityChip GroupKey="Calendar" SliderWidth="52" ShowValueText="False" Margin="0,0,8,0"/>
+                        <!-- 본문 폰트 크기 (일일/주간 컨텐츠 창과 동일한 방식) -->
+                        <Slider Width="70"
+                                Minimum="10"
+                                Maximum="28"
+                                TickFrequency="1"
+                                IsSnapToTickEnabled="True"
+                                VerticalAlignment="Center"
+                                Margin="0,0,5,0"
+                                ToolTip="폰트 크기"
+                                Value="{Binding ItemCalendarFontSize, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                        <TextBlock Text="{Binding ItemCalendarFontSizeDisplay}"
+                                   Foreground="{DynamicResource OverlayInfoTextBrush}"
+                                   FontSize="11"
+                                   FontWeight="SemiBold"
+                                   VerticalAlignment="Center"
+                                   Margin="0,0,8,0"/>
                         <!-- 닫기 버튼과 동일한 크기/폰트 -->
                         <Button Content="갱신"
                                 Margin="0,0,6,0"
@@ -144,7 +162,7 @@
                                                     Padding="6,4">
                                                 <TextBlock Text="{Binding DateLabel}"
                                                            Foreground="{DynamicResource TextBrush}"
-                                                           FontSize="10"
+                                                           FontSize="{Binding DataContext.ItemCalendarFontSize, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource AddValueConverter}, ConverterParameter=-1}"
                                                            FontWeight="Bold"
                                                            VerticalAlignment="Center"/>
                                             </Border>
@@ -167,7 +185,7 @@
                                                                     Margin="0,0,0,4">
                                                                 <TextBlock Text="{Binding DisplayText}"
                                                                            Foreground="{DynamicResource TextBrush}"
-                                                                           FontSize="11"
+                                                                           FontSize="{Binding DataContext.ItemCalendarFontSize, RelativeSource={RelativeSource AncestorType=Window}}"
                                                                            FontWeight="SemiBold"
                                                                            TextWrapping="NoWrap"
                                                                            TextTrimming="CharacterEllipsis"/>
@@ -185,7 +203,7 @@
                                                        Margin="0,0,0,0"
                                                        VerticalAlignment="Bottom"
                                                        Foreground="{DynamicResource OverlayExpAccentBrush}"
-                                                       FontSize="10"
+                                                       FontSize="{Binding DataContext.ItemCalendarFontSize, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource AddValueConverter}, ConverterParameter=-1}"
                                                        FontWeight="SemiBold"
                                                        Text="{Binding ExperienceEssenceText}"
                                                        Visibility="{Binding HasExperienceEssence, Converter={StaticResource BooleanToVisibilityConverter}}"/>
@@ -235,7 +253,7 @@
                                 <StackPanel>
                                     <TextBlock Text="어밴던 누적 합계"
                                                Foreground="{DynamicResource TextBrush}"
-                                               FontSize="12"
+                                               FontSize="{Binding ItemCalendarFontSize, Converter={StaticResource AddValueConverter}, ConverterParameter=1}"
                                                FontWeight="SemiBold"
                                                Margin="0,0,0,8"/>
 
@@ -247,7 +265,7 @@
                                             Margin="0,0,0,8">
                                         <TextBlock Text="{Binding MonthlyAbandonSeedText}"
                                                    Foreground="{DynamicResource OverlayExpAccentBrush}"
-                                                   FontSize="11"
+                                                   FontSize="{Binding ItemCalendarFontSize}"
                                                    FontWeight="SemiBold"
                                                    TextTrimming="CharacterEllipsis"/>
                                     </Border>
@@ -272,13 +290,13 @@
                                                                    VerticalAlignment="Center"/>
                                                             <TextBlock Text="{Binding DisplayName}"
                                                                        Foreground="{Binding NameForegroundHex}"
-                                                                       FontSize="11"
+                                                                       FontSize="{Binding DataContext.ItemCalendarFontSize, RelativeSource={RelativeSource AncestorType=Window}}"
                                                                        FontWeight="SemiBold"
                                                                        TextTrimming="CharacterEllipsis"/>
                                                         </StackPanel>
                                                         <TextBlock Text="{Binding CountText}"
                                                                    Foreground="{Binding CountForegroundHex}"
-                                                                   FontSize="11"
+                                                                   FontSize="{Binding DataContext.ItemCalendarFontSize, RelativeSource={RelativeSource AncestorType=Window}}"
                                                                    FontWeight="Bold"
                                                                    HorizontalAlignment="Right"
                                                                    DockPanel.Dock="Right"/>
@@ -303,7 +321,7 @@
                                 <StackPanel>
                                     <TextBlock Text="아이템 득템 누적 합계"
                                                Foreground="{DynamicResource TextBrush}"
-                                               FontSize="12"
+                                               FontSize="{Binding ItemCalendarFontSize, Converter={StaticResource AddValueConverter}, ConverterParameter=1}"
                                                FontWeight="SemiBold"
                                                Margin="0,0,0,8"/>
 
@@ -319,13 +337,13 @@
                                                     <DockPanel LastChildFill="False">
                                                         <TextBlock Text="{Binding DisplayName}"
                                                                    Foreground="{DynamicResource TextBrush}"
-                                                                   FontSize="11"
+                                                                   FontSize="{Binding DataContext.ItemCalendarFontSize, RelativeSource={RelativeSource AncestorType=Window}}"
                                                                    FontWeight="SemiBold"
                                                                    TextTrimming="CharacterEllipsis"
                                                                    DockPanel.Dock="Left"/>
                                                         <TextBlock Text="{Binding Count, StringFormat=x{0:N0}}"
                                                                    Foreground="{DynamicResource OverlayInfoTextBrush}"
-                                                                   FontSize="11"
+                                                                   FontSize="{Binding DataContext.ItemCalendarFontSize, RelativeSource={RelativeSource AncestorType=Window}}"
                                                                    FontWeight="Bold"
                                                                    HorizontalAlignment="Right"
                                                                    DockPanel.Dock="Right"/>
@@ -351,7 +369,7 @@
                                 <StackPanel>
                                     <TextBlock Text="경험의 정수 누적 합계"
                                                Foreground="{DynamicResource TextBrush}"
-                                               FontSize="12"
+                                               FontSize="{Binding ItemCalendarFontSize, Converter={StaticResource AddValueConverter}, ConverterParameter=1}"
                                                FontWeight="SemiBold"
                                                Margin="0,0,0,8"/>
 
@@ -371,7 +389,7 @@
                                                        VerticalAlignment="Center"/>
                                                 <TextBlock Text="{Binding MonthlyExperienceEssenceSeedText}"
                                                            Foreground="{DynamicResource OverlayExpAccentBrush}"
-                                                           FontSize="11"
+                                                           FontSize="{Binding ItemCalendarFontSize}"
                                                            FontWeight="SemiBold"
                                                            TextTrimming="CharacterEllipsis"/>
                                             </StackPanel>
