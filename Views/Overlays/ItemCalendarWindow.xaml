@@ -193,7 +193,8 @@
                                                                                FontSize="12"
                                                                                FontWeight="SemiBold"
                                                                                VerticalAlignment="Center"
-                                                                               Margin="3,0,0,0"/>
+                                                                               Margin="3,0,0,0"
+                                                                               Visibility="{Binding ShowCountBadge, Converter={StaticResource BooleanToVisibilityConverter}}"/>
                                                                     <TextBlock x:Name="EntryText"
                                                                                Text="{Binding DisplayText}"
                                                                                Foreground="{DynamicResource TextBrush}"
@@ -203,22 +204,33 @@
                                                                                TextTrimming="CharacterEllipsis"
                                                                                VerticalAlignment="Center"
                                                                                Visibility="Collapsed"/>
-                                                                    <!-- 이미지는 남는 공간을 최대한 사용 -->
-                                                                    <Image x:Name="EntryIcon"
-                                                                           Source="{Binding IconUri}"
-                                                                           Stretch="Uniform"
-                                                                           MaxHeight="48"
-                                                                           VerticalAlignment="Center"/>
+                                                                    <!-- 이미지(또는 글자 대체 표기)는 남는 공간을 최대한 사용 -->
+                                                                    <Grid>
+                                                                        <Image x:Name="EntryIcon"
+                                                                               Source="{Binding IconUri}"
+                                                                               Stretch="Uniform"
+                                                                               MaxHeight="48"
+                                                                               VerticalAlignment="Center"/>
+                                                                        <TextBlock x:Name="EntryGlyph"
+                                                                                   Text="{Binding FallbackGlyph}"
+                                                                                   Foreground="{DynamicResource TextBrush}"
+                                                                                   FontSize="20"
+                                                                                   FontWeight="Bold"
+                                                                                   HorizontalAlignment="Center"
+                                                                                   VerticalAlignment="Center"
+                                                                                   Visibility="Collapsed"/>
+                                                                    </Grid>
                                                                 </DockPanel>
                                                             </Border>
                                                             <DataTemplate.Triggers>
                                                                 <DataTrigger Binding="{Binding HasIcon}" Value="False">
                                                                     <Setter TargetName="EntryIcon" Property="Visibility" Value="Collapsed"/>
-                                                                    <Setter TargetName="EntryCount" Property="Visibility" Value="Collapsed"/>
                                                                     <Setter TargetName="EntryText" Property="Visibility" Value="Visible"/>
                                                                 </DataTrigger>
-                                                                <DataTrigger Binding="{Binding ShowCountBadge}" Value="False">
-                                                                    <Setter TargetName="EntryCount" Property="Visibility" Value="Collapsed"/>
+                                                                <!-- 이미지가 없어도 글자 대체 표기가 있으면 [테] 형식으로 -->
+                                                                <DataTrigger Binding="{Binding HasGlyph}" Value="True">
+                                                                    <Setter TargetName="EntryGlyph" Property="Visibility" Value="Visible"/>
+                                                                    <Setter TargetName="EntryText" Property="Visibility" Value="Collapsed"/>
                                                                 </DataTrigger>
                                                             </DataTemplate.Triggers>
                                                         </DataTemplate>
