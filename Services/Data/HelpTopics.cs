@@ -32,21 +32,12 @@ namespace TWChatOverlay.Services
             ["chat.id.club_boss"] = ("클럽 보스 메시지", PlaceholderBody),
             ["chat.id.timestamp"] = ("타임 스탬프", PlaceholderBody),
 
-            // 폰트
-            ["chat.font.family"] = ("폰트 종류", PlaceholderBody),
-            ["chat.font.size"] = ("폰트 크기", PlaceholderBody),
+            // 폰트 (섹션 단위)
+            ["chat.font"] = ("폰트", PlaceholderBody),
 
-            // 서브 채팅창 1
-            ["chat.clone1.enabled"] = ("서브 채팅창 1 사용", PlaceholderBody),
-            ["chat.clone1.follow"] = ("메인 폰트 따라가기", PlaceholderBody),
-            ["chat.clone1.font"] = ("서브 채팅창 1 폰트", PlaceholderBody),
-            ["chat.clone1.size"] = ("서브 채팅창 1 크기", PlaceholderBody),
-
-            // 서브 채팅창 2
-            ["chat.clone2.enabled"] = ("서브 채팅창 2 사용", PlaceholderBody),
-            ["chat.clone2.follow"] = ("메인 폰트 따라가기", PlaceholderBody),
-            ["chat.clone2.font"] = ("서브 채팅창 2 폰트", PlaceholderBody),
-            ["chat.clone2.size"] = ("서브 채팅창 2 크기", PlaceholderBody),
+            // 서브 채팅창 (섹션 단위)
+            ["chat.clone1"] = ("서브 채팅창 1", PlaceholderBody),
+            ["chat.clone2"] = ("서브 채팅창 2", PlaceholderBody),
         };
     }
 }
