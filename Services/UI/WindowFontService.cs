@@ -33,6 +33,8 @@ namespace TWChatOverlay.Services
                 return;
 
             window.FontFamily = ResolveCurrentFont();
+            // 잠금 해제 인스펙터에서 지정한 창별 투명도 복원
+            UiLockService.ApplyStoredOpacity(window);
         }
 
         public static void Apply(FrameworkElement element)
