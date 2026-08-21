@@ -94,6 +94,19 @@ namespace TWChatOverlay.Views
         public ObservableCollection<ItemCalendarEntryViewModel> MonthlySummary => _monthlySummary;
         public ObservableCollection<AbandonMonthlyStoneSummaryEntryViewModel> MonthlyAbandonSummary => _monthlyAbandonSummary;
 
+        /// <summary>날짜 칸 아이템을 그림으로 볼지(true) 텍스트로 볼지(false).</summary>
+        public bool UseIconDisplay
+        {
+            get => _settings.ItemCalendarUseIcons;
+            set
+            {
+                if (_settings.ItemCalendarUseIcons == value) return;
+                _settings.ItemCalendarUseIcons = value;
+                OnPropertyChanged(nameof(UseIconDisplay));
+                ConfigService.SaveDeferred(_settings);
+            }
+        }
+
         /// <summary>달력 본문 기준 폰트 크기 (헤더 슬라이더로 조절, 10~28).</summary>
         public double ItemCalendarFontSize
         {
