@@ -82,6 +82,7 @@ namespace TWChatOverlay.Views
 
             InitializeComponent();
             WindowFontService.Apply(this);
+            OsSnapGuard.Disable(this); // 상단 드래그 시 OS 스냅(최대화) 차단
             DataContext = this;
 
             _currentMonthStart = GetMonthStart(DateTime.Today);
