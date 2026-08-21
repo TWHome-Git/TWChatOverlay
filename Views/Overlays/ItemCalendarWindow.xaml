@@ -183,6 +183,30 @@
                                                           VerticalAlignment="Stretch"
                                                           Padding="0,0,0,20">
                                                 <ItemsControl ItemsSource="{Binding Entries}">
+                                                    <ItemsControl.Style>
+                                                        <Style TargetType="ItemsControl">
+                                                            <!-- 텍스트 모드: 한 줄에 1개 -->
+                                                            <Setter Property="ItemsPanel">
+                                                                <Setter.Value>
+                                                                    <ItemsPanelTemplate>
+                                                                        <UniformGrid Columns="1"/>
+                                                                    </ItemsPanelTemplate>
+                                                                </Setter.Value>
+                                                            </Setter>
+                                                            <Style.Triggers>
+                                                                <!-- 그림 모드: 한 줄에 2개 -->
+                                                                <DataTrigger Binding="{Binding DataContext.UseIconDisplay, RelativeSource={RelativeSource AncestorType=Window}}" Value="True">
+                                                                    <Setter Property="ItemsPanel">
+                                                                        <Setter.Value>
+                                                                            <ItemsPanelTemplate>
+                                                                                <UniformGrid Columns="2"/>
+                                                                            </ItemsPanelTemplate>
+                                                                        </Setter.Value>
+                                                                    </Setter>
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </ItemsControl.Style>
                                                     <ItemsControl.ItemTemplate>
                                                         <!-- 아이콘이 있는 아이템은 이미지(+개수), 없는 아이템은 기존 텍스트 -->
                                                         <DataTemplate>
@@ -244,12 +268,12 @@
                                                                             </Style>
                                                                         </TextBlock.Style>
                                                                     </TextBlock>
-                                                                    <!-- 이미지(또는 글자 대체 표기)는 남는 공간을 최대한 사용 -->
+                                                                    <!-- 높이 고정: 모든 아이콘 칩이 동일한 크기로 표시 -->
                                                                     <Grid>
                                                                         <Image x:Name="EntryIcon"
                                                                                Source="{Binding IconUri}"
                                                                                Stretch="Uniform"
-                                                                               MaxHeight="48"
+                                                                               Height="36"
                                                                                VerticalAlignment="Center">
                                                                             <Image.Style>
                                                                                 <Style TargetType="Image">
@@ -291,12 +315,6 @@
                                                             </Border>
                                                         </DataTemplate>
                                                     </ItemsControl.ItemTemplate>
-                                                    <ItemsControl.ItemsPanel>
-                                                        <ItemsPanelTemplate>
-                                                            <!-- 한 줄에 아이템 2개 -->
-                                                            <UniformGrid Columns="2"/>
-                                                        </ItemsPanelTemplate>
-                                                    </ItemsControl.ItemsPanel>
                                                 </ItemsControl>
                                             </ScrollViewer>
                                             <StackPanel Grid.Row="1"
