@@ -118,8 +118,11 @@ namespace TWChatOverlay.Views
             };
         }
 
-        /// <summary>도움말 창을 열거나(이미 열려 있으면 내용 교체) 지정한 주제를 표시한다.</summary>
-        public static void ShowTopic(string key, Window? owner = null)
+        /// <summary>
+        /// 도움말 창을 열거나(이미 열려 있으면 내용 교체) 지정한 주제를 표시한다.
+        /// anchor(DIP 화면 좌표)가 주어지면 그 위치([?] 버튼 옆)에 띄운다.
+        /// </summary>
+        public static void ShowTopic(string key, Window? owner = null, Point? anchor = null)
         {
             try
             {
@@ -133,9 +136,27 @@ namespace TWChatOverlay.Views
                 _instance._titleText.Text = title;
                 _instance._bodyText.Text = body;
 
-                if (!_instance.IsVisible)
+                if (anchor.HasValue)
                 {
-                    // 소유 창(설정 창) 오른쪽 옆에 표시, 없으면 화면 중앙
+                    // [?] 버튼 옆 배치 — 화면 밖으로 나가면 반대쪽으로
+                    double screenRight = SystemParameters.VirtualScreenLeft + SystemParameters.VirtualScreenWidth;
+                    double screenBottom = SystemParameters.VirtualScreenTop + SystemParameters.VirtualScreenHeight;
+                    const double EstimatedHeight = 220;
+
+                    double left = anchor.Value.X;
+                    if (left + _instance.Width > screenRight)
+                        left = anchor.Value.X - _instance.Width - 24;
+
+                    double top = anchor.Value.Y;
+                    if (top + EstimatedHeight > screenBottom)
+                        top = Math.Max(SystemParameters.VirtualScreenTop, screenBottom - EstimatedHeight);
+
+                    _instance.Left = left;
+                    _instance.Top = top;
+                }
+                else if (!_instance.IsVisible)
+                {
+                    // 앵커가 없으면 소유 창(설정 창) 오른쪽 옆, 없으면 화면 중앙
                     if (owner?.IsVisible == true)
                     {
                         double left = owner.Left + owner.ActualWidth + 10;
@@ -150,7 +171,10 @@ namespace TWChatOverlay.Views
                         _instance.Left = (SystemParameters.PrimaryScreenWidth - _instance.Width) / 2.0;
                         _instance.Top = SystemParameters.PrimaryScreenHeight / 3.0;
                     }
+                }
 
+                if (!_instance.IsVisible)
+                {
                     _instance.Show();
                 }
 
