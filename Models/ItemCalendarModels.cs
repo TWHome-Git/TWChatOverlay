@@ -349,6 +349,7 @@ namespace TWChatOverlay.Models
             Grade = grade;
             Count = Math.Max(1, count);
             IconUri = ResolveIconUri(displayName);
+            FallbackGlyph = ResolveFallbackGlyph(displayName);
         }
 
         public string DisplayName { get; }
@@ -360,8 +361,22 @@ namespace TWChatOverlay.Models
         /// <summary>아이콘 이미지가 있으면 pack URI, 없으면 null(텍스트로 표시).</summary>
         public string? IconUri { get; }
         public bool HasIcon => IconUri != null;
-        public bool ShowCountBadge => HasIcon;
+
+        /// <summary>이미지가 없는 아이템의 한 글자 대체 표기 (예: 테네브리스 → "테").</summary>
+        public string? FallbackGlyph { get; }
+        public bool HasGlyph => !HasIcon && FallbackGlyph != null;
+
+        public bool ShowCountBadge => HasIcon || HasGlyph;
         public string CountBadgeText => $"x{Count:N0}";
+
+        private static string? ResolveFallbackGlyph(string displayName)
+        {
+            // 테네브리스 장비: 아직 이미지를 구할 수 없어 임시로 [테] 글자 표기
+            if (!string.IsNullOrEmpty(displayName) && displayName.StartsWith("테네브리스", StringComparison.Ordinal))
+                return "테";
+
+            return null;
+        }
 
         private static string? ResolveIconUri(string displayName)
         {
