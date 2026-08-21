@@ -1064,6 +1064,54 @@ namespace TWChatOverlay.Models
             }
         }
 
+        private double _dungeonCountDisplayFontSize = 18.0;
+
+        /// <summary>던전 카운트 알림창 본문 폰트 크기.</summary>
+        [JsonPropertyOrder(414)]
+        public double DungeonCountDisplayFontSize
+        {
+            get => _dungeonCountDisplayFontSize;
+            set
+            {
+                double clamped = Math.Max(10.0, Math.Min(40.0, value));
+                if (Math.Abs(_dungeonCountDisplayFontSize - clamped) < 0.0001) return;
+                _dungeonCountDisplayFontSize = clamped;
+                OnPropertyChanged();
+            }
+        }
+
+        private double _experienceAlertFontSize = 16.0;
+
+        /// <summary>경험치 누적 알림창 본문 폰트 크기.</summary>
+        [JsonPropertyOrder(415)]
+        public double ExperienceAlertFontSize
+        {
+            get => _experienceAlertFontSize;
+            set
+            {
+                double clamped = Math.Max(10.0, Math.Min(40.0, value));
+                if (Math.Abs(_experienceAlertFontSize - clamped) < 0.0001) return;
+                _experienceAlertFontSize = clamped;
+                OnPropertyChanged();
+            }
+        }
+
+        private double _itemDropToastFontSize = 16.0;
+
+        /// <summary>아이템 드롭 알림 토스트 폰트 크기.</summary>
+        [JsonPropertyOrder(416)]
+        public double ItemDropToastFontSize
+        {
+            get => _itemDropToastFontSize;
+            set
+            {
+                double clamped = Math.Max(10.0, Math.Min(40.0, value));
+                if (Math.Abs(_itemDropToastFontSize - clamped) < 0.0001) return;
+                _itemDropToastFontSize = clamped;
+                OnPropertyChanged();
+            }
+        }
+
         private double _itemCalendarFontSize = 11.0;
 
         /// <summary>달력(아이템 획득 내역) 본문 기준 폰트 크기. 헤더의 슬라이더로 조절.</summary>

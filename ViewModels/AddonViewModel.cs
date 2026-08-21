@@ -244,6 +244,28 @@ namespace TWChatOverlay.ViewModels
             set => SetSetting(ref _showBuffTrackerWindow, value, (settings, newValue) => settings.ShowBuffTrackerWindow = newValue);
         }
 
+        private double _dungeonCountDisplayFontSize;
+        private double _experienceAlertFontSize;
+        private double _itemDropToastFontSize;
+
+        public double DungeonCountDisplayFontSize
+        {
+            get => _dungeonCountDisplayFontSize;
+            set => SetSetting(ref _dungeonCountDisplayFontSize, value, (settings, newValue) => settings.DungeonCountDisplayFontSize = newValue);
+        }
+
+        public double ExperienceAlertFontSize
+        {
+            get => _experienceAlertFontSize;
+            set => SetSetting(ref _experienceAlertFontSize, value, (settings, newValue) => settings.ExperienceAlertFontSize = newValue);
+        }
+
+        public double ItemDropToastFontSize
+        {
+            get => _itemDropToastFontSize;
+            set => SetSetting(ref _itemDropToastFontSize, value, (settings, newValue) => settings.ItemDropToastFontSize = newValue);
+        }
+
         public double ItemDropAlertVolumePercent
         {
             get => _itemDropAlertVolumePercent;
@@ -326,6 +348,9 @@ namespace TWChatOverlay.ViewModels
             _enableBuffTrackerEndSound = _settings.EnableBuffTrackerEndSound;
             _showBuffTrackerWindow = _settings.ShowBuffTrackerWindow;
             _itemDropAlertVolumePercent = _settings.ItemDropAlertVolumePercent;
+            _dungeonCountDisplayFontSize = _settings.DungeonCountDisplayFontSize;
+            _experienceAlertFontSize = _settings.ExperienceAlertFontSize;
+            _itemDropToastFontSize = _settings.ItemDropToastFontSize;
             _highlightAlertVolumePercent = _settings.HighlightAlertVolumePercent;
             _magicCircleAlertVolumePercent = _settings.MagicCircleAlertVolumePercent;
             _reflectionPatternAlertVolumePercent = _settings.ReflectionPatternAlertVolumePercent;

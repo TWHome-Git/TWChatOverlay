@@ -763,6 +763,15 @@
                             <Border Style="{StaticResource SettingsRowStyle}">
                                 <DockPanel>
                                     <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                                        <Slider Minimum="10" Maximum="40" Value="{Binding ExperienceAlertFontSize, Mode=TwoWay}" TickFrequency="1" IsSnapToTickEnabled="True" VerticalAlignment="Center" Width="140"/>
+                                        <TextBlock Text="{Binding ExperienceAlertFontSize, StringFormat={}{0:F0}}" Foreground="{DynamicResource TextBrush}" Width="26" TextAlignment="Right" VerticalAlignment="Center" FontSize="12"/>
+                                    </StackPanel>
+                                    <TextBlock Text="누적 알림 폰트 크기" Style="{StaticResource SettingsRowLabelStyle}"/>
+                                </DockPanel>
+                            </Border>
+                            <Border Style="{StaticResource SettingsRowStyle}">
+                                <DockPanel>
+                                    <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
                                         <Slider Width="120" Minimum="0" Maximum="100" TickFrequency="10" IsSnapToTickEnabled="True" VerticalAlignment="Center"
                                                 Tag="EXPBuffCheck.wav" ValueChanged="PreviewSoundSlider_ValueChanged"
                                                 Value="{Binding ExpBuffAlertVolumePercent, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
@@ -846,6 +855,15 @@
                                     <TextBlock Text="알림 창 지속시간(초)" Style="{StaticResource SettingsRowLabelStyle}" ToolTip="1~300초"/>
                                 </DockPanel>
                             </Border>
+                            <Border Style="{StaticResource SettingsRowStyle}">
+                                <DockPanel>
+                                    <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                                        <Slider Minimum="10" Maximum="40" Value="{Binding DungeonCountDisplayFontSize, Mode=TwoWay}" TickFrequency="1" IsSnapToTickEnabled="True" VerticalAlignment="Center" Width="140"/>
+                                        <TextBlock Text="{Binding DungeonCountDisplayFontSize, StringFormat={}{0:F0}}" Foreground="{DynamicResource TextBrush}" Width="26" TextAlignment="Right" VerticalAlignment="Center" FontSize="12"/>
+                                    </StackPanel>
+                                    <TextBlock Text="던전 카운트 폰트 크기" Style="{StaticResource SettingsRowLabelStyle}"/>
+                                </DockPanel>
+                            </Border>
                         </WrapPanel>
                     </StackPanel>
 
@@ -868,6 +886,15 @@
                                         <TextBlock Text="{Binding ItemDropAlertVolumePercent, StringFormat={}{0:F0}%}" Foreground="{DynamicResource TextBrush}" Width="34" TextAlignment="Right" VerticalAlignment="Center" FontSize="12"/>
                                     </StackPanel>
                                     <TextBlock Text="알림 볼륨" Style="{StaticResource SettingsRowLabelStyle}"/>
+                                </DockPanel>
+                            </Border>
+                            <Border Style="{StaticResource SettingsRowStyle}">
+                                <DockPanel>
+                                    <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                                        <Slider Minimum="10" Maximum="40" Value="{Binding ItemDropToastFontSize, Mode=TwoWay}" TickFrequency="1" IsSnapToTickEnabled="True" VerticalAlignment="Center" Width="140"/>
+                                        <TextBlock Text="{Binding ItemDropToastFontSize, StringFormat={}{0:F0}}" Foreground="{DynamicResource TextBrush}" Width="26" TextAlignment="Right" VerticalAlignment="Center" FontSize="12"/>
+                                    </StackPanel>
+                                    <TextBlock Text="알림 폰트 크기" Style="{StaticResource SettingsRowLabelStyle}"/>
                                 </DockPanel>
                             </Border>
                         </WrapPanel>
