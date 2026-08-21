@@ -176,37 +176,73 @@
                                                           Padding="0,0,0,20">
                                                 <ItemsControl ItemsSource="{Binding Entries}">
                                                     <ItemsControl.ItemTemplate>
+                                                        <!-- 아이콘이 있는 아이템은 이미지(+개수), 없는 아이템은 기존 텍스트 -->
                                                         <DataTemplate>
                                                             <Border Background="{DynamicResource OverlayCardBackgroundBrush}"
                                                                     BorderBrush="{Binding BorderBrush}"
                                                                     BorderThickness="1"
                                                                     CornerRadius="2"
-                                                                    Padding="6,4"
-                                                                    Margin="0,0,0,4">
-                                                                <TextBlock Text="{Binding DisplayText}"
-                                                                           Foreground="{DynamicResource TextBrush}"
-                                                                           FontSize="{Binding DataContext.ItemCalendarFontSize, RelativeSource={RelativeSource AncestorType=Window}}"
-                                                                           FontWeight="SemiBold"
-                                                                           TextWrapping="NoWrap"
-                                                                           TextTrimming="CharacterEllipsis"/>
+                                                                    Padding="4,3"
+                                                                    Margin="0,0,4,4"
+                                                                    ToolTip="{Binding DisplayText}">
+                                                                <StackPanel Orientation="Horizontal">
+                                                                    <Image x:Name="EntryIcon"
+                                                                           Source="{Binding IconUri}"
+                                                                           Width="18"
+                                                                           Height="18"
+                                                                           VerticalAlignment="Center"/>
+                                                                    <TextBlock x:Name="EntryCount"
+                                                                               Text="{Binding CountBadgeText}"
+                                                                               Foreground="{DynamicResource TextBrush}"
+                                                                               FontSize="{Binding DataContext.ItemCalendarFontSize, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource AddValueConverter}, ConverterParameter=-1}"
+                                                                               FontWeight="SemiBold"
+                                                                               VerticalAlignment="Center"
+                                                                               Margin="3,0,0,0"/>
+                                                                    <TextBlock x:Name="EntryText"
+                                                                               Text="{Binding DisplayText}"
+                                                                               Foreground="{DynamicResource TextBrush}"
+                                                                               FontSize="{Binding DataContext.ItemCalendarFontSize, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                                               FontWeight="SemiBold"
+                                                                               TextWrapping="NoWrap"
+                                                                               TextTrimming="CharacterEllipsis"
+                                                                               Visibility="Collapsed"/>
+                                                                </StackPanel>
                                                             </Border>
+                                                            <DataTemplate.Triggers>
+                                                                <DataTrigger Binding="{Binding HasIcon}" Value="False">
+                                                                    <Setter TargetName="EntryIcon" Property="Visibility" Value="Collapsed"/>
+                                                                    <Setter TargetName="EntryCount" Property="Visibility" Value="Collapsed"/>
+                                                                    <Setter TargetName="EntryText" Property="Visibility" Value="Visible"/>
+                                                                </DataTrigger>
+                                                                <DataTrigger Binding="{Binding ShowCountBadge}" Value="False">
+                                                                    <Setter TargetName="EntryCount" Property="Visibility" Value="Collapsed"/>
+                                                                </DataTrigger>
+                                                            </DataTemplate.Triggers>
                                                         </DataTemplate>
                                                     </ItemsControl.ItemTemplate>
                                                     <ItemsControl.ItemsPanel>
                                                         <ItemsPanelTemplate>
-                                                            <StackPanel/>
+                                                            <WrapPanel Orientation="Horizontal"/>
                                                         </ItemsPanelTemplate>
                                                     </ItemsControl.ItemsPanel>
                                                 </ItemsControl>
                                             </ScrollViewer>
-                                            <TextBlock Grid.Row="1"
-                                                       Margin="0,0,0,0"
-                                                       VerticalAlignment="Bottom"
-                                                       Foreground="{DynamicResource OverlayExpAccentBrush}"
-                                                       FontSize="{Binding DataContext.ItemCalendarFontSize, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource AddValueConverter}, ConverterParameter=-1}"
-                                                       FontWeight="SemiBold"
-                                                       Text="{Binding ExperienceEssenceText}"
-                                                       Visibility="{Binding HasExperienceEssence, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                                            <StackPanel Grid.Row="1"
+                                                        Orientation="Horizontal"
+                                                        VerticalAlignment="Bottom"
+                                                        ToolTip="{Binding ExperienceEssenceText}"
+                                                        Visibility="{Binding HasExperienceEssence, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                                <Image Source="pack://application:,,,/Data/images/Item/경험의 정수.png"
+                                                       Width="16"
+                                                       Height="16"
+                                                       VerticalAlignment="Center"/>
+                                                <TextBlock Foreground="{DynamicResource OverlayExpAccentBrush}"
+                                                           FontSize="{Binding DataContext.ItemCalendarFontSize, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource AddValueConverter}, ConverterParameter=-1}"
+                                                           FontWeight="SemiBold"
+                                                           VerticalAlignment="Center"
+                                                           Margin="4,0,0,0"
+                                                           Text="{Binding ExperienceEssenceCount, StringFormat=x{0:N0}}"/>
+                                            </StackPanel>
                                         </Grid>
                                     </Border>
                                 </DataTemplate>
