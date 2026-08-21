@@ -1304,6 +1304,33 @@ namespace TWChatOverlay.Models
             }
         }
 
+        private double? _shoutReplayWindowWidth;
+        private double? _shoutReplayWindowHeight;
+
+        [JsonPropertyOrder(88)]
+        public double? ShoutReplayWindowWidth
+        {
+            get => _shoutReplayWindowWidth;
+            set
+            {
+                if (_shoutReplayWindowWidth == value) return;
+                _shoutReplayWindowWidth = value;
+                OnPropertyChanged();
+            }
+        }
+
+        [JsonPropertyOrder(89)]
+        public double? ShoutReplayWindowHeight
+        {
+            get => _shoutReplayWindowHeight;
+            set
+            {
+                if (_shoutReplayWindowHeight == value) return;
+                _shoutReplayWindowHeight = value;
+                OnPropertyChanged();
+            }
+        }
+
         [JsonPropertyOrder(87)]
         public double? MemoOverlayWindowLeft
         {

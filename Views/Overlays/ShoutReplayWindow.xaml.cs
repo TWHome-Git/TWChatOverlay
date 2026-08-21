@@ -82,12 +82,21 @@ namespace TWChatOverlay.Views
                 Left = _settings.ShoutReplayWindowLeft.Value;
                 Top = _settings.ShoutReplayWindowTop.Value;
             }
+
+            if (_settings.ShoutReplayWindowWidth.HasValue && _settings.ShoutReplayWindowWidth.Value >= MinWidth)
+                Width = _settings.ShoutReplayWindowWidth.Value;
+            if (_settings.ShoutReplayWindowHeight.HasValue && _settings.ShoutReplayWindowHeight.Value >= MinHeight)
+                Height = _settings.ShoutReplayWindowHeight.Value;
+
+            Services.OsSnapGuard.Disable(this); // 상단 드래그 시 OS 스냅(최대화) 차단
         }
 
         private void ShoutReplayWindow_Closing(object? sender, System.ComponentModel.CancelEventArgs e)
         {
             _settings.ShoutReplayWindowLeft = Left;
             _settings.ShoutReplayWindowTop = Top;
+            _settings.ShoutReplayWindowWidth = Width;
+            _settings.ShoutReplayWindowHeight = Height;
             ConfigService.SaveDeferred(_settings);
         }
 

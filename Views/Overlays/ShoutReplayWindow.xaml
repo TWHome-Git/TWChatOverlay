@@ -8,7 +8,7 @@
         MinWidth="620"
         Background="{DynamicResource OverlayShellBackgroundBrush}"
         WindowStyle="None"
-        ResizeMode="NoResize">
+        ResizeMode="CanResize">
     <Border Margin="10"
             Background="{DynamicResource OverlayShellBackgroundBrush}"
             BorderBrush="{DynamicResource OverlayCardBorderBrush}"
@@ -92,9 +92,9 @@
                                VerticalAlignment="Center"
                                Margin="0,0,8,0"
                                Foreground="{DynamicResource OverlaySubtleTextBrush}"/>
-                    <Button x:Name="BtnPrev" Content="&lt;" Width="34" Height="30" Margin="0,0,6,0" Click="Prev_Click"/>
-                    <Button x:Name="BtnDate" Content="-" Width="180" Height="30" Click="Date_Click"/>
-                    <Button x:Name="BtnNext" Content="&gt;" Width="34" Height="30" Margin="6,0,0,0" Click="Next_Click"/>
+                    <Button x:Name="BtnPrev" Content="&#x25C0;" Width="34" Height="30" Margin="0,0,6,0" Padding="0" FontSize="11" Style="{StaticResource SecondaryButtonStyle}" Click="Prev_Click"/>
+                    <Button x:Name="BtnDate" Content="-" Width="180" Height="30" Padding="0" FontSize="13" FontWeight="SemiBold" Style="{StaticResource SecondaryButtonStyle}" Click="Date_Click"/>
+                    <Button x:Name="BtnNext" Content="&#x25B6;" Width="34" Height="30" Margin="6,0,0,0" Padding="0" FontSize="11" Style="{StaticResource SecondaryButtonStyle}" Click="Next_Click"/>
                     <Popup x:Name="DatePopup" PlacementTarget="{Binding ElementName=BtnDate}" Placement="Bottom" StaysOpen="False">
                         <Border Background="{DynamicResource OverlaySurfaceBackgroundBrush}" BorderBrush="{DynamicResource OverlayCardBorderBrush}" BorderThickness="1" Padding="8">
                             <DatePicker x:Name="DatePickerLog" SelectedDateChanged="DatePickerLog_SelectedDateChanged"/>
