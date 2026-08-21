@@ -123,11 +123,73 @@ namespace TWChatOverlay.Models
 
     public sealed class ItemCalendarEntryViewModel
     {
-        // Data/images/Item 에 실제로 존재하는 아이콘 (파일명은 공백 없음)
-        private static readonly HashSet<string> KnownIconNames = new(StringComparer.Ordinal)
+        // 표시명(공백 제거) → Data/images/Item 파일명 매핑.
+        // 새 이미지를 추가하면 여기에 한 줄 등록하면 달력에 아이콘으로 표시된다.
+        private static readonly Dictionary<string, string> IconFilesByName = new(StringComparer.Ordinal)
         {
-            "경험의정수", "달의파편", "상급마정석", "시드", "신조의정수", "월광석",
-            "응축된신조의가루", "중급마정석", "최상급마정석", "코어가루", "코어결정", "하급마정석",
+            // 기본 재화/드롭
+            ["신조의정수"] = "신조의정수.png",
+            ["경험의정수"] = "경험의 정수.png",
+            ["월광석"] = "월광석.png",
+            ["달의파편"] = "달의파편.png",
+            ["응축된신조의가루"] = "응축된신조의가루.png",
+            ["코어가루"] = "코어가루.png",
+            ["코어결정"] = "코어결정.png",
+            ["시드"] = "시드.png",
+            ["하급마정석"] = "하급마정석.png",
+            ["중급마정석"] = "중급마정석.png",
+            ["상급마정석"] = "상급마정석.png",
+            ["최상급마정석"] = "최상급마정석.png",
+            ["갤럭시스톤"] = "갤럭시_스톤.png",
+            ["계승의결정체"] = "계승의_결정체.png",
+            ["달빛변환장치"] = "달빛_변환_장치.png",
+            ["세크리드룬스톤"] = "세크리드_룬스톤.png",
+            ["세크리드주화"] = "세크리드_주화.png",
+            ["에모티스"] = "에모티스.png",
+            ["아크론문양"] = "아크론_요새의_문양.png",
+            ["변환장비"] = "아크론_요새의_변환_장치.png",
+
+            // 가짜 달여왕 군단 시리즈
+            ["가짜각갑파편"] = "가짜_달여왕_군단의_각갑_파편.png",
+            ["가짜갑옷파편"] = "가짜_달여왕_군단의_갑옷_파편.png",
+            ["가짜건틀렛파편"] = "가짜_달여왕_군단의_건틀렛_파편.png",
+            ["가짜무기파편"] = "가짜_달여왕_군단의_무기_파편.png",
+            ["가짜문양"] = "가짜_달여왕_군단의_문양.png",
+            ["가짜방패조각"] = "가짜_달여왕_군단의_방패_조각.png",
+            ["가짜투구장식"] = "가짜_달여왕_군단의_투구_장식.png",
+            ["가짜펜던트장식"] = "가짜_달여왕_군단의_펜던트_파편.png",
+            ["가짜휘장장식"] = "가짜_달여왕_군단의_휘장_장식.png",
+
+            // 고대 기사 시리즈
+            ["고대각갑파편"] = "고대_기사의_각갑_파편.png",
+            ["고대갑옷파편"] = "고대_기사의_갑옷_파편.png",
+            ["고대건틀렛파편"] = "고대_기사의_건틀렛_조각.png",
+            ["고대방패조각"] = "고대_기사의_방패_조각.png",
+            ["고대투구파편"] = "고대_기사의_투구_파편.png",
+            ["고대펜던트파편"] = "고대_기사의_팬던트_파편.png",
+            ["고대휘장조각"] = "고대_기사의_휘장_조각.png",
+
+            // 아크론 요새 시리즈
+            ["요새가죽조각"] = "요새_문양이_새겨진_가죽_조각.png",
+            ["요새금속파편"] = "요새_문양이_새겨진_금속_파편.png",
+            ["요새목걸이조각"] = "요새_문양이_새겨진_목걸이_조각.png",
+            ["요새판금조각"] = "요새_문양이_새겨진_판금_조각.png",
+            ["요새보석파편"] = "요새_수호자의_보석_파편.png",
+            ["요새보호구조각"] = "요새_수호자의_보호구_조각.png",
+            ["요새부츠조각"] = "요새_수호자의_부츠_조각.png",
+            ["요새장식깃털"] = "요새_수호자의_장식_깃털.png",
+
+            // 어빌리티/연마 (사용자 제작 아이콘)
+            ["안식어빌리티"] = "안식.png",
+            ["야성어빌리티"] = "야성.png",
+            ["상실어빌리티"] = "상실.png",
+            ["렐릭부가재설정"] = "렐릭어빌.png",
+            ["렐릭어빌재설정"] = "렐릭어빌.png",
+            ["저격연마LV6"] = "저격연마.png",
+            ["저격연마LV7"] = "저격연마.png",
+            ["저격연마LV8"] = "저격연마.png",
+            ["저격연마LV9"] = "저격연마.png",
+            ["저격연마LV10"] = "저격연마.png",
         };
 
         public ItemCalendarEntryViewModel(string displayName, ItemDropGrade grade, int count)
@@ -153,12 +215,8 @@ namespace TWChatOverlay.Models
         {
             string normalized = (displayName ?? string.Empty).Replace(" ", "", StringComparison.Ordinal);
 
-            // "경험의 정수" 이미지는 파일명이 "경험의 정수.png"(공백 포함)라 별도 처리
-            if (normalized == "경험의정수")
-                return "pack://application:,,,/Data/images/Item/경험의 정수.png";
-
-            return KnownIconNames.Contains(normalized)
-                ? $"pack://application:,,,/Data/images/Item/{normalized}.png"
+            return IconFilesByName.TryGetValue(normalized, out string? fileName)
+                ? $"pack://application:,,,/Data/images/Item/{fileName}"
                 : null;
         }
         public Brush BorderBrush => Grade switch
