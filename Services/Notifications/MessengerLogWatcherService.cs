@@ -96,7 +96,7 @@ namespace TWChatOverlay.Services
                         string levelText = "정보 없음";
                         if (EtaProfileResolver.TryGetProfile(targetId, out var profile))
                             levelText = profile.Level.ToString();
-                        entries.Add($"{targetId} [{levelText}]");
+                        entries.Add($"{targetId}[{levelText}]");
                     }
 
                     AppLogger.Info($"Messenger toast dispatch start. File={fullPath}, Targets={entries.Count}");

@@ -101,6 +101,43 @@
             <Setter Property="MinWidth" Value="34"/>
         </Style>
 
+        <!-- 도움말 [?] 버튼: Tag에 도움말 키를 지정, Help_Click에서 HelpWindow 표시 -->
+        <Style x:Key="HelpButtonStyle" TargetType="Button">
+            <Setter Property="Width" Value="16"/>
+            <Setter Property="Height" Value="16"/>
+            <Setter Property="Margin" Value="7,0,0,0"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Focusable" Value="False"/>
+            <Setter Property="ToolTip" Value="설명 보기"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Bd"
+                                Background="Transparent"
+                                BorderBrush="{DynamicResource OverlayHintTextBrush}"
+                                BorderThickness="1"
+                                CornerRadius="8">
+                            <TextBlock x:Name="Glyph"
+                                       Text="?"
+                                       FontSize="10"
+                                       FontWeight="Bold"
+                                       Foreground="{DynamicResource OverlayHintTextBrush}"
+                                       HorizontalAlignment="Center"
+                                       VerticalAlignment="Center"
+                                       Margin="0,-1,0,0"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource OverlayAccentTextBrush}"/>
+                                <Setter TargetName="Glyph" Property="Foreground" Value="{DynamicResource OverlayAccentTextBrush}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
         <!-- 내비 액션 버튼: 패널 전환이 아닌 즉시 실행 항목 (잠금 해제/마법사/패치 노트) -->
         <Style x:Key="SettingsNavActionStyle" TargetType="Button">
             <Setter Property="Foreground" Value="{DynamicResource OverlaySubtleTextBrush}"/>
@@ -193,7 +230,7 @@
 
                     <!-- ===================== 채팅 ===================== -->
                     <StackPanel x:Name="ChatPanel">
-                        <TextBlock Text="채팅 필터" Style="{StaticResource SettingsSectionLabelStyle}" Margin="0,4,0,6"/>
+                        <TextBlock Text="기본 채팅 필터" Style="{StaticResource SettingsSectionLabelStyle}" Margin="0,4,0,6"/>
                         <WrapPanel>
                             <Border Style="{StaticResource SettingsRowStyle}">
                                 <DockPanel>
@@ -201,7 +238,10 @@
                                         <Button Width="26" Height="14" Margin="0,0,10,0" Background="{Binding NormalColor}" Command="{Binding ColorPickCommand}" CommandParameter="Normal" Style="{StaticResource ColorPickerButtonStyle}"/>
                                         <CheckBox IsChecked="{Binding ShowNormal}" Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
                                     </StackPanel>
-                                    <TextBlock Text="일반" Style="{StaticResource SettingsRowLabelStyle}"/>
+                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                        <TextBlock Text="일반" Style="{StaticResource SettingsRowLabelStyle}"/>
+                                        <Button Style="{StaticResource HelpButtonStyle}" Tag="chat.filter.normal" Click="Help_Click"/>
+                                    </StackPanel>
                                 </DockPanel>
                             </Border>
                             <Border Style="{StaticResource SettingsRowStyle}">
@@ -210,7 +250,10 @@
                                         <Button Width="26" Height="14" Margin="0,0,10,0" Background="{Binding TeamColor}" Command="{Binding ColorPickCommand}" CommandParameter="Team" Style="{StaticResource ColorPickerButtonStyle}"/>
                                         <CheckBox IsChecked="{Binding ShowTeam}" Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
                                     </StackPanel>
-                                    <TextBlock Text="팀" Style="{StaticResource SettingsRowLabelStyle}"/>
+                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                        <TextBlock Text="팀" Style="{StaticResource SettingsRowLabelStyle}"/>
+                                        <Button Style="{StaticResource HelpButtonStyle}" Tag="chat.filter.team" Click="Help_Click"/>
+                                    </StackPanel>
                                 </DockPanel>
                             </Border>
                             <Border Style="{StaticResource SettingsRowStyle}">
@@ -219,7 +262,10 @@
                                         <Button Width="26" Height="14" Margin="0,0,10,0" Background="{Binding ClubColor}" Command="{Binding ColorPickCommand}" CommandParameter="Club" Style="{StaticResource ColorPickerButtonStyle}"/>
                                         <CheckBox IsChecked="{Binding ShowClub}" Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
                                     </StackPanel>
-                                    <TextBlock Text="클럽" Style="{StaticResource SettingsRowLabelStyle}"/>
+                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                        <TextBlock Text="클럽" Style="{StaticResource SettingsRowLabelStyle}"/>
+                                        <Button Style="{StaticResource HelpButtonStyle}" Tag="chat.filter.club" Click="Help_Click"/>
+                                    </StackPanel>
                                 </DockPanel>
                             </Border>
                             <Border Style="{StaticResource SettingsRowStyle}">
@@ -228,7 +274,10 @@
                                         <Button Width="26" Height="14" Margin="0,0,10,0" Background="{Binding ShoutColor}" Command="{Binding ColorPickCommand}" CommandParameter="Shout" Style="{StaticResource ColorPickerButtonStyle}"/>
                                         <CheckBox IsChecked="{Binding ShowShout}" Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
                                     </StackPanel>
-                                    <TextBlock Text="외치기" Style="{StaticResource SettingsRowLabelStyle}"/>
+                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                        <TextBlock Text="외치기" Style="{StaticResource SettingsRowLabelStyle}"/>
+                                        <Button Style="{StaticResource HelpButtonStyle}" Tag="chat.filter.shout" Click="Help_Click"/>
+                                    </StackPanel>
                                 </DockPanel>
                             </Border>
                             <Border Style="{StaticResource SettingsRowStyle}">
@@ -237,7 +286,10 @@
                                         <Button Width="26" Height="14" Margin="0,0,10,0" Background="{Binding SystemColor}" Command="{Binding ColorPickCommand}" CommandParameter="System" Style="{StaticResource ColorPickerButtonStyle}"/>
                                         <CheckBox IsChecked="{Binding ShowSystem}" Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
                                     </StackPanel>
-                                    <TextBlock Text="시스템" Style="{StaticResource SettingsRowLabelStyle}"/>
+                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                        <TextBlock Text="시스템" Style="{StaticResource SettingsRowLabelStyle}"/>
+                                        <Button Style="{StaticResource HelpButtonStyle}" Tag="chat.filter.system" Click="Help_Click"/>
+                                    </StackPanel>
                                 </DockPanel>
                             </Border>
                         </WrapPanel>
@@ -247,13 +299,19 @@
                             <Border Style="{StaticResource SettingsRowStyle}">
                                 <DockPanel>
                                     <CheckBox DockPanel.Dock="Right" IsChecked="{Binding ShowEtaLevel}" Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
-                                    <TextBlock Text="에타 레벨" Style="{StaticResource SettingsRowLabelStyle}"/>
+                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                        <TextBlock Text="에타 레벨" Style="{StaticResource SettingsRowLabelStyle}"/>
+                                        <Button Style="{StaticResource HelpButtonStyle}" Tag="chat.id.eta_level" Click="Help_Click"/>
+                                    </StackPanel>
                                 </DockPanel>
                             </Border>
                             <Border Style="{StaticResource SettingsRowStyle}">
                                 <DockPanel>
                                     <CheckBox DockPanel.Dock="Right" IsChecked="{Binding ShowEtaCharacter}" Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
-                                    <TextBlock Text="캐릭터" Style="{StaticResource SettingsRowLabelStyle}"/>
+                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                        <TextBlock Text="캐릭터" Style="{StaticResource SettingsRowLabelStyle}"/>
+                                        <Button Style="{StaticResource HelpButtonStyle}" Tag="chat.id.character" Click="Help_Click"/>
+                                    </StackPanel>
                                 </DockPanel>
                             </Border>
                             <Border Style="{StaticResource SettingsRowStyle}">
@@ -273,19 +331,26 @@
                                                 </ControlTemplate>
                                             </Button.Template>
                                         </Button>
+                                        <Button Style="{StaticResource HelpButtonStyle}" Tag="chat.id.id_tag" Click="Help_Click"/>
                                     </StackPanel>
                                 </DockPanel>
                             </Border>
                             <Border Style="{StaticResource SettingsRowStyle}">
                                 <DockPanel>
                                     <CheckBox DockPanel.Dock="Right" IsChecked="{Binding ShowClubBoss}" Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
-                                    <TextBlock Text="클럽 보스" Style="{StaticResource SettingsRowLabelStyle}"/>
+                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                        <TextBlock Text="클럽 보스" Style="{StaticResource SettingsRowLabelStyle}"/>
+                                        <Button Style="{StaticResource HelpButtonStyle}" Tag="chat.id.club_boss" Click="Help_Click"/>
+                                    </StackPanel>
                                 </DockPanel>
                             </Border>
                             <Border Style="{StaticResource SettingsRowStyle}">
                                 <DockPanel>
                                     <CheckBox DockPanel.Dock="Right" IsChecked="{Binding ShowTimestamp}" Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
-                                    <TextBlock Text="타임 스탬프" Style="{StaticResource SettingsRowLabelStyle}"/>
+                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                        <TextBlock Text="타임 스탬프" Style="{StaticResource SettingsRowLabelStyle}"/>
+                                        <Button Style="{StaticResource HelpButtonStyle}" Tag="chat.id.timestamp" Click="Help_Click"/>
+                                    </StackPanel>
                                 </DockPanel>
                             </Border>
                         </WrapPanel>
@@ -300,7 +365,10 @@
                                         <RadioButton x:Name="CustomFontOption" Content="사용자 설정" Tag="사용자 설정" GroupName="FontFamilyOptions" Width="82" Height="26" Checked="FontOption_Checked" Style="{StaticResource FontOptionButtonStyle}"
                                                      ToolTip="프로그램 폴더의 Font\UserDefine.ttf / .otf / .ttc 파일을 사용합니다"/>
                                     </StackPanel>
-                                    <TextBlock Text="종류" Style="{StaticResource SettingsRowLabelStyle}"/>
+                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                        <TextBlock Text="종류" Style="{StaticResource SettingsRowLabelStyle}"/>
+                                        <Button Style="{StaticResource HelpButtonStyle}" Tag="chat.font.family" Click="Help_Click"/>
+                                    </StackPanel>
                                 </DockPanel>
                             </Border>
                             <Border Style="{StaticResource SettingsRowStyle}" BorderThickness="0">
@@ -309,7 +377,10 @@
                                         <Slider Minimum="10" Maximum="40" Value="{Binding FontSize}" TickFrequency="1" IsSnapToTickEnabled="True" VerticalAlignment="Center" Width="140"/>
                                         <TextBlock Text="{Binding FontSize, StringFormat={}{0:F0}}" Foreground="{DynamicResource TextBrush}" Width="26" TextAlignment="Right" VerticalAlignment="Center" FontSize="12"/>
                                     </StackPanel>
-                                    <TextBlock Text="크기" Style="{StaticResource SettingsRowLabelStyle}"/>
+                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                        <TextBlock Text="크기" Style="{StaticResource SettingsRowLabelStyle}"/>
+                                        <Button Style="{StaticResource HelpButtonStyle}" Tag="chat.font.size" Click="Help_Click"/>
+                                    </StackPanel>
                                 </DockPanel>
                             </Border>
                         </WrapPanel>
@@ -319,13 +390,19 @@
                             <Border Style="{StaticResource SettingsRowStyle}">
                                 <DockPanel>
                                     <CheckBox DockPanel.Dock="Right" IsChecked="{Binding Clone1Enabled}" Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
-                                    <TextBlock Text="사용" Style="{StaticResource SettingsRowLabelStyle}"/>
+                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                        <TextBlock Text="사용" Style="{StaticResource SettingsRowLabelStyle}"/>
+                                        <Button Style="{StaticResource HelpButtonStyle}" Tag="chat.clone1.enabled" Click="Help_Click"/>
+                                    </StackPanel>
                                 </DockPanel>
                             </Border>
                             <Border Style="{StaticResource SettingsRowStyle}">
                                 <DockPanel>
                                     <CheckBox DockPanel.Dock="Right" IsChecked="{Binding Clone1FollowMainFont}" Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
-                                    <TextBlock Text="메인 폰트 따라가기" Style="{StaticResource SettingsRowLabelStyle}"/>
+                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                        <TextBlock Text="메인 폰트 따라가기" Style="{StaticResource SettingsRowLabelStyle}"/>
+                                        <Button Style="{StaticResource HelpButtonStyle}" Tag="chat.clone1.follow" Click="Help_Click"/>
+                                    </StackPanel>
                                 </DockPanel>
                             </Border>
                             <Border Style="{StaticResource SettingsRowStyle}">
@@ -335,7 +412,10 @@
                                               SelectedItem="{Binding Clone1FontFamily, Mode=TwoWay}"
                                               IsEnabled="{Binding Clone1FollowMainFont, Converter={StaticResource BooleanInverseConverter}}"
                                               Style="{StaticResource DarkComboBoxStyle}"/>
-                                    <TextBlock Text="폰트" Style="{StaticResource SettingsRowLabelStyle}"/>
+                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                        <TextBlock Text="폰트" Style="{StaticResource SettingsRowLabelStyle}"/>
+                                        <Button Style="{StaticResource HelpButtonStyle}" Tag="chat.clone1.font" Click="Help_Click"/>
+                                    </StackPanel>
                                 </DockPanel>
                             </Border>
                             <Border Style="{StaticResource SettingsRowStyle}">
@@ -345,7 +425,10 @@
                                                 IsEnabled="{Binding Clone1FollowMainFont, Converter={StaticResource BooleanInverseConverter}}"/>
                                         <TextBlock Text="{Binding Clone1FontSize, StringFormat={}{0:F0}}" Foreground="{DynamicResource TextBrush}" Width="26" TextAlignment="Right" VerticalAlignment="Center" FontSize="12"/>
                                     </StackPanel>
-                                    <TextBlock Text="크기" Style="{StaticResource SettingsRowLabelStyle}"/>
+                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                        <TextBlock Text="크기" Style="{StaticResource SettingsRowLabelStyle}"/>
+                                        <Button Style="{StaticResource HelpButtonStyle}" Tag="chat.clone1.size" Click="Help_Click"/>
+                                    </StackPanel>
                                 </DockPanel>
                             </Border>
                         </WrapPanel>
@@ -355,13 +438,19 @@
                             <Border Style="{StaticResource SettingsRowStyle}">
                                 <DockPanel>
                                     <CheckBox DockPanel.Dock="Right" IsChecked="{Binding Clone2Enabled}" Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
-                                    <TextBlock Text="사용" Style="{StaticResource SettingsRowLabelStyle}"/>
+                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                        <TextBlock Text="사용" Style="{StaticResource SettingsRowLabelStyle}"/>
+                                        <Button Style="{StaticResource HelpButtonStyle}" Tag="chat.clone2.enabled" Click="Help_Click"/>
+                                    </StackPanel>
                                 </DockPanel>
                             </Border>
                             <Border Style="{StaticResource SettingsRowStyle}">
                                 <DockPanel>
                                     <CheckBox DockPanel.Dock="Right" IsChecked="{Binding Clone2FollowMainFont}" Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
-                                    <TextBlock Text="메인 폰트 따라가기" Style="{StaticResource SettingsRowLabelStyle}"/>
+                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                        <TextBlock Text="메인 폰트 따라가기" Style="{StaticResource SettingsRowLabelStyle}"/>
+                                        <Button Style="{StaticResource HelpButtonStyle}" Tag="chat.clone2.follow" Click="Help_Click"/>
+                                    </StackPanel>
                                 </DockPanel>
                             </Border>
                             <Border Style="{StaticResource SettingsRowStyle}">
@@ -371,7 +460,10 @@
                                               SelectedItem="{Binding Clone2FontFamily, Mode=TwoWay}"
                                               IsEnabled="{Binding Clone2FollowMainFont, Converter={StaticResource BooleanInverseConverter}}"
                                               Style="{StaticResource DarkComboBoxStyle}"/>
-                                    <TextBlock Text="폰트" Style="{StaticResource SettingsRowLabelStyle}"/>
+                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                        <TextBlock Text="폰트" Style="{StaticResource SettingsRowLabelStyle}"/>
+                                        <Button Style="{StaticResource HelpButtonStyle}" Tag="chat.clone2.font" Click="Help_Click"/>
+                                    </StackPanel>
                                 </DockPanel>
                             </Border>
                             <Border Style="{StaticResource SettingsRowStyle}">
@@ -381,7 +473,10 @@
                                                 IsEnabled="{Binding Clone2FollowMainFont, Converter={StaticResource BooleanInverseConverter}}"/>
                                         <TextBlock Text="{Binding Clone2FontSize, StringFormat={}{0:F0}}" Foreground="{DynamicResource TextBrush}" Width="26" TextAlignment="Right" VerticalAlignment="Center" FontSize="12"/>
                                     </StackPanel>
-                                    <TextBlock Text="크기" Style="{StaticResource SettingsRowLabelStyle}"/>
+                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                        <TextBlock Text="크기" Style="{StaticResource SettingsRowLabelStyle}"/>
+                                        <Button Style="{StaticResource HelpButtonStyle}" Tag="chat.clone2.size" Click="Help_Click"/>
+                                    </StackPanel>
                                 </DockPanel>
                             </Border>
                         </WrapPanel>

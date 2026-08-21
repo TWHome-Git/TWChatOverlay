@@ -49,6 +49,15 @@ namespace TWChatOverlay.Views
             ApplyPanelVisibility();
         }
 
+        /// <summary>[?] 버튼 — Tag의 도움말 키로 HelpWindow를 연다.</summary>
+        private void Help_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is not System.Windows.Controls.Button button || button.Tag is not string key)
+                return;
+
+            HelpWindow.ShowTopic(key, Window.GetWindow(this));
+        }
+
         /// <summary>잠금 해제 모드를 시작하고, 배치가 잘 보이도록 설정 창을 닫는다.</summary>
         private void UnlockMode_Click(object sender, RoutedEventArgs e)
         {
@@ -260,6 +269,7 @@ namespace TWChatOverlay.Views
 
         private void SettingsView_Unloaded(object sender, RoutedEventArgs e)
         {
+            HelpWindow.HideIfOpen();
             _itemDropPreviewTimer?.Stop();
             if (_addonPreviewActive)
             {
