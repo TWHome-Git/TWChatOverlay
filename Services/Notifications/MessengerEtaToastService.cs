@@ -69,7 +69,7 @@ namespace TWChatOverlay.Services
                     _previewToast.Closed += (_, _) => _previewToast = null;
                 }
 
-                _previewToast.SetEntries(new[] { "아이디1[285]", "아이디2[정보 없음]" });
+                _previewToast.SetEntries(new[] { "아이디1[41]", "아이디2[10]" });
                 _previewToast.SetPreviewMode(true);
                 var (left, topBase) = ResolveBasePositionFromSettings(settings);
                 _previewToast.ShowAt(left, topBase);
