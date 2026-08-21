@@ -18,6 +18,18 @@ namespace TWChatOverlay.Views
             FontFamily = fontFamily;
             ItemNameText.FontFamily = fontFamily;
             ItemNameText.Text = $"[{itemName}] 획득";
+
+            // 아이콘이 등록된 아이템이면 맨 앞에 이미지 표시
+            try
+            {
+                string? iconUri = Models.ItemCalendarEntryViewModel.GetIconUri(itemName);
+                if (iconUri != null)
+                {
+                    ItemIcon.Source = new System.Windows.Media.Imaging.BitmapImage(new Uri(iconUri));
+                    ItemIcon.Visibility = Visibility.Visible;
+                }
+            }
+            catch { }
             ItemNameText.Foreground = grade switch
             {
                 ItemDropGrade.Rare => new SolidColorBrush(Color.FromRgb(0xFF, 0xD8, 0x4A)),
