@@ -123,17 +123,44 @@ namespace TWChatOverlay.Models
 
     public sealed class ItemCalendarEntryViewModel
     {
+        // Data/images/Item 에 실제로 존재하는 아이콘 (파일명은 공백 없음)
+        private static readonly HashSet<string> KnownIconNames = new(StringComparer.Ordinal)
+        {
+            "경험의정수", "달의파편", "상급마정석", "시드", "신조의정수", "월광석",
+            "응축된신조의가루", "중급마정석", "최상급마정석", "코어가루", "코어결정", "하급마정석",
+        };
+
         public ItemCalendarEntryViewModel(string displayName, ItemDropGrade grade, int count)
         {
             DisplayName = displayName;
             Grade = grade;
             Count = Math.Max(1, count);
+            IconUri = ResolveIconUri(displayName);
         }
 
         public string DisplayName { get; }
         public ItemDropGrade Grade { get; }
         public int Count { get; }
         public string DisplayText => Count > 1 ? $"{DisplayName} x{Count}" : DisplayName;
+
+        /// <summary>아이콘 이미지가 있으면 pack URI, 없으면 null(텍스트로 표시).</summary>
+        public string? IconUri { get; }
+        public bool HasIcon => IconUri != null;
+        public bool ShowCountBadge => HasIcon && Count > 1;
+        public string CountBadgeText => $"x{Count:N0}";
+
+        private static string? ResolveIconUri(string displayName)
+        {
+            string normalized = (displayName ?? string.Empty).Replace(" ", "", StringComparison.Ordinal);
+
+            // "경험의 정수" 이미지는 파일명이 "경험의 정수.png"(공백 포함)라 별도 처리
+            if (normalized == "경험의정수")
+                return "pack://application:,,,/Data/images/Item/경험의 정수.png";
+
+            return KnownIconNames.Contains(normalized)
+                ? $"pack://application:,,,/Data/images/Item/{normalized}.png"
+                : null;
+        }
         public Brush BorderBrush => Grade switch
         {
             ItemDropGrade.Special => new SolidColorBrush(Color.FromRgb(0xFF, 0x7E, 0xDB)),
