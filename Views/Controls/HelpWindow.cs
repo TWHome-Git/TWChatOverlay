@@ -154,7 +154,10 @@ namespace TWChatOverlay.Views
                     _instance.Show();
                 }
 
+                // 숨겼다 다시 열면 이전 z-order(설정 창 뒤)에 남아 안 보일 수 있어 최상단으로 재삽입
+                _instance.Topmost = false;
                 _instance.Topmost = true;
+                TopmostWindowHelper.BringToTopmost(_instance);
             }
             catch (Exception ex)
             {
