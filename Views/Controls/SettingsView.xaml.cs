@@ -49,13 +49,25 @@ namespace TWChatOverlay.Views
             ApplyPanelVisibility();
         }
 
-        /// <summary>[?] 버튼 — Tag의 도움말 키로 HelpWindow를 연다.</summary>
+        /// <summary>[?] 버튼 — 버튼 위치 옆에 해당 도움말을 띄운다.</summary>
         private void Help_Click(object sender, RoutedEventArgs e)
         {
             if (sender is not System.Windows.Controls.Button button || button.Tag is not string key)
                 return;
 
-            HelpWindow.ShowTopic(key, Window.GetWindow(this));
+            System.Windows.Point? anchor = null;
+            try
+            {
+                // 버튼 오른쪽 살짝 위 지점 (장치 px → DIP 변환)
+                var devicePoint = button.PointToScreen(new System.Windows.Point(button.ActualWidth + 8, -4));
+                var source = PresentationSource.FromVisual(button);
+                anchor = source?.CompositionTarget != null
+                    ? source.CompositionTarget.TransformFromDevice.Transform(devicePoint)
+                    : devicePoint;
+            }
+            catch { }
+
+            HelpWindow.ShowTopic(key, Window.GetWindow(this), anchor);
         }
 
         /// <summary>잠금 해제 모드를 시작하고, 배치가 잘 보이도록 설정 창을 닫는다.</summary>
