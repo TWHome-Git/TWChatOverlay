@@ -162,7 +162,7 @@
                                                     Padding="6,4">
                                                 <TextBlock Text="{Binding DateLabel}"
                                                            Foreground="{DynamicResource TextBrush}"
-                                                           FontSize="17"
+                                                           FontSize="12"
                                                            FontWeight="Bold"
                                                            VerticalAlignment="Center"/>
                                             </Border>
@@ -185,28 +185,31 @@
                                                                     Padding="4,3"
                                                                     Margin="0,0,4,4"
                                                                     ToolTip="{Binding DisplayText}">
-                                                                <StackPanel Orientation="Horizontal">
-                                                                    <Image x:Name="EntryIcon"
-                                                                           Source="{Binding IconUri}"
-                                                                           Width="18"
-                                                                           Height="18"
-                                                                           VerticalAlignment="Center"/>
+                                                                <DockPanel LastChildFill="True">
                                                                     <TextBlock x:Name="EntryCount"
+                                                                               DockPanel.Dock="Right"
                                                                                Text="{Binding CountBadgeText}"
                                                                                Foreground="{DynamicResource TextBrush}"
-                                                                               FontSize="17"
+                                                                               FontSize="12"
                                                                                FontWeight="SemiBold"
                                                                                VerticalAlignment="Center"
                                                                                Margin="3,0,0,0"/>
                                                                     <TextBlock x:Name="EntryText"
                                                                                Text="{Binding DisplayText}"
                                                                                Foreground="{DynamicResource TextBrush}"
-                                                                               FontSize="18"
+                                                                               FontSize="12"
                                                                                FontWeight="SemiBold"
                                                                                TextWrapping="NoWrap"
                                                                                TextTrimming="CharacterEllipsis"
+                                                                               VerticalAlignment="Center"
                                                                                Visibility="Collapsed"/>
-                                                                </StackPanel>
+                                                                    <!-- 이미지는 남는 공간을 최대한 사용 -->
+                                                                    <Image x:Name="EntryIcon"
+                                                                           Source="{Binding IconUri}"
+                                                                           Stretch="Uniform"
+                                                                           MaxHeight="48"
+                                                                           VerticalAlignment="Center"/>
+                                                                </DockPanel>
                                                             </Border>
                                                             <DataTemplate.Triggers>
                                                                 <DataTrigger Binding="{Binding HasIcon}" Value="False">
@@ -238,7 +241,7 @@
                                                        Height="16"
                                                        VerticalAlignment="Center"/>
                                                 <TextBlock Foreground="{DynamicResource OverlayExpAccentBrush}"
-                                                           FontSize="17"
+                                                           FontSize="12"
                                                            FontWeight="SemiBold"
                                                            VerticalAlignment="Center"
                                                            Margin="4,0,0,0"
