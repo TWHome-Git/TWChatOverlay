@@ -293,13 +293,16 @@ namespace TWChatOverlay.Models
             ["안식어빌리티"] = "안식.png",
             ["야성어빌리티"] = "야성.png",
             ["상실어빌리티"] = "상실.png",
-            ["렐릭부가재설정"] = "렐릭어빌.png",
-            ["렐릭어빌재설정"] = "렐릭어빌.png",
-            ["저격연마LV6"] = "저격연마.png",
-            ["저격연마LV7"] = "저격연마.png",
-            ["저격연마LV8"] = "저격연마.png",
-            ["저격연마LV9"] = "저격연마.png",
-            ["저격연마LV10"] = "저격연마.png",
+            ["은월의결정(좌)"] = "은월.png",
+            ["은월의결정(우)"] = "은월.png",
+            ["고급방어구연마"] = "연마.png",
+            ["고급체력연마"] = "연마.png",
+            ["연마강화"] = "연마.png",
+            ["저격연마LV6"] = "연마.png",
+            ["저격연마LV7"] = "연마.png",
+            ["저격연마LV8"] = "연마.png",
+            ["저격연마LV9"] = "연마.png",
+            ["저격연마LV10"] = "연마.png",
         };
 
         public ItemCalendarEntryViewModel(string displayName, ItemDropGrade grade, int count)
