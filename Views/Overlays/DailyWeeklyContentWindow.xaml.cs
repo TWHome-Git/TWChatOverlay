@@ -500,8 +500,8 @@ namespace TWChatOverlay.Views
             _expandedHeight = Height;
             BodyRow.Height = new GridLength(0);
             FooterRow.Height = new GridLength(0);
-            // 상단 여백 30 + 테두리 2 + 제목 표시줄 34
-            Height = 66;
+            // 테두리 2 + 제목 표시줄 34
+            Height = 36;
         }
 
         private void ExpandBody()
