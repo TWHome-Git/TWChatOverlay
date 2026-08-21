@@ -23,6 +23,7 @@
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="8"/>
                 <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
@@ -63,6 +64,13 @@
                          Foreground="{DynamicResource OverlayInfoTextBrush}"
                          FontSize="20"
                          VerticalScrollBarVisibility="Disabled"/>
+
+            <TextBlock Grid.Row="3"
+                       Grid.ColumnSpan="2"
+                       Text="에타 랭킹 데이터 기준"
+                       Foreground="{DynamicResource OverlayHintTextBrush}"
+                       FontSize="11"
+                       Margin="4,6,0,0"/>
         </Grid>
     </Border>
 </Window>
