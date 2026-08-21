@@ -94,6 +94,23 @@ namespace TWChatOverlay.Views
         public ObservableCollection<ItemCalendarEntryViewModel> MonthlySummary => _monthlySummary;
         public ObservableCollection<AbandonMonthlyStoneSummaryEntryViewModel> MonthlyAbandonSummary => _monthlyAbandonSummary;
 
+        /// <summary>달력 본문 기준 폰트 크기 (헤더 슬라이더로 조절, 10~28).</summary>
+        public double ItemCalendarFontSize
+        {
+            get => _settings.ItemCalendarFontSize;
+            set
+            {
+                double clamped = Math.Max(10.0, Math.Min(28.0, value));
+                if (Math.Abs(_settings.ItemCalendarFontSize - clamped) < 0.0001) return;
+                _settings.ItemCalendarFontSize = clamped;
+                OnPropertyChanged(nameof(ItemCalendarFontSize));
+                OnPropertyChanged(nameof(ItemCalendarFontSizeDisplay));
+                ConfigService.SaveDeferred(_settings);
+            }
+        }
+
+        public string ItemCalendarFontSizeDisplay => $"{Math.Round(ItemCalendarFontSize):0}px";
+
         public string MonthlyAbandonSeedText
         {
             get => _monthlyAbandonSeedText;

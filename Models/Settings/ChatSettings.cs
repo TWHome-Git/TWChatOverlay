@@ -1049,6 +1049,22 @@ namespace TWChatOverlay.Models
             }
         }
 
+        private double _itemCalendarFontSize = 11.0;
+
+        /// <summary>달력(아이템 획득 내역) 본문 기준 폰트 크기. 헤더의 슬라이더로 조절.</summary>
+        [JsonPropertyOrder(412)]
+        public double ItemCalendarFontSize
+        {
+            get => _itemCalendarFontSize;
+            set
+            {
+                double clamped = Math.Max(10.0, Math.Min(28.0, value));
+                if (Math.Abs(_itemCalendarFontSize - clamped) < 0.0001) return;
+                _itemCalendarFontSize = clamped;
+                OnPropertyChanged();
+            }
+        }
+
         [JsonPropertyOrder(741)]
         public double? MessengerToastWindowLeft
         {
