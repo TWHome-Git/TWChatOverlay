@@ -19,6 +19,10 @@ namespace TWChatOverlay.Views
             ItemNameText.FontFamily = fontFamily;
             ItemNameText.Text = $"[{itemName}] 획득";
 
+            var sharedSettings = ToastPresentationHelper.FindSharedSettings();
+            if (sharedSettings != null)
+                ItemNameText.FontSize = sharedSettings.ItemDropToastFontSize;
+
             // 아이콘이 등록된 아이템이면 맨 앞에 이미지 표시
             try
             {

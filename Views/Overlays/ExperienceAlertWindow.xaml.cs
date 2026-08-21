@@ -17,12 +17,14 @@ namespace TWChatOverlay.Views
             _settings = settings ?? throw new ArgumentNullException(nameof(settings));
             InitializeComponent();
             WindowFontService.Apply(this);
+            MessageTextBlock.FontSize = _settings.ExperienceAlertFontSize;
             LocationChanged += (_, _) => SyncPositionToSettings(notify: false);
         }
 
         public void SetSettings(ChatSettings settings)
         {
             _settings = settings ?? throw new ArgumentNullException(nameof(settings));
+            MessageTextBlock.FontSize = _settings.ExperienceAlertFontSize;
         }
 
         public void SetMessage(string message)

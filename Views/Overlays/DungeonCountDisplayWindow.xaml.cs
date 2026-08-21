@@ -23,6 +23,7 @@ namespace TWChatOverlay.Views
             InitializeComponent();
             FontFamily = fontFamily;
             MessageTextBlock.FontFamily = fontFamily;
+            MessageTextBlock.FontSize = settings.DungeonCountDisplayFontSize;
             MessageTextBlock.Text = message;
             LocationChanged += (_, _) => SyncPositionToSettings(notify: false);
 
@@ -42,6 +43,7 @@ namespace TWChatOverlay.Views
         public void SetSettings(ChatSettings settings)
         {
             _settings = settings ?? throw new ArgumentNullException(nameof(settings));
+            MessageTextBlock.FontSize = _settings.DungeonCountDisplayFontSize;
             ApplyToolWindowStyle();
         }
 
