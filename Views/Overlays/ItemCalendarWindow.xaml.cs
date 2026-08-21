@@ -628,9 +628,8 @@ namespace TWChatOverlay.Views
 
             foreach (var snapshot in snapshots)
             {
-                string displayName = string.IsNullOrWhiteSpace(snapshot.DisplayName)
-                    ? snapshot.ItemName ?? "아이템"
-                    : snapshot.DisplayName;
+                // 전용 아이콘이 있는 아이템은 묶음명(abbr) 대신 실제 아이템명으로 표시
+                string displayName = ItemCalendarEntryViewModel.ResolvePreferredDisplayName(snapshot.ItemName, snapshot.DisplayName);
 
                 var key = (displayName, snapshot.Grade);
                 int addCount = Math.Max(1, snapshot.Count);
@@ -706,7 +705,7 @@ namespace TWChatOverlay.Views
                 return;
 
             todayCell.AddSnapshot(new ItemCalendarEntryViewModel(
-                string.IsNullOrWhiteSpace(snapshot.DisplayName) ? snapshot.ItemName ?? "아이템" : snapshot.DisplayName!,
+                ItemCalendarEntryViewModel.ResolvePreferredDisplayName(snapshot.ItemName, snapshot.DisplayName),
                 snapshot.Grade,
                 Math.Max(1, snapshot.Count)));
         }
