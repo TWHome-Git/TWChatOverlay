@@ -182,7 +182,8 @@
                                                           CanContentScroll="False"
                                                           VerticalAlignment="Stretch"
                                                           Padding="0,0,0,20">
-                                                <ItemsControl ItemsSource="{Binding Entries}">
+                                                <!-- Top 고정: 스크롤 영역이 세로로 늘려도 항목 높이가 커지지 않게 -->
+                                                <ItemsControl ItemsSource="{Binding Entries}" VerticalAlignment="Top">
                                                     <ItemsControl.Style>
                                                         <Style TargetType="ItemsControl">
                                                             <!-- 텍스트 모드: 한 줄에 1개 -->
