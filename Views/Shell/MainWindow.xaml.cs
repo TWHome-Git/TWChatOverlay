@@ -487,6 +487,7 @@ namespace TWChatOverlay.Views
                 }
 
                 Opacity = 1;
+                UiLockService.ApplyStoredOpacity(this); // 창별 지정 투명도가 있으면 그 값으로
                 IsHitTestVisible = true;
                 Visibility = Visibility.Visible;
                 _stickyService?.UpdatePositionImmediately();

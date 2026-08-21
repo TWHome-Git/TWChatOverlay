@@ -57,6 +57,8 @@ namespace TWChatOverlay.Views
             // NOTE: 과거에는 여기서 MainBorder.Background를 불투명 색으로 덮어썼는데,
             // 그러면 XAML의 DynamicResource(OverlayWindowBackgroundBrush) 바인딩이 끊겨
             // 오버레이 투명도 설정이 채팅창에 반영되지 않는다. 배경은 리소스에 맡긴다.
+
+            UiLockService.ApplyStoredOpacity(this);
         }
 
         public void InjectDebugLogText(string rawText)

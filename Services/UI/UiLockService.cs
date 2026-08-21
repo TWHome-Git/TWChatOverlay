@@ -238,6 +238,53 @@ namespace TWChatOverlay.Services
             return Math.Max(lower, Math.Min(upper, value));
         }
 
+        /// <summary>창별 투명도 저장 키 (서브 채팅창은 슬롯 구분).</summary>
+        private static string GetOpacityKey(Window window)
+            => window is TWChatOverlay.Views.ChatCloneWindow clone
+                ? $"ChatCloneWindow{clone.Slot}"
+                : window.GetType().Name;
+
+        /// <summary>저장된 창별 투명도(10~100%)가 있으면 적용한다. 창 생성/표시 시 호출.</summary>
+        public static void ApplyStoredOpacity(Window window)
+        {
+            if (window == null) return;
+
+            try
+            {
+                var settings = ToastPresentationHelper.FindSharedSettings();
+                if (settings?.WindowOpacityPercents != null &&
+                    settings.WindowOpacityPercents.TryGetValue(GetOpacityKey(window), out double percent))
+                {
+                    window.Opacity = Math.Max(0.1, Math.Min(1.0, percent / 100.0));
+                }
+            }
+            catch { }
+        }
+
+        /// <summary>인스펙터 슬라이더로 선택된 창의 투명도를 지정하고 창별로 저장한다.</summary>
+        internal static void SetSelectedOpacity(double percent)
+        {
+            var window = _selected;
+            if (window == null) return;
+
+            percent = Math.Max(10.0, Math.Min(100.0, Math.Round(percent)));
+            try
+            {
+                window.Opacity = percent / 100.0;
+
+                var settings = ToastPresentationHelper.FindSharedSettings();
+                if (settings != null)
+                {
+                    settings.WindowOpacityPercents[GetOpacityKey(window)] = percent;
+                    ConfigService.SaveDeferred(settings);
+                }
+            }
+            catch (Exception ex)
+            {
+                AppLogger.Warn("Unlock opacity change failed.", ex);
+            }
+        }
+
         private static string GetFriendlyName(Window window)
         {
             if (window is TWChatOverlay.Views.ChatCloneWindow clone)
@@ -530,9 +577,12 @@ namespace TWChatOverlay.Services
             private readonly TextBox _heightBox;
             private readonly TextBox _xBox;
             private readonly TextBox _yBox;
+            private readonly Slider _opacitySlider;
+            private readonly TextBlock _opacityText;
+            private bool _suppressOpacityEvent;
 
             private const double SideZone = 34;   // 좌우 버튼이 차지하는 폭
-            private const double VertZone = 118;  // 상하 버튼 + 정보 패널이 차지하는 높이
+            private const double VertZone = 152;  // 상하 버튼 + 정보 패널이 차지하는 높이
             private const double PanelWidth = 248;
             private const double ButtonW = 26;
             private const double ButtonH = 24;
@@ -576,8 +626,54 @@ namespace TWChatOverlay.Services
                 fieldPanel.Children.Add(PlaceField(_xBox, 0, 3));
                 fieldPanel.Children.Add(PlaceField(_yBox, 1, 3));
 
+                // 투명도 슬라이더 (10~100%) + 우측 % 표시
+                _opacitySlider = new Slider
+                {
+                    Minimum = 10,
+                    Maximum = 100,
+                    Value = 100,
+                    Width = 138,
+                    TickFrequency = 1,
+                    IsSnapToTickEnabled = true,
+                    Focusable = false,
+                    VerticalAlignment = VerticalAlignment.Center,
+                    Margin = new Thickness(8, 0, 8, 0),
+                };
+                _opacityText = new TextBlock
+                {
+                    Text = "100%",
+                    FontSize = 11,
+                    Width = 36,
+                    TextAlignment = TextAlignment.Right,
+                    Foreground = new SolidColorBrush(TextCol),
+                    VerticalAlignment = VerticalAlignment.Center,
+                };
+                _opacitySlider.ValueChanged += (_, e) =>
+                {
+                    _opacityText.Text = $"{(int)Math.Round(e.NewValue)}%";
+                    if (_suppressOpacityEvent) return;
+                    SetSelectedOpacity(e.NewValue);
+                };
+
+                var opacityRow = new StackPanel
+                {
+                    Orientation = Orientation.Horizontal,
+                    HorizontalAlignment = HorizontalAlignment.Center,
+                    Margin = new Thickness(0, 7, 0, 0),
+                };
+                opacityRow.Children.Add(new TextBlock
+                {
+                    Text = "투명도",
+                    FontSize = 11,
+                    Foreground = new SolidColorBrush(SubTextCol),
+                    VerticalAlignment = VerticalAlignment.Center,
+                });
+                opacityRow.Children.Add(_opacitySlider);
+                opacityRow.Children.Add(_opacityText);
+
                 var root = new StackPanel();
                 root.Children.Add(fieldPanel);
+                root.Children.Add(opacityRow);
 
                 _panel = new Border
                 {
@@ -688,7 +784,23 @@ namespace TWChatOverlay.Services
                 _widthBox.Opacity = fieldOpacity;
                 _heightBox.Opacity = fieldOpacity;
 
+                SyncOpacitySlider(target);
                 RefreshValues();
+            }
+
+            private void SyncOpacitySlider(Window target)
+            {
+                _suppressOpacityEvent = true;
+                try
+                {
+                    double percent = Math.Max(10, Math.Min(100, Math.Round(target.Opacity * 100)));
+                    _opacitySlider.Value = percent;
+                    _opacityText.Text = $"{(int)percent}%";
+                }
+                finally
+                {
+                    _suppressOpacityEvent = false;
+                }
             }
 
             public void RefreshValues()
@@ -738,7 +850,7 @@ namespace TWChatOverlay.Services
                 Canvas.SetTop(_btnDown, VertZone + th + 4);
 
                 // 정보 패널: 기본은 창 상단(▲ 버튼 위), 화면 위쪽에 붙어 있으면 하단(▼ 버튼 아래)
-                double panelHeight = _panel.ActualHeight > 0 ? _panel.ActualHeight : 84;
+                double panelHeight = _panel.ActualHeight > 0 ? _panel.ActualHeight : 112;
                 bool showBelow = target.Top - (ButtonH + Gap * 2 + panelHeight) < SystemParameters.VirtualScreenTop + 4;
 
                 double panelLeft = originX + tw / 2 - PanelWidth / 2;

@@ -160,6 +160,7 @@ namespace TWChatOverlay.Views
 
             _currentTabTag = NormalizeTabTag(GetStoredTabTag());
 
+            UiLockService.ApplyStoredOpacity(this);
             ApplySizeFromMainWindow();
             ApplyDefaultFontSettings();
             ApplyEffectiveFont();

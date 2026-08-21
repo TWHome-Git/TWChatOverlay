@@ -1415,6 +1415,20 @@ namespace TWChatOverlay.Models
             }
         }
 
+        private Dictionary<string, double> _windowOpacityPercents = new();
+
+        /// <summary>잠금 해제 인스펙터에서 지정한 창별 투명도(10~100%). 키 = 창 타입명(서브 채팅창은 슬롯 포함).</summary>
+        [JsonPropertyOrder(99)]
+        public Dictionary<string, double> WindowOpacityPercents
+        {
+            get => _windowOpacityPercents;
+            set
+            {
+                _windowOpacityPercents = value ?? new Dictionary<string, double>();
+                OnPropertyChanged();
+            }
+        }
+
         public void SetBuffTrackerWindowPosition(double? left, double? top, bool notify)
         {
             _buffTrackerWindowLeft = left;
