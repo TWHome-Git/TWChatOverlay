@@ -1049,6 +1049,21 @@ namespace TWChatOverlay.Models
             }
         }
 
+        private bool _itemCalendarUseIcons; // 기본 텍스트 모드
+
+        /// <summary>달력 날짜 칸 아이템을 그림(true)/텍스트(false)로 표시.</summary>
+        [JsonPropertyOrder(413)]
+        public bool ItemCalendarUseIcons
+        {
+            get => _itemCalendarUseIcons;
+            set
+            {
+                if (_itemCalendarUseIcons == value) return;
+                _itemCalendarUseIcons = value;
+                OnPropertyChanged();
+            }
+        }
+
         private double _itemCalendarFontSize = 11.0;
 
         /// <summary>달력(아이템 획득 내역) 본문 기준 폰트 크기. 헤더의 슬라이더로 조절.</summary>

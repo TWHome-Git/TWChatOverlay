@@ -75,6 +75,14 @@
                                    TextAlignment="Right"
                                    TextTrimming="CharacterEllipsis"
                                    VerticalAlignment="Center"/>
+                        <!-- 날짜 칸 표시 방식: ON=그림, OFF=텍스트 -->
+                        <CheckBox Content="그림"
+                                  FontSize="11"
+                                  Foreground="{DynamicResource OverlayInfoTextBrush}"
+                                  IsChecked="{Binding UseIconDisplay, Mode=TwoWay}"
+                                  Style="{StaticResource ToggleSwitchCheckBoxStyle}"
+                                  ToolTip="켜면 아이템을 그림으로, 끄면 텍스트로 표시"
+                                  Margin="0,0,10,0"/>
                         <views:OverlayOpacityChip GroupKey="Calendar" SliderWidth="52" ShowValueText="False" Margin="0,0,8,0"/>
                         <!-- 본문 폰트 크기 (일일/주간 컨텐츠 창과 동일한 방식) -->
                         <Slider Width="70"
@@ -185,6 +193,9 @@
                                                                     Padding="4,3"
                                                                     Margin="0,0,4,4"
                                                                     ToolTip="{Binding DisplayText}">
+                                                                <!-- 표시 우선순위(그림 모드): 아이콘 > 글자 대체([테]) > 텍스트.
+                                                                     텍스트 모드(UseIconDisplay=false)에서는 항상 텍스트만.
+                                                                     가시성은 로컬 값 우선순위 문제를 피하려고 전부 Style 트리거로 제어. -->
                                                                 <DockPanel LastChildFill="True">
                                                                     <TextBlock x:Name="EntryCount"
                                                                                DockPanel.Dock="Right"
@@ -193,8 +204,21 @@
                                                                                FontSize="12"
                                                                                FontWeight="SemiBold"
                                                                                VerticalAlignment="Center"
-                                                                               Margin="3,0,0,0"
-                                                                               Visibility="{Binding ShowCountBadge, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                                                                               Margin="3,0,0,0">
+                                                                        <TextBlock.Style>
+                                                                            <Style TargetType="TextBlock">
+                                                                                <Setter Property="Visibility" Value="Visible"/>
+                                                                                <Style.Triggers>
+                                                                                    <DataTrigger Binding="{Binding ShowCountBadge}" Value="False">
+                                                                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                                                                    </DataTrigger>
+                                                                                    <DataTrigger Binding="{Binding DataContext.UseIconDisplay, RelativeSource={RelativeSource AncestorType=Window}}" Value="False">
+                                                                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                                                                    </DataTrigger>
+                                                                                </Style.Triggers>
+                                                                            </Style>
+                                                                        </TextBlock.Style>
+                                                                    </TextBlock>
                                                                     <TextBlock x:Name="EntryText"
                                                                                Text="{Binding DisplayText}"
                                                                                Foreground="{DynamicResource TextBrush}"
@@ -202,37 +226,69 @@
                                                                                FontWeight="SemiBold"
                                                                                TextWrapping="NoWrap"
                                                                                TextTrimming="CharacterEllipsis"
-                                                                               VerticalAlignment="Center"
-                                                                               Visibility="Collapsed"/>
+                                                                               VerticalAlignment="Center">
+                                                                        <TextBlock.Style>
+                                                                            <Style TargetType="TextBlock">
+                                                                                <Setter Property="Visibility" Value="Collapsed"/>
+                                                                                <Style.Triggers>
+                                                                                    <DataTrigger Binding="{Binding HasIcon}" Value="False">
+                                                                                        <Setter Property="Visibility" Value="Visible"/>
+                                                                                    </DataTrigger>
+                                                                                    <DataTrigger Binding="{Binding HasGlyph}" Value="True">
+                                                                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                                                                    </DataTrigger>
+                                                                                    <DataTrigger Binding="{Binding DataContext.UseIconDisplay, RelativeSource={RelativeSource AncestorType=Window}}" Value="False">
+                                                                                        <Setter Property="Visibility" Value="Visible"/>
+                                                                                    </DataTrigger>
+                                                                                </Style.Triggers>
+                                                                            </Style>
+                                                                        </TextBlock.Style>
+                                                                    </TextBlock>
                                                                     <!-- 이미지(또는 글자 대체 표기)는 남는 공간을 최대한 사용 -->
                                                                     <Grid>
                                                                         <Image x:Name="EntryIcon"
                                                                                Source="{Binding IconUri}"
                                                                                Stretch="Uniform"
                                                                                MaxHeight="48"
-                                                                               VerticalAlignment="Center"/>
+                                                                               VerticalAlignment="Center">
+                                                                            <Image.Style>
+                                                                                <Style TargetType="Image">
+                                                                                    <Setter Property="Visibility" Value="Visible"/>
+                                                                                    <Style.Triggers>
+                                                                                        <DataTrigger Binding="{Binding HasIcon}" Value="False">
+                                                                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                                                                        </DataTrigger>
+                                                                                        <DataTrigger Binding="{Binding DataContext.UseIconDisplay, RelativeSource={RelativeSource AncestorType=Window}}" Value="False">
+                                                                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                                                                        </DataTrigger>
+                                                                                    </Style.Triggers>
+                                                                                </Style>
+                                                                            </Image.Style>
+                                                                        </Image>
                                                                         <TextBlock x:Name="EntryGlyph"
                                                                                    Text="{Binding FallbackGlyph}"
                                                                                    Foreground="{DynamicResource TextBrush}"
                                                                                    FontSize="20"
                                                                                    FontWeight="Bold"
                                                                                    HorizontalAlignment="Center"
-                                                                                   VerticalAlignment="Center"
-                                                                                   Visibility="Collapsed"/>
+                                                                                   VerticalAlignment="Center">
+                                                                            <TextBlock.Style>
+                                                                                <Style TargetType="TextBlock">
+                                                                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                                                                    <Style.Triggers>
+                                                                                        <DataTrigger Binding="{Binding HasGlyph}" Value="True">
+                                                                                            <Setter Property="Visibility" Value="Visible"/>
+                                                                                        </DataTrigger>
+                                                                                        <DataTrigger Binding="{Binding DataContext.UseIconDisplay, RelativeSource={RelativeSource AncestorType=Window}}" Value="False">
+                                                                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                                                                        </DataTrigger>
+                                                                                    </Style.Triggers>
+                                                                                </Style>
+                                                                            </TextBlock.Style>
+                                                                        </TextBlock>
                                                                     </Grid>
                                                                 </DockPanel>
                                                             </Border>
-                                                            <DataTemplate.Triggers>
-                                                                <DataTrigger Binding="{Binding HasIcon}" Value="False">
-                                                                    <Setter TargetName="EntryIcon" Property="Visibility" Value="Collapsed"/>
-                                                                    <Setter TargetName="EntryText" Property="Visibility" Value="Visible"/>
-                                                                </DataTrigger>
-                                                                <!-- 이미지가 없어도 글자 대체 표기가 있으면 [테] 형식으로 -->
-                                                                <DataTrigger Binding="{Binding HasGlyph}" Value="True">
-                                                                    <Setter TargetName="EntryGlyph" Property="Visibility" Value="Visible"/>
-                                                                    <Setter TargetName="EntryText" Property="Visibility" Value="Collapsed"/>
-                                                                </DataTrigger>
-                                                            </DataTemplate.Triggers>
                                                         </DataTemplate>
                                                     </ItemsControl.ItemTemplate>
                                                     <ItemsControl.ItemsPanel>
