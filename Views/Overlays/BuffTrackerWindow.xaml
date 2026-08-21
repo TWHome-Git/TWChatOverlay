@@ -17,7 +17,7 @@
         <!-- 버프 타일: 아이콘 + 오른쪽에 남은 시간. 판 위에 올려 게임 화면과 상관없이 읽힌다. -->
         <DataTemplate x:Key="BuffTileTemplate">
             <StackPanel Orientation="Horizontal"
-                        Margin="0,0,12,0"
+                        Margin="0,0,12,5"
                         ToolTip="{Binding DisplayName}">
                 <Border Width="26"
                         Height="26"
@@ -45,26 +45,40 @@
             CornerRadius="8"
             Padding="10,7"
             MouseLeftButtonDown="RootBorder_MouseLeftButtonDown">
-        <!-- 레어/경험치 구분은 아이콘 테두리 색(골드/하늘색)이 대신한다 — 머리글 없이 한 줄로 -->
-        <StackPanel Orientation="Horizontal">
-            <ItemsControl ItemsSource="{Binding ActiveRareBuffs}"
-                          ItemTemplate="{StaticResource BuffTileTemplate}"
-                          Visibility="{Binding HasRareBuffs, Converter={StaticResource BooleanToVisibilityConverter}}">
-                <ItemsControl.ItemsPanel>
-                    <ItemsPanelTemplate>
-                        <WrapPanel Orientation="Horizontal"/>
-                    </ItemsPanelTemplate>
-                </ItemsControl.ItemsPanel>
-            </ItemsControl>
-            <ItemsControl ItemsSource="{Binding ActiveExpBuffs}"
-                          ItemTemplate="{StaticResource BuffTileTemplate}"
-                          Visibility="{Binding HasExpBuffs, Converter={StaticResource BooleanToVisibilityConverter}}">
-                <ItemsControl.ItemsPanel>
-                    <ItemsPanelTemplate>
-                        <WrapPanel Orientation="Horizontal"/>
-                    </ItemsPanelTemplate>
-                </ItemsControl.ItemsPanel>
-            </ItemsControl>
+        <!-- 세로 배치 + 그룹별 WrapPanel: 가로 StackPanel은 폭 제한을 전달하지 않아
+             MaxWidth를 넘는 타일이 잘려 보이던 문제가 있었다. 레어/경험치 라벨로 분류 표시. -->
+        <StackPanel>
+            <StackPanel Visibility="{Binding HasRareBuffs, Converter={StaticResource BooleanToVisibilityConverter}}">
+                <TextBlock Text="레어"
+                           Foreground="{DynamicResource OverlayRareAccentBrush}"
+                           FontSize="11"
+                           FontWeight="Bold"
+                           Margin="0,0,0,4"/>
+                <ItemsControl ItemsSource="{Binding ActiveRareBuffs}"
+                              ItemTemplate="{StaticResource BuffTileTemplate}">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <WrapPanel Orientation="Horizontal"/>
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                </ItemsControl>
+            </StackPanel>
+            <StackPanel Visibility="{Binding HasExpBuffs, Converter={StaticResource BooleanToVisibilityConverter}}"
+                        Margin="0,3,0,0">
+                <TextBlock Text="경험치"
+                           Foreground="{DynamicResource OverlayExpAccentBrush}"
+                           FontSize="11"
+                           FontWeight="Bold"
+                           Margin="0,0,0,4"/>
+                <ItemsControl ItemsSource="{Binding ActiveExpBuffs}"
+                              ItemTemplate="{StaticResource BuffTileTemplate}">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <WrapPanel Orientation="Horizontal"/>
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                </ItemsControl>
+            </StackPanel>
         </StackPanel>
     </Border>
 </Window>
