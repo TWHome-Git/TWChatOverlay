@@ -22,12 +22,8 @@ namespace TWChatOverlay.Services
         // ===== 채팅 =====
         private static readonly Dictionary<string, (string Title, string Body)> Topics = new()
         {
-            // 기본 채팅 필터
-            ["chat.filter.normal"] = ("일반 채팅", PlaceholderBody),
-            ["chat.filter.team"] = ("팀 채팅", PlaceholderBody),
-            ["chat.filter.club"] = ("클럽 채팅", PlaceholderBody),
-            ["chat.filter.shout"] = ("외치기", PlaceholderBody),
-            ["chat.filter.system"] = ("시스템 메시지", PlaceholderBody),
+            // 기본 채팅 필터 (섹션 단위)
+            ["chat.filter"] = ("기본 채팅 필터", PlaceholderBody),
 
             // 아이디 표시
             ["chat.id.eta_level"] = ("에타 레벨 표시", PlaceholderBody),
