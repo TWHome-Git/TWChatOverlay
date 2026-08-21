@@ -21,6 +21,13 @@ namespace TWChatOverlay.Views
             TitleText.FontFamily = fontFamily;
             CloseButton.FontFamily = fontFamily;
             CloseButton.Click += (_, _) => Close();
+            EntryRichText.FontSize = _settings.MessengerEtaFontSize;
+        }
+
+        /// <summary>잠금 해제 인스펙터에서 폰트 크기 변경 시 즉시 반영.</summary>
+        public void SetFontSize(double size)
+        {
+            EntryRichText.FontSize = size;
         }
 
         public void SetEntries(IReadOnlyList<string> entries)

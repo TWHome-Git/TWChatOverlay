@@ -31,7 +31,7 @@ namespace TWChatOverlay.Models
         private bool _showShoutToastPopup = true;
         private bool _autoCopyShoutNickname = false;
         private int _shoutToastDurationSeconds = 5;
-        private double _shoutToastFontSize = 15.0;
+        private double _shoutToastFontSize = 18.0;
         private double _dailyWeeklyContentFontSize = 12.0;
         private string _chatLogFolderPath = @"C:\Nexon\TalesWeaver\ChatLog";
         private string _keywordInput = "";
@@ -1080,7 +1080,23 @@ namespace TWChatOverlay.Models
             }
         }
 
-        private double _experienceAlertFontSize = 16.0;
+        private double _messengerEtaFontSize = 18.0;
+
+        /// <summary>1:1 채팅 에타레벨 확인 창 본문 폰트 크기.</summary>
+        [JsonPropertyOrder(417)]
+        public double MessengerEtaFontSize
+        {
+            get => _messengerEtaFontSize;
+            set
+            {
+                double clamped = Math.Max(10.0, Math.Min(40.0, value));
+                if (Math.Abs(_messengerEtaFontSize - clamped) < 0.0001) return;
+                _messengerEtaFontSize = clamped;
+                OnPropertyChanged();
+            }
+        }
+
+        private double _experienceAlertFontSize = 18.0;
 
         /// <summary>경험치 누적 알림창 본문 폰트 크기.</summary>
         [JsonPropertyOrder(415)]
@@ -1096,7 +1112,7 @@ namespace TWChatOverlay.Models
             }
         }
 
-        private double _itemDropToastFontSize = 16.0;
+        private double _itemDropToastFontSize = 18.0;
 
         /// <summary>아이템 드롭 알림 토스트 폰트 크기.</summary>
         [JsonPropertyOrder(416)]
