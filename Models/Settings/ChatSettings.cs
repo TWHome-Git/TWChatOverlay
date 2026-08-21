@@ -1064,6 +1064,22 @@ namespace TWChatOverlay.Models
             }
         }
 
+        private double _shoutReplayFontSize = 14.0;
+
+        /// <summary>외치기 로그 창 본문 폰트 크기.</summary>
+        [JsonPropertyOrder(418)]
+        public double ShoutReplayFontSize
+        {
+            get => _shoutReplayFontSize;
+            set
+            {
+                double clamped = Math.Max(10.0, Math.Min(28.0, value));
+                if (Math.Abs(_shoutReplayFontSize - clamped) < 0.0001) return;
+                _shoutReplayFontSize = clamped;
+                OnPropertyChanged();
+            }
+        }
+
         private double _dungeonCountDisplayFontSize = 18.0;
 
         /// <summary>던전 카운트 알림창 본문 폰트 크기.</summary>

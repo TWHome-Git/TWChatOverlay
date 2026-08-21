@@ -36,6 +36,9 @@ namespace TWChatOverlay.Views
             InitializeComponent();
             _settings = settings;
             WindowFontService.Apply(this);
+            LogRichText.FontSize = _settings.ShoutReplayFontSize;
+            FontSizeSlider.Value = _settings.ShoutReplayFontSize;
+            FontSizeText.Text = $"{_settings.ShoutReplayFontSize:F0}px";
             Loaded += ShoutReplayWindow_Loaded;
             Closing += ShoutReplayWindow_Closing;
             RefreshDates();
@@ -58,6 +61,17 @@ namespace TWChatOverlay.Views
         private void CloseButton_Click(object sender, RoutedEventArgs e)
         {
             Close();
+        }
+
+        private void FontSizeSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        {
+            if (!IsLoaded) return;
+
+            double size = Math.Round(e.NewValue);
+            _settings.ShoutReplayFontSize = size;
+            LogRichText.FontSize = size;
+            FontSizeText.Text = $"{size:F0}px";
+            ConfigService.SaveDeferred(_settings);
         }
 
         private void ShoutReplayWindow_Loaded(object sender, RoutedEventArgs e)
