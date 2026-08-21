@@ -298,6 +298,7 @@ namespace TWChatOverlay.Services
                 TWChatOverlay.Views.ShoutToastWindow => (s => s.ShoutToastFontSize, (s, v) => s.ShoutToastFontSize = v),
                 TWChatOverlay.Views.ExperienceAlertWindow => (s => s.ExperienceAlertFontSize, (s, v) => s.ExperienceAlertFontSize = v),
                 TWChatOverlay.Views.ItemDropHelperWindow => (s => s.ItemDropToastFontSize, (s, v) => s.ItemDropToastFontSize = v),
+                TWChatOverlay.Views.MessengerEtaToastWindow => (s => s.MessengerEtaFontSize, (s, v) => s.MessengerEtaFontSize = v),
                 _ => ((Func<Models.ChatSettings, double>, Action<Models.ChatSettings, double>)?)null,
             };
 
@@ -332,6 +333,7 @@ namespace TWChatOverlay.Services
                     case TWChatOverlay.Views.ShoutToastWindow s: s.SetFontSize(size); break;
                     case TWChatOverlay.Views.ExperienceAlertWindow e: e.SetFontSize(size); break;
                     case TWChatOverlay.Views.ItemDropHelperWindow i: i.SetFontSize(size); break;
+                    case TWChatOverlay.Views.MessengerEtaToastWindow m: m.SetFontSize(size); break;
                 }
             }
             catch (Exception ex)
