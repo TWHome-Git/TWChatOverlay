@@ -274,7 +274,7 @@
                                                                         <Image x:Name="EntryIcon"
                                                                                Source="{Binding IconUri}"
                                                                                Stretch="Uniform"
-                                                                               Height="36"
+                                                                               Height="30"
                                                                                VerticalAlignment="Center">
                                                                             <Image.Style>
                                                                                 <Style TargetType="Image">
