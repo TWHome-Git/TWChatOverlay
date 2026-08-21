@@ -76,6 +76,13 @@ namespace TWChatOverlay.Views
             ApplyLayoutConstraints();
         }
 
+        /// <summary>잠금 해제 인스펙터에서 폰트 크기 변경 시 즉시 반영.</summary>
+        public void SetFontSize(double size)
+        {
+            ToastText.FontSize = size;
+            PreviewLabel.FontSize = size;
+        }
+
         // 미리보기 = 통일 라벨("외치기 알림창")만, 실제 토스트 = 기존 레이아웃
         private void ApplyPreviewVisual(bool isPreview)
         {

@@ -255,6 +255,8 @@ namespace TWChatOverlay.Services
                 if (settings?.WindowOpacityPercents != null &&
                     settings.WindowOpacityPercents.TryGetValue(GetOpacityKey(window), out double percent))
                 {
+                    // 표시 애니메이션이 Opacity를 잡고 있으면 직접 설정이 무시되므로 해제
+                    window.BeginAnimation(UIElement.OpacityProperty, null);
                     window.Opacity = Math.Max(0.1, Math.Min(1.0, percent / 100.0));
                 }
             }
@@ -270,6 +272,9 @@ namespace TWChatOverlay.Services
             percent = Math.Max(10.0, Math.Min(100.0, Math.Round(percent)));
             try
             {
+                // 토스트류는 표시할 때 Opacity 애니메이션을 걸어두는데,
+                // 애니메이션이 잡고 있는 동안에는 직접 값이 무시되므로 먼저 해제한다
+                window.BeginAnimation(UIElement.OpacityProperty, null);
                 window.Opacity = percent / 100.0;
 
                 var settings = ToastPresentationHelper.FindSharedSettings();
@@ -282,6 +287,56 @@ namespace TWChatOverlay.Services
             catch (Exception ex)
             {
                 AppLogger.Warn("Unlock opacity change failed.", ex);
+            }
+        }
+
+        /// <summary>선택된 창이 폰트 크기 조절을 지원하면 (읽기, 쓰기) 접근자를 돌려준다.</summary>
+        private static (Func<Models.ChatSettings, double> Get, Action<Models.ChatSettings, double> Set)? GetFontAccessor(Window window)
+            => window switch
+            {
+                TWChatOverlay.Views.DungeonCountDisplayWindow => (s => s.DungeonCountDisplayFontSize, (s, v) => s.DungeonCountDisplayFontSize = v),
+                TWChatOverlay.Views.ShoutToastWindow => (s => s.ShoutToastFontSize, (s, v) => s.ShoutToastFontSize = v),
+                TWChatOverlay.Views.ExperienceAlertWindow => (s => s.ExperienceAlertFontSize, (s, v) => s.ExperienceAlertFontSize = v),
+                TWChatOverlay.Views.ItemDropHelperWindow => (s => s.ItemDropToastFontSize, (s, v) => s.ItemDropToastFontSize = v),
+                _ => ((Func<Models.ChatSettings, double>, Action<Models.ChatSettings, double>)?)null,
+            };
+
+        internal static double? GetSelectedFontSize()
+        {
+            var window = _selected;
+            var accessor = window == null ? null : GetFontAccessor(window);
+            var settings = ToastPresentationHelper.FindSharedSettings();
+            if (accessor == null || settings == null) return null;
+            return accessor.Value.Get(settings);
+        }
+
+        /// <summary>인스펙터 슬라이더로 선택된 알림창의 폰트 크기를 지정·저장하고 즉시 반영한다.</summary>
+        internal static void SetSelectedFontSize(double size)
+        {
+            var window = _selected;
+            if (window == null) return;
+
+            var accessor = GetFontAccessor(window);
+            var settings = ToastPresentationHelper.FindSharedSettings();
+            if (accessor == null || settings == null) return;
+
+            size = Math.Max(10.0, Math.Min(40.0, Math.Round(size)));
+            try
+            {
+                accessor.Value.Set(settings, size);
+                ConfigService.SaveDeferred(settings);
+
+                switch (window)
+                {
+                    case TWChatOverlay.Views.DungeonCountDisplayWindow d: d.SetFontSize(size); break;
+                    case TWChatOverlay.Views.ShoutToastWindow s: s.SetFontSize(size); break;
+                    case TWChatOverlay.Views.ExperienceAlertWindow e: e.SetFontSize(size); break;
+                    case TWChatOverlay.Views.ItemDropHelperWindow i: i.SetFontSize(size); break;
+                }
+            }
+            catch (Exception ex)
+            {
+                AppLogger.Warn("Unlock font size change failed.", ex);
             }
         }
 
@@ -580,9 +635,13 @@ namespace TWChatOverlay.Services
             private readonly Slider _opacitySlider;
             private readonly TextBlock _opacityText;
             private bool _suppressOpacityEvent;
+            private readonly StackPanel _fontRow;
+            private readonly Slider _fontSlider;
+            private readonly TextBlock _fontText;
+            private bool _suppressFontEvent;
 
             private const double SideZone = 34;   // 좌우 버튼이 차지하는 폭
-            private const double VertZone = 152;  // 상하 버튼 + 정보 패널이 차지하는 높이
+            private const double VertZone = 180;  // 상하 버튼 + 정보 패널이 차지하는 높이
             private const double PanelWidth = 248;
             private const double ButtonW = 26;
             private const double ButtonH = 24;
@@ -671,9 +730,56 @@ namespace TWChatOverlay.Services
                 opacityRow.Children.Add(_opacitySlider);
                 opacityRow.Children.Add(_opacityText);
 
+                // 폰트 크기 슬라이더 (지원 창에서만 표시) — 투명도 아래
+                _fontSlider = new Slider
+                {
+                    Minimum = 10,
+                    Maximum = 40,
+                    Value = 16,
+                    Width = 138,
+                    TickFrequency = 1,
+                    IsSnapToTickEnabled = true,
+                    Focusable = false,
+                    VerticalAlignment = VerticalAlignment.Center,
+                    Margin = new Thickness(8, 0, 8, 0),
+                };
+                _fontText = new TextBlock
+                {
+                    Text = "16",
+                    FontSize = 11,
+                    Width = 36,
+                    TextAlignment = TextAlignment.Right,
+                    Foreground = new SolidColorBrush(TextCol),
+                    VerticalAlignment = VerticalAlignment.Center,
+                };
+                _fontSlider.ValueChanged += (_, e) =>
+                {
+                    _fontText.Text = $"{(int)Math.Round(e.NewValue)}";
+                    if (_suppressFontEvent) return;
+                    SetSelectedFontSize(e.NewValue);
+                };
+
+                _fontRow = new StackPanel
+                {
+                    Orientation = Orientation.Horizontal,
+                    HorizontalAlignment = HorizontalAlignment.Center,
+                    Margin = new Thickness(0, 7, 0, 0),
+                };
+                _fontRow.Children.Add(new TextBlock
+                {
+                    Text = "폰트",
+                    FontSize = 11,
+                    Foreground = new SolidColorBrush(SubTextCol),
+                    VerticalAlignment = VerticalAlignment.Center,
+                    Margin = new Thickness(9, 0, 0, 0),
+                });
+                _fontRow.Children.Add(_fontSlider);
+                _fontRow.Children.Add(_fontText);
+
                 var root = new StackPanel();
                 root.Children.Add(fieldPanel);
                 root.Children.Add(opacityRow);
+                root.Children.Add(_fontRow);
 
                 _panel = new Border
                 {
@@ -785,7 +891,26 @@ namespace TWChatOverlay.Services
                 _heightBox.Opacity = fieldOpacity;
 
                 SyncOpacitySlider(target);
+                SyncFontSlider();
                 RefreshValues();
+            }
+
+            private void SyncFontSlider()
+            {
+                double? size = GetSelectedFontSize();
+                _fontRow.Visibility = size.HasValue ? Visibility.Visible : Visibility.Collapsed;
+                if (!size.HasValue) return;
+
+                _suppressFontEvent = true;
+                try
+                {
+                    _fontSlider.Value = Math.Max(10, Math.Min(40, Math.Round(size.Value)));
+                    _fontText.Text = $"{(int)Math.Round(size.Value)}";
+                }
+                finally
+                {
+                    _suppressFontEvent = false;
+                }
             }
 
             private void SyncOpacitySlider(Window target)
@@ -850,7 +975,7 @@ namespace TWChatOverlay.Services
                 Canvas.SetTop(_btnDown, VertZone + th + 4);
 
                 // 정보 패널: 기본은 창 상단(▲ 버튼 위), 화면 위쪽에 붙어 있으면 하단(▼ 버튼 아래)
-                double panelHeight = _panel.ActualHeight > 0 ? _panel.ActualHeight : 112;
+                double panelHeight = _panel.ActualHeight > 0 ? _panel.ActualHeight : 140;
                 bool showBelow = target.Top - (ButtonH + Gap * 2 + panelHeight) < SystemParameters.VirtualScreenTop + 4;
 
                 double panelLeft = originX + tw / 2 - PanelWidth / 2;
