@@ -354,12 +354,13 @@ namespace TWChatOverlay.Models
         public string DisplayName { get; }
         public ItemDropGrade Grade { get; }
         public int Count { get; }
-        public string DisplayText => Count > 1 ? $"{DisplayName} x{Count}" : DisplayName;
+        // 갯수는 1개여도 항상 표기 (x1)
+        public string DisplayText => $"{DisplayName} x{Count:N0}";
 
         /// <summary>아이콘 이미지가 있으면 pack URI, 없으면 null(텍스트로 표시).</summary>
         public string? IconUri { get; }
         public bool HasIcon => IconUri != null;
-        public bool ShowCountBadge => HasIcon && Count > 1;
+        public bool ShowCountBadge => HasIcon;
         public string CountBadgeText => $"x{Count:N0}";
 
         private static string? ResolveIconUri(string displayName)

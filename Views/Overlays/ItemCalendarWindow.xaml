@@ -162,7 +162,7 @@
                                                     Padding="6,4">
                                                 <TextBlock Text="{Binding DateLabel}"
                                                            Foreground="{DynamicResource TextBrush}"
-                                                           FontSize="{Binding DataContext.ItemCalendarFontSize, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource AddValueConverter}, ConverterParameter=-1}"
+                                                           FontSize="17"
                                                            FontWeight="Bold"
                                                            VerticalAlignment="Center"/>
                                             </Border>
@@ -194,14 +194,14 @@
                                                                     <TextBlock x:Name="EntryCount"
                                                                                Text="{Binding CountBadgeText}"
                                                                                Foreground="{DynamicResource TextBrush}"
-                                                                               FontSize="{Binding DataContext.ItemCalendarFontSize, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource AddValueConverter}, ConverterParameter=-1}"
+                                                                               FontSize="17"
                                                                                FontWeight="SemiBold"
                                                                                VerticalAlignment="Center"
                                                                                Margin="3,0,0,0"/>
                                                                     <TextBlock x:Name="EntryText"
                                                                                Text="{Binding DisplayText}"
                                                                                Foreground="{DynamicResource TextBrush}"
-                                                                               FontSize="{Binding DataContext.ItemCalendarFontSize, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                                               FontSize="18"
                                                                                FontWeight="SemiBold"
                                                                                TextWrapping="NoWrap"
                                                                                TextTrimming="CharacterEllipsis"
@@ -222,7 +222,8 @@
                                                     </ItemsControl.ItemTemplate>
                                                     <ItemsControl.ItemsPanel>
                                                         <ItemsPanelTemplate>
-                                                            <WrapPanel Orientation="Horizontal"/>
+                                                            <!-- 한 줄에 아이템 2개 -->
+                                                            <UniformGrid Columns="2"/>
                                                         </ItemsPanelTemplate>
                                                     </ItemsControl.ItemsPanel>
                                                 </ItemsControl>
@@ -237,7 +238,7 @@
                                                        Height="16"
                                                        VerticalAlignment="Center"/>
                                                 <TextBlock Foreground="{DynamicResource OverlayExpAccentBrush}"
-                                                           FontSize="{Binding DataContext.ItemCalendarFontSize, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource AddValueConverter}, ConverterParameter=-1}"
+                                                           FontSize="17"
                                                            FontWeight="SemiBold"
                                                            VerticalAlignment="Center"
                                                            Margin="4,0,0,0"
