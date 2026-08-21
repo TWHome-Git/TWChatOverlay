@@ -19,7 +19,8 @@
             MouseLeftButtonDown="RootBorder_MouseLeftButtonDown">
         <Grid>
             <!-- 위치 표시 전용 창 — 잠금 해제 공통 라벨 형식 -->
-            <TextBlock Text="아이템 드롭 알림창"
+            <TextBlock x:Name="PreviewLabel"
+                       Text="아이템 드롭 알림창"
                        Foreground="{DynamicResource TextBrush}"
                        FontSize="15"
                        FontWeight="SemiBold"

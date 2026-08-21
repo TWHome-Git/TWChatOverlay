@@ -10,6 +10,12 @@ namespace TWChatOverlay.Views
     {
         public static ItemDropHelperWindow? Instance { get; private set; }
 
+        /// <summary>잠금 해제 인스펙터의 폰트 크기 조절 — 라벨에 즉시 반영 (실제 토스트 크기 설정과 연동).</summary>
+        public void SetFontSize(double size)
+        {
+            PreviewLabel.FontSize = size;
+        }
+
         public ItemDropHelperWindow()
         {
             InitializeComponent();
