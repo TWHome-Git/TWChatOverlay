@@ -293,7 +293,7 @@ namespace TWChatOverlay.Services
             return window.GetType().Name switch
             {
                 "MainWindow" => "채팅창",
-                "AbaddonRoadSummaryWindow" => "어밴던로드 주간 합계",
+                "AbaddonRoadSummaryWindow" => "어밴던로드 상황판",
                 "ExpTrackerWindow" => "경험치 추적창",
                 "ExperienceAlertWindow" => "경험치 누적 알림",
                 "DungeonCountDisplayWindow" => "던전 카운터",
