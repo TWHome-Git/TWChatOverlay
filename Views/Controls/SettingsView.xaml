@@ -230,7 +230,10 @@
 
                     <!-- ===================== 채팅 ===================== -->
                     <StackPanel x:Name="ChatPanel">
-                        <TextBlock Text="기본 채팅 필터" Style="{StaticResource SettingsSectionLabelStyle}" Margin="0,4,0,6"/>
+                        <StackPanel Orientation="Horizontal" Margin="0,4,0,6">
+                            <TextBlock Text="기본 채팅 필터" Style="{StaticResource SettingsSectionLabelStyle}" Margin="0"/>
+                            <Button Style="{StaticResource HelpButtonStyle}" Tag="chat.filter" Click="Help_Click"/>
+                        </StackPanel>
                         <WrapPanel>
                             <Border Style="{StaticResource SettingsRowStyle}">
                                 <DockPanel>
@@ -238,10 +241,7 @@
                                         <Button Width="26" Height="14" Margin="0,0,10,0" Background="{Binding NormalColor}" Command="{Binding ColorPickCommand}" CommandParameter="Normal" Style="{StaticResource ColorPickerButtonStyle}"/>
                                         <CheckBox IsChecked="{Binding ShowNormal}" Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
                                     </StackPanel>
-                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                        <TextBlock Text="일반" Style="{StaticResource SettingsRowLabelStyle}"/>
-                                        <Button Style="{StaticResource HelpButtonStyle}" Tag="chat.filter.normal" Click="Help_Click"/>
-                                    </StackPanel>
+                                    <TextBlock Text="일반" Style="{StaticResource SettingsRowLabelStyle}"/>
                                 </DockPanel>
                             </Border>
                             <Border Style="{StaticResource SettingsRowStyle}">
@@ -250,10 +250,7 @@
                                         <Button Width="26" Height="14" Margin="0,0,10,0" Background="{Binding TeamColor}" Command="{Binding ColorPickCommand}" CommandParameter="Team" Style="{StaticResource ColorPickerButtonStyle}"/>
                                         <CheckBox IsChecked="{Binding ShowTeam}" Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
                                     </StackPanel>
-                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                        <TextBlock Text="팀" Style="{StaticResource SettingsRowLabelStyle}"/>
-                                        <Button Style="{StaticResource HelpButtonStyle}" Tag="chat.filter.team" Click="Help_Click"/>
-                                    </StackPanel>
+                                    <TextBlock Text="팀" Style="{StaticResource SettingsRowLabelStyle}"/>
                                 </DockPanel>
                             </Border>
                             <Border Style="{StaticResource SettingsRowStyle}">
@@ -262,10 +259,7 @@
                                         <Button Width="26" Height="14" Margin="0,0,10,0" Background="{Binding ClubColor}" Command="{Binding ColorPickCommand}" CommandParameter="Club" Style="{StaticResource ColorPickerButtonStyle}"/>
                                         <CheckBox IsChecked="{Binding ShowClub}" Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
                                     </StackPanel>
-                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                        <TextBlock Text="클럽" Style="{StaticResource SettingsRowLabelStyle}"/>
-                                        <Button Style="{StaticResource HelpButtonStyle}" Tag="chat.filter.club" Click="Help_Click"/>
-                                    </StackPanel>
+                                    <TextBlock Text="클럽" Style="{StaticResource SettingsRowLabelStyle}"/>
                                 </DockPanel>
                             </Border>
                             <Border Style="{StaticResource SettingsRowStyle}">
@@ -274,10 +268,7 @@
                                         <Button Width="26" Height="14" Margin="0,0,10,0" Background="{Binding ShoutColor}" Command="{Binding ColorPickCommand}" CommandParameter="Shout" Style="{StaticResource ColorPickerButtonStyle}"/>
                                         <CheckBox IsChecked="{Binding ShowShout}" Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
                                     </StackPanel>
-                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                        <TextBlock Text="외치기" Style="{StaticResource SettingsRowLabelStyle}"/>
-                                        <Button Style="{StaticResource HelpButtonStyle}" Tag="chat.filter.shout" Click="Help_Click"/>
-                                    </StackPanel>
+                                    <TextBlock Text="외치기" Style="{StaticResource SettingsRowLabelStyle}"/>
                                 </DockPanel>
                             </Border>
                             <Border Style="{StaticResource SettingsRowStyle}">
@@ -286,10 +277,7 @@
                                         <Button Width="26" Height="14" Margin="0,0,10,0" Background="{Binding SystemColor}" Command="{Binding ColorPickCommand}" CommandParameter="System" Style="{StaticResource ColorPickerButtonStyle}"/>
                                         <CheckBox IsChecked="{Binding ShowSystem}" Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
                                     </StackPanel>
-                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                        <TextBlock Text="시스템" Style="{StaticResource SettingsRowLabelStyle}"/>
-                                        <Button Style="{StaticResource HelpButtonStyle}" Tag="chat.filter.system" Click="Help_Click"/>
-                                    </StackPanel>
+                                    <TextBlock Text="시스템" Style="{StaticResource SettingsRowLabelStyle}"/>
                                 </DockPanel>
                             </Border>
                         </WrapPanel>
