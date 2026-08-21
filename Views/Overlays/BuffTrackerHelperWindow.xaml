@@ -15,7 +15,7 @@
         <!-- 실제 버프 추적창과 동일한 타일 (BuffTrackerWindow.xaml 참고) -->
         <DataTemplate x:Key="BuffTileTemplate">
             <StackPanel Orientation="Horizontal"
-                        Margin="0,0,12,0"
+                        Margin="0,0,12,5"
                         ToolTip="{Binding DisplayName}">
                 <Border Width="26"
                         Height="26"
@@ -43,14 +43,34 @@
             CornerRadius="8"
             Padding="10,7"
             MouseLeftButtonDown="RootBorder_MouseLeftButtonDown">
-        <!-- 모든 버프가 켜졌을 때 기준의 최대 크기 미리보기 -->
-        <ItemsControl x:Name="PreviewItems"
-                      ItemTemplate="{StaticResource BuffTileTemplate}">
-            <ItemsControl.ItemsPanel>
-                <ItemsPanelTemplate>
-                    <WrapPanel Orientation="Horizontal"/>
-                </ItemsPanelTemplate>
-            </ItemsControl.ItemsPanel>
-        </ItemsControl>
+        <!-- 모든 버프가 켜졌을 때 기준의 최대 크기 미리보기 (실제 창과 동일한 그룹 구조) -->
+        <StackPanel>
+            <TextBlock Text="레어"
+                       Foreground="{DynamicResource OverlayRareAccentBrush}"
+                       FontSize="11"
+                       FontWeight="Bold"
+                       Margin="0,0,0,4"/>
+            <ItemsControl x:Name="PreviewRareItems"
+                          ItemTemplate="{StaticResource BuffTileTemplate}">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <WrapPanel Orientation="Horizontal"/>
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+            </ItemsControl>
+            <TextBlock Text="경험치"
+                       Foreground="{DynamicResource OverlayExpAccentBrush}"
+                       FontSize="11"
+                       FontWeight="Bold"
+                       Margin="0,3,0,4"/>
+            <ItemsControl x:Name="PreviewExpItems"
+                          ItemTemplate="{StaticResource BuffTileTemplate}">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <WrapPanel Orientation="Horizontal"/>
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+            </ItemsControl>
+        </StackPanel>
     </Border>
 </Window>

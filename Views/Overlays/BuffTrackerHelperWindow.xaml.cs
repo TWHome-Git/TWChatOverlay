@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Windows;
 using System.Windows.Input;
 using TWChatOverlay.Models;
@@ -15,7 +16,9 @@ namespace TWChatOverlay.Views
             InitializeComponent();
             WindowFontService.Apply(this);
             Instance = this;
-            PreviewItems.ItemsSource = BuffTrackerService.CreatePreviewItems();
+            var previewItems = BuffTrackerService.CreatePreviewItems();
+            PreviewRareItems.ItemsSource = previewItems.Where(item => item.IsRare).ToList();
+            PreviewExpItems.ItemsSource = previewItems.Where(item => !item.IsRare).ToList();
             LocationChanged += (_, _) => SyncPositionToSettings();
         }
 
