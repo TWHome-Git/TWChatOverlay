@@ -256,6 +256,7 @@ namespace TWChatOverlay.Views
 
         private void ConfirmExit()
         {
+            ChatWindowHub.BeginShutdown();
             Application.Current.Shutdown();
         }
 

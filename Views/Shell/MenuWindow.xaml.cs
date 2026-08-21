@@ -337,6 +337,7 @@ namespace TWChatOverlay.Views
                     break;
                 case "BtnExit":
                     AppLogger.Warn("Exit requested from menu window.");
+                    ChatWindowHub.BeginShutdown();
                     Application.Current.Shutdown();
                     break;
                 default:
@@ -681,7 +682,11 @@ namespace TWChatOverlay.Views
             var menu = new Forms.ContextMenuStrip();
             menu.Items.Add("열기", null, (_, _) => RestoreFromTray());
             menu.Items.Add("모든 창 숨기기", null, (_, _) => TrayAllWindowsService.HideAll());
-            menu.Items.Add("종료", null, (_, _) => Application.Current.Shutdown());
+            menu.Items.Add("종료", null, (_, _) =>
+            {
+                ChatWindowHub.BeginShutdown();
+                Application.Current.Shutdown();
+            });
 
             Drawing.Icon trayIcon;
             try
