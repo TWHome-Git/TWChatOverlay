@@ -418,6 +418,29 @@ namespace TWChatOverlay.Views
             PersistWindowPosition();
         }
 
+        protected override void OnSourceInitialized(EventArgs e)
+        {
+            base.OnSourceInitialized(e);
+
+            // 화면 상단으로 드래그하면 Windows 스냅(끌어서 최대화)이 개입해
+            // 창 위치가 임의로 내려가 고정되는 문제 방지 — 최대화 스타일 제거
+            try
+            {
+                var hwnd = new System.Windows.Interop.WindowInteropHelper(this).Handle;
+                const int GWL_STYLE = -16;
+                const int WS_MAXIMIZEBOX = 0x00010000;
+                int style = GetWindowLong(hwnd, GWL_STYLE);
+                SetWindowLong(hwnd, GWL_STYLE, style & ~WS_MAXIMIZEBOX);
+            }
+            catch { }
+        }
+
+        [System.Runtime.InteropServices.DllImport("user32.dll")]
+        private static extern int GetWindowLong(IntPtr hWnd, int nIndex);
+
+        [System.Runtime.InteropServices.DllImport("user32.dll")]
+        private static extern int SetWindowLong(IntPtr hWnd, int nIndex, int dwNewLong);
+
         protected override void OnClosed(EventArgs e)
         {
             _resetTimer?.Stop();
