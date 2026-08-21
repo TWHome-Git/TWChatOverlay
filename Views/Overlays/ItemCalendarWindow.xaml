@@ -75,8 +75,8 @@
                                    TextAlignment="Right"
                                    TextTrimming="CharacterEllipsis"
                                    VerticalAlignment="Center"/>
-                        <!-- 날짜 칸 표시 방식: ON=그림, OFF=텍스트 -->
-                        <CheckBox Content="그림"
+                        <!-- 날짜 칸 표시 방식: ON=아이템 이미지, OFF=텍스트 -->
+                        <CheckBox Content="아이템 이미지"
                                   FontSize="11"
                                   Foreground="{DynamicResource OverlayInfoTextBrush}"
                                   IsChecked="{Binding UseIconDisplay, Mode=TwoWay}"
