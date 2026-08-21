@@ -100,7 +100,7 @@
         </Style>
     </Window.Resources>
     <Grid>
-        <Border Margin="0,30,0,0" Background="{DynamicResource OverlayWindowBackgroundBrush}" CornerRadius="8" BorderBrush="{DynamicResource OverlayStrongBorderBrush}" BorderThickness="1">
+        <Border Background="{DynamicResource OverlayWindowBackgroundBrush}" CornerRadius="8" BorderBrush="{DynamicResource OverlayStrongBorderBrush}" BorderThickness="1">
             <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="34"/>
