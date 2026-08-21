@@ -35,6 +35,31 @@
                                FontWeight="Bold"
                                HorizontalAlignment="Center"
                                VerticalAlignment="Center"/>
+                    <!-- 본문 폰트 크기 조절 -->
+                    <StackPanel Orientation="Horizontal"
+                                HorizontalAlignment="Left"
+                                VerticalAlignment="Center">
+                        <TextBlock Text="폰트"
+                                   Foreground="{DynamicResource OverlaySubtleTextBrush}"
+                                   FontSize="11"
+                                   VerticalAlignment="Center"
+                                   Margin="0,0,6,0"/>
+                        <Slider x:Name="FontSizeSlider"
+                                Width="90"
+                                Minimum="10"
+                                Maximum="28"
+                                TickFrequency="1"
+                                IsSnapToTickEnabled="True"
+                                VerticalAlignment="Center"
+                                ValueChanged="FontSizeSlider_ValueChanged"/>
+                        <TextBlock x:Name="FontSizeText"
+                                   Foreground="{DynamicResource OverlayInfoTextBrush}"
+                                   FontSize="11"
+                                   FontWeight="SemiBold"
+                                   Width="34"
+                                   VerticalAlignment="Center"
+                                   Margin="4,0,0,0"/>
+                    </StackPanel>
                     <Button HorizontalAlignment="Right"
                             Click="CloseButton_Click"
                             Content="X"
