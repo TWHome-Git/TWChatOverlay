@@ -150,6 +150,9 @@ namespace TWChatOverlay.Views
                     });
                 }
 
+                // 실시간 저장 시 읽기 배치가 갈려 병합을 놓친 줄바꿈 외치기를 표시 단계에서 합친다
+                parsedLines = MergeWrappedStoredShoutLines(parsedLines);
+
                 _currentLines = parsedLines.Select(DecorateShoutEta).ToList();
                 if (myVersion == _loadVersion)
                     RenderLines(SearchBox.Text, scrollToBottom: true);
@@ -174,6 +177,44 @@ namespace TWChatOverlay.Views
                 }), DispatcherPriority.Input);
                 _loadGate.Release();
             }
+        }
+
+        private static readonly Regex StoredShoutTimeRegex = new(@"^\s*\[(?<time>[^\]]+)\]\s*(?<rest>.*)$", RegexOptions.Compiled);
+
+        /// <summary>
+        /// 저장된 외치기 로그에서 줄바꿈으로 쪼개진 항목을 합친다.
+        /// 같은 타임스탬프이면서 '외치기'로 시작하지 않는 줄은 앞 외치기 줄의 이어짐으로 본다.
+        /// (실시간 수집 시 두 줄이 서로 다른 읽기 배치로 들어오면 병합을 놓치고 따로 저장됨)
+        /// </summary>
+        private static List<string> MergeWrappedStoredShoutLines(List<string> lines)
+        {
+            static string NormalizeTime(string value) => Regex.Replace(value ?? string.Empty, @"\s+", " ").Trim();
+
+            var merged = new List<string>(lines.Count);
+            foreach (string line in lines)
+            {
+                var current = StoredShoutTimeRegex.Match(line);
+                if (merged.Count > 0 && current.Success)
+                {
+                    string rest = current.Groups["rest"].Value;
+                    bool looksLikeContinuation = !rest.Contains("외치기", StringComparison.Ordinal);
+                    if (looksLikeContinuation)
+                    {
+                        var previous = StoredShoutTimeRegex.Match(merged[^1]);
+                        if (previous.Success &&
+                            previous.Groups["rest"].Value.Contains("외치기", StringComparison.Ordinal) &&
+                            string.Equals(NormalizeTime(previous.Groups["time"].Value), NormalizeTime(current.Groups["time"].Value), StringComparison.Ordinal))
+                        {
+                            merged[^1] += rest;
+                            continue;
+                        }
+                    }
+                }
+
+                merged.Add(line);
+            }
+
+            return merged;
         }
 
         private void ApplyVisualStyle()
