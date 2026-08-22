@@ -218,8 +218,8 @@ namespace TWChatOverlay.Views
 
             if (!CanShowAbandonRoadSummaryWindow(previewMode))
             {
-                if (_AbandonRoadSummaryWindow?.IsVisible == true)
-                    _AbandonRoadSummaryWindow.Hide();
+                if (_AbandonRoadSummaryWindow != null)
+                    try { _AbandonRoadSummaryWindow.Close(); } catch { } // 사용하지 않을 땐 닫아 메모리 회수
                 return;
             }
 
@@ -282,8 +282,8 @@ namespace TWChatOverlay.Views
             {
                 if (_itemCalendarWindow?.IsVisible == true)
                     _itemCalendarWindow.Hide();
-                if (_AbandonRoadSummaryWindow?.IsVisible == true)
-                    _AbandonRoadSummaryWindow.Hide();
+                if (_AbandonRoadSummaryWindow != null)
+                    try { _AbandonRoadSummaryWindow.Close(); } catch { } // 사용하지 않을 땐 닫아 메모리 회수
                 if (_expTrackerWindow?.IsVisible == true)
                     _expTrackerWindow.Hide();
                 return;

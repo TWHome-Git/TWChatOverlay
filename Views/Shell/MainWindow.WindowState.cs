@@ -193,7 +193,7 @@ namespace TWChatOverlay.Views
                 SubAddonWindow.Instance?.ApplyPositionPreviewVisibility(false);
                 ItemDropHelperWindow.Instance?.Close();
                 BuffTrackerHelperWindow.Instance?.Close();
-                _AbandonRoadSummaryWindow?.Hide();
+                try { _AbandonRoadSummaryWindow?.Close(); } catch { }
             }
             catch { }
 
@@ -289,7 +289,7 @@ namespace TWChatOverlay.Views
                     SubAddonWindow.Instance?.Hide();
                     ItemDropHelperWindow.Instance?.Close();
                     BuffTrackerHelperWindow.Instance?.Close();
-                    _AbandonRoadSummaryWindow?.Hide();
+                    try { _AbandonRoadSummaryWindow?.Close(); } catch { }
                 }
                 catch { }
                 return;
@@ -652,8 +652,7 @@ namespace TWChatOverlay.Views
                 bool canShow = _settings.ShowAbandonRoadSummaryWindow && CanShowAbandonRoadSummaryWindow(previewMode: false);
                 if (!canShow)
                 {
-                    if (_AbandonRoadSummaryWindow.IsVisible)
-                        _AbandonRoadSummaryWindow.Hide();
+                    try { _AbandonRoadSummaryWindow.Close(); } catch { } // 사용하지 않을 땐 닫아 메모리 회수
                     return;
                 }
 
