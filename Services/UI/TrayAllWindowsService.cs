@@ -39,6 +39,11 @@ namespace TWChatOverlay.Services
                         try
                         {
                             if (!w.IsVisible) continue;
+
+                            // 메뉴 바는 남겨서 트레이 상태에서도 복귀 진입점이 보이게 한다
+                            if (w is TWChatOverlay.Views.MenuWindow)
+                                continue;
+
                             _hiddenWindows.Add(new WeakReference<Window>(w));
                             w.Hide();
                         }

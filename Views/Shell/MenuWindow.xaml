@@ -44,9 +44,11 @@
             <Border x:Name="AppIconArea"
                     Height="36"
                     Background="Transparent"
+                    BorderBrush="Transparent"
+                    BorderThickness="1.5"
                     CornerRadius="8"
                     Cursor="Hand"
-                    ToolTip="메뉴 — 마우스를 올리면 펼쳐집니다"
+                    ToolTip="메뉴 — 마우스를 올리면 펼쳐지고, 클릭하면 상시 표시로 고정됩니다"
                     MouseLeftButtonDown="AppIcon_MouseLeftButtonDown">
                 <Image Source="/TWChatOverlay;component/favicon.ico"
                        Width="28" Height="28"
