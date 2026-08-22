@@ -66,6 +66,8 @@ namespace TWChatOverlay.Views
             catch (Exception ex) { AppLogger.Warn("Failed to subscribe menu window to main window state.", ex); }
 
             UiLockService.UnlockChanged += OnUnlockChanged;
+            TrayAllWindowsService.TrayStateChanged += OnTrayStateChanged;
+            ApplyMinimizeHighlight(TrayAllWindowsService.IsTrayed);
             AppLogger.Info("Menu window initialized.");
         }
 
@@ -254,6 +256,7 @@ namespace TWChatOverlay.Views
         {
             try { _menuAutoHideTimer.Stop(); } catch { }
             try { GetSharedSettings().PropertyChanged -= SharedSettings_PropertyChanged; } catch { }
+            try { TrayAllWindowsService.TrayStateChanged -= OnTrayStateChanged; } catch { }
             try
             {
                 _notifyIcon.Dispose();
@@ -746,7 +749,35 @@ namespace TWChatOverlay.Views
 
         private void Minimize_Click(object sender, RoutedEventArgs e)
         {
-            MinimizeToTray();
+            // 이미 최소화 상태면 한 번 더 눌러 이전 상태로 복원
+            if (TrayAllWindowsService.IsTrayed)
+                RestoreFromTray();
+            else
+                MinimizeToTray();
+        }
+
+        private void OnTrayStateChanged(bool trayed)
+        {
+            try { Dispatcher.Invoke(() => ApplyMinimizeHighlight(trayed)); } catch { }
+        }
+
+        /// <summary>최소화 상태에서는 [최소화] 버튼을 활성 버튼과 같은 민트 테두리로 강조하고 복원 안내로 바꾼다.</summary>
+        private void ApplyMinimizeHighlight(bool trayed)
+        {
+            if (BtnMinimize == null) return;
+
+            if (trayed)
+            {
+                BtnMinimize.SetResourceReference(Control.BorderBrushProperty, "OverlayAccentBorderBrush");
+                BtnMinimize.BorderThickness = new Thickness(2);
+                BtnMinimize.ToolTip = "최소화 상태 — 한 번 더 누르면 모든 창 복원";
+            }
+            else
+            {
+                BtnMinimize.SetResourceReference(Control.BorderBrushProperty, "ControlBorderBrush");
+                BtnMinimize.BorderThickness = new Thickness(1);
+                BtnMinimize.ToolTip = "모든 창 트레이로 최소화";
+            }
         }
 
         /// <summary>메뉴 바를 제외한 모든 창을 트레이로 숨깁니다.</summary>
