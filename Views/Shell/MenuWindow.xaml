@@ -66,14 +66,16 @@
                     HorizontalAlignment="Stretch"
                     Click="Minimize_Click"
                     ToolTip="모든 창 트레이로 최소화"
+                    BorderBrush="{DynamicResource ControlBorderBrush}"
+                    BorderThickness="1"
                     Cursor="Hand"
                     Focusable="False">
                 <Button.Template>
                     <ControlTemplate TargetType="Button">
                         <Border x:Name="ButtonBorder"
                                 Background="{DynamicResource OverlayTabHoverBrush}"
-                                BorderBrush="{DynamicResource ControlBorderBrush}"
-                                BorderThickness="1"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
                                 CornerRadius="4">
                             <ContentPresenter HorizontalAlignment="Center"
                                               VerticalAlignment="Center"/>
