@@ -11,7 +11,6 @@ using System.Windows.Media;
 using TWChatOverlay.Models;
 using TWChatOverlay.Services;
 using TWChatOverlay.ViewModels;
-using Forms = System.Windows.Forms;
 
 namespace TWChatOverlay.Views
 {
@@ -173,14 +172,15 @@ namespace TWChatOverlay.Views
             var browseBtn = new Button { Content = "찾아보기", Width = 96, Height = 30, Margin = new Thickness(8, 0, 0, 0) };
             browseBtn.Click += (_, _) =>
             {
-                using var dlg = new Forms.FolderBrowserDialog
+                // .NET 8 WPF 기본 제공 폴더 선택 대화상자 (WinForms 불필요)
+                var dlg = new Microsoft.Win32.OpenFolderDialog
                 {
-                    Description = "채팅 로그 폴더를 선택하세요",
-                    SelectedPath = string.IsNullOrWhiteSpace(_settings.ChatLogFolderPath) ? @"C:\\Nexon\\TalesWeaver\\ChatLog" : _settings.ChatLogFolderPath
+                    Title = "채팅 로그 폴더를 선택하세요",
+                    InitialDirectory = string.IsNullOrWhiteSpace(_settings.ChatLogFolderPath) ? @"C:\Nexon\TalesWeaver\ChatLog" : _settings.ChatLogFolderPath
                 };
-                if (dlg.ShowDialog() == Forms.DialogResult.OK)
+                if (dlg.ShowDialog(this) == true)
                 {
-                    _settings.ChatLogFolderPath = dlg.SelectedPath;
+                    _settings.ChatLogFolderPath = dlg.FolderName;
                 }
             };
             Grid.SetColumn(browseBtn, 1);
@@ -290,7 +290,6 @@ namespace TWChatOverlay.Views
             {
                 try
                 {
-                    using var dialog = new Forms.ColorDialog();
                     string current = colorBindingPath switch
                     {
                         nameof(ChatSettings.NormalColor) => _settings.NormalColor,
@@ -300,11 +299,13 @@ namespace TWChatOverlay.Views
                         nameof(ChatSettings.SystemColor) => _settings.SystemColor,
                         _ => "#FFFFFF"
                     };
-                    dialog.Color = System.Drawing.ColorTranslator.FromHtml(current);
-                    if (dialog.ShowDialog() != Forms.DialogResult.OK)
+                    Color initial;
+                    try { initial = (Color)ColorConverter.ConvertFromString(current); }
+                    catch { initial = Colors.White; }
+                    if (!NativeColorDialog.TryPick(initial, out Color picked, this))
                         return;
 
-                    string hex = $"#{dialog.Color.R:X2}{dialog.Color.G:X2}{dialog.Color.B:X2}";
+                    string hex = $"#{picked.R:X2}{picked.G:X2}{picked.B:X2}";
                     switch (colorBindingPath)
                     {
                         case nameof(ChatSettings.NormalColor): _settings.NormalColor = hex; break;

@@ -6,8 +6,6 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using TWChatOverlay.Services;
-using Drawing = System.Drawing;
-using Forms = System.Windows.Forms;
 
 namespace TWChatOverlay.Views
 {
@@ -17,7 +15,7 @@ namespace TWChatOverlay.Views
         private readonly System.Windows.Threading.DispatcherTimer _menuAutoHideTimer;
         private bool _isPinned; // 아이콘 클릭으로 고정 — 자동 접힘 없이 상시 표시
         private MainWindow? _subscribedMainWindow;
-        private readonly Forms.NotifyIcon _notifyIcon;
+        private readonly TrayIconService _notifyIcon;
         private static ShoutReplayWindow? _shoutReplayWindow;
         private static MemoOverlayWindow? _memoWindow;
 
@@ -263,7 +261,6 @@ namespace TWChatOverlay.Views
             try { GetSharedSettings().PropertyChanged -= SharedSettings_PropertyChanged; } catch { }
             try
             {
-                _notifyIcon.Visible = false;
                 _notifyIcon.Dispose();
             }
             catch { }
@@ -731,43 +728,21 @@ namespace TWChatOverlay.Views
             Close();
         }
 
-        private Forms.NotifyIcon CreateNotifyIcon()
+        private TrayIconService CreateNotifyIcon()
         {
-            var menu = new Forms.ContextMenuStrip();
-            menu.Items.Add("열기", null, (_, _) => RestoreFromTray());
-            menu.Items.Add("모든 창 숨기기", null, (_, _) => TrayAllWindowsService.HideAll());
-            menu.Items.Add("종료", null, (_, _) =>
+            // WinForms NotifyIcon 대신 Shell_NotifyIcon 직접 구현 (WinForms 어셈블리 로드 제거)
+            var tray = new TrayIconService("TWChatOverlay", new[]
             {
-                ChatWindowHub.BeginShutdown();
-                Application.Current.Shutdown();
+                new TrayIconService.MenuItem("열기", RestoreFromTray),
+                new TrayIconService.MenuItem("모든 창 숨기기", TrayAllWindowsService.HideAll),
+                new TrayIconService.MenuItem("종료", () =>
+                {
+                    ChatWindowHub.BeginShutdown();
+                    Application.Current.Shutdown();
+                }),
             });
-
-            Drawing.Icon trayIcon;
-            try
-            {
-                string? exePath = Environment.ProcessPath;
-                if (string.IsNullOrWhiteSpace(exePath) || !System.IO.File.Exists(exePath))
-                    exePath = Process.GetCurrentProcess().MainModule?.FileName;
-
-                trayIcon = !string.IsNullOrWhiteSpace(exePath) && System.IO.File.Exists(exePath)
-                    ? Drawing.Icon.ExtractAssociatedIcon(exePath) ?? Drawing.SystemIcons.Application
-                    : Drawing.SystemIcons.Application;
-            }
-            catch
-            {
-                trayIcon = Drawing.SystemIcons.Application;
-            }
-
-            var notifyIcon = new Forms.NotifyIcon
-            {
-                Text = "TWChatOverlay",
-                Visible = true,
-                Icon = trayIcon,
-                ContextMenuStrip = menu
-            };
-
-            notifyIcon.DoubleClick += (_, _) => RestoreFromTray();
-            return notifyIcon;
+            tray.DoubleClick += RestoreFromTray;
+            return tray;
         }
 
         private void Minimize_Click(object sender, RoutedEventArgs e)
