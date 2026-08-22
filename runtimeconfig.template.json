@@ -1,0 +1,7 @@
+{
+  "configProperties": {
+    "System.GC.ConserveMemory": 6,
+    "System.GC.Concurrent": false,
+    "System.GC.RetainVM": false
+  }
+}
