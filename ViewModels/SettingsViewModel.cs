@@ -7,8 +7,6 @@ using System.Windows.Media;
 using TWChatOverlay.Models;
 using TWChatOverlay.Services;
 using TWChatOverlay.Views;
-using WinColor = System.Drawing.Color;
-using WinForms = System.Windows.Forms;
 
 namespace TWChatOverlay.ViewModels
 {
@@ -657,16 +655,10 @@ namespace TWChatOverlay.ViewModels
                 _ => null
             };
 
-            using var dialog = new WinForms.ColorDialog();
-            if (currentBrush is SolidColorBrush brush)
+            Color initial = currentBrush is SolidColorBrush brush ? brush.Color : Colors.White;
+            if (NativeColorDialog.TryPick(initial, out Color picked))
             {
-                var c = brush.Color;
-                dialog.Color = WinColor.FromArgb(c.A, c.R, c.G, c.B);
-            }
-
-            if (dialog.ShowDialog() == WinForms.DialogResult.OK)
-            {
-                string hex = $"#{dialog.Color.R:X2}{dialog.Color.G:X2}{dialog.Color.B:X2}";
+                string hex = $"#{picked.R:X2}{picked.G:X2}{picked.B:X2}";
                 _settings.UpdateColor(colorType, hex);
                 AppLogger.Info($"Updated color setting '{colorType}' to {hex}.");
 
