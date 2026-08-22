@@ -61,8 +61,10 @@ namespace TWChatOverlay.Services
                 else
                 {
                     ClearSelection();
-                    _banner?.Hide();
-                    _backdrop?.Hide();
+                    // 격자 백드롭은 가상 화면 전체 크기의 투명 창이라 숨겨두면 그만큼 메모리를 계속 차지한다.
+                    // 잠금 해제가 끝나면 닫고, 다음 진입 때 새로 만든다.
+                    CloseQuietly(ref _banner);
+                    CloseQuietly(ref _backdrop);
                 }
             }
             catch (Exception ex)
@@ -146,8 +148,18 @@ namespace TWChatOverlay.Services
         private static void ClearSelection()
         {
             DetachSelectionHandlers();
-            try { _highlight?.Hide(); } catch { }
-            try { _inspector?.Hide(); } catch { }
+            // 선택 UI도 대기시키지 않고 닫는다 — 다음 선택 때 새로 만든다
+            CloseQuietly(ref _highlight);
+            CloseQuietly(ref _inspector);
+        }
+
+        /// <summary>보조 창을 닫고 참조를 비운다. 이미 닫혔거나 예외가 나도 무시.</summary>
+        private static void CloseQuietly<T>(ref T? window) where T : Window
+        {
+            var target = window;
+            window = null;
+            if (target == null) return;
+            try { target.Close(); } catch { }
         }
 
         internal static void NudgeSelected(int dx, int dy)
