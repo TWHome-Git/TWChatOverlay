@@ -30,7 +30,7 @@ namespace TWChatOverlay.Views
             _tracker.ActiveRareBuffs.CollectionChanged += TrackerBuffs_CollectionChanged;
             _tracker.ActiveExpBuffs.CollectionChanged += TrackerBuffs_CollectionChanged;
             UiLockService.UnlockChanged += OnUnlockChanged;
-            ApplyVisibility();
+            // 표시는 호출자(ApplyBuffTrackerWindowSettings)가 위치를 맞춘 뒤 ApplyVisibility로 결정한다
         }
 
         protected override void OnSourceInitialized(EventArgs e)
@@ -86,7 +86,8 @@ namespace TWChatOverlay.Views
             }
             else if (IsVisible)
             {
-                Hide();
+                // 대기 중인 창을 상주시키지 않는다 — 버프가 다시 뜨면 MainWindow가 새로 만든다
+                Close();
             }
         }
 
@@ -137,7 +138,7 @@ namespace TWChatOverlay.Views
                 {
                     ApplyMousePassthroughStyle();
                     if (unlocked)
-                        Hide(); // 미리보기(도우미)가 대신 표시된다
+                        Close(); // 미리보기(도우미)가 대신 표시되고, 해제 후 MainWindow가 다시 만든다
                     else
                         ApplyVisibility();
                 });

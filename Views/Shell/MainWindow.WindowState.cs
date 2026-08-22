@@ -191,8 +191,8 @@ namespace TWChatOverlay.Views
                 ShoutToastService.ClosePositionPreview(_settings);
                 MessengerEtaToastService.ClosePositionPreview(_settings);
                 SubAddonWindow.Instance?.ApplyPositionPreviewVisibility(false);
-                ItemDropHelperWindow.Instance?.Hide();
-                BuffTrackerHelperWindow.Instance?.Hide();
+                ItemDropHelperWindow.Instance?.Close();
+                BuffTrackerHelperWindow.Instance?.Close();
                 _AbandonRoadSummaryWindow?.Hide();
             }
             catch { }
@@ -287,8 +287,8 @@ namespace TWChatOverlay.Views
                     ShoutToastService.ClosePositionPreview(_settings);
                     MessengerEtaToastService.ClosePositionPreview(_settings);
                     SubAddonWindow.Instance?.Hide();
-                    ItemDropHelperWindow.Instance?.Hide();
-                    BuffTrackerHelperWindow.Instance?.Hide();
+                    ItemDropHelperWindow.Instance?.Close();
+                    BuffTrackerHelperWindow.Instance?.Close();
                     _AbandonRoadSummaryWindow?.Hide();
                 }
                 catch { }
@@ -395,14 +395,15 @@ namespace TWChatOverlay.Views
             ExperienceAlertWindowService.Close();
             DungeonCountDisplayWindowService.ClosePositionPreview(_settings);
             SubAddonWindow.Instance?.Hide();
-            ItemDropHelperWindow.Instance?.Hide();
-            BuffTrackerHelperWindow.Instance?.Hide();
+            ItemDropHelperWindow.Instance?.Close();
+            BuffTrackerHelperWindow.Instance?.Close();
 
             if (restoreNormalWindows)
             {
                 ApplySubAddonWindowSettings();
                 ApplyItemDropHelperWindowSettings();
                 ApplyBuffTrackerHelperWindowSettings();
+                ApplyBuffTrackerWindowSettings(); // 잠금 해제 동안 닫혀 있던 실제 버프창 복원
                 PersistSettings();
             }
 
@@ -549,9 +550,9 @@ namespace TWChatOverlay.Views
                     if (!helper.IsVisible)
                         helper.Show();
                 }
-                else if (helper.IsVisible)
+                else
                 {
-                    helper.Hide();
+                    helper.Close(); // 대기 중인 창을 유지하지 않는다 (메모리)
                 }
             }
             catch (Exception ex)
@@ -564,7 +565,9 @@ namespace TWChatOverlay.Views
         {
             try
             {
-                if (!_settings.EnableBuffTrackerAlert && BuffTrackerWindow.Instance == null)
+                // 창은 실제로 보여줄 때만 만든다 — 대기용 창을 상주시키지 않는다 (메모리)
+                bool shouldShow = _settings.EnableBuffTrackerAlert && _buffTrackerService.HasAnyActiveBuffs;
+                if (BuffTrackerWindow.Instance == null && !shouldShow)
                     return;
 
                 var window = BuffTrackerWindow.Instance ?? CreateBuffTrackerWindow();
@@ -696,9 +699,9 @@ namespace TWChatOverlay.Views
                     if (!helper.IsVisible)
                         helper.Show();
                 }
-                else if (helper.IsVisible)
+                else
                 {
-                    helper.Hide();
+                    helper.Close(); // 대기 중인 창을 유지하지 않는다 (메모리)
                 }
             }
             catch (Exception ex)
