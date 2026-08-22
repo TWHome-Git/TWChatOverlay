@@ -19,11 +19,17 @@ namespace TWChatOverlay.Services
         // 사용자 지정 색 16칸은 세션 동안 유지된다 (WinForms ColorDialog와 같은 동작)
         private static readonly uint[] CustomColors = new uint[16];
 
-        /// <summary>색 선택 대화상자를 띄운다. 확인이면 true와 선택한 색.</summary>
+        // 한 번에 하나만 — 이미 열려 있으면 새로 띄우지 않는다
+        private static bool _isOpen;
+
+        /// <summary>색 선택 대화상자를 띄운다. 확인이면 true와 선택한 색. 이미 열려 있으면 false.</summary>
         public static bool TryPick(Color initial, out Color result, Window? owner = null)
         {
             result = initial;
+            if (_isOpen)
+                return false;
 
+            _isOpen = true;
             IntPtr custom = Marshal.AllocHGlobal(sizeof(uint) * 16);
             try
             {
@@ -48,6 +54,7 @@ namespace TWChatOverlay.Services
             finally
             {
                 Marshal.FreeHGlobal(custom);
+                _isOpen = false;
             }
         }
 
@@ -55,7 +62,21 @@ namespace TWChatOverlay.Services
         {
             try
             {
-                var window = owner ?? Application.Current?.MainWindow;
+                Window? window = owner;
+                if (window == null && Application.Current != null)
+                {
+                    // 호출한 설정 창(활성 창)을 소유자로 — 그래야 그 창에 모달로 묶이고 함께 닫힌다
+                    foreach (Window candidate in Application.Current.Windows)
+                    {
+                        if (candidate.IsActive && candidate.IsVisible)
+                        {
+                            window = candidate;
+                            break;
+                        }
+                    }
+                    window ??= Application.Current.MainWindow;
+                }
+
                 return window == null ? IntPtr.Zero : new WindowInteropHelper(window).Handle;
             }
             catch

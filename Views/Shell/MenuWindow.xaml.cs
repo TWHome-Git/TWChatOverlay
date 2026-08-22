@@ -222,16 +222,11 @@ namespace TWChatOverlay.Views
 
             if (AppIconArea != null)
             {
+                // 활성 메뉴 버튼(SetButtonActive)과 동일한 하이라이트: 테마 민트 2px 테두리만
                 if (pinned)
-                {
                     AppIconArea.SetResourceReference(Border.BorderBrushProperty, "OverlayAccentBorderBrush");
-                    AppIconArea.SetResourceReference(Border.BackgroundProperty, "OverlayHighlightBackgroundBrush");
-                }
                 else
-                {
                     AppIconArea.BorderBrush = Brushes.Transparent;
-                    AppIconArea.Background = Brushes.Transparent;
-                }
             }
 
             if (pinned)
@@ -717,8 +712,12 @@ namespace TWChatOverlay.Views
             if (btn == null) return;
             try
             {
+                // 고정된 앱 아이콘과 같은 하이라이트 (테마 민트 2px)
                 btn.BorderThickness = active ? new Thickness(2) : new Thickness(0);
-                btn.BorderBrush = active ? Brushes.Cyan : Brushes.Transparent;
+                if (active)
+                    btn.SetResourceReference(Control.BorderBrushProperty, "OverlayAccentBorderBrush");
+                else
+                    btn.BorderBrush = Brushes.Transparent;
             }
             catch { }
         }

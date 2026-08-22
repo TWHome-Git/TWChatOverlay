@@ -45,7 +45,7 @@
                     Height="36"
                     Background="Transparent"
                     BorderBrush="Transparent"
-                    BorderThickness="1.5"
+                    BorderThickness="2"
                     CornerRadius="8"
                     Cursor="Hand"
                     ToolTip="메뉴 — 마우스를 올리면 펼쳐지고, 클릭하면 상시 표시로 고정됩니다"
