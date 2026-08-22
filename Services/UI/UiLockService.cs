@@ -238,11 +238,19 @@ namespace TWChatOverlay.Services
             return Math.Max(lower, Math.Min(upper, value));
         }
 
-        /// <summary>창별 투명도 저장 키 (서브 채팅창은 슬롯 구분).</summary>
+        /// <summary>
+        /// 창별 투명도 저장 키 (서브 채팅창은 슬롯 구분).
+        /// 잠금 해제에서 보이는 미리보기(도우미) 창은 실제 창과 같은 키를 써서
+        /// 미리보기에서 조절한 값이 실제 창에도 적용되게 한다.
+        /// </summary>
         private static string GetOpacityKey(Window window)
-            => window is TWChatOverlay.Views.ChatCloneWindow clone
-                ? $"ChatCloneWindow{clone.Slot}"
-                : window.GetType().Name;
+            => window switch
+            {
+                TWChatOverlay.Views.ChatCloneWindow clone => $"ChatCloneWindow{clone.Slot}",
+                TWChatOverlay.Views.BuffTrackerHelperWindow => nameof(TWChatOverlay.Views.BuffTrackerWindow),
+                TWChatOverlay.Views.ItemDropHelperWindow => nameof(TWChatOverlay.Views.ItemDropToastWindow),
+                _ => window.GetType().Name,
+            };
 
         /// <summary>저장된 창별 투명도(10~100%)가 있으면 적용한다. 창 생성/표시 시 호출.</summary>
         public static void ApplyStoredOpacity(Window window)
@@ -277,11 +285,23 @@ namespace TWChatOverlay.Services
                 window.BeginAnimation(UIElement.OpacityProperty, null);
                 window.Opacity = percent / 100.0;
 
+                string key = GetOpacityKey(window);
+
                 var settings = ToastPresentationHelper.FindSharedSettings();
                 if (settings != null)
                 {
-                    settings.WindowOpacityPercents[GetOpacityKey(window)] = percent;
+                    settings.WindowOpacityPercents[key] = percent;
                     ConfigService.SaveDeferred(settings);
+                }
+
+                // 같은 키를 공유하는 다른 창(미리보기 뒤에 숨은 실제 창 등)에도 즉시 반영
+                foreach (Window other in Application.Current.Windows)
+                {
+                    if (ReferenceEquals(other, window) || GetOpacityKey(other) != key)
+                        continue;
+
+                    other.BeginAnimation(UIElement.OpacityProperty, null);
+                    other.Opacity = percent / 100.0;
                 }
             }
             catch (Exception ex)
