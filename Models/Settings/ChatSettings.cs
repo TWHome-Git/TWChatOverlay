@@ -52,6 +52,7 @@ namespace TWChatOverlay.Models
         private bool _showItemDropAlert = false;
         private bool _showEtosHelperWindow = false;
         private bool _menuWindowHorizontal = false;
+        private bool _menuWindowPinned = false;
         private bool _windowSnapEnabled = false;
         private bool _dailyWeeklyAutoCollapseEnabled = false;
         private int _dailyWeeklyAutoCollapseSeconds = 10;
@@ -841,6 +842,9 @@ namespace TWChatOverlay.Models
 
         /// <summary>잠금 해제 모드에서 채팅창끼리 가장자리에 자석처럼 붙는 스냅 기능.</summary>
         public bool WindowSnapEnabled { get => _windowSnapEnabled; set { _windowSnapEnabled = value; OnPropertyChanged(); } }
+
+        /// <summary>메뉴 바 고정: true면 자동 접힘 없이 메뉴가 상시 표시된다 (아이콘 클릭으로 전환).</summary>
+        public bool MenuWindowPinned { get => _menuWindowPinned; set { _menuWindowPinned = value; OnPropertyChanged(); } }
 
         /// <summary>메뉴 바 방향: false=세로형(기본), true=가로형.</summary>
         public bool MenuWindowHorizontal { get => _menuWindowHorizontal; set { _menuWindowHorizontal = value; OnPropertyChanged(); } }

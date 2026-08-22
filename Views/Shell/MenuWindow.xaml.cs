@@ -15,6 +15,7 @@ namespace TWChatOverlay.Views
     {
         private Button? _activeSubmenuButton;
         private readonly System.Windows.Threading.DispatcherTimer _menuAutoHideTimer;
+        private bool _isPinned; // 아이콘 클릭으로 고정 — 자동 접힘 없이 상시 표시
         private MainWindow? _subscribedMainWindow;
         private readonly Forms.NotifyIcon _notifyIcon;
         private static ShoutReplayWindow? _shoutReplayWindow;
@@ -45,6 +46,7 @@ namespace TWChatOverlay.Views
                 }
 
                 ApplyMenuOrientation(settings.MenuWindowHorizontal);
+                ApplyPinned(settings.MenuWindowPinned, persist: false);
                 settings.PropertyChanged += SharedSettings_PropertyChanged;
             }
             catch (Exception ex) { AppLogger.Warn("Failed to restore menu window position.", ex); }
@@ -181,6 +183,12 @@ namespace TWChatOverlay.Views
         /// <summary>마우스가 벗어난 상태면 메뉴 몸통을 접는다. 아직 올라가 있으면 타이머만 연장.</summary>
         private void CollapseMenuBody()
         {
+            if (_isPinned)
+            {
+                _menuAutoHideTimer.Stop();
+                return;
+            }
+
             if (IsMouseOver)
             {
                 _menuAutoHideTimer.Stop();
@@ -196,11 +204,57 @@ namespace TWChatOverlay.Views
         /// <summary>접힌 상태에서도 아이콘을 잡고 끌면 메뉴 바를 옮길 수 있다.</summary>
         private void AppIcon_MouseLeftButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
         {
+            double startLeft = Left, startTop = Top;
             try
             {
                 DragMove();
             }
             catch { }
+
+            // 창이 움직이지 않았으면 드래그가 아니라 클릭 → 고정 토글
+            bool moved = Math.Abs(Left - startLeft) > 0.5 || Math.Abs(Top - startTop) > 0.5;
+            if (!moved)
+                ApplyPinned(!_isPinned, persist: true);
+        }
+
+        /// <summary>고정 상태를 적용한다. 고정되면 아이콘 테두리가 강조되고 메뉴가 상시 표시된다.</summary>
+        private void ApplyPinned(bool pinned, bool persist)
+        {
+            _isPinned = pinned;
+
+            if (AppIconArea != null)
+            {
+                if (pinned)
+                {
+                    AppIconArea.SetResourceReference(Border.BorderBrushProperty, "OverlayAccentBorderBrush");
+                    AppIconArea.SetResourceReference(Border.BackgroundProperty, "OverlayHighlightBackgroundBrush");
+                }
+                else
+                {
+                    AppIconArea.BorderBrush = Brushes.Transparent;
+                    AppIconArea.Background = Brushes.Transparent;
+                }
+            }
+
+            if (pinned)
+            {
+                _menuAutoHideTimer.Stop();
+                if (MenuBody != null)
+                    MenuBody.Visibility = Visibility.Visible;
+            }
+            else
+            {
+                ExpandMenuBodyTemporarily(); // 해제 직후부터 자동 접힘 카운트 시작
+            }
+
+            if (!persist) return;
+            try
+            {
+                var settings = GetSharedSettings();
+                settings.MenuWindowPinned = pinned;
+                ConfigService.SaveDeferred(settings);
+            }
+            catch (Exception ex) { AppLogger.Warn("Failed to persist menu pin state.", ex); }
         }
 
         protected override void OnClosed(System.EventArgs e)
@@ -721,7 +775,7 @@ namespace TWChatOverlay.Views
             MinimizeToTray();
         }
 
-        /// <summary>메뉴 창을 포함한 모든 창을 트레이로 숨깁니다.</summary>
+        /// <summary>메뉴 바를 제외한 모든 창을 트레이로 숨깁니다.</summary>
         private void MinimizeToTray()
         {
             PersistMenuWindowPosition();
