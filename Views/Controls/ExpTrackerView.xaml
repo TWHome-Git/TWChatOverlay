@@ -105,6 +105,7 @@
                        FontSize="10"
                        FontWeight="SemiBold"
                        HorizontalAlignment="Right"
+                       Margin="0,0,8,0"
                        VerticalAlignment="Center"
                        Visibility="{Binding IsMeasurementStopped, Converter={StaticResource BooleanToVisibilityConverter}}"/>
 
