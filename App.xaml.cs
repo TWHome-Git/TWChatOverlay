@@ -16,6 +16,18 @@ namespace TWChatOverlay
         protected override void OnStartup(StartupEventArgs e)
         {
             AppLogger.Info("Application startup initiated.");
+
+            // 렌더링 모드: 기본은 소프트웨어. 작은 오버레이 창들이라 GPU 가속의 이점이 없는 반면,
+            // 하드웨어 경로는 D3D 드라이버가 창마다 잡는 네이티브 메모리가 커서(측정상 Private Bytes 약 -130MB)
+            // 소프트웨어 렌더링을 기본으로 한다. 되돌리려면 --hardware-render 인자 또는 TWCHAT_HARDWARE_RENDER=1.
+            bool hardwareRender = Array.Exists(e.Args, a => string.Equals(a, "--hardware-render", StringComparison.OrdinalIgnoreCase))
+                || string.Equals(Environment.GetEnvironmentVariable("TWCHAT_HARDWARE_RENDER"), "1", StringComparison.Ordinal);
+            if (!hardwareRender)
+            {
+                System.Windows.Media.RenderOptions.ProcessRenderMode = System.Windows.Interop.RenderMode.SoftwareOnly;
+                AppLogger.Info("Render mode: SoftwareOnly (default).");
+            }
+
             _mutex = new Mutex(true, "TWChatOverlay_SingleInstance", out bool isNewInstance);
 
             if (!isNewInstance)
