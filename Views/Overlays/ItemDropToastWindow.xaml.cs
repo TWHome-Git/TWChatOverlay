@@ -74,9 +74,13 @@ namespace TWChatOverlay.Views
             };
             BeginAnimation(TopProperty, topAnim);
 
+            // 페이드 인 목표를 창별 저장 투명도로 (잠금 해제 인스펙터에서 지정한 값)
+            UiLockService.ApplyStoredOpacity(this);
+            double targetOpacity = Opacity > 0 ? Opacity : 1.0;
+            Opacity = 0;
             var opacityAnim = new DoubleAnimation
             {
-                To = 1,
+                To = targetOpacity,
                 Duration = TimeSpan.FromMilliseconds(180)
             };
             BeginAnimation(OpacityProperty, opacityAnim);
