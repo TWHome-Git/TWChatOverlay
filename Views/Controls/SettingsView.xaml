@@ -286,7 +286,10 @@
                         <WrapPanel>
                             <Border Style="{StaticResource SettingsRowStyle}">
                                 <DockPanel>
-                                    <CheckBox DockPanel.Dock="Right" IsChecked="{Binding ShowEtaLevel}" Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
+                                    <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
+                                        <Button Width="26" Height="14" Margin="0,0,10,0" Background="{Binding EtaLevelColor}" IsEnabled="{Binding DecorationColorsEditable}" Command="{Binding ColorPickCommand}" CommandParameter="EtaLevel" Style="{StaticResource ColorPickerButtonStyle}" ToolTip="색상 동기화를 끄면 지정할 수 있습니다"/>
+                                        <CheckBox IsChecked="{Binding ShowEtaLevel}" Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
+                                    </StackPanel>
                                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                                         <TextBlock Text="에타 레벨" Style="{StaticResource SettingsRowLabelStyle}"/>
                                         <Button Style="{StaticResource HelpButtonStyle}" Tag="chat.id.eta_level" Click="Help_Click"/>
@@ -295,7 +298,10 @@
                             </Border>
                             <Border Style="{StaticResource SettingsRowStyle}">
                                 <DockPanel>
-                                    <CheckBox DockPanel.Dock="Right" IsChecked="{Binding ShowEtaCharacter}" Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
+                                    <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
+                                        <Button Width="26" Height="14" Margin="0,0,10,0" Background="{Binding EtaCharacterColor}" IsEnabled="{Binding DecorationColorsEditable}" Command="{Binding ColorPickCommand}" CommandParameter="EtaCharacter" Style="{StaticResource ColorPickerButtonStyle}" ToolTip="색상 동기화를 끄면 지정할 수 있습니다"/>
+                                        <CheckBox IsChecked="{Binding ShowEtaCharacter}" Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
+                                    </StackPanel>
                                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                                         <TextBlock Text="캐릭터" Style="{StaticResource SettingsRowLabelStyle}"/>
                                         <Button Style="{StaticResource HelpButtonStyle}" Tag="chat.id.character" Click="Help_Click"/>
@@ -334,10 +340,22 @@
                             </Border>
                             <Border Style="{StaticResource SettingsRowStyle}">
                                 <DockPanel>
-                                    <CheckBox DockPanel.Dock="Right" IsChecked="{Binding ShowTimestamp}" Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
+                                    <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
+                                        <Button Width="26" Height="14" Margin="0,0,10,0" Background="{Binding TimestampColor}" IsEnabled="{Binding DecorationColorsEditable}" Command="{Binding ColorPickCommand}" CommandParameter="Timestamp" Style="{StaticResource ColorPickerButtonStyle}" ToolTip="색상 동기화를 끄면 지정할 수 있습니다"/>
+                                        <CheckBox IsChecked="{Binding ShowTimestamp}" Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
+                                    </StackPanel>
                                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                                         <TextBlock Text="타임 스탬프" Style="{StaticResource SettingsRowLabelStyle}"/>
                                         <Button Style="{StaticResource HelpButtonStyle}" Tag="chat.id.timestamp" Click="Help_Click"/>
+                                    </StackPanel>
+                                </DockPanel>
+                            </Border>
+                            <Border Style="{StaticResource SettingsRowStyle}">
+                                <DockPanel>
+                                    <CheckBox DockPanel.Dock="Right" IsChecked="{Binding DecorationColorSync}" Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
+                                    <StackPanel VerticalAlignment="Center">
+                                        <TextBlock Text="색상 동기화" Style="{StaticResource SettingsRowLabelStyle}"/>
+                                        <TextBlock Text="켜면 에타 레벨·캐릭터·타임 스탬프가 줄 색을 따르고, 끄면 위 색을 직접 지정" Style="{StaticResource SettingsRowHintStyle}"/>
                                     </StackPanel>
                                 </DockPanel>
                             </Border>

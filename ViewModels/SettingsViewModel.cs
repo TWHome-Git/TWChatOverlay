@@ -264,6 +264,27 @@ namespace TWChatOverlay.ViewModels
             }
         }
 
+        /// <summary>에타 레벨/캐릭터/타임스탬프 색을 줄 색과 동기화. 끄면 개별 색 지정 가능.</summary>
+        public bool DecorationColorSync
+        {
+            get => _settings.DecorationColorSync;
+            set
+            {
+                if (_settings.DecorationColorSync == value) return;
+                _settings.DecorationColorSync = value;
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(DecorationColorsEditable));
+                _onColorsUpdated?.Invoke("Decoration");
+                SaveSettings();
+            }
+        }
+
+        public bool DecorationColorsEditable => !_settings.DecorationColorSync;
+
+        public Brush EtaLevelColor => StringToBrush(_settings.EtaLevelColor);
+        public Brush EtaCharacterColor => StringToBrush(_settings.EtaCharacterColor);
+        public Brush TimestampColor => StringToBrush(_settings.TimestampColor);
+
         public Brush NormalColor
         {
             get => StringToBrush(_settings.NormalColor);
@@ -652,6 +673,9 @@ namespace TWChatOverlay.ViewModels
                 "Club" => ClubColor,
                 "Shout" => ShoutColor,
                 "System" => SystemColor,
+                "EtaLevel" => EtaLevelColor,
+                "EtaCharacter" => EtaCharacterColor,
+                "Timestamp" => TimestampColor,
                 _ => null
             };
 
@@ -667,6 +691,9 @@ namespace TWChatOverlay.ViewModels
                 OnPropertyChanged(nameof(ClubColor));
                 OnPropertyChanged(nameof(ShoutColor));
                 OnPropertyChanged(nameof(SystemColor));
+                OnPropertyChanged(nameof(EtaLevelColor));
+                OnPropertyChanged(nameof(EtaCharacterColor));
+                OnPropertyChanged(nameof(TimestampColor));
 
                 _onColorsUpdated?.Invoke(colorType);
                 SaveSettings();
@@ -691,6 +718,11 @@ namespace TWChatOverlay.ViewModels
             OnPropertyChanged(nameof(ShowEtaCharacter));
             OnPropertyChanged(nameof(ShowIdTag));
             OnPropertyChanged(nameof(ShowTimestamp));
+            OnPropertyChanged(nameof(DecorationColorSync));
+            OnPropertyChanged(nameof(DecorationColorsEditable));
+            OnPropertyChanged(nameof(EtaLevelColor));
+            OnPropertyChanged(nameof(EtaCharacterColor));
+            OnPropertyChanged(nameof(TimestampColor));
             OnPropertyChanged(nameof(ShowShoutToastPopup));
             OnPropertyChanged(nameof(AutoCopyShoutNickname));
             OnPropertyChanged(nameof(ShoutToastDurationSeconds));

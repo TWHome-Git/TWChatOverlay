@@ -27,9 +27,6 @@ namespace TWChatOverlay.Views
 {
     public partial class MainWindow
     {
-        private static readonly Regex LeadingTimestampRegex = new(
-            @"^\s*\[[^\]]+\]\s*",
-            RegexOptions.Compiled);
         private static readonly Regex ShoutToastSourceRegex = new(
             @"^\s*\[\s*(?:\d{1,2}:\d{2}(?::\d{2})?|\d{1,2}\s*시\s*\d{1,2}\s*분(?:\s*\d{1,2}\s*초)?)\s*\]\s*외치기\s*:",
             RegexOptions.IgnoreCase | RegexOptions.Compiled);
@@ -652,15 +649,13 @@ namespace TWChatOverlay.Views
             bool isBlacklisted = BlacklistService.TryGetReason(log.SenderId, out string blacklistReason);
             Brush foreground = isBlacklisted ? BlacklistService.HighlightBrush : log.Brush;
             string displayText = isBlacklisted ? $"{log.FormattedText} [ {blacklistReason} ]" : log.FormattedText;
-            displayText = ApplyEtaDecorations(displayText, log);
-            if (!_settings.ShowTimestamp)
-                displayText = LeadingTimestampRegex.Replace(displayText, string.Empty);
 
             FontFamily safeFont = this.CurrentFont ?? FontService.GetFont(_settings.FontFamily);
             if (safeFont == null)
                 safeFont = new FontFamily("Malgun Gothic");
 
-            Paragraph p = new Paragraph(new Run(displayText))
+            // 타임스탬프/에타레벨/캐릭터를 조각으로 나눠 색을 따로 칠할 수 있게 (ChatLineComposer — 서브 채팅창과 동일 규칙)
+            Paragraph p = new Paragraph()
             {
                 Foreground = foreground,
                 FontSize = _settings.FontSize,
@@ -668,6 +663,7 @@ namespace TWChatOverlay.Views
                 Margin = new Thickness(0, 0, 0, 1),
                 LineHeight = 1
             };
+            ChatLineComposer.AppendRuns(p, ChatLineComposer.Compose(displayText, log, _settings), foreground, _settings);
 
             if (isBlacklisted)
             {
@@ -707,77 +703,6 @@ namespace TWChatOverlay.Views
                     Dispatcher.BeginInvoke(new Action(ScrollLogDisplayToEndAfterLayout), DispatcherPriority.Background);
                 }
             }
-        }
-
-        private string ApplyEtaDecorations(string text, LogParser.ParseResult log)
-        {
-            string lookupSenderId = log.RawSenderId ?? log.SenderId ?? string.Empty;
-            string displaySenderId = log.SenderId ?? log.RawSenderId ?? string.Empty;
-
-            if (string.IsNullOrWhiteSpace(text) || lookupSenderId.Length == 0 || displaySenderId.Length == 0)
-                return text;
-            if (!_settings.ShowEtaLevel && !_settings.ShowEtaCharacter && !_settings.ShowIdTag)
-                return text;
-
-            // 표기 순서: 아이디[에타레벨][캐릭터][태그]
-            string suffix = string.Empty;
-
-            if (_settings.ShowEtaLevel || _settings.ShowEtaCharacter)
-            {
-                if (EtaProfileResolver.TryGetProfile(lookupSenderId, out var profile)
-                    || EtaProfileResolver.TryGetProfile(lookupSenderId.Trim(), out profile))
-                {
-                    if (_settings.ShowEtaLevel)
-                        suffix += $"[{profile.Level}]";
-                    if (_settings.ShowEtaCharacter && !string.IsNullOrWhiteSpace(profile.CharacterName))
-                        suffix += $"[{profile.CharacterName}]";
-                }
-            }
-
-            if (_settings.ShowIdTag
-                && (IdTagService.TryGetTag(lookupSenderId, out string idTag)
-                    || IdTagService.TryGetTag(displaySenderId, out idTag)))
-            {
-                suffix += $"[{idTag}]";
-            }
-
-            if (string.IsNullOrEmpty(suffix))
-                return text;
-
-            if (log.Category == ChatCategory.Shout)
-            {
-                // 외치기는 끝의 [보낸이] 대괄호에 접미사를 덧붙인다. 대괄호 안팎 공백 등
-                // 형식 변형에 견고하도록 발신자 문자열이 아니라 마지막 대괄호 그룹 자체를 매칭한다.
-                return Regex.Replace(
-                    text,
-                    @"\[(?<id>[^\[\]]+)\]\s*$",
-                    m => $"[{m.Groups["id"].Value}{suffix}]");
-            }
-
-            if (!TrySplitTimestampAndBody(text, out string body))
-                return text;
-
-            int colon = body.IndexOf(':');
-            if (colon <= 0) return text;
-            string left = body.Substring(0, colon);
-            int idx = left.LastIndexOf(displaySenderId, StringComparison.Ordinal);
-            if (idx < 0) return text;
-            int bodySenderIndex = text.IndexOf(left, StringComparison.Ordinal);
-            if (bodySenderIndex < 0) return text;
-
-            int insertIndex = bodySenderIndex + idx + displaySenderId.Length;
-            return text.Substring(0, insertIndex) + suffix + text.Substring(insertIndex);
-        }
-
-        private static bool TrySplitTimestampAndBody(string text, out string body)
-        {
-            body = string.Empty;
-            int closingBracketIndex = text.IndexOf(']');
-            if (closingBracketIndex < 0 || closingBracketIndex + 1 >= text.Length)
-                return false;
-
-            body = text[(closingBracketIndex + 1)..].TrimStart();
-            return body.Length > 0;
         }
 
         private void ScrollLogDisplayToEndAfterLayout()
