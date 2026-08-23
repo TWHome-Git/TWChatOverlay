@@ -272,6 +272,7 @@ namespace TWChatOverlay.Services
                     if (applied)
                     {
                         await RemoteResourceManifestService.MarkResourceVersionAppliedAsync("DropItem.Json").ConfigureAwait(false);
+                        ReconcileCustomFilterWithDefaults();
                     }
                     AppLogger.Info($"Tracked item list load {(applied ? "succeeded" : "failed")}.");
                 }
@@ -287,6 +288,32 @@ namespace TWChatOverlay.Services
             finally
             {
                 LoadLock.Release();
+            }
+        }
+
+        /// <summary>기본 테이블이 갱신되면 사용자 정의 목록의 옛 이름(오타 등)을 새 이름으로 맞추고 저장한다.</summary>
+        private static void ReconcileCustomFilterWithDefaults()
+        {
+            var settings = _settings;
+            if (settings == null || string.IsNullOrWhiteSpace(settings.CustomDropItemJson))
+                return;
+
+            try
+            {
+                string? fixedJson = ReconcileCustomJsonWithDefaults(settings.CustomDropItemJson, _trackedItemList, out var renamed);
+                if (fixedJson == null)
+                    return;
+
+                foreach (var (oldName, newName) in renamed)
+                    AppLogger.Info($"Custom drop filter item renamed to match defaults: '{oldName}' -> '{newName}'");
+
+                // 설정 변경 알림으로 파이프라인의 사용자 정의 필터 스냅샷도 함께 갱신된다
+                settings.CustomDropItemJson = fixedJson;
+                ConfigService.SaveDeferred(settings);
+            }
+            catch (Exception ex)
+            {
+                AppLogger.Warn("Custom drop filter reconcile failed.", ex);
             }
         }
 
@@ -414,6 +441,64 @@ namespace TWChatOverlay.Services
             if (grade.Equals("RARE", StringComparison.OrdinalIgnoreCase))
                 return ItemDropGrade.Rare;
             return ItemDropGrade.Normal;
+        }
+
+        /// <summary>
+        /// 사용자 정의 목록을 기본 테이블과 대조해, 기본 테이블에서 이름이 바뀐 항목(오타 수정 등)을
+        /// 같은 약칭(abbr)을 가진 기본 항목의 새 이름으로 맞춘다. 드롭 판정은 이름 정확 일치라
+        /// 사용자 정의 목록에 옛 이름이 남아 있으면 영영 감지되지 않기 때문이다.
+        /// 바뀐 게 없으면 null을 돌려준다.
+        /// </summary>
+        public static string? ReconcileCustomJsonWithDefaults(
+            string customJson,
+            IReadOnlyList<(string Name, ItemDropGrade Grade, string? Abbreviation)> defaults,
+            out IReadOnlyList<(string OldName, string NewName)> renamed)
+        {
+            renamed = Array.Empty<(string, string)>();
+            if (string.IsNullOrWhiteSpace(customJson) || defaults.Count == 0)
+                return null;
+
+            DropItemPayload? payload;
+            try { payload = JsonSerializer.Deserialize<DropItemPayload>(customJson); }
+            catch { return null; }
+            if (payload == null || payload.Items.Count == 0)
+                return null;
+
+            var defaultNames = new HashSet<string>(defaults.Select(d => d.Name), StringComparer.OrdinalIgnoreCase);
+            var defaultByAbbr = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            foreach (var d in defaults)
+            {
+                if (!string.IsNullOrWhiteSpace(d.Abbreviation) && !defaultByAbbr.ContainsKey(d.Abbreviation))
+                    defaultByAbbr[d.Abbreviation] = d.Name;
+            }
+
+            var customNames = new HashSet<string>(payload.Items.Select(i => i.Name.Trim()), StringComparer.OrdinalIgnoreCase);
+            var changes = new List<(string, string)>();
+            foreach (var item in payload.Items)
+            {
+                string name = item.Name.Trim();
+                string? abbr = NormalizeAbbreviation(item.Abbreviation);
+                if (string.IsNullOrEmpty(name) || abbr == null || defaultNames.Contains(name))
+                    continue;
+
+                // 기본 테이블에 없는 이름인데 같은 약칭의 기본 항목이 있고, 그 새 이름이 아직 목록에 없으면 교체
+                if (defaultByAbbr.TryGetValue(abbr, out string? newName) && !customNames.Contains(newName))
+                {
+                    item.Name = newName;
+                    customNames.Add(newName);
+                    changes.Add((name, newName));
+                }
+            }
+
+            if (changes.Count == 0)
+                return null;
+
+            renamed = changes;
+            return JsonSerializer.Serialize(payload, new JsonSerializerOptions
+            {
+                WriteIndented = true,
+                Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+            });
         }
 
         private sealed class DropItemPayload
