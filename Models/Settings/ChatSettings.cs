@@ -24,6 +24,10 @@ namespace TWChatOverlay.Models
         private string _clubColor = "#00FF00";
         private string _systemColor = "#FFFF00";
         private string _shoutColor = "#FF8000";
+        private bool _decorationColorSync = true;
+        private string _etaLevelColor = "#FFD84A";
+        private string _etaCharacterColor = "#5AC8E8";
+        private string _timestampColor = "#9AA0A6";
         private bool _showEtaLevel = true;
         private bool _showEtaCharacter = true;
         private bool _showIdTag = true;
@@ -568,6 +572,12 @@ namespace TWChatOverlay.Models
         public string SystemColor { get => _systemColor; set { _systemColor = value; OnPropertyChanged(); } }
         [JsonPropertyOrder(27)]
         public string ShoutColor { get => _shoutColor; set { _shoutColor = value; OnPropertyChanged(); } }
+
+        /// <summary>에타 레벨/캐릭터/타임스탬프 색을 줄 색과 동기화. 끄면 아래 개별 색을 쓴다.</summary>
+        public bool DecorationColorSync { get => _decorationColorSync; set { _decorationColorSync = value; OnPropertyChanged(); } }
+        public string EtaLevelColor { get => _etaLevelColor; set { _etaLevelColor = value; OnPropertyChanged(); } }
+        public string EtaCharacterColor { get => _etaCharacterColor; set { _etaCharacterColor = value; OnPropertyChanged(); } }
+        public string TimestampColor { get => _timestampColor; set { _timestampColor = value; OnPropertyChanged(); } }
         [JsonPropertyOrder(28)]
         public string ExitHotKey
         {

@@ -20,6 +20,10 @@ namespace TWChatOverlay.Models
             _clubColor = "#00FF00";
             _systemColor = "#FFFF00";
             _shoutColor = "#FF8000";
+            _decorationColorSync = true;
+            _etaLevelColor = "#FFD84A";
+            _etaCharacterColor = "#5AC8E8";
+            _timestampColor = "#9AA0A6";
             _showEtaLevel = true;
             _showEtaCharacter = true;
             _showIdTag = true;

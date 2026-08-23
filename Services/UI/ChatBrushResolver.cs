@@ -8,6 +8,22 @@ namespace TWChatOverlay.Services
     /// </summary>
     public static class ChatBrushResolver
     {
+        /// <summary>색상 문자열(#RRGGBB)을 고정(Frozen) 브러시로. 잘못된 값이면 흰색.</summary>
+        public static SolidColorBrush ToBrush(string? hex)
+        {
+            try
+            {
+                var brush = new BrushConverter().ConvertFromString(hex ?? string.Empty) as SolidColorBrush ?? Brushes.White;
+                if (!brush.IsFrozen && brush.CanFreeze)
+                    brush.Freeze();
+                return brush;
+            }
+            catch
+            {
+                return Brushes.White;
+            }
+        }
+
         public static SolidColorBrush Resolve(ChatSettings settings, ChatCategory category)
         {
             string hex = category switch
