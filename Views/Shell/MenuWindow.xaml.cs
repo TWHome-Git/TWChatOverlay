@@ -577,6 +577,8 @@ namespace TWChatOverlay.Views
 
                 host.Show();
                 host.ShowHostContent(settingsView, "설정");
+                // 설정 콘텐츠 폭(내비 110 + 본문 620 + 여백/스크롤바)에 맞춰 오른쪽 빈 영역 제거
+                host.Width = 830;
                 SetMainAddonPositionMode(false);
                 SetMainSettingsPositionMode(false);
 
@@ -627,6 +629,7 @@ namespace TWChatOverlay.Views
             {
                 host.Show();
                 host.ShowHostContent(content, title);
+                host.Width = 1100; // 설정(830)에서 재사용될 수 있으므로 기본 폭 복원
                 bool isAddonSettingsView = false; // 추가 기능은 설정 창으로 통합됨
                 SetMainAddonPositionMode(isAddonSettingsView);
                 SetMainSettingsPositionMode(false);
