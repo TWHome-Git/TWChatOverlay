@@ -46,10 +46,14 @@ namespace TWChatOverlay.Services
         private readonly Encoding _logEncoding;
         private readonly Decoder _logDecoder;
         private string _pendingRawContent = string.Empty;
+        private DateTime _pendingSinceUtc = DateTime.MinValue;
         private string _lastLogTimeText = string.Empty;
 
         private const int InitialLogTailBytes = 2 * 1024 * 1024;
         private const int PollingIntervalMilliseconds = 30;
+        // 줄 구분자(<br>/개행) 없이 파일에 남은 조각을 완결로 간주하기까지의 대기 시간.
+        // 게임이 줄 끝을 아직 안 썼을 짧은 순간은 넘기고, 그 이상 조용하면 마지막 줄로 보고 내보낸다.
+        private const int PendingFlushMilliseconds = 500;
         private static readonly string StateDirectoryPath = LogStoragePaths.StateDirectory;
         private static readonly string CheckpointPath = Path.Combine(StateDirectoryPath, "log_pipeline_checkpoint.json");
         private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.General);
@@ -152,6 +156,18 @@ namespace TWChatOverlay.Services
             if (_logPath != expectedPath)
             {
                 AppLogger.Info($"Detected log path rollover. Updating path from '{_logPath}' to '{expectedPath}'.");
+
+                // 전환 전에 옛 파일의 남은 내용과 대기 조각을 마저 처리해 자정 부근 줄 유실을 막는다
+                try
+                {
+                    ReadLog();
+                    lock (_lockObj) { FlushPendingContent(force: true); }
+                }
+                catch (Exception ex)
+                {
+                    AppLogger.Warn("Failed to drain previous log file before rollover.", ex);
+                }
+
                 UpdatePath(isInitialLoad: false);
             }
         }
@@ -201,6 +217,12 @@ namespace TWChatOverlay.Services
                     _lastPosition = 0;
                     AppLogger.Warn($"Log file not found: {_logPath}.");
                 }
+            }
+
+            if (!isInitialLoad)
+            {
+                // 롤오버/경로 변경으로 버퍼만 채워진 줄들이 화면에도 반영되도록 전체 갱신을 요청한다
+                InitialLogsLoaded?.Invoke();
             }
 
             if (isInitialLoad)
@@ -289,7 +311,11 @@ namespace TWChatOverlay.Services
                     }
 
                     if (length <= _lastPosition)
+                    {
+                        // 새 내용이 없는 동안 대기 조각이 오래 묵으면 마지막 줄로 간주해 내보낸다
+                        FlushPendingContent(force: false);
                         return;
+                    }
 
                     long bytesToRead = length - _lastPosition;
                     if (bytesToRead > int.MaxValue)
@@ -435,6 +461,25 @@ namespace TWChatOverlay.Services
             return charsUsed <= 0 ? string.Empty : new string(chars, 0, charsUsed);
         }
 
+        /// <summary>
+        /// 줄 구분자가 아직 안 와서 대기 중인 조각을 내보낸다.
+        /// force=true(롤오버 등)면 즉시, 아니면 PendingFlushMilliseconds 이상 조용했을 때만.
+        /// 반드시 _lockObj를 보유한 상태에서 호출해야 한다.
+        /// </summary>
+        private void FlushPendingContent(bool force)
+        {
+            if (_pendingRawContent.Length == 0)
+                return;
+
+            if (!force && (DateTime.UtcNow - _pendingSinceUtc).TotalMilliseconds < PendingFlushMilliseconds)
+                return;
+
+            string stale = _pendingRawContent;
+            _pendingRawContent = string.Empty;
+            _pendingSinceUtc = DateTime.MinValue;
+            ProcessRawContent(stale, _experienceService.IsReady);
+        }
+
         private void ProcessIncrementalContent(string content, bool isRealTime, bool isStartupBackfill)
         {
             if (string.IsNullOrEmpty(content))
@@ -445,11 +490,13 @@ namespace TWChatOverlay.Services
             if (completeEnd < 0)
             {
                 _pendingRawContent = combined;
+                _pendingSinceUtc = DateTime.UtcNow;
                 return;
             }
 
             string readyContent = combined.Substring(0, completeEnd);
             _pendingRawContent = completeEnd < combined.Length ? combined.Substring(completeEnd) : string.Empty;
+            _pendingSinceUtc = _pendingRawContent.Length > 0 ? DateTime.UtcNow : DateTime.MinValue;
             ProcessRawContent(readyContent, isRealTime, isStartupBackfill: isStartupBackfill);
         }
 
