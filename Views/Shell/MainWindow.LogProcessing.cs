@@ -133,8 +133,16 @@ namespace TWChatOverlay.Views
             {
                 foreach (var item in batch)
                 {
-                    var context = CreateLogPipelineContext(item.Html, item.IsRealTime, item.IsStartupBackfill, deferUiScroll: true);
-                    ProcessLogPipelineContext(context);
+                    // 한 줄의 처리 실패가 배치의 나머지 줄을 잃게 하지 않는다 (로그 씹힘 방지)
+                    try
+                    {
+                        var context = CreateLogPipelineContext(item.Html, item.IsRealTime, item.IsStartupBackfill, deferUiScroll: true);
+                        ProcessLogPipelineContext(context);
+                    }
+                    catch (Exception ex)
+                    {
+                        AppLogger.Warn($"Log line processing failed; line skipped. Html='{item.Html}'", ex);
+                    }
                 }
             }
             finally
