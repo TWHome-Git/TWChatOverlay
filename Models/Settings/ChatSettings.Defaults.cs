@@ -13,150 +13,25 @@ namespace TWChatOverlay.Models
             ApplyDefaultValues();
         }
 
+        /// <summary>
+        /// 섹션을 새로 만들어 모든 값을 기본값으로 채운다. (섹션 클래스의 초기값 = 앱 기본값)
+        /// </summary>
         private void ApplyDefaultValues()
         {
-            _normalColor = "#FFFFFF";
-            _teamColor = "#00BFFF";
-            _clubColor = "#00FF00";
-            _systemColor = "#FFFF00";
-            _shoutColor = "#FF8000";
-            _decorationColorSync = true;
-            _etaLevelColor = "#FFD84A";
-            _etaCharacterColor = "#5AC8E8";
-            _timestampColor = "#9AA0A6";
-            _showEtaLevel = true;
-            _showEtaCharacter = true;
-            _showIdTag = true;
-            _showShoutToastPopup = true;
-            _autoCopyShoutNickname = false;
-            _shoutToastDurationSeconds = 5;
-            _shoutToastFontSize = 15.0;
-            _dailyWeeklyContentFontSize = 12.0;
-            _chatLogFolderPath = @"C:\Nexon\TalesWeaver\ChatLog";
-            _keywordInput = "";
-            _fontFamily = "사용자 설정";
-            _useAlertColor = false;
-            _useAlertSound = false;
-            _useMagicCircleAlert = false;
-            _showExpTracker = false;
-            _expTrackerWindowLeft = null;
-            _expTrackerWindowTop = null;
-            _expTrackerWindowRight = null;
-            _enableExperienceLimitAlert = false;
-            _showExperienceLimitAlertWindow = false;
-            _showDailyWeeklyContentOverlay = false;
-            _showEtosDirectionAlert = false;
-            _enableReflectionPatternAlert = false;
-            _enableAbandonRoadCountAlert = false;
-            _showAbandonRoadSummaryWindow = false;
-            _enableCravingPleasureCountAlert = false;
-            _showDungeonCountDisplayWindow = false;
-            _showItemDropAlert = false;
-            _showEtosHelperWindow = false;
-            _showItemDropHelperWindow = false;
-            _useCustomDropItemFilter = false;
-            _customDropItemJson = string.Empty;
-            _enableBuffTrackerAlert = false;
-            _enableBuffTrackerEndSound = false;
-            _showBuffTrackerWindow = false;
-            _experienceLimitTotalExp = 0;
-            _experienceLimitStateInitialized = false;
-            _experienceLimitLastRefreshWeekKey = string.Empty;
-            _experienceLimitWeeklyPromptShownWeekKey = string.Empty;
-            _buffTrackerEndSoundVolume = 1.0;
-            _itemDropAlertVolume = 0.1;
-            _highlightAlertVolume = 1.0;
-            _magicCircleAlertVolume = 1.0;
-            _reflectionPatternAlertVolume = 1.0;
-            _expBuffAlertVolume = 1.0;
-            _bossAlertVolume = 1.0;
-            _alwaysVisible = false;
+            Chat = new ChatSection();
+            Shout = new ShoutSection();
+            Alerts = new AlertsSection
+            {
+                Dungeon = { ItemConfigs = CreateDefaultDungeonItemConfigs() },
+                Boss = { Configs = CreateDefaultBossAlertConfigs() }
+            };
+            Windows = new WindowsSection();
+            Ui = new UiSection();
+            Hotkeys = new HotkeysSection();
+            SystemConfig = new SystemSection();
+            Presets = new PresetsSection();
+
             _enableDebugLogging = false;
-            _exitHotKey = "";
-            _toggleOverlayHotKey = "";
-            _toggleAlwaysVisibleHotKey = "";
-            _toggleDailyWeeklyContentHotKey = "";
-            _toggleSettingsHotKey = "";
-            _toggleTrayAllHotKey = "";
-            _toggleUnlockHotKey = "";
-            _overlayOpacityPercent = 96.0;
-            _overlayOpacityByGroup.Clear();
-            _mainWindowChatTabTag = "Basic";
-            _dailyWeeklyContentOverlayLeft = 0.0;
-            _dailyWeeklyContentOverlayTop = 0.0;
-            _subAddonWindowLeft = 0.0;
-            _subAddonWindowTop = 0.0;
-            _itemDropWindowLeft = 0.0;
-            _itemDropWindowTop = 0.0;
-            _buffTrackerWindowLeft = 0.0;
-            _buffTrackerWindowTop = 0.0;
-            _itemCalendarWindowLeft = 0.0;
-            _itemCalendarWindowTop = 0.0;
-            _AbandonRoadSummaryWindowLeft = 0.0;
-            _AbandonRoadSummaryWindowTop = 0.0;
-            _shoutToastWindowLeft = null;
-            _shoutToastWindowTop = null;
-            _recaptureSupplyWindowLeft = null;
-            _recaptureSupplyWindowTop = null;
-            _experienceLimitAlertWindowLeft = null;
-            _experienceLimitAlertWindowTop = null;
-            _dungeonCountDisplayWindowLeft = null;
-            _dungeonCountDisplayWindowTop = null;
-            _chatCloneWindow1Left = null;
-            _chatCloneWindow1Top = null;
-            _chatCloneWindow1Width = null;
-            _chatCloneWindow1Height = null;
-            _chatCloneWindow2Left = null;
-            _chatCloneWindow2Top = null;
-            _chatCloneWindow2Width = null;
-            _chatCloneWindow2Height = null;
-            _chatCloneWindow1TabTag = "General";
-            _chatCloneWindow2TabTag = "General";
-            _chatCloneWindow1IsOpen = false;
-            _chatCloneWindow2IsOpen = false;
-            _chatCloneWindow1FollowMainFont = true;
-            _chatCloneWindow1FontFamily = string.Empty;
-            _chatCloneWindow1FontSize = null;
-            _chatCloneWindow2FollowMainFont = true;
-            _chatCloneWindow2FontFamily = string.Empty;
-            _chatCloneWindow2FontSize = null;
-            _fontSize = 17.0;
-            _lineMargin = 0.0;
-            _lineMarginLeft = 0.0;
-            _expAlarmThreshold = 10000;
-            _AbandonRoadCountAlertDurationSeconds = 30;
-            _lastSelectedPresetNumber = 1;
-            ShowNormal = true;
-            ShowShout = true;
-            ShowTeam = true;
-            ShowWhisper = true;
-            ShowSystem = true;
-            ShowClub = true;
-            ShowClubBoss = true;
-            UseKeywordAlert = false;
-            IsExpAlarmEnabled = false;
-            EnableExperienceLimitAlert = false;
-            ShowExperienceLimitAlertWindow = false;
-            WindowWidth = 650.0;
-            WindowHeight = 250.0;
-            DailyWeeklyContentOverlayLeft = 0.0;
-            DailyWeeklyContentOverlayTop = 0.0;
-            DailyWeeklyContentOverlayWidth = 280.0;
-            DailyWeeklyContentOverlayHeight = 540.0;
-            SubAddonWindowLeft = 0.0;
-            SubAddonWindowTop = 0.0;
-            SubMenuWindowLeft = 0.0;
-            SubMenuWindowTop = 0.0;
-            MenuWindowLeft = 0.0;
-            MenuWindowTop = 0.0;
-            Preset1 = new WindowPositionPreset("프리셋 1", 0, 0);
-            Preset2 = new WindowPositionPreset("프리셋 2", 0, 0);
-            Preset3 = new WindowPositionPreset("프리셋 3", 0, 0);
-            InitialSetupWizardCompleted = false;
-            StartupLogReadCanceled = false;
-            StartupTodayOnlyBootstrapCompleted = false;
-            DungeonItemConfigs = CreateDefaultDungeonItemConfigs();
-            BossAlertConfigs = CreateDefaultBossAlertConfigs();
         }
 
         private static Dictionary<string, DungeonItemConfig> CreateDefaultDungeonItemConfigs()
