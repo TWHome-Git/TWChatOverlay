@@ -929,12 +929,17 @@
                     <StackPanel x:Name="AddonDungeonPanel" Visibility="Collapsed">
                         <Border Style="{StaticResource SettingsTabStripStyle}">
                             <StackPanel Orientation="Horizontal">
-                                <RadioButton x:Name="DungeonTabAlert" Content="알림" IsChecked="True" GroupName="DungeonTabs" Style="{StaticResource SettingsTabStyle}"/>
-                                <RadioButton x:Name="DungeonTabCounter" Content="던전 카운터" GroupName="DungeonTabs" Style="{StaticResource SettingsTabStyle}"/>
+                                <RadioButton x:Name="DungeonTabRune" Content="룬 경험치·테시스 코어" IsChecked="True" GroupName="DungeonTabs" Style="{StaticResource SettingsTabStyle}"
+                                             ToolTip="룬 경험치 던전 및 테시스 코어 던전"/>
+                                <RadioButton x:Name="DungeonTabAbyss" Content="어비스" GroupName="DungeonTabs" Style="{StaticResource SettingsTabStyle}"/>
+                                <RadioButton x:Name="DungeonTabEclipse" Content="이클립스" GroupName="DungeonTabs" Style="{StaticResource SettingsTabStyle}"/>
+                                <RadioButton x:Name="DungeonTabAbandon" Content="어밴던로드" GroupName="DungeonTabs" Style="{StaticResource SettingsTabStyle}"/>
+                                <RadioButton x:Name="DungeonTabCraving" Content="갈망하는 즐거움" GroupName="DungeonTabs" Style="{StaticResource SettingsTabStyle}"/>
                             </StackPanel>
                         </Border>
 
-                        <StackPanel Visibility="{Binding IsChecked, ElementName=DungeonTabAlert, Converter={StaticResource BooleanToVisibilityConverter}}">
+                        <!-- 룬 경험치 던전 및 테시스 코어 던전 -->
+                        <StackPanel Visibility="{Binding IsChecked, ElementName=DungeonTabRune, Converter={StaticResource BooleanToVisibilityConverter}}">
                         <WrapPanel>
                             <Border Style="{StaticResource SettingsRowStyle}">
                                 <DockPanel>
@@ -953,12 +958,12 @@
                                     <TextBlock Text="웨이브 볼륨" Style="{StaticResource SettingsRowLabelStyle}"/>
                                 </DockPanel>
                             </Border>
-                            <Border Style="{StaticResource SettingsRowStyle}">
-                                <DockPanel>
-                                    <CheckBox DockPanel.Dock="Right" IsChecked="{Binding ShowEtosDirectionAlert}" Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
-                                    <TextBlock Text="에토스 방향 알림" Style="{StaticResource SettingsRowLabelStyle}"/>
-                                </DockPanel>
-                            </Border>
+                        </WrapPanel>
+                        </StackPanel>
+
+                        <!-- 어비스 -->
+                        <StackPanel Visibility="{Binding IsChecked, ElementName=DungeonTabAbyss, Converter={StaticResource BooleanToVisibilityConverter}}">
+                        <WrapPanel>
                             <Border Style="{StaticResource SettingsRowStyle}">
                                 <DockPanel>
                                     <CheckBox DockPanel.Dock="Right" IsChecked="{Binding EnableReflectionPatternAlert}" Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
@@ -979,12 +984,34 @@
                         </WrapPanel>
                         </StackPanel>
 
-                        <StackPanel Visibility="{Binding IsChecked, ElementName=DungeonTabCounter, Converter={StaticResource BooleanToVisibilityConverter}}">
+                        <!-- 이클립스 -->
+                        <StackPanel Visibility="{Binding IsChecked, ElementName=DungeonTabEclipse, Converter={StaticResource BooleanToVisibilityConverter}}">
+                        <WrapPanel>
+                            <Border Style="{StaticResource SettingsRowStyle}">
+                                <DockPanel>
+                                    <CheckBox DockPanel.Dock="Right" IsChecked="{Binding ShowEtosDirectionAlert}" Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
+                                    <TextBlock Text="에토스 방향 알림" Style="{StaticResource SettingsRowLabelStyle}"/>
+                                </DockPanel>
+                            </Border>
+                            <Border Style="{StaticResource SettingsRowStyle}">
+                                <DockPanel>
+                                    <CheckBox DockPanel.Dock="Right" IsChecked="{Binding ShowRecaptureSupplyMap, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
+                                    <StackPanel VerticalAlignment="Center">
+                                        <TextBlock Text="보급품 탈환 미니 지도" Style="{StaticResource SettingsRowLabelStyle}"/>
+                                        <TextBlock Text="보급품 탈환 진입 시 지도 창 표시" Style="{StaticResource SettingsRowHintStyle}"/>
+                                    </StackPanel>
+                                </DockPanel>
+                            </Border>
+                        </WrapPanel>
+                        </StackPanel>
+
+                        <!-- 어밴던로드 -->
+                        <StackPanel Visibility="{Binding IsChecked, ElementName=DungeonTabAbandon, Converter={StaticResource BooleanToVisibilityConverter}}">
                         <WrapPanel>
                             <Border Style="{StaticResource SettingsRowStyle}">
                                 <DockPanel>
                                     <CheckBox DockPanel.Dock="Right" IsChecked="{Binding EnableAbandonRoadCountAlert, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
-                                    <TextBlock Text="어밴던로드 횟수" Style="{StaticResource SettingsRowLabelStyle}"/>
+                                    <TextBlock Text="어밴던로드 입장 횟수" Style="{StaticResource SettingsRowLabelStyle}"/>
                                 </DockPanel>
                             </Border>
                             <Border Style="{StaticResource SettingsRowStyle}">
@@ -995,23 +1022,44 @@
                             </Border>
                             <Border Style="{StaticResource SettingsRowStyle}">
                                 <DockPanel>
-                                    <CheckBox DockPanel.Dock="Right" IsChecked="{Binding EnableCravingPleasureCountAlert, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
-                                    <TextBlock Text="갈망하는 즐거움 횟수" Style="{StaticResource SettingsRowLabelStyle}"/>
+                                    <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                                        <Slider Minimum="10" Maximum="40" Value="{Binding DungeonCountDisplayFontSize, Mode=TwoWay}" TickFrequency="1" IsSnapToTickEnabled="True" VerticalAlignment="Center" Width="140"/>
+                                        <TextBlock Text="{Binding DungeonCountDisplayFontSize, StringFormat={}{0:F0}}" Foreground="{DynamicResource TextBrush}" Width="26" TextAlignment="Right" VerticalAlignment="Center" FontSize="12"/>
+                                    </StackPanel>
+                                    <TextBlock Text="알림 창 폰트 크기" Style="{StaticResource SettingsRowLabelStyle}"/>
                                 </DockPanel>
                             </Border>
                             <Border Style="{StaticResource SettingsRowStyle}">
                                 <DockPanel>
                                     <TextBox DockPanel.Dock="Right" Width="70" Text="{Binding AbandonRoadCountAlertDurationSeconds, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource SettingsRowInputStyle}"/>
-                                    <TextBlock Text="알림 창 지속시간(초)" Style="{StaticResource SettingsRowLabelStyle}" ToolTip="1~300초"/>
+                                    <TextBlock Text="알림 창 지속 시간(초)" Style="{StaticResource SettingsRowLabelStyle}" ToolTip="1~300초"/>
+                                </DockPanel>
+                            </Border>
+                        </WrapPanel>
+                        </StackPanel>
+
+                        <!-- 갈망하는 즐거움 -->
+                        <StackPanel Visibility="{Binding IsChecked, ElementName=DungeonTabCraving, Converter={StaticResource BooleanToVisibilityConverter}}">
+                        <WrapPanel>
+                            <Border Style="{StaticResource SettingsRowStyle}">
+                                <DockPanel>
+                                    <CheckBox DockPanel.Dock="Right" IsChecked="{Binding EnableCravingPleasureCountAlert, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
+                                    <TextBlock Text="갈망하는 즐거움 입장 횟수" Style="{StaticResource SettingsRowLabelStyle}"/>
                                 </DockPanel>
                             </Border>
                             <Border Style="{StaticResource SettingsRowStyle}">
                                 <DockPanel>
                                     <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
-                                        <Slider Minimum="10" Maximum="40" Value="{Binding DungeonCountDisplayFontSize, Mode=TwoWay}" TickFrequency="1" IsSnapToTickEnabled="True" VerticalAlignment="Center" Width="140"/>
-                                        <TextBlock Text="{Binding DungeonCountDisplayFontSize, StringFormat={}{0:F0}}" Foreground="{DynamicResource TextBrush}" Width="26" TextAlignment="Right" VerticalAlignment="Center" FontSize="12"/>
+                                        <Slider Minimum="10" Maximum="40" Value="{Binding CravingPleasureCountFontSize, Mode=TwoWay}" TickFrequency="1" IsSnapToTickEnabled="True" VerticalAlignment="Center" Width="140"/>
+                                        <TextBlock Text="{Binding CravingPleasureCountFontSize, StringFormat={}{0:F0}}" Foreground="{DynamicResource TextBrush}" Width="26" TextAlignment="Right" VerticalAlignment="Center" FontSize="12"/>
                                     </StackPanel>
-                                    <TextBlock Text="던전 카운트 폰트 크기" Style="{StaticResource SettingsRowLabelStyle}"/>
+                                    <TextBlock Text="알림 창 폰트 크기" Style="{StaticResource SettingsRowLabelStyle}"/>
+                                </DockPanel>
+                            </Border>
+                            <Border Style="{StaticResource SettingsRowStyle}">
+                                <DockPanel>
+                                    <TextBox DockPanel.Dock="Right" Width="70" Text="{Binding CravingPleasureCountAlertDurationSeconds, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource SettingsRowInputStyle}"/>
+                                    <TextBlock Text="알림 창 지속 시간(초)" Style="{StaticResource SettingsRowLabelStyle}" ToolTip="1~300초"/>
                                 </DockPanel>
                             </Border>
                         </WrapPanel>

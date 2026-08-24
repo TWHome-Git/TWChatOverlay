@@ -138,6 +138,12 @@ namespace TWChatOverlay.Models
         public bool ShowCountDisplayWindow { get; set; } = false;
         public int CountAlertDurationSeconds { get; set; } = 30;
         public double CountDisplayFontSize { get; set; } = 18.0;
+        /// <summary>갈망하는 즐거움 알림 창 지속 시간(초). 어밴던로드와 별도.</summary>
+        public int CravingDurationSeconds { get; set; } = 30;
+        /// <summary>갈망하는 즐거움 알림 창 폰트 크기. 어밴던로드와 별도.</summary>
+        public double CravingFontSize { get; set; } = 18.0;
+        /// <summary>보급품 탈환 진입 시 미니 지도 창 표시.</summary>
+        public bool ShowRecaptureSupplyMap { get; set; } = true;
         public Dictionary<string, DungeonItemConfig> ItemConfigs { get; set; } = new();
     }
 

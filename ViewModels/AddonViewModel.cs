@@ -254,6 +254,28 @@ namespace TWChatOverlay.ViewModels
             set => SetSetting(ref _dungeonCountDisplayFontSize, value, (settings, newValue) => settings.DungeonCountDisplayFontSize = newValue);
         }
 
+        private double _cravingPleasureCountFontSize;
+        private int _cravingPleasureCountAlertDurationSeconds;
+        private bool _showRecaptureSupplyMap;
+
+        public double CravingPleasureCountFontSize
+        {
+            get => _cravingPleasureCountFontSize;
+            set => SetSetting(ref _cravingPleasureCountFontSize, value, (settings, newValue) => settings.CravingPleasureCountFontSize = newValue);
+        }
+
+        public int CravingPleasureCountAlertDurationSeconds
+        {
+            get => _cravingPleasureCountAlertDurationSeconds;
+            set => SetSetting(ref _cravingPleasureCountAlertDurationSeconds, value, (settings, newValue) => settings.CravingPleasureCountAlertDurationSeconds = newValue);
+        }
+
+        public bool ShowRecaptureSupplyMap
+        {
+            get => _showRecaptureSupplyMap;
+            set => SetSetting(ref _showRecaptureSupplyMap, value, (settings, newValue) => settings.ShowRecaptureSupplyMap = newValue);
+        }
+
         public double ExperienceAlertFontSize
         {
             get => _experienceAlertFontSize;
@@ -349,6 +371,9 @@ namespace TWChatOverlay.ViewModels
             _showBuffTrackerWindow = _settings.ShowBuffTrackerWindow;
             _itemDropAlertVolumePercent = _settings.ItemDropAlertVolumePercent;
             _dungeonCountDisplayFontSize = _settings.DungeonCountDisplayFontSize;
+            _cravingPleasureCountFontSize = _settings.CravingPleasureCountFontSize;
+            _cravingPleasureCountAlertDurationSeconds = _settings.CravingPleasureCountAlertDurationSeconds;
+            _showRecaptureSupplyMap = _settings.ShowRecaptureSupplyMap;
             _experienceAlertFontSize = _settings.ExperienceAlertFontSize;
             _itemDropToastFontSize = _settings.ItemDropToastFontSize;
             _highlightAlertVolumePercent = _settings.HighlightAlertVolumePercent;

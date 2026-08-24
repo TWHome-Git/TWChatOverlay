@@ -70,6 +70,18 @@ namespace TWChatOverlay.Services
             _ = ShowAsync();
         }
 
+        /// <summary>잠금 해제 모드에서 위치/크기를 조정할 수 있게 지도 창을 미리보기로 띄운다.</summary>
+        public static void ShowPositionPreview(ChatSettings settings, bool force = false)
+        {
+            _ = ShowAsync(isPreview: true);
+        }
+
+        /// <summary>미리보기를 닫는다. (창의 Closed 처리에서 위치/크기가 저장된다)</summary>
+        public static void ClosePositionPreview()
+        {
+            Close();
+        }
+
         public static void Close()
         {
             Application.Current.Dispatcher.BeginInvoke(new Action(() =>
@@ -86,7 +98,7 @@ namespace TWChatOverlay.Services
             }));
         }
 
-        private static async Task ShowAsync()
+        private static async Task ShowAsync(bool isPreview = false)
         {
             if (!await EnsureImageReadyAsync().ConfigureAwait(false))
                 return;
@@ -94,17 +106,27 @@ namespace TWChatOverlay.Services
             await Application.Current.Dispatcher.InvokeAsync(() =>
             {
                 ChatSettings? settings = GetSharedSettings();
+
+                // 사용자가 미니 지도 표시를 꺼둔 경우 (미리보기는 위치 조정을 위해 항상 표시)
+                if (!isPreview && settings != null && !settings.ShowRecaptureSupplyMap)
+                    return;
+
                 if (_window == null || !_window.IsLoaded)
                 {
                     _window = new RecaptureSupplyWindow(CacheFilePath);
+                    RecaptureSupplyWindow createdWindow = _window;
                     _window.Closed += (_, _) =>
                     {
                         try
                         {
                             if (settings != null)
                             {
-                                settings.RecaptureSupplyWindowLeft = _window.Left;
-                                settings.RecaptureSupplyWindowTop = _window.Top;
+                                settings.RecaptureSupplyWindowLeft = createdWindow.Left;
+                                settings.RecaptureSupplyWindowTop = createdWindow.Top;
+                                if (createdWindow.ActualWidth > 0)
+                                    settings.RecaptureSupplyWindowWidth = createdWindow.ActualWidth;
+                                if (createdWindow.ActualHeight > 0)
+                                    settings.RecaptureSupplyWindowHeight = createdWindow.ActualHeight;
                                 ConfigService.SaveDeferred(settings);
                             }
                         }
@@ -113,7 +135,8 @@ namespace TWChatOverlay.Services
                             AppLogger.Warn("Failed to save Recapture supply window position on close.", ex);
                         }
 
-                        _window = null;
+                        if (ReferenceEquals(_window, createdWindow))
+                            _window = null;
                     };
                 }
 
@@ -123,6 +146,10 @@ namespace TWChatOverlay.Services
                         _window.Left = settings.RecaptureSupplyWindowLeft.Value;
                     if (settings.RecaptureSupplyWindowTop.HasValue)
                         _window.Top = settings.RecaptureSupplyWindowTop.Value;
+                    if (settings.RecaptureSupplyWindowWidth.HasValue)
+                        _window.Width = settings.RecaptureSupplyWindowWidth.Value;
+                    if (settings.RecaptureSupplyWindowHeight.HasValue)
+                        _window.Height = settings.RecaptureSupplyWindowHeight.Value;
                     if (!settings.RecaptureSupplyWindowLeft.HasValue || !settings.RecaptureSupplyWindowTop.HasValue)
                         _window.WindowStartupLocation = WindowStartupLocation.CenterScreen;
                     else

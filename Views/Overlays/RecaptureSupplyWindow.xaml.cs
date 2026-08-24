@@ -28,8 +28,58 @@ namespace TWChatOverlay.Views
         {
             InitializeComponent();
             SettingsHostZOrder.Register(this); // 설정 창이 열려 있으면 그 아래로 표시
+            WindowFontService.Apply(this);
             SourceInitialized += RecaptureSupplyWindow_SourceInitialized;
+            // 잠금 해제 모드에서는 창 어디를 잡아도 선택+드래그 가능
+            PreviewMouseLeftButtonDown += UnlockDrag_PreviewMouseLeftButtonDown;
+            SizeChanged += (_, _) => PersistBoundsDeferred();
+            LocationChanged += (_, _) => PersistBoundsDeferred();
             LoadImage(imagePath);
+        }
+
+        private void UnlockDrag_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            if (!UiLockService.IsUnlocked) return;
+            UiLockService.Select(this);
+            if (e.ButtonState != MouseButtonState.Pressed)
+                return;
+
+            try
+            {
+                DragMove();
+            }
+            catch
+            {
+            }
+
+            PersistBoundsDeferred();
+            e.Handled = true;
+        }
+
+        /// <summary>현재 위치/크기를 공유 설정에 지연 저장한다. (드래그·리사이즈·인스펙터 조정 공용)</summary>
+        private void PersistBoundsDeferred()
+        {
+            if (!IsLoaded || !IsVisible)
+                return;
+
+            try
+            {
+                foreach (Window window in Application.Current.Windows)
+                {
+                    if (window is MainWindow main && main.DataContext is Models.ChatSettings settings)
+                    {
+                        settings.RecaptureSupplyWindowLeft = Left;
+                        settings.RecaptureSupplyWindowTop = Top;
+                        if (ActualWidth > 0)
+                            settings.RecaptureSupplyWindowWidth = ActualWidth;
+                        if (ActualHeight > 0)
+                            settings.RecaptureSupplyWindowHeight = ActualHeight;
+                        ConfigService.SaveDeferred(settings);
+                        return;
+                    }
+                }
+            }
+            catch { }
         }
 
         private void RecaptureSupplyWindow_SourceInitialized(object? sender, EventArgs e)

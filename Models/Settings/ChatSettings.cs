@@ -549,6 +549,35 @@ namespace TWChatOverlay.Models
                 OnPropertyChanged();
             }
         }
+        /// <summary>갈망하는 즐거움 알림 창 지속 시간(초).</summary>
+        [JsonIgnore]
+        public int CravingPleasureCountAlertDurationSeconds
+        {
+            get => Alerts.Dungeon.CravingDurationSeconds;
+            set
+            {
+                int clamped = Math.Max(1, Math.Min(300, value));
+                if (Alerts.Dungeon.CravingDurationSeconds == clamped) return;
+                Alerts.Dungeon.CravingDurationSeconds = clamped;
+                OnPropertyChanged();
+            }
+        }
+        /// <summary>갈망하는 즐거움 알림 창 폰트 크기.</summary>
+        [JsonIgnore]
+        public double CravingPleasureCountFontSize
+        {
+            get => Alerts.Dungeon.CravingFontSize;
+            set
+            {
+                double clamped = Math.Max(10.0, Math.Min(40.0, value));
+                if (Math.Abs(Alerts.Dungeon.CravingFontSize - clamped) < 0.0001) return;
+                Alerts.Dungeon.CravingFontSize = clamped;
+                OnPropertyChanged();
+            }
+        }
+        /// <summary>보급품 탈환 진입 시 미니 지도 창 표시.</summary>
+        [JsonIgnore]
+        public bool ShowRecaptureSupplyMap { get => Alerts.Dungeon.ShowRecaptureSupplyMap; set { Alerts.Dungeon.ShowRecaptureSupplyMap = value; OnPropertyChanged(); } }
         [JsonIgnore]
         public Dictionary<string, DungeonItemConfig> DungeonItemConfigs
         {
@@ -801,6 +830,18 @@ namespace TWChatOverlay.Models
         {
             get => Windows.RecaptureSupply.Top;
             set { if (Windows.RecaptureSupply.Top == value) return; Windows.RecaptureSupply.Top = value; OnPropertyChanged(); }
+        }
+        [JsonIgnore]
+        public double? RecaptureSupplyWindowWidth
+        {
+            get => Windows.RecaptureSupply.Width;
+            set { if (Windows.RecaptureSupply.Width == value) return; Windows.RecaptureSupply.Width = value; OnPropertyChanged(); }
+        }
+        [JsonIgnore]
+        public double? RecaptureSupplyWindowHeight
+        {
+            get => Windows.RecaptureSupply.Height;
+            set { if (Windows.RecaptureSupply.Height == value) return; Windows.RecaptureSupply.Height = value; OnPropertyChanged(); }
         }
 
         [JsonIgnore]
