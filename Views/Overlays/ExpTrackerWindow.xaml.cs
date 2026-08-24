@@ -21,6 +21,7 @@ namespace TWChatOverlay.Views
         public ExpTrackerWindow(object? dataContext)
         {
             InitializeComponent();
+            SettingsHostZOrder.Register(this); // 설정 창이 열려 있으면 그 아래로 표시
             WindowFontService.Apply(this);
             DataContext = dataContext ?? throw new ArgumentNullException(nameof(dataContext));
             Loaded += ExpTrackerWindow_Loaded;

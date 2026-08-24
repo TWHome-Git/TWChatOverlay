@@ -24,6 +24,10 @@ namespace TWChatOverlay.Services
                 if (!window.Topmost)
                     window.Topmost = true;
 
+                // 설정 창이 떠 있는 동안 등록된 오버레이는 설정 창 바로 아래까지만 올린다
+                if (SettingsHostZOrder.IsRegistered(window) && SettingsHostZOrder.PlaceBelowHost(window))
+                    return;
+
                 IntPtr hwnd = new WindowInteropHelper(window).EnsureHandle();
                 NativeMethods.SetWindowPos(
                     hwnd,

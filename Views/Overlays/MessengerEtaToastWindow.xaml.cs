@@ -16,6 +16,7 @@ namespace TWChatOverlay.Views
         public MessengerEtaToastWindow(FontFamily fontFamily, ChatSettings settings)
         {
             InitializeComponent();
+            SettingsHostZOrder.Register(this); // 설정 창이 열려 있으면 그 아래로 표시
             _settings = settings;
             FontFamily = fontFamily;
             TitleText.FontFamily = fontFamily;

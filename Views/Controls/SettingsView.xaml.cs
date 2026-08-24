@@ -168,6 +168,8 @@ namespace TWChatOverlay.Views
             if (OnlyChatMode)
             {
                 NavColumn.Visibility = Visibility.Collapsed;
+                NavToolsColumn.Visibility = Visibility.Collapsed;
+                AppHeader.Visibility = Visibility.Collapsed;
                 ChatPanel.Visibility = Visibility.Visible;
                 ShoutPanel.Visibility = Visibility.Visible;
                 DisplayPanel.Visibility = Visibility.Collapsed;
@@ -184,6 +186,8 @@ namespace TWChatOverlay.Views
             }
 
             NavColumn.Visibility = Visibility.Visible;
+            NavToolsColumn.Visibility = Visibility.Visible;
+            AppHeader.Visibility = Visibility.Visible;
 
             int addonTab = SelectedAddonTabIndex;
             if (addonTab >= 0)

@@ -31,6 +31,8 @@ namespace TWChatOverlay.Views
             _settings = settings ?? throw new ArgumentNullException(nameof(settings));
 
             InitializeComponent();
+
+            SettingsHostZOrder.Register(this); // 설정 창이 열려 있으면 그 아래로 표시
             FontFamily = fontFamily;
             ToastText.FontFamily = fontFamily;
             ApplyToastSettings();
