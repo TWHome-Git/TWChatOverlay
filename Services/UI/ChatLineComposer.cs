@@ -69,25 +69,23 @@ namespace TWChatOverlay.Services
         /// <summary>조각들을 Run으로 만들어 문단에 넣는다. 색상 동기화가 켜져 있으면 전부 기본 색.</summary>
         public static void AppendRuns(Paragraph paragraph, IReadOnlyList<ChatSegment> segments, Brush baseBrush, ChatSettings settings)
         {
-            bool sync = settings.DecorationColorSync;
             foreach (var segment in segments)
             {
                 if (segment.Text.Length == 0)
                     continue;
 
                 var run = new Run(segment.Text);
-                if (!sync)
+                // 항목별 색상 동기화: 꺼진 항목만 개별 색을 칠하고, 나머지는 줄 색을 따른다
+                Brush? brush = segment.Kind switch
                 {
-                    Brush? brush = segment.Kind switch
-                    {
-                        ChatSegmentKind.Timestamp => ChatBrushResolver.ToBrush(settings.TimestampColor),
-                        ChatSegmentKind.EtaLevel => ChatBrushResolver.ToBrush(settings.EtaLevelColor),
-                        ChatSegmentKind.Character => ChatBrushResolver.ToBrush(settings.EtaCharacterColor),
-                        _ => null,
-                    };
-                    if (brush != null)
-                        run.Foreground = brush;
-                }
+                    ChatSegmentKind.Timestamp when !settings.TimestampColorSync => ChatBrushResolver.ToBrush(settings.TimestampColor),
+                    ChatSegmentKind.EtaLevel when !settings.EtaLevelColorSync => ChatBrushResolver.ToBrush(settings.EtaLevelColor),
+                    ChatSegmentKind.Character when !settings.EtaCharacterColorSync => ChatBrushResolver.ToBrush(settings.EtaCharacterColor),
+                    ChatSegmentKind.IdTag when !settings.IdTagColorSync => ChatBrushResolver.ToBrush(settings.IdTagColor),
+                    _ => null,
+                };
+                if (brush != null)
+                    run.Foreground = brush;
 
                 paragraph.Inlines.Add(run);
             }

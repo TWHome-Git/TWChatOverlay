@@ -117,9 +117,17 @@ namespace TWChatOverlay.Models
         public bool ShowIdTag { get => Chat.IdDisplay.ShowIdTag; set { Chat.IdDisplay.ShowIdTag = value; OnPropertyChanged(); } }
         [JsonIgnore]
         public bool ShowTimestamp { get => Chat.IdDisplay.ShowTimestamp; set { Chat.IdDisplay.ShowTimestamp = value; OnPropertyChanged(); } }
-        /// <summary>에타 레벨/캐릭터/타임스탬프 색을 줄 색과 동기화. 끄면 아래 개별 색을 쓴다.</summary>
+        // 항목별 색상 동기화: 켜면 줄 색을 따르고, 끄면 개별 색을 쓴다
         [JsonIgnore]
-        public bool DecorationColorSync { get => Chat.IdDisplay.ColorSync; set { Chat.IdDisplay.ColorSync = value; OnPropertyChanged(); } }
+        public bool EtaLevelColorSync { get => Chat.IdDisplay.EtaLevelColorSync; set { Chat.IdDisplay.EtaLevelColorSync = value; OnPropertyChanged(); } }
+        [JsonIgnore]
+        public bool EtaCharacterColorSync { get => Chat.IdDisplay.EtaCharacterColorSync; set { Chat.IdDisplay.EtaCharacterColorSync = value; OnPropertyChanged(); } }
+        [JsonIgnore]
+        public bool TimestampColorSync { get => Chat.IdDisplay.TimestampColorSync; set { Chat.IdDisplay.TimestampColorSync = value; OnPropertyChanged(); } }
+        [JsonIgnore]
+        public bool IdTagColorSync { get => Chat.IdDisplay.IdTagColorSync; set { Chat.IdDisplay.IdTagColorSync = value; OnPropertyChanged(); } }
+        [JsonIgnore]
+        public string IdTagColor { get => Chat.IdDisplay.IdTagColor; set { Chat.IdDisplay.IdTagColor = value; OnPropertyChanged(); } }
         [JsonIgnore]
         public string EtaLevelColor { get => Chat.IdDisplay.EtaLevelColor; set { Chat.IdDisplay.EtaLevelColor = value; OnPropertyChanged(); } }
         [JsonIgnore]
