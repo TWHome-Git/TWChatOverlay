@@ -118,7 +118,7 @@ namespace TWChatOverlay.Views
 
         #region Log Processing
 
-        private void ProcessUiLogBatch(IReadOnlyList<(string Html, bool IsRealTime, bool IsStartupBackfill)> batch)
+        private void ProcessUiLogBatch(IReadOnlyList<AnalyzedLogEvent> batch)
         {
             if (batch.Count == 0) return;
 
@@ -137,6 +137,7 @@ namespace TWChatOverlay.Views
                     try
                     {
                         var context = CreateLogPipelineContext(item.Html, item.IsRealTime, item.IsStartupBackfill, deferUiScroll: true);
+                        context.PipelineAnalysis = item.Analysis; // 백그라운드에서 이미 분석됨
                         ProcessLogPipelineContext(context);
                     }
                     catch (Exception ex)
@@ -182,7 +183,7 @@ namespace TWChatOverlay.Views
         {
             if (string.IsNullOrWhiteSpace(context.RawHtml)) return;
 
-            var pipelineAnalysis = _logPipelineCoordinator.Analyze(context.RawHtml, context.IsRealTime);
+            var pipelineAnalysis = context.PipelineAnalysis ?? _logPipelineCoordinator.Analyze(context.RawHtml, context.IsRealTime);
             context.PipelineAnalysis = pipelineAnalysis;
             var analysis = pipelineAnalysis.Primary;
             if (!analysis.IsSuccess) return;
