@@ -285,12 +285,13 @@
 
             <!-- 도구 오른쪽: 프로그램 아이콘 + 이름 (본문은 아래 행에서 시작) -->
             <Border x:Name="AppHeader" Grid.Row="0" Grid.Column="1">
-                <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="24,0,0,0">
-                    <Image Source="/TWChatOverlay;component/Data/images/MenuIcon/favicon.ico" Width="34" Height="34" VerticalAlignment="Center"/>
-                    <StackPanel Margin="12,0,0,0" VerticalAlignment="Center">
-                        <TextBlock Text="테일즈 채팅 오버레이" Foreground="{DynamicResource TextBrush}" FontSize="17" FontWeight="Bold"/>
-                        <TextBlock Text="TalesWeaver Chat Overlay" Foreground="{DynamicResource OverlaySubtleTextBrush}" FontSize="11" Margin="1,2,0,0"/>
-                    </StackPanel>
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="48,10,0,10">
+                    <Border CornerRadius="4" ClipToBounds="True">
+                        <Image Source="/TWChatOverlay;component/Data/images/MenuIcon/favicon.ico" Width="128" Height="128" VerticalAlignment="Center"
+                               RenderOptions.BitmapScalingMode="NearestNeighbor"/>
+                    </Border>
+                    <TextBlock Text="테일즈 채팅 오버레이" Foreground="{DynamicResource TextBrush}" FontSize="36" FontWeight="Bold"
+                               VerticalAlignment="Center" Margin="28,0,0,0"/>
                 </StackPanel>
             </Border>
 
