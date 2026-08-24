@@ -15,6 +15,7 @@ namespace TWChatOverlay.Views
         public ItemDropToastWindow(string itemName, ItemDropGrade grade, FontFamily fontFamily)
         {
             InitializeComponent();
+            SettingsHostZOrder.Register(this); // 설정 창이 열려 있으면 그 아래로 표시
             FontFamily = fontFamily;
             ItemNameText.FontFamily = fontFamily;
             ItemNameText.Text = $"[{itemName}] 획득";

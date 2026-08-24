@@ -11,6 +11,7 @@
         <Style x:Key="SettingsNavItemStyle" TargetType="RadioButton">
             <Setter Property="Foreground" Value="{DynamicResource OverlaySubtleTextBrush}"/>
             <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="FontSize" Value="12"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="RadioButton">
@@ -18,7 +19,7 @@
                                 Background="Transparent"
                                 BorderBrush="Transparent"
                                 BorderThickness="2,0,0,0"
-                                Padding="12,7">
+                                Padding="22,6">
                             <ContentPresenter VerticalAlignment="Center"/>
                         </Border>
                         <ControlTemplate.Triggers>
@@ -38,10 +39,10 @@
 
         <!-- 내비게이션 그룹 라벨: 상위 구분 제목이므로 항목보다 크고 굵게 -->
         <Style x:Key="SettingsNavGroupLabelStyle" TargetType="TextBlock">
-            <Setter Property="Foreground" Value="{DynamicResource OverlayInfoTextBrush}"/>
-            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+            <Setter Property="FontSize" Value="15"/>
             <Setter Property="FontWeight" Value="Bold"/>
-            <Setter Property="Margin" Value="14,14,0,5"/>
+            <Setter Property="Margin" Value="14,14,0,6"/>
         </Style>
 
         <!-- 섹션 라벨: 작은 회색 구분 텍스트 -->
@@ -231,7 +232,7 @@
         <Style x:Key="SettingsTabStripStyle" TargetType="Border">
             <Setter Property="BorderBrush" Value="{DynamicResource SeparatorBrush}"/>
             <Setter Property="BorderThickness" Value="0,0,0,1"/>
-            <Setter Property="Margin" Value="0,2,0,12"/>
+            <Setter Property="Margin" Value="0,8,0,12"/>
         </Style>
     </UserControl.Resources>
 
@@ -241,17 +242,20 @@
                 <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
 
-            <!-- 왼쪽 내비게이션 (컴팩트 모드에서는 숨김) -->
-            <Border x:Name="NavColumn"
-                    Grid.Column="0"
+            <!-- 도구: 사이드바 최상단 버튼 그룹 (EllesmereUI 스타일) -->
+            <Border x:Name="NavToolsColumn"
+                    Grid.Row="0" Grid.Column="0"
                     Background="{DynamicResource InputFieldBackgroundBrush}"
                     BorderBrush="{DynamicResource SeparatorBrush}"
                     BorderThickness="0,0,1,0"
-                    MinWidth="110">
-                <StackPanel Margin="0,4">
-                    <!-- 도구: 최상단 버튼 그룹 (EllesmereUI 스타일) -->
-                    <Button Style="{StaticResource SettingsNavActionStyle}" Click="UnlockMode_Click" Margin="0,4,0,0">
+                    Width="168">
+                <StackPanel Margin="0,8,0,0">
+                    <Button Style="{StaticResource SettingsNavActionStyle}" Click="UnlockMode_Click">
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Text="&#xE785;" FontFamily="Segoe MDL2 Assets" FontSize="12" VerticalAlignment="Center" Margin="0,0,8,0"/>
                             <TextBlock Text="잠금 해제 모드" VerticalAlignment="Center"/>
@@ -275,8 +279,29 @@
                             <TextBlock Text="프로필 및 프리셋" VerticalAlignment="Center"/>
                         </StackPanel>
                     </RadioButton>
-                    <Border Height="1" Background="{DynamicResource SeparatorBrush}" Margin="8,8,8,2"/>
+                    <Border Height="1" Background="{DynamicResource SeparatorBrush}" Margin="8,8,8,0"/>
+                </StackPanel>
+            </Border>
 
+            <!-- 도구 오른쪽: 프로그램 아이콘 + 이름 (본문은 아래 행에서 시작) -->
+            <Border x:Name="AppHeader" Grid.Row="0" Grid.Column="1">
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="24,0,0,0">
+                    <Image Source="/TWChatOverlay;component/Data/images/MenuIcon/favicon.ico" Width="34" Height="34" VerticalAlignment="Center"/>
+                    <StackPanel Margin="12,0,0,0" VerticalAlignment="Center">
+                        <TextBlock Text="테일즈 채팅 오버레이" Foreground="{DynamicResource TextBrush}" FontSize="17" FontWeight="Bold"/>
+                        <TextBlock Text="TalesWeaver Chat Overlay" Foreground="{DynamicResource OverlaySubtleTextBrush}" FontSize="11" Margin="1,2,0,0"/>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+
+            <!-- 왼쪽 내비게이션 (컴팩트 모드에서는 숨김) -->
+            <Border x:Name="NavColumn"
+                    Grid.Row="1" Grid.Column="0"
+                    Background="{DynamicResource InputFieldBackgroundBrush}"
+                    BorderBrush="{DynamicResource SeparatorBrush}"
+                    BorderThickness="0,0,1,0"
+                    Width="168">
+                <StackPanel Margin="0,4">
                     <TextBlock Text="기본" Style="{StaticResource SettingsNavGroupLabelStyle}"/>
                     <RadioButton x:Name="NavChat" Content="채팅" GroupName="SettingsNav" IsChecked="True" Checked="Nav_Checked" Style="{StaticResource SettingsNavItemStyle}"/>
                     <RadioButton x:Name="NavShout" Content="외치기" GroupName="SettingsNav" Checked="Nav_Checked" Style="{StaticResource SettingsNavItemStyle}"/>
@@ -296,8 +321,8 @@
                 </StackPanel>
             </Border>
 
-            <ScrollViewer x:Name="SettingsScroll" Grid.Column="1" VerticalScrollBarVisibility="Auto" Style="{StaticResource OverlayScrollViewerStyle}">
-                <StackPanel Margin="16,4,16,12" Width="620" HorizontalAlignment="Left">
+            <ScrollViewer x:Name="SettingsScroll" Grid.Row="1" Grid.Column="1" VerticalScrollBarVisibility="Auto" Style="{StaticResource OverlayScrollViewerStyle}">
+                <StackPanel Margin="16,4,12,12" Width="620" HorizontalAlignment="Left">
 
                     <!-- ===================== 채팅 ===================== -->
                     <StackPanel x:Name="ChatPanel">

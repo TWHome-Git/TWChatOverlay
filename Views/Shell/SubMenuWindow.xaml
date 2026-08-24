@@ -9,6 +9,7 @@
         Background="{DynamicResource PrimaryBackgroundBrush}"
         WindowStartupLocation="CenterScreen"
         WindowStyle="None"
+        Topmost="True"
         ResizeMode="NoResize">
     <Border Background="{DynamicResource PrimaryBackgroundBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" Padding="14">
         <Grid>

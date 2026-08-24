@@ -27,6 +27,7 @@ namespace TWChatOverlay.Views
         public RecaptureSupplyWindow(string imagePath)
         {
             InitializeComponent();
+            SettingsHostZOrder.Register(this); // 설정 창이 열려 있으면 그 아래로 표시
             SourceInitialized += RecaptureSupplyWindow_SourceInitialized;
             LoadImage(imagePath);
         }

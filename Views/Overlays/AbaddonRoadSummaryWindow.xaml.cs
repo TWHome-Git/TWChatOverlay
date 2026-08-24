@@ -50,6 +50,8 @@ namespace TWChatOverlay.Views
             _ = logAnalysisService ?? throw new ArgumentNullException(nameof(logAnalysisService));
 
             InitializeComponent();
+
+            SettingsHostZOrder.Register(this); // 설정 창이 열려 있으면 그 아래로 표시
             DataContext = this;
             _autoCloseTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(250) };
             _autoCloseTimer.Tick += AutoCloseTimer_Tick;
