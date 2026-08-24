@@ -82,7 +82,7 @@ namespace TWChatOverlay.Views
 
             if (forceRealTime)
             {
-                _uiLogBatchDispatcher.Enqueue(payload, true, false, ProcessUiLogBatch);
+                _logAnalysisPipeline?.Enqueue(new LogFeedItem(payload, IsRealTime: true, IsStartupBackfill: false));
                 return;
             }
 

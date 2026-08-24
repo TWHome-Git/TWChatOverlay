@@ -76,7 +76,7 @@ namespace TWChatOverlay.Views
         public event EventHandler<bool>? DailyWeeklyVisibilityChanged;
         public event EventHandler<bool>? ItemCalendarVisibilityChanged;
         private string _currentTabTag = "Basic";
-        private readonly UiLogBatchDispatcher _uiLogBatchDispatcher;
+        private LogAnalysisPipeline? _logAnalysisPipeline;
         private readonly LogTabBufferStore _logTabBufferStore;
         private readonly TabDisplayStateResolver _tabDisplayStateResolver;
         private bool _isRefreshLogDisplayScheduled;
@@ -147,7 +147,6 @@ namespace TWChatOverlay.Views
             Topmost = true;
             _settingsFileMissingOnStartup = !ConfigService.SettingsFileExists();
             _pendingInitialSetupWizard = _settingsFileMissingOnStartup;
-            _uiLogBatchDispatcher = new UiLogBatchDispatcher(Dispatcher, 60);
             _logTabBufferStore = ChatWindowHub.SharedLogBuffers;
             _tabDisplayStateResolver = new TabDisplayStateResolver();
             _mainTabAutoHideTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(3) };
@@ -172,6 +171,8 @@ namespace TWChatOverlay.Views
             };
             _logAnalysisService = new LogAnalysisService(_settings);
             _logPipelineCoordinator = new MainLogPipelineCoordinator(_settings, _logAnalysisService);
+            // 파싱·분석을 백그라운드로 — UI 스레드는 분석 결과를 소비만 한다
+            _logAnalysisPipeline = new LogAnalysisPipeline(_logPipelineCoordinator, Dispatcher, ProcessUiLogBatch);
             _settingsViewModel = new SettingsViewModel(_settings, OnColorsUpdatedFromSettings, ConfirmExit, OnSettingsResetFromSettings, ApplyHotKeys, ExecuteManualLogReloadFromSettingsAsync);
 
             _expService = new ExperienceService(_settings);
@@ -192,10 +193,7 @@ namespace TWChatOverlay.Views
             _logService = new LogService(_expService, _settings);
             TryLoadTestDropItemJsonForSession();
             DropItemResolver.InitializeAsync(_settings);
-            _logService.OnNewLogRead += (logItem) =>
-            {
-                _uiLogBatchDispatcher.Enqueue(logItem.Html, logItem.IsRealTime, logItem.IsStartupBackfill, ProcessUiLogBatch);
-            };
+            _logService.OnNewLogRead += (logItem) => _logAnalysisPipeline?.Enqueue(logItem);
             _logService.InitialLogsLoaded += () =>
             {
                 Dispatcher.BeginInvoke(new Action(() => RequestRefreshLogDisplay()), DispatcherPriority.ApplicationIdle);
@@ -235,6 +233,7 @@ namespace TWChatOverlay.Views
             try { UiLockService.UnlockChanged -= OnUiUnlockChanged; } catch { }
             try { UiLockService.WindowAdjusted -= OnUnlockWindowAdjusted; } catch { }
             try { _mainTabAutoHideTimer.Stop(); } catch { }
+            try { _logAnalysisPipeline?.Dispose(); } catch { }
             try
             {
                 _settings.MainWindowChatTabTag = _currentTabTag;
