@@ -63,6 +63,17 @@ namespace TWChatOverlay
                 ex.SetObserved();
             };
 
+            // 설정 폴더에 쓰기 권한이 없으면(예: Program Files 설치) 설정이 조용히 유실되므로 미리 알린다
+            if (!ConfigService.VerifyWritable(out string? writeError))
+            {
+                AppLogger.Warn($"Settings folder is not writable: {writeError}");
+                MessageBox.Show(
+                    $"프로그램 폴더에 설정을 저장할 수 없습니다.\n\n원인: {writeError}\n\n" +
+                    "이대로 사용하면 설정이 저장되지 않습니다. 폴더를 문서/바탕화면 등 쓰기 가능한 위치로 옮기거나, 관리자 권한으로 실행해 주세요.",
+                    "설정 저장 불가",
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
+
             System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
             AppServices.Initialize();
             EtaProfileResolver.InitializeAsync();

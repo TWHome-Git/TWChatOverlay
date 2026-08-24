@@ -192,13 +192,33 @@ namespace TWChatOverlay.Views
             if (WindowState == WindowState.Minimized)
                 return;
 
-            if (Owner is MainWindow main && main.DataContext is ChatSettings settings)
+            ChatSettings? settings = ResolveSettings();
+            if (settings != null)
             {
                 settings.ExpTrackerWindowLeft = Left;
                 settings.ExpTrackerWindowTop = Top;
                 settings.ExpTrackerWindowRight = _rightAnchor ?? (Left + ActualWidth);
                 ConfigService.SaveDeferred(settings);
             }
+        }
+
+        /// <summary>Owner가 아직 설정되지 않은 창(메인 창 로드 전 생성)에서도 설정 인스턴스를 찾는다.</summary>
+        private ChatSettings? ResolveSettings()
+        {
+            if (Owner is MainWindow ownerMain && ownerMain.DataContext is ChatSettings ownerSettings)
+                return ownerSettings;
+
+            try
+            {
+                foreach (Window window in Application.Current.Windows)
+                {
+                    if (window is MainWindow main && main.DataContext is ChatSettings settings)
+                        return settings;
+                }
+            }
+            catch { }
+
+            return null;
         }
     }
 }

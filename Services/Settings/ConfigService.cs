@@ -35,6 +35,24 @@ namespace TWChatOverlay.Services
             _options.NumberHandling = JsonNumberHandling.AllowNamedFloatingPointLiterals;
         }
 
+        /// <summary>설정 저장 폴더에 실제로 쓸 수 있는지 검사한다. (권한 문제 조기 감지)</summary>
+        public static bool VerifyWritable(out string? error)
+        {
+            try
+            {
+                string probePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, ".write_probe.tmp");
+                File.WriteAllText(probePath, "probe");
+                File.Delete(probePath);
+                error = null;
+                return true;
+            }
+            catch (Exception ex)
+            {
+                error = ex.Message;
+                return false;
+            }
+        }
+
         public static bool SettingsFileExists()
         {
             try
@@ -90,6 +108,8 @@ namespace TWChatOverlay.Services
             }
         }
 
+        private static bool _saveFailureNotified;
+
         private static void SaveInternal(ChatSettings settings)
         {
             if (settings == null)
@@ -98,47 +118,123 @@ namespace TWChatOverlay.Services
                 return;
             }
 
+            string json;
             try
             {
-                string json = JsonSerializer.Serialize(settings, _options);
-                if (string.Equals(_lastSavedJson, json, StringComparison.Ordinal))
-                {
-                    AppLogger.Debug("Settings save skipped because there were no changes.");
-                    return;
-                }
-
-                string directory = Path.GetDirectoryName(FilePath) ?? AppDomain.CurrentDomain.BaseDirectory;
-                Directory.CreateDirectory(directory);
-
-                string tempPath = FilePath + ".tmp";
-                File.WriteAllText(tempPath, json, new UTF8Encoding(false));
-
-                if (File.Exists(FilePath))
-                {
-                    File.Copy(FilePath, BackupFilePath, overwrite: true);
-                    File.Replace(tempPath, FilePath, null);
-                }
-                else
-                {
-                    File.Move(tempPath, FilePath);
-                    File.Copy(FilePath, BackupFilePath, overwrite: true);
-                }
-
-                _lastSavedJson = json;
-                AppLogger.Info($"Settings saved to {FilePath}.");
+                json = JsonSerializer.Serialize(settings, _options);
             }
             catch (Exception ex)
             {
-                AppLogger.Error("Failed to save settings.", ex);
+                AppLogger.Error("Failed to serialize settings.", ex);
+                return;
+            }
+
+            if (string.Equals(_lastSavedJson, json, StringComparison.Ordinal))
+            {
+                AppLogger.Debug("Settings save skipped because there were no changes.");
+                return;
+            }
+
+            // 백신/동기화 도구의 일시적 파일 잠금에 대비해 짧게 재시도한다
+            const int maxAttempts = 3;
+            Exception? lastError = null;
+            for (int attempt = 1; attempt <= maxAttempts; attempt++)
+            {
                 try
                 {
-                    string tempPath = FilePath + ".tmp";
-                    if (File.Exists(tempPath))
-                        File.Delete(tempPath);
+                    WriteSettingsFile(json);
+                    _lastSavedJson = json;
+                    _saveFailureNotified = false;
+                    AppLogger.Info($"Settings saved to {FilePath}.");
+                    return;
                 }
-                catch
+                catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
                 {
+                    lastError = ex;
+                    if (attempt < maxAttempts)
+                        Thread.Sleep(100);
                 }
+                catch (Exception ex)
+                {
+                    lastError = ex;
+                    break;
+                }
+            }
+
+            AppLogger.Error("Failed to save settings.", lastError ?? new IOException("unknown"));
+            CleanupTempFile();
+            NotifySaveFailureOnce(lastError);
+        }
+
+        private static void WriteSettingsFile(string json)
+        {
+            string directory = Path.GetDirectoryName(FilePath) ?? AppDomain.CurrentDomain.BaseDirectory;
+            Directory.CreateDirectory(directory);
+
+            string tempPath = FilePath + ".tmp";
+            File.WriteAllText(tempPath, json, new UTF8Encoding(false));
+
+            if (File.Exists(FilePath))
+            {
+                // 손상된 파일이 정상 백업을 덮어쓰지 않도록, 파싱되는 파일만 백업한다
+                if (IsParseableJsonFile(FilePath))
+                    File.Copy(FilePath, BackupFilePath, overwrite: true);
+                File.Replace(tempPath, FilePath, null);
+            }
+            else
+            {
+                File.Move(tempPath, FilePath);
+                File.Copy(FilePath, BackupFilePath, overwrite: true);
+            }
+        }
+
+        private static bool IsParseableJsonFile(string path)
+        {
+            try
+            {
+                JsonNode.Parse(File.ReadAllText(path));
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        private static void CleanupTempFile()
+        {
+            try
+            {
+                string tempPath = FilePath + ".tmp";
+                if (File.Exists(tempPath))
+                    File.Delete(tempPath);
+            }
+            catch
+            {
+            }
+        }
+
+        /// <summary>저장이 계속 실패하면 사용자에게 세션당 1회 알린다. (조용한 설정 유실 방지)</summary>
+        private static void NotifySaveFailureOnce(Exception? error)
+        {
+            if (_saveFailureNotified)
+                return;
+            _saveFailureNotified = true;
+
+            try
+            {
+                System.Windows.Application.Current?.Dispatcher.BeginInvoke(new Action(() =>
+                {
+                    System.Windows.MessageBox.Show(
+                        $"설정을 저장하지 못했습니다.\n\n경로: {FilePath}\n원인: {error?.Message}\n\n" +
+                        "프로그램 폴더에 쓰기 권한이 있는지 확인하거나, 폴더를 다른 위치로 옮긴 뒤 다시 실행해 주세요.",
+                        "설정 저장 실패",
+                        System.Windows.MessageBoxButton.OK,
+                        System.Windows.MessageBoxImage.Warning);
+                }));
+            }
+            catch
+            {
             }
         }
 
@@ -201,6 +297,37 @@ namespace TWChatOverlay.Services
             catch (Exception ex)
             {
                 AppLogger.Error("Failed to load settings.", ex);
+            }
+
+            // 주 파일이 없거나 손상됨: 백업(.bak)에서 복구를 시도한다
+            try
+            {
+                if (File.Exists(BackupFilePath))
+                {
+                    string bakJson = File.ReadAllText(BackupFilePath);
+                    ChatSettings? recovered = null;
+                    if (JsonNode.Parse(bakJson) is JsonObject bakObj)
+                    {
+                        recovered = SettingsMigration.IsLegacyFormat(bakObj)
+                            ? SettingsMigration.FromLegacy(bakObj, _options)
+                            : JsonSerializer.Deserialize<ChatSettings>(bakJson, _options);
+                    }
+
+                    if (recovered != null)
+                    {
+                        recovered.EnsureLoadedDefaults();
+                        MigrateDungeonItemConfigKeys(recovered);
+                        AppLogger.IsEnabled = recovered.EnableDebugLogging;
+                        _lastSavedJson = null;
+                        Save(recovered);
+                        AppLogger.Warn("Settings file was corrupted or missing; recovered from backup.");
+                        return recovered;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                AppLogger.Error("Failed to recover settings from backup.", ex);
             }
 
             AppLogger.Warn("Settings file was missing or unreadable. Default settings will be used.");
