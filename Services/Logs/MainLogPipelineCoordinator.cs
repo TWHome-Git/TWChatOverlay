@@ -35,7 +35,8 @@ namespace TWChatOverlay.Services
             LogAnalysisResult? defaultItemDropAnalysis = null;
             LogAnalysisResult? toastAnalysis = null;
 
-            if (isRealTime)
+            // 아이템 필터 재분석은 시스템 획득 로그일 때만 — 일반 채팅까지 줄당 3회 분석하던 낭비 제거
+            if (isRealTime && MayContainItemDrop(primaryAnalysis))
             {
                 defaultItemDropAnalysis = TryAnalyzeWithDefaultFilter(html, isRealTime);
                 toastAnalysis = defaultItemDropAnalysis;
@@ -48,6 +49,16 @@ namespace TWChatOverlay.Services
             }
 
             return new MainLogPipelineAnalysis(primaryAnalysis, defaultItemDropAnalysis, toastAnalysis);
+        }
+
+        /// <summary>아이템 드롭 판정이 나올 수 있는 줄인지 — 시스템 로그이면서 "획득" 문구가 있는 경우만.</summary>
+        private static bool MayContainItemDrop(LogAnalysisResult primaryAnalysis)
+        {
+            if (!primaryAnalysis.IsSystemLog)
+                return false;
+
+            string text = primaryAnalysis.Parsed.FormattedText ?? string.Empty;
+            return text.Contains("획득", StringComparison.Ordinal);
         }
 
         private LogAnalysisResult? TryAnalyzeWithDefaultFilter(string html, bool isRealTime)
