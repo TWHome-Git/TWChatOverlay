@@ -171,8 +171,26 @@ namespace TWChatOverlay.Views
             };
             _logAnalysisService = new LogAnalysisService(_settings);
             _logPipelineCoordinator = new MainLogPipelineCoordinator(_settings, _logAnalysisService);
-            // 파싱·분석을 백그라운드로 — UI 스레드는 분석 결과를 소비만 한다
-            _logAnalysisPipeline = new LogAnalysisPipeline(_logPipelineCoordinator, Dispatcher, ProcessUiLogBatch);
+            // 파싱·분석을 백그라운드로 — UI 스레드는 분석 결과를 소비만 한다.
+            // 아카이브 기록(파일 IO)은 UI가 필요 없으므로 분석 스레드에서 바로 처리한다.
+            _logAnalysisPipeline = new LogAnalysisPipeline(
+                _logPipelineCoordinator,
+                Dispatcher,
+                ProcessUiLogBatch,
+                backgroundHandler: evt =>
+                {
+                    if (!evt.IsRealTime && !evt.IsStartupBackfill)
+                        return; // 과거 로그 표시 전용은 집계/아카이브 부수효과 없음
+
+                    var primary = evt.Analysis.Primary;
+                    if (!primary.IsSuccess)
+                        return;
+
+                    _readableLogArchiveService?.AppendFromAnalysis(
+                        DateTime.Today,
+                        primary,
+                        IsContentCompletionRelevantLog(primary.Parsed.FormattedText));
+                });
             _settingsViewModel = new SettingsViewModel(_settings, OnColorsUpdatedFromSettings, ConfirmExit, OnSettingsResetFromSettings, ApplyHotKeys, ExecuteManualLogReloadFromSettingsAsync);
 
             _expService = new ExperienceService(_settings);

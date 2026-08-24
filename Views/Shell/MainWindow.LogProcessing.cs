@@ -157,6 +157,17 @@ namespace TWChatOverlay.Views
                     if (shouldAutoScroll)
                         ScrollLogDisplayToEndAfterLayout();
                 }
+
+                // 이 배치까지 소비 완료 — 파일 위치를 체크포인트로 확정 (뒤에서부터 파일 유래 항목을 찾는다)
+                for (int i = batch.Count - 1; i >= 0; i--)
+                {
+                    var source = batch[i].Source;
+                    if (source.CheckpointPosition >= 0 && !string.IsNullOrEmpty(source.SourcePath))
+                    {
+                        try { _logService.NotifyConsumed(source.SourcePath, source.CheckpointPosition); } catch { }
+                        break;
+                    }
+                }
             }
         }
 
@@ -179,6 +190,13 @@ namespace TWChatOverlay.Views
             return context;
         }
 
+        /// <summary>부수효과 한 기능의 실패가 같은 줄의 다른 기능(채팅 표시 등)까지 막지 않게 격리한다.</summary>
+        private static void GuardSideEffect(string what, Action action)
+        {
+            try { action(); }
+            catch (Exception ex) { AppLogger.Warn($"Log side effect '{what}' failed.", ex); }
+        }
+
         private void ProcessLogPipelineContext(UnifiedLogPipelineContext context)
         {
             if (string.IsNullOrWhiteSpace(context.RawHtml)) return;
@@ -197,13 +215,14 @@ namespace TWChatOverlay.Views
 
             if (!isHistoricalDisplayOnly)
             {
-                _buffTrackerService.ProcessLog(analysis);
+                GuardSideEffect("buff-tracker", () => _buffTrackerService.ProcessLog(analysis));
 
-                if (analysis.HasExperienceGain) _expService.AddExp(parseResult.GainedExp);
+                if (analysis.HasExperienceGain)
+                    GuardSideEffect("exp-gain", () => _expService.AddExp(parseResult.GainedExp));
             }
 
             if (shouldRunLiveUiEffects)
-                _experienceEssenceAlertService.Process(analysis);
+                GuardSideEffect("essence-alert", () => _experienceEssenceAlertService.Process(analysis));
 
             if (!context.HandledDailyWeeklyCountLog &&
                 shouldRunLiveUiEffects &&
@@ -216,9 +235,11 @@ namespace TWChatOverlay.Views
                     AppLogger.Debug($"[DailyWeekly] Realtime dispatch. StartupBackfill={context.IsStartupBackfill}, OverlayExists={_dailyWeeklyContentOverlay != null}, OverlayVisible={_dailyWeeklyContentOverlay?.IsVisible == true}, Text='{parseResult.FormattedText}'");
                 }
 
-                EnsureDailyWeeklyWindowForRealtimeProcessing();
-
-                _dailyWeeklyContentOverlay?.ProcessLog(analysis);
+                GuardSideEffect("daily-weekly", () =>
+                {
+                    EnsureDailyWeeklyWindowForRealtimeProcessing();
+                    _dailyWeeklyContentOverlay?.ProcessLog(analysis);
+                });
             }
 
             bool suppressChatLine = ShouldHideChatLine(parseResult);
@@ -237,20 +258,24 @@ namespace TWChatOverlay.Views
             {
                 if (parseResult.IsReflectionPatternAlert)
                 {
-                    NotificationService.PlayAlert("Reflection.wav");
-                    if (parseResult.IsReflectionPatternEndAlert)
-                        ScheduleReflectionEndAlert();
+                    GuardSideEffect("reflection-alert", () =>
+                    {
+                        NotificationService.PlayAlert("Reflection.wav");
+                        if (parseResult.IsReflectionPatternEndAlert)
+                            ScheduleReflectionEndAlert();
+                    });
                 }
 
                 if (pipelineAnalysis.Toast is { HasTrackedItemDrop: true, ShouldShowItemDropToast: true } toastAnalysis)
                 {
-                    ItemDropToastService.Show(
+                    GuardSideEffect("item-toast", () => ItemDropToastService.Show(
                         toastAnalysis.Parsed.TrackedItemName ?? "아이템",
                         toastAnalysis.Parsed.TrackedItemGrade,
-                        withSound: true);
+                        withSound: true));
                 }
 
                 if (parseResult.Category == ChatCategory.Shout)
+                GuardSideEffect("shout-actions", () =>
                 {
                     bool allowLiveShoutActions = true;
 
@@ -274,25 +299,32 @@ namespace TWChatOverlay.Views
 
                     if (_settings.ShowShoutToastPopup && isActualShout && allowLiveShoutActions)
                         ShoutToastService.Show(parseResult, _settings);
-                }
+                });
             }
 
-            _readableLogArchiveService.AppendFromAnalysis(DateTime.Today, analysis, isContentCompletionRelevant);
+            // 아카이브 기록은 LogAnalysisPipeline의 백그라운드 핸들러로 이동 (UI 스레드 파일 IO 제거)
 
             if (pipelineAnalysis.DefaultItemDrop?.HasTrackedItemDrop ?? analysis.HasTrackedItemDrop)
             {
-                var realtimeItemParseResult = pipelineAnalysis.DefaultItemDrop?.Parsed ?? parseResult;
-                _itemCalendarWindow?.ApplyRealtimeItemLog(realtimeItemParseResult, DateTime.Today);
+                GuardSideEffect("calendar-item", () =>
+                {
+                    var realtimeItemParseResult = pipelineAnalysis.DefaultItemDrop?.Parsed ?? parseResult;
+                    _itemCalendarWindow?.ApplyRealtimeItemLog(realtimeItemParseResult, DateTime.Today);
+                });
             }
 
             if (analysis.IsSystemLog)
             {
-                RecaptureSupplyAlertService.Observe(parseResult.FormattedText);
-                if (IsExperienceEssenceExchangeLog(parseResult.FormattedText))
-                    _itemCalendarWindow?.ApplyRealtimeExperienceEssenceLog(parseResult.FormattedText, DateTime.Today);
+                GuardSideEffect("recapture-essence", () =>
+                {
+                    RecaptureSupplyAlertService.Observe(parseResult.FormattedText);
+                    if (IsExperienceEssenceExchangeLog(parseResult.FormattedText))
+                        _itemCalendarWindow?.ApplyRealtimeExperienceEssenceLog(parseResult.FormattedText, DateTime.Today);
+                });
             }
 
             if (analysis.ShouldRunDailyWeeklyContent || analysis.IsSystemLog)
+            GuardSideEffect("abandon-summary", () =>
             {
                 EnsureAbandonWeeklySummaryCurrent(DateTime.Today);
                 bool isAbandonCountEntry = DailyWeeklyLogAnalyzer.TryMatchAbandonRoadCount(parseResult.FormattedText, out _);
@@ -317,7 +349,7 @@ namespace TWChatOverlay.Views
                     ShowAbandonRoadSummaryWindow(previewMode: false, restartLifetime: true, activateWindow: false);
                     _AbandonRoadSummaryWindow?.UpdateSummary(_AbandonWeeklySummary);
                 }
-            }
+            });
 
             if (shouldRunLiveUiEffects)
             {
@@ -332,12 +364,11 @@ namespace TWChatOverlay.Views
 
             if (analysis.ShouldShowEtosDirection && shouldRunLiveUiEffects)
             {
-                try
+                GuardSideEffect("etos-direction", () =>
                 {
                     var helperWindow = SubAddonWindow.Instance ?? CreateSubAddonWindow();
                     helperWindow?.ShowEtosDirection(parseResult.EtosImagePath);
-                }
-                catch { }
+                });
             }
         }
 

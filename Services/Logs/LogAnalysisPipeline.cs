@@ -8,10 +8,13 @@ namespace TWChatOverlay.Services
 {
     /// <summary>분석이 끝난 로그 한 줄. UI는 이 결과를 소비만 한다.</summary>
     public sealed record AnalyzedLogEvent(
-        string Html,
-        bool IsRealTime,
-        bool IsStartupBackfill,
-        MainLogPipelineAnalysis Analysis);
+        LogFeedItem Source,
+        MainLogPipelineAnalysis Analysis)
+    {
+        public string Html => Source.Html;
+        public bool IsRealTime => Source.IsRealTime;
+        public bool IsStartupBackfill => Source.IsStartupBackfill;
+    }
 
     /// <summary>
     /// 로그 줄의 파싱·분석을 백그라운드 스레드로 옮기는 파이프라인.
@@ -30,6 +33,7 @@ namespace TWChatOverlay.Services
         private readonly MainLogPipelineCoordinator _coordinator;
         private readonly Dispatcher _dispatcher;
         private readonly Action<IReadOnlyList<AnalyzedLogEvent>> _onBatchReady;
+        private readonly Action<AnalyzedLogEvent>? _backgroundHandler;
         private readonly int _batchSize;
 
         private readonly Channel<LogFeedItem> _channel;
@@ -44,12 +48,14 @@ namespace TWChatOverlay.Services
             MainLogPipelineCoordinator coordinator,
             Dispatcher dispatcher,
             Action<IReadOnlyList<AnalyzedLogEvent>> onBatchReady,
+            Action<AnalyzedLogEvent>? backgroundHandler = null,
             int batchSize = 60,
             int maxQueueSize = 20000)
         {
             _coordinator = coordinator ?? throw new ArgumentNullException(nameof(coordinator));
             _dispatcher = dispatcher ?? throw new ArgumentNullException(nameof(dispatcher));
             _onBatchReady = onBatchReady ?? throw new ArgumentNullException(nameof(onBatchReady));
+            _backgroundHandler = backgroundHandler;
             _batchSize = batchSize > 0 ? batchSize : 60;
 
             _channel = Channel.CreateBounded<LogFeedItem>(new BoundedChannelOptions(maxQueueSize > 0 ? maxQueueSize : 20000)
@@ -80,15 +86,24 @@ namespace TWChatOverlay.Services
                 try
                 {
                     var analysis = _coordinator.Analyze(item.Html, item.IsRealTime);
-                    analyzed = new AnalyzedLogEvent(item.Html, item.IsRealTime, item.IsStartupBackfill, analysis);
+                    analyzed = new AnalyzedLogEvent(item, analysis);
                 }
                 catch (Exception ex)
                 {
                     AppLogger.Warn($"Background log analysis failed; line skipped. Html='{item.Html}'", ex);
                 }
 
-                if (analyzed != null)
-                    EnqueueReady(analyzed);
+                if (analyzed == null)
+                    continue;
+
+                // UI가 필요 없는 부수효과(아카이브 파일 쓰기 등)는 여기 분석 스레드에서 처리한다
+                if (_backgroundHandler != null)
+                {
+                    try { _backgroundHandler(analyzed); }
+                    catch (Exception ex) { AppLogger.Warn("Background log handler failed.", ex); }
+                }
+
+                EnqueueReady(analyzed);
             }
         }
 
