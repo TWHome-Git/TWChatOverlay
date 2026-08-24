@@ -25,19 +25,14 @@
                     MouseLeftButtonDown="TitleBar_MouseLeftButtonDown"
                     Cursor="SizeAll">
                 <Grid>
-                    <!-- 좌상단 브랜드 (EUI의 로고 위치) -->
+                    <!-- 좌상단: 현재 화면 제목만 표시 (브랜드는 설정 본문 헤더로 이동) -->
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center">
                         <Ellipse Width="10" Height="10" Fill="{DynamicResource OverlayAccentBorderBrush}" VerticalAlignment="Center" Margin="2,1,8,0"/>
-                        <TextBlock Text="테일즈 채팅 오버레이"
+                        <TextBlock x:Name="HeaderTitle"
+                                   Text=""
                                    Foreground="{DynamicResource TextBrush}"
                                    FontSize="14"
                                    FontWeight="Bold"
-                                   VerticalAlignment="Center"/>
-                        <TextBlock x:Name="HeaderTitle"
-                                   Text=""
-                                   Foreground="{DynamicResource OverlayHintTextBrush}"
-                                   FontSize="12"
-                                   Margin="10,1,0,0"
                                    VerticalAlignment="Center"
                                    TextTrimming="CharacterEllipsis"/>
                     </StackPanel>
