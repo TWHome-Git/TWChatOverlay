@@ -38,6 +38,9 @@ namespace TWChatOverlay.Services
             // 서브 채팅창 (섹션 단위)
             ["chat.clone1"] = ("서브 채팅창 1", PlaceholderBody),
             ["chat.clone2"] = ("서브 채팅창 2", PlaceholderBody),
+
+            // 던전 도우미
+            ["dungeon.recapture_map"] = ("보급품 탈환 미니 지도", "보급품 탈환에 진입하면 보급품 위치가 표시된 미니 지도 창을 자동으로 띄웁니다.\n던전에서 나가면 창도 함께 닫힙니다."),
         };
     }
 }

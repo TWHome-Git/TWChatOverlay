@@ -264,26 +264,40 @@ namespace TWChatOverlay.ViewModels
             }
         }
 
-        /// <summary>에타 레벨/캐릭터/타임스탬프 색을 줄 색과 동기화. 끄면 개별 색 지정 가능.</summary>
-        public bool DecorationColorSync
+        // 항목별 색상 동기화: 켜면 줄 색을 따르고, 끄면 색 버튼으로 개별 지정
+        public bool EtaLevelColorSync
         {
-            get => _settings.DecorationColorSync;
-            set
-            {
-                if (_settings.DecorationColorSync == value) return;
-                _settings.DecorationColorSync = value;
-                OnPropertyChanged();
-                OnPropertyChanged(nameof(DecorationColorsEditable));
-                _onColorsUpdated?.Invoke("Decoration");
-                SaveSettings();
-            }
+            get => _settings.EtaLevelColorSync;
+            set { if (_settings.EtaLevelColorSync == value) return; _settings.EtaLevelColorSync = value; OnPropertyChanged(); OnPropertyChanged(nameof(EtaLevelColorEditable)); _onColorsUpdated?.Invoke("Decoration"); SaveSettings(); }
         }
 
-        public bool DecorationColorsEditable => !_settings.DecorationColorSync;
+        public bool EtaCharacterColorSync
+        {
+            get => _settings.EtaCharacterColorSync;
+            set { if (_settings.EtaCharacterColorSync == value) return; _settings.EtaCharacterColorSync = value; OnPropertyChanged(); OnPropertyChanged(nameof(EtaCharacterColorEditable)); _onColorsUpdated?.Invoke("Decoration"); SaveSettings(); }
+        }
+
+        public bool TimestampColorSync
+        {
+            get => _settings.TimestampColorSync;
+            set { if (_settings.TimestampColorSync == value) return; _settings.TimestampColorSync = value; OnPropertyChanged(); OnPropertyChanged(nameof(TimestampColorEditable)); _onColorsUpdated?.Invoke("Decoration"); SaveSettings(); }
+        }
+
+        public bool IdTagColorSync
+        {
+            get => _settings.IdTagColorSync;
+            set { if (_settings.IdTagColorSync == value) return; _settings.IdTagColorSync = value; OnPropertyChanged(); OnPropertyChanged(nameof(IdTagColorEditable)); _onColorsUpdated?.Invoke("Decoration"); SaveSettings(); }
+        }
+
+        public bool EtaLevelColorEditable => !_settings.EtaLevelColorSync;
+        public bool EtaCharacterColorEditable => !_settings.EtaCharacterColorSync;
+        public bool TimestampColorEditable => !_settings.TimestampColorSync;
+        public bool IdTagColorEditable => !_settings.IdTagColorSync;
 
         public Brush EtaLevelColor => StringToBrush(_settings.EtaLevelColor);
         public Brush EtaCharacterColor => StringToBrush(_settings.EtaCharacterColor);
         public Brush TimestampColor => StringToBrush(_settings.TimestampColor);
+        public Brush IdTagColor => StringToBrush(_settings.IdTagColor);
 
         public Brush NormalColor
         {
@@ -676,6 +690,7 @@ namespace TWChatOverlay.ViewModels
                 "EtaLevel" => EtaLevelColor,
                 "EtaCharacter" => EtaCharacterColor,
                 "Timestamp" => TimestampColor,
+                "IdTag" => IdTagColor,
                 _ => null
             };
 
@@ -694,6 +709,7 @@ namespace TWChatOverlay.ViewModels
                 OnPropertyChanged(nameof(EtaLevelColor));
                 OnPropertyChanged(nameof(EtaCharacterColor));
                 OnPropertyChanged(nameof(TimestampColor));
+                OnPropertyChanged(nameof(IdTagColor));
 
                 _onColorsUpdated?.Invoke(colorType);
                 SaveSettings();
@@ -718,11 +734,18 @@ namespace TWChatOverlay.ViewModels
             OnPropertyChanged(nameof(ShowEtaCharacter));
             OnPropertyChanged(nameof(ShowIdTag));
             OnPropertyChanged(nameof(ShowTimestamp));
-            OnPropertyChanged(nameof(DecorationColorSync));
-            OnPropertyChanged(nameof(DecorationColorsEditable));
+            OnPropertyChanged(nameof(EtaLevelColorSync));
+            OnPropertyChanged(nameof(EtaCharacterColorSync));
+            OnPropertyChanged(nameof(TimestampColorSync));
+            OnPropertyChanged(nameof(IdTagColorSync));
+            OnPropertyChanged(nameof(EtaLevelColorEditable));
+            OnPropertyChanged(nameof(EtaCharacterColorEditable));
+            OnPropertyChanged(nameof(TimestampColorEditable));
+            OnPropertyChanged(nameof(IdTagColorEditable));
             OnPropertyChanged(nameof(EtaLevelColor));
             OnPropertyChanged(nameof(EtaCharacterColor));
             OnPropertyChanged(nameof(TimestampColor));
+            OnPropertyChanged(nameof(IdTagColor));
             OnPropertyChanged(nameof(ShowShoutToastPopup));
             OnPropertyChanged(nameof(AutoCopyShoutNickname));
             OnPropertyChanged(nameof(ShoutToastDurationSeconds));

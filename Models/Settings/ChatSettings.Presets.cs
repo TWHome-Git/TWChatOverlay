@@ -14,6 +14,7 @@
                 case "EtaLevel": EtaLevelColor = hex; break;
                 case "EtaCharacter": EtaCharacterColor = hex; break;
                 case "Timestamp": TimestampColor = hex; break;
+                case "IdTag": IdTagColor = hex; break;
             }
         }
 

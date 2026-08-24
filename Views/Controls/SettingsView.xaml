@@ -58,14 +58,37 @@
             <Setter Property="BorderBrush" Value="{DynamicResource SeparatorBrush}"/>
             <Setter Property="BorderThickness" Value="0,0,0,1"/>
             <Setter Property="Padding" Value="0,7"/>
-            <Setter Property="Width" Value="296"/>
+            <Setter Property="Width" Value="272"/>
             <Setter Property="Margin" Value="0,0,14,0"/>
         </Style>
 
         <!-- 전체 폭 행 -->
         <Style x:Key="SettingsRowWideStyle" TargetType="Border" BasedOn="{StaticResource SettingsRowStyle}">
-            <Setter Property="Width" Value="606"/>
+            <Setter Property="Width" Value="558"/>
             <Setter Property="Margin" Value="0"/>
+        </Style>
+
+        <!-- 색상 동기화 링크형 체크: 켜짐=민트 동기화, 꺼짐=회색 -->
+        <Style x:Key="SyncLinkCheckBoxStyle" TargetType="CheckBox">
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="Margin" Value="0,0,8,0"/>
+            <Setter Property="ToolTip" Value="색상 동기화 — 켜면 줄 색을 따르고, 끄면 색 버튼으로 직접 지정"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="CheckBox">
+                        <TextBlock x:Name="Txt" Text="동기화" FontSize="11" Foreground="{DynamicResource OverlaySubtleTextBrush}"/>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="Txt" Property="Foreground" Value="{DynamicResource OverlayAccentTextBrush}"/>
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Txt" Property="TextDecorations" Value="Underline"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
         </Style>
 
         <!-- 행 왼쪽 라벨 -->
@@ -323,7 +346,7 @@
             </Border>
 
             <ScrollViewer x:Name="SettingsScroll" Grid.Row="1" Grid.Column="1" VerticalScrollBarVisibility="Auto" Style="{StaticResource OverlayScrollViewerStyle}">
-                <StackPanel Margin="16,4,12,12" Width="620" HorizontalAlignment="Left">
+                <StackPanel Margin="16,4,12,12" Width="566" HorizontalAlignment="Left">
 
                     <!-- ===================== 채팅 ===================== -->
                     <StackPanel x:Name="ChatPanel">
@@ -397,7 +420,8 @@
                             <Border Style="{StaticResource SettingsRowStyle}">
                                 <DockPanel>
                                     <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
-                                        <Button Width="26" Height="14" Margin="0,0,10,0" Background="{Binding EtaLevelColor}" IsEnabled="{Binding DecorationColorsEditable}" Command="{Binding ColorPickCommand}" CommandParameter="EtaLevel" Style="{StaticResource ColorPickerButtonStyle}" ToolTip="색상 동기화를 끄면 지정할 수 있습니다"/>
+                                        <CheckBox Style="{StaticResource SyncLinkCheckBoxStyle}" IsChecked="{Binding EtaLevelColorSync}"/>
+                                        <Button Width="26" Height="14" Margin="0,0,10,0" Background="{Binding EtaLevelColor}" IsEnabled="{Binding EtaLevelColorEditable}" Command="{Binding ColorPickCommand}" CommandParameter="EtaLevel" Style="{StaticResource ColorPickerButtonStyle}" ToolTip="동기화를 끄면 지정할 수 있습니다"/>
                                         <CheckBox IsChecked="{Binding ShowEtaLevel}" Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
                                     </StackPanel>
                                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
@@ -409,7 +433,8 @@
                             <Border Style="{StaticResource SettingsRowStyle}">
                                 <DockPanel>
                                     <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
-                                        <Button Width="26" Height="14" Margin="0,0,10,0" Background="{Binding EtaCharacterColor}" IsEnabled="{Binding DecorationColorsEditable}" Command="{Binding ColorPickCommand}" CommandParameter="EtaCharacter" Style="{StaticResource ColorPickerButtonStyle}" ToolTip="색상 동기화를 끄면 지정할 수 있습니다"/>
+                                        <CheckBox Style="{StaticResource SyncLinkCheckBoxStyle}" IsChecked="{Binding EtaCharacterColorSync}"/>
+                                        <Button Width="26" Height="14" Margin="0,0,10,0" Background="{Binding EtaCharacterColor}" IsEnabled="{Binding EtaCharacterColorEditable}" Command="{Binding ColorPickCommand}" CommandParameter="EtaCharacter" Style="{StaticResource ColorPickerButtonStyle}" ToolTip="동기화를 끄면 지정할 수 있습니다"/>
                                         <CheckBox IsChecked="{Binding ShowEtaCharacter}" Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
                                     </StackPanel>
                                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
@@ -420,7 +445,11 @@
                             </Border>
                             <Border Style="{StaticResource SettingsRowStyle}">
                                 <DockPanel>
-                                    <CheckBox DockPanel.Dock="Right" IsChecked="{Binding ShowIdTag}" Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
+                                    <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
+                                        <CheckBox Style="{StaticResource SyncLinkCheckBoxStyle}" IsChecked="{Binding IdTagColorSync}"/>
+                                        <Button Width="26" Height="14" Margin="0,0,10,0" Background="{Binding IdTagColor}" IsEnabled="{Binding IdTagColorEditable}" Command="{Binding ColorPickCommand}" CommandParameter="IdTag" Style="{StaticResource ColorPickerButtonStyle}" ToolTip="동기화를 끄면 지정할 수 있습니다"/>
+                                        <CheckBox IsChecked="{Binding ShowIdTag}" Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
+                                    </StackPanel>
                                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                                         <TextBlock Text="아이디 태그" Style="{StaticResource SettingsRowLabelStyle}" ToolTip="idtag.txt의 메모를 아이디 뒤에 [태그]로 표시"/>
                                         <Button Click="OpenIdTagFile_Click" ToolTip="idtag.txt 편집" Cursor="Hand" Margin="8,0,0,0" Padding="0" Background="Transparent" BorderThickness="0" VerticalAlignment="Center">
@@ -451,21 +480,13 @@
                             <Border Style="{StaticResource SettingsRowStyle}">
                                 <DockPanel>
                                     <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
-                                        <Button Width="26" Height="14" Margin="0,0,10,0" Background="{Binding TimestampColor}" IsEnabled="{Binding DecorationColorsEditable}" Command="{Binding ColorPickCommand}" CommandParameter="Timestamp" Style="{StaticResource ColorPickerButtonStyle}" ToolTip="색상 동기화를 끄면 지정할 수 있습니다"/>
+                                        <CheckBox Style="{StaticResource SyncLinkCheckBoxStyle}" IsChecked="{Binding TimestampColorSync}"/>
+                                        <Button Width="26" Height="14" Margin="0,0,10,0" Background="{Binding TimestampColor}" IsEnabled="{Binding TimestampColorEditable}" Command="{Binding ColorPickCommand}" CommandParameter="Timestamp" Style="{StaticResource ColorPickerButtonStyle}" ToolTip="동기화를 끄면 지정할 수 있습니다"/>
                                         <CheckBox IsChecked="{Binding ShowTimestamp}" Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
                                     </StackPanel>
                                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                                         <TextBlock Text="타임 스탬프" Style="{StaticResource SettingsRowLabelStyle}"/>
                                         <Button Style="{StaticResource HelpButtonStyle}" Tag="chat.id.timestamp" Click="Help_Click"/>
-                                    </StackPanel>
-                                </DockPanel>
-                            </Border>
-                            <Border Style="{StaticResource SettingsRowStyle}">
-                                <DockPanel>
-                                    <CheckBox DockPanel.Dock="Right" IsChecked="{Binding DecorationColorSync}" Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
-                                    <StackPanel VerticalAlignment="Center">
-                                        <TextBlock Text="색상 동기화" Style="{StaticResource SettingsRowLabelStyle}"/>
-                                        <TextBlock Text="켜면 에타 레벨·캐릭터·타임 스탬프가 줄 색을 따르고, 끄면 위 색을 직접 지정" Style="{StaticResource SettingsRowHintStyle}"/>
                                     </StackPanel>
                                 </DockPanel>
                             </Border>
@@ -996,9 +1017,9 @@
                             <Border Style="{StaticResource SettingsRowStyle}">
                                 <DockPanel>
                                     <CheckBox DockPanel.Dock="Right" IsChecked="{Binding ShowRecaptureSupplyMap, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
-                                    <StackPanel VerticalAlignment="Center">
+                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                                         <TextBlock Text="보급품 탈환 미니 지도" Style="{StaticResource SettingsRowLabelStyle}"/>
-                                        <TextBlock Text="보급품 탈환 진입 시 지도 창 표시" Style="{StaticResource SettingsRowHintStyle}"/>
+                                        <Button Style="{StaticResource HelpButtonStyle}" Tag="dungeon.recapture_map" Click="Help_Click"/>
                                     </StackPanel>
                                 </DockPanel>
                             </Border>

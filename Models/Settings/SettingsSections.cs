@@ -51,11 +51,15 @@ namespace TWChatOverlay.Models
         public bool ShowEtaCharacter { get; set; } = true;
         public bool ShowIdTag { get; set; } = true;
         public bool ShowTimestamp { get; set; } = true;
-        /// <summary>에타 레벨/캐릭터/타임스탬프 색을 줄 색과 동기화.</summary>
-        public bool ColorSync { get; set; } = true;
+        // 항목별 색상 동기화: 켜면 줄 색을 따르고, 끄면 아래 개별 색을 쓴다
+        public bool EtaLevelColorSync { get; set; } = true;
+        public bool EtaCharacterColorSync { get; set; } = true;
+        public bool TimestampColorSync { get; set; } = true;
+        public bool IdTagColorSync { get; set; } = true;
         public string EtaLevelColor { get; set; } = "#FFD84A";
         public string EtaCharacterColor { get; set; } = "#5AC8E8";
         public string TimestampColor { get; set; } = "#9AA0A6";
+        public string IdTagColor { get; set; } = "#B4BBC2";
     }
 
     public class ChatFontSettings
