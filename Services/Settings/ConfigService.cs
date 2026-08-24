@@ -154,10 +154,34 @@ namespace TWChatOverlay.Services
                     string json = File.ReadAllText(FilePath);
                     _lastSavedJson = json;
                     AppLogger.Debug($"Settings loaded from {FilePath}.");
-                    var settings = JsonSerializer.Deserialize<ChatSettings>(json, _options) ?? new ChatSettings();
+
+                    ChatSettings settings;
+                    bool migratedFromLegacy = false;
+                    if (JsonNode.Parse(json) is JsonObject rootObj && SettingsMigration.IsLegacyFormat(rootObj))
+                    {
+                        // 구버전(평면) 파일: v2로 이관하고 원본은 .v1.bak으로 보존
+                        settings = SettingsMigration.FromLegacy(rootObj, _options);
+                        migratedFromLegacy = true;
+                        try { File.Copy(FilePath, FilePath + ".v1.bak", overwrite: true); } catch { }
+                        AppLogger.Info("Legacy settings format detected; migrating to v2 schema.");
+                    }
+                    else
+                    {
+                        settings = JsonSerializer.Deserialize<ChatSettings>(json, _options) ?? new ChatSettings();
+                    }
+
+                    settings.EnsureLoadedDefaults();
                     MigrateDungeonItemConfigKeys(settings);
                     AppLogger.IsEnabled = settings.EnableDebugLogging;
                     //AppLogger.IsEnabled = true;
+
+                    if (migratedFromLegacy)
+                    {
+                        Save(settings);
+                        AppLogger.Info("Settings were migrated to the v2 schema.");
+                        return settings;
+                    }
+
                     string normalizedJson = JsonSerializer.Serialize(settings, _options);
                     bool removedObsoleteKeys = TryRemoveObsoleteKeys(json, normalizedJson, out string? cleanedJson);
                     if (removedObsoleteKeys && cleanedJson != null)
