@@ -17,7 +17,7 @@ namespace TWChatOverlay.Services
         private static readonly List<DungeonCountDisplayWindow> ActiveWindows = new();
         private static readonly Dictionary<string, DungeonCountDisplayWindow> ActiveWindowsByKey = new(StringComparer.Ordinal);
 
-        public static void Show(string dungeonName, int currentCount, int maxCount, int durationSeconds, ChatSettings settings)
+        public static void Show(string dungeonName, int currentCount, int maxCount, int durationSeconds, ChatSettings settings, double? fontSize = null)
         {
             if (string.IsNullOrWhiteSpace(dungeonName))
                 return;
@@ -31,6 +31,8 @@ namespace TWChatOverlay.Services
                     existing.IsLoaded)
                 {
                     existing.SetSettings(settings);
+                    if (fontSize.HasValue)
+                        existing.SetFontSize(fontSize.Value);
                     existing.UpdateDisplay(message, durationSeconds);
                     return;
                 }
@@ -52,6 +54,9 @@ namespace TWChatOverlay.Services
 
                 ActiveWindows.Add(window);
                 ActiveWindowsByKey[dungeonName] = window;
+
+                if (fontSize.HasValue)
+                    window.SetFontSize(fontSize.Value);
 
                 var (left, topBase) = ResolveBasePosition(settings);
                 double top = topBase + ((DisplayHeight + Gap) * (ActiveWindows.Count - 1));

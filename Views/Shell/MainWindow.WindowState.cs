@@ -133,6 +133,9 @@ namespace TWChatOverlay.Views
 
             // 1:1 대화 에타 표시 위치
             MessengerEtaToastService.ShowPositionPreview(_settings, force: true);
+
+            // 보급품 탈환 미니 지도 위치/크기
+            RecaptureSupplyAlertService.ShowPositionPreview(_settings, force: true);
         }
 
         /// <summary>인스펙터의 넛지/크기 입력으로 메인 창이 조정되면 즉시 저장한다.</summary>
@@ -159,6 +162,7 @@ namespace TWChatOverlay.Views
             ShoutToastService.SaveCurrentPosition(_settings);
             ShoutToastService.ClosePositionPreview(_settings);
             MessengerEtaToastService.ClosePositionPreview(_settings);
+            RecaptureSupplyAlertService.ClosePositionPreview();
             CloseAddonPositionPreviewWindows(savePositions: true, restoreNormalWindows: true);
             RefreshExpTrackerWindow();
         }
@@ -352,6 +356,9 @@ namespace TWChatOverlay.Views
 
                     var etosHelper = SubAddonWindow.Instance ?? CreateSubAddonWindow();
                     etosHelper?.ApplyPositionPreviewVisibility(true);
+
+                    // 보급품 탈환 미니 지도 (이클립스)
+                    RecaptureSupplyAlertService.ShowPositionPreview(_settings, force: true);
                     break;
                 case 3:
                     var itemHelper = ItemDropHelperWindow.Instance ?? CreateItemDropHelperWindow();
@@ -394,6 +401,7 @@ namespace TWChatOverlay.Views
 
             ExperienceAlertWindowService.Close();
             DungeonCountDisplayWindowService.ClosePositionPreview(_settings);
+            RecaptureSupplyAlertService.ClosePositionPreview();
             SubAddonWindow.Instance?.Hide();
             ItemDropHelperWindow.Instance?.Close();
             BuffTrackerHelperWindow.Instance?.Close();

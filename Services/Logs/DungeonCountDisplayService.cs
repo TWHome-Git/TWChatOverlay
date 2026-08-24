@@ -85,7 +85,8 @@ namespace TWChatOverlay.Services
                 count,
                 AbandonMaxCount,
                 _settings.AbandonRoadCountAlertDurationSeconds,
-                _settings);
+                _settings,
+                _settings.DungeonCountDisplayFontSize);
             return true;
         }
 
@@ -103,8 +104,9 @@ namespace TWChatOverlay.Services
                 "갈망하는 즐거움",
                 count,
                 CravingPleasureMaxCount,
-                _settings.AbandonRoadCountAlertDurationSeconds,
-                _settings);
+                _settings.CravingPleasureCountAlertDurationSeconds,
+                _settings,
+                _settings.CravingPleasureCountFontSize);
             return true;
         }
 
