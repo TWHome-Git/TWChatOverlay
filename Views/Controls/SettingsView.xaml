@@ -201,6 +201,38 @@
                 </Setter.Value>
             </Setter>
         </Style>
+
+        <!-- 패널 상단 섹션 탭 (EllesmereUI 스타일: 선택 시 민트 밑줄) -->
+        <Style x:Key="SettingsTabStyle" TargetType="RadioButton">
+            <Setter Property="Foreground" Value="{DynamicResource OverlaySubtleTextBrush}"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="RadioButton">
+                        <Border x:Name="Bd" Background="Transparent" BorderThickness="0,0,0,2" BorderBrush="Transparent" Padding="12,6">
+                            <ContentPresenter VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+                            </Trigger>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter Property="Foreground" Value="{DynamicResource ButtonTextBrush}"/>
+                                <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource OverlayTabSelectedBorderBrush}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- 탭 스트립 컨테이너: 아래 구분선 -->
+        <Style x:Key="SettingsTabStripStyle" TargetType="Border">
+            <Setter Property="BorderBrush" Value="{DynamicResource SeparatorBrush}"/>
+            <Setter Property="BorderThickness" Value="0,0,0,1"/>
+            <Setter Property="Margin" Value="0,2,0,12"/>
+        </Style>
     </UserControl.Resources>
 
     <Border x:Name="RootBorder" Background="Transparent" BorderThickness="0" Padding="8" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
@@ -269,7 +301,18 @@
 
                     <!-- ===================== 채팅 ===================== -->
                     <StackPanel x:Name="ChatPanel">
-                        <StackPanel Orientation="Horizontal" Margin="0,4,0,6">
+                        <Border Style="{StaticResource SettingsTabStripStyle}">
+                            <StackPanel Orientation="Horizontal">
+                                <RadioButton x:Name="ChatTabFilter" Content="채팅 필터" IsChecked="True" GroupName="ChatTabs" Style="{StaticResource SettingsTabStyle}"/>
+                                <RadioButton x:Name="ChatTabId" Content="아이디 표시" GroupName="ChatTabs" Style="{StaticResource SettingsTabStyle}"/>
+                                <RadioButton x:Name="ChatTabFont" Content="폰트" GroupName="ChatTabs" Style="{StaticResource SettingsTabStyle}"/>
+                                <RadioButton x:Name="ChatTabClone1" Content="서브 채팅창 1" GroupName="ChatTabs" Style="{StaticResource SettingsTabStyle}"/>
+                                <RadioButton x:Name="ChatTabClone2" Content="서브 채팅창 2" GroupName="ChatTabs" Style="{StaticResource SettingsTabStyle}"/>
+                            </StackPanel>
+                        </Border>
+
+                        <StackPanel Visibility="{Binding IsChecked, ElementName=ChatTabFilter, Converter={StaticResource BooleanToVisibilityConverter}}">
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
                             <TextBlock Text="기본 채팅 필터" Style="{StaticResource SettingsSectionLabelStyle}" Margin="0"/>
                             <Button Style="{StaticResource HelpButtonStyle}" Tag="chat.filter" Click="Help_Click"/>
                         </StackPanel>
@@ -320,8 +363,10 @@
                                 </DockPanel>
                             </Border>
                         </WrapPanel>
+                        </StackPanel>
 
-                        <TextBlock Text="아이디 표시" Style="{StaticResource SettingsSectionLabelStyle}"/>
+                        <StackPanel Visibility="{Binding IsChecked, ElementName=ChatTabId, Converter={StaticResource BooleanToVisibilityConverter}}">
+                        <TextBlock Text="아이디 표시" Style="{StaticResource SettingsSectionLabelStyle}" Margin="0,0,0,6"/>
                         <WrapPanel>
                             <Border Style="{StaticResource SettingsRowStyle}">
                                 <DockPanel>
@@ -399,8 +444,10 @@
                                 </DockPanel>
                             </Border>
                         </WrapPanel>
+                        </StackPanel>
 
-                        <StackPanel Orientation="Horizontal" Margin="0,14,0,6">
+                        <StackPanel Visibility="{Binding IsChecked, ElementName=ChatTabFont, Converter={StaticResource BooleanToVisibilityConverter}}">
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
                             <TextBlock Text="폰트" Style="{StaticResource SettingsSectionLabelStyle}" Margin="0"/>
                             <Button Style="{StaticResource HelpButtonStyle}" Tag="chat.font" Click="Help_Click"/>
                         </StackPanel>
@@ -426,8 +473,10 @@
                                 </DockPanel>
                             </Border>
                         </WrapPanel>
+                        </StackPanel>
 
-                        <StackPanel Orientation="Horizontal" Margin="0,14,0,6">
+                        <StackPanel Visibility="{Binding IsChecked, ElementName=ChatTabClone1, Converter={StaticResource BooleanToVisibilityConverter}}">
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
                             <TextBlock Text="서브 채팅창 1" Style="{StaticResource SettingsSectionLabelStyle}" Margin="0"/>
                             <Button Style="{StaticResource HelpButtonStyle}" Tag="chat.clone1" Click="Help_Click"/>
                         </StackPanel>
@@ -465,8 +514,10 @@
                                 </DockPanel>
                             </Border>
                         </WrapPanel>
+                        </StackPanel>
 
-                        <StackPanel Orientation="Horizontal" Margin="0,14,0,6">
+                        <StackPanel Visibility="{Binding IsChecked, ElementName=ChatTabClone2, Converter={StaticResource BooleanToVisibilityConverter}}">
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
                             <TextBlock Text="서브 채팅창 2" Style="{StaticResource SettingsSectionLabelStyle}" Margin="0"/>
                             <Button Style="{StaticResource HelpButtonStyle}" Tag="chat.clone2" Click="Help_Click"/>
                         </StackPanel>
@@ -504,11 +555,16 @@
                                 </DockPanel>
                             </Border>
                         </WrapPanel>
+                        </StackPanel>
                     </StackPanel>
 
                     <!-- ===================== 외치기 ===================== -->
                     <StackPanel x:Name="ShoutPanel" Visibility="Collapsed">
-                        <TextBlock Text="외치기 알림" Style="{StaticResource SettingsSectionLabelStyle}" Margin="0,4,0,6"/>
+                        <Border Style="{StaticResource SettingsTabStripStyle}">
+                            <StackPanel Orientation="Horizontal">
+                                <RadioButton Content="외치기 알림" IsChecked="True" GroupName="ShoutTabs" IsHitTestVisible="False" Style="{StaticResource SettingsTabStyle}"/>
+                            </StackPanel>
+                        </Border>
                         <WrapPanel>
                             <Border Style="{StaticResource SettingsRowStyle}">
                                 <DockPanel>
@@ -542,7 +598,11 @@
 
                     <!-- ===================== 화면 ===================== -->
                     <StackPanel x:Name="DisplayPanel" Visibility="Collapsed">
-                        <TextBlock Text="오버레이" Style="{StaticResource SettingsSectionLabelStyle}" Margin="0,4,0,6"/>
+                        <Border Style="{StaticResource SettingsTabStripStyle}">
+                            <StackPanel Orientation="Horizontal">
+                                <RadioButton Content="오버레이" IsChecked="True" GroupName="DisplayTabs" IsHitTestVisible="False" Style="{StaticResource SettingsTabStyle}"/>
+                            </StackPanel>
+                        </Border>
                         <WrapPanel>
                             <Border Style="{StaticResource SettingsRowStyle}">
                                 <DockPanel>
@@ -573,7 +633,11 @@
 
                     <!-- ===================== 단축키 ===================== -->
                     <StackPanel x:Name="HotkeyPanel" Visibility="Collapsed">
-                        <TextBlock Text="전역 단축키" Style="{StaticResource SettingsSectionLabelStyle}" Margin="0,4,0,2"/>
+                        <Border Style="{StaticResource SettingsTabStripStyle}">
+                            <StackPanel Orientation="Horizontal">
+                                <RadioButton Content="전역 단축키" IsChecked="True" GroupName="HotkeyTabs" IsHitTestVisible="False" Style="{StaticResource SettingsTabStyle}"/>
+                            </StackPanel>
+                        </Border>
                         <TextBlock Text="칸을 클릭한 뒤 원하는 키 조합을 누르세요. Esc 또는 Delete로 해제합니다." Style="{StaticResource SettingsRowHintStyle}" Margin="0,0,0,6"/>
                         <WrapPanel>
                             <Border Style="{StaticResource SettingsRowStyle}">
@@ -617,7 +681,14 @@
 
                     <!-- ===================== 시스템 ===================== -->
                     <StackPanel x:Name="SystemPanel" Visibility="Collapsed">
-                        <TextBlock Text="로그" Style="{StaticResource SettingsSectionLabelStyle}" Margin="0,4,0,6"/>
+                        <Border Style="{StaticResource SettingsTabStripStyle}">
+                            <StackPanel Orientation="Horizontal">
+                                <RadioButton x:Name="SystemTabLog" Content="로그" IsChecked="True" GroupName="SystemTabs" Style="{StaticResource SettingsTabStyle}"/>
+                                <RadioButton x:Name="SystemTabMaintain" Content="유지 관리" GroupName="SystemTabs" Style="{StaticResource SettingsTabStyle}"/>
+                            </StackPanel>
+                        </Border>
+
+                        <StackPanel Visibility="{Binding IsChecked, ElementName=SystemTabLog, Converter={StaticResource BooleanToVisibilityConverter}}">
                         <WrapPanel>
                             <Border Style="{StaticResource SettingsRowWideStyle}">
                                 <DockPanel>
@@ -632,8 +703,9 @@
                                 </DockPanel>
                             </Border>
                         </WrapPanel>
+                        </StackPanel>
 
-                        <TextBlock Text="유지 관리" Style="{StaticResource SettingsSectionLabelStyle}"/>
+                        <StackPanel Visibility="{Binding IsChecked, ElementName=SystemTabMaintain, Converter={StaticResource BooleanToVisibilityConverter}}">
                         <WrapPanel>
                             <Border Style="{StaticResource SettingsRowStyle}">
                                 <DockPanel>
@@ -660,11 +732,16 @@
                                 </DockPanel>
                             </Border>
                         </WrapPanel>
+                        </StackPanel>
                     </StackPanel>
 
                     <!-- ===================== 프로필 및 프리셋 ===================== -->
                     <StackPanel x:Name="PresetPanel" Visibility="Collapsed">
-                        <TextBlock Text="채팅창 위치 프리셋" Style="{StaticResource SettingsSectionLabelStyle}" Margin="0,4,0,6"/>
+                        <Border Style="{StaticResource SettingsTabStripStyle}">
+                            <StackPanel Orientation="Horizontal">
+                                <RadioButton Content="채팅창 위치 프리셋" IsChecked="True" GroupName="PresetTabs" IsHitTestVisible="False" Style="{StaticResource SettingsTabStyle}"/>
+                            </StackPanel>
+                        </Border>
                         <WrapPanel>
                             <Border Style="{StaticResource SettingsRowStyle}">
                                 <DockPanel>
@@ -699,7 +776,14 @@
 
                     <!-- ===================== 추가 기능: 키워드 알림 ===================== -->
                     <StackPanel x:Name="AddonKeywordPanel" Visibility="Collapsed">
-                        <TextBlock Text="키워드 알림" Style="{StaticResource SettingsSectionLabelStyle}" Margin="0,4,0,6"/>
+                        <Border Style="{StaticResource SettingsTabStripStyle}">
+                            <StackPanel Orientation="Horizontal">
+                                <RadioButton x:Name="KeywordTabAlert" Content="키워드 알림" IsChecked="True" GroupName="KeywordTabs" Style="{StaticResource SettingsTabStyle}"/>
+                                <RadioButton x:Name="KeywordTabList" Content="키워드" GroupName="KeywordTabs" Style="{StaticResource SettingsTabStyle}"/>
+                            </StackPanel>
+                        </Border>
+
+                        <StackPanel Visibility="{Binding IsChecked, ElementName=KeywordTabAlert, Converter={StaticResource BooleanToVisibilityConverter}}">
                         <WrapPanel>
                             <Border Style="{StaticResource SettingsRowStyle}">
                                 <DockPanel>
@@ -725,8 +809,9 @@
                                 </DockPanel>
                             </Border>
                         </WrapPanel>
+                        </StackPanel>
 
-                        <TextBlock Text="키워드" Style="{StaticResource SettingsSectionLabelStyle}"/>
+                        <StackPanel Visibility="{Binding IsChecked, ElementName=KeywordTabList, Converter={StaticResource BooleanToVisibilityConverter}}">
                         <TextBox x:Name="KeywordBox"
                                  Text="{Binding KeywordInput, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                  Style="{StaticResource InputTextBoxStyle}"
@@ -736,11 +821,19 @@
                                  HorizontalAlignment="Left"
                                  Height="80"/>
                         <TextBlock Text="@단어1 @단어2 형식 · 입력 즉시 적용됩니다" Style="{StaticResource SettingsRowHintStyle}" Margin="0,4,0,0"/>
+                        </StackPanel>
                     </StackPanel>
 
                     <!-- ===================== 추가 기능: 경험치 추적 ===================== -->
                     <StackPanel x:Name="AddonExpPanel" Visibility="Collapsed">
-                        <TextBlock Text="경험치 추적" Style="{StaticResource SettingsSectionLabelStyle}" Margin="0,4,0,6"/>
+                        <Border Style="{StaticResource SettingsTabStripStyle}">
+                            <StackPanel Orientation="Horizontal">
+                                <RadioButton x:Name="ExpTabTracker" Content="경험치 추적" IsChecked="True" GroupName="ExpTabs" Style="{StaticResource SettingsTabStyle}"/>
+                                <RadioButton x:Name="ExpTabLowEff" Content="저효율 알림" GroupName="ExpTabs" Style="{StaticResource SettingsTabStyle}"/>
+                            </StackPanel>
+                        </Border>
+
+                        <StackPanel Visibility="{Binding IsChecked, ElementName=ExpTabTracker, Converter={StaticResource BooleanToVisibilityConverter}}">
                         <WrapPanel>
                             <Border Style="{StaticResource SettingsRowStyle}">
                                 <DockPanel>
@@ -766,8 +859,9 @@
                                 </DockPanel>
                             </Border>
                         </WrapPanel>
+                        </StackPanel>
 
-                        <TextBlock Text="저효율 알림" Style="{StaticResource SettingsSectionLabelStyle}"/>
+                        <StackPanel Visibility="{Binding IsChecked, ElementName=ExpTabLowEff, Converter={StaticResource BooleanToVisibilityConverter}}">
                         <WrapPanel>
                             <Border Style="{StaticResource SettingsRowStyle}">
                                 <DockPanel>
@@ -802,11 +896,19 @@
                                 </DockPanel>
                             </Border>
                         </WrapPanel>
+                        </StackPanel>
                     </StackPanel>
 
                     <!-- ===================== 추가 기능: 던전 도우미 ===================== -->
                     <StackPanel x:Name="AddonDungeonPanel" Visibility="Collapsed">
-                        <TextBlock Text="알림" Style="{StaticResource SettingsSectionLabelStyle}" Margin="0,4,0,6"/>
+                        <Border Style="{StaticResource SettingsTabStripStyle}">
+                            <StackPanel Orientation="Horizontal">
+                                <RadioButton x:Name="DungeonTabAlert" Content="알림" IsChecked="True" GroupName="DungeonTabs" Style="{StaticResource SettingsTabStyle}"/>
+                                <RadioButton x:Name="DungeonTabCounter" Content="던전 카운터" GroupName="DungeonTabs" Style="{StaticResource SettingsTabStyle}"/>
+                            </StackPanel>
+                        </Border>
+
+                        <StackPanel Visibility="{Binding IsChecked, ElementName=DungeonTabAlert, Converter={StaticResource BooleanToVisibilityConverter}}">
                         <WrapPanel>
                             <Border Style="{StaticResource SettingsRowStyle}">
                                 <DockPanel>
@@ -849,8 +951,9 @@
                                 </DockPanel>
                             </Border>
                         </WrapPanel>
+                        </StackPanel>
 
-                        <TextBlock Text="던전 카운터" Style="{StaticResource SettingsSectionLabelStyle}"/>
+                        <StackPanel Visibility="{Binding IsChecked, ElementName=DungeonTabCounter, Converter={StaticResource BooleanToVisibilityConverter}}">
                         <WrapPanel>
                             <Border Style="{StaticResource SettingsRowStyle}">
                                 <DockPanel>
@@ -886,11 +989,19 @@
                                 </DockPanel>
                             </Border>
                         </WrapPanel>
+                        </StackPanel>
                     </StackPanel>
 
                     <!-- ===================== 추가 기능: 아이템 알림 ===================== -->
                     <StackPanel x:Name="AddonItemPanel" Visibility="Collapsed">
-                        <TextBlock Text="아이템 획득 알림" Style="{StaticResource SettingsSectionLabelStyle}" Margin="0,4,0,6"/>
+                        <Border Style="{StaticResource SettingsTabStripStyle}">
+                            <StackPanel Orientation="Horizontal">
+                                <RadioButton x:Name="ItemTabAlert" Content="획득 알림" IsChecked="True" GroupName="ItemTabs" Style="{StaticResource SettingsTabStyle}"/>
+                                <RadioButton x:Name="ItemTabFilter" Content="알림 필터" GroupName="ItemTabs" Style="{StaticResource SettingsTabStyle}"/>
+                            </StackPanel>
+                        </Border>
+
+                        <StackPanel Visibility="{Binding IsChecked, ElementName=ItemTabAlert, Converter={StaticResource BooleanToVisibilityConverter}}">
                         <WrapPanel>
                             <Border Style="{StaticResource SettingsRowStyle}">
                                 <DockPanel>
@@ -919,8 +1030,9 @@
                                 </DockPanel>
                             </Border>
                         </WrapPanel>
+                        </StackPanel>
 
-                        <TextBlock Text="알림 필터" Style="{StaticResource SettingsSectionLabelStyle}"/>
+                        <StackPanel Visibility="{Binding IsChecked, ElementName=ItemTabFilter, Converter={StaticResource BooleanToVisibilityConverter}}">
                         <TextBlock Text="기본 목록에서 알림 받을 항목을 사용자 정의 목록으로 옮긴 뒤 적용하세요." Style="{StaticResource SettingsRowHintStyle}" Margin="0,0,0,6"/>
                         <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
                             <Button Content="기본" Command="{Binding SelectDefaultDropFilterCommand}" Width="64" Margin="0,0,6,0" Style="{StaticResource DropFilterButtonStyle}"/>
@@ -986,11 +1098,16 @@
                             </StackPanel>
                         </Grid>
                         <TextBlock Text="{Binding CustomDropItemStatus}" Style="{StaticResource SettingsRowHintStyle}" Margin="0,6,0,0"/>
+                        </StackPanel>
                     </StackPanel>
 
                     <!-- ===================== 추가 기능: 버프 추적 ===================== -->
                     <StackPanel x:Name="AddonBuffPanel" Visibility="Collapsed">
-                        <TextBlock Text="버프 추적" Style="{StaticResource SettingsSectionLabelStyle}" Margin="0,4,0,6"/>
+                        <Border Style="{StaticResource SettingsTabStripStyle}">
+                            <StackPanel Orientation="Horizontal">
+                                <RadioButton Content="버프 추적" IsChecked="True" GroupName="BuffTabs" IsHitTestVisible="False" Style="{StaticResource SettingsTabStyle}"/>
+                            </StackPanel>
+                        </Border>
                         <WrapPanel>
                             <Border Style="{StaticResource SettingsRowStyle}">
                                 <DockPanel>
@@ -1021,7 +1138,11 @@
 
                     <!-- ===================== 추가 기능: 필드 보스 ===================== -->
                     <StackPanel x:Name="AddonBossPanel" Visibility="Collapsed">
-                        <TextBlock Text="필드 보스 알림" Style="{StaticResource SettingsSectionLabelStyle}" Margin="0,4,0,6"/>
+                        <Border Style="{StaticResource SettingsTabStripStyle}">
+                            <StackPanel Orientation="Horizontal">
+                                <RadioButton Content="필드 보스 알림" IsChecked="True" GroupName="BossTabs" IsHitTestVisible="False" Style="{StaticResource SettingsTabStyle}"/>
+                            </StackPanel>
+                        </Border>
                         <ItemsControl ItemsSource="{Binding BossAlarmCards}" Width="606" HorizontalAlignment="Left">
                             <ItemsControl.ItemsPanel>
                                 <ItemsPanelTemplate>
