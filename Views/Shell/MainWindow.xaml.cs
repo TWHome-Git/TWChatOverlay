@@ -177,6 +177,7 @@ namespace TWChatOverlay.Views
             _expService = new ExperienceService(_settings);
             _expTrackerViewModel = new ExpTrackerViewModel(_expService, _settings);
             _expService.SessionState.PropertyChanged += ExpSessionState_PropertyChanged;
+            _expService.TrackerActiveChanged += () => Dispatcher.BeginInvoke(new Action(RefreshExpTrackerWindow), DispatcherPriority.Background);
             _expTrackerViewModel.UpdateDisplay();
             _experienceEssenceAlertService = new ExperienceEssenceAlertService(_settings);
             ExperienceAlertWindowService.ConfigureStateBridge(
@@ -300,7 +301,10 @@ namespace TWChatOverlay.Views
             if (TrayAllWindowsService.IsTrayed)
                 return;
 
-            if (_settings.ShowExpTracker)
+            // 위치 지정/잠금 해제 모드에서는 활동 여부와 관계없이 미리보기로 표시한다
+            bool previewMode = IsSettingsPositionMode || UiLockService.IsUnlocked;
+
+            if (_settings.ShowExpTracker && (previewMode || _expService.IsTrackerActive))
             {
                 ShowExpTrackerWindow();
             }

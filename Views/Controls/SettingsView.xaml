@@ -138,24 +138,62 @@
             </Setter>
         </Style>
 
-        <!-- 내비 액션 버튼: 패널 전환이 아닌 즉시 실행 항목 (잠금 해제/마법사/패치 노트) -->
+        <!-- 도구 버튼(사이드바 최상단): 즉시 실행 항목 — 테두리 있는 버튼 칩 (EllesmereUI 참고) -->
         <Style x:Key="SettingsNavActionStyle" TargetType="Button">
-            <Setter Property="Foreground" Value="{DynamicResource OverlaySubtleTextBrush}"/>
+            <Setter Property="Foreground" Value="{DynamicResource OverlayInfoTextBrush}"/>
             <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="HorizontalContentAlignment" Value="Left"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
                         <Border x:Name="Bd"
-                                Background="Transparent"
-                                BorderBrush="Transparent"
-                                BorderThickness="2,0,0,0"
-                                Padding="12,7">
+                                Background="{DynamicResource OverlayCardBackgroundBrush}"
+                                BorderBrush="{DynamicResource ControlBorderBrush}"
+                                BorderThickness="1"
+                                CornerRadius="3"
+                                Margin="8,2"
+                                Padding="10,6">
                             <ContentPresenter VerticalAlignment="Center"/>
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
                                 <Setter TargetName="Bd" Property="Background" Value="{DynamicResource OverlayTabHoverBrush}"/>
+                                <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource OverlayTabSelectedBorderBrush}"/>
+                                <Setter Property="Foreground" Value="{DynamicResource ButtonTextBrush}"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource OverlayTabSelectedBrush}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- 도구 라디오(프로필 및 프리셋): 버튼 칩과 같은 형태 + 선택 상태 -->
+        <Style x:Key="SettingsNavToolRadioStyle" TargetType="RadioButton">
+            <Setter Property="Foreground" Value="{DynamicResource OverlayInfoTextBrush}"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="RadioButton">
+                        <Border x:Name="Bd"
+                                Background="{DynamicResource OverlayCardBackgroundBrush}"
+                                BorderBrush="{DynamicResource ControlBorderBrush}"
+                                BorderThickness="1"
+                                CornerRadius="3"
+                                Margin="8,2"
+                                Padding="10,6">
+                            <ContentPresenter VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource OverlayTabHoverBrush}"/>
+                                <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource OverlayTabSelectedBorderBrush}"/>
+                            </Trigger>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource OverlayTabSelectedBrush}"/>
+                                <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource OverlayTabSelectedBorderBrush}"/>
                                 <Setter Property="Foreground" Value="{DynamicResource ButtonTextBrush}"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
@@ -180,25 +218,8 @@
                     BorderThickness="0,0,1,0"
                     MinWidth="110">
                 <StackPanel Margin="0,4">
-                    <TextBlock Text="기본" Style="{StaticResource SettingsNavGroupLabelStyle}"/>
-                    <RadioButton x:Name="NavChat" Content="채팅" GroupName="SettingsNav" IsChecked="True" Checked="Nav_Checked" Style="{StaticResource SettingsNavItemStyle}"/>
-                    <RadioButton x:Name="NavShout" Content="외치기" GroupName="SettingsNav" Checked="Nav_Checked" Style="{StaticResource SettingsNavItemStyle}"/>
-                    <RadioButton x:Name="NavDisplay" Content="화면" GroupName="SettingsNav" Checked="Nav_Checked" Style="{StaticResource SettingsNavItemStyle}"/>
-
-                    <TextBlock Text="추가 기능" Style="{StaticResource SettingsNavGroupLabelStyle}"/>
-                    <RadioButton x:Name="NavAddonKeyword" Content="키워드 알림" GroupName="SettingsNav" Checked="Nav_Checked" Style="{StaticResource SettingsNavItemStyle}"/>
-                    <RadioButton x:Name="NavAddonExp" Content="경험치 추적" GroupName="SettingsNav" Checked="Nav_Checked" Style="{StaticResource SettingsNavItemStyle}"/>
-                    <RadioButton x:Name="NavAddonDungeon" Content="던전 도우미" GroupName="SettingsNav" Checked="Nav_Checked" Style="{StaticResource SettingsNavItemStyle}"/>
-                    <RadioButton x:Name="NavAddonItem" Content="아이템 알림" GroupName="SettingsNav" Checked="Nav_Checked" Style="{StaticResource SettingsNavItemStyle}"/>
-                    <RadioButton x:Name="NavAddonBuff" Content="버프 추적" GroupName="SettingsNav" Checked="Nav_Checked" Style="{StaticResource SettingsNavItemStyle}"/>
-                    <RadioButton x:Name="NavAddonBoss" Content="필드 보스" GroupName="SettingsNav" Checked="Nav_Checked" Style="{StaticResource SettingsNavItemStyle}"/>
-
-                    <TextBlock Text="관리" Style="{StaticResource SettingsNavGroupLabelStyle}"/>
-                    <RadioButton x:Name="NavHotkeys" Content="단축키" GroupName="SettingsNav" Checked="Nav_Checked" Style="{StaticResource SettingsNavItemStyle}"/>
-                    <RadioButton x:Name="NavSystem" Content="시스템" GroupName="SettingsNav" Checked="Nav_Checked" Style="{StaticResource SettingsNavItemStyle}"/>
-
-                    <TextBlock Text="도구" Style="{StaticResource SettingsNavGroupLabelStyle}"/>
-                    <Button Style="{StaticResource SettingsNavActionStyle}" Click="UnlockMode_Click">
+                    <!-- 도구: 최상단 버튼 그룹 (EllesmereUI 스타일) -->
+                    <Button Style="{StaticResource SettingsNavActionStyle}" Click="UnlockMode_Click" Margin="0,4,0,0">
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Text="&#xE785;" FontFamily="Segoe MDL2 Assets" FontSize="12" VerticalAlignment="Center" Margin="0,0,8,0"/>
                             <TextBlock Text="잠금 해제 모드" VerticalAlignment="Center"/>
@@ -216,12 +237,30 @@
                             <TextBlock Text="패치 노트" VerticalAlignment="Center"/>
                         </StackPanel>
                     </Button>
-                    <RadioButton x:Name="NavPresets" GroupName="SettingsNav" Checked="Nav_Checked" Style="{StaticResource SettingsNavItemStyle}">
+                    <RadioButton x:Name="NavPresets" GroupName="SettingsNav" Checked="Nav_Checked" Style="{StaticResource SettingsNavToolRadioStyle}">
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Text="&#xE77B;" FontFamily="Segoe MDL2 Assets" FontSize="12" VerticalAlignment="Center" Margin="0,0,8,0"/>
                             <TextBlock Text="프로필 및 프리셋" VerticalAlignment="Center"/>
                         </StackPanel>
                     </RadioButton>
+                    <Border Height="1" Background="{DynamicResource SeparatorBrush}" Margin="8,8,8,2"/>
+
+                    <TextBlock Text="기본" Style="{StaticResource SettingsNavGroupLabelStyle}"/>
+                    <RadioButton x:Name="NavChat" Content="채팅" GroupName="SettingsNav" IsChecked="True" Checked="Nav_Checked" Style="{StaticResource SettingsNavItemStyle}"/>
+                    <RadioButton x:Name="NavShout" Content="외치기" GroupName="SettingsNav" Checked="Nav_Checked" Style="{StaticResource SettingsNavItemStyle}"/>
+                    <RadioButton x:Name="NavDisplay" Content="화면" GroupName="SettingsNav" Checked="Nav_Checked" Style="{StaticResource SettingsNavItemStyle}"/>
+
+                    <TextBlock Text="추가 기능" Style="{StaticResource SettingsNavGroupLabelStyle}"/>
+                    <RadioButton x:Name="NavAddonKeyword" Content="키워드 알림" GroupName="SettingsNav" Checked="Nav_Checked" Style="{StaticResource SettingsNavItemStyle}"/>
+                    <RadioButton x:Name="NavAddonExp" Content="경험치 추적" GroupName="SettingsNav" Checked="Nav_Checked" Style="{StaticResource SettingsNavItemStyle}"/>
+                    <RadioButton x:Name="NavAddonDungeon" Content="던전 도우미" GroupName="SettingsNav" Checked="Nav_Checked" Style="{StaticResource SettingsNavItemStyle}"/>
+                    <RadioButton x:Name="NavAddonItem" Content="아이템 알림" GroupName="SettingsNav" Checked="Nav_Checked" Style="{StaticResource SettingsNavItemStyle}"/>
+                    <RadioButton x:Name="NavAddonBuff" Content="버프 추적" GroupName="SettingsNav" Checked="Nav_Checked" Style="{StaticResource SettingsNavItemStyle}"/>
+                    <RadioButton x:Name="NavAddonBoss" Content="필드 보스" GroupName="SettingsNav" Checked="Nav_Checked" Style="{StaticResource SettingsNavItemStyle}"/>
+
+                    <TextBlock Text="관리" Style="{StaticResource SettingsNavGroupLabelStyle}"/>
+                    <RadioButton x:Name="NavHotkeys" Content="단축키" GroupName="SettingsNav" Checked="Nav_Checked" Style="{StaticResource SettingsNavItemStyle}"/>
+                    <RadioButton x:Name="NavSystem" Content="시스템" GroupName="SettingsNav" Checked="Nav_Checked" Style="{StaticResource SettingsNavItemStyle}"/>
                 </StackPanel>
             </Border>
 
@@ -516,11 +555,8 @@
                             </Border>
                             <Border Style="{StaticResource SettingsRowStyle}">
                                 <DockPanel>
-                                    <Button DockPanel.Dock="Right" Content="잠금 해제" Width="86" Height="26" Padding="0" Foreground="White" Click="UnlockMode_Click" Style="{StaticResource SimButtonStyle}" FontSize="12"/>
-                                    <StackPanel VerticalAlignment="Center">
-                                        <TextBlock Text="잠금 해제 모드" Style="{StaticResource SettingsRowLabelStyle}"/>
-                                        <TextBlock Text="이 모드에서만 창을 드래그해 이동" Style="{StaticResource SettingsRowHintStyle}"/>
-                                    </StackPanel>
+                                    <Button DockPanel.Dock="Right" Content="잠금 해제" Width="74" Height="26" Padding="0" Foreground="White" Click="UnlockMode_Click" Style="{StaticResource SimButtonStyle}" FontSize="12"/>
+                                    <TextBlock Text="잠금 해제 모드" Style="{StaticResource SettingsRowLabelStyle}" ToolTip="이 모드에서만 창을 드래그해 이동할 수 있습니다"/>
                                 </DockPanel>
                             </Border>
                             <Border Style="{StaticResource SettingsRowStyle}">
