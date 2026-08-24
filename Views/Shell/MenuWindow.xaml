@@ -48,7 +48,7 @@
                     BorderThickness="2"
                     CornerRadius="8"
                     Cursor="Hand"
-                    ToolTip="메뉴 — 마우스를 올리면 펼쳐지고, 클릭하면 상시 표시로 고정됩니다"
+                    ToolTip="메뉴 고정/해제"
                     MouseLeftButtonDown="AppIcon_MouseLeftButtonDown">
                 <Image Source="/TWChatOverlay;component/favicon.ico"
                        Width="28" Height="28"
@@ -65,7 +65,7 @@
                     Margin="2,2,2,4"
                     HorizontalAlignment="Stretch"
                     Click="Minimize_Click"
-                    ToolTip="모든 창 트레이로 최소화"
+                    ToolTip="모든 창 숨기기"
                     BorderBrush="{DynamicResource ControlBorderBrush}"
                     BorderThickness="1"
                     Cursor="Hand"
@@ -101,7 +101,7 @@
 
             <UniformGrid x:Name="ButtonsGrid" Rows="9" Columns="1" HorizontalAlignment="Center" VerticalAlignment="Center">
                 <!-- 1: MainWindow ON/OFF -->
-                <Button x:Name="BtnChat" Width="{DynamicResource MenuIconSize}" Height="{DynamicResource MenuIconSize}" Click="OpenChild_Click" ToolTip="Toggle Overlay" Style="{StaticResource MenuIconButtonStyle}" Margin="2,2,2,2">
+                <Button x:Name="BtnChat" Width="{DynamicResource MenuIconSize}" Height="{DynamicResource MenuIconSize}" Click="OpenChild_Click" ToolTip="대화창 열기/닫기" Style="{StaticResource MenuIconButtonStyle}" Margin="2,2,2,2">
                     <Image Source="/TWChatOverlay;component/Data/images/MenuIcon/Chat.png" MaxWidth="{DynamicResource MenuIconSize}" MaxHeight="{DynamicResource MenuIconSize}" Stretch="Uniform" HorizontalAlignment="Center" VerticalAlignment="Center" />
                 </Button>
                 <!-- 2: TW DB 홈페이지 (에타 순위 / 장비 DB / 계산기 / 시뮬레이터 통합) -->
@@ -109,21 +109,21 @@
                     <TextBlock FontSize="10.5" FontWeight="Bold" Foreground="{DynamicResource TextBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center" LineHeight="11" LineStackingStrategy="BlockLineHeight"><Run Text="TW"/><LineBreak/><Run Text="DB"/></TextBlock>
                 </Button>
                 <!-- 3: Daily/Weekly Content -->
-                <Button x:Name="BtnDailyWeekly" Width="{DynamicResource MenuIconSize}" Height="{DynamicResource MenuIconSize}" Click="OpenChild_Click" ToolTip="일간/주간 컨텐츠" Style="{StaticResource MenuIconButtonStyle}" Margin="2,2,2,2">
+                <Button x:Name="BtnDailyWeekly" Width="{DynamicResource MenuIconSize}" Height="{DynamicResource MenuIconSize}" Click="OpenChild_Click" ToolTip="일일/주간 컨텐츠" Style="{StaticResource MenuIconButtonStyle}" Margin="2,2,2,2">
                     <Image Source="/TWChatOverlay;component/Data/images/MenuIcon/DailyWeekly.png" MaxWidth="{DynamicResource MenuIconSize}" MaxHeight="{DynamicResource MenuIconSize}" Stretch="Uniform" HorizontalAlignment="Center" VerticalAlignment="Center" />
                 </Button>
                 <!-- 4: Calendar -->
-                <Button x:Name="BtnCalendar" Width="{DynamicResource MenuIconSize}" Height="{DynamicResource MenuIconSize}" Click="OpenChild_Click" ToolTip="달력" Style="{StaticResource MenuIconButtonStyle}" Margin="2,2,2,2">
+                <Button x:Name="BtnCalendar" Width="{DynamicResource MenuIconSize}" Height="{DynamicResource MenuIconSize}" Click="OpenChild_Click" ToolTip="아이템 획득 내역" Style="{StaticResource MenuIconButtonStyle}" Margin="2,2,2,2">
                     <Image Source="/TWChatOverlay;component/Data/images/MenuIcon/Calendar.png" MaxWidth="{DynamicResource MenuIconSize}" MaxHeight="{DynamicResource MenuIconSize}" Stretch="Uniform" HorizontalAlignment="Center" VerticalAlignment="Center" />
                 </Button>
                 <!-- 5: Shout Replay -->
-                <Button x:Name="BtnShoutReplay" Width="{DynamicResource MenuIconSize}" Height="{DynamicResource MenuIconSize}" Click="OpenChild_Click" ToolTip="외치기 다시 보기" Style="{StaticResource MenuIconButtonStyle}" Margin="2,2,2,2">
+                <Button x:Name="BtnShoutReplay" Width="{DynamicResource MenuIconSize}" Height="{DynamicResource MenuIconSize}" Click="OpenChild_Click" ToolTip="외치기 로그" Style="{StaticResource MenuIconButtonStyle}" Margin="2,2,2,2">
                     <Image Source="/TWChatOverlay;component/Data/images/MenuIcon/Shout.png" MaxWidth="{DynamicResource MenuIconSize}" MaxHeight="{DynamicResource MenuIconSize}" Stretch="Uniform" HorizontalAlignment="Center" VerticalAlignment="Center" />
                 </Button>
                 <!-- 6: Memo -->
-                <Button x:Name="BtnMemo" Width="{DynamicResource MenuIconSize}" Height="{DynamicResource MenuIconSize}" Click="OpenChild_Click" ToolTip="메모장" Style="{StaticResource MenuIconButtonStyle}" Margin="2,2,2,2" Content="M"/>
+                <Button x:Name="BtnMemo" Width="{DynamicResource MenuIconSize}" Height="{DynamicResource MenuIconSize}" Click="OpenChild_Click" ToolTip="메모" Style="{StaticResource MenuIconButtonStyle}" Margin="2,2,2,2" Content="M"/>
                 <!-- 7: 잠금 해제 모드 (오버레이 이동) -->
-                <Button x:Name="BtnUnlock" Width="{DynamicResource MenuIconSize}" Height="{DynamicResource MenuIconSize}" Click="OpenChild_Click" ToolTip="잠금 해제 모드 (창 이동)" Style="{StaticResource MenuIconButtonStyle}" Margin="2,2,2,2">
+                <Button x:Name="BtnUnlock" Width="{DynamicResource MenuIconSize}" Height="{DynamicResource MenuIconSize}" Click="OpenChild_Click" ToolTip="잠금 해제 모드" Style="{StaticResource MenuIconButtonStyle}" Margin="2,2,2,2">
                     <TextBlock x:Name="UnlockGlyph" Text="&#xE72E;" FontFamily="Segoe MDL2 Assets" FontSize="16" Foreground="{DynamicResource TextBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                 </Button>
                 <!-- 8: Settings -->
@@ -131,7 +131,7 @@
                     <Image Source="/TWChatOverlay;component/Data/images/MenuIcon/Setting.png" MaxWidth="{DynamicResource MenuIconSize}" MaxHeight="{DynamicResource MenuIconSize}" Stretch="Uniform" HorizontalAlignment="Center" VerticalAlignment="Center" />
                 </Button>
                 <!-- 9: Exit -->
-                <Button x:Name="BtnExit" Width="{DynamicResource MenuIconSize}" Height="{DynamicResource MenuIconSize}" Click="OpenChild_Click" ToolTip="Exit" Style="{StaticResource MenuIconButtonStyle}" Margin="2,2,2,2">
+                <Button x:Name="BtnExit" Width="{DynamicResource MenuIconSize}" Height="{DynamicResource MenuIconSize}" Click="OpenChild_Click" ToolTip="프로그램 종료" Style="{StaticResource MenuIconButtonStyle}" Margin="2,2,2,2">
                     <Image Source="/TWChatOverlay;component/Data/images/MenuIcon/Exit.png" MaxWidth="{DynamicResource MenuIconSize}" MaxHeight="{DynamicResource MenuIconSize}" Stretch="Uniform" HorizontalAlignment="Center" VerticalAlignment="Center" />
                 </Button>
             </UniformGrid>
