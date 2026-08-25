@@ -24,6 +24,21 @@ namespace TWChatOverlay.Models
                 if (pair.Value == null)
                     continue;
 
+                // 구버전의 통합 색상 동기화 → 항목별 동기화 토글 4개로 전개
+                if (pair.Key == "DecorationColorSync")
+                {
+                    try
+                    {
+                        bool sync = pair.Value.GetValue<bool>();
+                        settings.EtaLevelColorSync = sync;
+                        settings.EtaCharacterColorSync = sync;
+                        settings.TimestampColorSync = sync;
+                        settings.IdTagColorSync = sync;
+                    }
+                    catch { }
+                    continue;
+                }
+
                 PropertyInfo? property = typeof(ChatSettings).GetProperty(pair.Key, BindingFlags.Public | BindingFlags.Instance);
                 if (property == null || !property.CanWrite)
                     continue;
