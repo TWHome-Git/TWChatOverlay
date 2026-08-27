@@ -142,10 +142,10 @@ namespace TWChatOverlay.Services
                 if (UiLockService.IsUnlocked)
                     return;
 
-                // 전체 화면 창(게임)이 전경일 때만 개입한다.
-                // PIP처럼 작은 topmost 창이 전경이면 재배치하지 않아
-                // 그 창이 오버레이 뒤로 밀리지 않게 한다.
-                if (!IsForegroundFullscreen())
+                // 전체 화면 창 또는 테일즈위버 창이 전경일 때만 개입한다.
+                // PIP처럼 작은 topmost 창이 전경이면 재배치하지 않아 그 창이 오버레이 뒤로 밀리지 않게 하되,
+                // 게임을 창모드/작은 해상도 전체 화면으로 써도 오버레이가 복구되도록 게임 프로세스는 항상 개입 대상.
+                if (!IsForegroundFullscreen() && !IsForegroundTalesWeaver())
                     return;
 
                 Window? settingsHost = null;
@@ -169,6 +169,28 @@ namespace TWChatOverlay.Services
             catch (Exception ex)
             {
                 AppLogger.Warn("Failed to reassert topmost overlays after foreground change.", ex);
+            }
+        }
+
+        /// <summary>전경 창이 테일즈위버 게임 프로세스의 창이면 true. 창모드여도 가드가 개입하게 한다.</summary>
+        private static bool IsForegroundTalesWeaver()
+        {
+            try
+            {
+                IntPtr foreground = NativeMethods.GetForegroundWindow();
+                if (foreground == IntPtr.Zero)
+                    return false;
+
+                NativeMethods.GetWindowThreadProcessId(foreground, out uint pid);
+                if (pid == 0)
+                    return false;
+
+                using var process = System.Diagnostics.Process.GetProcessById((int)pid);
+                return process.ProcessName.Contains("talesweaver", StringComparison.OrdinalIgnoreCase);
+            }
+            catch
+            {
+                return false;
             }
         }
 
