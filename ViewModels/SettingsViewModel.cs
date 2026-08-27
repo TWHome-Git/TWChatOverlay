@@ -265,6 +265,12 @@ namespace TWChatOverlay.ViewModels
         }
 
         // 항목별 색상 동기화: 켜면 줄 색을 따르고, 끄면 색 버튼으로 개별 지정
+        public bool SenderIdColorSync
+        {
+            get => _settings.SenderIdColorSync;
+            set { if (_settings.SenderIdColorSync == value) return; _settings.SenderIdColorSync = value; OnPropertyChanged(); OnPropertyChanged(nameof(SenderIdColorEditable)); _onColorsUpdated?.Invoke("Decoration"); SaveSettings(); }
+        }
+
         public bool EtaLevelColorSync
         {
             get => _settings.EtaLevelColorSync;
@@ -289,11 +295,13 @@ namespace TWChatOverlay.ViewModels
             set { if (_settings.IdTagColorSync == value) return; _settings.IdTagColorSync = value; OnPropertyChanged(); OnPropertyChanged(nameof(IdTagColorEditable)); _onColorsUpdated?.Invoke("Decoration"); SaveSettings(); }
         }
 
+        public bool SenderIdColorEditable => !_settings.SenderIdColorSync;
         public bool EtaLevelColorEditable => !_settings.EtaLevelColorSync;
         public bool EtaCharacterColorEditable => !_settings.EtaCharacterColorSync;
         public bool TimestampColorEditable => !_settings.TimestampColorSync;
         public bool IdTagColorEditable => !_settings.IdTagColorSync;
 
+        public Brush SenderIdColor => StringToBrush(_settings.SenderIdColor);
         public Brush EtaLevelColor => StringToBrush(_settings.EtaLevelColor);
         public Brush EtaCharacterColor => StringToBrush(_settings.EtaCharacterColor);
         public Brush TimestampColor => StringToBrush(_settings.TimestampColor);
@@ -691,6 +699,7 @@ namespace TWChatOverlay.ViewModels
                 "EtaCharacter" => EtaCharacterColor,
                 "Timestamp" => TimestampColor,
                 "IdTag" => IdTagColor,
+                "SenderId" => SenderIdColor,
                 _ => null
             };
 
@@ -710,6 +719,7 @@ namespace TWChatOverlay.ViewModels
                 OnPropertyChanged(nameof(EtaCharacterColor));
                 OnPropertyChanged(nameof(TimestampColor));
                 OnPropertyChanged(nameof(IdTagColor));
+                OnPropertyChanged(nameof(SenderIdColor));
 
                 _onColorsUpdated?.Invoke(colorType);
                 SaveSettings();
@@ -734,6 +744,9 @@ namespace TWChatOverlay.ViewModels
             OnPropertyChanged(nameof(ShowEtaCharacter));
             OnPropertyChanged(nameof(ShowIdTag));
             OnPropertyChanged(nameof(ShowTimestamp));
+            OnPropertyChanged(nameof(SenderIdColorSync));
+            OnPropertyChanged(nameof(SenderIdColorEditable));
+            OnPropertyChanged(nameof(SenderIdColor));
             OnPropertyChanged(nameof(EtaLevelColorSync));
             OnPropertyChanged(nameof(EtaCharacterColorSync));
             OnPropertyChanged(nameof(TimestampColorSync));
