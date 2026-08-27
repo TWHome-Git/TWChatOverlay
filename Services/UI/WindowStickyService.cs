@@ -127,9 +127,19 @@ namespace TWChatOverlay.Services
                 _overlayWindow.Visibility = Visibility.Visible;
             }
 
-            if (_overlayWindow.Opacity != 1)
+            // 잠금 해제 인스펙터에서 지정한 창별 투명도가 있으면 그 값을 목표로 한다
+            // (1로 강제 복원하면 지정 투명도가 0.1초마다 무효화된다)
+            double targetOpacity = 1.0;
+            var opacityPercents = _settings.WindowOpacityPercents;
+            if (opacityPercents != null &&
+                opacityPercents.TryGetValue(_overlayWindow.GetType().Name, out double percent))
             {
-                _overlayWindow.Opacity = 1;
+                targetOpacity = Math.Max(0.1, Math.Min(1.0, percent / 100.0));
+            }
+
+            if (Math.Abs(_overlayWindow.Opacity - targetOpacity) > 0.001)
+            {
+                _overlayWindow.Opacity = targetOpacity;
             }
         }
 
