@@ -310,7 +310,7 @@
             <Border x:Name="AppHeader" Grid.Row="0" Grid.Column="1">
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="48,10,0,10">
                     <Border CornerRadius="4" ClipToBounds="True">
-                        <Image Source="/TWChatOverlay;component/Data/images/MenuIcon/favicon.ico" Width="128" Height="128" VerticalAlignment="Center"
+                        <Image Source="/TWChatOverlay;component/favicon.ico" Width="128" Height="128" VerticalAlignment="Center"
                                RenderOptions.BitmapScalingMode="NearestNeighbor"/>
                     </Border>
                     <TextBlock Text="테일즈 채팅 오버레이" Foreground="{DynamicResource TextBrush}" FontSize="36" FontWeight="Bold"
@@ -417,6 +417,15 @@
                         <StackPanel Visibility="{Binding IsChecked, ElementName=ChatTabId, Converter={StaticResource BooleanToVisibilityConverter}}">
                         <TextBlock Text="아이디 표시" Style="{StaticResource SettingsSectionLabelStyle}" Margin="0,0,0,6"/>
                         <WrapPanel>
+                            <Border Style="{StaticResource SettingsRowStyle}">
+                                <DockPanel>
+                                    <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
+                                        <CheckBox Style="{StaticResource SyncLinkCheckBoxStyle}" IsChecked="{Binding SenderIdColorSync}"/>
+                                        <Button Width="26" Height="14" Margin="0,0,62,0" Background="{Binding SenderIdColor}" IsEnabled="{Binding SenderIdColorEditable}" Command="{Binding ColorPickCommand}" CommandParameter="SenderId" Style="{StaticResource ColorPickerButtonStyle}" ToolTip="동기화를 끄면 지정할 수 있습니다"/>
+                                    </StackPanel>
+                                    <TextBlock Text="아이디" Style="{StaticResource SettingsRowLabelStyle}" ToolTip="채팅 줄의 보낸 사람 아이디 색상"/>
+                                </DockPanel>
+                            </Border>
                             <Border Style="{StaticResource SettingsRowStyle}">
                                 <DockPanel>
                                     <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">

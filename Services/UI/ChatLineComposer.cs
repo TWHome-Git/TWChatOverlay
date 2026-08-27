@@ -11,6 +11,7 @@ namespace TWChatOverlay.Services
     {
         Body,
         Timestamp,
+        SenderId,
         EtaLevel,
         Character,
         IdTag,
@@ -44,25 +45,19 @@ namespace TWChatOverlay.Services
                 rest = text[ts.Length..];
             }
 
-            // 2) 아이디 뒤 장식 조각
+            // 2) 아이디 구간 + 아이디 뒤 장식 조각. 아이디를 못 찾으면 통짜 본문으로.
             var decorations = BuildDecorations(log, settings);
-            if (decorations.Count == 0)
+            if (!TryFindSenderRange(rest, log, out int senderStart, out int senderEnd))
             {
                 segments.Add(new ChatSegment(rest, ChatSegmentKind.Body));
                 return segments;
             }
 
-            int insertIndex = FindInsertIndex(rest, log);
-            if (insertIndex < 0)
-            {
-                segments.Add(new ChatSegment(rest, ChatSegmentKind.Body));
-                return segments;
-            }
-
-            segments.Add(new ChatSegment(rest[..insertIndex], ChatSegmentKind.Body));
+            segments.Add(new ChatSegment(rest[..senderStart], ChatSegmentKind.Body));
+            segments.Add(new ChatSegment(rest[senderStart..senderEnd], ChatSegmentKind.SenderId));
             segments.AddRange(decorations);
-            if (insertIndex < rest.Length)
-                segments.Add(new ChatSegment(rest[insertIndex..], ChatSegmentKind.Body));
+            if (senderEnd < rest.Length)
+                segments.Add(new ChatSegment(rest[senderEnd..], ChatSegmentKind.Body));
             return segments;
         }
 
@@ -78,6 +73,7 @@ namespace TWChatOverlay.Services
                 // 항목별 색상 동기화: 꺼진 항목만 개별 색을 칠하고, 나머지는 줄 색을 따른다
                 Brush? brush = segment.Kind switch
                 {
+                    ChatSegmentKind.SenderId when !settings.SenderIdColorSync => ChatBrushResolver.ToBrush(settings.SenderIdColor),
                     ChatSegmentKind.Timestamp when !settings.TimestampColorSync => ChatBrushResolver.ToBrush(settings.TimestampColor),
                     ChatSegmentKind.EtaLevel when !settings.EtaLevelColorSync => ChatBrushResolver.ToBrush(settings.EtaLevelColor),
                     ChatSegmentKind.Character when !settings.EtaCharacterColorSync => ChatBrushResolver.ToBrush(settings.EtaCharacterColor),
@@ -126,24 +122,30 @@ namespace TWChatOverlay.Services
             return result;
         }
 
-        /// <summary>장식을 끼워 넣을 위치. 외치기는 끝의 [보낸이] 닫는 괄호 앞, 그 외는 아이디 바로 뒤.</summary>
-        private static int FindInsertIndex(string body, LogParser.ParseResult log)
+        /// <summary>아이디가 차지하는 구간. 외치기는 끝의 [보낸이] 괄호 안, 그 외는 콜론 앞 아이디. 장식은 구간 끝에 붙는다.</summary>
+        private static bool TryFindSenderRange(string body, LogParser.ParseResult log, out int start, out int end)
         {
+            start = end = -1;
+
             if (log.Category == ChatCategory.Shout)
             {
                 Match m = ShoutTrailingSenderRegex.Match(body);
-                if (!m.Success) return -1;
-                // "[" + id 뒤, 즉 닫는 "]" 바로 앞
-                return m.Index + 1 + m.Groups["id"].Length;
+                if (!m.Success) return false;
+                start = m.Index + 1;                      // "[" 바로 뒤
+                end = start + m.Groups["id"].Length;      // 닫는 "]" 바로 앞
+                return true;
             }
 
             string displaySenderId = log.SenderId ?? log.RawSenderId ?? string.Empty;
+            if (displaySenderId.Length == 0) return false;
             int colon = body.IndexOf(':');
-            if (colon <= 0) return -1;
+            if (colon <= 0) return false;
             string left = body[..colon];
             int idx = left.LastIndexOf(displaySenderId, StringComparison.Ordinal);
-            if (idx < 0) return -1;
-            return idx + displaySenderId.Length;
+            if (idx < 0) return false;
+            start = idx;
+            end = idx + displaySenderId.Length;
+            return true;
         }
     }
 }

@@ -52,10 +52,12 @@ namespace TWChatOverlay.Models
         public bool ShowIdTag { get; set; } = true;
         public bool ShowTimestamp { get; set; } = true;
         // 항목별 색상 동기화: 켜면 줄 색을 따르고, 끄면 아래 개별 색을 쓴다
+        public bool SenderIdColorSync { get; set; } = true;
         public bool EtaLevelColorSync { get; set; } = true;
         public bool EtaCharacterColorSync { get; set; } = true;
         public bool TimestampColorSync { get; set; } = true;
         public bool IdTagColorSync { get; set; } = true;
+        public string SenderIdColor { get; set; } = "#E8EAE9";
         public string EtaLevelColor { get; set; } = "#FFD84A";
         public string EtaCharacterColor { get; set; } = "#5AC8E8";
         public string TimestampColor { get; set; } = "#9AA0A6";

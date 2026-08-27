@@ -119,6 +119,10 @@ namespace TWChatOverlay.Models
         public bool ShowTimestamp { get => Chat.IdDisplay.ShowTimestamp; set { Chat.IdDisplay.ShowTimestamp = value; OnPropertyChanged(); } }
         // 항목별 색상 동기화: 켜면 줄 색을 따르고, 끄면 개별 색을 쓴다
         [JsonIgnore]
+        public bool SenderIdColorSync { get => Chat.IdDisplay.SenderIdColorSync; set { Chat.IdDisplay.SenderIdColorSync = value; OnPropertyChanged(); } }
+        [JsonIgnore]
+        public string SenderIdColor { get => Chat.IdDisplay.SenderIdColor; set { Chat.IdDisplay.SenderIdColor = value; OnPropertyChanged(); } }
+        [JsonIgnore]
         public bool EtaLevelColorSync { get => Chat.IdDisplay.EtaLevelColorSync; set { Chat.IdDisplay.EtaLevelColorSync = value; OnPropertyChanged(); } }
         [JsonIgnore]
         public bool EtaCharacterColorSync { get => Chat.IdDisplay.EtaCharacterColorSync; set { Chat.IdDisplay.EtaCharacterColorSync = value; OnPropertyChanged(); } }
