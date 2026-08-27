@@ -684,6 +684,15 @@
                                     </StackPanel>
                                 </DockPanel>
                             </Border>
+                            <Border Style="{StaticResource SettingsRowStyle}">
+                                <DockPanel>
+                                    <CheckBox DockPanel.Dock="Right" IsChecked="{Binding YieldOverlaysToOtherApps}" Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
+                                    <StackPanel VerticalAlignment="Center">
+                                        <TextBlock Text="다른 앱에 자리 양보" Style="{StaticResource SettingsRowLabelStyle}"/>
+                                        <TextBlock Text="브라우저 등 다른 앱이 앞에 오면 오버레이를 그 뒤로 내림" Style="{StaticResource SettingsRowHintStyle}"/>
+                                    </StackPanel>
+                                </DockPanel>
+                            </Border>
                         </WrapPanel>
                     </StackPanel>
 
