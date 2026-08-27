@@ -180,6 +180,18 @@ namespace TWChatOverlay.ViewModels
             }
         }
 
+        public bool YieldOverlaysToOtherApps
+        {
+            get => _settings.YieldOverlaysToOtherApps;
+            set
+            {
+                if (_settings.YieldOverlaysToOtherApps == value) return;
+                _settings.YieldOverlaysToOtherApps = value;
+                OnPropertyChanged();
+                SaveSettings();
+            }
+        }
+
         public bool MenuWindowHorizontal
         {
             get => _settings.MenuWindowHorizontal;

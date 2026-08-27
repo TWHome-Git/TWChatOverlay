@@ -1016,6 +1016,10 @@ namespace TWChatOverlay.Models
 
         #region 화면/UI (facade)
 
+        /// <summary>브라우저 등 다른 앱이 전경이면 오버레이를 최상단에서 내려 그 앱을 가리지 않는다.</summary>
+        [JsonIgnore]
+        public bool YieldOverlaysToOtherApps { get => Ui.YieldOverlaysToOtherApps; set { Ui.YieldOverlaysToOtherApps = value; OnPropertyChanged(); } }
+
         /// <summary>메인·서브 채팅창과 자동으로 뜨는 창의 통합 배경 불투명도(%). 20~100. 텍스트는 항상 불투명.</summary>
         [JsonIgnore]
         public double OverlayOpacityPercent
