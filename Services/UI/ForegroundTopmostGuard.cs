@@ -26,6 +26,35 @@ namespace TWChatOverlay.Services
         [DllImport("user32.dll")]
         private static extern bool UnhookWinEvent(IntPtr hWinEventHook);
 
+        [DllImport("user32.dll")]
+        private static extern bool GetWindowRect(IntPtr hWnd, out RECT rect);
+
+        [DllImport("user32.dll")]
+        private static extern IntPtr MonitorFromWindow(IntPtr hwnd, uint flags);
+
+        [DllImport("user32.dll", CharSet = CharSet.Auto)]
+        private static extern bool GetMonitorInfo(IntPtr hMonitor, ref MONITORINFO info);
+
+        private const uint MONITOR_DEFAULTTONEAREST = 2;
+
+        [StructLayout(LayoutKind.Sequential)]
+        private struct RECT
+        {
+            public int Left;
+            public int Top;
+            public int Right;
+            public int Bottom;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        private struct MONITORINFO
+        {
+            public int cbSize;
+            public RECT rcMonitor;
+            public RECT rcWork;
+            public uint dwFlags;
+        }
+
         private static WinEventDelegate? _callback; // 훅이 살아 있는 동안 GC 수집 방지
         private static IntPtr _hook = IntPtr.Zero;
         private static DispatcherTimer? _reassertTimer;
@@ -113,6 +142,12 @@ namespace TWChatOverlay.Services
                 if (UiLockService.IsUnlocked)
                     return;
 
+                // 전체 화면 창(게임)이 전경일 때만 개입한다.
+                // PIP처럼 작은 topmost 창이 전경이면 재배치하지 않아
+                // 그 창이 오버레이 뒤로 밀리지 않게 한다.
+                if (!IsForegroundFullscreen())
+                    return;
+
                 Window? settingsHost = null;
                 foreach (Window window in Application.Current.Windows)
                 {
@@ -134,6 +169,38 @@ namespace TWChatOverlay.Services
             catch (Exception ex)
             {
                 AppLogger.Warn("Failed to reassert topmost overlays after foreground change.", ex);
+            }
+        }
+
+        /// <summary>전경 창이 자기 모니터를 사실상 가득 덮고 있으면(전체 화면/보더리스) true.</summary>
+        private static bool IsForegroundFullscreen()
+        {
+            try
+            {
+                IntPtr foreground = NativeMethods.GetForegroundWindow();
+                if (foreground == IntPtr.Zero)
+                    return false;
+
+                if (!GetWindowRect(foreground, out RECT rect))
+                    return false;
+
+                IntPtr monitor = MonitorFromWindow(foreground, MONITOR_DEFAULTTONEAREST);
+                if (monitor == IntPtr.Zero)
+                    return false;
+
+                var info = new MONITORINFO { cbSize = Marshal.SizeOf<MONITORINFO>() };
+                if (!GetMonitorInfo(monitor, ref info))
+                    return false;
+
+                // 최대화 창의 보이지 않는 테두리를 감안해 2px 여유를 둔다
+                return rect.Left <= info.rcMonitor.Left + 2
+                    && rect.Top <= info.rcMonitor.Top + 2
+                    && rect.Right >= info.rcMonitor.Right - 2
+                    && rect.Bottom >= info.rcMonitor.Bottom - 2;
+            }
+            catch
+            {
+                return false;
             }
         }
     }
