@@ -81,6 +81,7 @@ namespace TWChatOverlay
             IdTagService.Initialize();
             _ = RecaptureSupplyAlertService.PreloadAsync();
             SecondaryWindowTopmostRefreshService.Initialize();
+            ForegroundTopmostGuard.Initialize();
             base.OnStartup(e);
             AppLogger.Info("Core services initialized.");
 
@@ -210,6 +211,7 @@ namespace TWChatOverlay
                 AppLogger.Warn("Failed to persist window positions during shutdown.", ex);
             }
 
+            ForegroundTopmostGuard.Shutdown();
             EtaProfileResolver.DeleteCache();
             NotificationService.DeleteCachedAudioFiles();
             _mutex?.ReleaseMutex();
