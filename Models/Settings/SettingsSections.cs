@@ -250,6 +250,8 @@ namespace TWChatOverlay.Models
     {
         /// <summary>메인·서브 채팅창과 자동으로 뜨는 창의 통합 배경 불투명도(%). 20~100.</summary>
         public double OverlayOpacityPercent { get; set; } = 96.0;
+        /// <summary>브라우저 등 다른 앱이 전경이면 오버레이를 최상단에서 내려 그 앱을 가리지 않는다.</summary>
+        public bool YieldOverlaysToOtherApps { get; set; } = true;
         /// <summary>따로 여는 창(달력·컨텐츠·어밴던)의 배경 불투명도(%). 키는 OverlayOpacityService의 그룹 키.</summary>
         public Dictionary<string, double> OverlayOpacityByGroup { get; set; } = new(StringComparer.OrdinalIgnoreCase);
         public bool WindowSnapEnabled { get; set; } = false;

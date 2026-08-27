@@ -142,11 +142,16 @@ namespace TWChatOverlay.Services
                 if (UiLockService.IsUnlocked)
                     return;
 
-                // 전체 화면 창 또는 테일즈위버 창이 전경일 때만 개입한다.
-                // PIP처럼 작은 topmost 창이 전경이면 재배치하지 않아 그 창이 오버레이 뒤로 밀리지 않게 하되,
-                // 게임을 창모드/작은 해상도 전체 화면으로 써도 오버레이가 복구되도록 게임 프로세스는 항상 개입 대상.
+                // 게임(테일즈위버·전체 화면)이 전경 → 오버레이를 최상단으로 복구.
+                // 그 외 일반 앱(브라우저 등)이 전경 → 설정이 켜져 있으면 오버레이를 최상단 밴드에서 내려
+                // 그 앱을 가리지 않게 한다. (비-topmost 밴드 맨 위라 게임보다는 여전히 위)
                 if (!IsForegroundFullscreen() && !IsForegroundTalesWeaver())
+                {
+                    var settings = ToastPresentationHelper.FindSharedSettings();
+                    if (settings?.YieldOverlaysToOtherApps == true)
+                        DemoteTopmostWindows();
                     return;
+                }
 
                 Window? settingsHost = null;
                 foreach (Window window in Application.Current.Windows)
@@ -169,6 +174,31 @@ namespace TWChatOverlay.Services
             catch (Exception ex)
             {
                 AppLogger.Warn("Failed to reassert topmost overlays after foreground change.", ex);
+            }
+        }
+
+        /// <summary>표시 중인 topmost 오버레이들을 비-topmost 밴드로 내린다. WPF Topmost 속성은 그대로 둬
+        /// 게임이 전경으로 돌아오면 기존 복구 루프가 다시 최상단으로 올린다.</summary>
+        private static void DemoteTopmostWindows()
+        {
+            const int SWP_NOMOVE = 0x0002;
+            const int SWP_NOSIZE = 0x0001;
+            const int SWP_NOACTIVATE = 0x0010;
+
+            foreach (Window window in Application.Current.Windows)
+            {
+                if (!window.IsVisible || !window.Topmost)
+                    continue;
+
+                try
+                {
+                    var handle = new System.Windows.Interop.WindowInteropHelper(window).Handle;
+                    if (handle == IntPtr.Zero)
+                        continue;
+
+                    NativeMethods.SetWindowPos(handle, NativeMethods.HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
+                }
+                catch { }
             }
         }
 
