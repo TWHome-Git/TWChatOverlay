@@ -12,6 +12,13 @@ namespace TWChatOverlay.Services
         private readonly DispatcherTimer _timer;
         private readonly HashSet<string> _firedKeys = new(StringComparer.Ordinal);
 
+        // 출현 시각은 하루 단위로 캐시한다 (매초 스케줄 재계산·문자열 파싱 방지)
+        private readonly Dictionary<string, DateTime[]> _occurrenceCache = new(StringComparer.Ordinal);
+        private DateTime _occurrenceCacheDate = DateTime.MinValue;
+
+        /// <summary>틱이 늦게 와도 이 시간 안이면 알람을 놓치지 않고 울린다.</summary>
+        private static readonly TimeSpan LateFireWindow = TimeSpan.FromSeconds(2);
+
         public BossAlarmSchedulerService(ChatSettings settings)
         {
             _settings = settings;
@@ -71,27 +78,50 @@ namespace TWChatOverlay.Services
             if (!isEnabled)
                 return false;
 
-            DateTime nowSecond = new(now.Year, now.Month, now.Day, now.Hour, now.Minute, now.Second);
-
-            foreach (DateTime date in new[] { now.Date.AddDays(-1), now.Date, now.Date.AddDays(1) })
+            foreach (DateTime occurrence in GetOccurrencesCached(boss, now))
             {
-                foreach (DateTime occurrence in BossTimerService.GetOccurrences(boss, date))
-                {
-                    DateTime triggerTime = occurrence.Subtract(offsetBefore);
-                    if (triggerTime != nowSecond)
-                        continue;
+                DateTime triggerTime = occurrence.Subtract(offsetBefore);
 
-                    string fireKey = $"{boss.Id}|{occurrence:yyyyMMddHHmmss}|{(int)offsetBefore.TotalSeconds}";
-                    if (!_firedKeys.Add(fireKey))
-                        continue;
+                // 트리거 시각을 지났고, 지난 지 얼마 안 됐을 때만 (틱 지연으로 정확한 초를 놓쳐도 울린다)
+                TimeSpan elapsed = now - triggerTime;
+                if (elapsed < TimeSpan.Zero || elapsed > LateFireWindow)
+                    continue;
 
-                    AppLogger.Info($"Boss alarm triggered. Boss='{boss.Name}', Trigger='{label}', Occurrence='{occurrence:yyyy-MM-dd HH:mm:ss}'");
-                    NotificationService.PlayAlert(ResolveSoundFile(boss.Id, offsetBefore));
-                    return true;
-                }
+                string fireKey = $"{boss.Id}|{occurrence:yyyyMMddHHmmss}|{(int)offsetBefore.TotalSeconds}";
+                if (!_firedKeys.Add(fireKey))
+                    continue;
+
+                AppLogger.Info($"Boss alarm triggered. Boss='{boss.Name}', Trigger='{label}', Occurrence='{occurrence:yyyy-MM-dd HH:mm:ss}'");
+                NotificationService.PlayAlert(ResolveSoundFile(boss.Id, offsetBefore));
+                return true;
             }
 
             return false;
+        }
+
+        /// <summary>어제~내일 출현 시각을 보스별로 캐시해 반환한다. 날짜가 바뀌면 갱신.</summary>
+        private DateTime[] GetOccurrencesCached(BossTimerService.BossTimerDefinition boss, DateTime now)
+        {
+            DateTime today = now.Date;
+            if (_occurrenceCacheDate != today)
+            {
+                _occurrenceCache.Clear();
+                _occurrenceCacheDate = today;
+            }
+
+            if (!_occurrenceCache.TryGetValue(boss.Id, out DateTime[]? occurrences))
+            {
+                var list = new List<DateTime>();
+                foreach (DateTime date in new[] { today.AddDays(-1), today, today.AddDays(1) })
+                {
+                    list.AddRange(BossTimerService.GetOccurrences(boss, date));
+                }
+
+                occurrences = list.ToArray();
+                _occurrenceCache[boss.Id] = occurrences;
+            }
+
+            return occurrences;
         }
 
         private static string ResolveSoundFile(string bossId, TimeSpan offsetBefore)

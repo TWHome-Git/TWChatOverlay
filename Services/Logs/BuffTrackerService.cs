@@ -218,12 +218,18 @@ namespace TWChatOverlay.Services
             rare = rare.OrderBy(x => x.SortOrder).ThenBy(x => x.DisplayName, StringComparer.Ordinal).ToList();
             exp = exp.OrderBy(x => x.SortOrder).ThenBy(x => x.DisplayName, StringComparer.Ordinal).ToList();
 
-            ReplaceCollection(ActiveRareBuffs, rare);
-            ReplaceCollection(ActiveExpBuffs, exp);
+            SyncCollection(ActiveRareBuffs, rare);
+            SyncCollection(ActiveExpBuffs, exp);
 
             HasRareBuffs = ActiveRareBuffs.Count > 0;
             HasExpBuffs = ActiveExpBuffs.Count > 0;
             HasAnyActiveBuffs = HasRareBuffs || HasExpBuffs;
+
+            // 추적할 버프가 하나도 없으면 매초 틱을 멈춘다 (버프가 다시 잡히면 ProcessLog가 재시작)
+            if (_activeUntil.Count == 0 && _pausedRemaining.Count == 0)
+                _timer.Stop();
+            else if (!_timer.IsEnabled)
+                _timer.Start();
         }
 
         private void TryPlayBuffEndSound(DateTime now)
@@ -244,8 +250,30 @@ namespace TWChatOverlay.Services
             NotificationService.PlayAlert("BuffCheck.wav");
         }
 
-        private static void ReplaceCollection(ObservableCollection<BuffDisplayItem> target, IReadOnlyList<BuffDisplayItem> source)
+        /// <summary>구성(항목·순서)이 같으면 남은 시간 텍스트만 제자리 갱신하고,
+        /// 달라졌을 때만 컬렉션을 재구성한다. (매초 UI 재생성·CollectionChanged 방지)</summary>
+        private static void SyncCollection(ObservableCollection<BuffDisplayItem> target, IReadOnlyList<BuffDisplayItem> source)
         {
+            bool sameStructure = target.Count == source.Count;
+            if (sameStructure)
+            {
+                for (int i = 0; i < target.Count; i++)
+                {
+                    if (!string.Equals(target[i].DisplayName, source[i].DisplayName, StringComparison.Ordinal))
+                    {
+                        sameStructure = false;
+                        break;
+                    }
+                }
+            }
+
+            if (sameStructure)
+            {
+                for (int i = 0; i < target.Count; i++)
+                    target[i].RemainingText = source[i].RemainingText;
+                return;
+            }
+
             target.Clear();
             foreach (var item in source)
             {
@@ -502,22 +530,38 @@ namespace TWChatOverlay.Services
             public DateTimeOffset SavedAt { get; set; }
         }
 
-        public sealed class BuffDisplayItem
+        public sealed class BuffDisplayItem : System.ComponentModel.INotifyPropertyChanged
         {
+            private string _remainingText;
+
             public BuffDisplayItem(string displayName, string remainingText, ImageSource iconSource, int sortOrder, bool isRare = false)
             {
                 DisplayName = displayName;
-                RemainingText = remainingText;
+                _remainingText = remainingText;
                 IconSource = iconSource;
                 SortOrder = sortOrder;
                 IsRare = isRare;
             }
 
             public string DisplayName { get; }
-            public string RemainingText { get; }
+
+            /// <summary>남은 시간 텍스트. 매초 제자리 갱신되어 컬렉션 재구성 없이 표시가 바뀐다.</summary>
+            public string RemainingText
+            {
+                get => _remainingText;
+                set
+                {
+                    if (_remainingText == value) return;
+                    _remainingText = value;
+                    PropertyChanged?.Invoke(this, new System.ComponentModel.PropertyChangedEventArgs(nameof(RemainingText)));
+                }
+            }
+
             public ImageSource IconSource { get; }
             public int SortOrder { get; }
             public bool IsRare { get; }
+
+            public event System.ComponentModel.PropertyChangedEventHandler? PropertyChanged;
 
             /// <summary>타일 안쪽 테두리 색: 레어=골드, 경험치=하늘색. 테마 브러시를 따른다.</summary>
             public System.Windows.Media.Brush AccentBrush
