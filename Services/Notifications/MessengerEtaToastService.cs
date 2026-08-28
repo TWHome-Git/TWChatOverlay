@@ -18,6 +18,9 @@ namespace TWChatOverlay.Services
 
         public static void ShowForFile(string filePath, IReadOnlyList<string> entries, ChatSettings settings)
         {
+            if (TrayAllWindowsService.IsTrayed)
+                return; // 트레이 최소화 중에는 알림 창을 띄우지 않는다
+
             if (string.IsNullOrWhiteSpace(filePath) || entries.Count == 0)
                 return;
 

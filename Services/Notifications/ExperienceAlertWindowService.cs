@@ -45,6 +45,9 @@ namespace TWChatOverlay.Services
 
         public static void Show(string message, ChatSettings settings)
         {
+            if (TrayAllWindowsService.IsTrayed)
+                return; // 트레이 최소화 중에는 알림 창을 띄우지 않는다
+
             ShowWindow(message, settings, requireAlertEnabled: true);
         }
 

@@ -25,6 +25,9 @@ namespace TWChatOverlay.Services
 
         public static void Show(string itemName, ItemDropGrade grade = ItemDropGrade.Normal, bool withSound = true)
         {
+            if (TrayAllWindowsService.IsTrayed)
+                return; // 트레이 최소화 중에는 알림 창을 띄우지 않는다
+
             if (string.IsNullOrWhiteSpace(itemName))
                 return;
 

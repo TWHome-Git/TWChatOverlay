@@ -207,6 +207,9 @@ namespace TWChatOverlay.Views
 
         public void ShowAbandonRoadSummaryWindow(bool previewMode = false, bool restartLifetime = true, bool activateWindow = true, bool forcePreview = false)
         {
+            if (TrayAllWindowsService.IsTrayed && !forcePreview)
+                return; // 트레이 최소화 중에는 알림 창을 띄우지 않는다
+
             if (!_settings.ShowAbandonRoadSummaryWindow && !forcePreview)
             {
                 if (_AbandonRoadSummaryWindow != null)

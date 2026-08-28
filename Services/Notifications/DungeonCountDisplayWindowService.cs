@@ -19,6 +19,9 @@ namespace TWChatOverlay.Services
 
         public static void Show(string dungeonName, int currentCount, int maxCount, int durationSeconds, ChatSettings settings, double? fontSize = null)
         {
+            if (TrayAllWindowsService.IsTrayed)
+                return; // 트레이 최소화 중에는 알림 창을 띄우지 않는다
+
             if (string.IsNullOrWhiteSpace(dungeonName))
                 return;
             if (settings == null)
