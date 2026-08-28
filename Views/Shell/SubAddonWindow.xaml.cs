@@ -58,6 +58,9 @@ namespace TWChatOverlay.Views
 
         public void ShowEtosDirection(string? imagePath)
         {
+            if (TrayAllWindowsService.IsTrayed)
+                return; // 트레이 최소화 중에는 알림 창을 띄우지 않는다
+
             if (!IsEtosAlertEnabled())
             {
                 HideAlert();
