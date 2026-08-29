@@ -58,13 +58,13 @@
             <Setter Property="BorderBrush" Value="{DynamicResource SeparatorBrush}"/>
             <Setter Property="BorderThickness" Value="0,0,0,1"/>
             <Setter Property="Padding" Value="0,7"/>
-            <Setter Property="Width" Value="272"/>
+            <Setter Property="Width" Value="296"/>
             <Setter Property="Margin" Value="0,0,14,0"/>
         </Style>
 
         <!-- 전체 폭 행 -->
         <Style x:Key="SettingsRowWideStyle" TargetType="Border" BasedOn="{StaticResource SettingsRowStyle}">
-            <Setter Property="Width" Value="558"/>
+            <Setter Property="Width" Value="606"/>
             <Setter Property="Margin" Value="0"/>
         </Style>
 
@@ -372,7 +372,7 @@
             </Border>
 
             <ScrollViewer x:Name="SettingsScroll" Grid.Row="1" Grid.Column="1" VerticalScrollBarVisibility="Auto" Style="{StaticResource OverlayScrollViewerStyle}">
-                <StackPanel Margin="16,4,12,12" Width="566" HorizontalAlignment="Left">
+                <StackPanel Margin="16,4,12,12" Width="620" HorizontalAlignment="Left">
 
                     <!-- ===================== 채팅 ===================== -->
                     <StackPanel x:Name="ChatPanel">
@@ -483,7 +483,7 @@
                             <!-- 에타 레벨의 소분류: 라벨·토글은 다른 행과 같은 272 정렬, 아래에 구간 스펙트럼 바 -->
                             <Border Style="{StaticResource SettingsRowWideStyle}">
                                 <StackPanel>
-                                    <DockPanel Width="272" HorizontalAlignment="Left">
+                                    <DockPanel Width="296" HorizontalAlignment="Left">
                                         <CheckBox DockPanel.Dock="Right" IsChecked="{Binding EtaLevelRangeColors}" Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
                                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="14,0,0,0">
                                             <TextBlock Text="레벨별 색상" Style="{StaticResource SettingsRowLabelStyle}" ToolTip="에타 레벨 구간에 따라 [레벨] 색을 다르게 표시"/>
@@ -491,7 +491,7 @@
                                         </StackPanel>
                                     </DockPanel>
                                     <Border Margin="28,8,0,2" HorizontalAlignment="Left" BorderBrush="{DynamicResource SeparatorBrush}" BorderThickness="1" CornerRadius="3">
-                                        <UniformGrid Columns="5" Width="400" Height="22">
+                                        <UniformGrid Columns="5" Width="440" Height="22">
                                             <Button Content="1~20" Background="{Binding EtaLevelRange1Color}" IsEnabled="{Binding EtaLevelRangeColors}" Command="{Binding ColorPickCommand}" CommandParameter="EtaLevelRange1" Style="{StaticResource EtaRangeSegmentStyle}"/>
                                             <Button Content="21~40" Background="{Binding EtaLevelRange2Color}" IsEnabled="{Binding EtaLevelRangeColors}" Command="{Binding ColorPickCommand}" CommandParameter="EtaLevelRange2" Style="{StaticResource EtaRangeSegmentStyle}"/>
                                             <Button Content="41~60" Background="{Binding EtaLevelRange3Color}" IsEnabled="{Binding EtaLevelRangeColors}" Command="{Binding ColorPickCommand}" CommandParameter="EtaLevelRange3" Style="{StaticResource EtaRangeSegmentStyle}"/>
@@ -944,7 +944,7 @@
                                  Style="{StaticResource InputTextBoxStyle}"
                                  AcceptsReturn="True"
                                  TextWrapping="Wrap"
-                                 Width="566"
+                                 Width="606"
                                  HorizontalAlignment="Left"
                                  Height="80"/>
                         <TextBlock Text="@단어1 @단어2 형식 · 입력 즉시 적용됩니다" Style="{StaticResource SettingsRowHintStyle}" Margin="0,4,0,0"/>
@@ -1214,7 +1214,7 @@
                             <Button Content="사용자 정의" Command="{Binding SelectCustomDropFilterCommand}" Width="92" Style="{StaticResource DropFilterButtonStyle}"/>
                         </StackPanel>
 
-                        <Grid Width="566" HorizontalAlignment="Left">
+                        <Grid Width="606" HorizontalAlignment="Left">
                             <Grid.Style>
                                 <Style TargetType="Grid">
                                     <Setter Property="Visibility" Value="Collapsed"/>
@@ -1318,7 +1318,7 @@
                                 <RadioButton Content="필드 보스 알림" IsChecked="True" GroupName="BossTabs" IsHitTestVisible="False" Style="{StaticResource SettingsTabStyle}"/>
                             </StackPanel>
                         </Border>
-                        <ItemsControl ItemsSource="{Binding BossAlarmCards}" Width="566" HorizontalAlignment="Left">
+                        <ItemsControl ItemsSource="{Binding BossAlarmCards}" Width="606" HorizontalAlignment="Left">
                             <ItemsControl.ItemsPanel>
                                 <ItemsPanelTemplate>
                                     <UniformGrid Columns="3"/>
