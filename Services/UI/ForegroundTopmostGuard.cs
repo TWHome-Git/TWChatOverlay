@@ -190,6 +190,10 @@ namespace TWChatOverlay.Services
                 if (!window.IsVisible || !window.Topmost)
                     continue;
 
+                // 메뉴 바는 앱의 진입점이라 항상 접근 가능해야 한다 — 양보 대상에서 제외
+                if (window is TWChatOverlay.Views.MenuWindow)
+                    continue;
+
                 try
                 {
                     var handle = new System.Windows.Interop.WindowInteropHelper(window).Handle;
