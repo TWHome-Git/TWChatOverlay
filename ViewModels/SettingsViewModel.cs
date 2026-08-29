@@ -180,13 +180,13 @@ namespace TWChatOverlay.ViewModels
             }
         }
 
-        public bool YieldOverlaysToOtherApps
+        public bool OverlaysAlwaysOnTop
         {
-            get => _settings.YieldOverlaysToOtherApps;
+            get => _settings.OverlaysAlwaysOnTop;
             set
             {
-                if (_settings.YieldOverlaysToOtherApps == value) return;
-                _settings.YieldOverlaysToOtherApps = value;
+                if (_settings.OverlaysAlwaysOnTop == value) return;
+                _settings.OverlaysAlwaysOnTop = value;
                 OnPropertyChanged();
                 SaveSettings();
             }

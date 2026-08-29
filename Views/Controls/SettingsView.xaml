@@ -686,10 +686,10 @@
                             </Border>
                             <Border Style="{StaticResource SettingsRowStyle}">
                                 <DockPanel>
-                                    <CheckBox DockPanel.Dock="Right" IsChecked="{Binding YieldOverlaysToOtherApps}" Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
+                                    <CheckBox DockPanel.Dock="Right" IsChecked="{Binding OverlaysAlwaysOnTop}" Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
                                     <StackPanel VerticalAlignment="Center">
-                                        <TextBlock Text="다른 앱에 자리 양보" Style="{StaticResource SettingsRowLabelStyle}"/>
-                                        <TextBlock Text="브라우저 등 다른 앱이 앞에 오면 오버레이를 그 뒤로 내림" Style="{StaticResource SettingsRowHintStyle}"/>
+                                        <TextBlock Text="항상 위" Style="{StaticResource SettingsRowLabelStyle}"/>
+                                        <TextBlock Text="끄면 처음 실행 때만 위에 두고, 이후엔 일반 창처럼 다른 앱 뒤로 내려감 (메뉴 바는 항상 위)" Style="{StaticResource SettingsRowHintStyle}"/>
                                     </StackPanel>
                                 </DockPanel>
                             </Border>
