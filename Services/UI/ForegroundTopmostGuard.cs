@@ -29,6 +29,9 @@ namespace TWChatOverlay.Services
         [DllImport("user32.dll")]
         private static extern bool GetWindowRect(IntPtr hWnd, out RECT rect);
 
+        [DllImport("user32.dll", CharSet = CharSet.Unicode)]
+        private static extern int GetWindowTextW(IntPtr hWnd, System.Text.StringBuilder text, int maxCount);
+
         [DllImport("user32.dll")]
         private static extern IntPtr MonitorFromWindow(IntPtr hwnd, uint flags);
 
@@ -220,7 +223,31 @@ namespace TWChatOverlay.Services
                     return false;
 
                 using var process = System.Diagnostics.Process.GetProcessById((int)pid);
-                return process.ProcessName.Contains("talesweaver", StringComparison.OrdinalIgnoreCase);
+                if (process.ProcessName.Contains("talesweaver", StringComparison.OrdinalIgnoreCase))
+                    return true;
+            }
+            catch
+            {
+                // 게임가드 등으로 프로세스 조회가 막히면 아래 창 제목 검사로 폴백
+            }
+
+            return ForegroundTitleContainsTalesWeaver();
+        }
+
+        /// <summary>전경 창 제목에 Talesweaver가 들어 있으면 true. 프로세스 조회가 막혀도 동작하는 폴백.</summary>
+        private static bool ForegroundTitleContainsTalesWeaver()
+        {
+            try
+            {
+                IntPtr foreground = NativeMethods.GetForegroundWindow();
+                if (foreground == IntPtr.Zero)
+                    return false;
+
+                var title = new System.Text.StringBuilder(128);
+                if (GetWindowTextW(foreground, title, title.Capacity) <= 0)
+                    return false;
+
+                return title.ToString().Contains("talesweaver", StringComparison.OrdinalIgnoreCase);
             }
             catch
             {
