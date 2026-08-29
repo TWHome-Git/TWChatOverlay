@@ -54,17 +54,17 @@ namespace TWChatOverlay.Services
             Save(outDir, "chat_id_sender_sync_off.png", SyncGuideMock(syncOn: false));
 
             // ── 에타 레벨 ──
-            Save(outDir, "chat_id_eta_level_off.png", Panel("표시 꺼짐",
+            Save(outDir, "chat_id_eta_level_off.png", PanelToggle(false,
                 Line(NormalCol, ("모비딕", NormalCol), (" : 사냥 가실 분?", NormalCol))));
-            Save(outDir, "chat_id_eta_level_on.png", Panel("표시 켜짐",
-                Line(NormalCol, ("모비딕", NormalCol), ("[310]", GoldCol), (" : 사냥 가실 분?", NormalCol))));
+            Save(outDir, "chat_id_eta_level_on.png", PanelToggle(true,
+                Line(NormalCol, ("모비딕", NormalCol), ("[72]", GoldCol), (" : 사냥 가실 분?", NormalCol))));
 
             // ── 에타 레벨별 색상 ──
-            Save(outDir, "chat_id_eta_range_off.png", Panel("레벨별 색상 꺼짐 — 한 가지 색",
+            Save(outDir, "chat_id_eta_range_off.png", PanelToggle(false,
                 Line(NormalCol, ("나비", NormalCol), ("[15]", GoldCol), (" : 반가워요", NormalCol)),
                 Line(NormalCol, ("딩고", NormalCol), ("[55]", GoldCol), (" : 사냥 가실 분?", NormalCol)),
                 Line(NormalCol, ("모비딕", NormalCol), ("[92]", GoldCol), (" : 보스 곧 엽니다", NormalCol))));
-            Save(outDir, "chat_id_eta_range_on.png", Panel("레벨별 색상 켜짐 — 구간별 색",
+            Save(outDir, "chat_id_eta_range_on.png", PanelToggle(true,
                 Line(NormalCol, ("나비", NormalCol), ("[15]", Range1Col), (" : 반가워요", NormalCol)),
                 Line(NormalCol, ("호밀", NormalCol), ("[33]", Range2Col), (" : 물약 팝니다", NormalCol)),
                 Line(NormalCol, ("딩고", NormalCol), ("[55]", Range3Col), (" : 사냥 가실 분?", NormalCol)),
@@ -72,29 +72,30 @@ namespace TWChatOverlay.Services
                 Line(NormalCol, ("모비딕", NormalCol), ("[92]", Range5Col), (" : 보스 곧 엽니다", NormalCol))));
 
             // ── 캐릭터 ──
-            Save(outDir, "chat_id_character_off.png", Panel("표시 꺼짐",
-                Line(NormalCol, ("모비딕", NormalCol), ("[310]", GoldCol), (" : 사냥 가실 분?", NormalCol))));
-            Save(outDir, "chat_id_character_on.png", Panel("표시 켜짐",
-                Line(NormalCol, ("모비딕", NormalCol), ("[310]", GoldCol), ("[루시안]", SkyCol), (" : 사냥 가실 분?", NormalCol))));
+            Save(outDir, "chat_id_character_off.png", PanelToggle(false,
+                Line(NormalCol, ("모비딕", NormalCol), ("[72]", GoldCol), (" : 사냥 가실 분?", NormalCol))));
+            Save(outDir, "chat_id_character_on.png", PanelToggle(true,
+                Line(NormalCol, ("모비딕", NormalCol), ("[72]", GoldCol), ("[루시안]", SkyCol), (" : 사냥 가실 분?", NormalCol))));
 
             // ── 아이디 태그 ──
-            Save(outDir, "chat_id_tag_off.png", Panel("표시 꺼짐",
+            Save(outDir, "chat_id_tag_off.png", PanelToggle(false,
                 Line(NormalCol, ("모비딕", NormalCol), (" : 물약 팝니다", NormalCol))));
-            Save(outDir, "chat_id_tag_on.png", Panel("표시 켜짐  (idtag.txt: 모비딕=상인)",
-                Line(NormalCol, ("모비딕", NormalCol), ("[상인]", SkyCol), (" : 물약 팝니다", NormalCol))));
+            Save(outDir, "chat_id_tag_on.png", PanelToggle(true,
+                Line(NormalCol, ("모비딕", NormalCol), ("[상인]", SkyCol), (" : 물약 팝니다", NormalCol)),
+                DimLine("(idtag.txt: 모비딕=상인)")));
 
             // ── 클럽 보스 ──
-            Save(outDir, "chat_id_club_boss_on.png", Panel("표시 켜짐",
+            Save(outDir, "chat_id_club_boss_on.png", PanelToggle(true,
                 Line(ClubCol, ("[클럽] 딩고 : 보스 갑니다", ClubCol)),
                 Line(SystemCol, ("클럽 공지 : '[클럽 보스] 그람존' 에 '딩고' 님이 참가하셨습니다.", SystemCol))));
-            Save(outDir, "chat_id_club_boss_off.png", Panel("표시 꺼짐 — 공지 숨김",
+            Save(outDir, "chat_id_club_boss_off.png", PanelToggle(false,
                 Line(ClubCol, ("[클럽] 딩고 : 보스 갑니다", ClubCol)),
                 DimLine("(클럽 보스 공지는 표시되지 않음)")));
 
             // ── 타임 스탬프 ──
-            Save(outDir, "chat_id_timestamp_off.png", Panel("표시 꺼짐",
+            Save(outDir, "chat_id_timestamp_off.png", PanelToggle(false,
                 Line(NormalCol, ("모비딕 : 안녕하세요", NormalCol))));
-            Save(outDir, "chat_id_timestamp_on.png", Panel("표시 켜짐",
+            Save(outDir, "chat_id_timestamp_on.png", PanelToggle(true,
                 Line(NormalCol, ("[7시 15분 18초] ", SubText), ("모비딕 : 안녕하세요", NormalCol))));
 
             // ── 폰트 크기 ──
@@ -104,11 +105,11 @@ namespace TWChatOverlay.Services
                 LineSized(17, ("모비딕 : 폰트 크기를 바꿀 수 있습니다", NormalCol))));
 
             // ── 종류 말머리 ──
-            Save(outDir, "chat_category_prefix_off.png", Panel("말머리 꺼짐",
+            Save(outDir, "chat_category_prefix_off.png", PanelToggle(false,
                 Line(NormalCol, ("모비딕 : 사냥 가실 분?", NormalCol)),
                 Line(TeamCol, ("나비 : 집결지로 와주세요", TeamCol)),
                 Line(ClubCol, ("딩고 : 보스 곧 엽니다", ClubCol))));
-            Save(outDir, "chat_category_prefix_on.png", Panel("말머리 켜짐",
+            Save(outDir, "chat_category_prefix_on.png", PanelToggle(true,
                 Line(NormalCol, ("[일반] ", NormalCol), ("모비딕 : 사냥 가실 분?", NormalCol)),
                 Line(TeamCol, ("[팀] ", TeamCol), ("나비 : 집결지로 와주세요", TeamCol)),
                 Line(ClubCol, ("[클럽] ", ClubCol), ("딩고 : 보스 곧 엽니다", ClubCol))));
@@ -122,6 +123,13 @@ namespace TWChatOverlay.Services
 
         /// <summary>어두운 채팅 판 + 우상단 상태 배지.</summary>
         private static FrameworkElement Panel(string badge, params UIElement[] lines)
+            => PanelCore(Badge(badge), lines);
+
+        /// <summary>어두운 채팅 판 + 우상단에 실제 설정과 같은 모양의 토글 스위치 (켜짐/꺼짐 상태 대응용).</summary>
+        private static FrameworkElement PanelToggle(bool on, params UIElement[] lines)
+            => PanelCore(ToggleBadge(on), lines);
+
+        private static FrameworkElement PanelCore(UIElement badge, params UIElement[] lines)
         {
             var stack = new StackPanel { Margin = new Thickness(10, 8, 10, 8) };
             foreach (var line in lines)
@@ -129,7 +137,7 @@ namespace TWChatOverlay.Services
 
             var grid = new Grid();
             grid.Children.Add(stack);
-            grid.Children.Add(Badge(badge));
+            grid.Children.Add(badge);
 
             return new Border
             {
@@ -139,6 +147,36 @@ namespace TWChatOverlay.Services
                 BorderThickness = new Thickness(1),
                 CornerRadius = new CornerRadius(6),
                 Child = grid,
+            };
+        }
+
+        /// <summary>설정 화면의 토글 스위치와 같은 모양: 켜짐=민트 트랙+오른쪽 흰 손잡이, 꺼짐=회색 트랙+왼쪽 손잡이.</summary>
+        private static UIElement ToggleBadge(bool on)
+        {
+            var knob = new Border
+            {
+                Width = 12,
+                Height = 12,
+                CornerRadius = new CornerRadius(6),
+                Background = new SolidColorBrush(Colors.White),
+                HorizontalAlignment = on ? HorizontalAlignment.Right : HorizontalAlignment.Left,
+                VerticalAlignment = VerticalAlignment.Center,
+                Margin = new Thickness(2, 0, 2, 0),
+            };
+            var track = new Border
+            {
+                Width = 32,
+                Height = 16,
+                CornerRadius = new CornerRadius(8),
+                Background = new SolidColorBrush(on ? Mint : Color.FromRgb(0x3A, 0x42, 0x3E)),
+                Child = knob,
+            };
+            return new Border
+            {
+                HorizontalAlignment = HorizontalAlignment.Right,
+                VerticalAlignment = VerticalAlignment.Top,
+                Margin = new Thickness(0, 6, 6, 0),
+                Child = track,
             };
         }
 
