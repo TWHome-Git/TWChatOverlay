@@ -115,22 +115,10 @@ namespace TWChatOverlay.Services
 
                 // 단순 2모드 (전경 앱 감지 없음):
                 //  - 항상 위 ON: 다른 앱이 전경이 될 때마다 오버레이를 최상단 밴드로 재승격
-                //  - 항상 위 OFF: 시작 때만 위에 있고, 이후 전경 전환마다 최상단에서 내려 일반 창처럼 동작
-                // 메뉴 바는 어느 모드든 항상 위 (DemoteTopmostWindows에서 제외)
+                //  - 항상 위 OFF: 아무것도 하지 않는다 — 시작 때의 z-순서를 그대로 두고 OS에 맡긴다
                 var settings = ToastPresentationHelper.FindSharedSettings();
                 if (settings?.OverlaysAlwaysOnTop == false)
-                {
-                    DemoteTopmostWindows();
-
-                    // 메뉴 바만은 항상 위 유지
-                    foreach (Window window in Application.Current.Windows)
-                    {
-                        if (window is TWChatOverlay.Views.MenuWindow && window.IsVisible)
-                            TopmostWindowHelper.BringToTopmost(window);
-                    }
-
                     return;
-                }
 
                 Window? settingsHost = null;
                 foreach (Window window in Application.Current.Windows)
@@ -153,34 +141,6 @@ namespace TWChatOverlay.Services
             catch (Exception ex)
             {
                 AppLogger.Warn("Failed to reassert topmost overlays after foreground change.", ex);
-            }
-        }
-
-        /// <summary>표시 중인 topmost 오버레이들을 비-topmost 밴드로 내린다. 메뉴 바는 제외.</summary>
-        private static void DemoteTopmostWindows()
-        {
-            const int SWP_NOMOVE = 0x0002;
-            const int SWP_NOSIZE = 0x0001;
-            const int SWP_NOACTIVATE = 0x0010;
-
-            foreach (Window window in Application.Current.Windows)
-            {
-                if (!window.IsVisible || !window.Topmost)
-                    continue;
-
-                // 메뉴 바는 앱의 진입점이라 항상 접근 가능해야 한다 — 양보 대상에서 제외
-                if (window is TWChatOverlay.Views.MenuWindow)
-                    continue;
-
-                try
-                {
-                    var handle = new System.Windows.Interop.WindowInteropHelper(window).Handle;
-                    if (handle == IntPtr.Zero)
-                        continue;
-
-                    NativeMethods.SetWindowPos(handle, NativeMethods.HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
-                }
-                catch { }
             }
         }
 
