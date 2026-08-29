@@ -12,6 +12,13 @@ namespace TWChatOverlay.Services
     {
         private const string PlaceholderBody = "설명이 준비 중입니다.";
 
+        /// <summary>동기화·색 버튼 공통 설명 (색상 지정 가능한 표기 항목 뒤에 붙인다)</summary>
+        private const string ColorSyncGuide =
+            "\n\n■ 색상 동기화와 색 지정\n" +
+            "'동기화'가 민트색이면 켜진 상태로, 이 표기는 줄(채팅 종류)의 색을 그대로 따릅니다.\n" +
+            "'동기화'를 눌러 회색(꺼짐)으로 바꾸면 옆의 색 버튼이 활성화되고,\n" +
+            "색 버튼을 눌러 원하는 색을 고르면 이 표기에만 그 색이 적용됩니다.";
+
         public static (string Title, string Body, string[]? Frames) Get(string key)
         {
             if (!string.IsNullOrWhiteSpace(key) && Topics.TryGetValue(key, out var topic))
@@ -30,18 +37,23 @@ namespace TWChatOverlay.Services
                 "각 종류 왼쪽의 색 버튼으로 해당 채팅의 글자 색을 바꿀 수 있습니다.",
                 new[] { "chat_filter.png" }),
 
+            ["chat.id.sender"] = (
+                "아이디 색상",
+                "채팅 줄에서 보낸 사람 아이디 부분의 색을 지정합니다." + ColorSyncGuide,
+                new[] { "chat_id_sender_sync_on.png", "chat_id_sender_sync_off.png" }),
+
             ["chat.id.eta_level"] = (
                 "에타 레벨 표시",
                 "말한 사람의 에타 레벨을 아이디 뒤에 [레벨]로 붙여 보여줍니다.\n" +
                 "레벨 정보는 TW DB 에타 랭킹에서 가져오며, 랭킹에 없는 아이디는 표시되지 않습니다.\n" +
-                "'동기화'를 끄면 색 버튼으로 레벨 표기의 색을 따로 지정할 수 있습니다.",
+                "레벨 정보는 하루 단위로 갱신됩니다." + ColorSyncGuide,
                 new[] { "chat_id_eta_level_off.png", "chat_id_eta_level_on.png" }),
 
             ["chat.id.character"] = (
                 "캐릭터 표시",
                 "말한 사람의 캐릭터(직업) 이름을 아이디 뒤에 [캐릭터]로 붙여 보여줍니다.\n" +
                 "에타 레벨과 함께 쓰면 [레벨][캐릭터] 순서로 표시됩니다.\n" +
-                "'동기화'를 끄면 색 버튼으로 캐릭터 표기의 색을 따로 지정할 수 있습니다.",
+                "캐릭터 정보가 없는 아이디는 표시되지 않습니다." + ColorSyncGuide,
                 new[] { "chat_id_character_off.png", "chat_id_character_on.png" }),
 
             ["chat.id.id_tag"] = (
@@ -49,7 +61,7 @@ namespace TWChatOverlay.Services
                 "idtag.txt에 적어 둔 메모를 해당 아이디 뒤에 [태그]로 보여줍니다.\n" +
                 "[편집]을 눌러 메모장을 열고 \"아이디=태그\" 형식으로 한 줄씩 적으면 됩니다.\n" +
                 "예) 모비딕=상인  →  채팅에서 모비딕[상인]으로 표시\n" +
-                "'동기화'를 끄면 색 버튼으로 태그 표기의 색을 따로 지정할 수 있습니다.",
+                "태그를 지우려면 idtag.txt에서 해당 줄을 삭제하면 됩니다." + ColorSyncGuide,
                 new[] { "chat_id_tag_off.png", "chat_id_tag_on.png" }),
 
             ["chat.id.club_boss"] = (
@@ -61,8 +73,7 @@ namespace TWChatOverlay.Services
             ["chat.id.timestamp"] = (
                 "타임 스탬프",
                 "각 채팅 줄 앞에 게임 로그의 시각([N시 N분 N초])을 표시합니다.\n" +
-                "끄면 시각 없이 내용만 표시됩니다.\n" +
-                "'동기화'를 끄면 색 버튼으로 시각 표기의 색을 따로 지정할 수 있습니다.",
+                "끄면 시각 없이 내용만 표시됩니다." + ColorSyncGuide,
                 new[] { "chat_id_timestamp_off.png", "chat_id_timestamp_on.png" }),
 
             ["chat.font"] = (

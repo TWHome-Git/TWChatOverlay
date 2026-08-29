@@ -43,6 +43,14 @@ namespace TWChatOverlay.Services
                 Line(ShoutCol, ("외치기 : 잡템 삽니다 [상점왕]", ShoutCol)),
                 Line(SystemCol, ("[아이템] 을 획득하였습니다.", SystemCol))));
 
+            // ── 아이디 색상 동기화 ──
+            Save(outDir, "chat_id_sender_sync_on.png", Panel("동기화 켜짐 — 줄 색을 따름",
+                Line(NormalCol, ("모비딕", NormalCol), (" : 사냥 가실 분?", NormalCol)),
+                Line(TeamCol, ("[팀] ", TeamCol), ("나비", TeamCol), (" : 집결지로 와주세요", TeamCol))));
+            Save(outDir, "chat_id_sender_sync_off.png", Panel("동기화 꺼짐 — 지정한 색",
+                Line(NormalCol, ("모비딕", SkyCol), (" : 사냥 가실 분?", NormalCol)),
+                Line(TeamCol, ("[팀] ", TeamCol), ("나비", SkyCol), (" : 집결지로 와주세요", TeamCol))));
+
             // ── 에타 레벨 ──
             Save(outDir, "chat_id_eta_level_off.png", Panel("표시 꺼짐",
                 Line(NormalCol, ("모비딕", NormalCol), (" : 사냥 가실 분?", NormalCol))));
