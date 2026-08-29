@@ -411,6 +411,18 @@
                                     <TextBlock Text="시스템" Style="{StaticResource SettingsRowLabelStyle}"/>
                                 </DockPanel>
                             </Border>
+                            <Border Style="{StaticResource SettingsRowStyle}">
+                                <DockPanel>
+                                    <CheckBox DockPanel.Dock="Right" IsChecked="{Binding ShowCategoryPrefix}" Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
+                                    <StackPanel VerticalAlignment="Center">
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Text="종류 말머리" Style="{StaticResource SettingsRowLabelStyle}"/>
+                                            <Button Style="{StaticResource HelpButtonStyle}" Tag="chat.filter.category_prefix" Click="Help_Click"/>
+                                        </StackPanel>
+                                        <TextBlock Text="각 줄 앞에 [일반]/[팀]/[클럽]/[시스템] 표시" Style="{StaticResource SettingsRowHintStyle}"/>
+                                    </StackPanel>
+                                </DockPanel>
+                            </Border>
                         </WrapPanel>
                         </StackPanel>
 

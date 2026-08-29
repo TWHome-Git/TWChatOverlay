@@ -45,6 +45,21 @@ namespace TWChatOverlay.Services
                 rest = text[ts.Length..];
             }
 
+            // 1.5) 종류 말머리: [일반]/[팀]/[클럽]/[시스템] (외치기는 원문에 이미 '외치기 :'가 있어 생략)
+            if (settings.ShowCategoryPrefix)
+            {
+                string? prefix = log.Category switch
+                {
+                    ChatCategory.Normal or ChatCategory.NormalSelf => "[일반] ",
+                    ChatCategory.Team => "[팀] ",
+                    ChatCategory.Club => "[클럽] ",
+                    ChatCategory.System or ChatCategory.System2 or ChatCategory.System3 => "[시스템] ",
+                    _ => null,
+                };
+                if (prefix != null)
+                    segments.Add(new ChatSegment(prefix, ChatSegmentKind.Body));
+            }
+
             // 2) 아이디 구간 + 아이디 뒤 장식 조각. 아이디를 못 찾으면 통짜 본문으로.
             var decorations = BuildDecorations(log, settings);
             if (!TryFindSenderRange(rest, log, out int senderStart, out int senderEnd))

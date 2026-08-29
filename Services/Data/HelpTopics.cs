@@ -88,6 +88,12 @@ namespace TWChatOverlay.Services
                 "위치·크기·폰트는 창마다 따로 저장됩니다.",
                 new[] { "chat_clone_basic.png", "chat_clone_shout.png" }),
 
+            ["chat.filter.category_prefix"] = (
+                "종류 말머리",
+                "각 채팅 줄 앞에 [일반]/[팀]/[클럽]/[시스템] 종류를 붙여 어떤 채팅인지 한눈에 구분합니다.\n" +
+                "외치기는 원문에 이미 '외치기 :'가 있어 말머리를 붙이지 않습니다.",
+                new[] { "chat_category_prefix_off.png", "chat_category_prefix_on.png" }),
+
             // ===== 던전 도우미 =====
 
             ["dungeon.recapture_map"] = (

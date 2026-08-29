@@ -38,6 +38,8 @@ namespace TWChatOverlay.Models
         public bool ShowSystem { get; set; } = true;
         public bool ShowWhisper { get; set; } = true;
         public bool ShowClubBoss { get; set; } = true;
+        /// <summary>각 줄 앞에 [일반]/[팀]/[클럽]/[시스템] 종류 말머리를 붙인다.</summary>
+        public bool ShowCategoryPrefix { get; set; } = false;
         public string NormalColor { get; set; } = "#FFFFFF";
         public string TeamColor { get; set; } = "#00BFFF";
         public string ClubColor { get; set; } = "#00FF00";

@@ -110,6 +110,22 @@ namespace TWChatOverlay.ViewModels
             }
         }
 
+        /// <summary>각 줄 앞에 [일반]/[팀]/[클럽]/[시스템] 종류 말머리 표시.</summary>
+        public bool ShowCategoryPrefix
+        {
+            get => _settings.ShowCategoryPrefix;
+            set
+            {
+                if (_settings.ShowCategoryPrefix != value)
+                {
+                    _settings.ShowCategoryPrefix = value;
+                    OnPropertyChanged();
+                    _onColorsUpdated?.Invoke("CategoryPrefix"); // 열린 채팅창 즉시 다시 그리기
+                    SaveSettings();
+                }
+            }
+        }
+
         public bool ShowShout
         {
             get => _settings.ShowShout;
