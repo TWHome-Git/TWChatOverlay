@@ -353,7 +353,7 @@
                         <Border Style="{StaticResource SettingsTabStripStyle}">
                             <StackPanel Orientation="Horizontal">
                                 <RadioButton x:Name="ChatTabFilter" Content="채팅 필터" IsChecked="True" GroupName="ChatTabs" Style="{StaticResource SettingsTabStyle}"/>
-                                <RadioButton x:Name="ChatTabId" Content="아이디 표시" GroupName="ChatTabs" Style="{StaticResource SettingsTabStyle}"/>
+                                <RadioButton x:Name="ChatTabId" Content="채팅 표시" GroupName="ChatTabs" Style="{StaticResource SettingsTabStyle}"/>
                                 <RadioButton x:Name="ChatTabFont" Content="폰트" GroupName="ChatTabs" Style="{StaticResource SettingsTabStyle}"/>
                                 <RadioButton x:Name="ChatTabClone1" Content="서브 채팅창 1" GroupName="ChatTabs" Style="{StaticResource SettingsTabStyle}"/>
                                 <RadioButton x:Name="ChatTabClone2" Content="서브 채팅창 2" GroupName="ChatTabs" Style="{StaticResource SettingsTabStyle}"/>
@@ -427,7 +427,7 @@
                         </StackPanel>
 
                         <StackPanel Visibility="{Binding IsChecked, ElementName=ChatTabId, Converter={StaticResource BooleanToVisibilityConverter}}">
-                        <TextBlock Text="아이디 표시" Style="{StaticResource SettingsSectionLabelStyle}" Margin="0,0,0,6"/>
+                        <TextBlock Text="채팅 표시" Style="{StaticResource SettingsSectionLabelStyle}" Margin="0,0,0,6"/>
                         <WrapPanel>
                             <Border Style="{StaticResource SettingsRowStyle}">
                                 <DockPanel>
@@ -451,6 +451,37 @@
                                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                                         <TextBlock Text="에타 레벨" Style="{StaticResource SettingsRowLabelStyle}"/>
                                         <Button Style="{StaticResource HelpButtonStyle}" Tag="chat.id.eta_level" Click="Help_Click"/>
+                                    </StackPanel>
+                                </DockPanel>
+                            </Border>
+                            <Border Style="{StaticResource SettingsRowWideStyle}">
+                                <DockPanel>
+                                    <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
+                                        <StackPanel Margin="6,0,0,0" VerticalAlignment="Center">
+                                            <TextBlock Text="1~20" FontSize="9" Foreground="{DynamicResource OverlaySubtleTextBrush}" HorizontalAlignment="Center" Margin="0,0,0,2"/>
+                                            <Button Width="26" Height="14" Background="{Binding EtaLevelRange1Color}" IsEnabled="{Binding EtaLevelRangeColors}" Command="{Binding ColorPickCommand}" CommandParameter="EtaLevelRange1" Style="{StaticResource ColorPickerButtonStyle}"/>
+                                        </StackPanel>
+                                        <StackPanel Margin="6,0,0,0" VerticalAlignment="Center">
+                                            <TextBlock Text="21~40" FontSize="9" Foreground="{DynamicResource OverlaySubtleTextBrush}" HorizontalAlignment="Center" Margin="0,0,0,2"/>
+                                            <Button Width="26" Height="14" Background="{Binding EtaLevelRange2Color}" IsEnabled="{Binding EtaLevelRangeColors}" Command="{Binding ColorPickCommand}" CommandParameter="EtaLevelRange2" Style="{StaticResource ColorPickerButtonStyle}"/>
+                                        </StackPanel>
+                                        <StackPanel Margin="6,0,0,0" VerticalAlignment="Center">
+                                            <TextBlock Text="41~60" FontSize="9" Foreground="{DynamicResource OverlaySubtleTextBrush}" HorizontalAlignment="Center" Margin="0,0,0,2"/>
+                                            <Button Width="26" Height="14" Background="{Binding EtaLevelRange3Color}" IsEnabled="{Binding EtaLevelRangeColors}" Command="{Binding ColorPickCommand}" CommandParameter="EtaLevelRange3" Style="{StaticResource ColorPickerButtonStyle}"/>
+                                        </StackPanel>
+                                        <StackPanel Margin="6,0,0,0" VerticalAlignment="Center">
+                                            <TextBlock Text="61~80" FontSize="9" Foreground="{DynamicResource OverlaySubtleTextBrush}" HorizontalAlignment="Center" Margin="0,0,0,2"/>
+                                            <Button Width="26" Height="14" Background="{Binding EtaLevelRange4Color}" IsEnabled="{Binding EtaLevelRangeColors}" Command="{Binding ColorPickCommand}" CommandParameter="EtaLevelRange4" Style="{StaticResource ColorPickerButtonStyle}"/>
+                                        </StackPanel>
+                                        <StackPanel Margin="6,0,0,0" VerticalAlignment="Center">
+                                            <TextBlock Text="81~" FontSize="9" Foreground="{DynamicResource OverlaySubtleTextBrush}" HorizontalAlignment="Center" Margin="0,0,0,2"/>
+                                            <Button Width="26" Height="14" Background="{Binding EtaLevelRange5Color}" IsEnabled="{Binding EtaLevelRangeColors}" Command="{Binding ColorPickCommand}" CommandParameter="EtaLevelRange5" Style="{StaticResource ColorPickerButtonStyle}"/>
+                                        </StackPanel>
+                                        <CheckBox IsChecked="{Binding EtaLevelRangeColors}" Style="{StaticResource ToggleSwitchCheckBoxStyle}" Margin="12,0,0,0"/>
+                                    </StackPanel>
+                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                        <TextBlock Text="레벨별 색상" Style="{StaticResource SettingsRowLabelStyle}" ToolTip="에타 레벨 구간에 따라 [레벨] 색을 다르게 표시"/>
+                                        <Button Style="{StaticResource HelpButtonStyle}" Tag="chat.id.eta_range" Click="Help_Click"/>
                                     </StackPanel>
                                 </DockPanel>
                             </Border>

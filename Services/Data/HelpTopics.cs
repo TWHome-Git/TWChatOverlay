@@ -12,12 +12,10 @@ namespace TWChatOverlay.Services
     {
         private const string PlaceholderBody = "설명이 준비 중입니다.";
 
-        /// <summary>동기화·색 버튼 공통 설명 (색상 지정 가능한 표기 항목 뒤에 붙인다)</summary>
+        /// <summary>동기화·색 버튼 공통 안내 (사용법 그림은 '아이디' [?] 도움말에 있다)</summary>
         private const string ColorSyncGuide =
-            "\n\n■ 색상 동기화와 색 지정\n" +
-            "'동기화'가 민트색이면 켜진 상태로, 이 표기는 줄(채팅 종류)의 색을 그대로 따릅니다.\n" +
-            "'동기화'를 눌러 회색(꺼짐)으로 바꾸면 옆의 색 버튼이 활성화되고,\n" +
-            "색 버튼을 눌러 원하는 색을 고르면 이 표기에만 그 색이 적용됩니다.";
+            "\n\n'동기화'를 끄면 색 버튼으로 색을 따로 지정할 수 있습니다.\n" +
+            "자세한 방법은 [채팅 표시 > 아이디]의 [?] 도움말 그림을 참고하세요.";
 
         public static (string Title, string Body, string[]? Frames) Get(string key)
         {
@@ -39,15 +37,27 @@ namespace TWChatOverlay.Services
 
             ["chat.id.sender"] = (
                 "아이디 색상",
-                "채팅 줄에서 보낸 사람 아이디 부분의 색을 지정합니다." + ColorSyncGuide,
+                "채팅 줄에서 보낸 사람 아이디 부분의 색을 지정합니다.\n" +
+                "그림처럼 '동기화'가 민트색(켜짐)이면 줄 색을 그대로 따르고,\n" +
+                "'동기화'를 눌러 끄면 색 버튼이 활성화되어 원하는 색을 고를 수 있습니다.\n" +
+                "다른 표기(에타 레벨/캐릭터/태그/타임 스탬프)의 동기화·색 버튼도 같은 방식입니다.",
                 new[] { "chat_id_sender_sync_on.png", "chat_id_sender_sync_off.png" }),
 
             ["chat.id.eta_level"] = (
                 "에타 레벨 표시",
                 "말한 사람의 에타 레벨을 아이디 뒤에 [레벨]로 붙여 보여줍니다.\n" +
-                "레벨 정보는 TW DB 에타 랭킹에서 가져오며, 랭킹에 없는 아이디는 표시되지 않습니다.\n" +
-                "레벨 정보는 하루 단위로 갱신됩니다." + ColorSyncGuide,
+                "레벨 정보는 TW DB 에타 랭킹에서 가져오며, 하루 단위로 갱신됩니다.\n" +
+                "랭킹에 없거나 에타 정보가 없는(레벨 0) 아이디는 표시하지 않습니다.\n" +
+                "아래 '레벨별 색상'을 켜면 레벨 구간에 따라 색을 다르게 칠할 수 있습니다." + ColorSyncGuide,
                 new[] { "chat_id_eta_level_off.png", "chat_id_eta_level_on.png" }),
+
+            ["chat.id.eta_range"] = (
+                "레벨별 색상",
+                "에타 레벨 구간에 따라 [레벨] 표기 색을 다르게 칠합니다.\n" +
+                "구간: 1~20 / 21~40 / 41~60 / 61~80 / 81 이상 — 각 구간의 색 버튼으로 바꿀 수 있습니다.\n" +
+                "켜면 '동기화'나 개별 색 설정보다 우선 적용됩니다.\n" +
+                "에타 정보가 없는(레벨 0) 아이디는 레벨 자체가 표시되지 않습니다.",
+                new[] { "chat_id_eta_range_off.png", "chat_id_eta_range_on.png" }),
 
             ["chat.id.character"] = (
                 "캐릭터 표시",

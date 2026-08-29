@@ -30,6 +30,12 @@ namespace TWChatOverlay.Services
         private static readonly Color SystemCol = Color.FromRgb(0xFF, 0xFF, 0x00);
         private static readonly Color GoldCol = Color.FromRgb(0xFF, 0xD8, 0x4A);
         private static readonly Color SkyCol = Color.FromRgb(0x5A, 0xC8, 0xE8);
+        // 에타 레벨 구간별 기본 색 (IdDisplaySettings 기본값과 동일)
+        private static readonly Color Range1Col = Color.FromRgb(0xC8, 0xCD, 0xD2);
+        private static readonly Color Range2Col = Color.FromRgb(0x7E, 0xE0, 0x81);
+        private static readonly Color Range3Col = Color.FromRgb(0x5A, 0xC8, 0xE8);
+        private static readonly Color Range4Col = Color.FromRgb(0xC0, 0x8B, 0xFF);
+        private static readonly Color Range5Col = Color.FromRgb(0xFF, 0xD8, 0x4A);
 
         public static void RenderAll(string outDir)
         {
@@ -43,19 +49,27 @@ namespace TWChatOverlay.Services
                 Line(ShoutCol, ("외치기 : 잡템 삽니다 [상점왕]", ShoutCol)),
                 Line(SystemCol, ("[아이템] 을 획득하였습니다.", SystemCol))));
 
-            // ── 아이디 색상 동기화 ──
-            Save(outDir, "chat_id_sender_sync_on.png", Panel("동기화 켜짐 — 줄 색을 따름",
-                Line(NormalCol, ("모비딕", NormalCol), (" : 사냥 가실 분?", NormalCol)),
-                Line(TeamCol, ("[팀] ", TeamCol), ("나비", TeamCol), (" : 집결지로 와주세요", TeamCol))));
-            Save(outDir, "chat_id_sender_sync_off.png", Panel("동기화 꺼짐 — 지정한 색",
-                Line(NormalCol, ("모비딕", SkyCol), (" : 사냥 가실 분?", NormalCol)),
-                Line(TeamCol, ("[팀] ", TeamCol), ("나비", SkyCol), (" : 집결지로 와주세요", TeamCol))));
+            // ── 색상 동기화·색 지정 (설정 UI 목업으로 사용법을 그림으로) ──
+            Save(outDir, "chat_id_sender_sync_on.png", SyncGuideMock(syncOn: true));
+            Save(outDir, "chat_id_sender_sync_off.png", SyncGuideMock(syncOn: false));
 
             // ── 에타 레벨 ──
             Save(outDir, "chat_id_eta_level_off.png", Panel("표시 꺼짐",
                 Line(NormalCol, ("모비딕", NormalCol), (" : 사냥 가실 분?", NormalCol))));
             Save(outDir, "chat_id_eta_level_on.png", Panel("표시 켜짐",
                 Line(NormalCol, ("모비딕", NormalCol), ("[310]", GoldCol), (" : 사냥 가실 분?", NormalCol))));
+
+            // ── 에타 레벨별 색상 ──
+            Save(outDir, "chat_id_eta_range_off.png", Panel("레벨별 색상 꺼짐 — 한 가지 색",
+                Line(NormalCol, ("나비", NormalCol), ("[15]", GoldCol), (" : 반가워요", NormalCol)),
+                Line(NormalCol, ("딩고", NormalCol), ("[55]", GoldCol), (" : 사냥 가실 분?", NormalCol)),
+                Line(NormalCol, ("모비딕", NormalCol), ("[92]", GoldCol), (" : 보스 곧 엽니다", NormalCol))));
+            Save(outDir, "chat_id_eta_range_on.png", Panel("레벨별 색상 켜짐 — 구간별 색",
+                Line(NormalCol, ("나비", NormalCol), ("[15]", Range1Col), (" : 반가워요", NormalCol)),
+                Line(NormalCol, ("호밀", NormalCol), ("[33]", Range2Col), (" : 물약 팝니다", NormalCol)),
+                Line(NormalCol, ("딩고", NormalCol), ("[55]", Range3Col), (" : 사냥 가실 분?", NormalCol)),
+                Line(NormalCol, ("루카", NormalCol), ("[71]", Range4Col), (" : 집결지로 와주세요", NormalCol)),
+                Line(NormalCol, ("모비딕", NormalCol), ("[92]", Range5Col), (" : 보스 곧 엽니다", NormalCol))));
 
             // ── 캐릭터 ──
             Save(outDir, "chat_id_character_off.png", Panel("표시 꺼짐",
@@ -179,6 +193,90 @@ namespace TWChatOverlay.Services
                 Foreground = new SolidColorBrush(SubText),
                 FontFamily = new FontFamily("Malgun Gothic"),
                 Margin = new Thickness(0, 1, 0, 1),
+            };
+        }
+
+        /// <summary>
+        /// 색상 동기화 사용법 목업: 실제 설정 행(동기화 링크 + 색 버튼)을 그려서
+        /// "동기화를 끄면 색 버튼이 켜지고, 눌러 고른 색이 채팅에 적용된다"를 그림으로 보여준다.
+        /// </summary>
+        private static FrameworkElement SyncGuideMock(bool syncOn)
+        {
+            var textCol = Color.FromRgb(0xE8, 0xEA, 0xE9);
+
+            // 설정 행 목업: [아이디 ......... 동기화  ▓색버튼]
+            var row = new DockPanel { Margin = new Thickness(2, 2, 2, 6) };
+            var right = new StackPanel { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Center };
+            right.Children.Add(new TextBlock
+            {
+                Text = "동기화",
+                FontSize = 12,
+                FontFamily = new FontFamily("Malgun Gothic"),
+                Foreground = new SolidColorBrush(syncOn ? Mint : SubText),
+                Margin = new Thickness(0, 0, 8, 0),
+                VerticalAlignment = VerticalAlignment.Center,
+            });
+            right.Children.Add(new Border
+            {
+                Width = 28,
+                Height = 15,
+                CornerRadius = new CornerRadius(2),
+                Background = new SolidColorBrush(syncOn ? Color.FromRgb(0x3A, 0x42, 0x3E) : SkyCol),
+                BorderBrush = new SolidColorBrush(syncOn ? BorderCol : Mint),
+                BorderThickness = new Thickness(1),
+                Opacity = syncOn ? 0.5 : 1.0,
+                VerticalAlignment = VerticalAlignment.Center,
+            });
+            DockPanel.SetDock(right, Dock.Right);
+            row.Children.Add(right);
+            row.Children.Add(new TextBlock
+            {
+                Text = "아이디",
+                FontSize = 12,
+                FontFamily = new FontFamily("Malgun Gothic"),
+                Foreground = new SolidColorBrush(textCol),
+                VerticalAlignment = VerticalAlignment.Center,
+            });
+
+            var rowBox = new Border
+            {
+                Background = new SolidColorBrush(Color.FromRgb(0x18, 0x1F, 0x1C)),
+                BorderBrush = new SolidColorBrush(BorderCol),
+                BorderThickness = new Thickness(1),
+                CornerRadius = new CornerRadius(4),
+                Padding = new Thickness(10, 5, 10, 5),
+                Child = row,
+            };
+
+            var hint = new TextBlock
+            {
+                Text = syncOn
+                    ? "동기화 켜짐(민트색) — 색 버튼 비활성, 줄 색을 그대로 따름"
+                    : "동기화를 눌러 끄면 색 버튼 활성 — 눌러서 색을 고르면 바로 적용",
+                FontSize = 10,
+                FontFamily = new FontFamily("Malgun Gothic"),
+                Foreground = new SolidColorBrush(SubText),
+                Margin = new Thickness(2, 5, 2, 5),
+            };
+
+            // 적용 결과 채팅 줄
+            var result = syncOn
+                ? Line(NormalCol, ("모비딕", NormalCol), (" : 사냥 가실 분?", NormalCol))
+                : Line(NormalCol, ("모비딕", SkyCol), (" : 사냥 가실 분?", NormalCol));
+
+            var stack = new StackPanel { Margin = new Thickness(10, 8, 10, 8) };
+            stack.Children.Add(rowBox);
+            stack.Children.Add(hint);
+            stack.Children.Add(result);
+
+            return new Border
+            {
+                Width = PanelWidth,
+                Background = new SolidColorBrush(PanelBg),
+                BorderBrush = new SolidColorBrush(BorderCol),
+                BorderThickness = new Thickness(1),
+                CornerRadius = new CornerRadius(6),
+                Child = stack,
             };
         }
 
