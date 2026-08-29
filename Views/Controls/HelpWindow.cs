@@ -24,6 +24,10 @@ namespace TWChatOverlay.Views
 
         private readonly TextBlock _titleText;
         private readonly TextBlock _bodyText;
+        private readonly Image _frameImage;
+        private readonly System.Windows.Threading.DispatcherTimer _frameTimer;
+        private string[]? _frames;
+        private int _frameIndex;
 
         private HelpWindow()
         {
@@ -59,6 +63,20 @@ namespace TWChatOverlay.Views
             header.Children.Add(closeButton);
             header.Children.Add(_titleText);
 
+            _frameImage = new Image
+            {
+                Stretch = Stretch.Uniform,
+                MaxWidth = 328,
+                HorizontalAlignment = HorizontalAlignment.Left,
+                Margin = new Thickness(0, 0, 0, 10),
+                Visibility = Visibility.Collapsed,
+            };
+            RenderOptions.SetBitmapScalingMode(_frameImage, BitmapScalingMode.HighQuality);
+
+            // 프레임이 2장 이상이면 1.1초 간격으로 교차 표시 (GIF처럼 전후 비교)
+            _frameTimer = new System.Windows.Threading.DispatcherTimer { Interval = TimeSpan.FromMilliseconds(1100) };
+            _frameTimer.Tick += (_, _) => ShowNextFrame();
+
             _bodyText = new TextBlock
             {
                 FontSize = 12,
@@ -85,6 +103,7 @@ namespace TWChatOverlay.Views
 
             var root = new StackPanel();
             root.Children.Add(header);
+            root.Children.Add(_frameImage);
             root.Children.Add(bodyScroll);
             root.Children.Add(hint);
 
@@ -132,9 +151,10 @@ namespace TWChatOverlay.Views
                     _instance.Closed += (_, _) => _instance = null;
                 }
 
-                var (title, body) = HelpTopics.Get(key);
+                var (title, body, frames) = HelpTopics.Get(key);
                 _instance._titleText.Text = title;
                 _instance._bodyText.Text = body;
+                _instance.SetFrames(frames);
 
                 if (anchor.HasValue)
                 {
@@ -186,6 +206,55 @@ namespace TWChatOverlay.Views
             catch (Exception ex)
             {
                 AppLogger.Warn("Failed to show help window.", ex);
+            }
+        }
+
+        /// <summary>예시 프레임 목록을 설정한다. 2장 이상이면 교차 표시 타이머 시작.</summary>
+        private void SetFrames(string[]? frames)
+        {
+            _frameTimer.Stop();
+            _frames = frames;
+            _frameIndex = 0;
+
+            if (frames == null || frames.Length == 0)
+            {
+                _frameImage.Visibility = Visibility.Collapsed;
+                _frameImage.Source = null;
+                return;
+            }
+
+            _frameImage.Visibility = Visibility.Visible;
+            LoadFrame(0);
+            if (frames.Length > 1)
+                _frameTimer.Start();
+        }
+
+        private void ShowNextFrame()
+        {
+            if (_frames == null || _frames.Length < 2 || !IsVisible)
+                return;
+
+            _frameIndex = (_frameIndex + 1) % _frames.Length;
+            LoadFrame(_frameIndex);
+        }
+
+        private void LoadFrame(int index)
+        {
+            try
+            {
+                var uri = new Uri($"pack://application:,,,/Data/images/Help/{_frames![index]}", UriKind.Absolute);
+                var bitmap = new System.Windows.Media.Imaging.BitmapImage();
+                bitmap.BeginInit();
+                bitmap.UriSource = uri;
+                bitmap.CacheOption = System.Windows.Media.Imaging.BitmapCacheOption.OnLoad;
+                bitmap.EndInit();
+                _frameImage.Source = bitmap;
+            }
+            catch
+            {
+                // 이미지가 아직 없으면 그림 없이 텍스트만 보여준다
+                _frameImage.Visibility = Visibility.Collapsed;
+                _frameTimer.Stop();
             }
         }
 
