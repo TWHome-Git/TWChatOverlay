@@ -323,6 +323,19 @@ namespace TWChatOverlay.ViewModels
             set { if (_settings.IdTagColorSync == value) return; _settings.IdTagColorSync = value; OnPropertyChanged(); OnPropertyChanged(nameof(IdTagColorEditable)); _onColorsUpdated?.Invoke("Decoration"); SaveSettings(); }
         }
 
+        // 에타 레벨 구간별 색상 (켜면 동기화/개별 색보다 우선)
+        public bool EtaLevelRangeColors
+        {
+            get => _settings.EtaLevelRangeColors;
+            set { if (_settings.EtaLevelRangeColors == value) return; _settings.EtaLevelRangeColors = value; OnPropertyChanged(); _onColorsUpdated?.Invoke("Decoration"); SaveSettings(); }
+        }
+
+        public Brush EtaLevelRange1Color => StringToBrush(_settings.EtaLevelRange1Color);
+        public Brush EtaLevelRange2Color => StringToBrush(_settings.EtaLevelRange2Color);
+        public Brush EtaLevelRange3Color => StringToBrush(_settings.EtaLevelRange3Color);
+        public Brush EtaLevelRange4Color => StringToBrush(_settings.EtaLevelRange4Color);
+        public Brush EtaLevelRange5Color => StringToBrush(_settings.EtaLevelRange5Color);
+
         public bool SenderIdColorEditable => !_settings.SenderIdColorSync;
         public bool EtaLevelColorEditable => !_settings.EtaLevelColorSync;
         public bool EtaCharacterColorEditable => !_settings.EtaCharacterColorSync;
@@ -728,6 +741,11 @@ namespace TWChatOverlay.ViewModels
                 "Timestamp" => TimestampColor,
                 "IdTag" => IdTagColor,
                 "SenderId" => SenderIdColor,
+                "EtaLevelRange1" => EtaLevelRange1Color,
+                "EtaLevelRange2" => EtaLevelRange2Color,
+                "EtaLevelRange3" => EtaLevelRange3Color,
+                "EtaLevelRange4" => EtaLevelRange4Color,
+                "EtaLevelRange5" => EtaLevelRange5Color,
                 _ => null
             };
 
@@ -748,6 +766,11 @@ namespace TWChatOverlay.ViewModels
                 OnPropertyChanged(nameof(TimestampColor));
                 OnPropertyChanged(nameof(IdTagColor));
                 OnPropertyChanged(nameof(SenderIdColor));
+                OnPropertyChanged(nameof(EtaLevelRange1Color));
+                OnPropertyChanged(nameof(EtaLevelRange2Color));
+                OnPropertyChanged(nameof(EtaLevelRange3Color));
+                OnPropertyChanged(nameof(EtaLevelRange4Color));
+                OnPropertyChanged(nameof(EtaLevelRange5Color));
 
                 _onColorsUpdated?.Invoke(colorType);
                 SaveSettings();
@@ -787,6 +810,12 @@ namespace TWChatOverlay.ViewModels
             OnPropertyChanged(nameof(EtaCharacterColor));
             OnPropertyChanged(nameof(TimestampColor));
             OnPropertyChanged(nameof(IdTagColor));
+            OnPropertyChanged(nameof(EtaLevelRangeColors));
+            OnPropertyChanged(nameof(EtaLevelRange1Color));
+            OnPropertyChanged(nameof(EtaLevelRange2Color));
+            OnPropertyChanged(nameof(EtaLevelRange3Color));
+            OnPropertyChanged(nameof(EtaLevelRange4Color));
+            OnPropertyChanged(nameof(EtaLevelRange5Color));
             OnPropertyChanged(nameof(ShowShoutToastPopup));
             OnPropertyChanged(nameof(AutoCopyShoutNickname));
             OnPropertyChanged(nameof(ShoutToastDurationSeconds));

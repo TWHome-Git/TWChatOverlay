@@ -90,6 +90,7 @@ namespace TWChatOverlay.Services
                 {
                     ChatSegmentKind.SenderId when !settings.SenderIdColorSync => ChatBrushResolver.ToBrush(settings.SenderIdColor),
                     ChatSegmentKind.Timestamp when !settings.TimestampColorSync => ChatBrushResolver.ToBrush(settings.TimestampColor),
+                    ChatSegmentKind.EtaLevel when settings.EtaLevelRangeColors => EtaLevelRangeBrush(segment.Text, settings),
                     ChatSegmentKind.EtaLevel when !settings.EtaLevelColorSync => ChatBrushResolver.ToBrush(settings.EtaLevelColor),
                     ChatSegmentKind.Character when !settings.EtaCharacterColorSync => ChatBrushResolver.ToBrush(settings.EtaCharacterColor),
                     ChatSegmentKind.IdTag when !settings.IdTagColorSync => ChatBrushResolver.ToBrush(settings.IdTagColor),
@@ -103,6 +104,29 @@ namespace TWChatOverlay.Services
 
             // 기본 색은 문단 단위로 — 지정하지 않은 조각은 이 색을 물려받는다
             paragraph.Foreground = baseBrush;
+        }
+
+        /// <summary>"[N]" 형태의 레벨 텍스트에서 숫자를 읽어 구간(1~20/21~40/41~60/61~80/81~) 색을 고른다.</summary>
+        private static Brush? EtaLevelRangeBrush(string text, ChatSettings settings)
+        {
+            int level = 0;
+            foreach (char c in text)
+            {
+                if (char.IsDigit(c))
+                    level = level * 10 + (c - '0');
+                else if (level > 0)
+                    break;
+            }
+
+            string hex = level switch
+            {
+                <= 20 => settings.EtaLevelRange1Color,
+                <= 40 => settings.EtaLevelRange2Color,
+                <= 60 => settings.EtaLevelRange3Color,
+                <= 80 => settings.EtaLevelRange4Color,
+                _ => settings.EtaLevelRange5Color,
+            };
+            return ChatBrushResolver.ToBrush(hex);
         }
 
         private static List<ChatSegment> BuildDecorations(LogParser.ParseResult log, ChatSettings settings)
@@ -120,7 +144,8 @@ namespace TWChatOverlay.Services
                 if (EtaProfileResolver.TryGetProfile(lookupSenderId, out var profile)
                     || EtaProfileResolver.TryGetProfile(lookupSenderId.Trim(), out profile))
                 {
-                    if (settings.ShowEtaLevel)
+                    // 레벨 0은 에타 정보 없음 → 표기하지 않는다
+                    if (settings.ShowEtaLevel && profile.Level > 0)
                         result.Add(new ChatSegment($"[{profile.Level}]", ChatSegmentKind.EtaLevel));
                     if (settings.ShowEtaCharacter && !string.IsNullOrWhiteSpace(profile.CharacterName))
                         result.Add(new ChatSegment($"[{profile.CharacterName}]", ChatSegmentKind.Character));

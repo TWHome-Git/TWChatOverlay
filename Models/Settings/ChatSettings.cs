@@ -140,6 +140,19 @@ namespace TWChatOverlay.Models
         public string EtaCharacterColor { get => Chat.IdDisplay.EtaCharacterColor; set { Chat.IdDisplay.EtaCharacterColor = value; OnPropertyChanged(); } }
         [JsonIgnore]
         public string TimestampColor { get => Chat.IdDisplay.TimestampColor; set { Chat.IdDisplay.TimestampColor = value; OnPropertyChanged(); } }
+        // 에타 레벨 구간별 색상 (켜면 동기화/개별 색보다 우선)
+        [JsonIgnore]
+        public bool EtaLevelRangeColors { get => Chat.IdDisplay.EtaLevelRangeColors; set { Chat.IdDisplay.EtaLevelRangeColors = value; OnPropertyChanged(); } }
+        [JsonIgnore]
+        public string EtaLevelRange1Color { get => Chat.IdDisplay.EtaLevelRange1Color; set { Chat.IdDisplay.EtaLevelRange1Color = value; OnPropertyChanged(); } }
+        [JsonIgnore]
+        public string EtaLevelRange2Color { get => Chat.IdDisplay.EtaLevelRange2Color; set { Chat.IdDisplay.EtaLevelRange2Color = value; OnPropertyChanged(); } }
+        [JsonIgnore]
+        public string EtaLevelRange3Color { get => Chat.IdDisplay.EtaLevelRange3Color; set { Chat.IdDisplay.EtaLevelRange3Color = value; OnPropertyChanged(); } }
+        [JsonIgnore]
+        public string EtaLevelRange4Color { get => Chat.IdDisplay.EtaLevelRange4Color; set { Chat.IdDisplay.EtaLevelRange4Color = value; OnPropertyChanged(); } }
+        [JsonIgnore]
+        public string EtaLevelRange5Color { get => Chat.IdDisplay.EtaLevelRange5Color; set { Chat.IdDisplay.EtaLevelRange5Color = value; OnPropertyChanged(); } }
 
         #endregion
 
