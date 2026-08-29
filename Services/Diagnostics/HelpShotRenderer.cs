@@ -81,6 +81,16 @@ namespace TWChatOverlay.Services
             Save(outDir, "chat_font_17.png", Panel("크기 17",
                 LineSized(17, ("모비딕 : 폰트 크기를 바꿀 수 있습니다", NormalCol))));
 
+            // ── 종류 말머리 ──
+            Save(outDir, "chat_category_prefix_off.png", Panel("말머리 꺼짐",
+                Line(NormalCol, ("모비딕 : 사냥 가실 분?", NormalCol)),
+                Line(TeamCol, ("나비 : 집결지로 와주세요", TeamCol)),
+                Line(ClubCol, ("딩고 : 보스 곧 엽니다", ClubCol))));
+            Save(outDir, "chat_category_prefix_on.png", Panel("말머리 켜짐",
+                Line(NormalCol, ("[일반] ", NormalCol), ("모비딕 : 사냥 가실 분?", NormalCol)),
+                Line(TeamCol, ("[팀] ", TeamCol), ("나비 : 집결지로 와주세요", TeamCol)),
+                Line(ClubCol, ("[클럽] ", ClubCol), ("딩고 : 보스 곧 엽니다", ClubCol))));
+
             // ── 서브 채팅창: 탭 전환 ──
             Save(outDir, "chat_clone_basic.png", CloneMock(activeShout: false));
             Save(outDir, "chat_clone_shout.png", CloneMock(activeShout: true));
