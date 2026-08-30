@@ -52,6 +52,8 @@ namespace TWChatOverlay.Services
         private const string ContentArchiveMigrationKey = "content-archive-experience-removal";
         private const int CurrentContentArchiveMigrationVersion = 1;
         private const string RawLogRebuildCheckpointKey = "raw-log-rebuild";
+        private const string LogsFolderResetMigrationKey = "logs-folder-reset-5x";
+        private const int CurrentLogsFolderResetVersion = 1;
         private static readonly TimeSpan SourceLogFileReadTimeout = TimeSpan.FromMinutes(1);
         private const string AbandonDaySummarySuffix = ".summary.day.json";
         private readonly Dictionary<DateTime, AbandonMonthlySummarySnapshotEntry> _abandonDayBuffer = new();
@@ -201,6 +203,54 @@ namespace TWChatOverlay.Services
             finally
             {
                 _buildGate.Release();
+            }
+        }
+
+        /// <summary>
+        /// 4.x → 5.x 업그레이드 1회 마이그레이션: 구버전 형식의 Logs 폴더를 통째로 삭제해
+        /// 원본 채팅 로그에서 새로 재구축되게 한다. 적용 여부는 Logs\_state\migration.json에 기록되어
+        /// 이후 실행(신규 설치 포함)에서는 아무것도 하지 않는다.
+        /// </summary>
+        public void ResetLogsFolderForV5IfNeeded()
+        {
+            lock (_syncRoot)
+            {
+                try
+                {
+                    if (LoadMigrationVersion(LogsFolderResetMigrationKey) >= CurrentLogsFolderResetVersion)
+                        return;
+
+                    _abandonDayBuffer.Clear();
+
+                    if (Directory.Exists(_rootDirectory))
+                    {
+                        try
+                        {
+                            Directory.Delete(_rootDirectory, recursive: true);
+                            AppLogger.Info("Legacy Logs folder was deleted for the 5.x archive rebuild.");
+                        }
+                        catch (Exception ex)
+                        {
+                            // 폴더 삭제가 막히면(파일 잠금 등) 내용물 삭제로 폴백 — 남는 게 있어도 재구축이 덮어쓴다
+                            AppLogger.Warn("Failed to delete legacy Logs folder; falling back to per-file cleanup.", ex);
+                            EnsureArchiveDirectoriesExist();
+                            DeleteFilesByPattern(_shoutDirectory, "*");
+                            DeleteFilesByPattern(_itemDirectory, "*");
+                            DeleteFilesByPattern(_expDirectory, "*");
+                            DeleteFilesByPattern(_contentDirectory, "*");
+                            DeleteFilesByPattern(_AbandonDirectory, "*");
+                            DeleteFilesByPattern(_stateDirectory, "*");
+                            DeleteFilesByPattern(_rootDirectory, "*");
+                        }
+                    }
+
+                    EnsureArchiveDirectoriesExist();
+                    SaveMigrationVersion(LogsFolderResetMigrationKey, CurrentLogsFolderResetVersion);
+                }
+                catch (Exception ex)
+                {
+                    AppLogger.Warn("Failed to reset legacy Logs folder for 5.x.", ex);
+                }
             }
         }
 

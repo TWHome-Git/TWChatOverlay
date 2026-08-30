@@ -704,6 +704,9 @@ namespace TWChatOverlay.Views
                 UpdateStartupLoadingProgress(35, "최근 로그를 읽는 중입니다.");
                 ReadableLogArchiveService.LogArchiveInitializationResult archiveResult = await Task.Run(async () =>
                 {
+                    // 4.x → 5.x 업그레이드: 구버전 Logs 폴더를 1회 삭제하고 아래에서 새로 재구축한다
+                    _readableLogArchiveService.ResetLogsFolderForV5IfNeeded();
+
                     Func<DateTime, bool> dateFilter = onlyToday
                         ? (d => d.Date == DateTime.Today)
                         : (d => d.Date >= recentCutoff);
