@@ -28,6 +28,8 @@ namespace TWChatOverlay.Services
     {
         private static readonly Regex LeadingTimestampRegex = new(@"^\s*\[[^\]]+\]\s*", RegexOptions.Compiled);
         private static readonly Regex ShoutTrailingSenderRegex = new(@"\[(?<id>[^\[\]]+)\]\s*$", RegexOptions.Compiled);
+        // 종류 말머리 켜짐일 때 "외치기 : 내용 [보낸이]" → "[외치기] 보낸이 : 내용" 재구성용
+        private static readonly Regex ShoutRestructureRegex = new(@"^외치기\s*:\s*(?<msg>.*?)\s*\[(?<id>[^\[\]]+)\]\s*$", RegexOptions.Compiled);
 
         public static List<ChatSegment> Compose(string text, LogParser.ParseResult log, ChatSettings settings)
         {
@@ -45,19 +47,36 @@ namespace TWChatOverlay.Services
                 rest = text[ts.Length..];
             }
 
-            // 1.5) 종류 말머리: [일반]/[팀]/[클럽]/[시스템] (외치기는 원문에 이미 '외치기 :'가 있어 생략)
+            // 1.5) 종류 말머리: [일반]/[팀]/[클럽]/[시스템]
+            //      외치기는 "외치기 : 내용 [보낸이]" 원문을 "[외치기] 보낸이 : 내용"으로 재구성한다
             if (settings.ShowCategoryPrefix)
             {
-                string? prefix = log.Category switch
+                if (log.Category == ChatCategory.Shout)
                 {
-                    ChatCategory.Normal or ChatCategory.NormalSelf => "[일반] ",
-                    ChatCategory.Team => "[팀] ",
-                    ChatCategory.Club => "[클럽] ",
-                    ChatCategory.System or ChatCategory.System2 or ChatCategory.System3 => "[시스템] ",
-                    _ => null,
-                };
-                if (prefix != null)
-                    segments.Add(new ChatSegment(prefix, ChatSegmentKind.Body));
+                    Match shout = ShoutRestructureRegex.Match(rest);
+                    if (shout.Success)
+                    {
+                        segments.Add(new ChatSegment("[외치기] ", ChatSegmentKind.Body));
+                        segments.Add(new ChatSegment(shout.Groups["id"].Value, ChatSegmentKind.SenderId));
+                        segments.AddRange(BuildDecorations(log, settings));
+                        segments.Add(new ChatSegment(" : " + shout.Groups["msg"].Value, ChatSegmentKind.Body));
+                        return segments;
+                    }
+                    // 재구성 실패(보낸이 괄호가 없는 줄 등)면 원문 그대로 아래 일반 처리로
+                }
+                else
+                {
+                    string? prefix = log.Category switch
+                    {
+                        ChatCategory.Normal or ChatCategory.NormalSelf => "[일반] ",
+                        ChatCategory.Team => "[팀] ",
+                        ChatCategory.Club => "[클럽] ",
+                        ChatCategory.System or ChatCategory.System2 or ChatCategory.System3 => "[시스템] ",
+                        _ => null,
+                    };
+                    if (prefix != null)
+                        segments.Add(new ChatSegment(prefix, ChatSegmentKind.Body));
+                }
             }
 
             // 2) 아이디 구간 + 아이디 뒤 장식 조각. 아이디를 못 찾으면 통짜 본문으로.

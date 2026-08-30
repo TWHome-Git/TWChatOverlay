@@ -109,11 +109,13 @@ namespace TWChatOverlay.Services
             Save(outDir, "chat_category_prefix_off.png", PanelToggle(false,
                 Line(NormalCol, ("모비딕 : 사냥 가실 분?", NormalCol)),
                 Line(TeamCol, ("나비 : 집결지로 와주세요", TeamCol)),
-                Line(ClubCol, ("딩고 : 보스 곧 엽니다", ClubCol))));
+                Line(ClubCol, ("딩고 : 보스 곧 엽니다", ClubCol)),
+                Line(ShoutCol, ("외치기 : 훈장 50개 삽니다 [티치엘]", ShoutCol))));
             Save(outDir, "chat_category_prefix_on.png", PanelToggle(true,
                 Line(NormalCol, ("[일반] ", NormalCol), ("모비딕 : 사냥 가실 분?", NormalCol)),
                 Line(TeamCol, ("[팀] ", TeamCol), ("나비 : 집결지로 와주세요", TeamCol)),
-                Line(ClubCol, ("[클럽] ", ClubCol), ("딩고 : 보스 곧 엽니다", ClubCol))));
+                Line(ClubCol, ("[클럽] ", ClubCol), ("딩고 : 보스 곧 엽니다", ClubCol)),
+                Line(ShoutCol, ("[외치기] ", ShoutCol), ("티치엘", ShoutCol), (" : 훈장 50개 삽니다", ShoutCol))));
 
             // ── 서브 채팅창: 탭 전환 ──
             Save(outDir, "chat_clone_basic.png", CloneMock(activeShout: false));
