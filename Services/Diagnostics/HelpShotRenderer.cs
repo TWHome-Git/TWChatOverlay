@@ -56,65 +56,66 @@ namespace TWChatOverlay.Services
 
             // ── 에타 레벨 ──
             Save(outDir, "chat_id_eta_level_off.png", PanelToggle(false,
-                Line(NormalCol, ("모비딕", NormalCol), (" : 사냥 가실 분?", NormalCol))));
+                Line(NormalCol, ("아나이스", NormalCol), (" : 어비스 가실 분?", NormalCol))));
             Save(outDir, "chat_id_eta_level_on.png", PanelToggle(true,
-                Line(NormalCol, ("모비딕", NormalCol), ("[72]", GoldCol), (" : 사냥 가실 분?", NormalCol))));
+                Line(NormalCol, ("아나이스", NormalCol), ("[72]", GoldCol), (" : 어비스 가실 분?", NormalCol))));
 
             // ── 에타 레벨별 색상 ──
             Save(outDir, "chat_id_eta_range_off.png", PanelToggle(false,
-                Line(NormalCol, ("나비", NormalCol), ("[15]", GoldCol), (" : 반가워요", NormalCol)),
-                Line(NormalCol, ("딩고", NormalCol), ("[55]", GoldCol), (" : 사냥 가실 분?", NormalCol)),
-                Line(NormalCol, ("모비딕", NormalCol), ("[92]", GoldCol), (" : 보스 곧 엽니다", NormalCol))));
+                Line(NormalCol, ("보리스", NormalCol), ("[15]", GoldCol), (" : 반가워요", NormalCol)),
+                Line(NormalCol, ("벤야", NormalCol), ("[55]", GoldCol), (" : 어비스 가실 분?", NormalCol)),
+                Line(NormalCol, ("아나이스", NormalCol), ("[92]", GoldCol), (" : 클럽보스 5초후 잡아요", NormalCol))));
             Save(outDir, "chat_id_eta_range_on.png", PanelToggle(true,
-                Line(NormalCol, ("나비", NormalCol), ("[15]", Range1Col), (" : 반가워요", NormalCol)),
-                Line(NormalCol, ("호밀", NormalCol), ("[33]", Range2Col), (" : 물약 팝니다", NormalCol)),
-                Line(NormalCol, ("딩고", NormalCol), ("[55]", Range3Col), (" : 사냥 가실 분?", NormalCol)),
-                Line(NormalCol, ("루카", NormalCol), ("[71]", Range4Col), (" : 집결지로 와주세요", NormalCol)),
-                Line(NormalCol, ("모비딕", NormalCol), ("[92]", Range5Col), (" : 보스 곧 엽니다", NormalCol))));
+                Line(NormalCol, ("보리스", NormalCol), ("[15]", Range1Col), (" : ㅎㅇ", NormalCol)),
+                Line(NormalCol, ("루시안", NormalCol), ("[33]", Range2Col), (" : 에오니스 라피스 팝니다", NormalCol)),
+                Line(NormalCol, ("벤야", NormalCol), ("[55]", Range3Col), (" : 어비스 가실 분?", NormalCol)),
+                Line(NormalCol, ("로아미니", NormalCol), ("[71]", Range4Col), (" : 상실의 섬으로 와주세요", NormalCol)),
+                Line(NormalCol, ("아나이스", NormalCol), ("[92]", Range5Col), (" : 클럽 보스 5초후 잡아요", NormalCol))));
 
             // ── 캐릭터 ──
             Save(outDir, "chat_id_character_off.png", PanelToggle(false,
-                Line(NormalCol, ("모비딕", NormalCol), ("[72]", GoldCol), (" : 사냥 가실 분?", NormalCol))));
+                Line(NormalCol, ("비호", NormalCol), ("[72]", GoldCol), (" : 어비스 가실 분?", NormalCol))));
             Save(outDir, "chat_id_character_on.png", PanelToggle(true,
-                Line(NormalCol, ("모비딕", NormalCol), ("[72]", GoldCol), ("[루시안]", SkyCol), (" : 사냥 가실 분?", NormalCol))));
+                Line(NormalCol, ("비호", NormalCol), ("[72]", GoldCol), ("[아나이스]", SkyCol), (" : 어비스 가실 분?", NormalCol))));
 
             // ── 아이디 태그 ──
             Save(outDir, "chat_id_tag_off.png", PanelToggle(false,
-                Line(NormalCol, ("모비딕", NormalCol), (" : 물약 팝니다", NormalCol))));
+                Line(NormalCol, ("아나이스", NormalCol), (" : 에오니스 라피스 팝니다", NormalCol))));
             Save(outDir, "chat_id_tag_on.png", PanelToggle(true,
-                Line(NormalCol, ("모비딕", NormalCol), ("[상인]", SkyCol), (" : 물약 팝니다", NormalCol)),
-                DimLine("(idtag.txt: 모비딕=상인)")));
+                Line(NormalCol, ("아나이스", NormalCol), ("[혐사]", SkyCol), (" : 에오니스 라피스 팝니다", NormalCol)),
+                DimLine("(idtag.txt: 아나이스 = 혐사)")));
 
             // ── 클럽 보스 ──
             Save(outDir, "chat_id_club_boss_on.png", PanelToggle(true,
-                Line(ClubCol, ("[클럽] 딩고 : 보스 갑니다", ClubCol)),
-                Line(SystemCol, ("클럽 공지 : '[클럽 보스] 그람존' 에 '딩고' 님이 참가하셨습니다.", SystemCol))));
+                Line(ClubCol, ("[클럽] 벤야 : 클럽 보스 갑니다", ClubCol)),
+                Line(SystemCol, ("클럽 공지 : '[클럽 보스] 그람존' 에 '벤야' 님이 참가하셨습니다.", SystemCol))));
             Save(outDir, "chat_id_club_boss_off.png", PanelToggle(false,
-                Line(ClubCol, ("[클럽] 딩고 : 보스 갑니다", ClubCol)),
+                Line(ClubCol, ("[클럽] 벤야 : 클럽 보스 갑니다", ClubCol)),
                 DimLine("(클럽 보스 공지는 표시되지 않음)")));
 
             // ── 타임 스탬프 ──
             Save(outDir, "chat_id_timestamp_off.png", PanelToggle(false,
-                Line(NormalCol, ("모비딕 : 안녕하세요", NormalCol))));
+                Line(NormalCol, ("아나이스 : 안녕하세요", NormalCol))));
             Save(outDir, "chat_id_timestamp_on.png", PanelToggle(true,
-                Line(NormalCol, ("[7시 15분 18초] ", SubText), ("모비딕 : 안녕하세요", NormalCol))));
+                Line(NormalCol, ("[7시 15분 18초] ", SubText), ("아나이스 : 안녕하세요", NormalCol))));
 
             // ── 폰트 크기 ──
             Save(outDir, "chat_font_13.png", Panel("크기 13",
-                LineSized(13, ("모비딕 : 폰트 크기를 바꿀 수 있습니다", NormalCol))));
+                LineSized(13, ("아나이스 : 폰트 크기를 바꿀 수 있습니다", NormalCol))));
             Save(outDir, "chat_font_17.png", Panel("크기 17",
-                LineSized(17, ("모비딕 : 폰트 크기를 바꿀 수 있습니다", NormalCol))));
+                LineSized(17, ("아나이스 : 폰트 크기를 바꿀 수 있습니다", NormalCol))));
 
             // ── 종류 말머리 ──
+
             Save(outDir, "chat_category_prefix_off.png", PanelToggle(false,
-                Line(NormalCol, ("모비딕 : 사냥 가실 분?", NormalCol)),
-                Line(TeamCol, ("나비 : 집결지로 와주세요", TeamCol)),
-                Line(ClubCol, ("딩고 : 보스 곧 엽니다", ClubCol)),
-                Line(ShoutCol, ("외치기 : 훈장 50개 삽니다 [티치엘]", ShoutCol))));
+                Line(NormalCol, ("아나이스 : 어비스 가실 분?", NormalCol)),
+                Line(TeamCol, ("로아미니 : 상실의 섬으로 와주세요", TeamCol)),
+                Line(ClubCol, ("벤야 : 클럽 보스 5초후 잡아요", ClubCol)),
+                Line(ShoutCol, ("티치엘 : 훈장 50개 삽니다 [티치엘]", ShoutCol))));
             Save(outDir, "chat_category_prefix_on.png", PanelToggle(true,
-                Line(NormalCol, ("[일반] ", NormalCol), ("모비딕 : 사냥 가실 분?", NormalCol)),
-                Line(TeamCol, ("[팀] ", TeamCol), ("나비 : 집결지로 와주세요", TeamCol)),
-                Line(ClubCol, ("[클럽] ", ClubCol), ("딩고 : 보스 곧 엽니다", ClubCol)),
+                Line(NormalCol, ("[일반] ", NormalCol), ("아나이스 : 어비스 가실 분?", NormalCol)),
+                Line(TeamCol, ("[팀] ", TeamCol), ("로아미니 : 상실의 섬으로 와주세요", TeamCol)),
+                Line(ClubCol, ("[클럽] ", ClubCol), ("벤야 : 클럽 보스 5초후 잡아요", ClubCol)),
                 Line(ShoutCol, ("[외치기] ", ShoutCol), ("티치엘", ShoutCol), (" : 훈장 50개 삽니다", ShoutCol))));
 
             // ── 서브 채팅창: 탭 전환 ──
@@ -131,17 +132,17 @@ namespace TWChatOverlay.Services
 
             // ── 외치기: 닉네임 자동복사 (실제 창) ──
             Save(outDir, "shout_autocopy_off.png", PanelToggle(false,
-                RealShoutToast("잡템 일괄 삽니다 [상점왕]"),
+                RealShoutToast("세크리드 주화 주머니 일괄 삽니다 [김주화]"),
                 DimLine("(클립보드 변화 없음)")));
             Save(outDir, "shout_autocopy_on.png", PanelToggle(true,
-                RealShoutToast("잡템 일괄 삽니다 [상점왕]"),
-                Chip("클립보드에 '상점왕' 복사됨")));
+                RealShoutToast("세크리드 주화 주머니 일괄 삽니다 [김주화]"),
+                Chip("클립보드에 '김주화' 복사됨")));
 
             // ── 외치기: 토스트 글자 크기 (실제 창) ──
             Save(outDir, "shout_toast_font_13.png", Panel("크기 13",
-                RealShoutToast("각인 도와드려요 [세공사]", 13)));
+                RealShoutToast("부가옵션 전이 도와드려요 [사기꾼]", 13)));
             Save(outDir, "shout_toast_font_20.png", Panel("크기 20",
-                RealShoutToast("각인 도와드려요 [세공사]", 20)));
+                RealShoutToast("부가옵션 전이 도와드려요 [사기꾼]", 20)));
 
             // ── 화면: 투명도 ──
             Save(outDir, "display_opacity_100.png", OpacityMock(0xF2, "투명도 100%"));
@@ -161,12 +162,12 @@ namespace TWChatOverlay.Services
 
             // ── 키워드: 색상 강조 ──
             Save(outDir, "keyword_color_off.png", PanelToggle(false,
-                Line(ShoutCol, ("외치기 : 룬 재료 팝니다 [상점왕]", ShoutCol)),
-                Line(ShoutCol, ("외치기 : 클럽원 모집 [달빛클럽]", ShoutCol))));
+                Line(ShoutCol, ("외치기 : 세크리드 주화 주머니 팝니다 [김주화]", ShoutCol)),
+                Line(ShoutCol, ("외치기 : 클럽원 모집 [김클럽]", ShoutCol))));
             Save(outDir, "keyword_color_on.png", PanelToggle(true,
-                Line(ShoutCol, ("외치기 : ", ShoutCol), ("룬 재료", Color.FromRgb(0xFF, 0x5A, 0x5A)), (" 팝니다 [상점왕]", ShoutCol)),
-                Line(ShoutCol, ("외치기 : 클럽원 모집 [달빛클럽]", ShoutCol)),
-                DimLine("(키워드: @룬 재료)")));
+                Line(ShoutCol, ("외치기 : ", ShoutCol), ("세크리드 주화 주머니", Color.FromRgb(0xFF, 0x5A, 0x5A)), (" 팝니다 [김주화]", ShoutCol)),
+                Line(ShoutCol, ("외치기 : 클럽원 모집 [김클럽]", ShoutCol)),
+                DimLine("(키워드: @세크리드 주화 주머니)")));
 
             // ── 경험치 추적 (실제 뷰) ──
             Save(outDir, "exp_tracker_off.png", PanelToggle(false,
@@ -177,7 +178,7 @@ namespace TWChatOverlay.Services
             Save(outDir, "exp_cum_off.png", PanelToggle(false,
                 DimLine("(누적 표시 없음)")));
             Save(outDir, "exp_cum_on.png", PanelToggle(true,
-                RealExpAlert("누적 경험치 1,234.5억")));
+                RealExpAlert("누적 경험치 100억")));
 
             // ── 저효율 알림 (실제 창) ──
             Save(outDir, "exp_loweff_off.png", PanelToggle(false,
@@ -200,9 +201,9 @@ namespace TWChatOverlay.Services
 
             // ── 필드 보스 알림 ──
             Save(outDir, "boss_alert_3min.png", Panel("3분 전",
-                ToastMock("필드 보스", "아르칸 등장 3분 전", SystemCol)));
+                ToastMock("필드 보스", "아칸 등장 3분 전", SystemCol)));
             Save(outDir, "boss_alert_spawn.png", Panel("5초 전",
-                ToastMock("필드 보스", "아르칸이 곧 등장합니다!", Color.FromRgb(0xFF, 0x5A, 0x5A))));
+                ToastMock("필드 보스", "아칸이 곧 등장합니다!", Color.FromRgb(0xFF, 0x5A, 0x5A))));
 
             // ── 던전 도우미 알림들 (실제 창) ──
             Save(outDir, "dungeon_wave_off.png", PanelToggle(false, DimLine("(웨이브가 끝나도 알림 없음)")));
@@ -210,7 +211,7 @@ namespace TWChatOverlay.Services
                 RealDungeonAlert("웨이브 종료")));
             Save(outDir, "dungeon_reflect_off.png", PanelToggle(false, DimLine("(반사 패턴 알림 없음)")));
             Save(outDir, "dungeon_reflect_on.png", PanelToggle(true,
-                RealDungeonAlert("반사 패턴!")));
+                RealDungeonAlert("2사도 반사 패턴!")));
             Save(outDir, "dungeon_abandon_count_off.png", PanelToggle(false, DimLine("(입장해도 알림 없음)")));
             Save(outDir, "dungeon_abandon_count_on.png", PanelToggle(true,
                 RealDungeonAlert("어밴던로드 입장 3회")));
