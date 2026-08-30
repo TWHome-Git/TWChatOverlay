@@ -251,7 +251,11 @@ namespace TWChatOverlay.ViewModels
         public double DungeonCountDisplayFontSize
         {
             get => _dungeonCountDisplayFontSize;
-            set => SetSetting(ref _dungeonCountDisplayFontSize, value, (settings, newValue) => settings.DungeonCountDisplayFontSize = newValue);
+            set
+            {
+                if (SetSetting(ref _dungeonCountDisplayFontSize, value, (settings, newValue) => settings.DungeonCountDisplayFontSize = newValue))
+                    DungeonCountDisplayWindowService.ApplyFontSize(value);
+            }
         }
 
         private double _cravingPleasureCountFontSize;
@@ -261,7 +265,11 @@ namespace TWChatOverlay.ViewModels
         public double CravingPleasureCountFontSize
         {
             get => _cravingPleasureCountFontSize;
-            set => SetSetting(ref _cravingPleasureCountFontSize, value, (settings, newValue) => settings.CravingPleasureCountFontSize = newValue);
+            set
+            {
+                if (SetSetting(ref _cravingPleasureCountFontSize, value, (settings, newValue) => settings.CravingPleasureCountFontSize = newValue))
+                    DungeonCountDisplayWindowService.ApplyFontSize(value);
+            }
         }
 
         public int CravingPleasureCountAlertDurationSeconds
@@ -279,13 +287,35 @@ namespace TWChatOverlay.ViewModels
         public double ExperienceAlertFontSize
         {
             get => _experienceAlertFontSize;
-            set => SetSetting(ref _experienceAlertFontSize, value, (settings, newValue) => settings.ExperienceAlertFontSize = newValue);
+            set
+            {
+                if (SetSetting(ref _experienceAlertFontSize, value, (settings, newValue) => settings.ExperienceAlertFontSize = newValue))
+                    ExperienceAlertWindowService.ApplyFontSize(value);
+            }
         }
 
         public double ItemDropToastFontSize
         {
             get => _itemDropToastFontSize;
-            set => SetSetting(ref _itemDropToastFontSize, value, (settings, newValue) => settings.ItemDropToastFontSize = newValue);
+            set
+            {
+                if (SetSetting(ref _itemDropToastFontSize, value, (settings, newValue) => settings.ItemDropToastFontSize = newValue))
+                {
+                    try { Views.ItemDropHelperWindow.Instance?.SetFontSize(value); } catch { }
+                }
+            }
+        }
+
+        private double _bossAlertToastFontSize;
+
+        public double BossAlertToastFontSize
+        {
+            get => _bossAlertToastFontSize;
+            set
+            {
+                if (SetSetting(ref _bossAlertToastFontSize, value, (settings, newValue) => settings.BossAlertToastFontSize = newValue))
+                    Views.BossAlertToastWindow.ApplyFontSize(value);
+            }
         }
 
         public double ItemDropAlertVolumePercent
@@ -382,10 +412,44 @@ namespace TWChatOverlay.ViewModels
             _expBuffAlertVolumePercent = _settings.ExpBuffAlertVolumePercent;
             _buffTrackerEndSoundVolumePercent = _settings.BuffTrackerEndSoundVolumePercent;
             _bossAlertVolumePercent = _settings.BossAlertVolumePercent;
+            _bossAlertToastFontSize = _settings.BossAlertToastFontSize;
             ReplaceBossAlarmCards(_bossAlarmCardProvider.CreateCards());
             _ = InitializeBossAlarmCardsAsync();
             _ = InitializeDropItemFilterListsAsync();
             RefreshExperienceLimitState();
+
+            // 잠금 해제 인스펙터 등 밖에서 설정이 바뀌면 화면 값도 실시간 동기화
+            _settings.PropertyChanged += Settings_PropertyChanged;
+        }
+
+        private void Settings_PropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+        {
+            switch (e.PropertyName)
+            {
+                case nameof(ChatSettings.DungeonCountDisplayFontSize):
+                    SyncFromSettings(ref _dungeonCountDisplayFontSize, _settings.DungeonCountDisplayFontSize, nameof(DungeonCountDisplayFontSize));
+                    break;
+                case nameof(ChatSettings.CravingPleasureCountFontSize):
+                    SyncFromSettings(ref _cravingPleasureCountFontSize, _settings.CravingPleasureCountFontSize, nameof(CravingPleasureCountFontSize));
+                    break;
+                case nameof(ChatSettings.ExperienceAlertFontSize):
+                    SyncFromSettings(ref _experienceAlertFontSize, _settings.ExperienceAlertFontSize, nameof(ExperienceAlertFontSize));
+                    break;
+                case nameof(ChatSettings.ItemDropToastFontSize):
+                    SyncFromSettings(ref _itemDropToastFontSize, _settings.ItemDropToastFontSize, nameof(ItemDropToastFontSize));
+                    break;
+                case nameof(ChatSettings.BossAlertToastFontSize):
+                    SyncFromSettings(ref _bossAlertToastFontSize, _settings.BossAlertToastFontSize, nameof(BossAlertToastFontSize));
+                    break;
+            }
+        }
+
+        private void SyncFromSettings(ref double field, double value, string propertyName)
+        {
+            if (field.Equals(value))
+                return;
+            field = value;
+            OnPropertyChanged(propertyName);
         }
 
         private void SaveSettings()

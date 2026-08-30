@@ -1435,6 +1435,15 @@
                                 <TextBlock Text="알림 볼륨" Style="{StaticResource SettingsRowLabelStyle}"/>
                             </DockPanel>
                         </Border>
+                        <Border Style="{StaticResource SettingsRowStyle}" BorderThickness="0">
+                            <DockPanel>
+                                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                                    <Slider Minimum="10" Maximum="40" Value="{Binding BossAlertToastFontSize, Mode=TwoWay}" TickFrequency="1" IsSnapToTickEnabled="True" VerticalAlignment="Center" Width="140"/>
+                                    <TextBlock Text="{Binding BossAlertToastFontSize, StringFormat={}{0:F0}}" Foreground="{DynamicResource TextBrush}" Width="26" TextAlignment="Right" VerticalAlignment="Center" FontSize="12"/>
+                                </StackPanel>
+                                <TextBlock Text="알림 창 폰트 크기" Style="{StaticResource SettingsRowLabelStyle}"/>
+                            </DockPanel>
+                        </Border>
                     </StackPanel>
 
                 </StackPanel>

@@ -84,6 +84,19 @@ namespace TWChatOverlay.Services
             }));
         }
 
+        /// <summary>설정 슬라이더 변경을 열려 있는 토스트(미리보기 포함)에 즉시 반영한다.</summary>
+        public static void ApplyFontSize(double size)
+        {
+            System.Windows.Application.Current.Dispatcher.BeginInvoke(new System.Action(() =>
+            {
+                try { _previewToast?.SetFontSize(size); } catch { }
+                foreach (var toast in ActiveToasts)
+                {
+                    try { toast.SetFontSize(size); } catch { }
+                }
+            }));
+        }
+
         public static void ClosePositionPreview(ChatSettings settings)
         {
             Application.Current.Dispatcher.BeginInvoke(new Action(() =>

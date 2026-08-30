@@ -91,6 +91,16 @@ namespace TWChatOverlay.Services
             }));
         }
 
+        /// <summary>설정 슬라이더 변경을 열려 있는 알림 창에 즉시 반영한다.</summary>
+        public static void ApplyFontSize(double size)
+        {
+            Application.Current.Dispatcher.BeginInvoke(new Action(() =>
+            {
+                if (_window != null && _window.IsLoaded)
+                    _window.SetFontSize(size);
+            }));
+        }
+
         public static void Close()
         {
             Application.Current.Dispatcher.BeginInvoke(new Action(() =>

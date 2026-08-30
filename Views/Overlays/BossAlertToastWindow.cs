@@ -234,6 +234,12 @@ namespace TWChatOverlay.Views
             }
         }
 
+        /// <summary>설정 슬라이더 변경을 열려 있는 알림 창에 즉시 반영한다.</summary>
+        public static void ApplyFontSize(double size)
+        {
+            try { _instance?.SetFontSize(size); } catch { }
+        }
+
         /// <summary>잠금 해제 종료: 미리보기였다면 위치를 저장하고 닫는다.</summary>
         public static void ClosePositionPreview()
         {
