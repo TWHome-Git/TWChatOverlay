@@ -51,13 +51,16 @@ namespace TWChatOverlay.Views
             InitializeComponent();
             WindowFontService.Apply(this);
             _settings = settings;
+            _mainWindow = mainWindow;
             if (!_settings.InitialSetupWizardCompleted)
             {
+                // 최초 실행: 공장 기본 설정(Defaults\DefaultSettings.json)을 마법사 시작값으로 적용
+                try { _mainWindow?.SettingsViewModelInstance.ApplyFactoryDefaultsForWizard(); }
+                catch (Exception ex) { AppLogger.Warn("Failed to apply factory defaults for setup wizard.", ex); }
                 ResetInitialWindowPositionsToOrigin();
                 ConfigService.SaveDeferred(_settings);
             }
             _addonViewModel = new AddonViewModel(settings);
-            _mainWindow = mainWindow;
             RenderStep();
         }
 

@@ -760,6 +760,23 @@ namespace TWChatOverlay.ViewModels
             _onSettingsReset?.Invoke();
         }
 
+        /// <summary>
+        /// 설정 마법사 최초 실행 시 공장 기본 설정(Defaults\DefaultSettings.json)을 시작값으로 적용한다.
+        /// 이미 지정된 채팅 로그 경로는 유지한다.
+        /// </summary>
+        public bool ApplyFactoryDefaultsForWizard()
+        {
+            var factoryDefaults = ConfigService.TryLoadFactoryDefaults();
+            if (factoryDefaults == null)
+                return false;
+
+            string existingLogPath = _settings.ChatLogFolderPath ?? string.Empty;
+            bool applied = ApplySettingsSnapshot(factoryDefaults, "factory defaults (setup wizard)");
+            if (applied && !string.IsNullOrWhiteSpace(existingLogPath))
+                _settings.ChatLogFolderPath = existingLogPath;
+            return applied;
+        }
+
         /// <summary>현재 설정 전체를 프로필로 저장.</summary>
         public bool SaveProfile(string name) => SettingsProfileService.Save(name, _settings);
 
