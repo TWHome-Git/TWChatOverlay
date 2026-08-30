@@ -94,7 +94,7 @@ namespace TWChatOverlay.Services
                 AppLogger.Info($"Boss alarm triggered. Boss='{boss.Name}', Trigger='{label}', Occurrence='{occurrence:yyyy-MM-dd HH:mm:ss}'");
                 NotificationService.PlayAlert(ResolveSoundFile(boss.Id, offsetBefore));
                 // 팝업 알림: 보스 출현 5초 후 자동으로 닫힌다
-                Views.BossAlertToastWindow.ShowAlert(boss.Name, label, occurrence);
+                Views.BossAlertToastWindow.ShowAlert(boss.Name, label, occurrence, _settings);
                 return true;
             }
 
