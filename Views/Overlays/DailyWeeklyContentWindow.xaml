@@ -4,7 +4,7 @@
         xmlns:views="clr-namespace:TWChatOverlay.Views"
         xmlns:models="clr-namespace:TWChatOverlay.Models"
         xmlns:converters="clr-namespace:TWChatOverlay.Converters"
-        Title="일간/주간 컨텐츠 확인"
+        Title="일일/주간 컨텐츠"
         Width="280" Height="540"
         Background="Transparent"
         AllowsTransparency="True"

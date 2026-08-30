@@ -45,9 +45,9 @@ namespace TWChatOverlay.Services
 
             // ── 기본 채팅 필터: 종류별 색 한눈에 ──
             Save(outDir, "chat_filter.png", Panel("채팅 종류별 색",
-                Line(NormalCol, ("[일반] 아나이스 : 아페테리아 가실 분?", NormalCol)),
+                Line(NormalCol, ("[일반] 아나이스 : 아페티리아 가실 분?", NormalCol)),
                 Line(TeamCol, ("[팀] 벤야 : 입구로 와주세요", TeamCol)),
-                Line(ClubCol, ("[클럽] 리체 : 클럽보스 하실분?", ClubCol)),
+                Line(ClubCol, ("[클럽] 리체 : 클럽 보스 하실 분?", ClubCol)),
                 Line(ShoutCol, ("[외치기] 티치엘 : 훈장 50개 삽니다", ShoutCol)),
                 Line(SystemCol, ("[시스템] : [에오니스 라피스] 아이템을 획득하였습니다.",SystemCol))));
 
@@ -65,13 +65,13 @@ namespace TWChatOverlay.Services
             Save(outDir, "chat_id_eta_range_off.png", PanelToggle(false,
                 Line(NormalCol, ("보리스", NormalCol), ("[15]", NormalCol), (" : 반가워요", NormalCol)),
                 Line(NormalCol, ("벤야", NormalCol), ("[55]", NormalCol), (" : 어비스 가실 분?", NormalCol)),
-                Line(NormalCol, ("아나이스", NormalCol), ("[92]", NormalCol), (" : 클럽보스 5초후 잡아요", NormalCol))));
+                Line(NormalCol, ("아나이스", NormalCol), ("[92]", NormalCol), (" : 클럽 보스 5초 후 잡아요", NormalCol))));
             Save(outDir, "chat_id_eta_range_on.png", PanelToggle(true,
                 Line(NormalCol, ("보리스", NormalCol), ("[15]", Range1Col), (" : ㅎㅇ", NormalCol)),
                 Line(NormalCol, ("루시안", NormalCol), ("[33]", Range2Col), (" : 에오니스 라피스 팝니다", NormalCol)),
                 Line(NormalCol, ("벤야", NormalCol), ("[55]", Range3Col), (" : 어비스 가실 분?", NormalCol)),
                 Line(NormalCol, ("로아미니", NormalCol), ("[71]", Range4Col), (" : 상실의 섬으로 와주세요", NormalCol)),
-                Line(NormalCol, ("아나이스", NormalCol), ("[92]", Range5Col), (" : 클럽 보스 5초후 잡아요", NormalCol))));
+                Line(NormalCol, ("아나이스", NormalCol), ("[92]", Range5Col), (" : 클럽 보스 5초 후 잡아요", NormalCol))));
 
             // ── 캐릭터 ──
             Save(outDir, "chat_id_character_off.png", PanelToggle(false,
@@ -111,12 +111,12 @@ namespace TWChatOverlay.Services
             Save(outDir, "chat_category_prefix_off.png", PanelToggle(false,
                 Line(NormalCol, ("아나이스 : 어비스 가실 분?", NormalCol)),
                 Line(TeamCol, ("로아미니 : 상실의 섬으로 와주세요", TeamCol)),
-                Line(ClubCol, ("벤야 : 클럽 보스 5초후 잡아요", ClubCol)),
+                Line(ClubCol, ("벤야 : 클럽 보스 5초 후 잡아요", ClubCol)),
                 Line(ShoutCol, ("외치기 : 훈장 50개 삽니다 [티치엘]", ShoutCol))));
             Save(outDir, "chat_category_prefix_on.png", PanelToggle(true,
                 Line(NormalCol, ("[일반] ", NormalCol), ("아나이스 : 어비스 가실 분?", NormalCol)),
                 Line(TeamCol, ("[팀] ", TeamCol), ("로아미니 : 상실의 섬으로 와주세요", TeamCol)),
-                Line(ClubCol, ("[클럽] ", ClubCol), ("벤야 : 클럽 보스 5초후 잡아요", ClubCol)),
+                Line(ClubCol, ("[클럽] ", ClubCol), ("벤야 : 클럽 보스 5초 후 잡아요", ClubCol)),
                 Line(ShoutCol, ("[외치기] ", ShoutCol), ("티치엘", ShoutCol), (" : 훈장 50개 삽니다", ShoutCol))));
 
             // ── 서브 채팅창: 탭 전환 ──
@@ -1062,7 +1062,7 @@ namespace TWChatOverlay.Services
             }
             else
             {
-                lines.Children.Add(Line(NormalCol, ("아나이스 : 아페테리아 가실 분?", NormalCol)));
+                lines.Children.Add(Line(NormalCol, ("아나이스 : 아페티리아 가실 분?", NormalCol)));
                 lines.Children.Add(Line(TeamCol, ("[팀] 벤야 : 입구로 와주세요", TeamCol)));
                 lines.Children.Add(Line(SystemCol, ("[경험의 심장] 아이템을 사용하였습니다.", SystemCol)));
             }

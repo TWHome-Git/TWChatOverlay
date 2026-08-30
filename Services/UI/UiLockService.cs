@@ -399,14 +399,14 @@ namespace TWChatOverlay.Services
                 "BossAlertToastWindow" => "필드 보스 알림창",
                 "ExpTrackerWindow" => "경험치 추적창",
                 "ExperienceAlertWindow" => "경험치 누적 알림",
-                "DungeonCountDisplayWindow" => "던전 카운터",
+                "DungeonCountDisplayWindow" => "던전 도우미",
                 "SubAddonWindow" => "에토스 방향 안내",
                 "ItemDropHelperWindow" => "아이템 드롭 알림",
                 "BuffTrackerHelperWindow" => "버프 추적",
                 "BuffTrackerWindow" => "버프 추적",
                 "ShoutToastWindow" => "외치기 팝업",
                 "MessengerEtaToastWindow" => "1:1 대화 에타 표시",
-                "RecaptureSupplyWindow" => "탈환 보급 알림",
+                "RecaptureSupplyWindow" => "보급품 탈환",
                 _ => string.IsNullOrWhiteSpace(window.Title) ? window.GetType().Name : window.Title,
             };
         }

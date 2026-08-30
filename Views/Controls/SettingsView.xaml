@@ -787,7 +787,7 @@
                             <Border Style="{StaticResource SettingsRowStyle}">
                                 <DockPanel>
                                     <TextBox DockPanel.Dock="Right" Width="120" Text="{Binding ToggleDailyWeeklyContentHotKey, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource SettingsRowInputStyle}" PreviewKeyDown="HotKeyInput_PreviewKeyDown" PreviewMouseLeftButtonDown="HotKeyTextBox_PreviewMouseLeftButtonDown" IsReadOnly="True" Tag="HotKey"/>
-                                    <TextBlock Text="일일/주간 콘텐츠" Style="{StaticResource SettingsRowLabelStyle}"/>
+                                    <TextBlock Text="일일/주간 컨텐츠" Style="{StaticResource SettingsRowLabelStyle}"/>
                                 </DockPanel>
                             </Border>
                             <Border Style="{StaticResource SettingsRowStyle}">
