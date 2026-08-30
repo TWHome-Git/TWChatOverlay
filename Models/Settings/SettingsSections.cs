@@ -213,6 +213,8 @@ namespace TWChatOverlay.Models
         public WindowRect RecaptureSupply { get; set; } = new();
         public WindowRect ExperienceLimitAlert { get; set; } = new();
         public WindowRect BossAlertToast { get; set; } = new();
+        /// <summary>통합 알림 스택(외치기·던전·경험치·아이템·보스) 기준 위치.</summary>
+        public WindowRect ToastStack { get; set; } = new();
         public WindowRect DungeonCountDisplay { get; set; } = new();
         public WindowRect ExpTracker { get; set; } = new();
         public WindowRect Clone1 { get; set; } = new();

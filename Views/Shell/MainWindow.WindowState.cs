@@ -80,27 +80,15 @@ namespace TWChatOverlay.Views
             // 어밴던로드 주간 합계
             ShowAbandonRoadSummaryWindow(previewMode: true, restartLifetime: false, activateWindow: false, forcePreview: true);
 
-            // 경험치 누적 알림 위치
-            ExperienceAlertWindowService.ShowPositionPreview(_settings, force: true);
+            // 통합 알림 스택 앵커 (외치기·던전 카운터·누적 경험치·아이템·필드 보스)
+            ToastStackService.ShowPositionPreview(_settings);
 
             // 경험치 추적창
             ShowExpTrackerWindow();
 
-            // 던전 카운터 위치
-            DungeonCountDisplayWindowService.ShowPositionPreview(_settings, force: true);
-
             // 에토스 방향 안내
             var etosHelper = SubAddonWindow.Instance ?? CreateSubAddonWindow();
             etosHelper?.ApplyPositionPreviewVisibility(true);
-
-            // 아이템 드롭 알림 위치
-            var itemHelper = ItemDropHelperWindow.Instance ?? CreateItemDropHelperWindow();
-            if (itemHelper != null)
-            {
-                ApplyStoredPosition(itemHelper, _settings.ItemDropWindowLeft, _settings.ItemDropWindowTop);
-                if (!itemHelper.IsVisible)
-                    itemHelper.Show();
-            }
 
             // 버프 추적 위치 — 모든 버프가 켜진 최대 크기 미리보기(도우미)로 배치한다
             // (실제 버프창은 잠금 해제 동안 스스로 숨는다)
@@ -112,17 +100,11 @@ namespace TWChatOverlay.Views
                     buffHelper.Show();
             }
 
-            // 외치기 팝업창 위치
-            ShoutToastService.ShowPositionPreview(_settings, force: true);
-
             // 1:1 대화 에타 표시 위치
             MessengerEtaToastService.ShowPositionPreview(_settings, force: true);
 
             // 보급품 탈환 미니 지도 위치/크기
             RecaptureSupplyAlertService.ShowPositionPreview(_settings, force: true);
-
-            // 필드 보스 알림 팝업 위치
-            BossAlertToastWindow.ShowPositionPreview(_settings);
         }
 
         /// <summary>인스펙터의 넛지/크기 입력으로 메인 창이 조정되면 즉시 저장한다.</summary>
@@ -146,11 +128,9 @@ namespace TWChatOverlay.Views
         private void CloseUnlockPositionWindows()
         {
             // 위치 저장 후 미리보기 종료, 각 창의 원래 표시 상태로 복원
-            ShoutToastService.SaveCurrentPosition(_settings);
-            ShoutToastService.ClosePositionPreview(_settings);
+            ToastStackService.ClosePositionPreview();
             MessengerEtaToastService.ClosePositionPreview(_settings);
             RecaptureSupplyAlertService.ClosePositionPreview();
-            BossAlertToastWindow.ClosePositionPreview();
             CloseAddonPositionPreviewWindows(savePositions: true, restoreNormalWindows: true);
             RefreshExpTrackerWindow();
         }
@@ -335,12 +315,13 @@ namespace TWChatOverlay.Views
             int nav = _addonPositionPreviewTabIndex / 10;
             int sub = _addonPositionPreviewTabIndex % 10;
 
-            // 각 창은 해당 기능이 활성화(토글 ON)된 경우에만 미리보기를 띄운다
+            // 각 창은 해당 기능이 활성화(토글 ON)된 경우에만 미리보기를 띄운다.
+            // 토스트류(외치기·던전 카운터·누적 경험치·아이템·필드 보스)는 통합 알림 스택 앵커 하나로 표시.
             switch (nav)
             {
                 case 1: // 경험치 추적: 일반 탭 + 누적 알림 켜짐
                     if (sub == 0 && _settings.EnableExperienceLimitAlert)
-                        ExperienceAlertWindowService.ShowPositionPreview(_settings, force: true);
+                        ToastStackService.ShowPositionPreview(_settings);
                     break;
                 case 2: // 던전 도우미
                     switch (sub)
@@ -354,9 +335,9 @@ namespace TWChatOverlay.Views
                             if (_settings.ShowRecaptureSupplyMap)
                                 RecaptureSupplyAlertService.ShowPositionPreview(_settings, force: true);
                             break;
-                        case 3: // 어밴던로드: 던전 카운터 + 통계 창
+                        case 3: // 어밴던로드: 알림 앵커 + 통계 창
                             if (_settings.EnableAbandonRoadCountAlert)
-                                DungeonCountDisplayWindowService.ShowPositionPreview(_settings, force: true);
+                                ToastStackService.ShowPositionPreview(_settings);
                             if (_settings.ShowAbandonRoadSummaryWindow)
                             {
                                 ShowAbandonRoadSummaryWindow(previewMode: true, restartLifetime: false, activateWindow: false, forcePreview: true);
@@ -364,24 +345,16 @@ namespace TWChatOverlay.Views
                                     _AbandonRoadSummaryWindow.Topmost = true;
                             }
                             break;
-                        case 4: // 갈망하는 즐거움: 던전 카운터
+                        case 4: // 갈망하는 즐거움: 알림 앵커
                             if (_settings.EnableCravingPleasureCountAlert)
-                                DungeonCountDisplayWindowService.ShowPositionPreview(_settings, force: true);
+                                ToastStackService.ShowPositionPreview(_settings);
                             break;
                             // 0(룬·테시스)·1(어비스)는 소리 알림뿐이라 창 없음
                     }
                     break;
                 case 3: // 아이템 알림: 획득 알림 탭 + 획득 알림 켜짐
                     if (sub == 0 && _settings.ShowItemDropAlert)
-                    {
-                        var itemHelper = ItemDropHelperWindow.Instance ?? CreateItemDropHelperWindow();
-                        if (itemHelper != null)
-                        {
-                            ApplyStoredPosition(itemHelper, _settings.ItemDropWindowLeft, _settings.ItemDropWindowTop);
-                            if (!itemHelper.IsVisible)
-                                itemHelper.Show();
-                        }
-                    }
+                        ToastStackService.ShowPositionPreview(_settings);
                     break;
                 case 4: // 버프 추적 켜짐
                     if (_settings.EnableBuffTrackerAlert)
@@ -395,8 +368,8 @@ namespace TWChatOverlay.Views
                         }
                     }
                     break;
-                case 5: // 필드 보스: 알림 팝업 위치 (보스별 토글이라 항상 표시)
-                    BossAlertToastWindow.ShowPositionPreview(_settings);
+                case 5: // 필드 보스: 알림 앵커
+                    ToastStackService.ShowPositionPreview(_settings);
                     break;
             }
         }
@@ -405,8 +378,7 @@ namespace TWChatOverlay.Views
         {
             if (savePositions)
             {
-                ExperienceAlertWindowService.SaveCurrentPosition(_settings);
-                DungeonCountDisplayWindowService.SaveCurrentPosition(_settings);
+                ToastStackService.SaveCurrentPosition(_settings);
 
                 if (_AbandonRoadSummaryWindow != null)
                 {
@@ -419,10 +391,8 @@ namespace TWChatOverlay.Views
                 }
             }
 
-            ExperienceAlertWindowService.Close();
-            DungeonCountDisplayWindowService.ClosePositionPreview(_settings);
+            ToastStackService.ClosePositionPreview();
             RecaptureSupplyAlertService.ClosePositionPreview();
-            BossAlertToastWindow.ClosePositionPreview();
             SubAddonWindow.Instance?.Hide();
             ItemDropHelperWindow.Instance?.Close();
             BuffTrackerHelperWindow.Instance?.Close();

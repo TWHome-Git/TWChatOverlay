@@ -12,11 +12,7 @@ namespace TWChatOverlay.Services
     public static class ShoutToastService
     {
         private static readonly List<ShoutToastWindow> ActiveToasts = new();
-        private static ShoutToastWindow? _previewToast;
-        private const double ToastWidth = 420;
-        private const double DefaultBaseTop = 124;
-        private const double Gap = 6;
-        private const double ToastHeight = 72;
+        private static ShoutToastWindow? _previewToast; // 프리웜 전용 (표시는 통합 스택 미리보기 사용)
 
         public static void Show(string formattedText, ChatSettings settings)
         {
@@ -29,17 +25,12 @@ namespace TWChatOverlay.Services
             Application.Current.Dispatcher.BeginInvoke(new Action(() =>
             {
                 var toast = new ShoutToastWindow(formattedText, ResolveToastFont(), settings);
-                toast.Closed += (_, _) =>
-                {
-                    ActiveToasts.Remove(toast);
-                    RearrangeToasts();
-                };
+                toast.Closed += (_, _) => ActiveToasts.Remove(toast);
 
                 ActiveToasts.Add(toast);
 
-                var (left, topBase) = ResolveBasePosition(settings);
-                int previewOffset = _previewToast?.IsVisible == true ? 1 : 0;
-                double top = topBase + ((ToastHeight + Gap) * (ActiveToasts.Count - 1 + previewOffset));
+                // 통합 알림 스택: 앵커 위치에서 다른 알림들 아래로 배치
+                var (left, top) = ToastStackService.Attach(toast);
                 toast.ShowAnimated(left, top, settings.ShoutToastDurationSeconds);
             }));
         }
@@ -52,37 +43,9 @@ namespace TWChatOverlay.Services
             Show(BuildMessageWithEta(parseResult), settings);
         }
 
+        /// <summary>통합 알림 스택 앵커 미리보기로 위임.</summary>
         public static void ShowPositionPreview(ChatSettings settings, bool force = false)
-        {
-            if (settings == null || (!force && settings.ShoutToastWindowLeft == null && settings.ShoutToastWindowTop == null))
-            {
-                return;
-            }
-
-            Application.Current.Dispatcher.BeginInvoke(new Action(() =>
-            {
-                if (_previewToast == null || !_previewToast.IsLoaded)
-                {
-                    _previewToast = new ShoutToastWindow("외치기 알림창", ResolveToastFont(), settings);
-                    _previewToast.Closed += (_, _) =>
-                    {
-                        _previewToast = null;
-                        RearrangeToasts();
-                    };
-                }
-                else
-                {
-                    _previewToast.SetSettings(settings);
-                    _previewToast.SetMessage("외치기 알림창");
-                }
-
-                _previewToast.SetPreviewMode(true);
-
-                var (left, topBase) = ResolveBasePosition(settings);
-                _previewToast.ShowPreview(left, topBase);
-                RearrangeToasts();
-            }));
-        }
+            => ToastStackService.ShowPositionPreview(settings);
 
         /// <summary>설정 슬라이더 변경을 열려 있는 토스트(미리보기 포함)에 즉시 반영한다.</summary>
         public static void ApplyFontSize(double size)
@@ -98,60 +61,13 @@ namespace TWChatOverlay.Services
         }
 
         public static void ClosePositionPreview(ChatSettings settings)
-        {
-            Application.Current.Dispatcher.BeginInvoke(new Action(() =>
-            {
-                if (_previewToast == null)
-                    return;
-
-                try
-                {
-                    if (_previewToast.IsVisible)
-                    {
-                        _previewToast.SaveCurrentPosition();
-                        _previewToast.Close();
-                    }
-                }
-                catch { }
-                finally
-                {
-                    _previewToast = null;
-                    RearrangeToasts();
-                }
-            }));
-        }
+            => ToastStackService.ClosePositionPreview();
 
         public static void SaveCurrentPosition(ChatSettings settings)
-        {
-            if (settings == null)
-                return;
-
-            void Save()
-            {
-                if (_previewToast?.IsVisible == true)
-                {
-                    _previewToast.SaveCurrentPosition();
-                }
-                else if (settings.ShoutToastWindowLeft.HasValue && settings.ShoutToastWindowTop.HasValue)
-                {
-                    ConfigService.Save(settings);
-                }
-            }
-
-            if (Application.Current?.Dispatcher?.CheckAccess() == true)
-            {
-                Save();
-            }
-            else
-            {
-                Application.Current?.Dispatcher?.Invoke(new Action(Save));
-            }
-        }
+            => ToastStackService.SaveCurrentPosition(settings);
 
         public static void NotifyPreviewPositionChanged()
-        {
-            Application.Current.Dispatcher.BeginInvoke(new Action(RearrangeToasts));
-        }
+            => Application.Current.Dispatcher.BeginInvoke(new Action(ToastStackService.Reflow));
 
         public static ShoutToastWindow? GetOrCreatePreviewWindow(ChatSettings settings)
         {
@@ -169,39 +85,6 @@ namespace TWChatOverlay.Services
             }
 
             return _previewToast;
-        }
-
-        private static void RearrangeToasts()
-        {
-            var basePosition = ResolveBasePositionFromSharedSettings();
-            double topBase = basePosition.Top;
-            int previewOffset = _previewToast?.IsVisible == true ? 1 : 0;
-
-            for (int i = 0; i < ActiveToasts.Count; i++)
-            {
-                var toast = ActiveToasts[i];
-                if (!toast.IsVisible)
-                    continue;
-
-                double targetTop = topBase + ((ToastHeight + Gap) * (i + previewOffset));
-                toast.MoveTo(targetTop);
-            }
-
-            if (_previewToast?.IsVisible == true)
-            {
-                _previewToast.MoveTo(topBase);
-            }
-        }
-
-        private static (double Left, double Top) ResolveBasePosition(ChatSettings settings)
-            => ToastPresentationHelper.ResolveBasePosition(
-                settings.ShoutToastWindowLeft, settings.ShoutToastWindowTop, ToastWidth, DefaultBaseTop);
-
-        private static (double Left, double Top) ResolveBasePositionFromSharedSettings()
-        {
-            ChatSettings? settings = ToastPresentationHelper.FindSharedSettings();
-            return ToastPresentationHelper.ResolveBasePosition(
-                settings?.ShoutToastWindowLeft, settings?.ShoutToastWindowTop, ToastWidth, DefaultBaseTop);
         }
 
         private static FontFamily ResolveToastFont() => ToastPresentationHelper.ResolveToastFont();

@@ -51,12 +51,13 @@ namespace TWChatOverlay.Services
             ShowWindow(message, settings, requireAlertEnabled: true);
         }
 
+        /// <summary>통합 알림 스택 앵커 미리보기로 위임.</summary>
         public static void ShowPositionPreview(ChatSettings settings, bool force = false)
         {
             if (settings == null || (!force && !settings.ShowExperienceLimitAlertWindow))
                 return;
 
-            ShowWindow("경험치 누적 알림창", settings, requireAlertEnabled: false, isPreview: true);
+            ToastStackService.ShowPositionPreview(settings);
         }
 
         private static void ShowWindow(string message, ChatSettings settings, bool requireAlertEnabled, bool isPreview = false)
@@ -80,12 +81,16 @@ namespace TWChatOverlay.Services
 
                 _window.SetMessage(message);
                 _window.SetPreviewMode(isPreview);
-                PositionWindow(_window, settings);
 
                 if (!_window.IsVisible)
                 {
                     _window.Show();
                 }
+
+                // 통합 알림 스택: 앵커 위치에서 다른 알림들 아래로 배치
+                var (left, top) = ToastStackService.Attach(_window);
+                _window.Left = left;
+                _window.Top = top;
 
                 _window.BringToFront();
             }));
@@ -132,39 +137,7 @@ namespace TWChatOverlay.Services
         }
 
         public static void SaveCurrentPosition(ChatSettings settings)
-        {
-            if (settings == null)
-                return;
-
-            Application.Current.Dispatcher.Invoke(() =>
-            {
-                if (_window == null || !_window.IsVisible)
-                    return;
-
-                settings.ExperienceLimitAlertWindowLeft = _window.Left;
-                settings.ExperienceLimitAlertWindowTop = _window.Top;
-            });
-
-            ConfigService.Save(settings);
-        }
-
-        private static void PositionWindow(Window window, ChatSettings settings)
-        {
-            if (settings.ExperienceLimitAlertWindowLeft.HasValue &&
-                settings.ExperienceLimitAlertWindowTop.HasValue)
-            {
-                window.Left = settings.ExperienceLimitAlertWindowLeft.Value;
-                window.Top = settings.ExperienceLimitAlertWindowTop.Value;
-                return;
-            }
-
-            Rect workArea = SystemParameters.WorkArea;
-            double left = workArea.Left + ((workArea.Width - window.Width) / 2.0);
-            double top = workArea.Top + 48;
-
-            window.Left = Math.Max(workArea.Left, left);
-            window.Top = Math.Max(workArea.Top, top);
-        }
+            => ToastStackService.SaveCurrentPosition(settings);
 
         private static ExperienceAlertStateSnapshot GetCurrentSnapshot(ChatSettings settings)
         {
