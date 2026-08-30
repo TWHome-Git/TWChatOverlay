@@ -285,6 +285,20 @@ namespace TWChatOverlay.Views
             AddonBuffPanel.Visibility = NavAddonBuff.IsChecked == true ? Visibility.Visible : Visibility.Collapsed;
             AddonBossPanel.Visibility = NavAddonBoss.IsChecked == true ? Visibility.Visible : Visibility.Collapsed;
             DebugOptionsBorder.Visibility = _debugOptionsAllowed ? Visibility.Visible : Visibility.Collapsed;
+            BossAlertTestBorder.Visibility = _debugOptionsAllowed ? Visibility.Visible : Visibility.Collapsed;
+        }
+
+        /// <summary>디버그 전용: 선택한 보스의 실제 알림 흐름(사운드+팝업)을 즉시 발사한다.</summary>
+        private void BossAlertTest_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is not Button button || button.Tag is not string label)
+                return;
+            if (BossAlertTestCombo.SelectedItem is not ComboBoxItem item || item.Tag is not string bossId)
+                return;
+
+            string bossName = item.Content as string ?? bossId;
+            var settings = Application.Current?.Windows.OfType<MainWindow>().FirstOrDefault()?.DataContext as Models.ChatSettings;
+            Services.BossAlarmSchedulerService.FireTestAlert(bossId, bossName, label, settings);
         }
 
         // ===== 프로필: 현재 설정 전체 저장/불러오기 =====

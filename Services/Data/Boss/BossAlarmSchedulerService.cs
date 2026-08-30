@@ -126,6 +126,21 @@ namespace TWChatOverlay.Services
             return occurrences;
         }
 
+        /// <summary>디버그용 테스트 발사: 실제 알림 흐름(사운드+팝업) 그대로 울린다.</summary>
+        public static void FireTestAlert(string bossId, string bossName, string label, ChatSettings? settings)
+        {
+            TimeSpan offset = label switch
+            {
+                "3분 전" => TimeSpan.FromMinutes(3),
+                "1분 전" => TimeSpan.FromMinutes(1),
+                _ => TimeSpan.FromSeconds(5),
+            };
+
+            AppLogger.Info($"Boss alarm TEST fired. Boss='{bossName}', Trigger='{label}'");
+            NotificationService.PlayAlert(ResolveSoundFile(bossId, offset));
+            Views.BossAlertToastWindow.ShowAlert(bossName, label, DateTime.Now.Add(offset), settings);
+        }
+
         private static string ResolveSoundFile(string bossId, TimeSpan offsetBefore)
         {
             string baseName = bossId switch

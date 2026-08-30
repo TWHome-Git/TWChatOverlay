@@ -846,6 +846,24 @@
                                     </StackPanel>
                                 </DockPanel>
                             </Border>
+                            <!-- 디버그 빌드 전용: 필드 보스 알림 테스트 발사 (실제 사운드+팝업 흐름) -->
+                            <Border x:Name="BossAlertTestBorder" Style="{StaticResource SettingsRowWideStyle}" Visibility="Collapsed">
+                                <DockPanel>
+                                    <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
+                                        <ComboBox x:Name="BossAlertTestCombo" Width="110" Height="26" Style="{StaticResource DarkComboBoxStyle}">
+                                            <ComboBoxItem Content="아칸" Tag="Arkan" IsSelected="True"/>
+                                            <ComboBoxItem Content="스페르첸드" Tag="Scherzendo"/>
+                                            <ComboBoxItem Content="파멸의 기원" Tag="Origin of Doom"/>
+                                            <ComboBoxItem Content="혼란한 대지" Tag="Confused Land"/>
+                                            <ComboBoxItem Content="이벤트" Tag="event"/>
+                                        </ComboBox>
+                                        <Button Content="3분 전" Tag="3분 전" Width="56" Height="26" Padding="0" Margin="6,0,0,0" Click="BossAlertTest_Click" Style="{StaticResource SecondaryButtonStyle}" FontSize="12"/>
+                                        <Button Content="1분 전" Tag="1분 전" Width="56" Height="26" Padding="0" Margin="6,0,0,0" Click="BossAlertTest_Click" Style="{StaticResource SecondaryButtonStyle}" FontSize="12"/>
+                                        <Button Content="5초 전" Tag="5초 전" Width="56" Height="26" Padding="0" Margin="6,0,0,0" Click="BossAlertTest_Click" Style="{StaticResource SecondaryButtonStyle}" FontSize="12"/>
+                                    </StackPanel>
+                                    <TextBlock Text="필드 보스 알림 테스트" Style="{StaticResource SettingsRowLabelStyle}" ToolTip="선택한 보스의 실제 알림(사운드+팝업)을 즉시 발사"/>
+                                </DockPanel>
+                            </Border>
                         </WrapPanel>
                         </StackPanel>
 
