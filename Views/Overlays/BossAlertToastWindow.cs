@@ -26,6 +26,10 @@ namespace TWChatOverlay.Views
         private readonly TextBlock _bodyText;
         private readonly TextBlock _previewLabel;
         private readonly DispatcherTimer _closeTimer;
+        private readonly DispatcherTimer _countdownTimer;
+        private DateTime _countdownOccurrence;
+        private string _countdownBossName = string.Empty;
+        private string _countdownLabel = string.Empty;
         private ChatSettings? _settings;
         private bool _isDragging;
 
@@ -109,6 +113,47 @@ namespace TWChatOverlay.Views
                 _closeTimer.Stop();
                 try { Close(); } catch { }
             };
+
+            _countdownTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
+            _countdownTimer.Tick += (_, _) => UpdateCountdownText();
+        }
+
+        /// <summary>
+        /// 남은 시간 표시 시작. 60초 초과 구간(3분 전 등)은 단계 문구를 그대로 보여주고,
+        /// 60초 이하로 들어오면 초 단위 카운트다운으로 전환, 5초 이하면 '곧 등장!'(붉은색) 연출.
+        /// </summary>
+        public void StartCountdown(string bossName, string label, DateTime occurrence)
+        {
+            _countdownBossName = bossName;
+            _countdownLabel = label;
+            _countdownOccurrence = occurrence;
+            UpdateCountdownText();
+            _countdownTimer.Start();
+        }
+
+        private void UpdateCountdownText()
+        {
+            TimeSpan remaining = _countdownOccurrence - DateTime.Now;
+            if (remaining <= TimeSpan.FromSeconds(5))
+            {
+                _countdownTimer.Stop();
+                _bodyText.Text = $"{_countdownBossName} 곧 등장!";
+                _bodyText.Foreground = new SolidColorBrush(DangerCol);
+                return;
+            }
+
+            if (remaining <= TimeSpan.FromSeconds(60))
+            {
+                int totalSeconds = (int)Math.Ceiling(remaining.TotalSeconds);
+                _bodyText.Text = $"{_countdownBossName} 등장 {totalSeconds}초 전";
+            }
+            else
+            {
+                // 60초 초과(3분 전 알림 등)에는 카운트다운 없이 단계 문구만
+                _bodyText.Text = $"{_countdownBossName} 등장 {_countdownLabel}";
+            }
+
+            _bodyText.SetResourceReference(TextBlock.ForegroundProperty, "TextBrush");
         }
 
         protected override void OnSourceInitialized(EventArgs e)
@@ -125,6 +170,8 @@ namespace TWChatOverlay.Views
 
         protected override void OnClosed(EventArgs e)
         {
+            try { _closeTimer.Stop(); } catch { }
+            try { _countdownTimer.Stop(); } catch { }
             SyncPositionToSettings(save: true);
             if (ReferenceEquals(_instance, this))
             {
@@ -199,7 +246,8 @@ namespace TWChatOverlay.Views
             try
             {
                 var window = EnsureInstance(settings);
-                window.SetAlert(bossName, label);
+                // 60초 이하부터 초 단위 카운트다운, 그 전에는 단계 문구(3분 전 등) 정적 표시
+                window.StartCountdown(bossName, label, occurrence);
                 window.SetPreviewMode(false);
 
                 // 보스 출현 5초 후 삭제 (이미 지났으면 5초만 유지)
