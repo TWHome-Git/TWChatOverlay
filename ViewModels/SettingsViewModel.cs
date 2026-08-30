@@ -784,7 +784,31 @@ namespace TWChatOverlay.ViewModels
         {
             AppLogger.Warn("Resetting settings to default values.");
             _settings.ResetToDefault();
+            NotifyAllSettingsChanged();
+            SaveSettings();
+            _onSettingsReset?.Invoke();
+        }
 
+        /// <summary>현재 설정 전체를 프로필로 저장.</summary>
+        public bool SaveProfile(string name) => SettingsProfileService.Save(name, _settings);
+
+        /// <summary>프로필을 불러와 현재 설정에 통째로 적용하고 앱 전체를 갱신한다. (설정 초기화와 같은 경로)</summary>
+        public bool LoadProfile(string name)
+        {
+            if (!SettingsProfileService.TryLoad(name, out var loaded))
+                return false;
+
+            _settings.ApplyFrom(loaded);
+            AppLogger.Info($"Settings profile applied. Name='{name}'");
+            NotifyAllSettingsChanged();
+            SaveSettings();
+            _onSettingsReset?.Invoke();
+            return true;
+        }
+
+        /// <summary>설정을 통째로 바꾼 뒤(초기화/프로필) 바인딩·오버레이 상태를 일괄 갱신한다.</summary>
+        private void NotifyAllSettingsChanged()
+        {
             OnPropertyChanged(nameof(ShowNormal));
             OnPropertyChanged(nameof(ShowTeam));
             OnPropertyChanged(nameof(ShowClub));
@@ -840,9 +864,6 @@ namespace TWChatOverlay.ViewModels
             OverlayOpacityService.ApplyToOpenWindows();
             OverlayOpacityService.NotifyAllGroupsChanged();
             OnPropertyChanged(nameof(OverlayOpacityPercent));
-
-            SaveSettings();
-            _onSettingsReset?.Invoke();
         }
 
         private void ExecuteApplyHotkeys()

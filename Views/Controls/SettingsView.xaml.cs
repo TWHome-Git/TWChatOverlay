@@ -208,6 +208,8 @@ namespace TWChatOverlay.Views
             HotkeyPanel.Visibility = NavHotkeys.IsChecked == true ? Visibility.Visible : Visibility.Collapsed;
             SystemPanel.Visibility = NavSystem.IsChecked == true ? Visibility.Visible : Visibility.Collapsed;
             PresetPanel.Visibility = NavPresets.IsChecked == true ? Visibility.Visible : Visibility.Collapsed;
+            if (NavPresets.IsChecked == true)
+                RefreshProfileList();
             AddonKeywordPanel.Visibility = NavAddonKeyword.IsChecked == true ? Visibility.Visible : Visibility.Collapsed;
             AddonExpPanel.Visibility = NavAddonExp.IsChecked == true ? Visibility.Visible : Visibility.Collapsed;
             AddonDungeonPanel.Visibility = NavAddonDungeon.IsChecked == true ? Visibility.Visible : Visibility.Collapsed;
@@ -215,6 +217,114 @@ namespace TWChatOverlay.Views
             AddonBuffPanel.Visibility = NavAddonBuff.IsChecked == true ? Visibility.Visible : Visibility.Collapsed;
             AddonBossPanel.Visibility = NavAddonBoss.IsChecked == true ? Visibility.Visible : Visibility.Collapsed;
             DebugOptionsBorder.Visibility = _debugOptionsAllowed ? Visibility.Visible : Visibility.Collapsed;
+        }
+
+        // ===== 프로필: 현재 설정 전체 저장/불러오기 =====
+
+        /// <summary>프로필 목록 UI를 다시 그린다. (기본 2개 + 추가 프로필)</summary>
+        private void RefreshProfileList()
+        {
+            if (ProfileListPanel == null)
+                return;
+
+            ProfileListPanel.Children.Clear();
+            foreach (string name in Services.SettingsProfileService.GetProfileNames())
+                ProfileListPanel.Children.Add(BuildProfileRow(name));
+        }
+
+        private UIElement BuildProfileRow(string name)
+        {
+            bool exists = Services.SettingsProfileService.Exists(name);
+            bool isDefault = Services.SettingsProfileService.IsDefaultProfile(name);
+
+            Button MakeButton(string text, bool enabled, RoutedEventHandler onClick, bool danger = false)
+            {
+                var button = new Button
+                {
+                    Content = text,
+                    MinWidth = 64,
+                    Height = 26,
+                    Padding = new Thickness(6, 0, 6, 0),
+                    FontSize = 12,
+                    Margin = new Thickness(6, 0, 0, 0),
+                    IsEnabled = enabled,
+                    VerticalContentAlignment = VerticalAlignment.Center,
+                };
+                button.SetResourceReference(StyleProperty, danger ? "DangerButtonStyle" : "SecondaryButtonStyle");
+                button.Click += onClick;
+                return button;
+            }
+
+            var right = new StackPanel { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Center };
+            right.Children.Add(MakeButton("저장", enabled: true, (_, _) => SaveProfile(name)));
+            right.Children.Add(MakeButton("불러오기", enabled: exists, (_, _) => LoadProfile(name)));
+            if (!isDefault)
+                right.Children.Add(MakeButton("삭제", enabled: true, (_, _) => DeleteProfile(name), danger: true));
+
+            var label = new StackPanel { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Center };
+            var nameText = new TextBlock { Text = name };
+            nameText.SetResourceReference(StyleProperty, "SettingsRowLabelStyle");
+            label.Children.Add(nameText);
+            if (!exists)
+            {
+                var emptyHint = new TextBlock { Text = "  (비어 있음)", FontSize = 11, VerticalAlignment = VerticalAlignment.Center };
+                emptyHint.SetResourceReference(TextBlock.ForegroundProperty, "OverlaySubtleTextBrush");
+                label.Children.Add(emptyHint);
+            }
+
+            var row = new DockPanel();
+            DockPanel.SetDock(right, Dock.Right);
+            row.Children.Add(right);
+            row.Children.Add(label);
+
+            var border = new Border { Child = row };
+            border.SetResourceReference(StyleProperty, "SettingsRowStyle");
+            return border;
+        }
+
+        private void SaveProfile(string name)
+        {
+            if (DataContext is not ViewModels.SettingsViewModel viewModel)
+                return;
+
+            if (Services.SettingsProfileService.Exists(name) &&
+                !ConfirmDialogWindow.Confirm(Window.GetWindow(this), $"'{name}'에 저장된 설정을 현재 설정으로 덮어쓸까요?", "저장"))
+                return;
+
+            viewModel.SaveProfile(name);
+            RefreshProfileList();
+        }
+
+        private void LoadProfile(string name)
+        {
+            if (DataContext is not ViewModels.SettingsViewModel viewModel)
+                return;
+
+            if (!ConfirmDialogWindow.Confirm(Window.GetWindow(this),
+                    $"'{name}' 프로필을 불러올까요?\n현재 설정이 모두 이 프로필의 내용으로 바뀝니다.", "불러오기"))
+                return;
+
+            viewModel.LoadProfile(name);
+        }
+
+        private void AddProfile_Click(object sender, RoutedEventArgs e)
+        {
+            if (DataContext is not ViewModels.SettingsViewModel viewModel)
+                return;
+
+            // 새 프로필 = 현재 설정을 새 이름으로 즉시 저장
+            string name = Services.SettingsProfileService.SuggestNewName();
+            viewModel.SaveProfile(name);
+            RefreshProfileList();
+        }
+
+        private void DeleteProfile(string name)
+        {
+            if (!ConfirmDialogWindow.Confirm(Window.GetWindow(this), $"'{name}' 프로필을 삭제할까요?", "삭제"))
+                return;
+
+            Services.SettingsProfileService.Delete(name);
+            RefreshProfileList();
         }
 
         private void SettingsView_PreviewKeyDown(object? sender, KeyEventArgs e)

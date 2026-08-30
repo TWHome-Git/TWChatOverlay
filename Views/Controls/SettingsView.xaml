@@ -322,7 +322,7 @@
                     <RadioButton x:Name="NavPresets" GroupName="SettingsNav" Checked="Nav_Checked" Style="{StaticResource SettingsNavToolRadioStyle}">
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Text="&#xE77B;" FontFamily="Segoe MDL2 Assets" FontSize="12" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                            <TextBlock Text="프로필 및 프리셋" VerticalAlignment="Center"/>
+                            <TextBlock Text="프로필" VerticalAlignment="Center"/>
                         </StackPanel>
                     </RadioButton>
                     <Button Style="{StaticResource SettingsNavActionStyle}" Command="{Binding ExitAppCommand}" ToolTip="프로그램을 종료합니다">
@@ -895,8 +895,19 @@
                         </StackPanel>
                     </StackPanel>
 
-                    <!-- ===================== 프로필 및 프리셋 ===================== -->
+                    <!-- ===================== 프로필 ===================== -->
                     <StackPanel x:Name="PresetPanel" Visibility="Collapsed">
+                        <Border Style="{StaticResource SettingsTabStripStyle}">
+                            <StackPanel Orientation="Horizontal">
+                                <RadioButton Content="프로필" IsChecked="True" GroupName="ProfileTabs" IsHitTestVisible="False" Style="{StaticResource SettingsTabStyle}"/>
+                            </StackPanel>
+                        </Border>
+                        <TextBlock Text="현재 모든 설정 상태를 프로필로 저장하고, 언제든 통째로 불러올 수 있습니다."
+                                   Style="{StaticResource SettingsRowHintStyle}" Margin="0,0,0,6"/>
+                        <StackPanel x:Name="ProfileListPanel"/>
+                        <Button Content="+ 새 프로필 추가" Width="140" Height="26" Padding="0" HorizontalAlignment="Left"
+                                Margin="0,10,0,16" Click="AddProfile_Click" Style="{StaticResource SecondaryButtonStyle}" FontSize="12"/>
+
                         <Border Style="{StaticResource SettingsTabStripStyle}">
                             <StackPanel Orientation="Horizontal">
                                 <RadioButton Content="채팅창 위치 프리셋" IsChecked="True" GroupName="PresetTabs" IsHitTestVisible="False" Style="{StaticResource SettingsTabStyle}"/>
