@@ -300,7 +300,7 @@ namespace TWChatOverlay.Services
 
             ["system.debug_log"] = (
                 "Debug.log 활성화",
-                "문제 진단용 상세 로그를 프로그램 폴더의 Debug.log 파일에 기록합니다.\n" +
+                "문제 진단용 상세 로그를 Config 폴더의 Debug.log 파일에 기록합니다.\n" +
                 "오류 제보 시에만 켜고, 평소에는 꺼 두는 것을 권장합니다.",
                 null),
 
