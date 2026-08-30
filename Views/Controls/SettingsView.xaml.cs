@@ -410,9 +410,9 @@ namespace TWChatOverlay.Views
             e.Handled = !regex.IsMatch(fullText);
         }
 
-        private void FontOption_Checked(object sender, RoutedEventArgs e)
+        private void FontFamilyCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            if (sender is RadioButton { Tag: string fontName } &&
+            if (FontFamilyCombo.SelectedItem is string fontName &&
                 DataContext is ViewModels.SettingsViewModel viewModel &&
                 viewModel.FontFamily != fontName)
             {
@@ -424,12 +424,8 @@ namespace TWChatOverlay.Views
         {
             if (DataContext is not ViewModels.SettingsViewModel viewModel) return;
 
-            NanumFontOption.IsChecked = viewModel.FontFamily == "나눔고딕";
-            GulimFontOption.IsChecked = viewModel.FontFamily == "굴림";
-            PretendardFontOption.IsChecked = viewModel.FontFamily == "프리텐다드";
-            NanumRoundFontOption.IsChecked = viewModel.FontFamily == "나눔스퀘어라운드";
-            GmarketFontOption.IsChecked = viewModel.FontFamily == "G마켓 산스";
-            CustomFontOption.IsChecked = viewModel.FontFamily == "사용자 설정";
+            FontFamilyCombo.ItemsSource ??= Services.FontService.GetAvailableFonts();
+            FontFamilyCombo.SelectedItem = viewModel.FontFamily;
         }
 
         private void SettingsView_Loaded(object sender, RoutedEventArgs e)

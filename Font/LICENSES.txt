@@ -1,7 +1,7 @@
 번들 글꼴 라이선스 안내
 =======================
 
-UserDefine.ttf (쿠키런 Regular)
+CookieRun-Regular.ttf (쿠키런 Regular)
 - 저작권: (주)데브시스터즈 (Devsisters Corp.)
 - 출처: https://www.cookierunfont.com/
 - 개인·기업 모두 무료 사용 가능, 글꼴 자체의 유료 판매 금지.
