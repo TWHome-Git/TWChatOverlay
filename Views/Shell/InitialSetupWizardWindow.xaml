@@ -89,11 +89,6 @@
                                FontSize="12"
                                FontWeight="Bold"
                                VerticalAlignment="Center"/>
-                    <TextBlock Text="설정 마법사"
-                               Foreground="{DynamicResource OverlayHintTextBrush}"
-                               FontSize="11"
-                               VerticalAlignment="Center"
-                               Margin="8,1,0,0"/>
                 </StackPanel>
                 <StackPanel Orientation="Horizontal"
                             HorizontalAlignment="Right"
@@ -113,7 +108,7 @@
         </Grid.RowDefinitions>
 
         <StackPanel Grid.Row="0" Margin="0,0,0,14">
-            <TextBlock x:Name="TitleText" Text="초기 설정" Foreground="{DynamicResource OverlayTitleAccentTextBrush}" FontSize="22" FontWeight="Bold"/>
+            <TextBlock x:Name="TitleText" Text="설정 마법사" Foreground="{DynamicResource OverlayTitleAccentTextBrush}" FontSize="22" FontWeight="Bold"/>
             <TextBlock x:Name="ProgressText" Text="1 / 5" Foreground="{DynamicResource OverlaySubtleTextBrush}" FontSize="12" Margin="0,6,0,0"/>
         </StackPanel>
 

@@ -267,24 +267,54 @@ namespace TWChatOverlay.Views
             };
         }
 
+        /// <summary>설정 화면과 같은 행 스타일: 라벨 왼쪽 + 토글 스위치 오른쪽 + 아래 구분선.</summary>
         private UIElement CreateCheckRow(string label, string bindingPath)
         {
-            var cb = new CheckBox { Content = label, Foreground = ThemeBrushes.Get("TextBrush", Brushes.White), Margin = new Thickness(0, 2, 0, 2) };
-            cb.SetBinding(CheckBox.IsCheckedProperty, new Binding(bindingPath) { Source = _settings, Mode = BindingMode.TwoWay });
-            return cb;
+            // 토글 스위치가 ON/OFF를 표현하므로 라벨의 'ON/OFF' 표기는 정리한다
+            label = label.Replace(" ON/OFF", string.Empty);
+
+            var toggle = new CheckBox { VerticalAlignment = VerticalAlignment.Center };
+            toggle.SetResourceReference(FrameworkElement.StyleProperty, "ToggleSwitchCheckBoxStyle");
+            toggle.SetBinding(CheckBox.IsCheckedProperty, new Binding(bindingPath) { Source = _settings, Mode = BindingMode.TwoWay });
+
+            return WrapSettingsRow(label, toggle);
+        }
+
+        /// <summary>설정 화면과 같은 행 프레임(라벨 왼쪽·컨트롤 오른쪽·아래 1px 구분선)으로 감싼다.</summary>
+        private static Border WrapSettingsRow(string label, UIElement rightControl)
+        {
+            var dock = new DockPanel();
+            DockPanel.SetDock(rightControl, Dock.Right);
+            dock.Children.Add(rightControl);
+            dock.Children.Add(new TextBlock
+            {
+                Text = label,
+                FontSize = 13,
+                VerticalAlignment = VerticalAlignment.Center,
+                Foreground = ThemeBrushes.Get("TextBrush", Brushes.White),
+            });
+
+            var row = new Border
+            {
+                Padding = new Thickness(0, 7, 0, 7),
+                BorderThickness = new Thickness(0, 0, 0, 1),
+                Child = dock,
+            };
+            row.SetResourceReference(Border.BorderBrushProperty, "SeparatorBrush");
+            return row;
         }
 
         private UIElement CreateFilterColorRow(string label, string visibleBindingPath, string colorBindingPath)
         {
-            var grid = new Grid { Margin = new Thickness(0, 2, 0, 2) };
-            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
-            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+            // 설정 > 채팅 필터와 같은 구성: 라벨 왼쪽, 오른쪽에 색 버튼 + 토글
+            var right = new StackPanel { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Center };
 
-            var cb = new CheckBox { Content = label, Foreground = ThemeBrushes.Get("TextBrush", Brushes.White), VerticalAlignment = VerticalAlignment.Center };
-            cb.SetBinding(CheckBox.IsCheckedProperty, new Binding(visibleBindingPath) { Source = _settings, Mode = BindingMode.TwoWay });
-            grid.Children.Add(cb);
+            var toggle = new CheckBox { VerticalAlignment = VerticalAlignment.Center };
+            toggle.SetResourceReference(FrameworkElement.StyleProperty, "ToggleSwitchCheckBoxStyle");
+            toggle.SetBinding(CheckBox.IsCheckedProperty, new Binding(visibleBindingPath) { Source = _settings, Mode = BindingMode.TwoWay });
 
-            var colorBtn = new Button { Width = 38, Height = 20, Margin = new Thickness(8, 0, 0, 0), BorderBrush = Brushes.Transparent };
+            var colorBtn = new Button { Width = 26, Height = 14, Margin = new Thickness(0, 0, 10, 0), Cursor = System.Windows.Input.Cursors.Hand };
+            colorBtn.SetResourceReference(FrameworkElement.StyleProperty, "ColorPickerButtonStyle");
             colorBtn.SetBinding(Button.BackgroundProperty, new Binding(colorBindingPath) { Source = _settings });
             colorBtn.Click += (_, _) =>
             {
@@ -320,23 +350,19 @@ namespace TWChatOverlay.Views
                     AppLogger.Warn("Failed to change wizard chat color.", ex);
                 }
             };
-            Grid.SetColumn(colorBtn, 1);
-            grid.Children.Add(colorBtn);
 
-            return grid;
+            right.Children.Add(colorBtn);
+            right.Children.Add(toggle);
+            return WrapSettingsRow(label, right);
         }
 
         private UIElement BuildShoutSettingsStepContent()
         {
             var panel = new StackPanel();
 
-            var cbPopup = new CheckBox { Content = "외치기 팝업 ON/OFF", Foreground = ThemeBrushes.Get("TextBrush", Brushes.White), Margin = new Thickness(0, 0, 0, 6) };
-            cbPopup.SetBinding(CheckBox.IsCheckedProperty, new Binding(nameof(ChatSettings.ShowShoutToastPopup)) { Source = _settings, Mode = BindingMode.TwoWay });
-            panel.Children.Add(cbPopup);
-
-            var cbAuto = new CheckBox { Content = "외치기 닉네임 자동복사 ON/OFF", Foreground = ThemeBrushes.Get("TextBrush", Brushes.White), Margin = new Thickness(0, 0, 0, 10) };
-            cbAuto.SetBinding(CheckBox.IsCheckedProperty, new Binding(nameof(ChatSettings.AutoCopyShoutNickname)) { Source = _settings, Mode = BindingMode.TwoWay });
-            panel.Children.Add(cbAuto);
+            panel.Children.Add(CreateCheckRow("외치기 팝업", nameof(ChatSettings.ShowShoutToastPopup)));
+            panel.Children.Add(CreateCheckRow("닉네임 자동복사", nameof(ChatSettings.AutoCopyShoutNickname)));
+            panel.Children.Add(new Border { Height = 8 });
 
             var durationLabel = new TextBlock { Foreground = ThemeBrushes.Get("TextBrush", Brushes.White), FontSize = 12 };
             durationLabel.SetBinding(TextBlock.TextProperty, new Binding(nameof(ChatSettings.ShoutToastDurationSeconds))
@@ -826,16 +852,8 @@ namespace TWChatOverlay.Views
                     _settings.DungeonItemConfigs[resolvedKey] = cfg;
                 }
 
-                var cb = new CheckBox
-                {
-                    Content = label,
-                    Foreground = ThemeBrushes.Get("TextBrush", Brushes.White),
-                    Margin = new Thickness(indent, 2, 0, 2),
-                    IsChecked = cfg.IsEnabled
-                };
-                cb.Checked += (_, _) => SetDungeonItemEnabled(resolvedKey, true);
-                cb.Unchecked += (_, _) => SetDungeonItemEnabled(resolvedKey, false);
-                parent.Children.Add(cb);
+                parent.Children.Add(CreateToggleListRow(label, indent, cfg.IsEnabled,
+                    v => SetDungeonItemEnabled(resolvedKey, v)));
             }
         }
 
@@ -844,14 +862,14 @@ namespace TWChatOverlay.Views
         {
             var border = new Border
             {
-                BorderBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#404040")),
                 BorderThickness = new Thickness(1),
-                CornerRadius = new CornerRadius(8),
-                Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#262626")),
+                CornerRadius = new CornerRadius(3),
                 Padding = new Thickness(10),
                 Margin = new Thickness(0, 0, 10, 10),
                 Width = 200
             };
+            border.SetResourceReference(Border.BackgroundProperty, "OverlayCardBackgroundBrush");
+            border.SetResourceReference(Border.BorderBrushProperty, "OverlayStrongBorderBrush");
 
             var panel = new StackPanel();
             panel.Children.Add(new TextBlock { Text = ToKoreanBossName(bossName), Foreground = ThemeBrushes.Get("TextBrush", Brushes.White), FontWeight = FontWeights.SemiBold, Margin = new Thickness(0, 0, 0, 6) });
@@ -876,11 +894,27 @@ namespace TWChatOverlay.Views
         }
 
         private UIElement CreateBossAlertCheck(string label, bool initial, Action<bool> setValue)
+            => CreateToggleListRow(label, indent: 0, initial, setValue);
+
+        /// <summary>목록형 토글 행: 라벨 왼쪽(들여쓰기 지원) + 토글 스위치 오른쪽 — 설정 화면과 같은 스타일.</summary>
+        private static UIElement CreateToggleListRow(string label, double indent, bool initial, Action<bool> setValue)
         {
-            var cb = new CheckBox { Content = label, Foreground = ThemeBrushes.Get("TextBrush", Brushes.White), Margin = new Thickness(0, 2, 0, 2), IsChecked = initial };
-            cb.Checked += (_, _) => setValue(true);
-            cb.Unchecked += (_, _) => setValue(false);
-            return cb;
+            var toggle = new CheckBox { VerticalAlignment = VerticalAlignment.Center, IsChecked = initial };
+            toggle.SetResourceReference(FrameworkElement.StyleProperty, "ToggleSwitchCheckBoxStyle");
+            toggle.Checked += (_, _) => setValue(true);
+            toggle.Unchecked += (_, _) => setValue(false);
+
+            var dock = new DockPanel { Margin = new Thickness(indent, 3, 0, 3) };
+            DockPanel.SetDock(toggle, Dock.Right);
+            dock.Children.Add(toggle);
+            dock.Children.Add(new TextBlock
+            {
+                Text = label,
+                FontSize = 12,
+                VerticalAlignment = VerticalAlignment.Center,
+                Foreground = ThemeBrushes.Get("TextBrush", Brushes.White),
+            });
+            return dock;
         }
 
         private void SetDungeonItemEnabled(string key, bool enabled)
@@ -958,16 +992,8 @@ namespace TWChatOverlay.Views
                 if (!_settings.DungeonItemConfigs.TryGetValue(key, out var cfg))
                     continue;
 
-                var cb = new CheckBox
-                {
-                    Content = key,
-                    Foreground = ThemeBrushes.Get("TextBrush", Brushes.White),
-                    Margin = new Thickness(0, 2, 0, 2),
-                    IsChecked = cfg.IsEnabled
-                };
-                cb.Checked += (_, _) => SetDungeonItemEnabled(key, true);
-                cb.Unchecked += (_, _) => SetDungeonItemEnabled(key, false);
-                parent.Children.Add(cb);
+                parent.Children.Add(CreateToggleListRow(key, indent: 0, cfg.IsEnabled,
+                    v => SetDungeonItemEnabled(key, v)));
             }
         }
 
