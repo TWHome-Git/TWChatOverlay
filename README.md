@@ -1,245 +1,157 @@
-﻿﻿﻿﻿# TWChatOverlay
+# TWChatOverlay
 <img width="1920" height="937" alt="TWChatOverlay-hero-1920" src="https://github.com/user-attachments/assets/b9655813-e94f-4056-9351-79f02dab2a90" />
 
+**테일즈위버 채팅 로그 기반의 보조 프로그램** — 실시간 채팅 로그 분석으로 인게임에서 놓치기 쉬운 정보를 오버레이로 제공합니다.
 
-**테일즈위버 채팅 로그 기반의 보조 프로그램** 실시간 채팅 로그 분석을 통해 인게임에서 놓치기 쉬운 정보들을 오버레이로 제공합니다.
+게임 메모리를 건드리지 않고, 게임이 직접 생성하는 텍스트 로그 파일만 읽습니다.
+
+---
+
+## v5.0 하이라이트
+
+* **UI 전면 리디자인** — 설정 화면·메뉴·오버레이를 일관된 다크 테마로 재구성
+* **설정 마법사 개편** — 마법사가 실제 설정 화면과 동일한 패널을 사용해, 마법사에서 만진 값이 그대로 설정에 반영
+* **프로필 시스템** — 현재 설정 전체를 프로필로 저장/불러오기, 파일로 내보내기/가져오기 지원
+* **통합 알림 위치** — 외치기·던전 도우미·누적 경험치·아이템 획득·필드 보스 알림이 한 위치에 쌓이는 알림 스택
+* **도움말 내장** — 설정 항목마다 `[?]` 버튼으로 실제 화면 예시와 설명 제공
+* **기본 폰트 번들** — 쿠키런 · 프리텐다드 · 나눔스퀘어라운드 · G마켓 산스 동봉
+* **시작 속도 개선** — 최근 1주 로그는 즉시, 과거 로그는 백그라운드에서 처리
 
 ---
 
 ## 주요 기능
 
-### 1. 채팅창 오버레이 & 알림
-* **키워드 알림**: 지정한 키워드가 채팅창에 등장하면 시각적/청각적 알림 제공
-* **에타 정보 표시**: 채팅창 내 유저의 에타 레벨을 실시간으로 표기
-* **경험치 추적**: 실시간 획득 경험치 및 시간당 효율 계산
+### 채팅창 오버레이
+* **채팅 필터 & 색상** — 일반/팀/클럽/외치기/시스템 종류별 표시 여부와 색상 지정
+* **말머리** — 각 줄 앞에 `[일반]` `[팀]` `[클럽]` `[외치기]` `[시스템]` 표기, 외치기는 `[외치기] 보낸이 : 내용`으로 재구성
 
-### 2. 에타 순위표 및 검색
-### 3. 계산기 및 시뮬레이터
-### 4. 장비 DB 및 제작 재료 확인
-* 위 항목들 TW DB로 이관
-* https://twhome-git.github.io/TWPage/
-  
-### 5. 컨텐츠 및 특수 알림
-* **컨텐츠 추적**: 일일/주간 숙제 완료 여부 자동 체크리스트
-<img width="414" height="885" alt="image" src="https://github.com/user-attachments/assets/4c06dc6b-f8d8-4b47-ac91-be340aea01f2" />
-  
-* **전투 및 필드 알림**:
-    * 키워드 알림
-    * 경험치 추적
-       - 누적 경험치 / 시간당 경험치 확인
-         
-         <img width="218" height="26" alt="image" src="https://github.com/user-attachments/assets/0393cb0b-f3da-4a4f-8236-e03921feea99" />
+  <img alt="말머리" src="Data/images/Help/chat_category_prefix_on.png" width="480" />
 
-       - 누적 경험치 알림
-          - '경험의 정수' 교환 후 누적 경험치 100억 획득 시, 알림
-          - `이벤트로 얻거나 퀘스트 중 인식되지 않는 경험치가 있을 수 있음`
-            
-       - 저효율 경험치 획득 알림
-          - 기준치 이하의 경험치를 획득하면 음성 알림
+* **에타 레벨 표시** — 채팅 유저의 에타 레벨을 실시간 표기, 레벨 구간별 색상 지원
 
-    * 던전 도우미
-       - 에토스 방향 알림
-         
-         <img width="122" height="167" alt="image" src="https://github.com/user-attachments/assets/a11588b8-2ffd-42b4-bede-5144d1466e23" />
-    
-       - 던전 입장 횟수 (`어밴던로드`, `갈망하는 즐거움`)
-         
-         <img width="364" height="79" alt="image" src="https://github.com/user-attachments/assets/240dc389-b992-420c-8000-52f45897a86b" />
+  <img alt="에타 레벨 구간 색상" src="Data/images/Help/chat_id_eta_range_on.png" width="480" />
 
-         <img width="360" height="77" alt="image" src="https://github.com/user-attachments/assets/38d59226-5785-4941-a7d0-ac2f618fffd5" />
+* **서브 채팅창** — 메인과 별도로 최대 2개, 탭별(일반/팀/클럽/외치기/시스템/아이템) 전용 창 구성 가능
 
-    * 필드 보스 알림
-      
-* **아이템 획득 알림**:
-   - 레어 획득 시 알림
-  
-  <img width="400" height="180" alt="image" src="https://github.com/user-attachments/assets/948eb84e-c20a-40d6-912a-1255ed2d9ddf" />
+### 외치기
+* **외치기 팝업** — 외치기 발생 시 토스트 알림, 유지 시간·텍스트 크기 조절
 
-   - 수익 월별 통계
-  
-  <img width="640" height="480" alt="image" src="https://github.com/user-attachments/assets/14cf6610-7626-495b-a282-d4894de0e6f3" />
-   
-   - 아이템 필터
+  <img alt="외치기 팝업" src="Data/images/Help/shout_toast_on.png" width="480" />
 
-  <img width="640" height="426" alt="image" src="https://github.com/user-attachments/assets/4e7a5a95-5d96-4f9f-9256-2cf4cfcf4b0d" />
-   
-      
-* **버프 알림 (참고용)**:
-  
-  <img width="412" height="123" alt="image" src="https://github.com/user-attachments/assets/a646e388-6aa1-40d8-a4e2-3af79ba3e709" />
+* **닉네임 자동복사** — 외치기 끝의 `[닉네임]`을 클립보드로 자동 복사
+* **외치기 다시 보기** — 놓친 외치기를 메뉴에서 다시 확인
 
-    * 로그상의 '시작' 시점만 감지 가능
-    * '마법의 눈', '심장'을 제외한 나머지 도핑은 종료시점을 확인할 수 없어, 참고용으로만 사용
-    * 현재 지원되는 버프 목록 : '마법의 눈', '경험의 심장', '클럽 포인트 스크롤', '경험치 캐시 3종 아이템', '레어의 심장', '클럽 포인트 스크롤', '로토의 부적'
+### 키워드 알림
+* 지정 키워드가 채팅에 등장하면 색상 강조 + 알림음
+
+  <img alt="키워드 알림" src="Data/images/Help/keyword_color_on.png" width="480" />
+
+### 경험치 추적
+* **실시간 추적** — 누적 경험치 / 시간당 효율 / 최근 획득량 표시
+
+  <img alt="경험치 추적" src="Data/images/Help/exp_tracker_on.png" width="480" />
+
+* **누적 경험치 알림** — '경험의 정수' 교환 후 목표 누적치 도달 시 알림 (이벤트·퀘스트 경험치는 인식되지 않을 수 있음)
+* **저효율 알림** — 기준치 이하 경험치 획득 시 음성 알림
+
+### 던전 도우미
+* **에토스 방향 알림** — 이클립스 에토스의 방향 표시
+
+  <img alt="에토스 방향" src="Data/images/Help/dungeon_etos_ne.jpg" width="120" />
+
+* **던전 카운터** — 어밴던로드 진행 단계, 갈망하는 즐거움 에너지량 표시
+
+  <img alt="어밴던로드 카운터" src="Data/images/Help/dungeon_abandon_count_on.png" width="480" />
+
+* **어밴던로드 통계** — 주간 수익(마정석 등) 집계 창
+
+  <img alt="어밴던로드 통계" src="Data/images/Help/dungeon_abandon_gold_on.png" width="480" />
+
+* **웨이브 종료 알림** — 룬 경험치 던전, 테시스 코어 던전 웨이브 종료 알림음
+* **반사 패턴 알림** — 어비스 2사도 반사 패턴 알림음
+* **보급품 탈환 지도** — 보급품 위치 참고용 지도 창
+
+### 아이템 획득 알림
+* 레어 아이템 획득 시 토스트 알림 + 사운드
+
+  <img alt="아이템 획득 알림" src="Data/images/Help/item_drop_on.png" width="480" />
+
+* **아이템 필터** — 기본 필터에 원하는 아이템을 추가/제거, 필터 저장·불러오기 지원
+* **수익 월별 통계** — 획득 아이템의 월별 수익 달력
+
+### 버프 추적 (참고용)
+* 버프 시작을 감지해 남은 시간 표시, 종료 시 사운드 알림
+
+  <img alt="버프 추적" src="Data/images/Help/buff_tracker_on.png" width="480" />
+
+* 로그상 '시작' 시점만 감지 가능 — 종료 시점을 확인할 수 없는 버프는 참고용
+* 지원 버프: 마법의 눈 · 경험의 심장 · 클럽 포인트 스크롤 · 경험치 캐시 3종 · 레어의 심장 · 로토의 부적
+
+### 필드 보스 알림
+* 아칸 · 스페르첸드 · 파멸의 기원 · 혼란한 대지 등 등장 3분 전 / 1분 전 / 직전 알림 (팝업 + 사운드)
+
+  <img alt="필드 보스 알림" src="Data/images/Help/boss_alert_spawn.png" width="480" />
+
+### 일간/주간 컨텐츠 추적
+* 일일/주간 숙제 완료 여부를 로그에서 자동 체크하는 체크리스트 오버레이
+
+  <img width="414" height="885" alt="일간/주간 체크리스트" src="https://github.com/user-attachments/assets/4c06dc6b-f8d8-4b47-ac91-be340aea01f2" />
+
+### TW DB (웹)
+에타 순위표·검색, 계산기·시뮬레이터, 장비 DB·제작 재료는 웹으로 이관되었습니다.
+→ **https://twhome-git.github.io/TWPage/**
 
 ---
 
 ## 시작하기
 
 ### 1. 설치 및 실행
-1. **Releases** 페이지에서 최신 버전의 `.zip` 파일을 다운로드합니다.
+1. **Releases** 페이지에서 최신 버전 `.zip`을 다운로드합니다.
 2. 적당한 폴더에 압축을 해제합니다.
-3. 테일즈위버 게임 설정에서 **설정 -> 게임 -> 채팅 로그 -> ON**으로 변경합니다.
-4. `TWChatOverlay.exe` 파일을 실행합니다.
+3. 테일즈위버에서 **설정 → 게임 → 채팅 로그 → ON**으로 변경합니다.
+4. `TWChatOverlay.exe`를 실행합니다.
 
-### 2. 초기 설정 마법사
-1. 테일즈위버 채팅로그 폴더 지정
+### 2. 설정 마법사
+최초 실행 시 설정 마법사가 열립니다.
+1. **채팅 로그 위치 설정** — 테일즈위버의 `ChatLog` 폴더를 지정합니다. (예: `C:\Nexon\TalesWeaver\ChatLog`)
+2. **채팅창 ~ 필드 보스 설정** — 실제 설정 화면과 동일한 패널이 단계별로 나옵니다. 여기서 바꾼 값은 그대로 저장됩니다.
+3. **일간/주간 컨텐츠 추적 설정** — 체크리스트에 표시할 항목을 고릅니다.
 
-   <img width="760" height="520" alt="image" src="https://github.com/user-attachments/assets/7790d86e-0fa3-4f3a-bfca-114eabda7d3f" />
-   
-2. 채팅창 위치 설정
+마법사는 언제든 **설정**에서 다시 실행할 수 있고, 건너뛰어도 기본값으로 바로 사용할 수 있습니다.
 
-    <img width="760" height="520" alt="image" src="https://github.com/user-attachments/assets/7c948285-0d54-4e4e-87de-794691063313" />
-3. 채팅창 옵션 설정
+### 3. 창 위치·크기 조정 (잠금 해제 모드)
+* 메뉴의 **잠금 해제**를 켜면 모든 오버레이 창을 드래그로 이동, 모서리로 크기 조절할 수 있습니다.
+* 설정의 각 추가 기능 탭에 들어가면 해당(활성화된) 창의 위치 미리보기가 표시됩니다.
 
-    <img width="760" height="520" alt="image" src="https://github.com/user-attachments/assets/7be69844-3402-40f2-acba-d3ae11867482" />
-    
-4. 외치기 창 설정
-
-   <img width="760" height="520" alt="image" src="https://github.com/user-attachments/assets/73ef2add-dc6e-46fc-a48c-f411ba75c956" />
-   
-5. 키워드 알림 설정
-
-    <img width="760" height="520" alt="image" src="https://github.com/user-attachments/assets/b3264293-d02b-4317-8284-efbc909fc0e4" />
-    
-6. 경험치 추적 알림 설정
-
-   <img width="760" height="520" alt="image" src="https://github.com/user-attachments/assets/c00f80d7-d198-4cda-95f4-b088d1c860ed" />
-   
-7. 던전 도우미 설정
-   
-   <img width="760" height="520" alt="image" src="https://github.com/user-attachments/assets/a7f61805-25f8-4617-a5c4-f6363fea4b78" />
-   
-8. 아이템 획득 알림 설정
-  
-   <img width="760" height="520" alt="image" src="https://github.com/user-attachments/assets/37598ea3-cf20-49f4-8dd9-48f0ea87a6d7" />
-   
-9. 버프 추적 설정
-  
-   <img width="760" height="520" alt="image" src="https://github.com/user-attachments/assets/2d8a59b7-b936-4141-9883-df34aff94929" />
-   
-10. 필드 보스 알림 설정
-    
-      <img width="760" height="520" alt="image" src="https://github.com/user-attachments/assets/acdcaa48-772b-4163-a185-acb6d8ca9a36" />
-   
-11. 일간/주간 컨텐츠 추적 설정
-    
-      <img width="760" height="520" alt="image" src="https://github.com/user-attachments/assets/2c854eaa-5bf7-429e-a02c-b37001548d2b" />
-
-
-### 3. 사전 요구 사항
-* 테일즈위버 설치 경로의 `ChatLog` 폴더에 대한 접근 권한
-
-### 4. 메뉴 소개
-* 메인메뉴
-  
-<img width="711" height="618" alt="image" src="https://github.com/user-attachments/assets/c5c64a7e-e35e-4105-a25f-944503936933" />
-
-
-### 5. 앱 기본 설정
-<img width="36" height="37" alt="image" src="https://github.com/user-attachments/assets/e4c17df7-84cf-439f-bd31-409199219bc8" />
-
-
-* 오버레이 창 위치 설정
-   - 설정 혹은 추가기능에 맞는 설정창을 열었을 때, 각종 오버레이의 창 위치를 드래그해서 변경가능
-
-* 채팅창 설정
-   - 채팅 필터 및 색상, 폰트 설정 가능
-   - 채팅 필터가 설정된 채팅을 기본 탭에서 보여줌
-<img width="640" height="480" alt="image" src="https://github.com/user-attachments/assets/796fa456-5f36-450d-9495-c08816489c3e" />
-
-
-* 프로그램 설정
-   - 채팅창 위치 및 항상 위 속성, 로그 경로 설정
-<img width="640" height="480" alt="image" src="https://github.com/user-attachments/assets/4fa15731-8bc1-4214-87b1-e963db99a731" />
-
-
-* 단축키 설정
-   - 각종 단축키 설정
-   - 기존에 윈도우 혹은 다른 프로그램에서 사용하는 단축키는 등록이 제한됨
-<img width="640" height="480" alt="image" src="https://github.com/user-attachments/assets/e95cd70d-6a5f-4d60-8f27-1b577ddf27a6" />
+### 4. 프로필
+* **설정 → 프로필**에서 현재 설정 전체를 프로필로 저장하고 언제든 되돌릴 수 있습니다.
+* 프로필을 파일로 내보내 다른 PC로 옮기거나, 파일에서 불러올 수 있습니다.
 
 ---
-### 6. 추가 기능 설정
-<img width="40" height="40" alt="image" src="https://github.com/user-attachments/assets/3c99fca6-3598-4341-825d-aab276227476" />
 
-* 키워드 알림
-   - 색상 강조 : 키워드 확인 시, 오버레이 창의 채팅 하이라이트 ON/OFF
-   - 알림음 재생 : 키워드 확인 시, 알림음 재생 ON/OFF
-   - 알림 키워드 입력 : ex) @단어1 @단어2 등록 시, 단어1, 단어2 채팅창 메세지 확인 시, 알림
-     
-<img width="640" height="480" alt="image" src="https://github.com/user-attachments/assets/708de74d-cea5-427f-be11-cbad17ed1e9b" />
-
-
-* 경험치 추적
-   - 경험치 추적기능 활성화 : 오버레이 상단에 누적 경험치 및 시간당 획득한 경험치, 현재 획득 경험치 디스플레이
-   - 경험치 누적 알림 : 경험의 정수 교환 후, '100억' 이상의 경험치가 누적되면 알림
-      - ** 주의사항 : 퀘스트 경험치는 미적용 될 수도 있음 **
-   - 저효율 알림 활성화 : 기준치 미만의 경험치 획득 시, 알림음 재생 ON/OFF
-
-<img width="640" height="480" alt="image" src="https://github.com/user-attachments/assets/ea930186-df4f-4d58-8665-dac8bff36955" />
-
-
-* 던전 도우미
-   - 웨이브 종료 알림 : 룬 경험치 던전, 테시스 코어 던전 웨이브 종료 시, 알림
-     
-   - 에토스 방향 알림 : 에토스 방향 디스플레이 ON/OFF
-
-   - 반사 패턴 알림 : 어비스 2사도 반사 패턴 알림 ON/OFF
-
-   - 던전 카운터
-      - 어밴던로드 횟수 알리미 : 현재 진행한 단계를 보여줌
-      - 갈망하는 즐거움 횟수 알리미 : 보스방 진입 시, 현재 에너지량을 보여줌
-      - 창 지속시간 : 창이 표기된 후, 사라질 때까지의 시간
- 
-<img width="640" height="480" alt="image" src="https://github.com/user-attachments/assets/b1a405b9-4ea2-487b-86d1-8df6ad5f99fa" />
-
-
-* 아이템 획득 알림
-   - 아이템 획득 알림 : 아이템 획득 알림 디스플레이 ON/OFF
-   - 사용자 정의 필터 : 기본 필터에서 사용자가 원하는 아이템 목록을 추가/제거
-      - 적용 버튼 시, 적용되며 저장 및 불러오기 기능은 업데이트 혹은 다른 환경에서 같은 필터를 쉽게 설정할 수 있음
-        
-<img width="640" height="480" alt="image" src="https://github.com/user-attachments/assets/a387c8af-887d-4b55-9220-6af67d923d41" />
-
-
- * 버프 추적
-   - 버프 추적 알림 : 버프 추적 디스플레이 ON/OFF
-  
-<img width="640" height="480" alt="image" src="https://github.com/user-attachments/assets/d20e9fe2-e95e-4153-b310-022e51280034" />
-
-
- * 필드 보스 알림
-   - 필드 보스 알림 ON/OFF
-
-<img width="640" height="480" alt="image" src="https://github.com/user-attachments/assets/b05d01fc-039f-4dbc-8115-96940bf60328" />
-
-
-
----
 ## Q&A
 
-* Q) 채팅로그가 나타나지 않아요
-   - 앱 설정(`톱니바퀴`) -> 프로그램 설정 -> 로그 경로 설정에 실제 테일즈위버의 로그 폴더로 변경
-
-* Q) 폰트를 바꾸고 싶어요
-   - 원하는 폰트를 실행 파일이 있는 위치의 `Font`폴더에 `UserDefine.ttf`로 이름을 변경하여 이동
-   - 앱 설정(`톱니바퀴`) -> 채팅창 설정 -> 폰트 종류 `사용자 설정`
-
-* Q) 원하는 채팅만 보고 싶어요
-   - 앱 설정(`톱니바퀴`) -> 채팅창 설정 -> 채팅 필터 및 색상에서 원하는 채팅만 체크하면 `일반`탭에 체크한 항목만 표기
----
-
-## 기술 스택
-* **Language**: C#
-* **Framework**: WPF (Windows Presentation Foundation)
-* **Library**: Newtonsoft.Json
+* **Q) 채팅 로그가 나타나지 않아요**
+  - 게임 설정에서 채팅 로그가 ON인지 확인 → 앱 **설정 → 시스템**의 로그 경로를 실제 테일즈위버 `ChatLog` 폴더로 지정
+* **Q) 폰트를 바꾸고 싶어요**
+  - **설정 → 채팅 표시**의 글꼴에서 번들 폰트(쿠키런/프리텐다드/나눔스퀘어라운드/G마켓 산스 등)를 선택
+  - 다른 폰트를 쓰려면 실행 파일 위치의 `Font` 폴더에 원하는 폰트를 `UserDefine.ttf`로 넣고 글꼴을 `사용자 설정`으로 선택
+* **Q) 원하는 채팅만 보고 싶어요**
+  - **설정 → 채팅 필터**에서 원하는 종류만 체크하면 기본 탭에 해당 채팅만 표기
+* **Q) 설정 항목이 무슨 기능인지 모르겠어요**
+  - 각 설정 항목 옆의 `[?]` 버튼을 누르면 실제 화면 예시와 설명이 나옵니다.
 
 ---
 
 ## 주의 사항
-* **데이터 방식**: 본 프로그램은 메모리를 변조하지 않으며, 게임에서 생성하는 텍스트 로그 파일만 읽는 방식입니다.
-* **디스플레이**: 오버레이는 **창 모드**에 최적화되어 있습니다. 전체화면 모드에서는 오버레이가 보이지 않을 수 있습니다.
+* **데이터 방식** — 메모리를 변조하지 않으며, 게임이 생성하는 텍스트 로그 파일만 읽습니다.
+* **디스플레이** — 오버레이는 **창 모드**에 최적화되어 있습니다. 전체화면 모드에서는 오버레이가 보이지 않을 수 있습니다.
+
+---
+
+## 기술 스택
+* **Language**: C#
+* **Framework**: WPF (.NET 8)
 
 ---
 
