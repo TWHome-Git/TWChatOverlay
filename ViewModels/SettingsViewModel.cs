@@ -794,12 +794,20 @@ namespace TWChatOverlay.ViewModels
 
         /// <summary>프로필을 불러와 현재 설정에 통째로 적용하고 앱 전체를 갱신한다. (설정 초기화와 같은 경로)</summary>
         public bool LoadProfile(string name)
-        {
-            if (!SettingsProfileService.TryLoad(name, out var loaded))
-                return false;
+            => SettingsProfileService.TryLoad(name, out var loaded) && ApplySettingsSnapshot(loaded, $"profile '{name}'");
 
+        /// <summary>임의의 프로필(.json) 파일을 불러와 적용한다.</summary>
+        public bool LoadProfileFromFile(string path)
+            => SettingsProfileService.TryLoadFile(path, out var loaded) && ApplySettingsSnapshot(loaded, $"file '{path}'");
+
+        /// <summary>현 시점 설정 전체를 파일로 내보낸다.</summary>
+        public bool ExportCurrentSettings(string path)
+            => SettingsProfileService.ExportToFile(path, _settings);
+
+        private bool ApplySettingsSnapshot(ChatSettings loaded, string source)
+        {
             _settings.ApplyFrom(loaded);
-            AppLogger.Info($"Settings profile applied. Name='{name}'");
+            AppLogger.Info($"Settings snapshot applied from {source}.");
             NotifyAllSettingsChanged();
             SaveSettings();
             _onSettingsReset?.Invoke();
