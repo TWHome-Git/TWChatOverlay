@@ -222,8 +222,10 @@ namespace TWChatOverlay.Services
                 Content = root;
 
                 // 드래그로 앵커 이동 — 이동 중에도 실제 알림들이 따라오도록 즉시 재정렬
+                // 잠금 해제 모드에서는 다른 창처럼 선택 시 인스펙터(X/Y 입력·넛지)로도 편집 가능
                 root.MouseLeftButtonDown += (_, e) =>
                 {
+                    UiLockService.Select(this);
                     if (e.ButtonState != MouseButtonState.Pressed)
                         return;
                     try { DragMove(); } catch { }
@@ -235,6 +237,7 @@ namespace TWChatOverlay.Services
                         return;
                     _settings.ToastStackLeft = Left;
                     _settings.ToastStackTop = Top;
+                    ConfigService.SaveDeferred(_settings); // 인스펙터(X/Y 입력·넛지) 이동도 저장되도록
                     Reflow();
                 };
             }
