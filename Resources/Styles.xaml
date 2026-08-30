@@ -92,10 +92,6 @@
     <SolidColorBrush x:Key="TabSelectedAccentBackgroundBrush" Color="#1F0CD29D"/>
     <SolidColorBrush x:Key="TabSelectedAccentBorderBrush" Color="#FF0CD29D"/>
     <SolidColorBrush x:Key="TabHoverBorderBrush" Color="#FF2E3833"/>
-    <SolidColorBrush x:Key="PresetCheckedBackgroundBrush" Color="#330CD29D"/>
-    <SolidColorBrush x:Key="PresetCheckedBorderBrush" Color="#FF0CD29D"/>
-    <SolidColorBrush x:Key="PresetSaveButtonBrush" Color="#FF1A2320"/>
-    <SolidColorBrush x:Key="PresetLoadButtonBrush" Color="#260CD29D"/>
     <SolidColorBrush x:Key="DangerButtonBackgroundBrush" Color="#59E05252"/>
     <SolidColorBrush x:Key="CloseButtonBackgroundBrush" Color="#59E05252"/>
     <SolidColorBrush x:Key="CloseButtonHoverBrush" Color="#8CE05252"/>
@@ -115,11 +111,6 @@
     <SolidColorBrush x:Key="ComboItemTextBrush" Color="#FFD4D8D6"/>
     <SolidColorBrush x:Key="ComboItemHoverBrush" Color="#FF1E2622"/>
     <SolidColorBrush x:Key="ComboItemSelectedBrush" Color="#330CD29D"/>
-    <SolidColorBrush x:Key="PresetButtonBackgroundBrush" Color="#FF161D1A"/>
-    <SolidColorBrush x:Key="PresetButtonHoverBrush" Color="#FF1E2622"/>
-    <SolidColorBrush x:Key="PresetButtonPressedBrush" Color="#FF0AA97F"/>
-    <SolidColorBrush x:Key="PresetButtonTextBrush" Color="#FFD4D8D6"/>
-    <SolidColorBrush x:Key="PresetButtonBorderBrush" Color="#FF2A332E"/>
     <SolidColorBrush x:Key="SimButtonBackgroundBrush" Color="#FF0E8F6C"/>
     <SolidColorBrush x:Key="SimButtonBorderBrush" Color="#FF0AA97F"/>
     <SolidColorBrush x:Key="SimButtonHoverBrush" Color="#FF12A67E"/>
@@ -402,43 +393,6 @@
         </Setter>
     </Style>
 
-    <!-- Preset RadioButton Style -->
-    <Style x:Key="PresetRadioButtonStyle" TargetType="RadioButton">
-        <Setter Property="Background" Value="Transparent"/>
-        <Setter Property="Foreground" Value="{DynamicResource ButtonTextBrush}"/>
-        <Setter Property="Height" Value="28"/>
-        <Setter Property="Width" Value="60"/>
-        <Setter Property="Margin" Value="5,0"/>
-        <Setter Property="FontSize" Value="12"/>
-        <Setter Property="FontWeight" Value="Normal"/>
-        <Setter Property="Cursor" Value="Hand"/>
-        <Setter Property="Template">
-            <Setter.Value>
-                <ControlTemplate TargetType="RadioButton">
-                    <Border x:Name="RadioBorder"
-                            Background="{TemplateBinding Background}"
-                            CornerRadius="4"
-                            BorderThickness="1"
-                            BorderBrush="{DynamicResource ControlBorderBrush}"
-                            Padding="10,4">
-                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                    </Border>
-                    <ControlTemplate.Triggers>
-                        <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="RadioBorder" Property="Background" Value="{DynamicResource OverlayTabHoverBrush}"/>
-                            <Setter TargetName="RadioBorder" Property="BorderBrush" Value="{DynamicResource ControlHoverBorderBrush}"/>
-                        </Trigger>
-                        <Trigger Property="IsChecked" Value="True">
-                            <Setter TargetName="RadioBorder" Property="Background" Value="{DynamicResource PresetCheckedBackgroundBrush}"/>
-                            <Setter TargetName="RadioBorder" Property="BorderBrush" Value="{DynamicResource PresetCheckedBorderBrush}"/>
-                            <Setter Property="FontWeight" Value="Bold"/>
-                            <Setter Property="Foreground" Value="{DynamicResource ButtonTextBrush}"/>
-                        </Trigger>
-                    </ControlTemplate.Triggers>
-                </ControlTemplate>
-            </Setter.Value>
-        </Setter>
-    </Style>
 
     <!-- Section Header TextBlock Style -->
     <Style x:Key="SectionHeaderStyle" TargetType="TextBlock">
@@ -801,38 +755,6 @@
         <Setter Property="Margin" Value="15,2,5,2"/>
     </Style>
 
-    <!-- Missing styles used by IncSimulatorView -->
-    <Style x:Key="PresetButtonStyle" TargetType="Button" BasedOn="{StaticResource SecondaryButtonStyle}">
-        <Setter Property="Height" Value="34"/>
-        <Setter Property="MinWidth" Value="80"/>
-        <Setter Property="Padding" Value="8,5"/>
-        <Setter Property="Background" Value="{DynamicResource PresetButtonBackgroundBrush}"/>
-        <Setter Property="Foreground" Value="{DynamicResource PresetButtonTextBrush}"/>
-        <Setter Property="BorderBrush" Value="{DynamicResource PresetButtonBorderBrush}"/>
-        <Setter Property="FontFamily" Value="Segoe UI"/>
-        <Setter Property="FontSize" Value="13"/>
-        <Setter Property="Template">
-            <Setter.Value>
-                <ControlTemplate TargetType="Button">
-                    <Border Background="{TemplateBinding Background}"
-                            CornerRadius="6"
-                            BorderBrush="{TemplateBinding BorderBrush}"
-                            BorderThickness="1"
-                            Padding="{TemplateBinding Padding}">
-                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                    </Border>
-                    <ControlTemplate.Triggers>
-                        <Trigger Property="IsMouseOver" Value="True">
-                            <Setter Property="Background" Value="{DynamicResource PresetButtonHoverBrush}"/>
-                        </Trigger>
-                        <Trigger Property="IsPressed" Value="True">
-                            <Setter Property="Background" Value="{DynamicResource PresetButtonPressedBrush}"/>
-                        </Trigger>
-                    </ControlTemplate.Triggers>
-                </ControlTemplate>
-            </Setter.Value>
-        </Setter>
-    </Style>
 
     <Style x:Key="SimButtonStyle" TargetType="Button" BasedOn="{StaticResource SecondaryButtonStyle}">
         <Setter Property="Height" Value="34"/>
@@ -869,7 +791,7 @@
     <Style x:Key="SimTextBoxStyle" TargetType="TextBox" BasedOn="{StaticResource InputTextBoxStyle}">
         <Setter Property="Background" Value="{DynamicResource SimInputBackgroundBrush}"/>
         <Setter Property="Foreground" Value="{DynamicResource SimInputTextBrush}"/>
-        <Setter Property="BorderBrush" Value="{DynamicResource PresetButtonBorderBrush}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource ControlBorderBrush}"/>
         <Setter Property="BorderThickness" Value="1"/>
         <Setter Property="FontSize" Value="14"/>
         <Setter Property="Padding" Value="10,6"/>

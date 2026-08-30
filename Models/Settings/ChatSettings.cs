@@ -8,7 +8,7 @@ namespace TWChatOverlay.Models
 {
     /// <summary>
     /// 애플리케이션의 설정 클래스.
-    /// 저장 구조(settings.json v2)는 섹션 프로퍼티(Chat/Shout/Alerts/Windows/Ui/Hotkeys/System/Presets)이며,
+    /// 저장 구조(settings.json v2)는 섹션 프로퍼티(Chat/Shout/Alerts/Windows/Ui/Hotkeys/System)이며,
     /// 그 아래의 평면 프로퍼티들은 기존 호출부·바인딩 호환용 위임(facade)이다. ([JsonIgnore], 값 검증 담당)
     /// </summary>
     public partial class ChatSettings : INotifyPropertyChanged
@@ -46,9 +46,6 @@ namespace TWChatOverlay.Models
         [JsonPropertyName("System")]
         public SystemSection SystemConfig { get; set; } = new();
 
-        [JsonPropertyOrder(8)]
-        public PresetsSection Presets { get; set; } = new();
-
         /// <summary>역직렬화 후 누락된 컬렉션을 기본값으로 보정한다.</summary>
         public void EnsureLoadedDefaults()
         {
@@ -59,7 +56,6 @@ namespace TWChatOverlay.Models
             Ui ??= new UiSection();
             Hotkeys ??= new HotkeysSection();
             SystemConfig ??= new SystemSection();
-            Presets ??= new PresetsSection();
 
             if (Alerts.Dungeon.ItemConfigs == null || Alerts.Dungeon.ItemConfigs.Count == 0)
                 Alerts.Dungeon.ItemConfigs = CreateDefaultDungeonItemConfigs();
@@ -89,8 +85,6 @@ namespace TWChatOverlay.Models
         public bool ShowShout { get => Chat.Filters.ShowShout; set { Chat.Filters.ShowShout = value; OnPropertyChanged(); } }
         [JsonIgnore]
         public bool ShowSystem { get => Chat.Filters.ShowSystem; set { Chat.Filters.ShowSystem = value; OnPropertyChanged(); } }
-        [JsonIgnore]
-        public bool ShowWhisper { get => Chat.Filters.ShowWhisper; set { Chat.Filters.ShowWhisper = value; OnPropertyChanged(); } }
         [JsonIgnore]
         public bool ShowClubBoss { get => Chat.Filters.ShowClubBoss; set { Chat.Filters.ShowClubBoss = value; OnPropertyChanged(); } }
         [JsonIgnore]
@@ -189,9 +183,6 @@ namespace TWChatOverlay.Models
                 OnPropertyChanged();
             }
         }
-
-        [JsonIgnore]
-        public bool AlwaysVisible { get => Chat.AlwaysVisible; set { Chat.AlwaysVisible = value; OnPropertyChanged(); } }
 
         [JsonIgnore]
         public double WindowWidth { get => Windows.Main.Width ?? 650.0; set { Windows.Main.Width = value; OnPropertyChanged(); } }
@@ -1235,12 +1226,6 @@ namespace TWChatOverlay.Models
             set { if (Hotkeys.ToggleOverlay == value) return; Hotkeys.ToggleOverlay = value; OnPropertyChanged(); }
         }
         [JsonIgnore]
-        public string ToggleAlwaysVisibleHotKey
-        {
-            get => Hotkeys.ToggleAlwaysVisible;
-            set { if (Hotkeys.ToggleAlwaysVisible == value) return; Hotkeys.ToggleAlwaysVisible = value; OnPropertyChanged(); }
-        }
-        [JsonIgnore]
         public string ToggleDailyWeeklyContentHotKey
         {
             get => Hotkeys.ToggleDailyWeekly;
@@ -1297,51 +1282,6 @@ namespace TWChatOverlay.Models
             get => SystemConfig.StartupTodayOnlyBootstrapCompleted;
             set { if (SystemConfig.StartupTodayOnlyBootstrapCompleted == value) return; SystemConfig.StartupTodayOnlyBootstrapCompleted = value; OnPropertyChanged(); }
         }
-
-        #endregion
-
-        #region 프리셋 (facade)
-
-        [JsonIgnore]
-        public int LastSelectedPresetNumber
-        {
-            get => Presets.LastSelected;
-            set
-            {
-                int normalized = value is >= 1 and <= 3 ? value : 1;
-                if (Presets.LastSelected == normalized) return;
-                Presets.LastSelected = normalized;
-                OnPropertyChanged();
-            }
-        }
-        [JsonIgnore]
-        public WindowPositionPreset Preset1
-        {
-            get => Presets.Slot1;
-            set { Presets.Slot1 = value; OnPropertyChanged(); }
-        }
-        [JsonIgnore]
-        public WindowPositionPreset Preset2
-        {
-            get => Presets.Slot2;
-            set { Presets.Slot2 = value; OnPropertyChanged(); }
-        }
-        [JsonIgnore]
-        public WindowPositionPreset Preset3
-        {
-            get => Presets.Slot3;
-            set { Presets.Slot3 = value; OnPropertyChanged(); }
-        }
-
-        #endregion
-
-        #region 표시 전용
-
-        /// <summary>
-        /// 현재 창의 위치 표시 (읽기 전용)
-        /// </summary>
-        [JsonIgnore]
-        public string CurrentPositionDisplay { get; set; } = "위치: 기본값";
 
         #endregion
 

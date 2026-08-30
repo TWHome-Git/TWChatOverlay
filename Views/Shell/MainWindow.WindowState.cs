@@ -14,22 +14,6 @@ namespace TWChatOverlay.Views
         private void PersistCurrentMainWindowPosition()
         {
             SyncMarginsFromWindowPosition(this.Left, this.Top);
-            _settings.UpdatePositionDisplay(_settings.LineMarginLeft, _settings.LineMargin);
-
-            try
-            {
-                _settings.SavePreset(
-                    _settings.LastSelectedPresetNumber,
-                    this.Left,
-                    this.Top,
-                    _settings.LineMarginLeft,
-                    _settings.LineMargin);
-            }
-            catch (Exception ex)
-            {
-                AppLogger.Warn("Failed to persist main window position to preset.", ex);
-            }
-
             PersistSettings();
         }
 

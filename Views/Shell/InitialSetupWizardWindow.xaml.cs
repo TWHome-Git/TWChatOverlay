@@ -1065,18 +1065,14 @@ namespace TWChatOverlay.Views
 
         private void SaveMainWindowPositionToPreset1()
         {
+            // 위치는 LineMargin 값으로 이미 저장된다 (프리셋 시스템은 프로필로 대체되어 제거됨)
             try
             {
-                if (_mainWindow == null)
-                    return;
-
-                _settings.SavePreset(1, _mainWindow.Left, _mainWindow.Top, _settings.LineMarginLeft, _settings.LineMargin);
-                _settings.LastSelectedPresetNumber = 1;
                 ConfigService.SaveDeferred(_settings);
             }
             catch (Exception ex)
             {
-                AppLogger.Warn("Failed to save preset1 from setup wizard.", ex);
+                AppLogger.Warn("Failed to save settings from setup wizard.", ex);
             }
         }
 

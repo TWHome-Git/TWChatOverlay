@@ -179,17 +179,6 @@ namespace TWChatOverlay.Views
             }
         }
 
-        private void ApplyStartupPreset()
-        {
-            var preset = _settings.GetLastSelectedPreset();
-            if (preset == null) return;
-
-            _settings.LineMarginLeft = preset.Left;
-            _settings.LineMargin = preset.Top;
-
-            _settings.UpdatePositionDisplay(_settings.LineMarginLeft, _settings.LineMargin);
-        }
-
         private void WarmUpDefaultDropItemFilterSnapshot()
         {
             try
