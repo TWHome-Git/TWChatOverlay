@@ -358,7 +358,7 @@ namespace TWChatOverlay.Views
             var dialog = new Microsoft.Win32.SaveFileDialog
             {
                 Title = "프로필 파일로 내보내기",
-                FileName = $"TWChat_프로필_{System.DateTime.Now:yyyyMMdd_HHmm}.json",
+                FileName = $"TWChat_Profile_{System.DateTime.Now:yyyyMMdd_HHmm}.json",
                 Filter = "설정 프로필 (*.json)|*.json",
             };
             if (dialog.ShowDialog(Window.GetWindow(this)) != true)
