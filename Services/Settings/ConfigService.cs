@@ -17,7 +17,11 @@ namespace TWChatOverlay.Services
     /// </summary>
     public static class ConfigService
     {
-        private static readonly string FilePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "settings.json");
+        // 설정은 Config 폴더에 저장한다. 아이템 알림 관련(Alerts.ItemDrop)은 item.json으로 분리.
+        private static readonly string ConfigDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Config");
+        private static readonly string FilePath = Path.Combine(ConfigDir, "settings.json");
+        private static readonly string ItemFilePath = Path.Combine(ConfigDir, "item.json");
+        private static readonly string LegacyFilePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "settings.json");
         private static readonly object _saveLock = new();
         private static readonly TimeSpan SaveDebounce = TimeSpan.FromMilliseconds(250);
         private static readonly JsonSerializerOptions _options = new JsonSerializerOptions
@@ -56,11 +60,29 @@ namespace TWChatOverlay.Services
         {
             try
             {
-                return File.Exists(FilePath);
+                return File.Exists(FilePath) || File.Exists(LegacyFilePath);
             }
             catch
             {
                 return false;
+            }
+        }
+
+        /// <summary>구버전 위치(프로그램 폴더 루트)의 settings.json을 Config 폴더로 옮긴다.</summary>
+        private static void MigrateFileLocation()
+        {
+            try
+            {
+                if (File.Exists(FilePath) || !File.Exists(LegacyFilePath))
+                    return;
+
+                Directory.CreateDirectory(ConfigDir);
+                File.Move(LegacyFilePath, FilePath);
+                AppLogger.Info($"Settings file moved to '{FilePath}'.");
+            }
+            catch (Exception ex)
+            {
+                AppLogger.Error("Failed to move settings file into Config folder.", ex);
             }
         }
 
@@ -134,6 +156,28 @@ namespace TWChatOverlay.Services
                 return;
             }
 
+            // 아이템 알림(Alerts.ItemDrop)은 item.json으로 분리해 저장한다
+            string settingsJson = json;
+            string itemJson = "{}";
+            try
+            {
+                if (JsonNode.Parse(json) is JsonObject root)
+                {
+                    if (root["Alerts"] is JsonObject alerts && alerts["ItemDrop"] is JsonNode itemNode)
+                    {
+                        alerts.Remove("ItemDrop");
+                        itemJson = itemNode.ToJsonString(_options);
+                    }
+                    settingsJson = root.ToJsonString(_options);
+                }
+            }
+            catch (Exception ex)
+            {
+                AppLogger.Warn("Failed to split item settings; saving combined file.", ex);
+                settingsJson = json;
+                itemJson = "{}";
+            }
+
             // 백신/동기화 도구의 일시적 파일 잠금에 대비해 짧게 재시도한다
             const int maxAttempts = 3;
             Exception? lastError = null;
@@ -141,7 +185,8 @@ namespace TWChatOverlay.Services
             {
                 try
                 {
-                    WriteSettingsFile(json);
+                    WriteJsonFile(FilePath, settingsJson);
+                    WriteJsonFile(ItemFilePath, itemJson);
                     _lastSavedJson = json;
                     _saveFailureNotified = false;
                     AppLogger.Info($"Settings saved to {FilePath}.");
@@ -165,27 +210,29 @@ namespace TWChatOverlay.Services
             NotifySaveFailureOnce(lastError);
         }
 
-        private static void WriteSettingsFile(string json)
+        private static void WriteJsonFile(string path, string json)
         {
-            string directory = Path.GetDirectoryName(FilePath) ?? AppDomain.CurrentDomain.BaseDirectory;
+            string directory = Path.GetDirectoryName(path) ?? AppDomain.CurrentDomain.BaseDirectory;
             Directory.CreateDirectory(directory);
 
-            string tempPath = FilePath + ".tmp";
+            string tempPath = path + ".tmp";
             File.WriteAllText(tempPath, json, new UTF8Encoding(false));
 
-            if (File.Exists(FilePath))
-                File.Replace(tempPath, FilePath, null);
+            if (File.Exists(path))
+                File.Replace(tempPath, path, null);
             else
-                File.Move(tempPath, FilePath);
+                File.Move(tempPath, path);
         }
 
         private static void CleanupTempFile()
         {
             try
             {
-                string tempPath = FilePath + ".tmp";
-                if (File.Exists(tempPath))
-                    File.Delete(tempPath);
+                foreach (string path in new[] { FilePath + ".tmp", ItemFilePath + ".tmp" })
+                {
+                    if (File.Exists(path))
+                        File.Delete(path);
+                }
             }
             catch
             {
@@ -221,17 +268,20 @@ namespace TWChatOverlay.Services
         /// </summary>
         public static ChatSettings Load()
         {
+            MigrateFileLocation();
+
             try
             {
                 if (File.Exists(FilePath))
                 {
                     string json = File.ReadAllText(FilePath);
-                    _lastSavedJson = json;
                     AppLogger.Debug($"Settings loaded from {FilePath}.");
 
                     ChatSettings settings;
                     bool migratedFromLegacy = false;
-                    if (JsonNode.Parse(json) is JsonObject rootObj && SettingsMigration.IsLegacyFormat(rootObj))
+                    bool itemFileExisted = File.Exists(ItemFilePath);
+                    JsonObject? rootObj = JsonNode.Parse(json) as JsonObject;
+                    if (rootObj != null && SettingsMigration.IsLegacyFormat(rootObj))
                     {
                         // 구버전(평면) 파일: v2로 이관하고 원본은 .v1.bak으로 보존
                         settings = SettingsMigration.FromLegacy(rootObj, _options);
@@ -241,6 +291,28 @@ namespace TWChatOverlay.Services
                     }
                     else
                     {
+                        // item.json(Alerts.ItemDrop 분리 저장분)을 병합해 하나의 설정으로 읽는다
+                        if (rootObj != null && itemFileExisted)
+                        {
+                            try
+                            {
+                                if (JsonNode.Parse(File.ReadAllText(ItemFilePath)) is JsonNode itemNode)
+                                {
+                                    if (rootObj["Alerts"] is not JsonObject alerts)
+                                    {
+                                        alerts = new JsonObject();
+                                        rootObj["Alerts"] = alerts;
+                                    }
+                                    alerts["ItemDrop"] = itemNode;
+                                    json = rootObj.ToJsonString(_options);
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                AppLogger.Warn("Failed to merge item.json; item settings fall back to defaults.", ex);
+                            }
+                        }
+
                         settings = JsonSerializer.Deserialize<ChatSettings>(json, _options) ?? new ChatSettings();
                     }
 
@@ -251,6 +323,7 @@ namespace TWChatOverlay.Services
 
                     if (migratedFromLegacy)
                     {
+                        _lastSavedJson = null;
                         Save(settings);
                         AppLogger.Info("Settings were migrated to the v2 schema.");
                         return settings;
@@ -264,8 +337,10 @@ namespace TWChatOverlay.Services
                         normalizedJson = JsonSerializer.Serialize(settings, _options);
                     }
 
-                    if (!string.Equals(json, normalizedJson, StringComparison.Ordinal))
+                    _lastSavedJson = normalizedJson;
+                    if (removedObsoleteKeys || !itemFileExisted)
                     {
+                        _lastSavedJson = null;
                         Save(settings);
                         AppLogger.Info("Settings were normalized to the current schema.");
                     }
