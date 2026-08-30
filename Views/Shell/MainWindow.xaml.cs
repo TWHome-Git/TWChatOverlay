@@ -87,6 +87,9 @@ namespace TWChatOverlay.Views
         private StartupLoadingWindow? _startupLoadingWindow;
         private InitialSetupWizardWindow? _initialSetupWizardWindow;
         private readonly bool _settingsFileMissingOnStartup;
+
+        /// <summary>시작 시 설정 파일이 없었는지(진짜 최초 실행) — 마법사의 공장 기본값 적용 조건.</summary>
+        internal bool SettingsFileMissingOnStartup => _settingsFileMissingOnStartup;
         private bool _pendingInitialSetupWizard;
         private bool _isInitialSetupWizardRunning;
         private CancellationTokenSource? _startupLogInitCts;

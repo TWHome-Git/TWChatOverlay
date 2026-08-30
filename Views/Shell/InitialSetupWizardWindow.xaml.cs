@@ -53,9 +53,13 @@ namespace TWChatOverlay.Views
             _mainWindow = mainWindow;
             if (!_settings.InitialSetupWizardCompleted)
             {
-                // 최초 실행: 공장 기본 설정(Defaults\DefaultSettings.json)을 마법사 시작값으로 적용
-                try { _mainWindow?.SettingsViewModelInstance.ApplyFactoryDefaultsForWizard(); }
-                catch (Exception ex) { AppLogger.Warn("Failed to apply factory defaults for setup wizard.", ex); }
+                // 진짜 최초 실행(설정 파일 없음)에만 공장 기본 설정을 시작값으로 적용한다.
+                // 건너뛰기 후 재실행에서 또 적용하면 그 사이 사용자가 바꾼 설정이 초기화되기 때문.
+                if (_mainWindow?.SettingsFileMissingOnStartup == true)
+                {
+                    try { _mainWindow.SettingsViewModelInstance.ApplyFactoryDefaultsForWizard(); }
+                    catch (Exception ex) { AppLogger.Warn("Failed to apply factory defaults for setup wizard.", ex); }
+                }
                 ResetInitialWindowPositionsToOrigin();
                 ConfigService.SaveDeferred(_settings);
             }
