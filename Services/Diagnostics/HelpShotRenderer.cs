@@ -227,6 +227,78 @@ namespace TWChatOverlay.Services
             Save(outDir, "dungeon_craving_count_off.png", PanelToggle(false, DimLine("(입장해도 알림 없음)")));
             Save(outDir, "dungeon_craving_count_on.png", PanelToggle(true,
                 RealDungeonAlert("갈망하는 즐거움 2/20")));
+
+            RenderReadmeShots(outDir);
+        }
+
+        // ===== README 전용 이미지: 토글 뱃지 없이 내용만 (문서 삽입용) =====
+
+        private static void RenderReadmeShots(string outDir)
+        {
+            Save(outDir, "readme_category_prefix.png", PanelPlain(
+                Line(NormalCol, ("[일반] ", NormalCol), ("아나이스 : 어비스 가실 분?", NormalCol)),
+                Line(TeamCol, ("[팀] ", TeamCol), ("로아미니 : 상실의 섬으로 와주세요", TeamCol)),
+                Line(ClubCol, ("[클럽] ", ClubCol), ("벤야 : 클럽 보스 5초 후 잡아요", ClubCol)),
+                Line(ShoutCol, ("[외치기] ", ShoutCol), ("티치엘", ShoutCol), (" : 훈장 50개 삽니다", ShoutCol))));
+
+            Save(outDir, "readme_eta_range.png", PanelPlain(
+                Line(NormalCol, ("보리스", NormalCol), ("[15]", Range1Col), (" : ㅎㅇ", NormalCol)),
+                Line(NormalCol, ("루시안", NormalCol), ("[33]", Range2Col), (" : 에오니스 라피스 팝니다", NormalCol)),
+                Line(NormalCol, ("벤야", NormalCol), ("[55]", Range3Col), (" : 어비스 가실 분?", NormalCol)),
+                Line(NormalCol, ("로아미니", NormalCol), ("[71]", Range4Col), (" : 상실의 섬으로 와주세요", NormalCol)),
+                Line(NormalCol, ("아나이스", NormalCol), ("[92]", Range5Col), (" : 클럽 보스 5초 후 잡아요", NormalCol))));
+
+            Save(outDir, "readme_shout_toast.png", PanelPlain(
+                Line(ShoutCol, ("외치기 : 훈장 50개 삽니다 [티치엘]", ShoutCol)),
+                RealShoutToast("훈장 50개 삽니다 [티치엘]")));
+
+            Save(outDir, "readme_keyword_color.png", PanelPlain(
+                Line(ShoutCol, ("외치기 : ", ShoutCol), ("세크리드 주화 주머니", Color.FromRgb(0xFF, 0x5A, 0x5A)), (" 팝니다 [김주화]", ShoutCol)),
+                Line(ShoutCol, ("외치기 : 클럽원 모집 [김클럽]", ShoutCol)),
+                DimLine("(키워드: @세크리드 주화 주머니)")));
+
+            Save(outDir, "readme_exp_tracker.png", PanelPlain(RealExpTracker()));
+            Save(outDir, "readme_abandon_count.png", PanelPlain(RealDungeonAlert("어밴던로드 - 필멸의 땅 3/10")));
+            Save(outDir, "readme_abandon_gold.png", PanelPlain(RealAbandonSummary()));
+
+            Save(outDir, "readme_item_drop.png", PanelPlain(
+                Line(SystemCol, ("[설계자의 반지] 을 획득하였습니다.", SystemCol)),
+                RealItemToast("설계자의 반지", ItemDropGrade.Rare)));
+
+            Save(outDir, "readme_buff_tracker.png", PanelPlain(RealBuffTracker()));
+
+            // 일일/주간 컨텐츠 창 — 실제 창의 일반 상태와 설정 상태
+            Save(outDir, "readme_daily_weekly.png", RealDailyWeekly(settingsOpen: false));
+            Save(outDir, "readme_daily_weekly_settings.png", RealDailyWeekly(settingsOpen: true));
+        }
+
+        /// <summary>배지 없는 어두운 채팅 판 (README 삽입용).</summary>
+        private static FrameworkElement PanelPlain(params UIElement[] lines)
+        {
+            var stack = new StackPanel { Margin = new Thickness(10, 10, 10, 8) };
+            foreach (var line in lines)
+                stack.Children.Add(line);
+
+            return new Border
+            {
+                Width = PanelWidth,
+                Background = new SolidColorBrush(PanelBg),
+                BorderBrush = new SolidColorBrush(BorderCol),
+                BorderThickness = new Thickness(1),
+                CornerRadius = new CornerRadius(6),
+                Child = stack,
+            };
+        }
+
+        /// <summary>실제 일일/주간 컨텐츠 창 (일반/설정 상태). 실제 창 크기로 잘라 내부 스크롤 상태 그대로 찍는다.</summary>
+        private static FrameworkElement RealDailyWeekly(bool settingsOpen)
+        {
+            var w = new Views.DailyWeeklyContentWindow(new ChatSettings());
+            w.IsSettingsOpen = settingsOpen;
+            var root = WindowRoot(w);
+            root.Width = 280;
+            root.Height = 540;
+            return root;
         }
 
         // ===== 조립 헬퍼 =====
