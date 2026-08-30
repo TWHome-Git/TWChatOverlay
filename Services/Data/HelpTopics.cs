@@ -241,8 +241,9 @@ namespace TWChatOverlay.Services
                 new[] { "dungeon_abandon_count_off.png", "dungeon_abandon_count_on.png" }),
 
             ["dungeon.abandon_gold"] = (
-                "어밴던로드 누적 금액",
-                "어밴던로드에서 획득한 금액의 주간 합계 창을 보여줍니다.",
+                "어밴던로드 통계",
+                "어밴던로드 상황판 창을 보여줍니다.\n" +
+                "주간 합계 금액과 마정석(하급~최상급) 획득 내역을 한눈에 볼 수 있습니다.",
                 new[] { "dungeon_abandon_gold_off.png", "dungeon_abandon_gold_on.png" }),
 
             ["dungeon.craving_count"] = (
