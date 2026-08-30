@@ -654,68 +654,118 @@ namespace TWChatOverlay.Services
             return brush;
         }
 
-        /// <summary>메뉴 바 목업: 실제 메뉴 아이콘(채팅/일일주간/달력/외치기/설정/종료)과 최소화 버튼을 세로/가로로 배치.</summary>
+        /// <summary>
+        /// 메뉴 바 목업: 실제 MenuWindow 구성 그대로 —
+        /// 앱 아이콘 / 최소화 / 채팅 / TW DB / 일일·주간 / 달력 / 외치기 / M(메모) / 잠금 / 설정 / 종료.
+        /// </summary>
         private static FrameworkElement MenuBarMock(bool horizontal)
         {
-            string[] iconFiles = { "Chat.png", "DailyWeekly.png", "Calendar.png", "Shout.png", "Setting.png", "Exit.png" };
+            const double cell = 28;
+            var textCol = Color.FromRgb(0xE8, 0xEA, 0xE9);
 
-            var icons = new StackPanel
-            {
-                Orientation = horizontal ? Orientation.Horizontal : Orientation.Vertical,
-                HorizontalAlignment = HorizontalAlignment.Left,
-            };
-            foreach (string file in iconFiles)
+            UIElement PackIcon(string uri)
             {
                 var image = new System.Windows.Controls.Image
                 {
-                    Width = 22,
-                    Height = 22,
+                    Width = cell - 6,
+                    Height = cell - 6,
                     Stretch = Stretch.Uniform,
-                    Margin = new Thickness(3),
                 };
-                try
-                {
-                    image.Source = new BitmapImage(
-                        new Uri($"pack://application:,,,/Data/images/MenuIcon/{file}", UriKind.Absolute));
-                }
-                catch { }
-                icons.Children.Add(image);
+                try { image.Source = new BitmapImage(new Uri(uri, UriKind.Absolute)); } catch { }
+                return Cell(image);
             }
 
-            // 최소화 텍스트 버튼: 세로 바는 가로 글자, 가로 바는 세로 글자
+            UIElement TextIcon(string text, double size, string family = "Malgun Gothic", double lineHeight = 0)
+            {
+                var tb = new TextBlock
+                {
+                    Text = text,
+                    FontSize = size,
+                    FontWeight = FontWeights.Bold,
+                    Foreground = new SolidColorBrush(textCol),
+                    FontFamily = new FontFamily(family),
+                    TextAlignment = TextAlignment.Center,
+                    HorizontalAlignment = HorizontalAlignment.Center,
+                    VerticalAlignment = VerticalAlignment.Center,
+                };
+                if (lineHeight > 0)
+                {
+                    tb.LineHeight = lineHeight;
+                    tb.LineStackingStrategy = LineStackingStrategy.BlockLineHeight;
+                }
+                return Cell(tb);
+            }
+
+            UIElement Cell(UIElement content) => new Border
+            {
+                Width = cell,
+                Height = cell,
+                Margin = new Thickness(1),
+                CornerRadius = new CornerRadius(6),
+                Child = content is FrameworkElement fe ? Center(fe) : content,
+            };
+
+            FrameworkElement Center(FrameworkElement fe)
+            {
+                fe.HorizontalAlignment = HorizontalAlignment.Center;
+                fe.VerticalAlignment = VerticalAlignment.Center;
+                return fe;
+            }
+
+            // 최소화: 세로 바는 가로 글자 낮은 버튼, 가로 바는 세로 글자 좁은 버튼
             var minText = new TextBlock
             {
                 Text = horizontal ? "최\n소\n화" : "최소화",
-                FontSize = 9,
-                LineHeight = 10,
-                Foreground = new SolidColorBrush(SubText),
+                FontSize = 8.5,
+                LineHeight = 9.5,
+                LineStackingStrategy = LineStackingStrategy.BlockLineHeight,
+                Foreground = new SolidColorBrush(textCol),
                 FontFamily = new FontFamily("Malgun Gothic"),
                 TextAlignment = TextAlignment.Center,
                 HorizontalAlignment = HorizontalAlignment.Center,
                 VerticalAlignment = VerticalAlignment.Center,
             };
-            icons.Children.Add(new Border
+            var minButton = new Border
             {
-                Margin = new Thickness(3),
-                Padding = new Thickness(3, 2, 3, 2),
-                CornerRadius = new CornerRadius(3),
+                Width = horizontal ? 16 : cell + 2,
+                Height = horizontal ? cell + 2 : 15,
+                Margin = new Thickness(1, horizontal ? 1 : 2, 1, horizontal ? 1 : 2),
+                CornerRadius = new CornerRadius(4),
                 Background = new SolidColorBrush(Color.FromRgb(0x22, 0x2A, 0x26)),
                 BorderBrush = new SolidColorBrush(BorderCol),
                 BorderThickness = new Thickness(1),
                 VerticalAlignment = VerticalAlignment.Center,
                 HorizontalAlignment = HorizontalAlignment.Center,
                 Child = minText,
-            });
+            };
 
+            var items = new StackPanel
+            {
+                Orientation = horizontal ? Orientation.Horizontal : Orientation.Vertical,
+                HorizontalAlignment = HorizontalAlignment.Left,
+            };
+            items.Children.Add(PackIcon("pack://application:,,,/favicon.ico"));
+            items.Children.Add(minButton);
+            items.Children.Add(PackIcon("pack://application:,,,/Data/images/MenuIcon/Chat.png"));
+            items.Children.Add(TextIcon("TW\nDB", 8.5, lineHeight: 9));
+            items.Children.Add(PackIcon("pack://application:,,,/Data/images/MenuIcon/DailyWeekly.png"));
+            items.Children.Add(PackIcon("pack://application:,,,/Data/images/MenuIcon/Calendar.png"));
+            items.Children.Add(PackIcon("pack://application:,,,/Data/images/MenuIcon/Shout.png"));
+            items.Children.Add(TextIcon("M", 12));
+            items.Children.Add(TextIcon("", 13, family: "Segoe MDL2 Assets"));
+            items.Children.Add(PackIcon("pack://application:,,,/Data/images/MenuIcon/Setting.png"));
+            items.Children.Add(PackIcon("pack://application:,,,/Data/images/MenuIcon/Exit.png"));
+
+            // 실제 메뉴 바처럼 불투명한 어두운 판
             var bar = new Border
             {
                 Background = new SolidColorBrush(Color.FromRgb(0x18, 0x1F, 0x1C)),
                 BorderBrush = new SolidColorBrush(BorderCol),
                 BorderThickness = new Thickness(1),
                 CornerRadius = new CornerRadius(5),
-                Padding = new Thickness(3),
+                Padding = new Thickness(2),
                 HorizontalAlignment = HorizontalAlignment.Left,
-                Child = icons,
+                Child = items,
             };
             var stack = new StackPanel();
             stack.Children.Add(bar);
