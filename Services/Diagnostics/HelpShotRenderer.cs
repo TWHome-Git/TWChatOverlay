@@ -117,6 +117,109 @@ namespace TWChatOverlay.Services
             // ── 서브 채팅창: 탭 전환 ──
             Save(outDir, "chat_clone_basic.png", CloneMock(activeShout: false));
             Save(outDir, "chat_clone_shout.png", CloneMock(activeShout: true));
+
+            // ── 외치기: 토스트 팝업 ──
+            Save(outDir, "shout_toast_off.png", PanelToggle(false,
+                Line(ShoutCol, ("외치기 : 잡템 일괄 삽니다 [상점왕]", ShoutCol)),
+                DimLine("(채팅창에만 표시 — 팝업 없음)")));
+            Save(outDir, "shout_toast_on.png", PanelToggle(true,
+                Line(ShoutCol, ("외치기 : 잡템 일괄 삽니다 [상점왕]", ShoutCol)),
+                ToastMock("외치기", "잡템 일괄 삽니다 [상점왕]", ShoutCol)));
+
+            // ── 외치기: 닉네임 자동복사 ──
+            Save(outDir, "shout_autocopy_off.png", PanelToggle(false,
+                ToastMock("외치기", "잡템 일괄 삽니다 [상점왕]", ShoutCol),
+                DimLine("(클립보드 변화 없음)")));
+            Save(outDir, "shout_autocopy_on.png", PanelToggle(true,
+                ToastMock("외치기", "잡템 일괄 삽니다 [상점왕]", ShoutCol),
+                Chip("클립보드에 '상점왕' 복사됨")));
+
+            // ── 외치기: 토스트 글자 크기 ──
+            Save(outDir, "shout_toast_font_13.png", Panel("크기 13",
+                ToastMockSized(13, "외치기", "각인 도와드려요 [세공사]", ShoutCol)));
+            Save(outDir, "shout_toast_font_20.png", Panel("크기 20",
+                ToastMockSized(20, "외치기", "각인 도와드려요 [세공사]", ShoutCol)));
+
+            // ── 화면: 투명도 ──
+            Save(outDir, "display_opacity_100.png", OpacityMock(0xF2, "투명도 100%"));
+            Save(outDir, "display_opacity_50.png", OpacityMock(0x66, "투명도 50%"));
+
+            // ── 화면: 잠금 해제 모드 ──
+            Save(outDir, "display_unlock_off.png", Panel("잠금 상태",
+                Line(NormalCol, ("모비딕 : 사냥 가실 분?", NormalCol)),
+                DimLine("(창 이동·크기 변경 불가)")));
+            Save(outDir, "display_unlock_on.png", Panel("잠금 해제 — 드래그로 이동",
+                UnlockMock()));
+
+            // ── 화면: 메뉴 바 가로형 ──
+            Save(outDir, "display_menu_h_off.png", PanelToggle(false, MenuBarMock(horizontal: false)));
+            Save(outDir, "display_menu_h_on.png", PanelToggle(true, MenuBarMock(horizontal: true)));
+
+            // ── 화면: 항상 위 ──
+            Save(outDir, "display_ontop_off.png", PanelToggle(false, ZOrderMock(overlayOnTop: false)));
+            Save(outDir, "display_ontop_on.png", PanelToggle(true, ZOrderMock(overlayOnTop: true)));
+
+            // ── 키워드: 색상 강조 ──
+            Save(outDir, "keyword_color_off.png", PanelToggle(false,
+                Line(ShoutCol, ("외치기 : 룬 재료 팝니다 [상점왕]", ShoutCol)),
+                Line(ShoutCol, ("외치기 : 클럽원 모집 [달빛클럽]", ShoutCol))));
+            Save(outDir, "keyword_color_on.png", PanelToggle(true,
+                Line(ShoutCol, ("외치기 : ", ShoutCol), ("룬 재료", Color.FromRgb(0xFF, 0x5A, 0x5A)), (" 팝니다 [상점왕]", ShoutCol)),
+                Line(ShoutCol, ("외치기 : 클럽원 모집 [달빛클럽]", ShoutCol)),
+                DimLine("(키워드: @룬 재료)")));
+
+            // ── 경험치 추적 ──
+            Save(outDir, "exp_tracker_off.png", PanelToggle(false,
+                DimLine("(추적 창 표시 안 함)")));
+            Save(outDir, "exp_tracker_on.png", PanelToggle(true, TrackerMock()));
+
+            // ── 경험치 누적 알림 ──
+            Save(outDir, "exp_cum_off.png", PanelToggle(false,
+                DimLine("(누적 표시 없음)")));
+            Save(outDir, "exp_cum_on.png", PanelToggle(true,
+                ToastMock("누적 경험치", "1,234.5억  (+1.2억)", GoldCol)));
+
+            // ── 저효율 알림 ──
+            Save(outDir, "exp_loweff_off.png", PanelToggle(false,
+                DimLine("(효율이 떨어져도 알림 없음)")));
+            Save(outDir, "exp_loweff_on.png", PanelToggle(true,
+                ToastMock("저효율 알림", "최근 획득이 기준치 미만입니다", Color.FromRgb(0xFF, 0x5A, 0x5A))));
+
+            // ── 아이템 획득 알림 ──
+            Save(outDir, "item_drop_off.png", PanelToggle(false,
+                Line(SystemCol, ("[설계자의 반지] 을 획득하였습니다.", SystemCol)),
+                DimLine("(알림 없음)")));
+            Save(outDir, "item_drop_on.png", PanelToggle(true,
+                Line(SystemCol, ("[설계자의 반지] 을 획득하였습니다.", SystemCol)),
+                ToastMock("아이템 획득", "설계자의 반지", SystemCol)));
+
+            // ── 버프 추적 ──
+            Save(outDir, "buff_tracker_off.png", PanelToggle(false,
+                DimLine("(버프 추적 창 표시 안 함)")));
+            Save(outDir, "buff_tracker_on.png", PanelToggle(true, BuffMock()));
+
+            // ── 필드 보스 알림 ──
+            Save(outDir, "boss_alert_3min.png", Panel("3분 전",
+                ToastMock("필드 보스", "아르칸 등장 3분 전", SystemCol)));
+            Save(outDir, "boss_alert_spawn.png", Panel("5초 전",
+                ToastMock("필드 보스", "아르칸이 곧 등장합니다!", Color.FromRgb(0xFF, 0x5A, 0x5A))));
+
+            // ── 던전 도우미 알림들 ──
+            Save(outDir, "dungeon_wave_off.png", PanelToggle(false, DimLine("(웨이브가 끝나도 알림 없음)")));
+            Save(outDir, "dungeon_wave_on.png", PanelToggle(true,
+                ToastMock("던전 도우미", "웨이브 종료!", Mint)));
+            Save(outDir, "dungeon_reflect_off.png", PanelToggle(false, DimLine("(반사 패턴 알림 없음)")));
+            Save(outDir, "dungeon_reflect_on.png", PanelToggle(true,
+                ToastMock("어비스", "반사 패턴! 공격을 멈추세요", Color.FromRgb(0xFF, 0x5A, 0x5A))));
+            Save(outDir, "dungeon_abandon_count_off.png", PanelToggle(false, DimLine("(입장해도 알림 없음)")));
+            Save(outDir, "dungeon_abandon_count_on.png", PanelToggle(true,
+                ToastMock("어밴던로드", "입장 3회", Mint)));
+            Save(outDir, "dungeon_abandon_gold_off.png", PanelToggle(false, DimLine("(합계 창 표시 안 함)")));
+            Save(outDir, "dungeon_abandon_gold_on.png", PanelToggle(true,
+                ToastMock("어밴던로드 주간 합계", "12,340,000 골드", GoldCol)));
+            Save(outDir, "dungeon_craving_count_off.png", PanelToggle(false, DimLine("(입장해도 알림 없음)")));
+            Save(outDir, "dungeon_craving_count_on.png", PanelToggle(true,
+                ToastMock("갈망하는 즐거움", "입장 2회", Mint)));
         }
 
         // ===== 조립 헬퍼 =====
@@ -231,6 +334,312 @@ namespace TWChatOverlay.Services
                 Foreground = new SolidColorBrush(SubText),
                 FontFamily = new FontFamily("Malgun Gothic"),
                 Margin = new Thickness(0, 1, 0, 1),
+            };
+        }
+
+        /// <summary>알림 토스트 목업: 민트 테두리 작은 창 + 제목/본문.</summary>
+        private static FrameworkElement ToastMock(string title, string body, Color bodyColor)
+            => ToastMockSized(12, title, body, bodyColor);
+
+        private static FrameworkElement ToastMockSized(double bodySize, string title, string body, Color bodyColor)
+        {
+            var stack = new StackPanel();
+            stack.Children.Add(new TextBlock
+            {
+                Text = title,
+                FontSize = 10,
+                FontWeight = FontWeights.Bold,
+                Foreground = new SolidColorBrush(Mint),
+                FontFamily = new FontFamily("Malgun Gothic"),
+                Margin = new Thickness(0, 0, 0, 3),
+            });
+            stack.Children.Add(new TextBlock
+            {
+                Text = body,
+                FontSize = bodySize,
+                TextWrapping = TextWrapping.Wrap,
+                Foreground = new SolidColorBrush(bodyColor),
+                FontFamily = new FontFamily("Malgun Gothic"),
+            });
+            return new Border
+            {
+                Background = new SolidColorBrush(Color.FromRgb(0x10, 0x16, 0x14)),
+                BorderBrush = new SolidColorBrush(Mint),
+                BorderThickness = new Thickness(1),
+                CornerRadius = new CornerRadius(4),
+                Padding = new Thickness(10, 6, 10, 7),
+                Margin = new Thickness(0, 4, 0, 1),
+                HorizontalAlignment = HorizontalAlignment.Left,
+                Child = stack,
+            };
+        }
+
+        /// <summary>작은 상태 칩 (예: 클립보드 복사됨).</summary>
+        private static FrameworkElement Chip(string text)
+        {
+            return new Border
+            {
+                Background = new SolidColorBrush(Color.FromArgb(0x28, Mint.R, Mint.G, Mint.B)),
+                BorderBrush = new SolidColorBrush(Mint),
+                BorderThickness = new Thickness(1),
+                CornerRadius = new CornerRadius(3),
+                Padding = new Thickness(8, 2, 8, 3),
+                Margin = new Thickness(0, 4, 0, 1),
+                HorizontalAlignment = HorizontalAlignment.Left,
+                Child = new TextBlock
+                {
+                    Text = text,
+                    FontSize = 11,
+                    Foreground = new SolidColorBrush(Mint),
+                    FontFamily = new FontFamily("Malgun Gothic"),
+                },
+            };
+        }
+
+        /// <summary>투명도 목업: 게임 화면 배경 위에 배경 투명도가 다른 채팅 판. 글자는 그대로 선명.</summary>
+        private static FrameworkElement OpacityMock(byte panelAlpha, string badge)
+        {
+            var chat = new StackPanel { Margin = new Thickness(10, 8, 10, 8) };
+            chat.Children.Add(Line(NormalCol, ("모비딕 : 사냥 가실 분?", NormalCol)));
+            chat.Children.Add(Line(TeamCol, ("[팀] 나비 : 집결지로 와주세요", TeamCol)));
+
+            var panel = new Border
+            {
+                Background = new SolidColorBrush(Color.FromArgb(panelAlpha, PanelBg.R, PanelBg.G, PanelBg.B)),
+                BorderBrush = new SolidColorBrush(BorderCol),
+                BorderThickness = new Thickness(1),
+                CornerRadius = new CornerRadius(6),
+                Margin = new Thickness(20, 16, 20, 16),
+                Child = chat,
+            };
+
+            var backdrop = new Grid();
+            // 게임 화면 느낌의 배경 (초원 톤 그라데이션)
+            backdrop.Children.Add(new Border
+            {
+                Background = new LinearGradientBrush(
+                    Color.FromRgb(0x4A, 0x6B, 0x3A), Color.FromRgb(0x2C, 0x44, 0x28), 45),
+            });
+            backdrop.Children.Add(panel);
+            backdrop.Children.Add(Badge(badge));
+
+            return new Border
+            {
+                Width = PanelWidth,
+                BorderBrush = new SolidColorBrush(BorderCol),
+                BorderThickness = new Thickness(1),
+                CornerRadius = new CornerRadius(6),
+                ClipToBounds = true,
+                Child = backdrop,
+            };
+        }
+
+        /// <summary>잠금 해제 모드 목업: 민트 테두리 채팅 판 + 좌표·크기 안내 칩.</summary>
+        private static FrameworkElement UnlockMock()
+        {
+            var chat = new StackPanel { Margin = new Thickness(10, 6, 10, 6) };
+            chat.Children.Add(Line(NormalCol, ("모비딕 : 사냥 가실 분?", NormalCol)));
+
+            var stack = new StackPanel();
+            stack.Children.Add(new Border
+            {
+                Background = new SolidColorBrush(Color.FromArgb(0xE0, PanelBg.R, PanelBg.G, PanelBg.B)),
+                BorderBrush = new SolidColorBrush(Mint),
+                BorderThickness = new Thickness(2),
+                CornerRadius = new CornerRadius(4),
+                Child = chat,
+            });
+            stack.Children.Add(Chip("X: 120  Y: 340  가로: 320  세로: 180"));
+            return stack;
+        }
+
+        /// <summary>메뉴 바 목업: 아이콘 사각형을 세로/가로로 배치.</summary>
+        private static FrameworkElement MenuBarMock(bool horizontal)
+        {
+            var icons = new StackPanel
+            {
+                Orientation = horizontal ? Orientation.Horizontal : Orientation.Vertical,
+                HorizontalAlignment = HorizontalAlignment.Left,
+            };
+            for (int i = 0; i < 4; i++)
+            {
+                icons.Children.Add(new Border
+                {
+                    Width = 20,
+                    Height = 20,
+                    Margin = new Thickness(3),
+                    CornerRadius = new CornerRadius(4),
+                    Background = new SolidColorBrush(Color.FromArgb(0x50, Mint.R, Mint.G, Mint.B)),
+                    BorderBrush = new SolidColorBrush(Mint),
+                    BorderThickness = new Thickness(1),
+                });
+            }
+            var bar = new Border
+            {
+                Background = new SolidColorBrush(Color.FromRgb(0x18, 0x1F, 0x1C)),
+                BorderBrush = new SolidColorBrush(BorderCol),
+                BorderThickness = new Thickness(1),
+                CornerRadius = new CornerRadius(5),
+                Padding = new Thickness(3),
+                HorizontalAlignment = HorizontalAlignment.Left,
+                Child = icons,
+            };
+            var stack = new StackPanel();
+            stack.Children.Add(bar);
+            stack.Children.Add(DimLine(horizontal ? "(가로형 메뉴 바)" : "(세로형 메뉴 바 — 기본)"));
+            return stack;
+        }
+
+        /// <summary>z-순서 목업: '다른 앱' 창과 오버레이 창의 앞뒤 관계.</summary>
+        private static FrameworkElement ZOrderMock(bool overlayOnTop)
+        {
+            var other = new Border
+            {
+                Width = 180,
+                Height = 84,
+                Background = new SolidColorBrush(Color.FromRgb(0x3C, 0x41, 0x47)),
+                BorderBrush = new SolidColorBrush(Color.FromRgb(0x5A, 0x60, 0x67)),
+                BorderThickness = new Thickness(1),
+                CornerRadius = new CornerRadius(4),
+                HorizontalAlignment = HorizontalAlignment.Left,
+                VerticalAlignment = VerticalAlignment.Top,
+                Margin = overlayOnTop ? new Thickness(70, 0, 0, 0) : new Thickness(70, 14, 0, 0),
+                Child = new TextBlock
+                {
+                    Text = "다른 앱 창",
+                    FontSize = 11,
+                    Foreground = new SolidColorBrush(Colors.White),
+                    FontFamily = new FontFamily("Malgun Gothic"),
+                    Margin = new Thickness(8, 5, 0, 0),
+                },
+            };
+            var overlay = new Border
+            {
+                Width = 150,
+                Height = 60,
+                Background = new SolidColorBrush(Color.FromArgb(0xF2, PanelBg.R, PanelBg.G, PanelBg.B)),
+                BorderBrush = new SolidColorBrush(Mint),
+                BorderThickness = new Thickness(1),
+                CornerRadius = new CornerRadius(4),
+                HorizontalAlignment = HorizontalAlignment.Left,
+                VerticalAlignment = VerticalAlignment.Top,
+                Margin = overlayOnTop ? new Thickness(0, 32, 0, 0) : new Thickness(0, 40, 0, 0),
+                Child = new TextBlock
+                {
+                    Text = "채팅 오버레이",
+                    FontSize = 11,
+                    Foreground = new SolidColorBrush(Mint),
+                    FontFamily = new FontFamily("Malgun Gothic"),
+                    Margin = new Thickness(8, 5, 0, 0),
+                },
+            };
+
+            var grid = new Grid { Height = 104, HorizontalAlignment = HorizontalAlignment.Left, Width = 260 };
+            if (overlayOnTop) { grid.Children.Add(other); grid.Children.Add(overlay); }
+            else { grid.Children.Add(overlay); grid.Children.Add(other); }
+
+            var stack = new StackPanel();
+            stack.Children.Add(grid);
+            stack.Children.Add(DimLine(overlayOnTop ? "(오버레이가 항상 앞에 유지됨)" : "(다른 앱이 앞으로 오면 그대로 둠)"));
+            return stack;
+        }
+
+        /// <summary>경험치 추적 창 목업: 2x2 지표 + 중지/리셋.</summary>
+        private static FrameworkElement TrackerMock()
+        {
+            var grid = new Grid { HorizontalAlignment = HorizontalAlignment.Left };
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(130) });
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(130) });
+            grid.RowDefinitions.Add(new RowDefinition());
+            grid.RowDefinitions.Add(new RowDefinition());
+
+            void Cell(int r, int c, string label, string value, Color valueColor)
+            {
+                var cell = new StackPanel { Margin = new Thickness(0, 2, 0, 2) };
+                cell.Children.Add(new TextBlock
+                {
+                    Text = label,
+                    FontSize = 9,
+                    Foreground = new SolidColorBrush(SubText),
+                    FontFamily = new FontFamily("Malgun Gothic"),
+                });
+                cell.Children.Add(new TextBlock
+                {
+                    Text = value,
+                    FontSize = 13,
+                    FontWeight = FontWeights.Bold,
+                    Foreground = new SolidColorBrush(valueColor),
+                    FontFamily = new FontFamily("Malgun Gothic"),
+                });
+                Grid.SetRow(cell, r);
+                Grid.SetColumn(cell, c);
+                grid.Children.Add(cell);
+            }
+
+            Cell(0, 0, "누적 경험치", "1,234.5억", Colors.White);
+            Cell(0, 1, "1시간 예상", "82.3억", Colors.White);
+            Cell(1, 0, "획득 경험치", "+1,520만", Color.FromRgb(0x7E, 0xE0, 0x81));
+            Cell(1, 1, "처치 수", "128마리", Colors.White);
+
+            var buttons = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 4, 0, 0) };
+            buttons.Children.Add(Chip("중지"));
+            buttons.Children.Add(new Border { Width = 6 });
+            buttons.Children.Add(Chip("리셋"));
+
+            var stack = new StackPanel();
+            stack.Children.Add(grid);
+            stack.Children.Add(buttons);
+            return new Border
+            {
+                Background = new SolidColorBrush(Color.FromRgb(0x10, 0x16, 0x14)),
+                BorderBrush = new SolidColorBrush(BorderCol),
+                BorderThickness = new Thickness(1),
+                CornerRadius = new CornerRadius(5),
+                Padding = new Thickness(10, 6, 10, 8),
+                HorizontalAlignment = HorizontalAlignment.Left,
+                Child = stack,
+            };
+        }
+
+        /// <summary>버프 추적 창 목업: 버프 이름 + 남은 시간 (임박한 버프는 붉게).</summary>
+        private static FrameworkElement BuffMock()
+        {
+            var stack = new StackPanel();
+            void Row(string name, string time, Color timeColor)
+            {
+                var row = new DockPanel { Margin = new Thickness(0, 2, 0, 2), Width = 190 };
+                var timeText = new TextBlock
+                {
+                    Text = time,
+                    FontSize = 12,
+                    FontWeight = FontWeights.Bold,
+                    Foreground = new SolidColorBrush(timeColor),
+                    FontFamily = new FontFamily("Malgun Gothic"),
+                };
+                DockPanel.SetDock(timeText, Dock.Right);
+                row.Children.Add(timeText);
+                row.Children.Add(new TextBlock
+                {
+                    Text = name,
+                    FontSize = 12,
+                    Foreground = new SolidColorBrush(Colors.White),
+                    FontFamily = new FontFamily("Malgun Gothic"),
+                });
+                stack.Children.Add(row);
+            }
+            Row("축복의 노래", "14:32", Mint);
+            Row("가속", "02:05", Mint);
+            Row("집중", "00:08", Color.FromRgb(0xFF, 0x5A, 0x5A));
+
+            return new Border
+            {
+                Background = new SolidColorBrush(Color.FromRgb(0x10, 0x16, 0x14)),
+                BorderBrush = new SolidColorBrush(BorderCol),
+                BorderThickness = new Thickness(1),
+                CornerRadius = new CornerRadius(5),
+                Padding = new Thickness(10, 6, 10, 8),
+                HorizontalAlignment = HorizontalAlignment.Left,
+                Child = stack,
             };
         }
 

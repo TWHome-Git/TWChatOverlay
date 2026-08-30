@@ -123,18 +123,18 @@ namespace TWChatOverlay.Services
                 "'유지 시간(초)'으로 토스트가 떠 있는 시간을 조절합니다.\n" +
                 "트레이 최소화 중에는 토스트가 뜨지 않으며,\n" +
                 "놓친 외치기는 메뉴의 외치기 다시 보기에서 확인할 수 있습니다.",
-                null),
+                new[] { "shout_toast_off.png", "shout_toast_on.png" }),
 
             ["shout.autocopy"] = (
                 "닉네임 자동복사",
                 "외치기 끝의 [닉네임]을 자동으로 클립보드에 복사합니다.\n" +
                 "외치기를 보고 바로 Ctrl+V로 1:1 대화나 팀 초대에 붙여넣기 좋습니다.",
-                null),
+                new[] { "shout_autocopy_off.png", "shout_autocopy_on.png" }),
 
             ["shout.toast_font"] = (
                 "토스트 글자 크기",
                 "외치기 토스트 팝업의 글자 크기를 조절합니다 (10~40).",
-                null),
+                new[] { "shout_toast_font_13.png", "shout_toast_font_20.png" }),
 
             // ===== 화면 =====
 
@@ -142,7 +142,7 @@ namespace TWChatOverlay.Services
                 "투명도",
                 "오버레이 창 배경의 투명도를 조절합니다 (20~100%).\n" +
                 "배경만 투명해지고 글자는 항상 선명하게 유지됩니다.",
-                null),
+                new[] { "display_opacity_100.png", "display_opacity_50.png" }),
 
             ["display.unlock"] = (
                 "잠금 해제 모드",
@@ -150,19 +150,19 @@ namespace TWChatOverlay.Services
                 "각 창을 드래그해 이동하고, 가로·세로 크기와 X·Y 좌표를 직접 입력할 수도 있습니다.\n" +
                 "이동 중에는 좌표·크기 안내 창이 최상단에 표시됩니다.\n" +
                 "다시 누르면 잠금 상태로 돌아갑니다.",
-                null),
+                new[] { "display_unlock_off.png", "display_unlock_on.png" }),
 
             ["display.menu_horizontal"] = (
                 "메뉴 바 가로형",
                 "메뉴 아이콘 바를 가로형으로 바꿉니다. 끄면 세로형(기본)입니다.",
-                null),
+                new[] { "display_menu_h_off.png", "display_menu_h_on.png" }),
 
             ["display.always_on_top"] = (
                 "항상 위",
                 "켜면 다른 앱이 앞으로 와도 오버레이 창들을 계속 맨 위로 유지합니다.\n" +
                 "끄면 z-순서를 건드리지 않아 처음 실행 상태 그대로 OS에 맡깁니다.\n" +
                 "메뉴 바는 이 설정과 무관하게 항상 맨 위에 유지됩니다.",
-                null),
+                new[] { "display_ontop_off.png", "display_ontop_on.png" }),
 
             // ===== 키워드 알림 =====
 
@@ -170,7 +170,7 @@ namespace TWChatOverlay.Services
                 "색상 강조",
                 "등록한 키워드가 포함된 채팅 줄을 지정한 색으로 강조합니다.\n" +
                 "키워드는 '키워드' 탭에서 @단어1 @단어2 형식으로 등록합니다.",
-                null),
+                new[] { "keyword_color_off.png", "keyword_color_on.png" }),
 
             // ===== 경험치 추적 =====
 
@@ -179,13 +179,13 @@ namespace TWChatOverlay.Services
                 "사냥 중 획득 경험치를 실시간으로 추적하는 창을 띄웁니다.\n" +
                 "누적 경험치 / 1시간 예상 / 획득 경험치 / 처치 수를 보여주며\n" +
                 "[중지]와 [리셋] 버튼으로 측정을 제어합니다.",
-                null),
+                new[] { "exp_tracker_off.png", "exp_tracker_on.png" }),
 
             ["exp.cumulative_alert"] = (
                 "경험치 누적 알림",
                 "획득 경험치를 계속 누적해 알림 창으로 보여줍니다.\n" +
                 "아래 '현재 누적 경험치(억)'에 현재 값을 입력해 두면 그 값부터 이어서 계산합니다.",
-                null),
+                new[] { "exp_cum_off.png", "exp_cum_on.png" }),
 
             ["exp.current_total"] = (
                 "현재 누적 경험치(억)",
@@ -197,7 +197,7 @@ namespace TWChatOverlay.Services
                 "저효율 알림",
                 "경험치 획득 효율이 기준치보다 낮아지면 알림을 띄웁니다.\n" +
                 "버프가 꺼졌거나 사냥 효율이 떨어졌을 때 빨리 알아차릴 수 있습니다.",
-                null),
+                new[] { "exp_loweff_off.png", "exp_loweff_on.png" }),
 
             ["exp.loweff_threshold"] = (
                 "기준치(만 EXP 미만)",
@@ -214,13 +214,13 @@ namespace TWChatOverlay.Services
             ["dungeon.wave_end"] = (
                 "웨이브 종료 알림",
                 "룬 경험치·테시스 코어에서 웨이브가 끝나면 알림을 띄웁니다.",
-                null),
+                new[] { "dungeon_wave_off.png", "dungeon_wave_on.png" }),
 
             ["dungeon.abyss_reflect"] = (
                 "반사 패턴 알림",
                 "어비스에서 반사 패턴이 시작되면 알림을 띄워\n" +
                 "공격을 멈출 타이밍을 알려줍니다.",
-                null),
+                new[] { "dungeon_reflect_off.png", "dungeon_reflect_on.png" }),
 
             ["dungeon.etos_direction"] = (
                 "에토스 방향 알림",
@@ -238,17 +238,17 @@ namespace TWChatOverlay.Services
                 "어밴던로드 입장 횟수",
                 "어밴던로드 입장을 감지해 입장 횟수를 세고 알림 창으로 보여줍니다.\n" +
                 "알림 창 폰트 크기와 지속 시간은 아래에서 조절합니다.",
-                null),
+                new[] { "dungeon_abandon_count_off.png", "dungeon_abandon_count_on.png" }),
 
             ["dungeon.abandon_gold"] = (
                 "어밴던로드 누적 금액",
                 "어밴던로드에서 획득한 금액의 주간 합계 창을 보여줍니다.",
-                null),
+                new[] { "dungeon_abandon_gold_off.png", "dungeon_abandon_gold_on.png" }),
 
             ["dungeon.craving_count"] = (
                 "갈망하는 즐거움 입장 횟수",
                 "갈망하는 즐거움 입장을 감지해 입장 횟수를 알림 창으로 보여줍니다.",
-                null),
+                new[] { "dungeon_craving_count_off.png", "dungeon_craving_count_on.png" }),
 
             // ===== 아이템 알림 =====
 
@@ -256,7 +256,7 @@ namespace TWChatOverlay.Services
                 "아이템 획득 알림",
                 "채팅 로그에서 아이템 획득을 감지해 알림을 띄웁니다.\n" +
                 "'알림 필터' 탭에서 알림 받을 아이템을 고를 수 있습니다.",
-                null),
+                new[] { "item_drop_off.png", "item_drop_on.png" }),
 
             ["item.filter"] = (
                 "알림 필터",
@@ -272,7 +272,7 @@ namespace TWChatOverlay.Services
                 "버프 추적",
                 "채팅 로그에서 버프 사용을 감지해 남은 시간을 추적하는 창을 띄웁니다.\n" +
                 "버프가 곧 끝나면 종료 사운드로 알려주며, 볼륨은 아래에서 조절합니다.",
-                null),
+                new[] { "buff_tracker_off.png", "buff_tracker_on.png" }),
 
             // ===== 필드 보스 =====
 
@@ -280,7 +280,7 @@ namespace TWChatOverlay.Services
                 "필드 보스 알림",
                 "필드 보스 등장 시간표에 맞춰 3분 전 / 1분 전 / 5초 전에 알림을 띄웁니다.\n" +
                 "보스별로 받을 알림을 따로 켜고 끌 수 있고, 알림 볼륨도 조절할 수 있습니다.",
-                null),
+                new[] { "boss_alert_3min.png", "boss_alert_spawn.png" }),
 
             // ===== 시스템 =====
 
