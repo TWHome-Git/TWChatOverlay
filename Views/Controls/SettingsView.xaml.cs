@@ -108,19 +108,41 @@ namespace TWChatOverlay.Views
             }
         }
 
-        /// <summary>선택된 추가 기능 내비 인덱스(위치 미리보기용 탭 인덱스). 선택이 없으면 -1.</summary>
+        /// <summary>
+        /// 선택된 추가 기능 내비+서브 탭 인덱스(위치 미리보기용). 선택이 없으면 -1.
+        /// 값은 내비*10 + 서브탭 — 서브 탭에 해당하는 창만 미리보기로 띄우는 데 쓴다.
+        /// </summary>
         private int SelectedAddonTabIndex
         {
             get
             {
                 if (NavAddonKeyword.IsChecked == true) return 0;
-                if (NavAddonExp.IsChecked == true) return 1;
-                if (NavAddonDungeon.IsChecked == true) return 2;
-                if (NavAddonItem.IsChecked == true) return 3;
-                if (NavAddonBuff.IsChecked == true) return 4;
-                if (NavAddonBoss.IsChecked == true) return 5;
+                if (NavAddonExp.IsChecked == true)
+                    return 10 + (ExpTabLowEff.IsChecked == true ? 1 : 0);
+                if (NavAddonDungeon.IsChecked == true)
+                {
+                    int sub = DungeonTabAbyss.IsChecked == true ? 1
+                        : DungeonTabEclipse.IsChecked == true ? 2
+                        : DungeonTabAbandon.IsChecked == true ? 3
+                        : DungeonTabCraving.IsChecked == true ? 4
+                        : 0;
+                    return 20 + sub;
+                }
+                if (NavAddonItem.IsChecked == true)
+                    return 30 + (ItemTabFilter.IsChecked == true ? 1 : 0);
+                if (NavAddonBuff.IsChecked == true) return 40;
+                if (NavAddonBoss.IsChecked == true) return 50;
                 return -1;
             }
+        }
+
+        /// <summary>추가 기능 서브 탭 전환 시 해당 탭의 창만 미리보기로 갱신한다.</summary>
+        private void AddonSubTab_Checked(object sender, RoutedEventArgs e)
+        {
+            if (!IsLoaded || !_addonPreviewActive)
+                return;
+
+            SetAddonPositionPreview(true, SelectedAddonTabIndex);
         }
 
         private bool _addonPreviewActive;

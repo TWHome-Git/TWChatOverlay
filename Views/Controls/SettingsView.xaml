@@ -974,8 +974,8 @@
                     <StackPanel x:Name="AddonExpPanel" Visibility="Collapsed">
                         <Border Style="{StaticResource SettingsTabStripStyle}">
                             <StackPanel Orientation="Horizontal">
-                                <RadioButton x:Name="ExpTabTracker" Content="일반" IsChecked="True" GroupName="ExpTabs" Style="{StaticResource SettingsTabStyle}"/>
-                                <RadioButton x:Name="ExpTabLowEff" Content="저효율 알림" GroupName="ExpTabs" Style="{StaticResource SettingsTabStyle}"/>
+                                <RadioButton x:Name="ExpTabTracker" Content="일반" IsChecked="True" GroupName="ExpTabs" Checked="AddonSubTab_Checked" Style="{StaticResource SettingsTabStyle}"/>
+                                <RadioButton x:Name="ExpTabLowEff" Content="저효율 알림" GroupName="ExpTabs" Checked="AddonSubTab_Checked" Style="{StaticResource SettingsTabStyle}"/>
                             </StackPanel>
                         </Border>
 
@@ -1067,12 +1067,12 @@
                     <StackPanel x:Name="AddonDungeonPanel" Visibility="Collapsed">
                         <Border Style="{StaticResource SettingsTabStripStyle}">
                             <StackPanel Orientation="Horizontal">
-                                <RadioButton x:Name="DungeonTabRune" Content="룬 경험치·테시스 코어" IsChecked="True" GroupName="DungeonTabs" Style="{StaticResource SettingsTabStyle}"
+                                <RadioButton x:Name="DungeonTabRune" Content="룬 경험치·테시스 코어" IsChecked="True" GroupName="DungeonTabs" Checked="AddonSubTab_Checked" Style="{StaticResource SettingsTabStyle}"
                                              ToolTip="룬 경험치 던전 및 테시스 코어 던전"/>
-                                <RadioButton x:Name="DungeonTabAbyss" Content="어비스" GroupName="DungeonTabs" Style="{StaticResource SettingsTabStyle}"/>
-                                <RadioButton x:Name="DungeonTabEclipse" Content="이클립스" GroupName="DungeonTabs" Style="{StaticResource SettingsTabStyle}"/>
-                                <RadioButton x:Name="DungeonTabAbandon" Content="어밴던로드" GroupName="DungeonTabs" Style="{StaticResource SettingsTabStyle}"/>
-                                <RadioButton x:Name="DungeonTabCraving" Content="갈망하는 즐거움" GroupName="DungeonTabs" Style="{StaticResource SettingsTabStyle}"/>
+                                <RadioButton x:Name="DungeonTabAbyss" Content="어비스" GroupName="DungeonTabs" Checked="AddonSubTab_Checked" Style="{StaticResource SettingsTabStyle}"/>
+                                <RadioButton x:Name="DungeonTabEclipse" Content="이클립스" GroupName="DungeonTabs" Checked="AddonSubTab_Checked" Style="{StaticResource SettingsTabStyle}"/>
+                                <RadioButton x:Name="DungeonTabAbandon" Content="어밴던로드" GroupName="DungeonTabs" Checked="AddonSubTab_Checked" Style="{StaticResource SettingsTabStyle}"/>
+                                <RadioButton x:Name="DungeonTabCraving" Content="갈망하는 즐거움" GroupName="DungeonTabs" Checked="AddonSubTab_Checked" Style="{StaticResource SettingsTabStyle}"/>
                             </StackPanel>
                         </Border>
 
@@ -1226,8 +1226,8 @@
                     <StackPanel x:Name="AddonItemPanel" Visibility="Collapsed">
                         <Border Style="{StaticResource SettingsTabStripStyle}">
                             <StackPanel Orientation="Horizontal">
-                                <RadioButton x:Name="ItemTabAlert" Content="획득 알림" IsChecked="True" GroupName="ItemTabs" Style="{StaticResource SettingsTabStyle}"/>
-                                <RadioButton x:Name="ItemTabFilter" Content="알림 필터" GroupName="ItemTabs" Style="{StaticResource SettingsTabStyle}"/>
+                                <RadioButton x:Name="ItemTabAlert" Content="획득 알림" IsChecked="True" GroupName="ItemTabs" Checked="AddonSubTab_Checked" Style="{StaticResource SettingsTabStyle}"/>
+                                <RadioButton x:Name="ItemTabFilter" Content="알림 필터" GroupName="ItemTabs" Checked="AddonSubTab_Checked" Style="{StaticResource SettingsTabStyle}"/>
                                 <Button Style="{StaticResource HelpButtonStyle}" Tag="item.filter" Click="Help_Click" VerticalAlignment="Center"/>
                             </StackPanel>
                         </Border>
