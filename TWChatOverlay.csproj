@@ -38,9 +38,10 @@
     <None Remove="sound\drop_low.mp3" />
   </ItemGroup>
 
-  <!-- 이미지/사운드 리소스 -->
+  <!-- 이미지/사운드 리소스 (readme_*는 README 문서 전용 — exe에 임베드하지 않음) -->
   <ItemGroup>
     <Resource Include="Data\images\**\*" />
+    <Resource Remove="Data\images\Help\readme_*.png" />
     <Resource Include="Sound\*.wav" />
     <Resource Include="sound\drop.mp3">
       <LogicalName>Sound/drop.mp3</LogicalName>

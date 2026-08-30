@@ -1,5 +1,5 @@
 # TWChatOverlay
-<img width="1920" height="937" alt="TWChatOverlay-hero-1920" src="https://github.com/user-attachments/assets/b9655813-e94f-4056-9351-79f02dab2a90" />
+<img alt="TWChatOverlay" src="docs/images/main.jpg" />
 
 **테일즈위버 채팅 로그 기반의 보조 프로그램** — 실시간 채팅 로그 분석으로 인게임에서 놓치기 쉬운 정보를 오버레이로 제공합니다.
 
@@ -24,18 +24,18 @@
 * **채팅 필터 & 색상** — 일반/팀/클럽/외치기/시스템 종류별 표시 여부와 색상 지정
 * **말머리** — 각 줄 앞에 `[일반]` `[팀]` `[클럽]` `[외치기]` `[시스템]` 표기, 외치기는 `[외치기] 보낸이 : 내용`으로 재구성
 
-  <img alt="말머리" src="Data/images/Help/chat_category_prefix_on.png" width="480" />
+  <img alt="말머리" src="Data/images/Help/readme_category_prefix.png" width="480" />
 
 * **에타 레벨 표시** — 채팅 유저의 에타 레벨을 실시간 표기, 레벨 구간별 색상 지원
 
-  <img alt="에타 레벨 구간 색상" src="Data/images/Help/chat_id_eta_range_on.png" width="480" />
+  <img alt="에타 레벨 구간 색상" src="Data/images/Help/readme_eta_range.png" width="480" />
 
 * **서브 채팅창** — 메인과 별도로 최대 2개, 탭별(일반/팀/클럽/외치기/시스템/아이템) 전용 창 구성 가능
 
 ### 외치기
 * **외치기 팝업** — 외치기 발생 시 토스트 알림, 유지 시간·텍스트 크기 조절
 
-  <img alt="외치기 팝업" src="Data/images/Help/shout_toast_on.png" width="480" />
+  <img alt="외치기 팝업" src="Data/images/Help/readme_shout_toast.png" width="480" />
 
 * **닉네임 자동복사** — 외치기 끝의 `[닉네임]`을 클립보드로 자동 복사
 * **외치기 다시 보기** — 놓친 외치기를 메뉴에서 다시 확인
@@ -43,12 +43,12 @@
 ### 키워드 알림
 * 지정 키워드가 채팅에 등장하면 색상 강조 + 알림음
 
-  <img alt="키워드 알림" src="Data/images/Help/keyword_color_on.png" width="480" />
+  <img alt="키워드 알림" src="Data/images/Help/readme_keyword_color.png" width="480" />
 
 ### 경험치 추적
 * **실시간 추적** — 누적 경험치 / 시간당 효율 / 최근 획득량 표시
 
-  <img alt="경험치 추적" src="Data/images/Help/exp_tracker_on.png" width="480" />
+  <img alt="경험치 추적" src="Data/images/Help/readme_exp_tracker.png" width="480" />
 
 * **누적 경험치 알림** — '경험의 정수' 교환 후 목표 누적치 도달 시 알림 (이벤트·퀘스트 경험치는 인식되지 않을 수 있음)
 * **저효율 알림** — 기준치 이하 경험치 획득 시 음성 알림
@@ -60,11 +60,11 @@
 
 * **던전 카운터** — 어밴던로드 진행 단계, 갈망하는 즐거움 에너지량 표시
 
-  <img alt="어밴던로드 카운터" src="Data/images/Help/dungeon_abandon_count_on.png" width="480" />
+  <img alt="어밴던로드 카운터" src="Data/images/Help/readme_abandon_count.png" width="480" />
 
 * **어밴던로드 통계** — 주간 수익(마정석 등) 집계 창
 
-  <img alt="어밴던로드 통계" src="Data/images/Help/dungeon_abandon_gold_on.png" width="480" />
+  <img alt="어밴던로드 통계" src="Data/images/Help/readme_abandon_gold.png" width="480" />
 
 * **웨이브 종료 알림** — 룬 경험치 던전, 테시스 코어 던전 웨이브 종료 알림음
 * **반사 패턴 알림** — 어비스 2사도 반사 패턴 알림음
@@ -73,7 +73,7 @@
 ### 아이템 획득 알림
 * 레어 아이템 획득 시 토스트 알림 + 사운드
 
-  <img alt="아이템 획득 알림" src="Data/images/Help/item_drop_on.png" width="480" />
+  <img alt="아이템 획득 알림" src="Data/images/Help/readme_item_drop.png" width="480" />
 
 * **아이템 필터** — 기본 필터에 원하는 아이템을 추가/제거, 필터 저장·불러오기 지원
 * **수익 월별 통계** — 획득 아이템의 월별 수익 달력
@@ -81,7 +81,7 @@
 ### 버프 추적 (참고용)
 * 버프 시작을 감지해 남은 시간 표시, 종료 시 사운드 알림
 
-  <img alt="버프 추적" src="Data/images/Help/buff_tracker_on.png" width="480" />
+  <img alt="버프 추적" src="Data/images/Help/readme_buff_tracker.png" width="480" />
 
 * 로그상 '시작' 시점만 감지 가능 — 종료 시점을 확인할 수 없는 버프는 참고용
 * 지원 버프: 마법의 눈 · 경험의 심장 · 클럽 포인트 스크롤 · 경험치 캐시 3종 · 레어의 심장 · 로토의 부적
@@ -91,10 +91,13 @@
 
   <img alt="필드 보스 알림" src="Data/images/Help/boss_alert_spawn.png" width="480" />
 
-### 일간/주간 컨텐츠 추적
-* 일일/주간 숙제 완료 여부를 로그에서 자동 체크하는 체크리스트 오버레이
+### 일일/주간 컨텐츠 추적
+* 일일/주간 숙제 완료 여부를 로그에서 자동 체크하는 체크리스트 오버레이 (왼쪽: 일반, 오른쪽: 설정)
 
-  <img width="414" height="885" alt="일간/주간 체크리스트" src="https://github.com/user-attachments/assets/4c06dc6b-f8d8-4b47-ac91-be340aea01f2" />
+  <p>
+    <img alt="일일/주간 컨텐츠 (일반)" src="Data/images/Help/readme_daily_weekly.png" width="240" />
+    <img alt="일일/주간 컨텐츠 (설정)" src="Data/images/Help/readme_daily_weekly_settings.png" width="240" />
+  </p>
 
 ### TW DB (웹)
 에타 순위표·검색, 계산기·시뮬레이터, 장비 DB·제작 재료는 웹으로 이관되었습니다.
@@ -114,7 +117,7 @@
 최초 실행 시 설정 마법사가 열립니다.
 1. **채팅 로그 위치 설정** — 테일즈위버의 `ChatLog` 폴더를 지정합니다. (예: `C:\Nexon\TalesWeaver\ChatLog`)
 2. **채팅창 ~ 필드 보스 설정** — 실제 설정 화면과 동일한 패널이 단계별로 나옵니다. 여기서 바꾼 값은 그대로 저장됩니다.
-3. **일간/주간 컨텐츠 추적 설정** — 체크리스트에 표시할 항목을 고릅니다.
+3. **일일/주간 컨텐츠 추적 설정** — 체크리스트에 표시할 항목을 고릅니다.
 
 마법사는 언제든 **설정**에서 다시 실행할 수 있고, 건너뛰어도 기본값으로 바로 사용할 수 있습니다.
 
