@@ -22,6 +22,7 @@ namespace TWChatOverlay.Services
         private static readonly string FilePath = Path.Combine(ConfigDir, "settings.json");
         private static readonly string ItemFilePath = Path.Combine(ConfigDir, "item.json");
         private static readonly string LegacyFilePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "settings.json");
+        private static readonly string FactoryDefaultsPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Defaults", "DefaultSettings.json");
         private static readonly object _saveLock = new();
         private static readonly TimeSpan SaveDebounce = TimeSpan.FromMilliseconds(250);
         private static readonly JsonSerializerOptions _options = new JsonSerializerOptions
@@ -353,10 +354,37 @@ namespace TWChatOverlay.Services
             }
 
             AppLogger.Warn("Settings file was missing or unreadable. Default settings will be used.");
-            var defaultSettings = new ChatSettings();
+            var defaultSettings = TryLoadFactoryDefaults() ?? new ChatSettings();
             AppLogger.IsEnabled = defaultSettings.EnableDebugLogging;
             Save(defaultSettings);
             return defaultSettings;
+        }
+
+        /// <summary>
+        /// 배포에 동봉된 공장 기본 설정(Defaults\DefaultSettings.json)을 읽는다.
+        /// 설정 초기화와 설정 파일이 없는 최초 실행에서 기본값으로 쓰인다. 없거나 손상되면 null.
+        /// </summary>
+        public static ChatSettings? TryLoadFactoryDefaults()
+        {
+            try
+            {
+                if (!File.Exists(FactoryDefaultsPath))
+                    return null;
+
+                var settings = JsonSerializer.Deserialize<ChatSettings>(File.ReadAllText(FactoryDefaultsPath), _options);
+                if (settings == null)
+                    return null;
+
+                settings.EnsureLoadedDefaults();
+                MigrateDungeonItemConfigKeys(settings);
+                AppLogger.Info("Factory default settings loaded.");
+                return settings;
+            }
+            catch (Exception ex)
+            {
+                AppLogger.Warn("Failed to load factory default settings.", ex);
+                return null;
+            }
         }
 
         private static bool TryRemoveObsoleteKeys(string currentJson, string normalizedJson, out string? cleanedJson)
