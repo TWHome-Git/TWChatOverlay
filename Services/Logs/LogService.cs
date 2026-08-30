@@ -55,6 +55,15 @@ namespace TWChatOverlay.Services
         private readonly object _consumedSync = new();
         private string? _pendingConsumedPath;
         private long _pendingConsumedPosition = -1;
+
+        // 게임이 로그 꼬리를 다시 쓰는 경우(타임스탬프 보정 등)를 감지하기 위한 연속성 검증 상태.
+        // _lastTailBytes: 직전에 읽은 내용의 끝 바이트(원본과 대조), _resyncAnchorText: 마지막으로
+        // 소비한 완결 줄의 메시지 부분(타임스탬프 뒤) — 재작성으로 시각이 바뀌어도 내용으로 위치를 되찾는다.
+        private byte[] _lastTailBytes = Array.Empty<byte>();
+        private string _resyncAnchorText = string.Empty;
+        private const int TailVerifyLength = 256;
+        private const int ResyncSearchBack = 128 * 1024;
+        private const int ResyncSearchForward = 4096;
         private string _lastLogTimeText = string.Empty;
 
         private const int InitialLogTailBytes = 2 * 1024 * 1024;
@@ -311,6 +320,7 @@ namespace TWChatOverlay.Services
                         CloseStream();
                         _lastPosition = 0;
                         _pendingRawContent = string.Empty;
+                        _lastTailBytes = Array.Empty<byte>();
                         _logDecoder.Reset();
 
                         if (!File.Exists(_logPath))
@@ -326,6 +336,12 @@ namespace TWChatOverlay.Services
                         FlushPendingContent(force: false);
                         return;
                     }
+
+                    // 게임이 꼬리를 다시 쓰면(같은 길이로 타임스탬프만 보정하는 경우 포함) 오프셋이
+                    // 어긋나 그 사이 줄이 통째로 유실된다 — 직전 읽기 꼬리가 그대로인지 확인하고 복구한다.
+                    VerifyReadContinuity(length);
+                    if (_lastPosition >= length)
+                        return; // 재동기화 결과 새로 읽을 내용이 없음
 
                     long bytesToRead = length - _lastPosition;
                     if (bytesToRead > int.MaxValue)
@@ -357,6 +373,7 @@ namespace TWChatOverlay.Services
                         return;
                     }
 
+                    UpdateTailBytes(buffer, totalRead);
                     string newContent = DecodeIncrementalBytes(buffer, totalRead);
                     ProcessIncrementalContent(
                         newContent,
@@ -372,6 +389,155 @@ namespace TWChatOverlay.Services
                     CloseStream();
                 }
             }
+        }
+
+        /// <summary>
+        /// 직전에 읽은 꼬리 바이트가 파일에 그대로 있는지 확인한다. 게임이 로그 꼬리를 다시 쓰면
+        /// (관찰상 타임스탬프를 쓰기 시점으로 보정하며 재기록) 오프셋이 어긋나 줄이 유실되므로,
+        /// 마지막으로 소비한 줄의 '메시지 내용'으로 새 위치를 찾아 재동기화한다.
+        /// 반드시 _lockObj를 보유한 상태에서 호출해야 한다.
+        /// </summary>
+        private void VerifyReadContinuity(long length)
+        {
+            try
+            {
+                if (_lastPosition <= 0)
+                    return;
+
+                if (_lastTailBytes.Length == 0)
+                {
+                    CaptureTailBytesFromFile();
+                    return;
+                }
+
+                int tailLen = (int)Math.Min(_lastTailBytes.Length, _lastPosition);
+                var current = new byte[tailLen];
+                _logStream!.Seek(_lastPosition - tailLen, SeekOrigin.Begin);
+                if (ReadExactly(current, tailLen) == tailLen &&
+                    current.AsSpan().SequenceEqual(_lastTailBytes.AsSpan(_lastTailBytes.Length - tailLen)))
+                {
+                    return; // 연속성 유지 — 정상 경로
+                }
+
+                // 오프셋이 어긋남 → 마지막 소비 줄의 메시지 내용(타임스탬프 제외)으로 위치를 되찾는다
+                byte[] anchor = _resyncAnchorText.Length >= 6
+                    ? _logEncoding.GetBytes(_resyncAnchorText)
+                    : Array.Empty<byte>();
+
+                if (anchor.Length > 0)
+                {
+                    long searchStart = Math.Max(0, _lastPosition - ResyncSearchBack);
+                    long searchEnd = Math.Min(length, _lastPosition + ResyncSearchForward);
+                    int windowLen = (int)(searchEnd - searchStart);
+                    var window = new byte[windowLen];
+                    _logStream.Seek(searchStart, SeekOrigin.Begin);
+                    if (ReadExactly(window, windowLen) == windowLen)
+                    {
+                        int found = LastIndexOfBytes(window, anchor);
+                        if (found >= 0)
+                        {
+                            // 앵커 줄의 끝(개행 다음)부터 다시 읽는다
+                            int lineEnd = found + anchor.Length;
+                            while (lineEnd < windowLen && window[lineEnd] != (byte)'\n')
+                                lineEnd++;
+                            long newPos = searchStart + Math.Min(lineEnd + 1, windowLen);
+
+                            AppLogger.Warn($"Log tail was rewritten by the game. Resynced read position {_lastPosition} -> {newPos}.");
+                            _lastPosition = newPos;
+                            _pendingRawContent = string.Empty;
+                            _logDecoder.Reset();
+                            _lastTailBytes = Array.Empty<byte>();
+                            return;
+                        }
+                    }
+                }
+
+                // 되찾지 못함 → 파일이 통째로 바뀐 것으로 보고 처음부터 다시 (기존 잘림 처리와 동일 의미)
+                AppLogger.Warn("Log tail no longer matches and anchor resync failed. Restarting from file beginning.");
+                _lastPosition = 0;
+                _pendingRawContent = string.Empty;
+                _logDecoder.Reset();
+                _lastTailBytes = Array.Empty<byte>();
+            }
+            catch (Exception ex)
+            {
+                AppLogger.Warn("Log read continuity check failed.", ex);
+            }
+        }
+
+        /// <summary>
+        /// 마지막 소비 줄의 메시지 부분(첫 타임스탬프 font 태그 뒤)을 재동기화 앵커로 저장한다.
+        /// 게임이 꼬리를 다시 쓸 때 타임스탬프는 바뀌지만 메시지 내용은 그대로이기 때문.
+        /// </summary>
+        private void UpdateResyncAnchor(IReadOnlyList<string> lines)
+        {
+            for (int i = lines.Count - 1; i >= 0; i--)
+            {
+                string line = lines[i].Trim();
+                int cut = line.IndexOf("</font>", StringComparison.OrdinalIgnoreCase);
+                string message = cut >= 0 ? line[(cut + 7)..].Trim() : line;
+                if (message.Length >= 6)
+                {
+                    _resyncAnchorText = message;
+                    return;
+                }
+            }
+        }
+
+        /// <summary>체크포인트 복원 직후 등 꼬리 표본이 없을 때 현재 파일에서 채운다.</summary>
+        private void CaptureTailBytesFromFile()
+        {
+            int len = (int)Math.Min(TailVerifyLength, _lastPosition);
+            if (len <= 0)
+                return;
+
+            var tail = new byte[len];
+            _logStream!.Seek(_lastPosition - len, SeekOrigin.Begin);
+            if (ReadExactly(tail, len) == len)
+                _lastTailBytes = tail;
+        }
+
+        /// <summary>읽은 버퍼의 끝부분으로 연속성 검증용 꼬리 바이트를 갱신한다.</summary>
+        private void UpdateTailBytes(byte[] buffer, int count)
+        {
+            if (count >= TailVerifyLength)
+            {
+                _lastTailBytes = new byte[TailVerifyLength];
+                Array.Copy(buffer, count - TailVerifyLength, _lastTailBytes, 0, TailVerifyLength);
+                return;
+            }
+
+            int keepOld = Math.Min(_lastTailBytes.Length, TailVerifyLength - count);
+            var next = new byte[keepOld + count];
+            if (keepOld > 0)
+                Array.Copy(_lastTailBytes, _lastTailBytes.Length - keepOld, next, 0, keepOld);
+            Array.Copy(buffer, 0, next, keepOld, count);
+            _lastTailBytes = next;
+        }
+
+        private int ReadExactly(byte[] buffer, int count)
+        {
+            int total = 0;
+            while (total < count)
+            {
+                int read = _logStream!.Read(buffer, total, count - total);
+                if (read <= 0)
+                    break;
+                total += read;
+            }
+
+            return total;
+        }
+
+        private static int LastIndexOfBytes(byte[] haystack, byte[] needle)
+        {
+            for (int i = haystack.Length - needle.Length; i >= 0; i--)
+            {
+                if (haystack.AsSpan(i, needle.Length).SequenceEqual(needle))
+                    return i;
+            }
+
+            return -1;
         }
 
         /// <summary>
@@ -427,6 +593,8 @@ namespace TWChatOverlay.Services
             var lines = LineSplitRegex.Split(content)
                 .Where(l => !string.IsNullOrWhiteSpace(l))
                 .ToList();
+
+            UpdateResyncAnchor(lines);
 
             lines = ShoutLineMergeHelper.MergeWrappedShoutLines(lines);
             lines = SystemLineMergeHelper.MergeWrappedSystemLines(lines);
