@@ -18,14 +18,46 @@
             MouseLeftButtonDown="RootBorder_MouseLeftButtonDown">
         <Grid>
             <Grid x:Name="NormalContent">
-                <Button HorizontalAlignment="Right"
-                        VerticalAlignment="Top"
-                        Click="CloseButton_Click"
-                        Content="X"
-                        Style="{StaticResource WindowCloseButtonStyle}"/>
+                <!-- 오른쪽: [수정] 위 / [닫기] 아래 -->
+                <StackPanel HorizontalAlignment="Right" VerticalAlignment="Center">
+                    <Button Height="22"
+                            MinWidth="40"
+                            Cursor="Hand"
+                            Click="EditButton_Click"
+                            ToolTip="누적 알림 ON/OFF와 저장된 누적 경험치를 바로 수정합니다">
+                        <Button.Template>
+                            <ControlTemplate TargetType="Button">
+                                <Border x:Name="ButtonBorder"
+                                        Background="{DynamicResource OverlayTabHoverBrush}"
+                                        BorderBrush="{DynamicResource ControlBorderBrush}"
+                                        BorderThickness="1"
+                                        CornerRadius="4"
+                                        Padding="8,0">
+                                    <TextBlock Text="설정"
+                                               FontSize="11"
+                                               Foreground="{DynamicResource ButtonTextBrush}"
+                                               HorizontalAlignment="Center"
+                                               VerticalAlignment="Center"/>
+                                </Border>
+                                <ControlTemplate.Triggers>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter TargetName="ButtonBorder" Property="Background" Value="{DynamicResource OverlayTabSelectedBrush}"/>
+                                    </Trigger>
+                                    <Trigger Property="IsPressed" Value="True">
+                                        <Setter TargetName="ButtonBorder" Property="Background" Value="{DynamicResource OverlayTabSelectedBorderBrush}"/>
+                                    </Trigger>
+                                </ControlTemplate.Triggers>
+                            </ControlTemplate>
+                        </Button.Template>
+                    </Button>
+                    <Button Margin="0,4,0,0"
+                            Click="CloseButton_Click"
+                            Content="X"
+                            Style="{StaticResource WindowCloseButtonStyle}"/>
+                </StackPanel>
 
                 <TextBlock x:Name="MessageTextBlock"
-                           Margin="34,0,34,0"
+                           Margin="44,0,58,0"
                            TextWrapping="Wrap"
                            TextAlignment="Center"
                            HorizontalAlignment="Center"
