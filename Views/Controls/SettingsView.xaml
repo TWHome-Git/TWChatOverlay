@@ -1013,6 +1013,18 @@
                                     </StackPanel>
                                 </DockPanel>
                             </Border>
+                            <Border Style="{StaticResource SettingsRowStyle}">
+                                <DockPanel>
+                                    <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                                        <Slider Minimum="10" Maximum="40" Value="{Binding ExperienceAlertFontSize, Mode=TwoWay}" TickFrequency="1" IsSnapToTickEnabled="True" VerticalAlignment="Center" Width="140"/>
+                                        <TextBlock Text="{Binding ExperienceAlertFontSize, StringFormat={}{0:F0}}" Foreground="{DynamicResource TextBrush}" Width="26" TextAlignment="Right" VerticalAlignment="Center" FontSize="12"/>
+                                    </StackPanel>
+                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                        <TextBlock Text="누적 알림 폰트 크기" Style="{StaticResource SettingsRowLabelStyle}"/>
+                                        <Button Style="{StaticResource HelpButtonStyle}" Tag="exp.loweff_font" Click="Help_Click"/>
+                                    </StackPanel>
+                                </DockPanel>
+                            </Border>
                         </WrapPanel>
                         </StackPanel>
 
@@ -1033,18 +1045,6 @@
                                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                                         <TextBlock Text="기준치(만 EXP 미만)" Style="{StaticResource SettingsRowLabelStyle}"/>
                                         <Button Style="{StaticResource HelpButtonStyle}" Tag="exp.loweff_threshold" Click="Help_Click"/>
-                                    </StackPanel>
-                                </DockPanel>
-                            </Border>
-                            <Border Style="{StaticResource SettingsRowStyle}">
-                                <DockPanel>
-                                    <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
-                                        <Slider Minimum="10" Maximum="40" Value="{Binding ExperienceAlertFontSize, Mode=TwoWay}" TickFrequency="1" IsSnapToTickEnabled="True" VerticalAlignment="Center" Width="140"/>
-                                        <TextBlock Text="{Binding ExperienceAlertFontSize, StringFormat={}{0:F0}}" Foreground="{DynamicResource TextBrush}" Width="26" TextAlignment="Right" VerticalAlignment="Center" FontSize="12"/>
-                                    </StackPanel>
-                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                        <TextBlock Text="누적 알림 폰트 크기" Style="{StaticResource SettingsRowLabelStyle}"/>
-                                        <Button Style="{StaticResource HelpButtonStyle}" Tag="exp.loweff_font" Click="Help_Click"/>
                                     </StackPanel>
                                 </DockPanel>
                             </Border>
