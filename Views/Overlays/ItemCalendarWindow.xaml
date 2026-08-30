@@ -356,7 +356,7 @@
                                            Margin="0,0,0,10"/>
                                 <ProgressBar Minimum="0"
                                              Maximum="100"
-                                             Value="{Binding LoadProgressValue}"
+                                             Value="{Binding LoadProgressValue, Mode=OneWay}"
                                              Height="10"/>
                             </StackPanel>
                         </Border>
