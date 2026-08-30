@@ -54,6 +54,10 @@ namespace TWChatOverlay.Services
                 Version currentVersion = GetCurrentVersion();
                 bool hasNewer = release.LatestVersion > currentVersion;
                 bool shouldPrompt = forceInstallLatest || hasNewer;
+#if DEBUG
+                // 디버그 빌드: 창 디자인 확인용으로 최신 버전이어도 업데이트 창을 항상 띄운다
+                shouldPrompt = true;
+#endif
                 AppLogger.Info($"Update metadata loaded in {stopwatch.ElapsedMilliseconds} ms. Current={FormatVersion(currentVersion)}, Latest={release.TagName}, HasNewer={hasNewer}");
 
                 if (!shouldPrompt)
