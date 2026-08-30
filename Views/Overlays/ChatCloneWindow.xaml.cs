@@ -303,13 +303,13 @@ namespace TWChatOverlay.Views
 
         private void ChatWindowHub_BuffersChanged(object? sender, EventArgs e)
         {
-            Dispatcher.BeginInvoke(new Action(RefreshLogDisplay), System.Windows.Threading.DispatcherPriority.Background);
+            Dispatcher.BeginInvoke(new Action(() => RefreshLogDisplay()), System.Windows.Threading.DispatcherPriority.Background);
         }
 
         /// <summary>아이디 태그/블랙리스트 파일이 바뀌면 표기 접미사가 달라지므로 다시 그린다.</summary>
         private void IdTagService_Changed()
         {
-            Dispatcher.BeginInvoke(new Action(RefreshLogDisplay), System.Windows.Threading.DispatcherPriority.Background);
+            Dispatcher.BeginInvoke(new Action(() => RefreshLogDisplay(forceRebuild: true)), System.Windows.Threading.DispatcherPriority.Background);
         }
 
         private void Settings_PropertyChanged(object? sender, PropertyChangedEventArgs e)
@@ -342,7 +342,7 @@ namespace TWChatOverlay.Views
             }
             else if (e.PropertyName != null && e.PropertyName.StartsWith("Show", StringComparison.Ordinal))
             {
-                Dispatcher.BeginInvoke(new Action(RefreshLogDisplay), System.Windows.Threading.DispatcherPriority.Background);
+                Dispatcher.BeginInvoke(new Action(() => RefreshLogDisplay(forceRebuild: true)), System.Windows.Threading.DispatcherPriority.Background);
             }
         }
 
@@ -378,7 +378,7 @@ namespace TWChatOverlay.Views
             CurrentFontSize = effectiveSize;
 
             if (_isInitialized)
-                RefreshLogDisplay();
+                RefreshLogDisplay(forceRebuild: true);
         }
 
         private FontFamily ResolveMainFont()
@@ -399,31 +399,87 @@ namespace TWChatOverlay.Views
             return _settings.FontSize > 0 ? _settings.FontSize : 17.0;
         }
 
-        private void RefreshLogDisplay()
+        // 증분 렌더 상태: 마지막으로 그린 시점의 버퍼 버전
+        private long _renderedTotalAppended;
+        private int _renderedGeneration = -1;
+        private string? _renderedTabTag;
+
+        /// <summary>
+        /// 평상시(버퍼에 줄 추가)에는 새 줄만 덧붙이고, 탭/폰트/필터 변경이나
+        /// 버퍼 전체 교체 시에만 문서를 전체 재구축한다.
+        /// </summary>
+        private void RefreshLogDisplay(bool forceRebuild = false)
         {
             var logDisplay = ChatDisplay.LogDisplayControl;
             if (logDisplay == null)
                 return;
 
+            var store = ChatWindowHub.SharedLogBuffers;
+            bool canAppend = !forceRebuild
+                && string.Equals(_renderedTabTag, _currentTabTag, StringComparison.Ordinal)
+                && _renderedGeneration >= 0;
+
+            IReadOnlyList<LogParser.ParseResult>? delta = null;
+            long totalAppended;
+            int generation;
+            if (canAppend)
+            {
+                delta = store.GetLogsAppendedAfter(
+                    _currentTabTag, _renderedTotalAppended, _renderedGeneration,
+                    out totalAppended, out generation);
+                if (delta != null && delta.Count == 0)
+                {
+                    // 새 줄 없음 — 그릴 것도 없다
+                    _renderedTotalAppended = totalAppended;
+                    return;
+                }
+            }
+            else
+            {
+                (totalAppended, generation) = store.GetVersion(_currentTabTag);
+            }
+
             bool shouldAutoScroll = ChatDisplay.IsAutoScrollEnabled;
             logDisplay.BeginChange();
             try
             {
-                logDisplay.Document.Blocks.Clear();
-                foreach (var log in ChatWindowHub.SharedLogBuffers.GetLogs(_currentTabTag))
+                if (delta != null)
                 {
-                    _renderer.AddLog(logDisplay.Document, log, _settings, CurrentFont, CurrentFontSize, false, false);
+                    foreach (var log in delta)
+                    {
+                        _renderer.AddLog(logDisplay.Document, log, _settings, CurrentFont, CurrentFontSize, false, false);
+                    }
+
+                    // 버퍼 상한만큼만 유지 — 오래된 문단은 앞에서 제거 (Count는 O(n)이라 한 번만 센다)
+                    var blocks = logDisplay.Document.Blocks;
+                    int maxBlocks = store.MaxCountPerTab;
+                    int blockCount = blocks.Count;
+                    while (blockCount > maxBlocks && blocks.FirstBlock != null)
+                    {
+                        blocks.Remove(blocks.FirstBlock);
+                        blockCount--;
+                    }
+                }
+                else
+                {
+                    (totalAppended, generation) = store.GetVersion(_currentTabTag);
+                    logDisplay.Document.Blocks.Clear();
+                    foreach (var log in store.GetLogs(_currentTabTag))
+                    {
+                        _renderer.AddLog(logDisplay.Document, log, _settings, CurrentFont, CurrentFontSize, false, false);
+                    }
                 }
             }
             finally
             {
                 logDisplay.EndChange();
-                logDisplay.InvalidateMeasure();
-                logDisplay.InvalidateVisual();
-                logDisplay.UpdateLayout();
                 if (shouldAutoScroll)
                     logDisplay.ScrollToEnd();
             }
+
+            _renderedTotalAppended = totalAppended;
+            _renderedGeneration = generation;
+            _renderedTabTag = _currentTabTag;
         }
 
         private void Tab_Click(object sender, RoutedEventArgs e)

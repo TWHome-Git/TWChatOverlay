@@ -191,6 +191,9 @@ namespace TWChatOverlay.Views
         }
 
         /// <summary>추가 기능 패널들의 DataContext(AddonViewModel)를 준비한다.</summary>
+        /// <summary>설정 마법사가 완료 시 경험치 상태 적용 등에 재사용한다.</summary>
+        internal ViewModels.AddonViewModel? AddonViewModelInstance => _addonViewModel;
+
         private void EnsureAddonViewModel()
         {
             if (_addonViewModel != null) return;
@@ -625,12 +628,15 @@ namespace TWChatOverlay.Views
         private void SettingsView_Loaded(object sender, RoutedEventArgs e)
         {
             SyncFontOptions();
+            _addonViewModel?.Attach();
         }
 
         private void SettingsView_Unloaded(object sender, RoutedEventArgs e)
         {
             HelpWindow.HideIfOpen();
             _itemDropPreviewTimer?.Stop();
+            // ChatSettings는 앱 수명 내내 살아 있으므로 구독을 남기면 VM 전체가 누수된다
+            _addonViewModel?.Detach();
             if (_addonPreviewActive)
             {
                 _addonPreviewActive = false;
