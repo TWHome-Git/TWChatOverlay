@@ -24,7 +24,7 @@
                     <RowDefinition Height="*"/>
                 </Grid.RowDefinitions>
 
-                <TextBlock Text="던전 카운트"
+                <TextBlock Text="던전 도우미"
                            Foreground="{DynamicResource OverlayTitleAccentTextBrush}"
                            FontSize="13"
                            FontWeight="SemiBold"
@@ -43,7 +43,7 @@
 
             <!-- 잠금 해제(위치 미리보기) 공통 라벨 -->
             <TextBlock x:Name="PreviewLabel"
-                       Text="던전 카운트 알림창"
+                       Text="던전 도우미 알림창"
                        Foreground="{DynamicResource TextBrush}"
                        FontSize="15"
                        FontWeight="SemiBold"

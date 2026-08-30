@@ -66,6 +66,8 @@ namespace TWChatOverlay.Views
             _frameImage = new Image
             {
                 Stretch = Stretch.Uniform,
+                // 작은 원본(에토스 방향 등)이 창 폭까지 확대되어 흐릿해지지 않게 축소만 허용
+                StretchDirection = StretchDirection.DownOnly,
                 MaxWidth = 448,
                 HorizontalAlignment = HorizontalAlignment.Left,
                 Margin = new Thickness(0, 0, 0, 10),

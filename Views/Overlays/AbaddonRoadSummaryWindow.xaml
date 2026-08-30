@@ -5,7 +5,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d"
-        Title="어밴던로드 상황판"
+        Title="어밴던로드 통계"
         Width="384"
         Height="320"
         MinWidth="344"
@@ -40,7 +40,7 @@
                     <StackPanel Grid.Column="0"
                                 HorizontalAlignment="Center"
                                 VerticalAlignment="Center">
-                        <TextBlock Text="어밴던로드 상황판"
+                        <TextBlock Text="어밴던로드 통계"
                                    Foreground="{DynamicResource TextBrush}"
                                    FontSize="16"
                                    FontWeight="Bold"

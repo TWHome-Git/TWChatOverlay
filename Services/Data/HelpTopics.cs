@@ -244,7 +244,7 @@ namespace TWChatOverlay.Services
 
             ["dungeon.abandon_gold"] = (
                 "어밴던로드 통계",
-                "어밴던로드 상황판 창을 보여줍니다.\n" +
+                "어밴던로드 통계 창을 보여줍니다.\n" +
                 "주간 합계 금액과 마정석(하급~최상급) 획득 내역을 한눈에 볼 수 있습니다.",
                 new[] { "dungeon_abandon_gold_off.png", "dungeon_abandon_gold_on.png" }),
 
@@ -281,7 +281,8 @@ namespace TWChatOverlay.Services
 
             ["boss.alert"] = (
                 "필드 보스 알림",
-                "필드 보스 등장 시간표에 맞춰 3분 전 / 1분 전 / 5초 전에 알림을 띄웁니다.\n" +
+                "필드 보스 등장 시간표에 맞춰 3분 전 / 1분 전 / 5초 전에\n" +
+                "소리와 함께 팝업 알림을 띄웁니다. 팝업은 보스 출현 5초 후 자동으로 닫힙니다.\n" +
                 "보스별로 받을 알림을 따로 켜고 끌 수 있고, 알림 볼륨도 조절할 수 있습니다.",
                 new[] { "boss_alert_3min.png", "boss_alert_spawn.png" }),
 

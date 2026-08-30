@@ -200,11 +200,9 @@ namespace TWChatOverlay.Services
                 DimLine("(버프 추적 창 표시 안 함)")));
             Save(outDir, "buff_tracker_on.png", PanelToggle(true, RealBuffTracker()));
 
-            // ── 필드 보스 알림 ──
-            Save(outDir, "boss_alert_3min.png", Panel("3분 전",
-                ToastMock("필드 보스", "아칸 등장 3분 전", SystemCol)));
-            Save(outDir, "boss_alert_spawn.png", Panel("5초 전",
-                ToastMock("필드 보스", "아칸이 곧 등장합니다!", Color.FromRgb(0xFF, 0x5A, 0x5A))));
+            // ── 필드 보스 알림 (실제 팝업 창) ──
+            Save(outDir, "boss_alert_3min.png", Panel("3분 전", RealBossToast("아칸", "3분 전")));
+            Save(outDir, "boss_alert_spawn.png", Panel("5초 전", RealBossToast("아칸", "5초 전")));
 
             // ── 던전 도우미 알림들 (실제 창) ──
             Save(outDir, "dungeon_wave_off.png", PanelToggle(false, DimLine("(웨이브가 끝나도 알림 없음)")));
@@ -383,6 +381,16 @@ namespace TWChatOverlay.Services
         private static FrameworkElement RealDungeonAlert(string message)
         {
             var root = WindowRoot(new Views.DungeonCountDisplayWindow(message, RealFont, durationSeconds: 0, new ChatSettings()));
+            root.MaxWidth = 426;
+            return root;
+        }
+
+        /// <summary>실제 필드 보스 알림 팝업 창.</summary>
+        private static FrameworkElement RealBossToast(string bossName, string label)
+        {
+            var w = new Views.BossAlertToastWindow();
+            w.SetAlert(bossName, label);
+            var root = WindowRoot(w);
             root.MaxWidth = 426;
             return root;
         }
