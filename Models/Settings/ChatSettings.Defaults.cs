@@ -14,6 +14,26 @@ namespace TWChatOverlay.Models
         }
 
         /// <summary>
+        /// 다른 설정 인스턴스의 내용을 통째로 가져온다 (프로필 불러오기).
+        /// 섹션 교체 방식이라 초기화(ResetToDefault)와 같은 전체 갱신 경로를 쓰면 된다.
+        /// </summary>
+        public void ApplyFrom(ChatSettings source)
+        {
+            if (source == null)
+                return;
+
+            Chat = source.Chat ?? new ChatSection();
+            Shout = source.Shout ?? new ShoutSection();
+            Alerts = source.Alerts ?? new AlertsSection();
+            Windows = source.Windows ?? new WindowsSection();
+            Ui = source.Ui ?? new UiSection();
+            Hotkeys = source.Hotkeys ?? new HotkeysSection();
+            SystemConfig = source.SystemConfig ?? new SystemSection();
+            Presets = source.Presets ?? new PresetsSection();
+            _enableDebugLogging = source.EnableDebugLogging;
+        }
+
+        /// <summary>
         /// 섹션을 새로 만들어 모든 값을 기본값으로 채운다. (섹션 클래스의 초기값 = 앱 기본값)
         /// </summary>
         private void ApplyDefaultValues()
