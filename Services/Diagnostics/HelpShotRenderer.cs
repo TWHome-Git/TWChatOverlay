@@ -124,11 +124,11 @@ namespace TWChatOverlay.Services
 
             // ── 외치기: 토스트 팝업 (실제 창) ──
             Save(outDir, "shout_toast_off.png", PanelToggle(false,
-                Line(ShoutCol, ("외치기 : 잡템 일괄 삽니다 [상점왕]", ShoutCol)),
+                Line(ShoutCol, ("외치기 : 훈장 50개 삽니다 [티치엘]", ShoutCol)),
                 DimLine("(채팅창에만 표시 — 팝업 없음)")));
             Save(outDir, "shout_toast_on.png", PanelToggle(true,
-                Line(ShoutCol, ("외치기 : 잡템 일괄 삽니다 [상점왕]", ShoutCol)),
-                RealShoutToast("잡템 일괄 삽니다 [상점왕]")));
+                Line(ShoutCol, ("외치기 : 훈장 50개 삽니다 [티치엘]", ShoutCol)),
+                RealShoutToast("훈장 50개 삽니다 [티치엘]")));
 
             // ── 외치기: 닉네임 자동복사 (실제 창) ──
             Save(outDir, "shout_autocopy_off.png", PanelToggle(false,
@@ -464,7 +464,7 @@ namespace TWChatOverlay.Services
         private sealed class AbandonSummarySample
         {
             public string WeekText { get; } = "8/24 (일) ~ 8/30 (토)";
-            public string SummaryText { get; } = "어밴던로드 주간 합계: 1,234만";
+            public string SummaryText { get; } = "어밴던로드 주간 합계: 1억 2350만";
             public System.Collections.ObjectModel.ObservableCollection<AbandonMonthlyStoneSummaryEntryViewModel> StoneEntries { get; } = new()
             {
                 new("하급 마정석", "pack://application:,,,/Data/images/Item/하급마정석.png", 42),
@@ -537,8 +537,8 @@ namespace TWChatOverlay.Services
         private static FrameworkElement OpacityMock(byte panelAlpha, string badge)
         {
             var chat = new StackPanel { Margin = new Thickness(10, 8, 10, 8) };
-            chat.Children.Add(Line(NormalCol, ("모비딕 : 사냥 가실 분?", NormalCol)));
-            chat.Children.Add(Line(TeamCol, ("[팀] 나비 : 집결지로 와주세요", TeamCol)));
+            chat.Children.Add(Line(NormalCol, ("[일반] 아나이스 : 어비스 가실 분?", NormalCol)));
+            chat.Children.Add(Line(TeamCol, ("[팀] 로아미니 : 상실의 섬으로 와주세요", TeamCol)));
 
             var panel = new Border
             {
@@ -578,7 +578,7 @@ namespace TWChatOverlay.Services
         private static FrameworkElement UnlockMock(bool unlocked)
         {
             var chat = new StackPanel { Margin = new Thickness(10, 6, 10, 6) };
-            chat.Children.Add(Line(NormalCol, ("모비딕 : 사냥 가실 분?", NormalCol)));
+            chat.Children.Add(Line(NormalCol, ("아나이스 : 어비스 가실 분?", NormalCol)));
 
             var windowStack = new StackPanel
             {
@@ -940,8 +940,8 @@ namespace TWChatOverlay.Services
 
             // 적용 결과 채팅 줄
             var result = syncOn
-                ? Line(NormalCol, ("모비딕", NormalCol), (" : 사냥 가실 분?", NormalCol))
-                : Line(NormalCol, ("모비딕", SkyCol), (" : 사냥 가실 분?", NormalCol));
+                ? Line(NormalCol, ("아나이스", NormalCol), (" : 어비스 가실 분?", NormalCol))
+                : Line(NormalCol, ("아나이스", SkyCol), (" : 어비스 가실 분?", NormalCol));
 
             var stack = new StackPanel { Margin = new Thickness(10, 8, 10, 8) };
             stack.Children.Add(rowBox);
@@ -989,14 +989,14 @@ namespace TWChatOverlay.Services
             var lines = new StackPanel { Margin = new Thickness(10, 2, 10, 8) };
             if (activeShout)
             {
-                lines.Children.Add(Line(ShoutCol, ("외치기 : 잡템 일괄 삽니다 [상점왕]", ShoutCol)));
-                lines.Children.Add(Line(ShoutCol, ("외치기 : 각인 도와드려요 [세공사]", ShoutCol)));
-                lines.Children.Add(Line(ShoutCol, ("외치기 : 클럽원 모집합니다 [달빛클럽]", ShoutCol)));
+                lines.Children.Add(Line(ShoutCol, ("외치기 : 훈장 50개 삽니다 [티치엘]", ShoutCol)));
+                lines.Children.Add(Line(ShoutCol, ("외치기 : 세크리드 주화 주머니 팝니다 [김주화]", ShoutCol)));
+                lines.Children.Add(Line(ShoutCol, ("외치기 : 클럽원 모집합니다 [리체]", ShoutCol)));
             }
             else
             {
-                lines.Children.Add(Line(NormalCol, ("모비딕 : 사냥 가실 분?", NormalCol)));
-                lines.Children.Add(Line(TeamCol, ("[팀] 나비 : 집결지로 와주세요", TeamCol)));
+                lines.Children.Add(Line(NormalCol, ("아나이스 : 아페테리아 가실 분?", NormalCol)));
+                lines.Children.Add(Line(TeamCol, ("[팀] 벤야 : 입구로 와주세요", TeamCol)));
                 lines.Children.Add(Line(SystemCol, ("[경험의 심장] 아이템을 사용하였습니다.", SystemCol)));
             }
 
