@@ -432,35 +432,6 @@ namespace TWChatOverlay.Services
         }
 
         /// <summary>
-        /// 전경 앱 전환(그림판 등)으로 흐트러진 잠금 해제 z-순서를 복구한다:
-        /// 격자 백드롭을 최상단 밴드에 다시 넣고, 그 위로 오버레이/배너/인스펙터를 재삽입.
-        /// </summary>
-        internal static void ReassertUnlockZOrder()
-        {
-            if (!IsUnlocked)
-                return;
-
-            try
-            {
-                if (_backdrop?.IsVisible == true)
-                {
-                    const int SWP_NOMOVE = 0x0002;
-                    const int SWP_NOSIZE = 0x0001;
-                    const int SWP_NOACTIVATE = 0x0010;
-                    var handle = new WindowInteropHelper(_backdrop).Handle;
-                    if (handle != IntPtr.Zero)
-                        NativeMethods.SetWindowPos(handle, new IntPtr(-1), 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
-                }
-
-                RaiseOverlaysAboveBackdrop();
-            }
-            catch (Exception ex)
-            {
-                AppLogger.Warn("Failed to reassert unlock z-order.", ex);
-            }
-        }
-
-        /// <summary>
         /// 백드롭보다 우리 오버레이 창/배너가 위에 오도록 Topmost 밴드 최상단으로 재삽입한다.
         /// (백드롭이 나중에 Show되면 같은 밴드 최상단에 끼어들어 격자가 오버레이 위에 그려짐)
         /// </summary>

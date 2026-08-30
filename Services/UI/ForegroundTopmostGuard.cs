@@ -109,17 +109,16 @@ namespace TWChatOverlay.Services
                 if (TrayAllWindowsService.IsTrayed)
                     return;
 
-                // 잠금 해제 모드: 격자(백드롭)는 아래, 오버레이·배너·인스펙터는 위 순서로 복구
+                // 잠금 해제 모드는 배경/배너/인스펙터가 자체적으로 z-순서를 관리한다
                 if (UiLockService.IsUnlocked)
-                {
-                    UiLockService.ReassertUnlockZOrder();
                     return;
-                }
 
-                // '항상 위' 설정과 무관하게 복구한다 — 창들은 Topmost로 떠 있는데
-                // 일부 앱(그림판 등 패키지 앱)이 닫힐 때 Windows가 최상단 밴드에서 밀어내는
-                // 글리치가 있어, 복구하지 않으면 오버레이가 게임 뒤로 사라진 것처럼 보인다.
-                // Topmost=false인 창은 건드리지 않으므로 일반 창 동작은 그대로다.
+                // 단순 2모드 (전경 앱 감지 없음):
+                //  - 항상 위 ON: 다른 앱이 전경이 될 때마다 오버레이를 최상단 밴드로 재승격
+                //  - 항상 위 OFF: 아무것도 하지 않는다 — 시작 때의 z-순서를 그대로 두고 OS에 맡긴다
+                var settings = ToastPresentationHelper.FindSharedSettings();
+                if (settings?.OverlaysAlwaysOnTop == false)
+                    return;
 
                 Window? settingsHost = null;
                 foreach (Window window in Application.Current.Windows)
