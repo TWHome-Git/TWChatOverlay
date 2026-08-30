@@ -146,7 +146,7 @@ namespace TWChatOverlay.Services
         {
             string windowTitle = forceInstallLatest ? "수동 업데이트" : "업데이트 알림";
             string headline = forceInstallLatest
-                ? ""
+                ? "현재 버전을 다시 설치합니다."
                 : "업데이트 내역";
             string footerHint = forceInstallLatest
                 ? "업데이트를 시작하면 앱이 잠시 종료되고 최신 파일이 다시 설치됩니다."

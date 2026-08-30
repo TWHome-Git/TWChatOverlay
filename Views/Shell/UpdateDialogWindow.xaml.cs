@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Windows;
 using System.Windows.Input;
+using TWChatOverlay.Services;
 
 namespace TWChatOverlay.Views
 {
@@ -16,10 +17,12 @@ namespace TWChatOverlay.Views
             string updateButtonText)
         {
             InitializeComponent();
+            WindowFontService.Apply(this);
 
             Title = windowTitle;
             WindowTitleText.Text = windowTitle;
             HeadlineText.Text = headline;
+            HeadlineText.Visibility = string.IsNullOrWhiteSpace(headline) ? Visibility.Collapsed : Visibility.Visible;
             CurrentVersionText.Text = currentVersion;
             LatestVersionText.Text = latestVersion;
             ReleaseNotesTextBox.Text = string.IsNullOrWhiteSpace(releaseNotes)
