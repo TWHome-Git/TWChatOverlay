@@ -54,6 +54,11 @@
     <Resource Include="favicon.ico" />
   </ItemGroup>
 
+  <!-- 번들 폰트: 출력 폴더의 Font\ 에 파일로 복사되어 FontService가 로드한다 -->
+  <ItemGroup>
+    <None Include="Font\**\*" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.1" />
   </ItemGroup>

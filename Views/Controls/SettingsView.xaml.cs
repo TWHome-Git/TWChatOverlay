@@ -426,6 +426,9 @@ namespace TWChatOverlay.Views
 
             NanumFontOption.IsChecked = viewModel.FontFamily == "나눔고딕";
             GulimFontOption.IsChecked = viewModel.FontFamily == "굴림";
+            PretendardFontOption.IsChecked = viewModel.FontFamily == "프리텐다드";
+            NanumRoundFontOption.IsChecked = viewModel.FontFamily == "나눔스퀘어라운드";
+            GmarketFontOption.IsChecked = viewModel.FontFamily == "G마켓 산스";
             CustomFontOption.IsChecked = viewModel.FontFamily == "사용자 설정";
         }
 
