@@ -280,6 +280,21 @@ namespace TWChatOverlay.Views
                 PersistMenuWindowPosition();
             }
             catch { }
+
+            // 메뉴 바는 앱의 진입점 — 외부(Alt+F4·작업 표시줄 닫기 등)에서 닫히면
+            // 트레이 아이콘까지 사라져 제어 수단 없는 프로세스만 남으므로 앱 전체를 종료한다.
+            // (정상 종료 경로에서는 이미 Shutdown이 시작된 상태라 아무것도 하지 않는다)
+            try
+            {
+                var app = Application.Current;
+                if (app != null && !app.Dispatcher.HasShutdownStarted)
+                {
+                    AppLogger.Info("Menu window was closed externally. Shutting down application.");
+                    ChatWindowHub.BeginShutdown();
+                    app.Shutdown();
+                }
+            }
+            catch { }
         }
 
         private static Models.ChatSettings GetSharedSettings()
