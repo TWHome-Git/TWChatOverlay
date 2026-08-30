@@ -201,70 +201,82 @@ namespace TWChatOverlay.Views
             root.Children.Add(CreateFilterColorRow("외치기", nameof(ChatSettings.ShowShout), nameof(ChatSettings.ShoutColor)));
             root.Children.Add(CreateFilterColorRow("시스템", nameof(ChatSettings.ShowSystem), nameof(ChatSettings.SystemColor)));
 
-            root.Children.Add(new Border { Height = 1, Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#2E3640")), Margin = new Thickness(0, 10, 0, 10) });
+            root.Children.Add(CreateSectionDivider());
 
             root.Children.Add(CreateCheckRow("에타 레벨 표시", nameof(ChatSettings.ShowEtaLevel)));
             root.Children.Add(CreateCheckRow("캐릭터 표시", nameof(ChatSettings.ShowEtaCharacter)));
             root.Children.Add(CreateCheckRow("클럽 보스 메시지 표시", nameof(ChatSettings.ShowClubBoss)));
             root.Children.Add(CreateCheckRow("타임스탬프 표시", nameof(ChatSettings.ShowTimestamp)));
 
-            root.Children.Add(new Border { Height = 1, Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#2E3640")), Margin = new Thickness(0, 10, 0, 10) });
+            root.Children.Add(CreateSectionDivider());
 
             root.Children.Add(new TextBlock
             {
                 Text = "텍스트 폰트 및 크기",
                 Foreground = ThemeBrushes.Get("TextBrush", Brushes.White),
                 FontWeight = FontWeights.SemiBold,
-                Margin = new Thickness(0, 0, 0, 6)
+                Margin = new Thickness(0, 0, 0, 2)
             });
 
-            var fontGrid = new Grid { Margin = new Thickness(0, 0, 0, 8) };
-            fontGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
-            fontGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
-
-            var rbNanum = new RadioButton { Content = "나눔고딕", Foreground = ThemeBrushes.Get("TextBrush", Brushes.White), GroupName = "WizardFontFamily" };
-            rbNanum.IsChecked = _settings.FontFamily == "나눔고딕";
-            rbNanum.Checked += (_, _) => _settings.FontFamily = "나눔고딕";
-            Grid.SetColumn(rbNanum, 0);
-            fontGrid.Children.Add(rbNanum);
-
-            var rbGulim = new RadioButton { Content = "굴림", Foreground = ThemeBrushes.Get("TextBrush", Brushes.White), GroupName = "WizardFontFamily" };
-            rbGulim.IsChecked = _settings.FontFamily == "굴림";
-            rbGulim.Checked += (_, _) => _settings.FontFamily = "굴림";
-            Grid.SetColumn(rbGulim, 1);
-            fontGrid.Children.Add(rbGulim);
-            root.Children.Add(fontGrid);
-
-            var rbCustom = new RadioButton { Content = "사용자 설정", Foreground = ThemeBrushes.Get("TextBrush", Brushes.White), GroupName = "WizardFontFamily", Margin = new Thickness(0, 0, 0, 8) };
-            rbCustom.IsChecked = _settings.FontFamily == "사용자 설정";
-            rbCustom.Checked += (_, _) => _settings.FontFamily = "사용자 설정";
-            root.Children.Add(rbCustom);
-
-            var sizePanel = new StackPanel { Orientation = Orientation.Horizontal };
-            var fontSizeLabel = new TextBlock { Foreground = ThemeBrushes.Get("TextBrush", Brushes.White), Width = 110, VerticalAlignment = VerticalAlignment.Center };
-            fontSizeLabel.SetBinding(TextBlock.TextProperty, new Binding(nameof(ChatSettings.FontSize))
+            // 설정 > 폰트 탭과 동일: 글꼴 콤보박스 + 크기 슬라이더 행
+            var fontCombo = new ComboBox
             {
-                Source = _settings,
-                StringFormat = "폰트 크기: {0:F0}pt"
-            });
-            sizePanel.Children.Add(fontSizeLabel);
+                Width = 170,
+                Height = 26,
+                VerticalAlignment = VerticalAlignment.Center,
+                ItemsSource = FontService.GetAvailableFonts(),
+                SelectedItem = _settings.FontFamily,
+            };
+            fontCombo.SetResourceReference(FrameworkElement.StyleProperty, "DarkComboBoxStyle");
+            fontCombo.SelectionChanged += (_, _) =>
+            {
+                if (fontCombo.SelectedItem is string fontName && _settings.FontFamily != fontName)
+                    _settings.FontFamily = fontName;
+            };
+            root.Children.Add(WrapSettingsRow("종류", fontCombo));
+
+            var sizePanel = new StackPanel { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Center };
             var fontSizeSlider = new Slider
             {
                 Minimum = 10,
                 Maximum = 40,
                 TickFrequency = 1,
                 IsSnapToTickEnabled = true,
-                Width = 220
+                Width = 140,
+                VerticalAlignment = VerticalAlignment.Center,
+                Margin = new Thickness(0),
             };
             fontSizeSlider.SetBinding(Slider.ValueProperty, new Binding(nameof(ChatSettings.FontSize)) { Source = _settings, Mode = BindingMode.TwoWay });
             sizePanel.Children.Add(fontSizeSlider);
-            root.Children.Add(sizePanel);
+            var fontSizeValue = new TextBlock
+            {
+                Foreground = ThemeBrushes.Get("TextBrush", Brushes.White),
+                FontSize = 12,
+                Width = 26,
+                TextAlignment = TextAlignment.Right,
+                VerticalAlignment = VerticalAlignment.Center,
+            };
+            fontSizeValue.SetBinding(TextBlock.TextProperty, new Binding(nameof(ChatSettings.FontSize))
+            {
+                Source = _settings,
+                StringFormat = "{0:F0}"
+            });
+            sizePanel.Children.Add(fontSizeValue);
+            root.Children.Add(WrapSettingsRow("크기", sizePanel));
 
             return new ScrollViewer
             {
                 VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
                 Content = root
             };
+        }
+
+        /// <summary>섹션 구분선 (테마 색).</summary>
+        private static Border CreateSectionDivider()
+        {
+            var divider = new Border { Height = 1, Margin = new Thickness(0, 10, 0, 10) };
+            divider.SetResourceReference(Border.BackgroundProperty, "SeparatorBrush");
+            return divider;
         }
 
         /// <summary>설정 화면과 같은 행 스타일: 라벨 왼쪽 + 토글 스위치 오른쪽 + 아래 구분선.</summary>
