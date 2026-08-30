@@ -1,0 +1,533 @@
+{
+  "Version": 2,
+  "Chat": {
+    "Filters": {
+      "ShowNormal": true,
+      "ShowTeam": true,
+      "ShowClub": false,
+      "ShowShout": true,
+      "ShowSystem": false,
+      "ShowClubBoss": true,
+      "ShowCategoryPrefix": false,
+      "NormalColor": "#FFFFFF",
+      "TeamColor": "#00BFFF",
+      "ClubColor": "#00FF00",
+      "SystemColor": "#FFFF00",
+      "ShoutColor": "#FF8000"
+    },
+    "IdDisplay": {
+      "ShowEtaLevel": true,
+      "ShowEtaCharacter": false,
+      "ShowIdTag": true,
+      "ShowTimestamp": true,
+      "SenderIdColorSync": false,
+      "EtaLevelColorSync": false,
+      "EtaCharacterColorSync": true,
+      "TimestampColorSync": false,
+      "IdTagColorSync": false,
+      "SenderIdColor": "#FFFFFF",
+      "EtaLevelColor": "#0080FF",
+      "EtaLevelRangeColors": false,
+      "EtaLevelRange1Color": "#C8CDD2",
+      "EtaLevelRange2Color": "#7EE081",
+      "EtaLevelRange3Color": "#5AC8E8",
+      "EtaLevelRange4Color": "#C08BFF",
+      "EtaLevelRange5Color": "#FFD84A",
+      "EtaCharacterColor": "#5AC8E8",
+      "TimestampColor": "#FFFF00",
+      "IdTagColor": "#80FFFF"
+    },
+    "Font": {
+      "Family": "사용자 설정",
+      "Size": 17,
+      "LineMargin": 899.2,
+      "LineMarginLeft": 836.8000000000001
+    },
+    "MainTabTag": "Basic",
+    "Clone1": {
+      "IsOpen": true,
+      "FollowMainFont": true,
+      "FontFamily": "사용자 설정",
+      "FontSize": 13,
+      "TabTag": "Club"
+    },
+    "Clone2": {
+      "IsOpen": false,
+      "FollowMainFont": true,
+      "FontFamily": "사용자 설정",
+      "TabTag": "General"
+    }
+  },
+  "Shout": {
+    "ToastPopup": true,
+    "AutoCopyNickname": false,
+    "ToastDurationSeconds": 5,
+    "ToastFontSize": 20,
+    "ReplayFontSize": 14
+  },
+  "Alerts": {
+    "Keyword": {
+      "Enabled": false,
+      "UseColor": true,
+      "UseSound": true,
+      "Volume": 1,
+      "Keywords": "@드드해 @뜨뜨해"
+    },
+    "Experience": {
+      "ShowTracker": true,
+      "LowEfficiencyAlarm": false,
+      "Threshold": 52000000,
+      "Volume": 1,
+      "AlertFontSize": 18,
+      "LimitAlertEnabled": true,
+      "ShowLimitAlertWindow": false,
+      "LimitTotalExp": 3381974570,
+      "LimitStateInitialized": true,
+      "LimitLastRefreshWeekKey": "2026-W34",
+      "LimitWeeklyPromptShownWeekKey": "2026-W34"
+    },
+    "Dungeon": {
+      "MagicCircleAlert": true,
+      "MagicCircleVolume": 1,
+      "EtosDirectionAlert": true,
+      "ShowEtosHelperWindow": false,
+      "ReflectionPatternAlert": true,
+      "ReflectionPatternVolume": 1,
+      "AbandonRoadCountAlert": true,
+      "ShowAbandonRoadSummaryWindow": true,
+      "CravingPleasureCountAlert": true,
+      "ShowCountDisplayWindow": false,
+      "CountAlertDurationSeconds": 60,
+      "CountDisplayFontSize": 18,
+      "CravingDurationSeconds": 30,
+      "CravingFontSize": 18,
+      "ShowRecaptureSupplyMap": false,
+      "ItemConfigs": {
+        "로카고스": {
+          "IsEnabled": true
+        },
+        "에토스": {
+          "IsEnabled": true
+        },
+        "체리아": {
+          "IsEnabled": true
+        },
+        "마티아": {
+          "IsEnabled": true
+        },
+        "티로로스": {
+          "IsEnabled": true
+        },
+        "라이코스": {
+          "IsEnabled": true
+        },
+        "이클립스 토벌전": {
+          "IsEnabled": true
+        },
+        "보급품 탈환": {
+          "IsEnabled": false
+        },
+        "훈련소": {
+          "IsEnabled": true
+        },
+        "별동대": {
+          "IsEnabled": true
+        },
+        "혼란한 대지": {
+          "IsEnabled": true
+        },
+        "색을 잃은 땅": {
+          "IsEnabled": true
+        },
+        "코어던전": {
+          "IsEnabled": true
+        },
+        "발굴지": {
+          "IsEnabled": true
+        },
+        "렐릭": {
+          "IsEnabled": true
+        },
+        "채굴장": {
+          "IsEnabled": true
+        },
+        "차원의 틈": {
+          "IsEnabled": true
+        },
+        "심연의 보물창고": {
+          "IsEnabled": true
+        },
+        "갈망하는 즐거움": {
+          "IsEnabled": true
+        },
+        "청소 아르바이트": {
+          "IsEnabled": true
+        },
+        "프라바 방어전": {
+          "IsEnabled": true
+        },
+        "카타콤 지옥": {
+          "IsEnabled": false
+        },
+        "어비스 - 심층Ⅰ": {
+          "IsEnabled": true
+        },
+        "어비스 - 심층Ⅱ": {
+          "IsEnabled": true
+        },
+        "어비스 - 심층Ⅲ": {
+          "IsEnabled": true
+        },
+        "신조의 둥지 어려움": {
+          "IsEnabled": true
+        },
+        "시오칸 하임 보스 토벌전": {
+          "IsEnabled": true
+        },
+        "시오칸 하임 오딘 전면전": {
+          "IsEnabled": true
+        },
+        "필멸의 땅": {
+          "IsEnabled": true
+        },
+        "카디프": {
+          "IsEnabled": true
+        },
+        "오를란느": {
+          "IsEnabled": true
+        },
+        "일일 컨텐츠": {
+          "IsEnabled": true
+        },
+        "이클립스 보스": {
+          "IsEnabled": true
+        },
+        "주간 컨텐츠": {
+          "IsEnabled": true
+        },
+        "어비스 지옥": {
+          "IsEnabled": true
+        },
+        "어밴던로드": {
+          "IsEnabled": true
+        },
+        "머큐리얼 케이브": {
+          "IsEnabled": true,
+          "RequiredCount": 8
+        },
+        "루미너스": {
+          "IsEnabled": true
+        },
+        "추종하는 환희(일반)": {
+          "IsEnabled": true,
+          "RequiredCount": 3
+        },
+        "응시하는 슬픔(일반)": {
+          "IsEnabled": true,
+          "RequiredCount": 3
+        },
+        "추종하는 환희(어려움)": {
+          "IsEnabled": false
+        },
+        "응시하는 슬픔(어려움)": {
+          "IsEnabled": false
+        },
+        "환희의 잔상": {
+          "IsEnabled": true
+        },
+        "로카고스 코어 마스터": {
+          "IsEnabled": true
+        },
+        "에토스 코어 마스터": {
+          "IsEnabled": true
+        },
+        "체리아 코어 마스터": {
+          "IsEnabled": true
+        },
+        "마티아 코어 마스터": {
+          "IsEnabled": true
+        },
+        "라이코스 코어 마스터": {
+          "IsEnabled": true
+        },
+        "티로로스 코어 마스터": {
+          "IsEnabled": true
+        },
+        "이클립스 코어 마스터": {
+          "IsEnabled": true
+        },
+        "아페티리아 EX": {
+          "IsEnabled": true
+        },
+        "아페티리아": {
+          "IsEnabled": true
+        },
+        "에타 일일 도전 과제": {
+          "IsEnabled": true
+        },
+        "에타의 의지 퀘스트": {
+          "IsEnabled": true
+        },
+        "머큐리얼": {
+          "IsEnabled": true
+        },
+        "머큐리얼 코어 마스터": {
+          "IsEnabled": false
+        },
+        "샐리온 코어 마스터 던전": {
+          "IsEnabled": false
+        },
+        "샐레아나 코어 마스터 던전": {
+          "IsEnabled": false
+        },
+        "실라이론 코어 마스터 던전": {
+          "IsEnabled": false
+        },
+        "실반 코어 마스터 던전": {
+          "IsEnabled": false
+        },
+        "루미너스 코어 마스터 던전": {
+          "IsEnabled": false
+        },
+        "머큐리얼 주간": {
+          "IsEnabled": true
+        },
+        "샐리온": {
+          "IsEnabled": true
+        },
+        "샐레아나": {
+          "IsEnabled": true
+        },
+        "실라이론": {
+          "IsEnabled": true
+        },
+        "실반": {
+          "IsEnabled": true
+        },
+        "루미너스(EX)": {
+          "IsEnabled": true
+        },
+        "어비스": {
+          "IsEnabled": true
+        },
+        "어비스 코어 마스터": {
+          "IsEnabled": true
+        },
+        "심층Ⅰ 코어 마스터": {
+          "IsEnabled": true
+        },
+        "심층Ⅱ 코어 마스터": {
+          "IsEnabled": true
+        },
+        "심층Ⅲ 코어 마스터": {
+          "IsEnabled": true
+        },
+        "이클립스": {
+          "IsEnabled": true
+        },
+        "최후의 결전": {
+          "IsEnabled": true,
+          "RequiredCount": 4
+        },
+        "기타지역": {
+          "IsEnabled": true
+        },
+        "베스티지": {
+          "IsEnabled": true
+        },
+        "오를리 방어전 지옥": {
+          "IsEnabled": true
+        },
+        "어비스 보스전(EX)": {
+          "IsEnabled": true
+        },
+        "이터널 플로어": {
+          "IsEnabled": false
+        }
+      }
+    },
+    "ItemDrop": {
+      "Enabled": true,
+      "Volume": 0.1,
+      "ToastFontSize": 18,
+      "ShowHelperWindow": false,
+      "UseCustomFilter": true,
+      "CustomFilterJson": "{\r\n  \u0022items\u0022: [\r\n    {\r\n      \u0022name\u0022: \u0022고대 신조의 깃털\u0022,\r\n      \u0022grade\u0022: \u0022Normal\u0022,\r\n      \u0022abbr\u0022: \u0022신조의 깃털\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022불사의 기민함\u0022,\r\n      \u0022grade\u0022: \u0022Normal\u0022,\r\n      \u0022abbr\u0022: \u0022안식 어빌리티\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022불사의 생명력\u0022,\r\n      \u0022grade\u0022: \u0022Normal\u0022,\r\n      \u0022abbr\u0022: \u0022안식 어빌리티\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022불사의 적중검\u0022,\r\n      \u0022grade\u0022: \u0022Normal\u0022,\r\n      \u0022abbr\u0022: \u0022안식 어빌리티\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022불사의 치명타\u0022,\r\n      \u0022grade\u0022: \u0022Normal\u0022,\r\n      \u0022abbr\u0022: \u0022안식 어빌리티\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022신조의 정수\u0022,\r\n      \u0022grade\u0022: \u0022Normal\u0022,\r\n      \u0022abbr\u0022: null\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022안식의 마력 증폭\u0022,\r\n      \u0022grade\u0022: \u0022Normal\u0022,\r\n      \u0022abbr\u0022: \u0022안식 어빌리티\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022안식의 매서운 칼날\u0022,\r\n      \u0022grade\u0022: \u0022Normal\u0022,\r\n      \u0022abbr\u0022: \u0022안식 어빌리티\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022안식의 백마법 증폭\u0022,\r\n      \u0022grade\u0022: \u0022Normal\u0022,\r\n      \u0022abbr\u0022: \u0022안식 어빌리티\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022안식의 예리한 칼날\u0022,\r\n      \u0022grade\u0022: \u0022Normal\u0022,\r\n      \u0022abbr\u0022: \u0022안식 어빌리티\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022월광석\u0022,\r\n      \u0022grade\u0022: \u0022Normal\u0022,\r\n      \u0022abbr\u0022: null\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022은월의 결정(우)\u0022,\r\n      \u0022grade\u0022: \u0022Normal\u0022,\r\n      \u0022abbr\u0022: null\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022은월의 결정(좌)\u0022,\r\n      \u0022grade\u0022: \u0022Normal\u0022,\r\n      \u0022abbr\u0022: null\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022고대 기사의 각갑 파편\u0022,\r\n      \u0022grade\u0022: \u0022Rare\u0022,\r\n      \u0022abbr\u0022: \u0022고대 각갑 파편\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022고대 기사의 갑옷 파편\u0022,\r\n      \u0022grade\u0022: \u0022Rare\u0022,\r\n      \u0022abbr\u0022: \u0022고대 갑옷 파편\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022고대 기사의 건틀렛 파편\u0022,\r\n      \u0022grade\u0022: \u0022Rare\u0022,\r\n      \u0022abbr\u0022: \u0022고대 건틀렛 파편\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022고대 기사의 방패 조각\u0022,\r\n      \u0022grade\u0022: \u0022Rare\u0022,\r\n      \u0022abbr\u0022: \u0022고대 방패 조각\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022고대 기사의 투구 파편\u0022,\r\n      \u0022grade\u0022: \u0022Rare\u0022,\r\n      \u0022abbr\u0022: \u0022고대 투구 파편\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022고대 기사의 펜던트 파편\u0022,\r\n      \u0022grade\u0022: \u0022Rare\u0022,\r\n      \u0022abbr\u0022: \u0022고대 펜던트 파편\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022고대 기사의 휘장 조각\u0022,\r\n      \u0022grade\u0022: \u0022Rare\u0022,\r\n      \u0022abbr\u0022: \u0022고대 휘장 조각\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022룬의 결정\u0022,\r\n      \u0022grade\u0022: \u0022Rare\u0022,\r\n      \u0022abbr\u0022: null\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022스페셜 스킬 (ⓟ 고급 방어구 연마)\u0022,\r\n      \u0022grade\u0022: \u0022Rare\u0022,\r\n      \u0022abbr\u0022: \u0022고급 방어구 연마\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022스페셜 스킬 (ⓟ 고급 체력 연마)\u0022,\r\n      \u0022grade\u0022: \u0022Rare\u0022,\r\n      \u0022abbr\u0022: \u0022고급 체력 연마\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022스페셜 스킬 (ⓟ 연마 강화)\u0022,\r\n      \u0022grade\u0022: \u0022Rare\u0022,\r\n      \u0022abbr\u0022: \u0022연마 강화\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022스페셜 스킬 (ⓟ 저격 연마) Lv.10\u0022,\r\n      \u0022grade\u0022: \u0022Rare\u0022,\r\n      \u0022abbr\u0022: \u0022저격 연마 LV10\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022스페셜 스킬 (ⓟ 저격 연마) Lv.6\u0022,\r\n      \u0022grade\u0022: \u0022Rare\u0022,\r\n      \u0022abbr\u0022: \u0022저격 연마 LV6\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022스페셜 스킬 (ⓟ 저격 연마) Lv.7\u0022,\r\n      \u0022grade\u0022: \u0022Rare\u0022,\r\n      \u0022abbr\u0022: \u0022저격 연마 LV7\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022스페셜 스킬 (ⓟ 저격 연마) Lv.8\u0022,\r\n      \u0022grade\u0022: \u0022Rare\u0022,\r\n      \u0022abbr\u0022: \u0022저격 연마 LV8\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022스페셜 스킬 (ⓟ 저격 연마) Lv.9\u0022,\r\n      \u0022grade\u0022: \u0022Rare\u0022,\r\n      \u0022abbr\u0022: \u0022저격 연마 LV9\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022신조의 눈물\u0022,\r\n      \u0022grade\u0022: \u0022Rare\u0022,\r\n      \u0022abbr\u0022: null\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022아크론 요새의 문양\u0022,\r\n      \u0022grade\u0022: \u0022Rare\u0022,\r\n      \u0022abbr\u0022: \u0022아크론 문양\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022어비스 건틀렛\u0022,\r\n      \u0022grade\u0022: \u0022Rare\u0022,\r\n      \u0022abbr\u0022: \u0022어비스 장비\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022어비스 글라디우스\u0022,\r\n      \u0022grade\u0022: \u0022Rare\u0022,\r\n      \u0022abbr\u0022: \u0022어비스 장비\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022어비스 글라디우스(sub)\u0022,\r\n      \u0022grade\u0022: \u0022Rare\u0022,\r\n      \u0022abbr\u0022: \u0022어비스 장비\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022어비스 나이프\u0022,\r\n      \u0022grade\u0022: \u0022Rare\u0022,\r\n      \u0022abbr\u0022: \u0022어비스 장비\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022어비스 대거\u0022,\r\n      \u0022grade\u0022: \u0022Rare\u0022,\r\n      \u0022abbr\u0022: \u0022어비스 장비\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022어비스 레이피어\u0022,\r\n      \u0022grade\u0022: \u0022Rare\u0022,\r\n      \u0022abbr\u0022: \u0022어비스 장비\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022어비스 로드\u0022,\r\n      \u0022grade\u0022: \u0022Rare\u0022,\r\n      \u0022abbr\u0022: \u0022어비스 장비\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022어비스 로브\u0022,\r\n      \u0022grade\u0022: \u0022Rare\u0022,\r\n      \u0022abbr\u0022: \u0022어비스 장비\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022어비스 리스트\u0022,\r\n      \u0022grade\u0022: \u0022Rare\u0022,\r\n      \u0022abbr\u0022: \u0022어비스 장비\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022어비스 리플렉트 아머\u0022,\r\n      \u0022grade\u0022: \u0022Rare\u0022,\r\n      \u0022abbr\u0022: \u0022어비스 장비\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022어비스 마나피스톨\u0022,\r\n      \u0022grade\u0022: \u0022Rare\u0022,\r\n      \u0022abbr\u0022: \u0022어비스 장비\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022어비스 마법 탄창\u0022,\r\n      \u0022grade\u0022: \u0022Rare\u0022,\r\n      \u0022abbr\u0022: \u0022어비스 장비\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022어비스 메이스\u0022,\r\n      \u0022grade\u0022: \u0022Rare\u0022,\r\n      \u0022abbr\u0022: \u0022어비스 장비\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022어비스 메일\u0022,\r\n      \u0022grade\u0022: \u0022Rare\u0022,\r\n      \u0022abbr\u0022: \u0022어비스 장비\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022어비스 물리 탄창\u0022,\r\n      \u0022grade\u0022: \u0022Rare\u0022,\r\n      \u0022abbr\u0022: \u0022어비스 장비\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022어비스 방패\u0022,\r\n      \u0022grade\u0022: \u0022Rare\u0022,\r\n      \u0022abbr\u0022: \u0022어비스 장비\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022어비스 밴드\u0022,\r\n      \u0022grade\u0022: \u0022Rare\u0022,\r\n      \u0022abbr\u0022: \u0022어비스 장비\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022어비스 부츠\u0022,\r\n      \u0022grade\u0022: \u0022Rare\u0022,\r\n      \u0022abbr\u0022: \u0022어비스 장비\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022어비스 블레이드\u0022,\r\n      \u0022grade\u0022: \u0022Rare\u0022,\r\n      \u0022abbr\u0022: \u0022어비스 장비\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022어비스 사이드\u0022,\r\n      \u0022grade\u0022: \u0022Rare\u0022,\r\n      \u0022abbr\u0022: \u0022어비스 장비\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022어비스 셉터\u0022,\r\n      \u0022grade\u0022: \u0022Rare\u0022,\r\n      \u0022abbr\u0022: \u0022어비스 장비\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022어비스 소드\u0022,\r\n      \u0022grade\u0022: \u0022Rare\u0022,\r\n      \u0022abbr\u0022: \u0022어비스 장비\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022어비스 소드셰이프\u0022,\r\n      \u0022grade\u0022: \u0022Rare\u0022,\r\n      \u0022abbr\u0022: \u0022어비스 장비\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022어비스 수정구\u0022,\r\n      \u0022grade\u0022: \u0022Rare\u0022,\r\n      \u0022abbr\u0022: \u0022어비스 장비\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022어비스 슈츠\u0022,\r\n      \u0022grade\u0022: \u0022Rare\u0022,\r\n      \u0022abbr\u0022: \u0022어비스 장비\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022어비스 스몰소드\u0022,\r\n      \u0022grade\u0022: \u0022Rare\u0022,\r\n      \u0022abbr\u0022: \u0022어비스 장비\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022어비스 스태프\u0022,\r\n      \u0022grade\u0022: \u0022Rare\u0022,\r\n      \u0022abbr\u0022: \u0022어비스 장비\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022어비스 스틱\u0022,\r\n      \u0022grade\u0022: \u0022Rare\u0022,\r\n      \u0022abbr\u0022: \u0022어비스 장비\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022어비스 스펠북\u0022,\r\n      \u0022grade\u0022: \u0022Rare\u0022,\r\n      \u0022abbr\u0022: \u0022어비스 장비\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022어비스 스피어\u0022,\r\n      \u0022grade\u0022: \u0022Rare\u0022,\r\n      \u0022abbr\u0022: \u0022어비스 장비\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022어비스 시미터\u0022,\r\n      \u0022grade\u0022: \u0022Rare\u0022,\r\n      \u0022abbr\u0022: \u0022어비스 장비\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022어비스 아머\u0022,\r\n      \u0022grade\u0022: \u0022Rare\u0022,\r\n      \u0022abbr\u0022: \u0022어비스 장비\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022어비스 아뮬렛\u0022,\r\n      \u0022grade\u0022: \u0022Rare\u0022,\r\n      \u0022abbr\u0022: \u0022어비스 장비\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022어비스 아밍소드\u0022,\r\n      \u0022grade\u0022: \u0022Rare\u0022,\r\n      \u0022abbr\u0022: \u0022어비스 장비\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022어비스 암릿\u0022,\r\n      \u0022grade\u0022: \u0022Rare\u0022,\r\n      \u0022abbr\u0022: \u0022어비스 장비\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022어비스 액스\u0022,\r\n      \u0022grade\u0022: \u0022Rare\u0022,\r\n      \u0022abbr\u0022: \u0022어비스 장비\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022어비스 완드\u0022,\r\n      \u0022grade\u0022: \u0022Rare\u0022,\r\n      \u0022abbr\u0022: \u0022어비스 장비\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022어비스 윙\u0022,\r\n      \u0022grade\u0022: \u0022Rare\u0022,\r\n      \u0022abbr\u0022: \u0022어비스 장비\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022어비스 카라\u0022,\r\n      \u0022grade\u0022: \u0022Rare\u0022,\r\n      \u0022abbr\u0022: \u0022어비스 장비\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022어비스 크리스\u0022,\r\n      \u0022grade\u0022: \u0022Rare\u0022,\r\n      \u0022abbr\u0022: \u0022어비스 장비\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022어비스 크리스(sub)\u0022,\r\n      \u0022grade\u0022: \u0022Rare\u0022,\r\n      \u0022abbr\u0022: \u0022어비스 장비\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022어비스 클로\u0022,\r\n      \u0022grade\u0022: \u0022Rare\u0022,\r\n      \u0022abbr\u0022: \u0022어비스 장비\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022어비스 토템\u0022,\r\n      \u0022grade\u0022: \u0022Rare\u0022,\r\n      \u0022abbr\u0022: \u0022어비스 장비\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022어비스 페이크소드\u0022,\r\n      \u0022grade\u0022: \u0022Rare\u0022,\r\n      \u0022abbr\u0022: \u0022어비스 장비\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022어비스 펜듈럼\u0022,\r\n      \u0022grade\u0022: \u0022Rare\u0022,\r\n      \u0022abbr\u0022: \u0022어비스 장비\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022어비스 플레일\u0022,\r\n      \u0022grade\u0022: \u0022Rare\u0022,\r\n      \u0022abbr\u0022: \u0022어비스 장비\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022어비스 피스톨\u0022,\r\n      \u0022grade\u0022: \u0022Rare\u0022,\r\n      \u0022abbr\u0022: \u0022어비스 장비\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022어비스 해머\u0022,\r\n      \u0022grade\u0022: \u0022Rare\u0022,\r\n      \u0022abbr\u0022: \u0022어비스 장비\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022어비스 핸드런처\u0022,\r\n      \u0022grade\u0022: \u0022Rare\u0022,\r\n      \u0022abbr\u0022: \u0022어비스 장비\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022어비스 핸드벨\u0022,\r\n      \u0022grade\u0022: \u0022Rare\u0022,\r\n      \u0022abbr\u0022: \u0022어비스 장비\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022어비스 헬름\u0022,\r\n      \u0022grade\u0022: \u0022Rare\u0022,\r\n      \u0022abbr\u0022: \u0022어비스 장비\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022어비스 휩\u0022,\r\n      \u0022grade\u0022: \u0022Rare\u0022,\r\n      \u0022abbr\u0022: \u0022어비스 장비\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022요새 문양이 새겨진 가죽 조각\u0022,\r\n      \u0022grade\u0022: \u0022Rare\u0022,\r\n      \u0022abbr\u0022: \u0022요새 가죽 조각\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022요새 문양이 새겨진 금속 파편\u0022,\r\n      \u0022grade\u0022: \u0022Rare\u0022,\r\n      \u0022abbr\u0022: \u0022요새 금속 파편\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022요새 문양이 새겨진 목걸이 조각\u0022,\r\n      \u0022grade\u0022: \u0022Rare\u0022,\r\n      \u0022abbr\u0022: \u0022요새 목걸이 조각\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022요새 문양이 새겨진 판금 조각\u0022,\r\n      \u0022grade\u0022: \u0022Rare\u0022,\r\n      \u0022abbr\u0022: \u0022요새 판금 조각\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022요새 수호자의 보호구 조각\u0022,\r\n      \u0022grade\u0022: \u0022Rare\u0022,\r\n      \u0022abbr\u0022: \u0022요새 보호구 조각\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022요새 수호자의 부츠 조각\u0022,\r\n      \u0022grade\u0022: \u0022Rare\u0022,\r\n      \u0022abbr\u0022: \u0022요새 부츠 조각\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022요새 수호자의 장식 깃털\u0022,\r\n      \u0022grade\u0022: \u0022Rare\u0022,\r\n      \u0022abbr\u0022: \u0022요새 장식 깃털\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022장비 강화 재설정 주문서\u0022,\r\n      \u0022grade\u0022: \u0022Rare\u0022,\r\n      \u0022abbr\u0022: \u0022재설정 주문서\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022장비 강화 효과 되돌리기 주문서\u0022,\r\n      \u0022grade\u0022: \u0022Rare\u0022,\r\n      \u0022abbr\u0022: \u0022되돌리기 주문서\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022최상급 마정석\u0022,\r\n      \u0022grade\u0022: \u0022Rare\u0022,\r\n      \u0022abbr\u0022: null\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022가짜 달여왕 군단의 각갑 파편\u0022,\r\n      \u0022grade\u0022: \u0022Special\u0022,\r\n      \u0022abbr\u0022: \u0022가짜 각갑 파편\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022가짜 달여왕 군단의 갑옷 파편\u0022,\r\n      \u0022grade\u0022: \u0022Special\u0022,\r\n      \u0022abbr\u0022: \u0022가짜 갑옷 파편\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022가짜 달여왕 군단의 건틀렛 파편\u0022,\r\n      \u0022grade\u0022: \u0022Special\u0022,\r\n      \u0022abbr\u0022: \u0022가짜 건틀렛 파편\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022가짜 달여왕 군단의 무구\u0022,\r\n      \u0022grade\u0022: \u0022Special\u0022,\r\n      \u0022abbr\u0022: \u0022가짜 무구\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022가짜 달여왕 군단의 무기 파편\u0022,\r\n      \u0022grade\u0022: \u0022Special\u0022,\r\n      \u0022abbr\u0022: \u0022가짜 무기 파편\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022가짜 달여왕 군단의 문양\u0022,\r\n      \u0022grade\u0022: \u0022Special\u0022,\r\n      \u0022abbr\u0022: \u0022가짜 문양\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022가짜 달여왕 군단의 방패 조각\u0022,\r\n      \u0022grade\u0022: \u0022Special\u0022,\r\n      \u0022abbr\u0022: \u0022가짜 방패 조각\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022가짜 달여왕 군단의 투구 장식\u0022,\r\n      \u0022grade\u0022: \u0022Special\u0022,\r\n      \u0022abbr\u0022: \u0022가짜 투구 장식\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022가짜 달여왕 군단의 펜던트 파편\u0022,\r\n      \u0022grade\u0022: \u0022Special\u0022,\r\n      \u0022abbr\u0022: \u0022가짜 펜던트 장식\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022가짜 달여왕 군단의 휘장 장식\u0022,\r\n      \u0022grade\u0022: \u0022Special\u0022,\r\n      \u0022abbr\u0022: \u0022가짜 휘장 장식\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022갤럭시 스톤\u0022,\r\n      \u0022grade\u0022: \u0022Special\u0022,\r\n      \u0022abbr\u0022: null\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022계승의 결정체 (무기, 손목)\u0022,\r\n      \u0022grade\u0022: \u0022Special\u0022,\r\n      \u0022abbr\u0022: \u0022계승의 결정체\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022계승의 결정체 (방어구)\u0022,\r\n      \u0022grade\u0022: \u0022Special\u0022,\r\n      \u0022abbr\u0022: \u0022계승의 결정체\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022달빛 변환 장치\u0022,\r\n      \u0022grade\u0022: \u0022Special\u0022,\r\n      \u0022abbr\u0022: null\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022렐릭 부가옵션 재설정 스톤\u0022,\r\n      \u0022grade\u0022: \u0022Special\u0022,\r\n      \u0022abbr\u0022: \u0022렐릭 부가 재설정\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022렐릭 어빌리티 매직리폼\u0022,\r\n      \u0022grade\u0022: \u0022Special\u0022,\r\n      \u0022abbr\u0022: \u0022렐릭 어빌 재설정\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022설계자의 반지\u0022,\r\n      \u0022grade\u0022: \u0022Special\u0022,\r\n      \u0022abbr\u0022: null\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022세크리드 룬스톤\u0022,\r\n      \u0022grade\u0022: \u0022Special\u0022,\r\n      \u0022abbr\u0022: null\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022세크리드 주화 (무기)\u0022,\r\n      \u0022grade\u0022: \u0022Special\u0022,\r\n      \u0022abbr\u0022: \u0022세크리드 주화\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022세크리드 주화 주머니\u0022,\r\n      \u0022grade\u0022: \u0022Special\u0022,\r\n      \u0022abbr\u0022: \u0022세크 주머니\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022수호자의 영혼석\u0022,\r\n      \u0022grade\u0022: \u0022Special\u0022,\r\n      \u0022abbr\u0022: null\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022아크론 요새의 변환 장치\u0022,\r\n      \u0022grade\u0022: \u0022Special\u0022,\r\n      \u0022abbr\u0022: \u0022변환 장비\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022에모티스\u0022,\r\n      \u0022grade\u0022: \u0022Special\u0022,\r\n      \u0022abbr\u0022: null\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022에오니스 라피스\u0022,\r\n      \u0022grade\u0022: \u0022Special\u0022,\r\n      \u0022abbr\u0022: null\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022에테르 오브\u0022,\r\n      \u0022grade\u0022: \u0022Special\u0022,\r\n      \u0022abbr\u0022: null\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022에테르의 주사기\u0022,\r\n      \u0022grade\u0022: \u0022Special\u0022,\r\n      \u0022abbr\u0022: null\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022연금술사의 시험관\u0022,\r\n      \u0022grade\u0022: \u0022Special\u0022,\r\n      \u0022abbr\u0022: null\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022이클립스 건틀렛\u0022,\r\n      \u0022grade\u0022: \u0022Special\u0022,\r\n      \u0022abbr\u0022: \u0022이클립스 장비\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022이클립스 글라디우스\u0022,\r\n      \u0022grade\u0022: \u0022Special\u0022,\r\n      \u0022abbr\u0022: \u0022이클립스 장비\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022이클립스 글라디우스(sub)\u0022,\r\n      \u0022grade\u0022: \u0022Special\u0022,\r\n      \u0022abbr\u0022: \u0022이클립스 장비\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022이클립스 나이프\u0022,\r\n      \u0022grade\u0022: \u0022Special\u0022,\r\n      \u0022abbr\u0022: \u0022이클립스 장비\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022이클립스 대거\u0022,\r\n      \u0022grade\u0022: \u0022Special\u0022,\r\n      \u0022abbr\u0022: \u0022이클립스 장비\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022이클립스 레이피어\u0022,\r\n      \u0022grade\u0022: \u0022Special\u0022,\r\n      \u0022abbr\u0022: \u0022이클립스 장비\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022이클립스 로드\u0022,\r\n      \u0022grade\u0022: \u0022Special\u0022,\r\n      \u0022abbr\u0022: \u0022이클립스 장비\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022이클립스 로브\u0022,\r\n      \u0022grade\u0022: \u0022Special\u0022,\r\n      \u0022abbr\u0022: \u0022이클립스 장비\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022이클립스 리스트\u0022,\r\n      \u0022grade\u0022: \u0022Special\u0022,\r\n      \u0022abbr\u0022: \u0022이클립스 장비\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022이클립스 리플렉트 아머\u0022,\r\n      \u0022grade\u0022: \u0022Special\u0022,\r\n      \u0022abbr\u0022: \u0022이클립스 장비\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022이클립스 마나피스톨\u0022,\r\n      \u0022grade\u0022: \u0022Special\u0022,\r\n      \u0022abbr\u0022: \u0022이클립스 장비\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022이클립스 마법 탄창\u0022,\r\n      \u0022grade\u0022: \u0022Special\u0022,\r\n      \u0022abbr\u0022: \u0022이클립스 장비\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022이클립스 메이스\u0022,\r\n      \u0022grade\u0022: \u0022Special\u0022,\r\n      \u0022abbr\u0022: \u0022이클립스 장비\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022이클립스 메일\u0022,\r\n      \u0022grade\u0022: \u0022Special\u0022,\r\n      \u0022abbr\u0022: \u0022이클립스 장비\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022이클립스 물리 탄창\u0022,\r\n      \u0022grade\u0022: \u0022Special\u0022,\r\n      \u0022abbr\u0022: \u0022이클립스 장비\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022이클립스 방패\u0022,\r\n      \u0022grade\u0022: \u0022Special\u0022,\r\n      \u0022abbr\u0022: \u0022이클립스 장비\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022이클립스 밴드\u0022,\r\n      \u0022grade\u0022: \u0022Special\u0022,\r\n      \u0022abbr\u0022: \u0022이클립스 장비\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022이클립스 부츠\u0022,\r\n      \u0022grade\u0022: \u0022Special\u0022,\r\n      \u0022abbr\u0022: \u0022이클립스 장비\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022이클립스 블레이드\u0022,\r\n      \u0022grade\u0022: \u0022Special\u0022,\r\n      \u0022abbr\u0022: \u0022이클립스 장비\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022이클립스 사이드\u0022,\r\n      \u0022grade\u0022: \u0022Special\u0022,\r\n      \u0022abbr\u0022: \u0022이클립스 장비\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022이클립스 셉터\u0022,\r\n      \u0022grade\u0022: \u0022Special\u0022,\r\n      \u0022abbr\u0022: \u0022이클립스 장비\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022이클립스 소드\u0022,\r\n      \u0022grade\u0022: \u0022Special\u0022,\r\n      \u0022abbr\u0022: \u0022이클립스 장비\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022이클립스 소드셰이프\u0022,\r\n      \u0022grade\u0022: \u0022Special\u0022,\r\n      \u0022abbr\u0022: \u0022이클립스 장비\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022이클립스 수정구\u0022,\r\n      \u0022grade\u0022: \u0022Special\u0022,\r\n      \u0022abbr\u0022: \u0022이클립스 장비\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022이클립스 슈츠\u0022,\r\n      \u0022grade\u0022: \u0022Special\u0022,\r\n      \u0022abbr\u0022: \u0022이클립스 장비\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022이클립스 스몰소드\u0022,\r\n      \u0022grade\u0022: \u0022Special\u0022,\r\n      \u0022abbr\u0022: \u0022이클립스 장비\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022이클립스 스태프\u0022,\r\n      \u0022grade\u0022: \u0022Special\u0022,\r\n      \u0022abbr\u0022: \u0022이클립스 장비\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022이클립스 스틱\u0022,\r\n      \u0022grade\u0022: \u0022Special\u0022,\r\n      \u0022abbr\u0022: \u0022이클립스 장비\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022이클립스 스펠북\u0022,\r\n      \u0022grade\u0022: \u0022Special\u0022,\r\n      \u0022abbr\u0022: \u0022이클립스 장비\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022이클립스 스피어\u0022,\r\n      \u0022grade\u0022: \u0022Special\u0022,\r\n      \u0022abbr\u0022: \u0022이클립스 장비\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022이클립스 시미터\u0022,\r\n      \u0022grade\u0022: \u0022Special\u0022,\r\n      \u0022abbr\u0022: \u0022이클립스 장비\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022이클립스 아머\u0022,\r\n      \u0022grade\u0022: \u0022Special\u0022,\r\n      \u0022abbr\u0022: \u0022이클립스 장비\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022이클립스 아뮬렛\u0022,\r\n      \u0022grade\u0022: \u0022Special\u0022,\r\n      \u0022abbr\u0022: \u0022이클립스 장비\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022이클립스 아밍소드\u0022,\r\n      \u0022grade\u0022: \u0022Special\u0022,\r\n      \u0022abbr\u0022: \u0022이클립스 장비\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022이클립스 암릿\u0022,\r\n      \u0022grade\u0022: \u0022Special\u0022,\r\n      \u0022abbr\u0022: \u0022이클립스 장비\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022이클립스 액스\u0022,\r\n      \u0022grade\u0022: \u0022Special\u0022,\r\n      \u0022abbr\u0022: \u0022이클립스 장비\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022이클립스 완드\u0022,\r\n      \u0022grade\u0022: \u0022Special\u0022,\r\n      \u0022abbr\u0022: \u0022이클립스 장비\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022이클립스 윙\u0022,\r\n      \u0022grade\u0022: \u0022Special\u0022,\r\n      \u0022abbr\u0022: \u0022이클립스 장비\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022이클립스 카라\u0022,\r\n      \u0022grade\u0022: \u0022Special\u0022,\r\n      \u0022abbr\u0022: \u0022이클립스 장비\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022이클립스 크리스\u0022,\r\n      \u0022grade\u0022: \u0022Special\u0022,\r\n      \u0022abbr\u0022: \u0022이클립스 장비\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022이클립스 크리스(sub)\u0022,\r\n      \u0022grade\u0022: \u0022Special\u0022,\r\n      \u0022abbr\u0022: \u0022이클립스 장비\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022이클립스 클로\u0022,\r\n      \u0022grade\u0022: \u0022Special\u0022,\r\n      \u0022abbr\u0022: \u0022이클립스 장비\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022이클립스 토템\u0022,\r\n      \u0022grade\u0022: \u0022Special\u0022,\r\n      \u0022abbr\u0022: \u0022이클립스 장비\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022이클립스 페이크소드\u0022,\r\n      \u0022grade\u0022: \u0022Special\u0022,\r\n      \u0022abbr\u0022: \u0022이클립스 장비\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022이클립스 펜듈럼\u0022,\r\n      \u0022grade\u0022: \u0022Special\u0022,\r\n      \u0022abbr\u0022: \u0022이클립스 장비\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022이클립스 플레일\u0022,\r\n      \u0022grade\u0022: \u0022Special\u0022,\r\n      \u0022abbr\u0022: \u0022이클립스 장비\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022이클립스 피스톨\u0022,\r\n      \u0022grade\u0022: \u0022Special\u0022,\r\n      \u0022abbr\u0022: \u0022이클립스 장비\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022이클립스 해머\u0022,\r\n      \u0022grade\u0022: \u0022Special\u0022,\r\n      \u0022abbr\u0022: \u0022이클립스 장비\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022이클립스 핸드런처\u0022,\r\n      \u0022grade\u0022: \u0022Special\u0022,\r\n      \u0022abbr\u0022: \u0022이클립스 장비\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022이클립스 핸드벨\u0022,\r\n      \u0022grade\u0022: \u0022Special\u0022,\r\n      \u0022abbr\u0022: \u0022이클립스 장비\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022이클립스 헬름\u0022,\r\n      \u0022grade\u0022: \u0022Special\u0022,\r\n      \u0022abbr\u0022: \u0022이클립스 장비\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022이클립스 휩\u0022,\r\n      \u0022grade\u0022: \u0022Special\u0022,\r\n      \u0022abbr\u0022: \u0022이클립스 장비\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022찬란한 마력의 가루\u0022,\r\n      \u0022grade\u0022: \u0022Special\u0022,\r\n      \u0022abbr\u0022: \u0022찬란한 마력 가루\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022테네브리스 건틀렛\u0022,\r\n      \u0022grade\u0022: \u0022Special\u0022,\r\n      \u0022abbr\u0022: \u0022테네브리스 장비\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022테네브리스 글라디우스\u0022,\r\n      \u0022grade\u0022: \u0022Special\u0022,\r\n      \u0022abbr\u0022: \u0022테네브리스 장비\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022테네브리스 글라디우스(sub)\u0022,\r\n      \u0022grade\u0022: \u0022Special\u0022,\r\n      \u0022abbr\u0022: \u0022테네브리스 장비\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022테네브리스 나이프\u0022,\r\n      \u0022grade\u0022: \u0022Special\u0022,\r\n      \u0022abbr\u0022: \u0022테네브리스 장비\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022테네브리스 대거\u0022,\r\n      \u0022grade\u0022: \u0022Special\u0022,\r\n      \u0022abbr\u0022: \u0022테네브리스 장비\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022테네브리스 레이피어\u0022,\r\n      \u0022grade\u0022: \u0022Special\u0022,\r\n      \u0022abbr\u0022: \u0022테네브리스 장비\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022테네브리스 로드\u0022,\r\n      \u0022grade\u0022: \u0022Special\u0022,\r\n      \u0022abbr\u0022: \u0022테네브리스 장비\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022테네브리스 마나피스톨\u0022,\r\n      \u0022grade\u0022: \u0022Special\u0022,\r\n      \u0022abbr\u0022: \u0022테네브리스 장비\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022테네브리스 메이스\u0022,\r\n      \u0022grade\u0022: \u0022Special\u0022,\r\n      \u0022abbr\u0022: \u0022테네브리스 장비\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022테네브리스 부츠\u0022,\r\n      \u0022grade\u0022: \u0022Special\u0022,\r\n      \u0022abbr\u0022: \u0022테네브리스 장비\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022테네브리스 블레이드\u0022,\r\n      \u0022grade\u0022: \u0022Special\u0022,\r\n      \u0022abbr\u0022: \u0022테네브리스 장비\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022테네브리스 사이드\u0022,\r\n      \u0022grade\u0022: \u0022Special\u0022,\r\n      \u0022abbr\u0022: \u0022테네브리스 장비\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022테네브리스 셉터\u0022,\r\n      \u0022grade\u0022: \u0022Special\u0022,\r\n      \u0022abbr\u0022: \u0022테네브리스 장비\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022테네브리스 소드\u0022,\r\n      \u0022grade\u0022: \u0022Special\u0022,\r\n      \u0022abbr\u0022: \u0022테네브리스 장비\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022테네브리스 소드셰이프\u0022,\r\n      \u0022grade\u0022: \u0022Special\u0022,\r\n      \u0022abbr\u0022: \u0022테네브리스 장비\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022테네브리스 스몰소드\u0022,\r\n      \u0022grade\u0022: \u0022Special\u0022,\r\n      \u0022abbr\u0022: \u0022테네브리스 장비\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022테네브리스 스태프\u0022,\r\n      \u0022grade\u0022: \u0022Special\u0022,\r\n      \u0022abbr\u0022: \u0022테네브리스 장비\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022테네브리스 스틱\u0022,\r\n      \u0022grade\u0022: \u0022Special\u0022,\r\n      \u0022abbr\u0022: \u0022테네브리스 장비\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022테네브리스 스피어\u0022,\r\n      \u0022grade\u0022: \u0022Special\u0022,\r\n      \u0022abbr\u0022: \u0022테네브리스 장비\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022테네브리스 시미터\u0022,\r\n      \u0022grade\u0022: \u0022Special\u0022,\r\n      \u0022abbr\u0022: \u0022테네브리스 장비\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022테네브리스 아뮬렛\u0022,\r\n      \u0022grade\u0022: \u0022Special\u0022,\r\n      \u0022abbr\u0022: \u0022테네브리스 장비\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022테네브리스 아밍소드\u0022,\r\n      \u0022grade\u0022: \u0022Special\u0022,\r\n      \u0022abbr\u0022: \u0022테네브리스 장비\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022테네브리스 액스\u0022,\r\n      \u0022grade\u0022: \u0022Special\u0022,\r\n      \u0022abbr\u0022: \u0022테네브리스 장비\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022테네브리스 완드\u0022,\r\n      \u0022grade\u0022: \u0022Special\u0022,\r\n      \u0022abbr\u0022: \u0022테네브리스 장비\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022테네브리스 윙\u0022,\r\n      \u0022grade\u0022: \u0022Special\u0022,\r\n      \u0022abbr\u0022: \u0022테네브리스 장비\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022테네브리스 카라\u0022,\r\n      \u0022grade\u0022: \u0022Special\u0022,\r\n      \u0022abbr\u0022: \u0022테네브리스 장비\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022테네브리스 크리스\u0022,\r\n      \u0022grade\u0022: \u0022Special\u0022,\r\n      \u0022abbr\u0022: \u0022테네브리스 장비\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022테네브리스 크리스(sub)\u0022,\r\n      \u0022grade\u0022: \u0022Special\u0022,\r\n      \u0022abbr\u0022: \u0022테네브리스 장비\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022테네브리스 클로\u0022,\r\n      \u0022grade\u0022: \u0022Special\u0022,\r\n      \u0022abbr\u0022: \u0022테네브리스 장비\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022테네브리스 토템\u0022,\r\n      \u0022grade\u0022: \u0022Special\u0022,\r\n      \u0022abbr\u0022: \u0022테네브리스 장비\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022테네브리스 페이크소드\u0022,\r\n      \u0022grade\u0022: \u0022Special\u0022,\r\n      \u0022abbr\u0022: \u0022테네브리스 장비\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022테네브리스 플레일\u0022,\r\n      \u0022grade\u0022: \u0022Special\u0022,\r\n      \u0022abbr\u0022: \u0022테네브리스 장비\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022테네브리스 피스톨\u0022,\r\n      \u0022grade\u0022: \u0022Special\u0022,\r\n      \u0022abbr\u0022: \u0022테네브리스 장비\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022테네브리스 해머\u0022,\r\n      \u0022grade\u0022: \u0022Special\u0022,\r\n      \u0022abbr\u0022: \u0022테네브리스 장비\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022테네브리스 핸드런처\u0022,\r\n      \u0022grade\u0022: \u0022Special\u0022,\r\n      \u0022abbr\u0022: \u0022테네브리스 장비\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022테네브리스 핸드벨\u0022,\r\n      \u0022grade\u0022: \u0022Special\u0022,\r\n      \u0022abbr\u0022: \u0022테네브리스 장비\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022테네브리스 헬름\u0022,\r\n      \u0022grade\u0022: \u0022Special\u0022,\r\n      \u0022abbr\u0022: \u0022테네브리스 장비\u0022\r\n    },\r\n    {\r\n      \u0022name\u0022: \u0022테네브리스 휩\u0022,\r\n      \u0022grade\u0022: \u0022Special\u0022,\r\n      \u0022abbr\u0022: \u0022테네브리스 장비\u0022\r\n    }\r\n  ]\r\n}"
+    },
+    "Buff": {
+      "Enabled": true,
+      "EndSound": true,
+      "EndSoundVolume": 1,
+      "ShowMaxSizeWindow": false
+    },
+    "Boss": {
+      "Volume": 1,
+      "Configs": {
+        "Arkan": {
+          "Alert3MinutesBefore": true,
+          "Alert1MinuteBefore": false,
+          "AlertAtSpawn": false
+        },
+        "Scherzendo": {
+          "Alert3MinutesBefore": true,
+          "Alert1MinuteBefore": false,
+          "AlertAtSpawn": false
+        },
+        "Origin of Doom": {
+          "Alert3MinutesBefore": true,
+          "Alert1MinuteBefore": false,
+          "AlertAtSpawn": false
+        },
+        "Confused Land": {
+          "Alert3MinutesBefore": true,
+          "Alert1MinuteBefore": false,
+          "AlertAtSpawn": false
+        },
+        "event": {
+          "Alert3MinutesBefore": false,
+          "Alert1MinuteBefore": false,
+          "AlertAtSpawn": false
+        }
+      }
+    }
+  },
+  "Windows": {
+    "Main": {
+      "Width": 547.2,
+      "Height": 180.00000000000003
+    },
+    "Menu": {
+      "Left": 416.8,
+      "Top": 8
+    },
+    "SubMenu": {
+      "Left": 1004.8000000000001,
+      "Top": 82.4
+    },
+    "DailyWeekly": {
+      "Left": 2337.6,
+      "Top": 0.8,
+      "Width": 326.40000000000003,
+      "Height": 1040.8
+    },
+    "SubAddon": {
+      "Left": 1450.4,
+      "Top": 484
+    },
+    "ItemDropHelper": {
+      "Left": 1156.8,
+      "Top": 57.6
+    },
+    "BuffTracker": {
+      "Left": 864,
+      "Top": 784.8000000000001
+    },
+    "ItemCalendar": {
+      "Left": 671.2,
+      "Top": 53.6
+    },
+    "AbandonRoadSummary": {
+      "Left": 1941.6000000000001,
+      "Top": 776.8000000000001
+    },
+    "ShoutToast": {
+      "Left": 1152.8,
+      "Top": 53.6
+    },
+    "MessengerToast": {
+      "Left": 1680,
+      "Top": 144.8
+    },
+    "RecaptureSupply": {
+      "Left": 1993.6000000000001,
+      "Top": 671.2,
+      "Width": 294.40000000000003,
+      "Height": 204
+    },
+    "ExperienceLimitAlert": {
+      "Left": 1166.4,
+      "Top": 648
+    },
+    "DungeonCountDisplay": {
+      "Left": 687.2,
+      "Top": 140.8
+    },
+    "ExpTracker": {
+      "Left": 1384,
+      "Top": 848,
+      "Right": 1714
+    },
+    "Clone1": {
+      "Left": 1373.6000000000001,
+      "Top": 899.2,
+      "Width": 540.8000000000001,
+      "Height": 180
+    },
+    "Clone2": {
+      "Left": 1379.2,
+      "Top": 684,
+      "Width": 539.2,
+      "Height": 186.4
+    },
+    "ShoutReplay": {
+      "Left": 923.2,
+      "Top": 95.2,
+      "Width": 920,
+      "Height": 640
+    },
+    "Memo": {
+      "Left": 517.6,
+      "Top": 124
+    },
+    "OpacityPercents": {
+      "BuffTrackerHelperWindow": 50
+    }
+  },
+  "Ui": {
+    "OverlayOpacityPercent": 100,
+    "OverlaysAlwaysOnTop": false,
+    "OverlayOpacityByGroup": {
+      "Calendar": 100,
+      "Content": 100,
+      "Abaddon": 100
+    },
+    "WindowSnapEnabled": false,
+    "MenuBar": {
+      "Pinned": false,
+      "Horizontal": false
+    },
+    "DailyWeekly": {
+      "Show": true,
+      "AutoCollapseEnabled": false,
+      "AutoCollapseSeconds": 3,
+      "FontSize": 14
+    },
+    "Calendar": {
+      "UseIcons": false,
+      "FontSize": 11
+    },
+    "Memo": {
+      "Text": "",
+      "TextOnlyMode": true,
+      "FontSize": 20,
+      "Bold": false,
+      "Italic": false,
+      "ColorKey": "White"
+    },
+    "MessengerEtaFontSize": 18
+  },
+  "Hotkeys": {
+    "Exit": "",
+    "ToggleOverlay": "",
+    "ToggleDailyWeekly": "",
+    "ToggleSettings": "",
+    "ToggleTrayAll": "NumPad9",
+    "ToggleUnlock": ""
+  },
+  "System": {
+    "ChatLogFolderPath": "C:\\Nexon\\TalesWeaver\\ChatLog",
+    "WizardCompleted": true,
+    "StartupLogReadCanceled": false,
+    "StartupTodayOnlyBootstrapCompleted": true
+  }
+}

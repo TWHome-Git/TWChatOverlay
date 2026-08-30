@@ -59,6 +59,11 @@
     <None Include="Font\**\*" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
+  <!-- 공장 기본 설정: 설정 초기화·최초 실행 시 로드되는 기본 프로필 -->
+  <ItemGroup>
+    <None Include="Defaults\**\*" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.1" />
   </ItemGroup>
