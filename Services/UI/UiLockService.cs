@@ -331,6 +331,7 @@ namespace TWChatOverlay.Services
                 TWChatOverlay.Views.ExperienceAlertWindow => (s => s.ExperienceAlertFontSize, (s, v) => s.ExperienceAlertFontSize = v),
                 TWChatOverlay.Views.ItemDropHelperWindow => (s => s.ItemDropToastFontSize, (s, v) => s.ItemDropToastFontSize = v),
                 TWChatOverlay.Views.MessengerEtaToastWindow => (s => s.MessengerEtaFontSize, (s, v) => s.MessengerEtaFontSize = v),
+                TWChatOverlay.Views.BossAlertToastWindow => (s => s.BossAlertToastFontSize, (s, v) => s.BossAlertToastFontSize = v),
                 _ => ((Func<Models.ChatSettings, double>, Action<Models.ChatSettings, double>)?)null,
             };
 
@@ -366,6 +367,7 @@ namespace TWChatOverlay.Services
                     case TWChatOverlay.Views.ExperienceAlertWindow e: e.SetFontSize(size); break;
                     case TWChatOverlay.Views.ItemDropHelperWindow i: i.SetFontSize(size); break;
                     case TWChatOverlay.Views.MessengerEtaToastWindow m: m.SetFontSize(size); break;
+                    case TWChatOverlay.Views.BossAlertToastWindow b: b.SetFontSize(size); break;
                 }
             }
             catch (Exception ex)
@@ -382,7 +384,8 @@ namespace TWChatOverlay.Services
             return window.GetType().Name switch
             {
                 "MainWindow" => "채팅창",
-                "AbaddonRoadSummaryWindow" => "어밴던로드 상황판",
+                "AbaddonRoadSummaryWindow" => "어밴던로드 통계",
+                "BossAlertToastWindow" => "필드 보스 알림창",
                 "ExpTrackerWindow" => "경험치 추적창",
                 "ExperienceAlertWindow" => "경험치 누적 알림",
                 "DungeonCountDisplayWindow" => "던전 카운터",

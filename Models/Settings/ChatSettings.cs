@@ -702,6 +702,18 @@ namespace TWChatOverlay.Models
             set => BossAlertVolume = Math.Max(0.0, Math.Min(100.0, value)) / 100.0;
         }
         [JsonIgnore]
+        public double BossAlertToastFontSize
+        {
+            get => Alerts.Boss.ToastFontSize;
+            set
+            {
+                double clamped = Math.Max(10.0, Math.Min(40.0, value));
+                if (Math.Abs(Alerts.Boss.ToastFontSize - clamped) < 0.0001) return;
+                Alerts.Boss.ToastFontSize = clamped;
+                OnPropertyChanged();
+            }
+        }
+        [JsonIgnore]
         public Dictionary<string, BossAlertConfig> BossAlertConfigs
         {
             get => Alerts.Boss.Configs;

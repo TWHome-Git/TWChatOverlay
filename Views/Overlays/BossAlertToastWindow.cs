@@ -168,6 +168,13 @@ namespace TWChatOverlay.Views
                 _bodyText.SetResourceReference(TextBlock.ForegroundProperty, "TextBrush");
         }
 
+        /// <summary>잠금 해제 인스펙터에서 폰트 크기 변경 시 즉시 반영.</summary>
+        public void SetFontSize(double size)
+        {
+            _bodyText.FontSize = size;
+            _previewLabel.FontSize = size;
+        }
+
         /// <summary>위치 미리보기: 통일 라벨("필드 보스 알림창")만 표시.</summary>
         public void SetPreviewMode(bool isPreview)
         {
@@ -253,7 +260,10 @@ namespace TWChatOverlay.Views
             }
 
             if (settings != null)
+            {
                 _instance._settings = settings;
+                _instance.SetFontSize(settings.BossAlertToastFontSize);
+            }
             return _instance;
         }
 
