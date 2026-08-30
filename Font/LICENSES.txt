@@ -1,0 +1,21 @@
+번들 글꼴 라이선스 안내
+=======================
+
+UserDefine.ttf (쿠키런 Regular)
+- 저작권: (주)데브시스터즈 (Devsisters Corp.)
+- 출처: https://www.cookierunfont.com/
+- 개인·기업 모두 무료 사용 가능, 글꼴 자체의 유료 판매 금지.
+
+Pretendard-Regular.otf (프리텐다드)
+- 저작권: Kil Hyung-jin 외 (https://github.com/orioncactus/pretendard)
+- 라이선스: SIL Open Font License 1.1
+
+NanumSquareRoundB.ttf (나눔스퀘어라운드 Bold)
+- 저작권: NAVER Corporation (https://hangeul.naver.com/)
+- 라이선스: SIL Open Font License 1.1
+
+GmarketSansTTFMedium.ttf (G마켓 산스 Medium)
+- 저작권: (주)지마켓 (https://corp.gmarket.com/fonts/)
+- 개인·기업 모두 무료 사용 가능, 글꼴 자체의 유료 판매 금지.
+
+각 글꼴의 자세한 사용 범위는 위 출처의 라이선스 전문을 따릅니다.
