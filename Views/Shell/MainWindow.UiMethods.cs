@@ -29,6 +29,9 @@ namespace TWChatOverlay.Views
     {
         #region UI Methods
 
+        private static readonly Regex NicknameBeforeColonRegex = new(
+            @"(?:^|\]\s*)(?<nickname>[^:\[\]]{1,40})\s*:", RegexOptions.Compiled);
+
         private void ApplyInitialSettings()
         {
             if (_settings == null || MainBorder == null) return;
@@ -136,7 +139,7 @@ namespace TWChatOverlay.Views
                 return candidate;
             }
 
-            var colonMatch = Regex.Match(formattedText, @"(?:^|\]\s*)(?<nickname>[^:\[\]]{1,40})\s*:");
+            var colonMatch = NicknameBeforeColonRegex.Match(formattedText);
             if (colonMatch.Success)
             {
                 string candidate = colonMatch.Groups["nickname"].Value.Trim();

@@ -150,10 +150,8 @@ namespace TWChatOverlay.Views
             {
                 if (LogDisplay != null)
                 {
+                    // EndChange 이후 레이아웃은 WPF가 다음 렌더 틱에 알아서 수행한다 — 동기 강제 패스 불필요
                     LogDisplay.EndChange();
-                    LogDisplay.InvalidateMeasure();
-                    LogDisplay.InvalidateVisual();
-                    LogDisplay.UpdateLayout();
                     if (shouldAutoScroll)
                         ScrollLogDisplayToEndAfterLayout();
                 }
@@ -752,13 +750,10 @@ namespace TWChatOverlay.Views
 
             logDisplay.ScrollToEnd();
 
+            // 새 문단의 레이아웃이 끝난 뒤(ContextIdle) 진짜 끝으로 한 번 더 — UpdateLayout 강제는 불필요
             Dispatcher.BeginInvoke(new Action(() =>
             {
-                var refreshedLogDisplay = LogDisplay;
-                if (refreshedLogDisplay == null) return;
-
-                refreshedLogDisplay.UpdateLayout();
-                refreshedLogDisplay.ScrollToEnd();
+                LogDisplay?.ScrollToEnd();
             }), DispatcherPriority.ContextIdle);
         }
 

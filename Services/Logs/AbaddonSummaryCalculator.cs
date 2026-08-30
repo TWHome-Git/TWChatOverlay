@@ -37,6 +37,8 @@ namespace TWChatOverlay.Services
 
     public static class AbandonSummaryCalculator
     {
+        private static readonly Regex LeadingBracketRegex = new(@"^\[[^\]]+\]\s*", RegexOptions.Compiled);
+
         private static readonly Regex AbandonEntryFeeRegex = new(
             @"입장료\s*(?<value>[\d,]+)\s*만\s*Seed",
             RegexOptions.Compiled);
@@ -122,7 +124,7 @@ namespace TWChatOverlay.Services
             if (string.IsNullOrWhiteSpace(formattedText))
                 return false;
 
-            string body = Regex.Replace(formattedText, @"^\[[^\]]+\]\s*", string.Empty);
+            string body = LeadingBracketRegex.Replace(formattedText, string.Empty);
             if (body.Contains("주문을 통해", StringComparison.Ordinal))
                 return false;
             if (body.Contains("대량으로 획득", StringComparison.Ordinal))
