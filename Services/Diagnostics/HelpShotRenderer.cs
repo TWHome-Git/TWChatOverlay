@@ -179,7 +179,7 @@ namespace TWChatOverlay.Services
             Save(outDir, "exp_cum_off.png", PanelToggle(false,
                 DimLine("(누적 표시 없음)")));
             Save(outDir, "exp_cum_on.png", PanelToggle(true,
-                RealExpAlert("누적 경험치 100억")));
+                RealExpAlert("경험치 150억 누적 달성")));
 
             // ── 저효율 알림 (실제 창) ──
             Save(outDir, "exp_loweff_off.png", PanelToggle(false,
