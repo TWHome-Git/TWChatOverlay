@@ -75,7 +75,8 @@ namespace TWChatOverlay.Services
             Func<string, bool> isContentRelevant,
             Action<string, int, int>? onProgressText = null,
             Func<DateTime, bool>? sourceDateFilter = null,
-            CancellationToken cancellationToken = default)
+            CancellationToken cancellationToken = default,
+            bool updateCheckpoint = true)
         {
             if (string.IsNullOrWhiteSpace(chatLogFolderPath) || !Directory.Exists(chatLogFolderPath))
                 return LogArchiveInitializationResult.Empty;
@@ -194,7 +195,8 @@ namespace TWChatOverlay.Services
                     missingItemDays,
                     missingContentWeeks,
                     missingAbandonDays,
-                    missingAbandonSummaryDays).ConfigureAwait(false);
+                    missingAbandonSummaryDays,
+                    updateCheckpoint).ConfigureAwait(false);
             }
             finally
             {
@@ -333,7 +335,8 @@ namespace TWChatOverlay.Services
             HashSet<DateTime> missingItemDays,
             HashSet<string> missingContentWeeks,
             HashSet<DateTime> missingAbandonDays,
-            HashSet<DateTime> missingAbandonSummaryDays)
+            HashSet<DateTime> missingAbandonSummaryDays,
+            bool updateCheckpoint = true)
         {
             DropItemResolver.DropItemFilterSnapshot filterSnapshot = await DropItemResolver.LoadDefaultFilterSnapshotAsync().ConfigureAwait(false);
             _abandonDayBuffer.Clear();
@@ -357,6 +360,13 @@ namespace TWChatOverlay.Services
                 bool rebuildAbandonSummary = missingAbandonSummaryDays.Contains(logDate);
 
                 bool hasArchiveWriteTarget = writeShout || writeExp || writeItem || writeContent || writeAbandon;
+
+                // 이미 모든 아카이브가 있는 날짜는 파싱 자체를 건너뛴다 (재시작·백필 시 최근 구간 무료 통과)
+                if (!hasArchiveWriteTarget && !rebuildAbandonSummary)
+                {
+                    lastProcessedDate = logDate;
+                    continue;
+                }
 
                 SourceFileReadOutcome outcome = await ProcessSourceLinesMergedAsync(source.Path, cancellationToken, line =>
                 {
@@ -401,7 +411,9 @@ namespace TWChatOverlay.Services
             }
             pendingArchiveWrites.FlushAll();
             FlushAbandonDayBuffer();
-            if (lastProcessedDate.HasValue)
+            // 부분 범위(최근 로그만) 초기화 시에는 체크포인트를 올리지 않아
+            // 과거 로그 백필이 건너뛰어지지 않게 한다
+            if (updateCheckpoint && lastProcessedDate.HasValue)
                 SaveRawLogRebuildCheckpoint(lastProcessedDate.Value);
 
             return new LogArchiveInitializationResult(timedOutFiles);
