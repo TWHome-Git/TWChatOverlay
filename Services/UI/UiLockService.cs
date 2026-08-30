@@ -38,6 +38,17 @@ namespace TWChatOverlay.Services
         /// <summary>모드 변경 시 발생. 인자 = 새 잠금 해제 상태.</summary>
         public static event Action<bool>? UnlockChanged;
 
+        /// <summary>설정 화면에서 잠금 해제로 들어온 경우, 종료 시 설정 창으로 복귀하기 위한 플래그.</summary>
+        public static bool ReturnToSettingsOnLock { get; set; }
+
+        /// <summary>복귀 플래그를 읽고 초기화한다.</summary>
+        public static bool ConsumeReturnToSettings()
+        {
+            bool value = ReturnToSettingsOnLock;
+            ReturnToSettingsOnLock = false;
+            return value;
+        }
+
         /// <summary>넛지/크기 입력으로 창 위치·크기가 바뀐 뒤 발생. 창별 저장 로직을 연결한다.</summary>
         public static event Action<Window>? WindowAdjusted;
 

@@ -317,8 +317,9 @@ namespace TWChatOverlay.Views
             if (TrayAllWindowsService.IsTrayed)
                 return;
 
-            // 위치 지정/잠금 해제 모드에서는 활동 여부와 관계없이 미리보기로 표시한다
-            bool previewMode = IsSettingsPositionMode || UiLockService.IsUnlocked;
+            // 잠금 해제, 또는 추가 기능 > 경험치 추적 > 일반 탭에서만 미리보기로 표시한다
+            bool previewMode = UiLockService.IsUnlocked ||
+                               (_isAddonPositionMode && _addonPositionPreviewTabIndex == 10);
 
             if (_settings.ShowExpTracker && (previewMode || _expService.IsTrackerActive))
             {

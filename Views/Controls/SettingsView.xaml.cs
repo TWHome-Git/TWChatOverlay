@@ -73,6 +73,8 @@ namespace TWChatOverlay.Views
         /// <summary>잠금 해제 모드를 시작하고, 배치가 잘 보이도록 설정 창을 닫는다.</summary>
         private void UnlockMode_Click(object sender, RoutedEventArgs e)
         {
+            // 설정에서 들어간 잠금 해제는 종료 시 설정 창으로 복귀한다
+            Services.UiLockService.ReturnToSettingsOnLock = !OnlyChatMode;
             Services.UiLockService.Set(true);
             if (!OnlyChatMode)
             {

@@ -65,9 +65,32 @@ namespace TWChatOverlay.Views
             try
             {
                 if (unlocked)
+                {
                     ShowUnlockPositionWindows();
+                }
                 else
+                {
                     CloseUnlockPositionWindows();
+
+                    // 설정 화면의 [잠금 해제 모드] 버튼으로 들어온 경우 설정 창으로 복귀
+                    if (UiLockService.ConsumeReturnToSettings())
+                    {
+                        Dispatcher.BeginInvoke(new Action(() =>
+                        {
+                            try
+                            {
+                                System.Windows.Application.Current.Windows
+                                    .OfType<MenuWindow>()
+                                    .FirstOrDefault()?
+                                    .OpenSettingsFromExternal();
+                            }
+                            catch (Exception ex)
+                            {
+                                AppLogger.Warn("Failed to reopen settings after unlock.", ex);
+                            }
+                        }));
+                    }
+                }
             }
             catch (Exception ex)
             {

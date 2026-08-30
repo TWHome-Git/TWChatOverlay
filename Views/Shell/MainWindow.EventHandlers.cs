@@ -147,8 +147,10 @@ namespace TWChatOverlay.Views
                         ApplySubAddonWindowSettings();
                         SubAddonWindow.Instance?.ApplyPositionPreviewVisibility(true);
                     }
-                    else
+                    else if (!_isAddonPositionMode)
                     {
+                        // 추가 기능 미리보기 중에는 위의 미리보기 갱신이 표시를 관리한다
+                        // (여기서 ApplySubAddonWindowSettings를 부르면 방금 띄운 미리보기가 숨겨진다)
                         ApplySubAddonWindowSettings();
                     }
                 }
