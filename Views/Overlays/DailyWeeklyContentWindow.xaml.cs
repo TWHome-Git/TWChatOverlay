@@ -48,7 +48,7 @@ namespace TWChatOverlay.Views
         private const string WeeklyMercurialGroupName = "머큐리얼";
         private const string WeeklyAbyssGroupName = "어비스";
         private const string WeeklyEclipseGroupName = "이클립스";
-        private const string WeeklyOtherGroupName = "기타지역";
+        private const string WeeklyOtherGroupName = "기타 지역";
 
         private const string SallionItemName = "샐리온";
         private const string SeleanaItemName = "샐레아나";
@@ -63,7 +63,7 @@ namespace TWChatOverlay.Views
         private const string DetachedForceSubjugationItemName = "별동대";
         private const string ConfusedLandItemName = "혼란한 대지";
         private const string ColorlessLandItemName = "색을 잃은 땅";
-        private const string CoreDungeonItemName = "코어던전";
+        private const string CoreDungeonItemName = "코어 던전";
         private const string ExcavationSiteItemName = "발굴지";
         private const string MiningSiteItemName = "채굴장";
         private const string DimensionalGapItemName = "차원의 틈";

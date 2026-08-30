@@ -277,7 +277,7 @@ namespace TWChatOverlay.Views
             AddSectionTitle(right, "기타 지역");
             AddDungeonChecks(right, new[]
             {
-                ("- 코어 던전", "코어던전"),
+                ("- 코어 던전", "코어 던전"),
                 ("- 발굴지", "발굴지"),
                 ("- 렐릭", "렐릭"),
                 ("- 청소 아르바이트", "청소 아르바이트"),

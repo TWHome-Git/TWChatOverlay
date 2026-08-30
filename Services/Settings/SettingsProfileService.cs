@@ -109,6 +109,7 @@ namespace TWChatOverlay.Services
                     return false;
 
                 settings.EnsureLoadedDefaults();
+                ConfigService.MigrateDungeonItemConfigKeys(settings);
                 loaded = settings;
                 return true;
             }

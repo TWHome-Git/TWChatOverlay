@@ -439,12 +439,17 @@ namespace TWChatOverlay.Services
             return changed;
         }
 
-        private static void MigrateDungeonItemConfigKeys(ChatSettings settings)
+        /// <summary>옛 던전 설정 키를 현재 표기로 개명한다. 설정·공장 기본값·프로필 로드 경로 모두에서 호출된다.</summary>
+        internal static void MigrateDungeonItemConfigKeys(ChatSettings settings)
         {
             try
             {
                 if (settings.DungeonItemConfigs == null)
                     return;
+
+                // 띄어쓰기 표기 통일 (표시 텍스트가 저장 키를 겸하므로 키도 함께 개명)
+                RenameDungeonItemConfigKey(settings, "코어던전", "코어 던전");
+                RenameDungeonItemConfigKey(settings, "기타지역", "기타 지역");
 
                 bool hasUnified = settings.DungeonItemConfigs.TryGetValue("아페티리아", out var unifiedCfg);
                 bool hasNormal = settings.DungeonItemConfigs.TryGetValue("아페티리아 일반", out var normalCfg);
@@ -465,6 +470,17 @@ namespace TWChatOverlay.Services
             {
                 AppLogger.Warn("Failed to migrate dungeon item config keys.", ex);
             }
+        }
+
+        /// <summary>옛 키의 값을 새 키로 옮긴다. 새 키가 이미 있으면 기존 값을 유지하고 옛 키만 지운다.</summary>
+        private static void RenameDungeonItemConfigKey(ChatSettings settings, string oldKey, string newKey)
+        {
+            if (!settings.DungeonItemConfigs.TryGetValue(oldKey, out var oldCfg))
+                return;
+
+            if (!settings.DungeonItemConfigs.ContainsKey(newKey))
+                settings.DungeonItemConfigs[newKey] = oldCfg;
+            settings.DungeonItemConfigs.Remove(oldKey);
         }
     }
 }
