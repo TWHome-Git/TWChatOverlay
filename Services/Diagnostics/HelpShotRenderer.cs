@@ -169,7 +169,7 @@ namespace TWChatOverlay.Services
                 Line(ShoutCol, ("외치기 : ", ShoutCol), ("세크리드 주화 주머니", Color.FromRgb(0xFF, 0x5A, 0x5A)), (" 팝니다 [김주화]", ShoutCol)),
                 Line(ShoutCol, ("외치기 : 클럽원 모집 [김클럽]", ShoutCol)),
                 DimLine("(키워드: @세크리드 주화 주머니)")));
-
+            
             // ── 경험치 추적 (실제 뷰) ──
             Save(outDir, "exp_tracker_off.png", PanelToggle(false,
                 DimLine("(추적 창 표시 안 함)")));

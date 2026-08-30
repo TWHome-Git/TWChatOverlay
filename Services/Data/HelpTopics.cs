@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 namespace TWChatOverlay.Services
 {
@@ -31,16 +31,15 @@ namespace TWChatOverlay.Services
 
             ["chat.filter"] = (
                 "기본 채팅 필터",
-                "게임 채팅을 종류별로 켜고 끕니다. 끈 종류는 채팅창에 표시되지 않습니다.\n" +
-                "각 종류 왼쪽의 색 버튼으로 해당 채팅의 글자 색을 바꿀 수 있습니다.",
+                "기본 탭에 표시 되어질 채팅을 종류별로 선택합니다.\n" +
+                "색상 버튼으로 해당 채팅의 글자 색을 바꿀 수 있습니다.",
                 new[] { "chat_filter.png" }),
 
             ["chat.id.sender"] = (
                 "아이디 색상",
                 "채팅 줄에서 보낸 사람 아이디 부분의 색을 지정합니다.\n" +
                 "그림처럼 '동기화'가 민트색(켜짐)이면 줄 색을 그대로 따르고,\n" +
-                "'동기화'를 눌러 끄면 색 버튼이 활성화되어 원하는 색을 고를 수 있습니다.\n" +
-                "다른 표기(에타 레벨/캐릭터/태그/타임 스탬프)의 동기화·색 버튼도 같은 방식입니다.",
+                "'동기화'를 눌러 끄면 색 버튼이 활성화되어 원하는 색을 고를 수 있습니다.\n",
                 new[] { "chat_id_sender_sync_on.png", "chat_id_sender_sync_off.png" }),
 
             ["chat.id.eta_level"] = (
@@ -48,7 +47,7 @@ namespace TWChatOverlay.Services
                 "말한 사람의 에타 레벨을 아이디 뒤에 [레벨]로 붙여 보여줍니다.\n" +
                 "레벨 정보는 TW DB 에타 랭킹에서 가져오며, 하루 단위로 갱신됩니다.\n" +
                 "랭킹에 없거나 에타 정보가 없는(레벨 0) 아이디는 표시하지 않습니다.\n" +
-                "아래 '레벨별 색상'을 켜면 레벨 구간에 따라 색을 다르게 칠할 수 있습니다." + ColorSyncGuide,
+                "아래 '레벨별 색상'을 켜면 레벨 구간에 따라 색을 다르게 고를 수 있습니다." + ColorSyncGuide,
                 new[] { "chat_id_eta_level_off.png", "chat_id_eta_level_on.png" }),
 
             ["chat.id.eta_range"] = (
@@ -70,14 +69,13 @@ namespace TWChatOverlay.Services
                 "아이디 태그",
                 "idtag.txt에 적어 둔 메모를 해당 아이디 뒤에 [태그]로 보여줍니다.\n" +
                 "[편집]을 눌러 메모장을 열고 \"아이디=태그\" 형식으로 한 줄씩 적으면 됩니다.\n" +
-                "예) 모비딕=상인  →  채팅에서 모비딕[상인]으로 표시\n" +
+                "예) 아나이스 = 혐사  →  채팅에서 아나이스[혐사]으로 표시\n" +
                 "태그를 지우려면 idtag.txt에서 해당 줄을 삭제하면 됩니다." + ColorSyncGuide,
                 new[] { "chat_id_tag_off.png", "chat_id_tag_on.png" }),
 
             ["chat.id.club_boss"] = (
                 "클럽 보스 메시지",
-                "클럽 보스 관련 공지(생성/참가/퇴장/문 닫힘 등)를 채팅창에 표시할지 정합니다.\n" +
-                "끄면 해당 공지가 채팅창에서 숨겨집니다.",
+                "클럽 보스 관련 공지(생성/참가/퇴장/문 닫힘 등)를 채팅창에 표시할지 정합니다.\n",
                 new[] { "chat_id_club_boss_off.png", "chat_id_club_boss_on.png" }),
 
             ["chat.id.timestamp"] = (
@@ -90,8 +88,7 @@ namespace TWChatOverlay.Services
                 "폰트",
                 "채팅창 글꼴과 크기를 바꿉니다. 모든 채팅 창(메인/서브)에 함께 적용됩니다.\n" +
                 "쿠키런·프리텐다드·나눔스퀘어라운드·G마켓 산스는 무료 글꼴을 기본 내장한 것입니다.\n" +
-                "'사용자 설정'은 Font 폴더에 UserDefine.ttf(.otf/.ttc) 파일을 넣으면 그 글꼴을 사용합니다.\n" +
-                "줄 간격·왼쪽 여백도 이 탭에서 조절할 수 있습니다.",
+                "'사용자 설정'은 Font 폴더에 UserDefine.ttf(.otf/.ttc) 파일을 넣으면 그 글꼴을 사용합니다.\n",
                 new[] { "chat_font_13.png", "chat_font_17.png" }),
 
             ["chat.clone1"] = (
@@ -112,8 +109,7 @@ namespace TWChatOverlay.Services
 
             ["chat.filter.category_prefix"] = (
                 "종류 말머리",
-                "각 채팅 줄 앞에 [일반]/[팀]/[클럽]/[외치기]/[시스템] 종류를 붙여 한눈에 구분합니다.\n" +
-                "외치기는 \"외치기 : 내용 [보낸이]\" 원문을 \"[외치기] 보낸이 : 내용\" 형태로 정리해 보여줍니다.",
+                "각 채팅 줄 앞에 [일반]/[팀]/[클럽]/[외치기]/[시스템] 종류를 붙여 한눈에 구분합니다.\n",
                 new[] { "chat_category_prefix_off.png", "chat_category_prefix_on.png" }),
 
             // ===== 외치기 =====
@@ -149,8 +145,7 @@ namespace TWChatOverlay.Services
                 "잠금 해제 모드",
                 "창을 옮기거나 크기를 바꿀 수 있는 편집 모드입니다.\n" +
                 "각 창을 드래그해 이동하고, 가로·세로 크기와 X·Y 좌표를 직접 입력할 수도 있습니다.\n" +
-                "이동 중에는 좌표·크기 안내 창이 최상단에 표시됩니다.\n" +
-                "다시 누르면 잠금 상태로 돌아갑니다.",
+                "이동 중에는 좌표·크기 안내 창이 최상단에 표시됩니다.\n",
                 new[] { "display_unlock_off.png", "display_unlock_on.png" }),
 
             ["display.menu_horizontal"] = (
@@ -179,7 +174,7 @@ namespace TWChatOverlay.Services
                 "경험치 추적",
                 "사냥 중 획득 경험치를 실시간으로 추적하는 창을 띄웁니다.\n" +
                 "누적 경험치 / 1시간 예상 / 획득 경험치 / 처치 수를 보여주며\n" +
-                "[중지]와 [리셋] 버튼으로 측정을 제어합니다.",
+                "[리셋] 버튼으로 측정을 초기화합니다.",
                 new[] { "exp_tracker_off.png", "exp_tracker_on.png" }),
 
             ["exp.cumulative_alert"] = (
@@ -223,7 +218,7 @@ namespace TWChatOverlay.Services
             ["dungeon.abyss_reflect"] = (
                 "반사 패턴 알림",
                 "어비스에서 심연의 제2사도가 반사 패턴 대사를 하면 알림 소리를 울려\n" +
-                "공격을 멈출 타이밍을 알려줍니다. (트리거 대사는 채팅창에 표시되지 않습니다)",
+                "공격을 멈출 타이밍을 알려줍니다.",
                 new[] { "dungeon_reflect_off.png", "dungeon_reflect_on.png" }),
 
             ["dungeon.etos_direction"] = (
@@ -241,8 +236,7 @@ namespace TWChatOverlay.Services
             ["dungeon.abandon_count"] = (
                 "어밴던로드 입장 횟수",
                 "어밴던로드 도전 횟수 안내를 감지해 지역별 횟수를\n" +
-                "'던전 도우미' 창(예: 어밴던로드 - 필멸의 땅 3/10)으로 보여줍니다.\n" +
-                "알림 창 폰트 크기와 지속 시간은 아래에서 조절합니다.",
+                "'던전 도우미' 창(예: 어밴던로드 - 필멸의 땅 3/10)으로 보여줍니다.\n",
                 new[] { "dungeon_abandon_count_off.png", "dungeon_abandon_count_on.png" }),
 
             ["dungeon.abandon_gold"] = (
@@ -307,8 +301,7 @@ namespace TWChatOverlay.Services
 
             ["system.manual_update"] = (
                 "수동 업데이트",
-                "프로그램이 쓰는 원격 데이터(아이템 목록 등)를 지금 바로 새로 내려받습니다.\n" +
-                "보통은 자동으로 갱신되므로 데이터가 오래되어 보일 때만 사용하면 됩니다.",
+                "프로그램이 쓰는 원격 데이터(아이템 목록 등)를 지금 바로 새로 내려받습니다.\n",
                 null),
 
             ["system.log_reload"] = (

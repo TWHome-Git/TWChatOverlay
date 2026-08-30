@@ -17,6 +17,18 @@ namespace TWChatOverlay.Services
         private static readonly List<DungeonCountDisplayWindow> ActiveWindows = new();
         private static readonly Dictionary<string, DungeonCountDisplayWindow> ActiveWindowsByKey = new(StringComparer.Ordinal);
 
+        /// <summary>설정 슬라이더 변경을 열려 있는 알림 창(미리보기 포함)에 즉시 반영한다.</summary>
+        public static void ApplyFontSize(double size)
+        {
+            Application.Current.Dispatcher.BeginInvoke(new Action(() =>
+            {
+                foreach (var window in ActiveWindows)
+                {
+                    try { window.SetFontSize(size); } catch { }
+                }
+            }));
+        }
+
         public static void Show(string dungeonName, int currentCount, int maxCount, int durationSeconds, ChatSettings settings, double? fontSize = null)
         {
             if (TrayAllWindowsService.IsTrayed)

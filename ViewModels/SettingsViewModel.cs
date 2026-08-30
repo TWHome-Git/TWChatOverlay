@@ -272,6 +272,7 @@ namespace TWChatOverlay.ViewModels
                     _settings.ShoutToastFontSize = value;
                     OnPropertyChanged();
                     SaveSettings();
+                    ShoutToastService.ApplyFontSize(value);
                 }
             }
         }
@@ -675,6 +676,11 @@ namespace TWChatOverlay.ViewModels
             else if (e.PropertyName == nameof(ChatSettings.LineMargin))
             {
                 OnPropertyChanged(nameof(LineMargin));
+            }
+            else if (e.PropertyName == nameof(ChatSettings.ShoutToastFontSize))
+            {
+                // 잠금 해제 인스펙터에서 바꾼 값을 설정 화면 슬라이더에도 반영
+                OnPropertyChanged(nameof(ShoutToastFontSize));
             }
             else if (e.PropertyName == nameof(ChatSettings.ChatCloneWindow1IsOpen))
             {
