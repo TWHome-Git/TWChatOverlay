@@ -79,7 +79,7 @@ namespace TWChatOverlay.Models
                 ["별동대"] = new() { IsEnabled = true },
                 ["혼란한 대지"] = new() { IsEnabled = true },
                 ["색을 잃은 땅"] = new() { IsEnabled = true },
-                ["코어던전"] = new() { IsEnabled = true },
+                ["코어 던전"] = new() { IsEnabled = true },
                 ["발굴지"] = new() { IsEnabled = true },
                 ["렐릭"] = new() { IsEnabled = true },
                 ["채굴장"] = new() { IsEnabled = true },

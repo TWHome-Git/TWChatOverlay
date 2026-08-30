@@ -137,7 +137,7 @@
         "색을 잃은 땅": {
           "IsEnabled": true
         },
-        "코어던전": {
+        "코어 던전": {
           "IsEnabled": true
         },
         "발굴지": {
@@ -327,7 +327,7 @@
           "IsEnabled": true,
           "RequiredCount": 4
         },
-        "기타지역": {
+        "기타 지역": {
           "IsEnabled": true
         },
         "베스티지": {
