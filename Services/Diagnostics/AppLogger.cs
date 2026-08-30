@@ -19,7 +19,9 @@ namespace TWChatOverlay.Services
 
     public static class AppLogger
     {
-        private static readonly string LogFilePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Debug.log");
+        // Debug.log도 설정과 같은 Config 폴더에 둔다 (구버전 루트 파일은 시작 시 이관)
+        private static readonly string LogFilePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Config", "Debug.log");
+        private static readonly string LegacyLogFilePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Debug.log");
         private static readonly object _lock = new object();
         private static readonly ConcurrentQueue<string> _pendingLines = new();
         private static readonly Timer _flushTimer;
@@ -36,6 +38,7 @@ namespace TWChatOverlay.Services
         {
             try
             {
+                MigrateLegacyLogFile();
                 RotateIfNeeded();
                 WriteHeader();
                 _flushTimer = new Timer(_ => FlushPending(), null, TimeSpan.FromMilliseconds(120), TimeSpan.FromMilliseconds(120));
@@ -158,6 +161,27 @@ namespace TWChatOverlay.Services
             finally
             {
                 Interlocked.Exchange(ref _flushInProgress, 0);
+            }
+        }
+
+        /// <summary>구버전 위치(프로그램 폴더 루트)의 Debug.log를 Config 폴더로 옮긴다.</summary>
+        private static void MigrateLegacyLogFile()
+        {
+            try
+            {
+                Directory.CreateDirectory(Path.GetDirectoryName(LogFilePath)!);
+
+                if (File.Exists(LegacyLogFilePath) && !File.Exists(LogFilePath))
+                    File.Move(LegacyLogFilePath, LogFilePath);
+
+                string legacyBackup = Path.ChangeExtension(LegacyLogFilePath, ".old.log");
+                string newBackup = Path.ChangeExtension(LogFilePath, ".old.log");
+                if (File.Exists(legacyBackup) && !File.Exists(newBackup))
+                    File.Move(legacyBackup, newBackup);
+            }
+            catch
+            {
+                // 이관 실패해도 로깅 자체는 새 경로에 이어서 기록한다
             }
         }
 
