@@ -35,7 +35,6 @@ namespace TWChatOverlay.Views
 
         private int _stepIndex;
         private readonly ChatSettings _settings;
-        private readonly AddonViewModel _addonViewModel;
         private readonly MainWindow? _mainWindow;
         private bool _positionPreviewEnabled;
         private bool _shoutPreviewEnabled;
@@ -60,7 +59,6 @@ namespace TWChatOverlay.Views
                 ResetInitialWindowPositionsToOrigin();
                 ConfigService.SaveDeferred(_settings);
             }
-            _addonViewModel = new AddonViewModel(settings);
             RenderStep();
         }
 
@@ -556,7 +554,17 @@ namespace TWChatOverlay.Views
 
         private void ApplyExperienceLimitStateFromWizard()
         {
-            _addonViewModel.ApplyExperienceLimitStateFromSettings();
+            // 임베드된 설정 화면의 VM을 재사용하고, 없으면(추가 기능 단계를 건너뜀) 일회용으로 만들어 즉시 해제
+            var vm = _embeddedSettings?.AddonViewModelInstance;
+            if (vm != null)
+            {
+                vm.ApplyExperienceLimitStateFromSettings();
+                return;
+            }
+
+            var temp = new AddonViewModel(_settings);
+            try { temp.ApplyExperienceLimitStateFromSettings(); }
+            finally { temp.Detach(); }
         }
 
         protected override void OnClosed(EventArgs e)

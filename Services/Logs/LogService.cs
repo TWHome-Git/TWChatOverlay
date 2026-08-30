@@ -50,6 +50,11 @@ namespace TWChatOverlay.Services
         private string _pendingRawContent = string.Empty;
         private DateTime _pendingSinceUtc = DateTime.MinValue;
         private long _lastSavedCheckpointPosition = -1;
+
+        // UI가 소비를 알린 최신 위치 (실제 체크포인트 저장은 폴링 스레드에서)
+        private readonly object _consumedSync = new();
+        private string? _pendingConsumedPath;
+        private long _pendingConsumedPosition = -1;
         private string _lastLogTimeText = string.Empty;
 
         private const int InitialLogTailBytes = 2 * 1024 * 1024;
@@ -108,6 +113,7 @@ namespace TWChatOverlay.Services
 
             try { Stop(); } catch (Exception ex) { AppLogger.Warn("Failed to stop LogService during dispose.", ex); }
             try { _pollingTimer.Dispose(); } catch (Exception ex) { AppLogger.Warn("Failed to dispose polling timer.", ex); }
+            try { FlushConsumedCheckpoint(); } catch (Exception ex) { AppLogger.Warn("Failed to flush checkpoint during dispose.", ex); }
             lock (_lockObj) { CloseStream(); }
             GC.SuppressFinalize(this);
         }
@@ -126,6 +132,7 @@ namespace TWChatOverlay.Services
             {
                 CheckDateAndPath();
                 ReadLog();
+                FlushConsumedCheckpoint();
             }
             catch (Exception ex)
             {
@@ -474,9 +481,39 @@ namespace TWChatOverlay.Services
             if (string.IsNullOrEmpty(sourcePath) || position < 0)
                 return;
 
+            // UI 스레드에서 호출된다 — 파일 IO와 _lockObj(폴링 스레드가 파일 읽는 동안 보유) 경합을 피하기 위해
+            // 위치만 기록하고 실제 저장은 폴링 스레드(FlushConsumedCheckpoint)에서 한다.
+            lock (_consumedSync)
+            {
+                if (!string.Equals(sourcePath, _pendingConsumedPath, StringComparison.OrdinalIgnoreCase))
+                {
+                    _pendingConsumedPath = sourcePath;
+                    _pendingConsumedPosition = position;
+                }
+                else if (position > _pendingConsumedPosition)
+                {
+                    _pendingConsumedPosition = position;
+                }
+            }
+        }
+
+        /// <summary>UI가 알린 소비 위치를 체크포인트로 저장한다. 폴링 스레드(및 Dispose)에서만 호출.</summary>
+        private void FlushConsumedCheckpoint()
+        {
+            string? path;
+            long position;
+            lock (_consumedSync)
+            {
+                path = _pendingConsumedPath;
+                position = _pendingConsumedPosition;
+            }
+
+            if (path == null || position < 0)
+                return;
+
             lock (_lockObj)
             {
-                if (!string.Equals(sourcePath, _logPath, StringComparison.OrdinalIgnoreCase))
+                if (!string.Equals(path, _logPath, StringComparison.OrdinalIgnoreCase))
                     return;
                 if (position <= _lastSavedCheckpointPosition || position > _lastPosition)
                     return;

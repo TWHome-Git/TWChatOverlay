@@ -25,6 +25,13 @@ namespace TWChatOverlay.Services
         private readonly int _maxCountPerTab;
         private readonly int _trimThresholdPerTab;
 
+        // 증분 렌더용 버전: 탭별 누적 추가 수(트림과 무관하게 단조 증가)와
+        // 세대(Replace 등 전체 교체 시 증가 — 소비자는 세대가 바뀌면 전체를 다시 그린다)
+        private readonly Dictionary<string, long> _totalAppended = new(StringComparer.Ordinal);
+        private readonly Dictionary<string, int> _generation = new(StringComparer.Ordinal);
+
+        public int MaxCountPerTab => _maxCountPerTab;
+
         // 버퍼는 로그 파이프라인과 UI 코드에서 접근된다. 현재는 모두 UI 스레드에서 호출되지만,
         // 자료구조 손상을 원천 차단하기 위해 모든 접근을 이 락으로 보호한다.
         private readonly object _sync = new();
@@ -45,7 +52,47 @@ namespace TWChatOverlay.Services
                 if (!_buffers.TryGetValue(tabName, out var buffer)) return;
 
                 buffer.Add(log);
+                _totalAppended[tabName] = _totalAppended.GetValueOrDefault(tabName) + 1;
                 TrimIfNeeded(buffer);
+            }
+        }
+
+        /// <summary>증분 렌더용 버전 조회: (누적 추가 수, 세대).</summary>
+        public (long TotalAppended, int Generation) GetVersion(string tabName)
+        {
+            lock (_sync)
+            {
+                return (_totalAppended.GetValueOrDefault(tabName), _generation.GetValueOrDefault(tabName));
+            }
+        }
+
+        /// <summary>
+        /// 누적 추가 수 <paramref name="afterTotalAppended"/> 이후에 추가된 로그의 스냅샷을 반환한다.
+        /// 새 로그가 트림으로 이미 버퍼를 넘겼거나 세대가 바뀐 경우 null을 반환한다 — 호출자는 전체를 다시 그려야 한다.
+        /// </summary>
+        public IReadOnlyList<LogParser.ParseResult>? GetLogsAppendedAfter(
+            string tabName, long afterTotalAppended, int expectedGeneration,
+            out long totalAppended, out int generation)
+        {
+            lock (_sync)
+            {
+                totalAppended = _totalAppended.GetValueOrDefault(tabName);
+                generation = _generation.GetValueOrDefault(tabName);
+
+                if (!_buffers.TryGetValue(tabName, out var buffer))
+                    return Array.Empty<LogParser.ParseResult>();
+
+                if (generation != expectedGeneration || afterTotalAppended > totalAppended)
+                    return null;
+
+                long newCountLong = totalAppended - afterTotalAppended;
+                if (newCountLong == 0)
+                    return Array.Empty<LogParser.ParseResult>();
+                if (newCountLong >= buffer.Count)
+                    return null; // 중간이 트림으로 유실됨 — 전체 재구축 필요
+
+                int newCount = (int)newCountLong;
+                return buffer.GetRange(buffer.Count - newCount, newCount);
             }
         }
 
@@ -91,6 +138,9 @@ namespace TWChatOverlay.Services
                     buffer.Add(log);
                     TrimIfNeeded(buffer);
                 }
+
+                _generation[tabName] = _generation.GetValueOrDefault(tabName) + 1;
+                _totalAppended[tabName] = buffer.Count;
             }
         }
 
@@ -107,12 +157,15 @@ namespace TWChatOverlay.Services
 
             lock (_sync)
             {
-                foreach (var buffer in _buffers.Values)
+                foreach (var pair in _buffers)
                 {
-                    foreach (var log in buffer)
+                    foreach (var log in pair.Value)
                     {
                         log.Brush = brushFactory(log.Category);
                     }
+
+                    // 이미 그려진 문단은 옛 브러시를 물고 있으므로 소비자가 전체를 다시 그리게 한다
+                    _generation[pair.Key] = _generation.GetValueOrDefault(pair.Key) + 1;
                 }
             }
         }

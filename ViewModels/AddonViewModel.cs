@@ -422,6 +422,22 @@ namespace TWChatOverlay.ViewModels
             _settings.PropertyChanged += Settings_PropertyChanged;
         }
 
+        /// <summary>
+        /// 설정 구독을 해제한다. 설정 화면/마법사가 닫힐 때 반드시 호출 —
+        /// 앱 수명 내내 사는 ChatSettings에 붙은 채 남으면 VM 전체(드롭 아이템 목록 포함)가 누수된다.
+        /// </summary>
+        public void Detach()
+        {
+            _settings.PropertyChanged -= Settings_PropertyChanged;
+        }
+
+        /// <summary>Detach 후 화면이 다시 로드될 때 재구독한다. (중복 구독 방지를 위해 해제 후 구독)</summary>
+        public void Attach()
+        {
+            _settings.PropertyChanged -= Settings_PropertyChanged;
+            _settings.PropertyChanged += Settings_PropertyChanged;
+        }
+
         private void Settings_PropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
         {
             switch (e.PropertyName)
