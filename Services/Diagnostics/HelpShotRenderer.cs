@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
@@ -44,11 +44,11 @@ namespace TWChatOverlay.Services
 
             // ── 기본 채팅 필터: 종류별 색 한눈에 ──
             Save(outDir, "chat_filter.png", Panel("채팅 종류별 색",
-                Line(NormalCol, ("모비딕 : 사냥 가실 분?", NormalCol)),
-                Line(TeamCol, ("[팀] 나비 : 집결지로 와주세요", TeamCol)),
-                Line(ClubCol, ("[클럽] 딩고 : 보스 곧 엽니다", ClubCol)),
-                Line(ShoutCol, ("외치기 : 잡템 삽니다 [상점왕]", ShoutCol)),
-                Line(SystemCol, ("[아이템] 을 획득하였습니다.", SystemCol))));
+                Line(NormalCol, ("[일반] 아나이스 : 아페테리아 가실 분?", NormalCol)),
+                Line(TeamCol, ("[팀] 벤야 : 입구로 와주세요", TeamCol)),
+                Line(ClubCol, ("[클럽] 리체 : 클럽보스 하실분?", ClubCol)),
+                Line(ShoutCol, ("[외치기] 티치엘 : 훈장 50개 삽니다", ShoutCol)),
+                Line(SystemCol, ("[시스템] : [에오니스 라피스] 아이템을 획득하였습니다.",SystemCol))));
 
             // ── 색상 동기화·색 지정 (설정 UI 목업으로 사용법을 그림으로) ──
             Save(outDir, "chat_id_sender_sync_on.png", SyncGuideMock(syncOn: true));
