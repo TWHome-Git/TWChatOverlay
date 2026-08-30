@@ -92,7 +92,7 @@
                        FontWeight="Bold"/>
 
             <TextBlock Grid.Row="0" Grid.Column="2"
-                       Text="1 시간 예상 :"
+                       Text="1시간 예상 :"
                        Style="{StaticResource ExpFieldLabelStyle}"/>
             <TextBlock Grid.Row="0" Grid.Column="3"
                        Text="{Binding ExpPerHourDisplay}"

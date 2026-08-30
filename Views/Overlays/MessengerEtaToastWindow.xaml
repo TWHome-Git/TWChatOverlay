@@ -39,7 +39,7 @@
                     MouseLeftButtonDown="TitleBar_MouseLeftButtonDown">
                 <Grid>
                     <TextBlock x:Name="TitleText"
-                               Text="1:1 채팅 에타레벨 확인"
+                               Text="1:1 대화 에타 레벨 확인"
                                Foreground="{DynamicResource TextBrush}"
                                FontSize="16"
                                FontWeight="SemiBold"
