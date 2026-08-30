@@ -170,7 +170,7 @@ namespace TWChatOverlay.Views
 
                 _input = new System.Windows.Controls.TextBox
                 {
-                    Width = 120,
+                    Width = 72,
                     Height = 26,
                     FontSize = 13,
                     Text = currentEok.ToString(),
@@ -213,9 +213,12 @@ namespace TWChatOverlay.Views
                     {
                         Content = text,
                         Width = 56,
-                        Height = 24,
+                        Height = 28,
+                        Padding = new Thickness(0),
                         Margin = new Thickness(isApply ? 0 : 6, 0, 0, 0),
                         FontSize = 12,
+                        VerticalContentAlignment = VerticalAlignment.Center,
+                        HorizontalContentAlignment = HorizontalAlignment.Center,
                         Cursor = System.Windows.Input.Cursors.Hand,
                     };
                     button.SetResourceReference(StyleProperty, "SecondaryButtonStyle");
