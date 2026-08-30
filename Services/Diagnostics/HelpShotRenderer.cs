@@ -59,13 +59,13 @@ namespace TWChatOverlay.Services
             Save(outDir, "chat_id_eta_level_off.png", PanelToggle(false,
                 Line(NormalCol, ("아나이스", NormalCol), (" : 어비스 가실 분?", NormalCol))));
             Save(outDir, "chat_id_eta_level_on.png", PanelToggle(true,
-                Line(NormalCol, ("아나이스", NormalCol), ("[72]", GoldCol), (" : 어비스 가실 분?", NormalCol))));
+                Line(NormalCol, ("아나이스", NormalCol), ("[72]", NormalCol), (" : 어비스 가실 분?", NormalCol))));
 
             // ── 에타 레벨별 색상 ──
             Save(outDir, "chat_id_eta_range_off.png", PanelToggle(false,
-                Line(NormalCol, ("보리스", NormalCol), ("[15]", GoldCol), (" : 반가워요", NormalCol)),
-                Line(NormalCol, ("벤야", NormalCol), ("[55]", GoldCol), (" : 어비스 가실 분?", NormalCol)),
-                Line(NormalCol, ("아나이스", NormalCol), ("[92]", GoldCol), (" : 클럽보스 5초후 잡아요", NormalCol))));
+                Line(NormalCol, ("보리스", NormalCol), ("[15]", NormalCol), (" : 반가워요", NormalCol)),
+                Line(NormalCol, ("벤야", NormalCol), ("[55]", NormalCol), (" : 어비스 가실 분?", NormalCol)),
+                Line(NormalCol, ("아나이스", NormalCol), ("[92]", NormalCol), (" : 클럽보스 5초후 잡아요", NormalCol))));
             Save(outDir, "chat_id_eta_range_on.png", PanelToggle(true,
                 Line(NormalCol, ("보리스", NormalCol), ("[15]", Range1Col), (" : ㅎㅇ", NormalCol)),
                 Line(NormalCol, ("루시안", NormalCol), ("[33]", Range2Col), (" : 에오니스 라피스 팝니다", NormalCol)),
@@ -75,9 +75,9 @@ namespace TWChatOverlay.Services
 
             // ── 캐릭터 ──
             Save(outDir, "chat_id_character_off.png", PanelToggle(false,
-                Line(NormalCol, ("비호", NormalCol), ("[72]", GoldCol), (" : 어비스 가실 분?", NormalCol))));
+                Line(NormalCol, ("비호", NormalCol), ("[72]", NormalCol), (" : 어비스 가실 분?", NormalCol))));
             Save(outDir, "chat_id_character_on.png", PanelToggle(true,
-                Line(NormalCol, ("비호", NormalCol), ("[72]", GoldCol), ("[아나이스]", SkyCol), (" : 어비스 가실 분?", NormalCol))));
+                Line(NormalCol, ("비호", NormalCol), ("[72]", NormalCol), ("[아나이스]", SkyCol), (" : 어비스 가실 분?", NormalCol))));
 
             // ── 아이디 태그 ──
             Save(outDir, "chat_id_tag_off.png", PanelToggle(false,
