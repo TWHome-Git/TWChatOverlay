@@ -899,6 +899,20 @@ namespace TWChatOverlay.Models
             get => Windows.BossAlertToast.Top;
             set { if (Windows.BossAlertToast.Top == value) return; Windows.BossAlertToast.Top = value; OnPropertyChanged(); }
         }
+        // 통합 알림 스택(외치기·던전·경험치·아이템·보스) 기준 위치
+        [JsonIgnore]
+        public double? ToastStackLeft
+        {
+            get => Windows.ToastStack.Left;
+            set { if (Windows.ToastStack.Left == value) return; Windows.ToastStack.Left = value; OnPropertyChanged(); }
+        }
+        [JsonIgnore]
+        public double? ToastStackTop
+        {
+            get => Windows.ToastStack.Top;
+            set { if (Windows.ToastStack.Top == value) return; Windows.ToastStack.Top = value; OnPropertyChanged(); }
+        }
+
         [JsonIgnore]
         public double? BossAlertToastWindowWidth
         {

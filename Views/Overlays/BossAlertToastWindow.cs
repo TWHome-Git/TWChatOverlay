@@ -19,7 +19,6 @@ namespace TWChatOverlay.Views
     public sealed class BossAlertToastWindow : Window
     {
         private static BossAlertToastWindow? _instance;
-        private static bool _isPreviewShowing;
 
         private static readonly Color DangerCol = Color.FromRgb(0xFF, 0x5A, 0x5A);
 
@@ -130,7 +129,6 @@ namespace TWChatOverlay.Views
             if (ReferenceEquals(_instance, this))
             {
                 _instance = null;
-                _isPreviewShowing = false;
             }
             base.OnClosed(e);
         }
@@ -153,11 +151,10 @@ namespace TWChatOverlay.Views
 
         private void SyncPositionToSettings(bool save)
         {
+            // 위치는 통합 알림 스택(앵커)이 관리하므로 크기만 저장한다
             if (_settings == null || !IsVisible)
                 return;
 
-            _settings.BossAlertToastWindowLeft = Left;
-            _settings.BossAlertToastWindowTop = Top;
             _settings.BossAlertToastWindowWidth = Width;
             _settings.BossAlertToastWindowHeight = Height;
 
@@ -204,7 +201,6 @@ namespace TWChatOverlay.Views
                 var window = EnsureInstance(settings);
                 window.SetAlert(bossName, label);
                 window.SetPreviewMode(false);
-                _isPreviewShowing = false;
 
                 // 보스 출현 5초 후 삭제 (이미 지났으면 5초만 유지)
                 TimeSpan lifetime = occurrence.AddSeconds(5) - DateTime.Now;
@@ -223,24 +219,9 @@ namespace TWChatOverlay.Views
             }
         }
 
-        /// <summary>잠금 해제 모드: 위치 조정용 미리보기를 표시한다.</summary>
+        /// <summary>통합 알림 스택 앵커 미리보기로 위임.</summary>
         public static void ShowPositionPreview(ChatSettings settings)
-        {
-            try
-            {
-                var window = EnsureInstance(settings);
-                window._closeTimer.Stop(); // 미리보기 동안에는 자동 닫힘 없음
-                window.SetPreviewMode(true);
-                _isPreviewShowing = true;
-
-                ShowAtStoredPosition(window, settings);
-                TopmostWindowHelper.BringToTopmost(window);
-            }
-            catch (Exception ex)
-            {
-                AppLogger.Warn("Failed to show boss alert toast preview.", ex);
-            }
-        }
+            => ToastStackService.ShowPositionPreview(settings);
 
         /// <summary>설정 슬라이더 변경을 열려 있는 알림 창에 즉시 반영한다.</summary>
         public static void ApplyFontSize(double size)
@@ -248,22 +229,9 @@ namespace TWChatOverlay.Views
             try { _instance?.SetFontSize(size); } catch { }
         }
 
-        /// <summary>잠금 해제 종료: 미리보기였다면 위치를 저장하고 닫는다.</summary>
+        /// <summary>통합 알림 스택 앵커 미리보기로 위임.</summary>
         public static void ClosePositionPreview()
-        {
-            try
-            {
-                if (_instance == null || !_isPreviewShowing)
-                    return;
-
-                _instance.SyncPositionToSettings(save: true);
-                _instance.Close();
-            }
-            catch (Exception ex)
-            {
-                AppLogger.Warn("Failed to close boss alert toast preview.", ex);
-            }
-        }
+            => ToastStackService.ClosePositionPreview();
 
         private static BossAlertToastWindow EnsureInstance(ChatSettings? settings)
         {
@@ -283,8 +251,7 @@ namespace TWChatOverlay.Views
 
         private static void ShowAtStoredPosition(BossAlertToastWindow window, ChatSettings? settings)
         {
-            bool wasVisible = window.IsVisible;
-            if (!wasVisible)
+            if (!window.IsVisible)
             {
                 // 저장된 크기 복원 (기본 420x72)
                 if (settings?.BossAlertToastWindowWidth is double width && width >= window.MinWidth)
@@ -293,21 +260,12 @@ namespace TWChatOverlay.Views
                     window.Height = height;
 
                 window.Show();
-
-                if (settings?.BossAlertToastWindowLeft is double left &&
-                    settings.BossAlertToastWindowTop is double top)
-                {
-                    window.Left = left;
-                    window.Top = top;
-                }
-                else
-                {
-                    // 기본 위치: 작업 영역 상단 중앙
-                    Rect workArea = SystemParameters.WorkArea;
-                    window.Left = workArea.Left + ((workArea.Width - window.ActualWidth) / 2.0);
-                    window.Top = workArea.Top + 120;
-                }
             }
+
+            // 통합 알림 스택: 앵커 위치에서 다른 알림들 아래로 배치
+            var (left, top) = ToastStackService.Attach(window);
+            window.Left = left;
+            window.Top = top;
         }
     }
 }
