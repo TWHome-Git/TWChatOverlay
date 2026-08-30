@@ -120,6 +120,9 @@ namespace TWChatOverlay.Views
 
             // 보급품 탈환 미니 지도 위치/크기
             RecaptureSupplyAlertService.ShowPositionPreview(_settings, force: true);
+
+            // 필드 보스 알림 팝업 위치
+            BossAlertToastWindow.ShowPositionPreview(_settings);
         }
 
         /// <summary>인스펙터의 넛지/크기 입력으로 메인 창이 조정되면 즉시 저장한다.</summary>
@@ -147,6 +150,7 @@ namespace TWChatOverlay.Views
             ShoutToastService.ClosePositionPreview(_settings);
             MessengerEtaToastService.ClosePositionPreview(_settings);
             RecaptureSupplyAlertService.ClosePositionPreview();
+            BossAlertToastWindow.ClosePositionPreview();
             CloseAddonPositionPreviewWindows(savePositions: true, restoreNormalWindows: true);
             RefreshExpTrackerWindow();
         }

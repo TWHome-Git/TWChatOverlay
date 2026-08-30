@@ -211,6 +211,7 @@ namespace TWChatOverlay.Models
         public WindowRect MessengerToast { get; set; } = new();
         public WindowRect RecaptureSupply { get; set; } = new();
         public WindowRect ExperienceLimitAlert { get; set; } = new();
+        public WindowRect BossAlertToast { get; set; } = new();
         public WindowRect DungeonCountDisplay { get; set; } = new();
         public WindowRect ExpTracker { get; set; } = new();
         public WindowRect Clone1 { get; set; } = new();

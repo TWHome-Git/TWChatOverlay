@@ -876,6 +876,19 @@ namespace TWChatOverlay.Models
         }
 
         [JsonIgnore]
+        public double? BossAlertToastWindowLeft
+        {
+            get => Windows.BossAlertToast.Left;
+            set { if (Windows.BossAlertToast.Left == value) return; Windows.BossAlertToast.Left = value; OnPropertyChanged(); }
+        }
+        [JsonIgnore]
+        public double? BossAlertToastWindowTop
+        {
+            get => Windows.BossAlertToast.Top;
+            set { if (Windows.BossAlertToast.Top == value) return; Windows.BossAlertToast.Top = value; OnPropertyChanged(); }
+        }
+
+        [JsonIgnore]
         public double? DungeonCountDisplayWindowLeft
         {
             get => Windows.DungeonCountDisplay.Left;
