@@ -39,7 +39,11 @@ namespace TWChatOverlay.Views
             ShowActivated = false;
             Topmost = true;
             ResizeMode = ResizeMode.NoResize;
-            SizeToContent = SizeToContent.WidthAndHeight;
+            // 다른 알림 창(던전 도우미 등)과 같은 기본 크기 — 인스펙터에서 크기 조절·저장 가능
+            Width = 420;
+            Height = 72;
+            MinWidth = 160;
+            MinHeight = 56;
             WindowFontService.Apply(this);
 
             var title = new TextBlock
@@ -56,11 +60,12 @@ namespace TWChatOverlay.Views
                 FontSize = 18,
                 FontWeight = FontWeights.Bold,
                 TextAlignment = TextAlignment.Center,
+                TextTrimming = TextTrimming.CharacterEllipsis,
                 Margin = new Thickness(0, 4, 0, 0),
             };
             _bodyText.SetResourceReference(TextBlock.ForegroundProperty, "TextBrush");
 
-            var stack = new StackPanel { MinWidth = 150 };
+            var stack = new StackPanel { VerticalAlignment = VerticalAlignment.Center };
             stack.Children.Add(title);
             stack.Children.Add(_bodyText);
 
@@ -79,7 +84,7 @@ namespace TWChatOverlay.Views
             };
             _previewLabel.SetResourceReference(TextBlock.ForegroundProperty, "TextBrush");
 
-            var rootGrid = new Grid { MinWidth = 150, MinHeight = 44 };
+            var rootGrid = new Grid();
             rootGrid.Children.Add(_normalContent);
             rootGrid.Children.Add(_previewLabel);
 
@@ -97,6 +102,7 @@ namespace TWChatOverlay.Views
             // 잠금 해제 모드에서만 드래그로 이동 (위치는 설정에 저장)
             root.MouseLeftButtonDown += RootBorder_MouseLeftButtonDown;
             LocationChanged += (_, _) => SyncPositionToSettings(save: false);
+            SizeChanged += (_, _) => SyncPositionToSettings(save: true);
 
             _closeTimer = new DispatcherTimer();
             _closeTimer.Tick += (_, _) =>
@@ -152,6 +158,8 @@ namespace TWChatOverlay.Views
 
             _settings.BossAlertToastWindowLeft = Left;
             _settings.BossAlertToastWindowTop = Top;
+            _settings.BossAlertToastWindowWidth = Width;
+            _settings.BossAlertToastWindowHeight = Height;
 
             if (_isDragging || save)
                 ConfigService.SaveDeferred(_settings);
@@ -277,10 +285,15 @@ namespace TWChatOverlay.Views
         {
             bool wasVisible = window.IsVisible;
             if (!wasVisible)
+            {
+                // 저장된 크기 복원 (기본 420x72)
+                if (settings?.BossAlertToastWindowWidth is double width && width >= window.MinWidth)
+                    window.Width = width;
+                if (settings?.BossAlertToastWindowHeight is double height && height >= window.MinHeight)
+                    window.Height = height;
+
                 window.Show();
 
-            if (!wasVisible)
-            {
                 if (settings?.BossAlertToastWindowLeft is double left &&
                     settings.BossAlertToastWindowTop is double top)
                 {

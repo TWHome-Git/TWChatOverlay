@@ -899,6 +899,18 @@ namespace TWChatOverlay.Models
             get => Windows.BossAlertToast.Top;
             set { if (Windows.BossAlertToast.Top == value) return; Windows.BossAlertToast.Top = value; OnPropertyChanged(); }
         }
+        [JsonIgnore]
+        public double? BossAlertToastWindowWidth
+        {
+            get => Windows.BossAlertToast.Width;
+            set { if (Windows.BossAlertToast.Width == value) return; Windows.BossAlertToast.Width = value; OnPropertyChanged(); }
+        }
+        [JsonIgnore]
+        public double? BossAlertToastWindowHeight
+        {
+            get => Windows.BossAlertToast.Height;
+            set { if (Windows.BossAlertToast.Height == value) return; Windows.BossAlertToast.Height = value; OnPropertyChanged(); }
+        }
 
         [JsonIgnore]
         public double? DungeonCountDisplayWindowLeft
