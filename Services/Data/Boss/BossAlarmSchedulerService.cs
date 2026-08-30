@@ -103,7 +103,7 @@ namespace TWChatOverlay.Services
         }
 
         /// <summary>
-        /// 혼란한 대지: 등장 시각에 입장 가능 시간(3분) 카운트다운 팝업을 띄운다.
+        /// 입장 시간 카운트가 켜진 보스(혼란한 대지 3분, 파멸의 기원 6분): 등장 시각에 카운트다운 팝업을 띄운다.
         /// 사전 알림(1분/5초 전)이 꺼져 있어도 이 토글이 켜져 있으면 등장 시점에 팝업이 열린다. (사운드 없음)
         /// </summary>
         private bool CheckEntryCountdownStart(BossTimerService.BossTimerDefinition boss, DateTime now)
@@ -130,12 +130,19 @@ namespace TWChatOverlay.Services
             return false;
         }
 
-        /// <summary>혼란한 대지에서 입장 시간 카운트가 켜져 있으면 입장 가능 시간(3분)을 반환.</summary>
+        /// <summary>입장 시간 카운트가 켜진 보스의 입장 가능 시간 — 혼란한 대지 3분, 파멸의 기원 6분.</summary>
         internal static TimeSpan? GetEntryWindow(string bossId, ChatSettings? settings)
-            => string.Equals(bossId, "Confused Land", StringComparison.OrdinalIgnoreCase)
-               && settings?.BossAlertConfusedLandEntryCountdown == true
-                ? TimeSpan.FromMinutes(3)
-                : null;
+        {
+            if (string.Equals(bossId, "Confused Land", StringComparison.OrdinalIgnoreCase)
+                && settings?.BossAlertConfusedLandEntryCountdown == true)
+                return TimeSpan.FromMinutes(3);
+
+            if (string.Equals(bossId, "Origin of Doom", StringComparison.OrdinalIgnoreCase)
+                && settings?.BossAlertOriginOfDoomEntryCountdown == true)
+                return TimeSpan.FromMinutes(6);
+
+            return null;
+        }
 
         /// <summary>어제~내일 출현 시각을 보스별로 캐시해 반환한다. 날짜가 바뀌면 갱신.</summary>
         private DateTime[] GetOccurrencesCached(BossTimerService.BossTimerDefinition boss, DateTime now)

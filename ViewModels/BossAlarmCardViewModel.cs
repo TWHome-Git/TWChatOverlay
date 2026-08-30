@@ -66,19 +66,27 @@ namespace TWChatOverlay.ViewModels
             }
         }
 
-        /// <summary>혼란한 대지 카드에만 '입장 시간 카운트' 토글을 노출한다.</summary>
-        public bool IsConfusedLand => string.Equals(BossId, "Confused Land", StringComparison.OrdinalIgnoreCase);
+        private bool IsConfusedLand => string.Equals(BossId, "Confused Land", StringComparison.OrdinalIgnoreCase);
+        private bool IsOriginOfDoom => string.Equals(BossId, "Origin of Doom", StringComparison.OrdinalIgnoreCase);
 
-        /// <summary>혼란한 대지: 등장 후 입장 가능 3분을 팝업으로 카운트다운.</summary>
+        /// <summary>입장 시간 카운트 토글을 노출할 보스(혼란한 대지·파멸의 기원)인지.</summary>
+        public bool HasEntryCountdown => IsConfusedLand || IsOriginOfDoom;
+
+        /// <summary>등장 후 입장 가능 시간(혼란한 대지 3분, 파멸의 기원 6분)을 팝업으로 카운트다운.</summary>
         public bool EntryCountdown
         {
-            get => _settings.BossAlertConfusedLandEntryCountdown;
+            get => IsOriginOfDoom
+                ? _settings.BossAlertOriginOfDoomEntryCountdown
+                : _settings.BossAlertConfusedLandEntryCountdown;
             set
             {
-                if (_settings.BossAlertConfusedLandEntryCountdown == value)
+                if (EntryCountdown == value)
                     return;
 
-                _settings.BossAlertConfusedLandEntryCountdown = value;
+                if (IsOriginOfDoom)
+                    _settings.BossAlertOriginOfDoomEntryCountdown = value;
+                else
+                    _settings.BossAlertConfusedLandEntryCountdown = value;
                 OnPropertyChanged();
                 SaveSettings();
             }
