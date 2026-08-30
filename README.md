@@ -101,7 +101,7 @@
 
 ### TW DB (웹)
 에타 순위표·검색, 계산기·시뮬레이터, 장비 DB·제작 재료는 웹으로 이관되었습니다.
-→ **https://twhome-git.github.io/TWPage/**
+→ **https://talesdb.xyz/#/extra**
 
 ---
 
