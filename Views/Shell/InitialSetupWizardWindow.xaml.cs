@@ -41,6 +41,7 @@ namespace TWChatOverlay.Views
         private bool _shoutPreviewEnabled;
 
         private UIElement? _dailyWeeklyStepContent;
+        private SettingsView? _embeddedSettings;
 
         public event EventHandler<bool>? WizardFinished;
         public event EventHandler<string>? LogPathConfirmed;
@@ -99,55 +100,71 @@ namespace TWChatOverlay.Views
 
             UpdateStepSpecificPreviews();
 
-            StepContentHost.Content = BuildStepContent(_stepIndex);
+            // 임베드된 설정 패널은 같은 인스턴스를 재사용하므로 불필요한 재장착(Unloaded/Loaded)을 피한다
+            UIElement content = BuildStepContent(_stepIndex);
+            if (!ReferenceEquals(StepContentHost.Content, content))
+                StepContentHost.Content = content;
         }
 
         private void UpdateStepSpecificPreviews()
         {
+            // 외치기 단계에서만 외치기 위치 미리보기를 표시 (설정 화면에는 없는 마법사 전용 보조)
             bool shouldShowShoutPreview = _stepIndex == 2;
-            if (shouldShowShoutPreview == _shoutPreviewEnabled)
+            if (shouldShowShoutPreview != _shoutPreviewEnabled)
             {
-                _mainWindow?.ShowWizardStepPreviewWindows(_stepIndex);
-                return;
-            }
-
-            _shoutPreviewEnabled = shouldShowShoutPreview;
-
-            try
-            {
-                if (_shoutPreviewEnabled)
+                _shoutPreviewEnabled = shouldShowShoutPreview;
+                try
                 {
-                    ShoutToastService.ShowPositionPreview(_settings, force: true);
+                    if (_shoutPreviewEnabled)
+                        ShoutToastService.ShowPositionPreview(_settings, force: true);
+                    else
+                        ShoutToastService.ClosePositionPreview(_settings);
                 }
-                else
+                catch (Exception ex)
                 {
-                    ShoutToastService.ClosePositionPreview(_settings);
+                    AppLogger.Warn("Failed to toggle shout position preview in setup wizard.", ex);
                 }
             }
-            catch (Exception ex)
-            {
-                AppLogger.Warn("Failed to toggle shout position preview in setup wizard.", ex);
-            }
 
-            _mainWindow?.ShowWizardStepPreviewWindows(_stepIndex);
+            // 임베드되지 않는 단계(로그 위치·일일/주간)에서는 추가 기능 미리보기를 정리한다
+            if (_stepIndex == 0 || _stepIndex == _steps.Count - 1)
+                _embeddedSettings?.EndWizardPanelMode();
         }
 
         private UIElement BuildStepContent(int stepIndex)
         {
+            // 1~8단계는 실제 설정 화면 패널을 그대로 임베드한다 (설정과 마법사의 이중 관리 제거)
             return stepIndex switch
             {
                 0 => BuildLogPathStepContent(),
-                1 => BuildChatSettingsStepContent(),
-                2 => BuildShoutSettingsStepContent(),
-                3 => BuildKeywordAddonContent(),
-                4 => BuildExperienceAddonContent(),
-                5 => BuildDungeonAddonContent(),
-                6 => BuildItemDropAddonContent(),
-                7 => BuildBuffAddonContent(),
-                8 => BuildFieldBossAddonContent(),
+                1 => GetEmbeddedSettingsPanel("Chat"),
+                2 => GetEmbeddedSettingsPanel("Shout"),
+                3 => GetEmbeddedSettingsPanel("Keyword"),
+                4 => GetEmbeddedSettingsPanel("Exp"),
+                5 => GetEmbeddedSettingsPanel("Dungeon"),
+                6 => GetEmbeddedSettingsPanel("Item"),
+                7 => GetEmbeddedSettingsPanel("Buff"),
+                8 => GetEmbeddedSettingsPanel("Boss"),
                 9 => BuildDailyWeeklyStepContent(),
                 _ => new TextBlock { Text = "준비 중", Foreground = ThemeBrushes.Get("TextBrush", Brushes.White) }
             };
+        }
+
+        /// <summary>
+        /// 설정 화면(SettingsView)의 실제 패널을 마법사 단계로 임베드한다.
+        /// 같은 인스턴스를 재사용하며 ShowWizardPanel이 해당 패널만 표시한다.
+        /// </summary>
+        private SettingsView GetEmbeddedSettingsPanel(string navKey)
+        {
+            if (_embeddedSettings == null)
+            {
+                _embeddedSettings = new SettingsView();
+                if (_mainWindow != null)
+                    _embeddedSettings.DataContext = _mainWindow.SettingsViewModelInstance;
+            }
+
+            _embeddedSettings.ShowWizardPanel(navKey);
+            return _embeddedSettings;
         }
 
         private UIElement BuildLogPathStepContent()
@@ -191,553 +208,10 @@ namespace TWChatOverlay.Views
             return panel;
         }
 
-        private UIElement BuildChatSettingsStepContent()
-        {
-            var root = new StackPanel();
-
-            root.Children.Add(CreateFilterColorRow("일반", nameof(ChatSettings.ShowNormal), nameof(ChatSettings.NormalColor)));
-            root.Children.Add(CreateFilterColorRow("팀", nameof(ChatSettings.ShowTeam), nameof(ChatSettings.TeamColor)));
-            root.Children.Add(CreateFilterColorRow("클럽", nameof(ChatSettings.ShowClub), nameof(ChatSettings.ClubColor)));
-            root.Children.Add(CreateFilterColorRow("외치기", nameof(ChatSettings.ShowShout), nameof(ChatSettings.ShoutColor)));
-            root.Children.Add(CreateFilterColorRow("시스템", nameof(ChatSettings.ShowSystem), nameof(ChatSettings.SystemColor)));
-
-            root.Children.Add(CreateSectionDivider());
-
-            root.Children.Add(CreateCheckRow("에타 레벨 표시", nameof(ChatSettings.ShowEtaLevel)));
-            root.Children.Add(CreateCheckRow("캐릭터 표시", nameof(ChatSettings.ShowEtaCharacter)));
-            root.Children.Add(CreateCheckRow("클럽 보스 메시지 표시", nameof(ChatSettings.ShowClubBoss)));
-            root.Children.Add(CreateCheckRow("타임스탬프 표시", nameof(ChatSettings.ShowTimestamp)));
-
-            root.Children.Add(CreateSectionDivider());
-
-            root.Children.Add(new TextBlock
-            {
-                Text = "텍스트 폰트 및 크기",
-                Foreground = ThemeBrushes.Get("TextBrush", Brushes.White),
-                FontWeight = FontWeights.SemiBold,
-                Margin = new Thickness(0, 0, 0, 2)
-            });
-
-            // 설정 > 폰트 탭과 동일: 글꼴 콤보박스 + 크기 슬라이더 행
-            var fontCombo = new ComboBox
-            {
-                Width = 170,
-                Height = 26,
-                VerticalAlignment = VerticalAlignment.Center,
-                ItemsSource = FontService.GetAvailableFonts(),
-                SelectedItem = _settings.FontFamily,
-            };
-            fontCombo.SetResourceReference(FrameworkElement.StyleProperty, "DarkComboBoxStyle");
-            fontCombo.SelectionChanged += (_, _) =>
-            {
-                if (fontCombo.SelectedItem is string fontName && _settings.FontFamily != fontName)
-                    _settings.FontFamily = fontName;
-            };
-            root.Children.Add(WrapSettingsRow("종류", fontCombo));
-
-            var sizePanel = new StackPanel { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Center };
-            var fontSizeSlider = new Slider
-            {
-                Minimum = 10,
-                Maximum = 40,
-                TickFrequency = 1,
-                IsSnapToTickEnabled = true,
-                Width = 140,
-                VerticalAlignment = VerticalAlignment.Center,
-                Margin = new Thickness(0),
-            };
-            fontSizeSlider.SetBinding(Slider.ValueProperty, new Binding(nameof(ChatSettings.FontSize)) { Source = _settings, Mode = BindingMode.TwoWay });
-            sizePanel.Children.Add(fontSizeSlider);
-            var fontSizeValue = new TextBlock
-            {
-                Foreground = ThemeBrushes.Get("TextBrush", Brushes.White),
-                FontSize = 12,
-                Width = 26,
-                TextAlignment = TextAlignment.Right,
-                VerticalAlignment = VerticalAlignment.Center,
-            };
-            fontSizeValue.SetBinding(TextBlock.TextProperty, new Binding(nameof(ChatSettings.FontSize))
-            {
-                Source = _settings,
-                StringFormat = "{0:F0}"
-            });
-            sizePanel.Children.Add(fontSizeValue);
-            root.Children.Add(WrapSettingsRow("크기", sizePanel));
-
-            return new ScrollViewer
-            {
-                VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
-                Content = root
-            };
-        }
-
-        /// <summary>섹션 구분선 (테마 색).</summary>
-        private static Border CreateSectionDivider()
-        {
-            var divider = new Border { Height = 1, Margin = new Thickness(0, 10, 0, 10) };
-            divider.SetResourceReference(Border.BackgroundProperty, "SeparatorBrush");
-            return divider;
-        }
-
-        /// <summary>설정 화면과 같은 행 스타일: 라벨 왼쪽 + 토글 스위치 오른쪽 + 아래 구분선.</summary>
-        private UIElement CreateCheckRow(string label, string bindingPath)
-        {
-            // 토글 스위치가 ON/OFF를 표현하므로 라벨의 'ON/OFF' 표기는 정리한다
-            label = label.Replace(" ON/OFF", string.Empty);
-
-            var toggle = new CheckBox { VerticalAlignment = VerticalAlignment.Center };
-            toggle.SetResourceReference(FrameworkElement.StyleProperty, "ToggleSwitchCheckBoxStyle");
-            toggle.SetBinding(CheckBox.IsCheckedProperty, new Binding(bindingPath) { Source = _settings, Mode = BindingMode.TwoWay });
-
-            return WrapSettingsRow(label, toggle);
-        }
-
-        /// <summary>설정 화면과 같은 행 프레임(라벨 왼쪽·컨트롤 오른쪽·아래 1px 구분선)으로 감싼다.</summary>
-        private static Border WrapSettingsRow(string label, UIElement rightControl)
-        {
-            var dock = new DockPanel();
-            DockPanel.SetDock(rightControl, Dock.Right);
-            dock.Children.Add(rightControl);
-            dock.Children.Add(new TextBlock
-            {
-                Text = label,
-                FontSize = 13,
-                VerticalAlignment = VerticalAlignment.Center,
-                Foreground = ThemeBrushes.Get("TextBrush", Brushes.White),
-            });
-
-            var row = new Border
-            {
-                Padding = new Thickness(0, 7, 0, 7),
-                BorderThickness = new Thickness(0, 0, 0, 1),
-                Child = dock,
-            };
-            row.SetResourceReference(Border.BorderBrushProperty, "SeparatorBrush");
-            return row;
-        }
-
-        private UIElement CreateFilterColorRow(string label, string visibleBindingPath, string colorBindingPath)
-        {
-            // 설정 > 채팅 필터와 같은 구성: 라벨 왼쪽, 오른쪽에 색 버튼 + 토글
-            var right = new StackPanel { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Center };
-
-            var toggle = new CheckBox { VerticalAlignment = VerticalAlignment.Center };
-            toggle.SetResourceReference(FrameworkElement.StyleProperty, "ToggleSwitchCheckBoxStyle");
-            toggle.SetBinding(CheckBox.IsCheckedProperty, new Binding(visibleBindingPath) { Source = _settings, Mode = BindingMode.TwoWay });
-
-            var colorBtn = new Button { Width = 26, Height = 14, Margin = new Thickness(0, 0, 10, 0), Cursor = System.Windows.Input.Cursors.Hand };
-            colorBtn.SetResourceReference(FrameworkElement.StyleProperty, "ColorPickerButtonStyle");
-            colorBtn.SetBinding(Button.BackgroundProperty, new Binding(colorBindingPath) { Source = _settings });
-            colorBtn.Click += (_, _) =>
-            {
-                try
-                {
-                    string current = colorBindingPath switch
-                    {
-                        nameof(ChatSettings.NormalColor) => _settings.NormalColor,
-                        nameof(ChatSettings.TeamColor) => _settings.TeamColor,
-                        nameof(ChatSettings.ClubColor) => _settings.ClubColor,
-                        nameof(ChatSettings.ShoutColor) => _settings.ShoutColor,
-                        nameof(ChatSettings.SystemColor) => _settings.SystemColor,
-                        _ => "#FFFFFF"
-                    };
-                    Color initial;
-                    try { initial = (Color)ColorConverter.ConvertFromString(current); }
-                    catch { initial = Colors.White; }
-                    if (!NativeColorDialog.TryPick(initial, out Color picked, this))
-                        return;
-
-                    string hex = $"#{picked.R:X2}{picked.G:X2}{picked.B:X2}";
-                    switch (colorBindingPath)
-                    {
-                        case nameof(ChatSettings.NormalColor): _settings.NormalColor = hex; break;
-                        case nameof(ChatSettings.TeamColor): _settings.TeamColor = hex; break;
-                        case nameof(ChatSettings.ClubColor): _settings.ClubColor = hex; break;
-                        case nameof(ChatSettings.ShoutColor): _settings.ShoutColor = hex; break;
-                        case nameof(ChatSettings.SystemColor): _settings.SystemColor = hex; break;
-                    }
-                }
-                catch (Exception ex)
-                {
-                    AppLogger.Warn("Failed to change wizard chat color.", ex);
-                }
-            };
-
-            right.Children.Add(colorBtn);
-            right.Children.Add(toggle);
-            return WrapSettingsRow(label, right);
-        }
-
-        private UIElement BuildShoutSettingsStepContent()
-        {
-            var panel = new StackPanel();
-
-            panel.Children.Add(CreateCheckRow("외치기 팝업", nameof(ChatSettings.ShowShoutToastPopup)));
-            panel.Children.Add(CreateCheckRow("닉네임 자동복사", nameof(ChatSettings.AutoCopyShoutNickname)));
-            panel.Children.Add(new Border { Height = 8 });
-
-            var durationLabel = new TextBlock { Foreground = ThemeBrushes.Get("TextBrush", Brushes.White), FontSize = 12 };
-            durationLabel.SetBinding(TextBlock.TextProperty, new Binding(nameof(ChatSettings.ShoutToastDurationSeconds))
-            {
-                Source = _settings,
-                StringFormat = "외치기 팝업 유지시간: {0}초"
-            });
-            panel.Children.Add(durationLabel);
-            var duration = new Slider { Minimum = 1, Maximum = 60, TickFrequency = 1, IsSnapToTickEnabled = true, Margin = new Thickness(0, 4, 0, 10) };
-            duration.SetBinding(Slider.ValueProperty, new Binding(nameof(ChatSettings.ShoutToastDurationSeconds)) { Source = _settings, Mode = BindingMode.TwoWay });
-            duration.ValueChanged += (_, _) =>
-            {
-                if (_shoutPreviewEnabled)
-                {
-                    try { ShoutToastService.ShowPositionPreview(_settings, force: true); } catch { }
-                }
-            };
-            panel.Children.Add(duration);
-
-            var fontSizeLabel = new TextBlock { Foreground = ThemeBrushes.Get("TextBrush", Brushes.White), FontSize = 12 };
-            fontSizeLabel.SetBinding(TextBlock.TextProperty, new Binding(nameof(ChatSettings.ShoutToastFontSize))
-            {
-                Source = _settings,
-                StringFormat = "외치기 팝업 텍스트 크기: {0:F0}"
-            });
-            panel.Children.Add(fontSizeLabel);
-            var fontSize = new Slider { Minimum = 10, Maximum = 40, TickFrequency = 1, IsSnapToTickEnabled = true, Margin = new Thickness(0, 4, 0, 0) };
-            fontSize.SetBinding(Slider.ValueProperty, new Binding(nameof(ChatSettings.ShoutToastFontSize)) { Source = _settings, Mode = BindingMode.TwoWay });
-            fontSize.ValueChanged += (_, _) =>
-            {
-                if (_shoutPreviewEnabled)
-                {
-                    try { ShoutToastService.ShowPositionPreview(_settings, force: true); } catch { }
-                }
-            };
-            panel.Children.Add(fontSize);
-
-            panel.Children.Add(new TextBlock { Text = "4단계에 진입하면 외치기 위치 미리보기 창이 자동으로 표시됩니다.", Foreground = ThemeBrushes.Get("OverlaySubtleTextBrush"), FontSize = 12, Margin = new Thickness(0, 10, 0, 0) });
-            return panel;
-        }
-
         private UIElement BuildDailyWeeklyStepContent()
         {
             _dailyWeeklyStepContent ??= CreateDailyWeeklyChecklistStep();
             return _dailyWeeklyStepContent;
-        }
-
-        private UIElement BuildKeywordAddonContent()
-            => BuildKeywordAddonContentCore();
-
-        private UIElement BuildKeywordAddonContentCore()
-        {
-            const string keywordPlaceholder = "ex)@드드해 @뜨뜨해";
-            var panel = new StackPanel { Margin = new Thickness(8) };
-            panel.Children.Add(CreateCheckRow("키워드 알림 ON/OFF", nameof(ChatSettings.UseKeywordAlert)));
-            panel.Children.Add(CreateCheckRow("색상 강조 ON/OFF", nameof(ChatSettings.UseAlertColor)));
-            panel.Children.Add(CreateCheckRow("알림음 재생 ON/OFF", nameof(ChatSettings.UseAlertSound)));
-            var volumeLabel = new TextBlock { Foreground = ThemeBrushes.Get("TextBrush", Brushes.White), Margin = new Thickness(0, 8, 0, 4) };
-            volumeLabel.SetBinding(TextBlock.TextProperty, new Binding(nameof(ChatSettings.HighlightAlertVolumePercent))
-            {
-                Source = _settings,
-                StringFormat = "키워드 알림 볼륨: {0:F0}%"
-            });
-            panel.Children.Add(volumeLabel);
-            var volume = new Slider { Minimum = 0, Maximum = 100, TickFrequency = 10, IsSnapToTickEnabled = true };
-            volume.SetBinding(Slider.ValueProperty, new Binding(nameof(ChatSettings.HighlightAlertVolumePercent)) { Source = _settings, Mode = BindingMode.TwoWay });
-            panel.Children.Add(volume);
-            panel.Children.Add(new TextBlock { Text = "알림 키워드(@키워드 형식)", Foreground = ThemeBrushes.Get("TextBrush", Brushes.White), Margin = new Thickness(0, 8, 0, 4) });
-            var keywordHost = new Grid { Height = 72 };
-            var keywordBox = new TextBox { AcceptsReturn = true, TextWrapping = TextWrapping.Wrap };
-            keywordBox.SetBinding(TextBox.TextProperty, new Binding(nameof(ChatSettings.KeywordInput)) { Source = _settings, Mode = BindingMode.TwoWay, UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged });
-
-            var keywordHint = new TextBlock
-            {
-                Text = keywordPlaceholder,
-                Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#6B7280")),
-                Opacity = 0.9,
-                FontStyle = FontStyles.Italic,
-                Margin = new Thickness(10, 0, 8, 0),
-                IsHitTestVisible = false,
-                VerticalAlignment = VerticalAlignment.Center
-            };
-
-            void UpdateKeywordHintVisibility()
-            {
-                keywordHint.Visibility = string.IsNullOrWhiteSpace(keywordBox.Text)
-                    ? Visibility.Visible
-                    : Visibility.Collapsed;
-            }
-
-            // If old settings accidentally stored the placeholder text as a real value, clear it.
-            if (string.Equals((_settings.KeywordInput ?? string.Empty).Trim(), keywordPlaceholder, StringComparison.Ordinal))
-            {
-                _settings.KeywordInput = string.Empty;
-                keywordBox.Text = string.Empty;
-            }
-
-            keywordBox.TextChanged += (_, _) => UpdateKeywordHintVisibility();
-            keywordBox.GotFocus += (_, _) => UpdateKeywordHintVisibility();
-            keywordBox.LostFocus += (_, _) => UpdateKeywordHintVisibility();
-            UpdateKeywordHintVisibility();
-
-            keywordHost.Children.Add(keywordBox);
-            keywordHost.Children.Add(keywordHint);
-            panel.Children.Add(keywordHost);
-            return new ScrollViewer { Content = panel, VerticalScrollBarVisibility = ScrollBarVisibility.Auto };
-        }
-
-        private UIElement BuildExperienceAddonContent()
-            => BuildExperienceAddonContentCore();
-
-        private UIElement BuildExperienceAddonContentCore()
-        {
-            var panel = new StackPanel { Margin = new Thickness(8) };
-            panel.Children.Add(CreateCheckRow("경험치 추적 ON/OFF", nameof(ChatSettings.ShowExpTracker)));
-            panel.Children.Add(CreateCheckRow("경험치 누적 알림 ON/OFF", nameof(ChatSettings.EnableExperienceLimitAlert)));
-            panel.Children.Add(new TextBlock { Text = "현재 누적 경험치(억)", Foreground = ThemeBrushes.Get("TextBrush", Brushes.White), Margin = new Thickness(0, 8, 0, 4) });
-            var expBox = new TextBox();
-            expBox.SetBinding(TextBox.TextProperty, new Binding(nameof(ChatSettings.ExperienceLimitTotalExp)) { Source = _settings, Mode = BindingMode.TwoWay, UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged });
-            panel.Children.Add(expBox);
-            var expHint = new TextBlock
-            {
-                Foreground = ThemeBrushes.Get("OverlaySubtleTextBrush"),
-                FontSize = 12,
-                Margin = new Thickness(0, 6, 0, 8)
-            };
-            expHint.Inlines.Add(new Run("캐릭터의 현재 경험치를 "));
-            expHint.Inlines.Add(new Run("억")
-            {
-                Foreground = ThemeBrushes.Get("OverlayAccentTextBrush"),
-                FontWeight = FontWeights.SemiBold
-            });
-            expHint.Inlines.Add(new Run(" 단위로 넣어주세요."));
-            panel.Children.Add(expHint);
-            panel.Children.Add(CreateCheckRow("저효율 알림 ON/OFF", nameof(ChatSettings.IsExpAlarmEnabled)));
-            panel.Children.Add(new TextBlock { Text = "저효율 알림 기준(만)", Foreground = ThemeBrushes.Get("TextBrush", Brushes.White), Margin = new Thickness(0, 8, 0, 4) });
-            var threshold = new TextBox();
-            threshold.SetBinding(TextBox.TextProperty, new Binding(nameof(ChatSettings.ExpAlarmThresholdMan)) { Source = _settings, Mode = BindingMode.TwoWay, UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged });
-            panel.Children.Add(threshold);
-            return new ScrollViewer { Content = panel, VerticalScrollBarVisibility = ScrollBarVisibility.Auto };
-        }
-
-        private UIElement BuildDungeonAddonContent()
-            => BuildDungeonAddonContentCore();
-
-        private UIElement BuildDungeonAddonContentCore()
-        {
-            var panel = new StackPanel { Margin = new Thickness(8) };
-            panel.Children.Add(CreateCheckRow("웨이브 종료 알림 ON/OFF", nameof(ChatSettings.UseMagicCircleAlert)));
-            var waveVolLabel = new TextBlock { Foreground = ThemeBrushes.Get("TextBrush", Brushes.White), Margin = new Thickness(0, 8, 0, 4) };
-            waveVolLabel.SetBinding(TextBlock.TextProperty, new Binding(nameof(ChatSettings.MagicCircleAlertVolumePercent))
-            {
-                Source = _settings,
-                StringFormat = "웨이브 종료 알림 볼륨: {0:F0}%"
-            });
-            panel.Children.Add(waveVolLabel);
-            var vol = new Slider { Minimum = 0, Maximum = 100, TickFrequency = 10, IsSnapToTickEnabled = true };
-            vol.SetBinding(Slider.ValueProperty, new Binding(nameof(ChatSettings.MagicCircleAlertVolumePercent)) { Source = _settings, Mode = BindingMode.TwoWay });
-            panel.Children.Add(vol);
-            panel.Children.Add(CreateCheckRow("에토스 방향 알림 ON/OFF", nameof(ChatSettings.ShowEtosDirectionAlert)));
-            panel.Children.Add(CreateCheckRow("반사 패턴 알림 ON/OFF", nameof(ChatSettings.EnableReflectionPatternAlert)));
-            var reflectionVolLabel = new TextBlock { Foreground = ThemeBrushes.Get("TextBrush", Brushes.White), Margin = new Thickness(0, 8, 0, 4) };
-            reflectionVolLabel.SetBinding(TextBlock.TextProperty, new Binding(nameof(ChatSettings.ReflectionPatternAlertVolumePercent))
-            {
-                Source = _settings,
-                StringFormat = "반사 패턴 알림 볼륨: {0:F0}%"
-            });
-            panel.Children.Add(reflectionVolLabel);
-            var reflectionVol = new Slider { Minimum = 0, Maximum = 100, TickFrequency = 10, IsSnapToTickEnabled = true };
-            reflectionVol.SetBinding(Slider.ValueProperty, new Binding(nameof(ChatSettings.ReflectionPatternAlertVolumePercent)) { Source = _settings, Mode = BindingMode.TwoWay });
-            panel.Children.Add(reflectionVol);
-            panel.Children.Add(CreateCheckRow("어밴던로드 횟수 알림", nameof(ChatSettings.EnableAbandonRoadCountAlert)));
-            panel.Children.Add(CreateCheckRow("어밴던로드 통계", nameof(ChatSettings.ShowAbandonRoadSummaryWindow)));
-            panel.Children.Add(CreateCheckRow("갈망하는 즐거움 횟수 알림", nameof(ChatSettings.EnableCravingPleasureCountAlert)));
-            panel.Children.Add(new TextBlock { Text = "던전 카운터 지속시간(초)", Foreground = ThemeBrushes.Get("TextBrush", Brushes.White), Margin = new Thickness(0, 8, 0, 4) });
-            var dur = new TextBox { Height = 30, VerticalContentAlignment = VerticalAlignment.Center };
-            dur.SetBinding(TextBox.TextProperty, new Binding(nameof(ChatSettings.AbandonRoadCountAlertDurationSeconds)) { Source = _settings, Mode = BindingMode.TwoWay, UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged });
-            panel.Children.Add(dur);
-            return new ScrollViewer { Content = panel, VerticalScrollBarVisibility = ScrollBarVisibility.Auto };
-        }
-
-        private UIElement BuildItemDropAddonContent()
-            => BuildItemDropAddonContentCore();
-
-        private UIElement BuildItemDropAddonContentCore()
-        {
-            var panel = new StackPanel { Margin = new Thickness(8) };
-            panel.Children.Add(CreateCheckRow("아이템 획득 알림 ON/OFF", nameof(ChatSettings.ShowItemDropAlert)));
-            var itemVolLabel = new TextBlock { Foreground = ThemeBrushes.Get("TextBrush", Brushes.White), Margin = new Thickness(0, 8, 0, 4) };
-            itemVolLabel.SetBinding(TextBlock.TextProperty, new Binding(nameof(ChatSettings.ItemDropAlertVolumePercent))
-            {
-                Source = _settings,
-                StringFormat = "아이템 획득 알림 볼륨: {0:F0}%"
-            });
-            panel.Children.Add(itemVolLabel);
-            var vol = new Slider { Minimum = 0, Maximum = 100, TickFrequency = 10, IsSnapToTickEnabled = true };
-            vol.SetBinding(Slider.ValueProperty, new Binding(nameof(ChatSettings.ItemDropAlertVolumePercent)) { Source = _settings, Mode = BindingMode.TwoWay });
-            panel.Children.Add(vol);
-
-            panel.Children.Add(new TextBlock
-            {
-                Text = "사용자 정의 필터",
-                Foreground = ThemeBrushes.Get("TextBrush", Brushes.White),
-                FontSize = 12,
-                FontWeight = FontWeights.SemiBold,
-                Margin = new Thickness(0, 8, 0, 4)
-            });
-            panel.Children.Add(new TextBlock
-            {
-                Text = "기본 목록에서 알림 받을 항목을 사용자 정의 목록으로 옮긴 뒤 적용하세요.",
-                Foreground = ThemeBrushes.Get("OverlaySubtleTextBrush"),
-                FontSize = 12,
-                Margin = new Thickness(0, 0, 0, 6)
-            });
-
-            var modeButtons = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 0, 0, 8) };
-            var defaultBtn = new Button { Content = "기본", Width = 64, Margin = new Thickness(0, 0, 6, 0) };
-            defaultBtn.Click += (_, _) =>
-            {
-                _settings.UseCustomDropItemFilter = false;
-                _addonViewModel.SelectDefaultDropFilterCommand.Execute(null);
-            };
-            modeButtons.Children.Add(defaultBtn);
-
-            var customBtn = new Button { Content = "사용자 정의", Width = 92 };
-            customBtn.Click += (_, _) =>
-            {
-                _settings.UseCustomDropItemFilter = true;
-                _addonViewModel.SelectCustomDropFilterCommand.Execute(null);
-            };
-            modeButtons.Children.Add(customBtn);
-            panel.Children.Add(modeButtons);
-
-            var customGrid = new Grid();
-            customGrid.ColumnDefinitions.Add(new ColumnDefinition());
-            customGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(42) });
-            customGrid.ColumnDefinitions.Add(new ColumnDefinition());
-            customGrid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
-            customGrid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(170) });
-            customGrid.SetBinding(VisibilityProperty, new Binding(nameof(ChatSettings.UseCustomDropItemFilter))
-            {
-                Source = _settings,
-                Converter = new BooleanToVisibilityConverter()
-            });
-
-            customGrid.Children.Add(new TextBlock { Text = "기본 목록", Foreground = ThemeBrushes.Get("TextBrush", Brushes.White), FontSize = 11, Margin = new Thickness(0, 0, 0, 4) });
-            var customLabel = new TextBlock { Text = "사용자 정의 목록", Foreground = ThemeBrushes.Get("TextBrush", Brushes.White), FontSize = 11, Margin = new Thickness(0, 0, 0, 4) };
-            Grid.SetColumn(customLabel, 2);
-            customGrid.Children.Add(customLabel);
-
-            var defaultList = new ListBox
-            {
-                SelectionMode = SelectionMode.Extended,
-                Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#111820")),
-                BorderBrush = ThemeBrushes.Get("OverlayStrongBorderBrush"),
-                Foreground = Brushes.White
-            };
-            defaultList.SetBinding(ItemsControl.ItemsSourceProperty, new Binding(nameof(AddonViewModel.DefaultDropItems)) { Source = _addonViewModel });
-            defaultList.ItemTemplate = CreateDropFilterItemTemplate();
-            Grid.SetRow(defaultList, 1);
-            customGrid.Children.Add(defaultList);
-
-            var customList = new ListBox
-            {
-                SelectionMode = SelectionMode.Extended,
-                Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#111820")),
-                BorderBrush = ThemeBrushes.Get("OverlayStrongBorderBrush"),
-                Foreground = Brushes.White
-            };
-            customList.SetBinding(ItemsControl.ItemsSourceProperty, new Binding(nameof(AddonViewModel.CustomDropItems)) { Source = _addonViewModel });
-            customList.ItemTemplate = CreateDropFilterItemTemplate();
-            Grid.SetColumn(customList, 2);
-            Grid.SetRow(customList, 1);
-            customGrid.Children.Add(customList);
-
-            var movePanel = new StackPanel { VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(5, 0, 5, 0) };
-            var toCustom = new Button { Content = ">>", Margin = new Thickness(0, 0, 0, 8) };
-            toCustom.Click += (_, _) => _addonViewModel.MoveToCustom(defaultList.SelectedItems.Cast<DropItemFilterEntry>().ToList());
-            movePanel.Children.Add(toCustom);
-            var toDefault = new Button { Content = "<<" };
-            toDefault.Click += (_, _) => _addonViewModel.MoveToDefault(customList.SelectedItems.Cast<DropItemFilterEntry>().ToList());
-            movePanel.Children.Add(toDefault);
-            Grid.SetColumn(movePanel, 1);
-            Grid.SetRow(movePanel, 1);
-            customGrid.Children.Add(movePanel);
-            panel.Children.Add(customGrid);
-
-            var actionRow = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 8, 0, 4) };
-            var applyBtn = new Button { Content = "적용", Width = 64, Margin = new Thickness(0, 0, 6, 0) };
-            applyBtn.Click += (_, _) => _addonViewModel.ApplyCustomDropItemFilterCommand.Execute(null);
-            actionRow.Children.Add(applyBtn);
-            var loadBtn = new Button { Content = "불러오기", Width = 70, Margin = new Thickness(0, 0, 6, 0) };
-            loadBtn.Click += (_, _) => _addonViewModel.LoadCustomDropItemFilterCommand.Execute(null);
-            actionRow.Children.Add(loadBtn);
-            var saveBtn = new Button { Content = "저장", Width = 64 };
-            saveBtn.Click += (_, _) => _addonViewModel.SaveCustomDropItemFilterCommand.Execute(null);
-            actionRow.Children.Add(saveBtn);
-            panel.Children.Add(actionRow);
-
-            var statusText = new TextBlock
-            {
-                Foreground = ThemeBrushes.Get("OverlaySubtleTextBrush"),
-                FontSize = 12
-            };
-            statusText.SetBinding(TextBlock.TextProperty, new Binding(nameof(AddonViewModel.CustomDropItemStatus)) { Source = _addonViewModel });
-            panel.Children.Add(statusText);
-            return new ScrollViewer { Content = panel, VerticalScrollBarVisibility = ScrollBarVisibility.Auto };
-        }
-
-        private static DataTemplate CreateDropFilterItemTemplate()
-        {
-            var text = new FrameworkElementFactory(typeof(TextBlock));
-            text.SetBinding(TextBlock.TextProperty, new Binding(nameof(DropItemFilterEntry.Name)));
-            text.SetBinding(TextBlock.ForegroundProperty, new Binding(nameof(DropItemFilterEntry.Foreground)));
-            text.SetValue(TextBlock.FontSizeProperty, 11.0);
-            text.SetValue(TextBlock.TextTrimmingProperty, TextTrimming.CharacterEllipsis);
-            return new DataTemplate { VisualTree = text };
-        }
-
-        private UIElement BuildBuffAddonContent()
-            => BuildBuffAddonContentCore();
-
-        private UIElement BuildBuffAddonContentCore()
-        {
-            var panel = new StackPanel { Margin = new Thickness(8) };
-            panel.Children.Add(CreateCheckRow("버프 추적 알림 ON/OFF", nameof(ChatSettings.EnableBuffTrackerAlert)));
-            panel.Children.Add(CreateCheckRow("버프 종료 사운드 알림 ON/OFF", nameof(ChatSettings.EnableBuffTrackerEndSound)));
-            var buffVolLabel = new TextBlock { Foreground = ThemeBrushes.Get("TextBrush", Brushes.White), Margin = new Thickness(0, 8, 0, 4) };
-            buffVolLabel.SetBinding(TextBlock.TextProperty, new Binding(nameof(ChatSettings.BuffTrackerEndSoundVolumePercent))
-            {
-                Source = _settings,
-                StringFormat = "버프 종료 사운드 볼륨: {0:F0}%"
-            });
-            panel.Children.Add(buffVolLabel);
-            var vol = new Slider { Minimum = 0, Maximum = 100, TickFrequency = 10, IsSnapToTickEnabled = true };
-            vol.SetBinding(Slider.ValueProperty, new Binding(nameof(ChatSettings.BuffTrackerEndSoundVolumePercent)) { Source = _settings, Mode = BindingMode.TwoWay });
-            panel.Children.Add(vol);
-            return new ScrollViewer { Content = panel, VerticalScrollBarVisibility = ScrollBarVisibility.Auto };
-        }
-
-        private UIElement BuildFieldBossAddonContent()
-            => BuildFieldBossAddonContentCore();
-
-        private UIElement BuildFieldBossAddonContentCore()
-        {
-            var panel = new StackPanel { Margin = new Thickness(8) };
-            panel.Children.Add(new TextBlock { Text = "필드보스 알림 항목", Foreground = ThemeBrushes.Get("TextBrush", Brushes.White), FontWeight = FontWeights.SemiBold, Margin = new Thickness(0, 0, 0, 6) });
-            var cardsHost = new WrapPanel { Orientation = Orientation.Horizontal, ItemWidth = 210, Margin = new Thickness(0, 0, 0, 4) };
-            foreach (var kv in _settings.BossAlertConfigs)
-                cardsHost.Children.Add(CreateBossAlertCard(kv.Key, kv.Value));
-            panel.Children.Add(cardsHost);
-
-            var bossVolLabel = new TextBlock { Foreground = ThemeBrushes.Get("TextBrush", Brushes.White), Margin = new Thickness(0, 10, 0, 4) };
-            bossVolLabel.SetBinding(TextBlock.TextProperty, new Binding(nameof(ChatSettings.BossAlertVolumePercent))
-            {
-                Source = _settings,
-                StringFormat = "필드보스 알림 볼륨: {0:F0}%"
-            });
-            panel.Children.Add(bossVolLabel);
-            var vol = new Slider { Minimum = 0, Maximum = 100, TickFrequency = 10, IsSnapToTickEnabled = true };
-            vol.SetBinding(Slider.ValueProperty, new Binding(nameof(ChatSettings.BossAlertVolumePercent)) { Source = _settings, Mode = BindingMode.TwoWay });
-            panel.Children.Add(vol);
-            return new ScrollViewer { Content = panel, VerticalScrollBarVisibility = ScrollBarVisibility.Auto };
         }
 
         private UIElement CreateDailyWeeklyChecklistStep()
@@ -870,44 +344,6 @@ namespace TWChatOverlay.Views
         }
 
 
-        private UIElement CreateBossAlertCard(string bossName, BossAlertConfig config)
-        {
-            var border = new Border
-            {
-                BorderThickness = new Thickness(1),
-                CornerRadius = new CornerRadius(3),
-                Padding = new Thickness(10),
-                Margin = new Thickness(0, 0, 10, 10),
-                Width = 200
-            };
-            border.SetResourceReference(Border.BackgroundProperty, "OverlayCardBackgroundBrush");
-            border.SetResourceReference(Border.BorderBrushProperty, "OverlayStrongBorderBrush");
-
-            var panel = new StackPanel();
-            panel.Children.Add(new TextBlock { Text = ToKoreanBossName(bossName), Foreground = ThemeBrushes.Get("TextBrush", Brushes.White), FontWeight = FontWeights.SemiBold, Margin = new Thickness(0, 0, 0, 6) });
-            panel.Children.Add(CreateBossAlertCheck("3분 전", config.Alert3MinutesBefore, v => config.Alert3MinutesBefore = v));
-            panel.Children.Add(CreateBossAlertCheck("1분 전", config.Alert1MinuteBefore, v => config.Alert1MinuteBefore = v));
-            panel.Children.Add(CreateBossAlertCheck("5초 전", config.AlertAtSpawn, v => config.AlertAtSpawn = v));
-            border.Child = panel;
-            return border;
-        }
-
-        private static string ToKoreanBossName(string bossName)
-        {
-            return bossName switch
-            {
-                "Arkan" => "아칸",
-                "Scherzendo" => "스페르첸드",
-                "Origin of Doom" => "파멸의 기원",
-                "Confused Land" => "혼란한 대지",
-                "event" => "이벤트",
-                _ => bossName
-            };
-        }
-
-        private UIElement CreateBossAlertCheck(string label, bool initial, Action<bool> setValue)
-            => CreateToggleListRow(label, indent: 0, initial, setValue);
-
         /// <summary>목록형 토글 행: 라벨 왼쪽(들여쓰기 지원) + 토글 스위치 오른쪽 — 설정 화면과 같은 스타일.</summary>
         private static UIElement CreateToggleListRow(string label, double indent, bool initial, Action<bool> setValue)
         {
@@ -979,34 +415,6 @@ namespace TWChatOverlay.Views
                 "아페티리아 일반" => _settings.DungeonItemConfigs.ContainsKey("아페티리아") ? "아페티리아" : key,
                 _ => key
             };
-        }
-
-        private void AddDailyWeeklyGroup(Panel parent, string topGroup, string midGroup, IEnumerable<string> keys)
-        {
-            parent.Children.Add(new TextBlock
-            {
-                Text = topGroup,
-                Foreground = ThemeBrushes.Get("OverlayAccentTextBrush"),
-                FontWeight = FontWeights.SemiBold,
-                Margin = new Thickness(0, 8, 0, 3)
-            });
-
-            parent.Children.Add(new TextBlock
-            {
-                Text = midGroup,
-                Foreground = ThemeBrushes.Get("OverlaySubtleTextBrush"),
-                FontSize = 12,
-                Margin = new Thickness(0, 0, 0, 5)
-            });
-
-            foreach (string key in keys)
-            {
-                if (!_settings.DungeonItemConfigs.TryGetValue(key, out var cfg))
-                    continue;
-
-                parent.Children.Add(CreateToggleListRow(key, indent: 0, cfg.IsEnabled,
-                    v => SetDungeonItemEnabled(key, v)));
-            }
         }
 
         private void ResetInitialWindowPositionsToOrigin()
@@ -1117,7 +525,7 @@ namespace TWChatOverlay.Views
         private void SkipButton_Click(object sender, RoutedEventArgs e)
         {
             try { ShoutToastService.ClosePositionPreview(_settings); } catch { }
-            try { _mainWindow?.ShowWizardStepPreviewWindows(-1); } catch { }
+            try { _embeddedSettings?.EndWizardPanelMode(); } catch { }
             SetPositionPreview(false);
             ConfigService.Save(_settings);
             WizardFinished?.Invoke(this, false);
@@ -1129,7 +537,7 @@ namespace TWChatOverlay.Views
             try
             {
                 ShoutToastService.ClosePositionPreview(_settings);
-                _mainWindow?.ShowWizardStepPreviewWindows(-1);
+                _embeddedSettings?.EndWizardPanelMode();
                 SetPositionPreview(false);
                 SaveMainWindowPositionToPreset1();
                 ApplyExperienceLimitStateFromWizard();
@@ -1151,7 +559,7 @@ namespace TWChatOverlay.Views
         protected override void OnClosed(EventArgs e)
         {
             try { ShoutToastService.ClosePositionPreview(_settings); } catch { }
-            try { _mainWindow?.ShowWizardStepPreviewWindows(-1); } catch { }
+            try { _embeddedSettings?.EndWizardPanelMode(); } catch { }
             try { SetPositionPreview(false); } catch { }
             base.OnClosed(e);
         }

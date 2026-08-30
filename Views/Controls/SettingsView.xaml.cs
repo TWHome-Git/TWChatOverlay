@@ -148,7 +148,47 @@ namespace TWChatOverlay.Views
         }
 
         private bool _addonPreviewActive;
+        private bool _wizardSingleMode;
         private ViewModels.AddonViewModel? _addonViewModel;
+
+        /// <summary>
+        /// 설정 마법사 임베드용: 내비 없이 지정한 설정 패널 하나만 표시한다.
+        /// 실제 설정 화면과 같은 패널·바인딩·미리보기 로직을 그대로 재사용한다.
+        /// </summary>
+        public void ShowWizardPanel(string navKey)
+        {
+            _wizardSingleMode = true;
+
+            RadioButton target = navKey switch
+            {
+                "Chat" => NavChat,
+                "Shout" => NavShout,
+                "Display" => NavDisplay,
+                "Keyword" => NavAddonKeyword,
+                "Exp" => NavAddonExp,
+                "Dungeon" => NavAddonDungeon,
+                "Item" => NavAddonItem,
+                "Buff" => NavAddonBuff,
+                "Boss" => NavAddonBoss,
+                _ => NavChat,
+            };
+
+            if (target.IsChecked == true)
+                ApplyPanelVisibility(); // 같은 패널 재진입 시에도 표시 갱신
+            else
+                target.IsChecked = true; // Nav_Checked → ApplyPanelVisibility → 미리보기 연동
+        }
+
+        /// <summary>마법사 종료 시 미리보기 상태를 정리한다.</summary>
+        public void EndWizardPanelMode()
+        {
+            if (_addonPreviewActive)
+            {
+                _addonPreviewActive = false;
+                SetAddonPositionPreview(false, -1);
+            }
+            _wizardSingleMode = false;
+        }
 
         /// <summary>추가 기능 패널들의 DataContext(AddonViewModel)를 준비한다.</summary>
         private void EnsureAddonViewModel()
@@ -209,9 +249,10 @@ namespace TWChatOverlay.Views
                 return;
             }
 
-            NavColumn.Visibility = Visibility.Visible;
-            NavToolsColumn.Visibility = Visibility.Visible;
-            AppHeader.Visibility = Visibility.Visible;
+            // 설정 마법사 임베드 모드: 내비/도구/헤더 없이 선택된 패널만 보여준다
+            NavColumn.Visibility = _wizardSingleMode ? Visibility.Collapsed : Visibility.Visible;
+            NavToolsColumn.Visibility = _wizardSingleMode ? Visibility.Collapsed : Visibility.Visible;
+            AppHeader.Visibility = _wizardSingleMode ? Visibility.Collapsed : Visibility.Visible;
 
             int addonTab = SelectedAddonTabIndex;
             if (addonTab >= 0)

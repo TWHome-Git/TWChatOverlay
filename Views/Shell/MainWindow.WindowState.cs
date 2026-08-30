@@ -178,64 +178,6 @@ namespace TWChatOverlay.Views
             ApplyWizardChatPositionUi(isEnabled);
         }
 
-        public void ShowWizardStepPreviewWindows(int stepIndex)
-        {
-            try
-            {
-                ExperienceAlertWindowService.Close();
-                DungeonCountDisplayWindowService.ClosePositionPreview(_settings);
-                ShoutToastService.ClosePositionPreview(_settings);
-                MessengerEtaToastService.ClosePositionPreview(_settings);
-                SubAddonWindow.Instance?.ApplyPositionPreviewVisibility(false);
-                ItemDropHelperWindow.Instance?.Close();
-                BuffTrackerHelperWindow.Instance?.Close();
-                try { _AbandonRoadSummaryWindow?.Close(); } catch { }
-            }
-            catch { }
-
-            try
-            {
-                // 인덱스는 마법사 _steps 순서와 일치 (채팅창 위치 설정 단계 제거 후 기준)
-                switch (stepIndex)
-                {
-                    case 2:
-                        ShoutToastService.ShowPositionPreview(_settings, force: true);
-                        break;
-                    case 4:
-                        ExperienceAlertWindowService.ShowPositionPreview(_settings, force: true);
-                        break;
-                    case 5:
-                        DungeonCountDisplayWindowService.ShowPositionPreview(_settings, force: true);
-                        ShowAbandonRoadSummaryWindow(previewMode: true, restartLifetime: false, activateWindow: false, forcePreview: true);
-                        var etosHelper = SubAddonWindow.Instance ?? CreateSubAddonWindow();
-                        etosHelper?.ApplyPositionPreviewVisibility(true);
-                        break;
-                    case 6:
-                        var itemHelper = ItemDropHelperWindow.Instance ?? CreateItemDropHelperWindow();
-                        if (itemHelper != null)
-                        {
-                            ApplyStoredPosition(itemHelper, _settings.ItemDropWindowLeft, _settings.ItemDropWindowTop);
-                            if (!itemHelper.IsVisible)
-                                itemHelper.Show();
-                        }
-                        break;
-                    case 7:
-                        var buffHelper = BuffTrackerHelperWindow.Instance ?? CreateBuffTrackerHelperWindow();
-                        if (buffHelper != null)
-                        {
-                            ApplyStoredPosition(buffHelper, _settings.BuffTrackerWindowLeft, _settings.BuffTrackerWindowTop);
-                            if (!buffHelper.IsVisible)
-                                buffHelper.Show();
-                        }
-                        break;
-                }
-            }
-            catch (Exception ex)
-            {
-                AppLogger.Warn("Failed to show wizard step preview windows.", ex);
-            }
-        }
-
         private void ApplyWizardChatPositionUi(bool enabled)
         {
             if (enabled)
