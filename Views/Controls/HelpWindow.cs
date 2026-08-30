@@ -39,7 +39,7 @@ namespace TWChatOverlay.Views
             Topmost = true;
             ResizeMode = ResizeMode.NoResize;
             SizeToContent = SizeToContent.Height;
-            Width = 360;
+            Width = 480;
             FontFamily = WindowFontService.ResolveCurrentFont();
 
             _titleText = new TextBlock
@@ -66,7 +66,7 @@ namespace TWChatOverlay.Views
             _frameImage = new Image
             {
                 Stretch = Stretch.Uniform,
-                MaxWidth = 328,
+                MaxWidth = 448,
                 HorizontalAlignment = HorizontalAlignment.Left,
                 Margin = new Thickness(0, 0, 0, 10),
                 Visibility = Visibility.Collapsed,
@@ -88,7 +88,7 @@ namespace TWChatOverlay.Views
             var bodyScroll = new ScrollViewer
             {
                 Content = _bodyText,
-                MaxHeight = 340,
+                MaxHeight = 400,
                 VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
                 HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled,
             };

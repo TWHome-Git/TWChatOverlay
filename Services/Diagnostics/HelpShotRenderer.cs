@@ -16,7 +16,8 @@ namespace TWChatOverlay.Services
     /// </summary>
     public static class HelpShotRenderer
     {
-        private const double PanelWidth = 328;
+        // 도움말 창 폭(480) - 여백에 맞춘 프레임 폭. HelpWindow._frameImage.MaxWidth와 함께 조정한다.
+        private const double PanelWidth = 448;
 
         private static readonly Color PanelBg = Color.FromRgb(0x12, 0x18, 0x16);
         private static readonly Color BorderCol = Color.FromRgb(0x2A, 0x33, 0x2E);
@@ -111,7 +112,7 @@ namespace TWChatOverlay.Services
                 Line(NormalCol, ("아나이스 : 어비스 가실 분?", NormalCol)),
                 Line(TeamCol, ("로아미니 : 상실의 섬으로 와주세요", TeamCol)),
                 Line(ClubCol, ("벤야 : 클럽 보스 5초후 잡아요", ClubCol)),
-                Line(ShoutCol, ("티치엘 : 훈장 50개 삽니다 [티치엘]", ShoutCol))));
+                Line(ShoutCol, ("외치기 : 훈장 50개 삽니다 [티치엘]", ShoutCol))));
             Save(outDir, "chat_category_prefix_on.png", PanelToggle(true,
                 Line(NormalCol, ("[일반] ", NormalCol), ("아나이스 : 어비스 가실 분?", NormalCol)),
                 Line(TeamCol, ("[팀] ", TeamCol), ("로아미니 : 상실의 섬으로 와주세요", TeamCol)),
@@ -132,17 +133,17 @@ namespace TWChatOverlay.Services
 
             // ── 외치기: 닉네임 자동복사 (실제 창) ──
             Save(outDir, "shout_autocopy_off.png", PanelToggle(false,
-                RealShoutToast("세크리드 주화 주머니 일괄 삽니다 [김주화]"),
+                RealShoutToast("주화 일괄 삽니다 [김주화]"),
                 DimLine("(클립보드 변화 없음)")));
             Save(outDir, "shout_autocopy_on.png", PanelToggle(true,
-                RealShoutToast("세크리드 주화 주머니 일괄 삽니다 [김주화]"),
+                RealShoutToast("주화 일괄 삽니다 [김주화]"),
                 Chip("클립보드에 '김주화' 복사됨")));
 
             // ── 외치기: 토스트 글자 크기 (실제 창) ──
             Save(outDir, "shout_toast_font_13.png", Panel("크기 13",
-                RealShoutToast("부가옵션 전이 도와드려요 [사기꾼]", 13)));
+                RealShoutToast("초보자 도와드려요 [벤야]", 13)));
             Save(outDir, "shout_toast_font_20.png", Panel("크기 20",
-                RealShoutToast("부가옵션 전이 도와드려요 [사기꾼]", 20)));
+                RealShoutToast("초보자 도와드려요 [벤야]", 20)));
 
             // ── 화면: 투명도 ──
             Save(outDir, "display_opacity_100.png", OpacityMock(0xF2, "투명도 100%"));
@@ -364,7 +365,7 @@ namespace TWChatOverlay.Services
             if (fontSize.HasValue)
                 settings.ShoutToastFontSize = fontSize.Value;
             var root = WindowRoot(new Views.ShoutToastWindow(message, RealFont, settings));
-            root.MaxWidth = 306;
+            root.MaxWidth = 426;
             return root;
         }
 
@@ -374,7 +375,7 @@ namespace TWChatOverlay.Services
             var w = new Views.ExperienceAlertWindow(new ChatSettings());
             w.SetMessage(message);
             var root = WindowRoot(w);
-            root.MaxWidth = 306;
+            root.MaxWidth = 426;
             return root;
         }
 
@@ -382,7 +383,7 @@ namespace TWChatOverlay.Services
         private static FrameworkElement RealDungeonAlert(string message)
         {
             var root = WindowRoot(new Views.DungeonCountDisplayWindow(message, RealFont, durationSeconds: 0, new ChatSettings()));
-            root.MaxWidth = 306;
+            root.MaxWidth = 426;
             return root;
         }
 
@@ -390,7 +391,7 @@ namespace TWChatOverlay.Services
         private static FrameworkElement RealItemToast(string itemName, ItemDropGrade grade)
         {
             var root = WindowRoot(new Views.ItemDropToastWindow(itemName, grade, RealFont));
-            root.MaxWidth = 306;
+            root.MaxWidth = 426;
             return root;
         }
 
@@ -400,7 +401,7 @@ namespace TWChatOverlay.Services
             return new Views.ExpTrackerView
             {
                 DataContext = new ExpTrackerSample(),
-                Width = 300,
+                Width = 330,
                 HorizontalAlignment = HorizontalAlignment.Left,
             };
         }
@@ -423,7 +424,7 @@ namespace TWChatOverlay.Services
             var tracker = new BuffTrackerService(settings, suppressEndSound: true);
             var root = WindowRoot(new Views.BuffTrackerWindow(tracker, settings));
             root.DataContext = new BuffTrackerSample();
-            root.MaxWidth = 306;
+            root.MaxWidth = 426;
             return root;
         }
 
@@ -457,7 +458,7 @@ namespace TWChatOverlay.Services
             var settings = new ChatSettings();
             var root = WindowRoot(new Views.AbandonRoadSummaryWindow(settings, new LogAnalysisService(settings)));
             root.DataContext = new AbandonSummarySample();
-            root.Width = 306;
+            root.Width = 400;
             return root;
         }
 
