@@ -181,6 +181,7 @@ namespace TWChatOverlay.Models
     public class BossAlertSettings
     {
         public double Volume { get; set; } = 1.0;
+        public double ToastFontSize { get; set; } = 18.0;
         public Dictionary<string, BossAlertConfig> Configs { get; set; } = new(StringComparer.OrdinalIgnoreCase);
     }
 
