@@ -331,33 +331,49 @@ namespace TWChatOverlay.Views
         {
             CloseAddonPositionPreviewWindows(savePositions: true, restoreNormalWindows: false);
 
-            switch (_addonPositionPreviewTabIndex)
+            // 인덱스 = 내비*10 + 서브탭. 선택된 서브 탭과 관련된 창만 미리보기로 띄운다.
+            int nav = _addonPositionPreviewTabIndex / 10;
+            int sub = _addonPositionPreviewTabIndex % 10;
+
+            switch (nav)
             {
-                case 1:
-                    ExperienceAlertWindowService.ShowPositionPreview(_settings, force: true);
+                case 1: // 경험치 추적: 일반 탭에서만 누적 알림 창
+                    if (sub == 0)
+                        ExperienceAlertWindowService.ShowPositionPreview(_settings, force: true);
                     break;
-                case 2:
-                    DungeonCountDisplayWindowService.ShowPositionPreview(_settings, force: true);
-                    ShowAbandonRoadSummaryWindow(previewMode: true, restartLifetime: false, activateWindow: false, forcePreview: true);
-                    if (_AbandonRoadSummaryWindow != null)
-                        _AbandonRoadSummaryWindow.Topmost = true;
-
-                    var etosHelper = SubAddonWindow.Instance ?? CreateSubAddonWindow();
-                    etosHelper?.ApplyPositionPreviewVisibility(true);
-
-                    // 보급품 탈환 미니 지도 (이클립스)
-                    RecaptureSupplyAlertService.ShowPositionPreview(_settings, force: true);
-                    break;
-                case 3:
-                    var itemHelper = ItemDropHelperWindow.Instance ?? CreateItemDropHelperWindow();
-                    if (itemHelper != null)
+                case 2: // 던전 도우미
+                    switch (sub)
                     {
-                        ApplyStoredPosition(itemHelper, _settings.ItemDropWindowLeft, _settings.ItemDropWindowTop);
-                        if (!itemHelper.IsVisible)
-                            itemHelper.Show();
+                        case 2: // 이클립스: 에토스 방향 + 보급품 탈환 미니 지도
+                            var etosHelper = SubAddonWindow.Instance ?? CreateSubAddonWindow();
+                            etosHelper?.ApplyPositionPreviewVisibility(true);
+                            RecaptureSupplyAlertService.ShowPositionPreview(_settings, force: true);
+                            break;
+                        case 3: // 어밴던로드: 던전 카운터 + 통계 창
+                            DungeonCountDisplayWindowService.ShowPositionPreview(_settings, force: true);
+                            ShowAbandonRoadSummaryWindow(previewMode: true, restartLifetime: false, activateWindow: false, forcePreview: true);
+                            if (_AbandonRoadSummaryWindow != null)
+                                _AbandonRoadSummaryWindow.Topmost = true;
+                            break;
+                        case 4: // 갈망하는 즐거움: 던전 카운터
+                            DungeonCountDisplayWindowService.ShowPositionPreview(_settings, force: true);
+                            break;
+                            // 0(룬·테시스)·1(어비스)는 소리 알림뿐이라 창 없음
                     }
                     break;
-                case 4:
+                case 3: // 아이템 알림: 획득 알림 탭에서만 도우미 창
+                    if (sub == 0)
+                    {
+                        var itemHelper = ItemDropHelperWindow.Instance ?? CreateItemDropHelperWindow();
+                        if (itemHelper != null)
+                        {
+                            ApplyStoredPosition(itemHelper, _settings.ItemDropWindowLeft, _settings.ItemDropWindowTop);
+                            if (!itemHelper.IsVisible)
+                                itemHelper.Show();
+                        }
+                    }
+                    break;
+                case 4: // 버프 추적
                     var buffHelper = BuffTrackerHelperWindow.Instance ?? CreateBuffTrackerHelperWindow();
                     if (buffHelper != null)
                     {
@@ -365,6 +381,9 @@ namespace TWChatOverlay.Views
                         if (!buffHelper.IsVisible)
                             buffHelper.Show();
                     }
+                    break;
+                case 5: // 필드 보스: 알림 팝업 위치
+                    BossAlertToastWindow.ShowPositionPreview(_settings);
                     break;
             }
         }
@@ -390,6 +409,7 @@ namespace TWChatOverlay.Views
             ExperienceAlertWindowService.Close();
             DungeonCountDisplayWindowService.ClosePositionPreview(_settings);
             RecaptureSupplyAlertService.ClosePositionPreview();
+            BossAlertToastWindow.ClosePositionPreview();
             SubAddonWindow.Instance?.Hide();
             ItemDropHelperWindow.Instance?.Close();
             BuffTrackerHelperWindow.Instance?.Close();
