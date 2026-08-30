@@ -11,6 +11,16 @@ namespace TWChatOverlay.Models
         public void ResetToDefault()
         {
             ApplyDefaultValues();
+            NotifySettingsReplaced();
+        }
+
+        /// <summary>
+        /// 설정 전체가 교체되었음을 알린다(PropertyChanged 빈 이름 = 모든 속성 변경).
+        /// WPF 바인딩은 전부 다시 읽고, 이름 필터 핸들러는 빈 이름을 전체 갱신으로 처리해야 한다.
+        /// </summary>
+        public void NotifySettingsReplaced()
+        {
+            OnPropertyChanged(string.Empty);
         }
 
         /// <summary>
@@ -30,6 +40,7 @@ namespace TWChatOverlay.Models
             Hotkeys = source.Hotkeys ?? new HotkeysSection();
             SystemConfig = source.SystemConfig ?? new SystemSection();
             _enableDebugLogging = source.EnableDebugLogging;
+            NotifySettingsReplaced();
         }
 
         /// <summary>

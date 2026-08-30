@@ -63,9 +63,11 @@ namespace TWChatOverlay.Services
             return "Basic";
         }
 
+        private static readonly Regex TimestampTextRegex = new(@"^\d{1,2}:\d{2}(?::\d{2})?$", RegexOptions.Compiled);
+
         /// <summary>"12:34" / "12:34:56" 형태의 시각 텍스트인지.</summary>
         public static bool IsTimestampText(string value)
-            => Regex.IsMatch(value, @"^\d{1,2}:\d{2}(?::\d{2})?$");
+            => TimestampTextRegex.IsMatch(value);
 
         /// <summary>1~9999 범위의 에타 레벨 텍스트인지.</summary>
         public static bool IsEtaLevelText(string value)

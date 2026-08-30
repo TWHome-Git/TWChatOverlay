@@ -314,6 +314,22 @@ namespace TWChatOverlay.Views
 
         private void Settings_PropertyChanged(object? sender, PropertyChangedEventArgs e)
         {
+            // 빈 이름 = 설정 전체 교체(프로필/초기화/마법사) — 폰트·탭·문서를 모두 다시 맞춘다
+            if (string.IsNullOrEmpty(e.PropertyName))
+            {
+                Dispatcher.BeginInvoke(new Action(() =>
+                {
+                    OnPropertyChanged(nameof(FollowMainFont));
+                    OnPropertyChanged(nameof(SelectedFontFamily));
+                    OnPropertyChanged(nameof(SelectedFontSize));
+                    string normalizedTag = NormalizeTabTag(GetStoredTabTag());
+                    if (!string.Equals(_currentTabTag, normalizedTag, StringComparison.Ordinal))
+                        ApplyTabState(normalizedTag, persistSettings: false, refreshLogDisplay: false);
+                    ApplyEffectiveFont(); // 초기화 후엔 RefreshLogDisplay(forceRebuild)까지 수행
+                }), System.Windows.Threading.DispatcherPriority.Background);
+                return;
+            }
+
             if (e.PropertyName == nameof(ChatSettings.FontFamily) ||
                 e.PropertyName == nameof(ChatSettings.FontSize) ||
                 e.PropertyName == nameof(ChatSettings.ChatCloneWindow1FollowMainFont) ||

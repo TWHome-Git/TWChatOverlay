@@ -114,7 +114,9 @@ namespace TWChatOverlay.Services
 
         private void Settings_PropertyChanged(object? sender, PropertyChangedEventArgs e)
         {
-            if (e.PropertyName == nameof(ChatSettings.UseCustomDropItemFilter) ||
+            // 빈 이름 = 설정 전체 교체(프로필/초기화/마법사) — 필터 스냅샷을 다시 만든다
+            if (string.IsNullOrEmpty(e.PropertyName) ||
+                e.PropertyName == nameof(ChatSettings.UseCustomDropItemFilter) ||
                 e.PropertyName == nameof(ChatSettings.CustomDropItemJson))
             {
                 RefreshCustomFilterSnapshot();

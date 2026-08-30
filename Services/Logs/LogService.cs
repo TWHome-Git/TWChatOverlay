@@ -576,14 +576,34 @@ namespace TWChatOverlay.Services
                 if (tagStart < 0)
                     break;
 
-                string tag = content.Substring(tagStart, i - tagStart + 1);
-                if (Regex.IsMatch(tag, @"^</?br\s*/?>$", RegexOptions.IgnoreCase))
+                if (IsBrTag(content, tagStart, i))
                     return i + 1;
 
                 i = tagStart;
             }
 
             return -1;
+        }
+
+        /// <summary>content[start..end](포함)가 &lt;br&gt; / &lt;/br&gt; / &lt;br/&gt; 형태인지 — 부분 문자열·정규식 할당 없이 판정.</summary>
+        private static bool IsBrTag(string content, int start, int end)
+        {
+            int i = start;
+            if (i >= end || content[i] != '<')
+                return false;
+            i++;
+            if (i < end && content[i] == '/')
+                i++;
+            if (i + 1 >= end)
+                return false;
+            if (char.ToLowerInvariant(content[i]) != 'b' || char.ToLowerInvariant(content[i + 1]) != 'r')
+                return false;
+            i += 2;
+            while (i < end && char.IsWhiteSpace(content[i]))
+                i++;
+            if (i < end && content[i] == '/')
+                i++;
+            return i == end && content[end] == '>';
         }
 
         #endregion

@@ -6,12 +6,15 @@ namespace TWChatOverlay.Services
 {
     public static class ItemLogDisplayFormatter
     {
+        private static readonly Regex LeadingBracketRegex = new(@"^\[[^\]]+\]\s*", RegexOptions.Compiled);
+        private static readonly Regex LeadingBracketOnlyRegex = new(@"^\[[^\]]+\]", RegexOptions.Compiled);
+
         public static string ReplaceLeadingTimeWithDate(string original, string dateLabel)
         {
             if (string.IsNullOrWhiteSpace(original))
                 return $"[{dateLabel}]";
 
-            string body = Regex.Replace(original, @"^\[[^\]]+\]\s*", string.Empty);
+            string body = LeadingBracketRegex.Replace(original, string.Empty);
             return $"[{dateLabel}] {body}";
         }
 
@@ -27,7 +30,7 @@ namespace TWChatOverlay.Services
             if (string.IsNullOrWhiteSpace(itemName))
                 return normalizedText;
 
-            var prefixMatch = Regex.Match(normalizedText, @"^\[[^\]]+\]");
+            var prefixMatch = LeadingBracketOnlyRegex.Match(normalizedText);
             if (!prefixMatch.Success)
                 return itemCount > 1 ? $"[{itemName}] x{itemCount}" : $"[{itemName}]";
 

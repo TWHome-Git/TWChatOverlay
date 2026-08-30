@@ -17,6 +17,23 @@ namespace TWChatOverlay.Services.LogAnalysis
             @"\[(?<userId>[^\[\]]+)\]\s*$",
             RegexOptions.Compiled);
 
+        private static readonly Regex WhitespaceRunRegex = new(@"\s+", RegexOptions.Compiled);
+
+        // 카테고리 판별용 브러시 — 줄마다 새로 만들지 않도록 Frozen 정적 인스턴스 재사용
+        private static readonly SolidColorBrush NormalSelfBrush = CreateFrozen(200, 255, 200);
+        private static readonly SolidColorBrush ShoutBrush = CreateFrozen(200, 150, 200);
+        private static readonly SolidColorBrush ClubBrush = CreateFrozen(148, 221, 250);
+        private static readonly SolidColorBrush TeamBrush = CreateFrozen(247, 183, 60);
+        private static readonly SolidColorBrush SystemBrush = CreateFrozen(255, 100, 255);
+        private static readonly SolidColorBrush System3Brush = CreateFrozen(255, 100, 100);
+
+        private static SolidColorBrush CreateFrozen(byte r, byte g, byte b)
+        {
+            var brush = new SolidColorBrush(Color.FromRgb(r, g, b));
+            brush.Freeze();
+            return brush;
+        }
+
         public void Analyze(LogLineContext context)
         {
             var fontMatches = FontTagRegex.Matches(context.RawHtml);
@@ -28,7 +45,7 @@ namespace TWChatOverlay.Services.LogAnalysis
             string rawContent = fontMatches[1].Groups["content"].Value;
             string decodedContent = WebUtility.HtmlDecode(rawContent)
                 .Replace("&nbsp", " ");
-            string chatContent = Regex.Replace(decodedContent, @"\s+", " ").Trim();
+            string chatContent = WhitespaceRunRegex.Replace(decodedContent, " ").Trim();
 
             if (chatColor == "white")
                 chatColor = "ffffff";
@@ -119,7 +136,7 @@ namespace TWChatOverlay.Services.LogAnalysis
 
         private static bool IsIgnoredNormalMessage(string rawContent)
         {
-            string message = Regex.Replace(rawContent, @"\s+", " ").Trim();
+            string message = WhitespaceRunRegex.Replace(rawContent, " ").Trim();
             return IgnoredChatMessageService.IsIgnoredNormalMessage(message);
         }
 
@@ -127,14 +144,14 @@ namespace TWChatOverlay.Services.LogAnalysis
         {
             return colorCode switch
             {
-                "c8ffc8" => (ChatCategory.NormalSelf, new SolidColorBrush(Color.FromRgb(200, 255, 200))),
+                "c8ffc8" => (ChatCategory.NormalSelf, NormalSelfBrush),
                 "ffffff" => (ChatCategory.Normal, Brushes.White),
-                "c896c8" => (ChatCategory.Shout, new SolidColorBrush(Color.FromRgb(200, 150, 200))),
-                "94ddfa" => (ChatCategory.Club, new SolidColorBrush(Color.FromRgb(148, 221, 250))),
-                "f7b73c" => (ChatCategory.Team, new SolidColorBrush(Color.FromRgb(247, 183, 60))),
-                "ff64ff" => (ChatCategory.System, new SolidColorBrush(Color.FromRgb(255, 100, 255))),
+                "c896c8" => (ChatCategory.Shout, ShoutBrush),
+                "94ddfa" => (ChatCategory.Club, ClubBrush),
+                "f7b73c" => (ChatCategory.Team, TeamBrush),
+                "ff64ff" => (ChatCategory.System, SystemBrush),
                 "00ffff" => (ChatCategory.System2, Brushes.Cyan),
-                "ff6464" => (ChatCategory.System3, new SolidColorBrush(Color.FromRgb(255, 100, 100))),
+                "ff6464" => (ChatCategory.System3, System3Brush),
                 _ => (ChatCategory.Unknown, Brushes.White)
             };
         }
