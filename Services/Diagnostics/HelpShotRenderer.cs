@@ -181,11 +181,13 @@ namespace TWChatOverlay.Services
             Save(outDir, "exp_cum_on.png", PanelToggle(true,
                 RealExpAlert("경험치 150억 누적 달성")));
 
-            // ── 저효율 알림 (실제 창) ──
+            // ── 저효율 알림 (소리 알림) ──
             Save(outDir, "exp_loweff_off.png", PanelToggle(false,
-                DimLine("(효율이 떨어져도 알림 없음)")));
+                Line(SystemCol, ("경험치가 [1200000] 상승했습니다.", SystemCol)),
+                DimLine("(기준치 미만이어도 조용함)")));
             Save(outDir, "exp_loweff_on.png", PanelToggle(true,
-                RealExpAlert("저효율: 최근 획득이 기준치 미만입니다")));
+                Line(SystemCol, ("경험치가 [1200000] 상승했습니다.", SystemCol)),
+                Chip("♪ 기준치 미만 — 알림 소리 재생")));
 
             // ── 아이템 획득 알림 (실제 창) ──
             Save(outDir, "item_drop_off.png", PanelToggle(false,
@@ -204,21 +206,27 @@ namespace TWChatOverlay.Services
             Save(outDir, "boss_alert_3min.png", Panel("3분 전", RealBossToast("아칸", "3분 전")));
             Save(outDir, "boss_alert_spawn.png", Panel("5초 전", RealBossToast("아칸", "5초 전")));
 
-            // ── 던전 도우미 알림들 (실제 창) ──
-            Save(outDir, "dungeon_wave_off.png", PanelToggle(false, DimLine("(웨이브가 끝나도 알림 없음)")));
+            // ── 던전 도우미 알림들 ──
+            // 웨이브 종료·반사 패턴은 소리 알림, 입장 횟수는 실제 '던전 도우미' 창(N/최대)
+            Save(outDir, "dungeon_wave_off.png", PanelToggle(false,
+                Line(SystemCol, ("몬스터가 남아있으면 다음 웨이브로 넘어가지 않습니다.", SystemCol)),
+                DimLine("(알림 없음)")));
             Save(outDir, "dungeon_wave_on.png", PanelToggle(true,
-                RealDungeonAlert("웨이브 종료")));
-            Save(outDir, "dungeon_reflect_off.png", PanelToggle(false, DimLine("(반사 패턴 알림 없음)")));
+                Line(SystemCol, ("몬스터가 남아있으면 다음 웨이브로 넘어가지 않습니다.", SystemCol)),
+                Chip("♪ 웨이브 종료 알림 소리 재생")));
+            Save(outDir, "dungeon_reflect_off.png", PanelToggle(false,
+                DimLine("(반사 패턴이 시작돼도 조용함)")));
             Save(outDir, "dungeon_reflect_on.png", PanelToggle(true,
-                RealDungeonAlert("2사도 반사 패턴!")));
+                DimLine("심연의 제2사도의 반사 패턴 대사를 감지하면"),
+                Chip("♪ 반사 패턴 알림 소리 재생")));
             Save(outDir, "dungeon_abandon_count_off.png", PanelToggle(false, DimLine("(입장해도 알림 없음)")));
             Save(outDir, "dungeon_abandon_count_on.png", PanelToggle(true,
-                RealDungeonAlert("어밴던로드 입장 3회")));
+                RealDungeonAlert("어밴던로드 - 필멸의 땅 3/10")));
             Save(outDir, "dungeon_abandon_gold_off.png", PanelToggle(false, DimLine("(통계 창 표시 안 함)")));
             Save(outDir, "dungeon_abandon_gold_on.png", PanelToggle(true, RealAbandonSummary()));
             Save(outDir, "dungeon_craving_count_off.png", PanelToggle(false, DimLine("(입장해도 알림 없음)")));
             Save(outDir, "dungeon_craving_count_on.png", PanelToggle(true,
-                RealDungeonAlert("갈망하는 즐거움 입장 2회")));
+                RealDungeonAlert("갈망하는 즐거움 2/20")));
         }
 
         // ===== 조립 헬퍼 =====

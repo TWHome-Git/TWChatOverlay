@@ -197,8 +197,9 @@ namespace TWChatOverlay.Services
 
             ["exp.loweff"] = (
                 "저효율 알림",
-                "경험치 획득 효율이 기준치보다 낮아지면 알림을 띄웁니다.\n" +
-                "버프가 꺼졌거나 사냥 효율이 떨어졌을 때 빨리 알아차릴 수 있습니다.",
+                "획득 경험치가 기준치(만 단위)보다 낮으면 알림 소리를 울립니다.\n" +
+                "버프가 꺼졌거나 사냥 효율이 떨어졌을 때 빨리 알아차릴 수 있습니다.\n" +
+                "소리는 3초에 한 번으로 제한됩니다.",
                 new[] { "exp_loweff_off.png", "exp_loweff_on.png" }),
 
             ["exp.loweff_threshold"] = (
@@ -215,13 +216,13 @@ namespace TWChatOverlay.Services
 
             ["dungeon.wave_end"] = (
                 "웨이브 종료 알림",
-                "룬 경험치·테시스 코어에서 웨이브가 끝나면 알림을 띄웁니다.",
+                "룬 경험치·테시스 코어에서 웨이브 종료 안내가 나오면 알림 소리를 울립니다.",
                 new[] { "dungeon_wave_off.png", "dungeon_wave_on.png" }),
 
             ["dungeon.abyss_reflect"] = (
                 "반사 패턴 알림",
-                "어비스에서 반사 패턴이 시작되면 알림을 띄워\n" +
-                "공격을 멈출 타이밍을 알려줍니다.",
+                "어비스에서 심연의 제2사도가 반사 패턴 대사를 하면 알림 소리를 울려\n" +
+                "공격을 멈출 타이밍을 알려줍니다. (트리거 대사는 채팅창에 표시되지 않습니다)",
                 new[] { "dungeon_reflect_off.png", "dungeon_reflect_on.png" }),
 
             ["dungeon.etos_direction"] = (
@@ -238,7 +239,8 @@ namespace TWChatOverlay.Services
 
             ["dungeon.abandon_count"] = (
                 "어밴던로드 입장 횟수",
-                "어밴던로드 입장을 감지해 입장 횟수를 세고 알림 창으로 보여줍니다.\n" +
+                "어밴던로드 도전 횟수 안내를 감지해 지역별 횟수를\n" +
+                "'던전 도우미' 창(예: 어밴던로드 - 필멸의 땅 3/10)으로 보여줍니다.\n" +
                 "알림 창 폰트 크기와 지속 시간은 아래에서 조절합니다.",
                 new[] { "dungeon_abandon_count_off.png", "dungeon_abandon_count_on.png" }),
 
@@ -250,7 +252,8 @@ namespace TWChatOverlay.Services
 
             ["dungeon.craving_count"] = (
                 "갈망하는 즐거움 입장 횟수",
-                "갈망하는 즐거움 입장을 감지해 입장 횟수를 알림 창으로 보여줍니다.",
+                "남은 에너지 안내를 감지해 사용 횟수를\n" +
+                "'던전 도우미' 창(예: 갈망하는 즐거움 2/20)으로 보여줍니다.",
                 new[] { "dungeon_craving_count_off.png", "dungeon_craving_count_on.png" }),
 
             // ===== 아이템 알림 =====
