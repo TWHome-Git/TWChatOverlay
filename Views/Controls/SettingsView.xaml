@@ -576,13 +576,10 @@
                             <Border Style="{StaticResource SettingsRowWideStyle}">
                                 <DockPanel>
                                     <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
-                                        <RadioButton x:Name="NanumFontOption" Content="나눔고딕" Tag="나눔고딕" GroupName="FontFamilyOptions" Width="72" Height="26" Margin="0,0,4,0" Checked="FontOption_Checked" Style="{StaticResource FontOptionButtonStyle}"/>
-                                        <RadioButton x:Name="GulimFontOption" Content="굴림" Tag="굴림" GroupName="FontFamilyOptions" Width="52" Height="26" Margin="0,0,4,0" Checked="FontOption_Checked" Style="{StaticResource FontOptionButtonStyle}"/>
-                                        <RadioButton x:Name="PretendardFontOption" Content="프리텐다드" Tag="프리텐다드" GroupName="FontFamilyOptions" Width="82" Height="26" Margin="0,0,4,0" Checked="FontOption_Checked" Style="{StaticResource FontOptionButtonStyle}"/>
-                                        <RadioButton x:Name="NanumRoundFontOption" Content="나눔스퀘어라운드" Tag="나눔스퀘어라운드" GroupName="FontFamilyOptions" Width="112" Height="26" Margin="0,0,4,0" Checked="FontOption_Checked" Style="{StaticResource FontOptionButtonStyle}"/>
-                                        <RadioButton x:Name="GmarketFontOption" Content="G마켓 산스" Tag="G마켓 산스" GroupName="FontFamilyOptions" Width="80" Height="26" Margin="0,0,4,0" Checked="FontOption_Checked" Style="{StaticResource FontOptionButtonStyle}"/>
-                                        <RadioButton x:Name="CustomFontOption" Content="사용자 설정" Tag="사용자 설정" GroupName="FontFamilyOptions" Width="82" Height="26" Checked="FontOption_Checked" Style="{StaticResource FontOptionButtonStyle}"
-                                                     ToolTip="프로그램 폴더의 Font\UserDefine.ttf / .otf / .ttc 파일을 사용합니다"/>
+                                        <ComboBox x:Name="FontFamilyCombo" Width="170" Height="26"
+                                                  SelectionChanged="FontFamilyCombo_SelectionChanged"
+                                                  Style="{StaticResource DarkComboBoxStyle}"
+                                                  ToolTip="'사용자 설정'은 Font\UserDefine.ttf(.otf/.ttc) 파일을 사용합니다"/>
                                     </StackPanel>
                                     <TextBlock Text="종류" Style="{StaticResource SettingsRowLabelStyle}"/>
                                 </DockPanel>
