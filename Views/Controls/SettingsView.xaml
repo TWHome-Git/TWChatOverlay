@@ -443,12 +443,9 @@
                             <Border Style="{StaticResource SettingsRowStyle}">
                                 <DockPanel>
                                     <CheckBox DockPanel.Dock="Right" IsChecked="{Binding ShowCategoryPrefix}" Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
-                                    <StackPanel VerticalAlignment="Center">
-                                        <StackPanel Orientation="Horizontal">
-                                            <TextBlock Text="종류 말머리" Style="{StaticResource SettingsRowLabelStyle}"/>
-                                            <Button Style="{StaticResource HelpButtonStyle}" Tag="chat.filter.category_prefix" Click="Help_Click"/>
-                                        </StackPanel>
-                                        <TextBlock Text="각 줄 앞에 [일반]/[팀]/[클럽]/[외치기]/[시스템] 표시" Style="{StaticResource SettingsRowHintStyle}"/>
+                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                        <TextBlock Text="종류 말머리" Style="{StaticResource SettingsRowLabelStyle}"/>
+                                        <Button Style="{StaticResource HelpButtonStyle}" Tag="chat.filter.category_prefix" Click="Help_Click"/>
                                     </StackPanel>
                                 </DockPanel>
                             </Border>
@@ -758,24 +755,18 @@
                             <Border Style="{StaticResource SettingsRowStyle}">
                                 <DockPanel>
                                     <CheckBox DockPanel.Dock="Right" IsChecked="{Binding MenuWindowHorizontal}" Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
-                                    <StackPanel VerticalAlignment="Center">
-                                        <StackPanel Orientation="Horizontal">
-                                            <TextBlock Text="메뉴 바 가로형" Style="{StaticResource SettingsRowLabelStyle}"/>
-                                            <Button Style="{StaticResource HelpButtonStyle}" Tag="display.menu_horizontal" Click="Help_Click"/>
-                                        </StackPanel>
-                                        <TextBlock Text="끄면 세로형 (기본)" Style="{StaticResource SettingsRowHintStyle}"/>
+                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                        <TextBlock Text="메뉴 바 가로형" Style="{StaticResource SettingsRowLabelStyle}"/>
+                                        <Button Style="{StaticResource HelpButtonStyle}" Tag="display.menu_horizontal" Click="Help_Click"/>
                                     </StackPanel>
                                 </DockPanel>
                             </Border>
                             <Border Style="{StaticResource SettingsRowStyle}">
                                 <DockPanel>
                                     <CheckBox DockPanel.Dock="Right" IsChecked="{Binding OverlaysAlwaysOnTop}" Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
-                                    <StackPanel VerticalAlignment="Center">
-                                        <StackPanel Orientation="Horizontal">
-                                            <TextBlock Text="항상 위" Style="{StaticResource SettingsRowLabelStyle}"/>
-                                            <Button Style="{StaticResource HelpButtonStyle}" Tag="display.always_on_top" Click="Help_Click"/>
-                                        </StackPanel>
-                                        <TextBlock Text="끄면 z-순서를 건드리지 않음 — 처음 실행 상태 그대로 OS에 맡김" Style="{StaticResource SettingsRowHintStyle}"/>
+                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                        <TextBlock Text="항상 위" Style="{StaticResource SettingsRowLabelStyle}"/>
+                                        <Button Style="{StaticResource HelpButtonStyle}" Tag="display.always_on_top" Click="Help_Click"/>
                                     </StackPanel>
                                 </DockPanel>
                             </Border>
@@ -902,8 +893,6 @@
                                 <RadioButton Content="프로필" IsChecked="True" GroupName="ProfileTabs" IsHitTestVisible="False" Style="{StaticResource SettingsTabStyle}"/>
                             </StackPanel>
                         </Border>
-                        <TextBlock Text="현재 모든 설정 상태를 프로필로 저장하고, 언제든 통째로 불러올 수 있습니다."
-                                   Style="{StaticResource SettingsRowHintStyle}" Margin="0,0,0,6"/>
                         <StackPanel x:Name="ProfileListPanel"/>
                         <StackPanel Orientation="Horizontal" Margin="0,10,0,16">
                             <Button Content="+ 새 프로필 추가" Width="140" Height="26" Padding="0"
