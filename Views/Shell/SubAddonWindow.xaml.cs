@@ -122,7 +122,11 @@ namespace TWChatOverlay.Views
             if (isPreviewing)
             {
                 _hideTimer.Stop();
-                EnsureEclipseAddonView();
+                var view = EnsureEclipseAddonView();
+                // 미리보기: 아무 방향이나 예시 그림을 보여준다
+                string[] sampleDirections = { "N", "NE", "E", "SE", "S", "SW", "W", "NW" };
+                string sample = sampleDirections[Environment.TickCount % sampleDirections.Length];
+                view.ShowEtosDirection($"Data/images/Etos/{sample}.jpg");
                 if (!IsVisible)
                 {
                     Show();
