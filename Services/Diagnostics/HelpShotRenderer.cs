@@ -232,13 +232,15 @@ namespace TWChatOverlay.Services
 
         private static FrameworkElement PanelCore(UIElement badge, params UIElement[] lines)
         {
-            var stack = new StackPanel { Margin = new Thickness(10, 8, 10, 8) };
+            var stack = new StackPanel { Margin = new Thickness(10, 2, 10, 8) };
             foreach (var line in lines)
                 stack.Children.Add(line);
 
-            var grid = new Grid();
-            grid.Children.Add(stack);
+            // 배지(토글/텍스트)는 내용 위에 겹치지 않게 전용 줄로 분리 —
+            // 실제 창 이미지에 토글이 붙어 있는 것처럼 보이지 않도록 한다
+            var grid = new StackPanel();
             grid.Children.Add(badge);
+            grid.Children.Add(stack);
 
             return new Border
             {
