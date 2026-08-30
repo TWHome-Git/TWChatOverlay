@@ -212,9 +212,8 @@ namespace TWChatOverlay.Services
             Save(outDir, "dungeon_abandon_count_off.png", PanelToggle(false, DimLine("(입장해도 알림 없음)")));
             Save(outDir, "dungeon_abandon_count_on.png", PanelToggle(true,
                 RealDungeonAlert("어밴던로드 입장 3회")));
-            Save(outDir, "dungeon_abandon_gold_off.png", PanelToggle(false, DimLine("(합계 창 표시 안 함)")));
-            Save(outDir, "dungeon_abandon_gold_on.png", PanelToggle(true,
-                RealDungeonAlert("어밴던로드 주간 합계 12,340,000 골드")));
+            Save(outDir, "dungeon_abandon_gold_off.png", PanelToggle(false, DimLine("(통계 창 표시 안 함)")));
+            Save(outDir, "dungeon_abandon_gold_on.png", PanelToggle(true, RealAbandonSummary()));
             Save(outDir, "dungeon_craving_count_off.png", PanelToggle(false, DimLine("(입장해도 알림 없음)")));
             Save(outDir, "dungeon_craving_count_on.png", PanelToggle(true,
                 RealDungeonAlert("갈망하는 즐거움 입장 2회")));
@@ -447,6 +446,29 @@ namespace TWChatOverlay.Services
                 }
                 catch { return null; }
             }
+        }
+
+        /// <summary>실제 어밴던로드 상황판(통계) 창 + 견본 주간 데이터.</summary>
+        private static FrameworkElement RealAbandonSummary()
+        {
+            var settings = new ChatSettings();
+            var root = WindowRoot(new Views.AbandonRoadSummaryWindow(settings, new LogAnalysisService(settings)));
+            root.DataContext = new AbandonSummarySample();
+            root.Width = 306;
+            return root;
+        }
+
+        private sealed class AbandonSummarySample
+        {
+            public string WeekText { get; } = "8/24 (일) ~ 8/30 (토)";
+            public string SummaryText { get; } = "어밴던로드 주간 합계: 1,234만";
+            public System.Collections.ObjectModel.ObservableCollection<AbandonMonthlyStoneSummaryEntryViewModel> StoneEntries { get; } = new()
+            {
+                new("하급 마정석", "pack://application:,,,/Data/images/Item/하급마정석.png", 42),
+                new("중급 마정석", "pack://application:,,,/Data/images/Item/중급마정석.png", 17),
+                new("상급 마정석", "pack://application:,,,/Data/images/Item/상급마정석.png", 5),
+                new("최상급 마정석", "pack://application:,,,/Data/images/Item/최상급마정석.png", 1),
+            };
         }
 
         /// <summary>알림 토스트 목업: 민트 테두리 작은 창 + 제목/본문.</summary>

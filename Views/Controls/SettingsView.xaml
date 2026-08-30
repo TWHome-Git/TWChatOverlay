@@ -1185,7 +1185,7 @@
                                 <DockPanel>
                                     <CheckBox DockPanel.Dock="Right" IsChecked="{Binding ShowAbandonRoadSummaryWindow, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
                                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                        <TextBlock Text="어밴던로드 누적 금액" Style="{StaticResource SettingsRowLabelStyle}"/>
+                                        <TextBlock Text="어밴던로드 통계" Style="{StaticResource SettingsRowLabelStyle}"/>
                                         <Button Style="{StaticResource HelpButtonStyle}" Tag="dungeon.abandon_gold" Click="Help_Click"/>
                                     </StackPanel>
                                 </DockPanel>
