@@ -325,6 +325,12 @@
                             <TextBlock Text="프로필 및 프리셋" VerticalAlignment="Center"/>
                         </StackPanel>
                     </RadioButton>
+                    <Button Style="{StaticResource SettingsNavActionStyle}" Command="{Binding ExitAppCommand}" ToolTip="프로그램을 종료합니다">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="&#xE7E8;" FontFamily="Segoe MDL2 Assets" FontSize="12" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                            <TextBlock Text="프로그램 종료" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
                     <Border Height="1" Background="{DynamicResource SeparatorBrush}" Margin="8,8,8,0"/>
                 </StackPanel>
             </Border>
@@ -684,13 +690,19 @@
                             <Border Style="{StaticResource SettingsRowStyle}">
                                 <DockPanel>
                                     <CheckBox DockPanel.Dock="Right" IsChecked="{Binding ShowShoutToastPopup}" Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
-                                    <TextBlock Text="외치기 팝업" Style="{StaticResource SettingsRowLabelStyle}" ToolTip="외치기 로그가 들어오면 토스트 팝업 표시"/>
+                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                        <TextBlock Text="외치기 팝업" Style="{StaticResource SettingsRowLabelStyle}" ToolTip="외치기 로그가 들어오면 토스트 팝업 표시"/>
+                                        <Button Style="{StaticResource HelpButtonStyle}" Tag="shout.toast" Click="Help_Click"/>
+                                    </StackPanel>
                                 </DockPanel>
                             </Border>
                             <Border Style="{StaticResource SettingsRowStyle}">
                                 <DockPanel>
                                     <CheckBox DockPanel.Dock="Right" IsChecked="{Binding AutoCopyShoutNickname}" Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
-                                    <TextBlock Text="닉네임 자동복사" Style="{StaticResource SettingsRowLabelStyle}" ToolTip="외치기 끝의 [닉네임]을 클립보드에 복사"/>
+                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                        <TextBlock Text="닉네임 자동복사" Style="{StaticResource SettingsRowLabelStyle}" ToolTip="외치기 끝의 [닉네임]을 클립보드에 복사"/>
+                                        <Button Style="{StaticResource HelpButtonStyle}" Tag="shout.autocopy" Click="Help_Click"/>
+                                    </StackPanel>
                                 </DockPanel>
                             </Border>
                             <Border Style="{StaticResource SettingsRowStyle}">
@@ -705,7 +717,10 @@
                                         <Slider Minimum="10" Maximum="40" Value="{Binding ShoutToastFontSize}" TickFrequency="1" IsSnapToTickEnabled="True" VerticalAlignment="Center" Width="140"/>
                                         <TextBlock Text="{Binding ShoutToastFontSize, StringFormat={}{0:F0}}" Foreground="{DynamicResource TextBrush}" Width="26" TextAlignment="Right" VerticalAlignment="Center" FontSize="12"/>
                                     </StackPanel>
-                                    <TextBlock Text="토스트 글자 크기" Style="{StaticResource SettingsRowLabelStyle}"/>
+                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                        <TextBlock Text="토스트 글자 크기" Style="{StaticResource SettingsRowLabelStyle}"/>
+                                        <Button Style="{StaticResource HelpButtonStyle}" Tag="shout.toast_font" Click="Help_Click"/>
+                                    </StackPanel>
                                 </DockPanel>
                             </Border>
                         </WrapPanel>
@@ -725,20 +740,29 @@
                                         <Slider Minimum="20" Maximum="100" Value="{Binding OverlayOpacityPercent, Mode=TwoWay, FallbackValue=96}" TickFrequency="5" IsSnapToTickEnabled="True" VerticalAlignment="Center" Width="140"/>
                                         <TextBlock Text="{Binding OverlayOpacityPercent, StringFormat={}{0:F0}%}" Foreground="{DynamicResource TextBrush}" Width="34" TextAlignment="Right" VerticalAlignment="Center" FontSize="12"/>
                                     </StackPanel>
-                                    <TextBlock Text="투명도" Style="{StaticResource SettingsRowLabelStyle}" ToolTip="글자는 항상 선명하게 유지됩니다"/>
+                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                        <TextBlock Text="투명도" Style="{StaticResource SettingsRowLabelStyle}" ToolTip="글자는 항상 선명하게 유지됩니다"/>
+                                        <Button Style="{StaticResource HelpButtonStyle}" Tag="display.opacity" Click="Help_Click"/>
+                                    </StackPanel>
                                 </DockPanel>
                             </Border>
                             <Border Style="{StaticResource SettingsRowStyle}">
                                 <DockPanel>
                                     <Button DockPanel.Dock="Right" Content="잠금 해제" Width="74" Height="26" Padding="0" Foreground="White" Click="UnlockMode_Click" Style="{StaticResource SimButtonStyle}" FontSize="12"/>
-                                    <TextBlock Text="잠금 해제 모드" Style="{StaticResource SettingsRowLabelStyle}" ToolTip="이 모드에서만 창을 드래그해 이동할 수 있습니다"/>
+                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                        <TextBlock Text="잠금 해제 모드" Style="{StaticResource SettingsRowLabelStyle}" ToolTip="이 모드에서만 창을 드래그해 이동할 수 있습니다"/>
+                                        <Button Style="{StaticResource HelpButtonStyle}" Tag="display.unlock" Click="Help_Click"/>
+                                    </StackPanel>
                                 </DockPanel>
                             </Border>
                             <Border Style="{StaticResource SettingsRowStyle}">
                                 <DockPanel>
                                     <CheckBox DockPanel.Dock="Right" IsChecked="{Binding MenuWindowHorizontal}" Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
                                     <StackPanel VerticalAlignment="Center">
-                                        <TextBlock Text="메뉴 바 가로형" Style="{StaticResource SettingsRowLabelStyle}"/>
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Text="메뉴 바 가로형" Style="{StaticResource SettingsRowLabelStyle}"/>
+                                            <Button Style="{StaticResource HelpButtonStyle}" Tag="display.menu_horizontal" Click="Help_Click"/>
+                                        </StackPanel>
                                         <TextBlock Text="끄면 세로형 (기본)" Style="{StaticResource SettingsRowHintStyle}"/>
                                     </StackPanel>
                                 </DockPanel>
@@ -747,7 +771,10 @@
                                 <DockPanel>
                                     <CheckBox DockPanel.Dock="Right" IsChecked="{Binding OverlaysAlwaysOnTop}" Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
                                     <StackPanel VerticalAlignment="Center">
-                                        <TextBlock Text="항상 위" Style="{StaticResource SettingsRowLabelStyle}"/>
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Text="항상 위" Style="{StaticResource SettingsRowLabelStyle}"/>
+                                            <Button Style="{StaticResource HelpButtonStyle}" Tag="display.always_on_top" Click="Help_Click"/>
+                                        </StackPanel>
                                         <TextBlock Text="끄면 z-순서를 건드리지 않음 — 처음 실행 상태 그대로 OS에 맡김" Style="{StaticResource SettingsRowHintStyle}"/>
                                     </StackPanel>
                                 </DockPanel>
@@ -759,7 +786,7 @@
                     <StackPanel x:Name="HotkeyPanel" Visibility="Collapsed">
                         <Border Style="{StaticResource SettingsTabStripStyle}">
                             <StackPanel Orientation="Horizontal">
-                                <RadioButton Content="전역 단축키" IsChecked="True" GroupName="HotkeyTabs" IsHitTestVisible="False" Style="{StaticResource SettingsTabStyle}"/>
+                                <RadioButton Content="일반" IsChecked="True" GroupName="HotkeyTabs" IsHitTestVisible="False" Style="{StaticResource SettingsTabStyle}"/>
                             </StackPanel>
                         </Border>
                         <TextBlock Text="칸을 클릭한 뒤 원하는 키 조합을 누르세요. Esc 또는 Delete로 해제합니다." Style="{StaticResource SettingsRowHintStyle}" Margin="0,0,0,6"/>
@@ -817,13 +844,19 @@
                             <Border Style="{StaticResource SettingsRowWideStyle}">
                                 <DockPanel>
                                     <TextBox DockPanel.Dock="Right" Width="240" Text="{Binding ChatLogFolderPath, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" Style="{StaticResource SettingsRowInputStyle}" TextAlignment="Left" Padding="5,0"/>
-                                    <TextBlock Text="채팅 로그 폴더" Style="{StaticResource SettingsRowLabelStyle}"/>
+                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                        <TextBlock Text="채팅 로그 폴더" Style="{StaticResource SettingsRowLabelStyle}"/>
+                                        <Button Style="{StaticResource HelpButtonStyle}" Tag="system.log_folder" Click="Help_Click"/>
+                                    </StackPanel>
                                 </DockPanel>
                             </Border>
                             <Border x:Name="DebugOptionsBorder" Style="{StaticResource SettingsRowWideStyle}" Visibility="Collapsed">
                                 <DockPanel>
                                     <CheckBox DockPanel.Dock="Right" IsChecked="{Binding EnableDebugLogging}" Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
-                                    <TextBlock Text="Debug.log 활성화" Style="{StaticResource SettingsRowLabelStyle}" ToolTip="디버그 로그를 Debug.log 파일에 기록"/>
+                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                        <TextBlock Text="Debug.log 활성화" Style="{StaticResource SettingsRowLabelStyle}" ToolTip="디버그 로그를 Debug.log 파일에 기록"/>
+                                        <Button Style="{StaticResource HelpButtonStyle}" Tag="system.debug_log" Click="Help_Click"/>
+                                    </StackPanel>
                                 </DockPanel>
                             </Border>
                         </WrapPanel>
@@ -834,25 +867,28 @@
                             <Border Style="{StaticResource SettingsRowStyle}">
                                 <DockPanel>
                                     <Button DockPanel.Dock="Right" Content="실행" Width="70" Height="26" Padding="0" Command="{Binding ManualUpdateCommand}" Style="{StaticResource SecondaryButtonStyle}" FontSize="12"/>
-                                    <TextBlock Text="수동 업데이트" Style="{StaticResource SettingsRowLabelStyle}"/>
+                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                        <TextBlock Text="수동 업데이트" Style="{StaticResource SettingsRowLabelStyle}"/>
+                                        <Button Style="{StaticResource HelpButtonStyle}" Tag="system.manual_update" Click="Help_Click"/>
+                                    </StackPanel>
                                 </DockPanel>
                             </Border>
                             <Border Style="{StaticResource SettingsRowStyle}">
                                 <DockPanel>
                                     <Button DockPanel.Dock="Right" Content="실행" Width="70" Height="26" Padding="0" Command="{Binding ManualLogReloadCommand}" Style="{StaticResource SecondaryButtonStyle}" FontSize="12"/>
-                                    <TextBlock Text="로그 다시 읽기" Style="{StaticResource SettingsRowLabelStyle}"/>
+                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                        <TextBlock Text="로그 다시 읽기" Style="{StaticResource SettingsRowLabelStyle}"/>
+                                        <Button Style="{StaticResource HelpButtonStyle}" Tag="system.log_reload" Click="Help_Click"/>
+                                    </StackPanel>
                                 </DockPanel>
                             </Border>
                             <Border Style="{StaticResource SettingsRowStyle}">
                                 <DockPanel>
                                     <Button DockPanel.Dock="Right" Content="초기화" Width="70" Height="26" Padding="0" Command="{Binding InitSettingsCommand}" Style="{StaticResource SecondaryButtonStyle}" FontSize="12"/>
-                                    <TextBlock Text="설정 초기화" Style="{StaticResource SettingsRowLabelStyle}" ToolTip="모든 설정을 기본값으로 되돌립니다"/>
-                                </DockPanel>
-                            </Border>
-                            <Border Style="{StaticResource SettingsRowStyle}">
-                                <DockPanel>
-                                    <Button DockPanel.Dock="Right" Content="종료" Width="70" Height="26" Padding="0" Command="{Binding ExitAppCommand}" Style="{StaticResource DangerButtonStyle}" FontSize="12"/>
-                                    <TextBlock Text="프로그램 종료" Style="{StaticResource SettingsRowLabelStyle}"/>
+                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                        <TextBlock Text="설정 초기화" Style="{StaticResource SettingsRowLabelStyle}" ToolTip="모든 설정을 기본값으로 되돌립니다"/>
+                                        <Button Style="{StaticResource HelpButtonStyle}" Tag="system.reset" Click="Help_Click"/>
+                                    </StackPanel>
                                 </DockPanel>
                             </Border>
                         </WrapPanel>
@@ -912,7 +948,10 @@
                             <Border Style="{StaticResource SettingsRowStyle}">
                                 <DockPanel>
                                     <CheckBox DockPanel.Dock="Right" IsChecked="{Binding UseAlertColor}" Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
-                                    <TextBlock Text="색상 강조" Style="{StaticResource SettingsRowLabelStyle}"/>
+                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                        <TextBlock Text="색상 강조" Style="{StaticResource SettingsRowLabelStyle}"/>
+                                        <Button Style="{StaticResource HelpButtonStyle}" Tag="keyword.color" Click="Help_Click"/>
+                                    </StackPanel>
                                 </DockPanel>
                             </Border>
                             <Border Style="{StaticResource SettingsRowStyle}">
@@ -952,7 +991,7 @@
                     <StackPanel x:Name="AddonExpPanel" Visibility="Collapsed">
                         <Border Style="{StaticResource SettingsTabStripStyle}">
                             <StackPanel Orientation="Horizontal">
-                                <RadioButton x:Name="ExpTabTracker" Content="경험치 추적" IsChecked="True" GroupName="ExpTabs" Style="{StaticResource SettingsTabStyle}"/>
+                                <RadioButton x:Name="ExpTabTracker" Content="일반" IsChecked="True" GroupName="ExpTabs" Style="{StaticResource SettingsTabStyle}"/>
                                 <RadioButton x:Name="ExpTabLowEff" Content="저효율 알림" GroupName="ExpTabs" Style="{StaticResource SettingsTabStyle}"/>
                             </StackPanel>
                         </Border>
@@ -962,13 +1001,19 @@
                             <Border Style="{StaticResource SettingsRowStyle}">
                                 <DockPanel>
                                     <CheckBox DockPanel.Dock="Right" IsChecked="{Binding ShowExpTracker, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
-                                    <TextBlock Text="경험치 추적" Style="{StaticResource SettingsRowLabelStyle}" ToolTip="화면 상단에 실시간 획득량 표시"/>
+                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                        <TextBlock Text="경험치 추적" Style="{StaticResource SettingsRowLabelStyle}" ToolTip="화면 상단에 실시간 획득량 표시"/>
+                                        <Button Style="{StaticResource HelpButtonStyle}" Tag="exp.tracker" Click="Help_Click"/>
+                                    </StackPanel>
                                 </DockPanel>
                             </Border>
                             <Border Style="{StaticResource SettingsRowStyle}">
                                 <DockPanel>
                                     <CheckBox DockPanel.Dock="Right" IsChecked="{Binding EnableExperienceLimitAlert, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
-                                    <TextBlock Text="경험치 누적 알림" Style="{StaticResource SettingsRowLabelStyle}"/>
+                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                        <TextBlock Text="경험치 누적 알림" Style="{StaticResource SettingsRowLabelStyle}"/>
+                                        <Button Style="{StaticResource HelpButtonStyle}" Tag="exp.cumulative_alert" Click="Help_Click"/>
+                                    </StackPanel>
                                 </DockPanel>
                             </Border>
                             <Border Style="{StaticResource SettingsRowWideStyle}">
@@ -979,7 +1024,10 @@
                                                  PreviewTextInput="ExperienceLimitExp_PreviewTextInput" DataObject.Pasting="ExperienceLimitExp_Pasting"/>
                                         <Button Content="적용" Width="56" Height="26" Padding="0" Command="{Binding ApplyExperienceLimitStateCommand}" Style="{StaticResource SecondaryButtonStyle}" FontSize="12"/>
                                     </StackPanel>
-                                    <TextBlock Text="현재 누적 경험치(억)" Style="{StaticResource SettingsRowLabelStyle}"/>
+                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                        <TextBlock Text="현재 누적 경험치(억)" Style="{StaticResource SettingsRowLabelStyle}"/>
+                                        <Button Style="{StaticResource HelpButtonStyle}" Tag="exp.current_total" Click="Help_Click"/>
+                                    </StackPanel>
                                 </DockPanel>
                             </Border>
                         </WrapPanel>
@@ -990,13 +1038,19 @@
                             <Border Style="{StaticResource SettingsRowStyle}">
                                 <DockPanel>
                                     <CheckBox DockPanel.Dock="Right" IsChecked="{Binding IsExpAlarmEnabled}" Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
-                                    <TextBlock Text="저효율 알림" Style="{StaticResource SettingsRowLabelStyle}"/>
+                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                        <TextBlock Text="저효율 알림" Style="{StaticResource SettingsRowLabelStyle}"/>
+                                        <Button Style="{StaticResource HelpButtonStyle}" Tag="exp.loweff" Click="Help_Click"/>
+                                    </StackPanel>
                                 </DockPanel>
                             </Border>
                             <Border Style="{StaticResource SettingsRowStyle}">
                                 <DockPanel>
                                     <TextBox DockPanel.Dock="Right" Width="70" Text="{Binding ExpAlarmThresholdMan, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource SettingsRowInputStyle}"/>
-                                    <TextBlock Text="기준치(만 EXP 미만)" Style="{StaticResource SettingsRowLabelStyle}"/>
+                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                        <TextBlock Text="기준치(만 EXP 미만)" Style="{StaticResource SettingsRowLabelStyle}"/>
+                                        <Button Style="{StaticResource HelpButtonStyle}" Tag="exp.loweff_threshold" Click="Help_Click"/>
+                                    </StackPanel>
                                 </DockPanel>
                             </Border>
                             <Border Style="{StaticResource SettingsRowStyle}">
@@ -1005,7 +1059,10 @@
                                         <Slider Minimum="10" Maximum="40" Value="{Binding ExperienceAlertFontSize, Mode=TwoWay}" TickFrequency="1" IsSnapToTickEnabled="True" VerticalAlignment="Center" Width="140"/>
                                         <TextBlock Text="{Binding ExperienceAlertFontSize, StringFormat={}{0:F0}}" Foreground="{DynamicResource TextBrush}" Width="26" TextAlignment="Right" VerticalAlignment="Center" FontSize="12"/>
                                     </StackPanel>
-                                    <TextBlock Text="누적 알림 폰트 크기" Style="{StaticResource SettingsRowLabelStyle}"/>
+                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                        <TextBlock Text="누적 알림 폰트 크기" Style="{StaticResource SettingsRowLabelStyle}"/>
+                                        <Button Style="{StaticResource HelpButtonStyle}" Tag="exp.loweff_font" Click="Help_Click"/>
+                                    </StackPanel>
                                 </DockPanel>
                             </Border>
                             <Border Style="{StaticResource SettingsRowStyle}">
@@ -1042,7 +1099,10 @@
                             <Border Style="{StaticResource SettingsRowStyle}">
                                 <DockPanel>
                                     <CheckBox DockPanel.Dock="Right" IsChecked="{Binding UseMagicCircleAlert}" Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
-                                    <TextBlock Text="웨이브 종료 알림" Style="{StaticResource SettingsRowLabelStyle}"/>
+                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                        <TextBlock Text="웨이브 종료 알림" Style="{StaticResource SettingsRowLabelStyle}"/>
+                                        <Button Style="{StaticResource HelpButtonStyle}" Tag="dungeon.wave_end" Click="Help_Click"/>
+                                    </StackPanel>
                                 </DockPanel>
                             </Border>
                             <Border Style="{StaticResource SettingsRowStyle}">
@@ -1065,7 +1125,10 @@
                             <Border Style="{StaticResource SettingsRowStyle}">
                                 <DockPanel>
                                     <CheckBox DockPanel.Dock="Right" IsChecked="{Binding EnableReflectionPatternAlert}" Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
-                                    <TextBlock Text="반사 패턴 알림" Style="{StaticResource SettingsRowLabelStyle}"/>
+                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                        <TextBlock Text="반사 패턴 알림" Style="{StaticResource SettingsRowLabelStyle}"/>
+                                        <Button Style="{StaticResource HelpButtonStyle}" Tag="dungeon.abyss_reflect" Click="Help_Click"/>
+                                    </StackPanel>
                                 </DockPanel>
                             </Border>
                             <Border Style="{StaticResource SettingsRowStyle}">
@@ -1088,7 +1151,10 @@
                             <Border Style="{StaticResource SettingsRowStyle}">
                                 <DockPanel>
                                     <CheckBox DockPanel.Dock="Right" IsChecked="{Binding ShowEtosDirectionAlert}" Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
-                                    <TextBlock Text="에토스 방향 알림" Style="{StaticResource SettingsRowLabelStyle}"/>
+                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                        <TextBlock Text="에토스 방향 알림" Style="{StaticResource SettingsRowLabelStyle}"/>
+                                        <Button Style="{StaticResource HelpButtonStyle}" Tag="dungeon.etos_direction" Click="Help_Click"/>
+                                    </StackPanel>
                                 </DockPanel>
                             </Border>
                             <Border Style="{StaticResource SettingsRowStyle}">
@@ -1109,13 +1175,19 @@
                             <Border Style="{StaticResource SettingsRowStyle}">
                                 <DockPanel>
                                     <CheckBox DockPanel.Dock="Right" IsChecked="{Binding EnableAbandonRoadCountAlert, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
-                                    <TextBlock Text="어밴던로드 입장 횟수" Style="{StaticResource SettingsRowLabelStyle}"/>
+                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                        <TextBlock Text="어밴던로드 입장 횟수" Style="{StaticResource SettingsRowLabelStyle}"/>
+                                        <Button Style="{StaticResource HelpButtonStyle}" Tag="dungeon.abandon_count" Click="Help_Click"/>
+                                    </StackPanel>
                                 </DockPanel>
                             </Border>
                             <Border Style="{StaticResource SettingsRowStyle}">
                                 <DockPanel>
                                     <CheckBox DockPanel.Dock="Right" IsChecked="{Binding ShowAbandonRoadSummaryWindow, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
-                                    <TextBlock Text="어밴던로드 누적 금액" Style="{StaticResource SettingsRowLabelStyle}"/>
+                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                        <TextBlock Text="어밴던로드 누적 금액" Style="{StaticResource SettingsRowLabelStyle}"/>
+                                        <Button Style="{StaticResource HelpButtonStyle}" Tag="dungeon.abandon_gold" Click="Help_Click"/>
+                                    </StackPanel>
                                 </DockPanel>
                             </Border>
                             <Border Style="{StaticResource SettingsRowStyle}">
@@ -1142,7 +1214,10 @@
                             <Border Style="{StaticResource SettingsRowStyle}">
                                 <DockPanel>
                                     <CheckBox DockPanel.Dock="Right" IsChecked="{Binding EnableCravingPleasureCountAlert, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
-                                    <TextBlock Text="갈망하는 즐거움 입장 횟수" Style="{StaticResource SettingsRowLabelStyle}"/>
+                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                        <TextBlock Text="갈망하는 즐거움 입장 횟수" Style="{StaticResource SettingsRowLabelStyle}"/>
+                                        <Button Style="{StaticResource HelpButtonStyle}" Tag="dungeon.craving_count" Click="Help_Click"/>
+                                    </StackPanel>
                                 </DockPanel>
                             </Border>
                             <Border Style="{StaticResource SettingsRowStyle}">
@@ -1170,6 +1245,7 @@
                             <StackPanel Orientation="Horizontal">
                                 <RadioButton x:Name="ItemTabAlert" Content="획득 알림" IsChecked="True" GroupName="ItemTabs" Style="{StaticResource SettingsTabStyle}"/>
                                 <RadioButton x:Name="ItemTabFilter" Content="알림 필터" GroupName="ItemTabs" Style="{StaticResource SettingsTabStyle}"/>
+                                <Button Style="{StaticResource HelpButtonStyle}" Tag="item.filter" Click="Help_Click" VerticalAlignment="Center"/>
                             </StackPanel>
                         </Border>
 
@@ -1178,7 +1254,10 @@
                             <Border Style="{StaticResource SettingsRowStyle}">
                                 <DockPanel>
                                     <CheckBox DockPanel.Dock="Right" IsChecked="{Binding ShowItemDropAlert}" Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
-                                    <TextBlock Text="아이템 획득 알림" Style="{StaticResource SettingsRowLabelStyle}"/>
+                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                        <TextBlock Text="아이템 획득 알림" Style="{StaticResource SettingsRowLabelStyle}"/>
+                                        <Button Style="{StaticResource HelpButtonStyle}" Tag="item.drop_alert" Click="Help_Click"/>
+                                    </StackPanel>
                                 </DockPanel>
                             </Border>
                             <Border Style="{StaticResource SettingsRowStyle}">
@@ -1277,7 +1356,8 @@
                     <StackPanel x:Name="AddonBuffPanel" Visibility="Collapsed">
                         <Border Style="{StaticResource SettingsTabStripStyle}">
                             <StackPanel Orientation="Horizontal">
-                                <RadioButton Content="버프 추적" IsChecked="True" GroupName="BuffTabs" IsHitTestVisible="False" Style="{StaticResource SettingsTabStyle}"/>
+                                <RadioButton Content="일반" IsChecked="True" GroupName="BuffTabs" IsHitTestVisible="False" Style="{StaticResource SettingsTabStyle}"/>
+                                <Button Style="{StaticResource HelpButtonStyle}" Tag="buff.tracker" Click="Help_Click" VerticalAlignment="Center"/>
                             </StackPanel>
                         </Border>
                         <WrapPanel>
@@ -1313,6 +1393,7 @@
                         <Border Style="{StaticResource SettingsTabStripStyle}">
                             <StackPanel Orientation="Horizontal">
                                 <RadioButton Content="필드 보스 알림" IsChecked="True" GroupName="BossTabs" IsHitTestVisible="False" Style="{StaticResource SettingsTabStyle}"/>
+                                <Button Style="{StaticResource HelpButtonStyle}" Tag="boss.alert" Click="Help_Click" VerticalAlignment="Center"/>
                             </StackPanel>
                         </Border>
                         <ItemsControl ItemsSource="{Binding BossAlarmCards}" Width="606" HorizontalAlignment="Left">
