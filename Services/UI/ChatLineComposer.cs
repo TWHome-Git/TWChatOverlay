@@ -109,8 +109,8 @@ namespace TWChatOverlay.Services
                 {
                     ChatSegmentKind.SenderId when !settings.SenderIdColorSync => ChatBrushResolver.ToBrush(settings.SenderIdColor),
                     ChatSegmentKind.Timestamp when !settings.TimestampColorSync => ChatBrushResolver.ToBrush(settings.TimestampColor),
-                    ChatSegmentKind.EtaLevel when settings.EtaLevelRangeColors => EtaLevelRangeBrush(segment.Text, settings),
-                    ChatSegmentKind.EtaLevel when !settings.EtaLevelColorSync => ChatBrushResolver.ToBrush(settings.EtaLevelColor),
+                    // 에타 레벨: 동기화 해제 시 구간(레벨별) 색을 사용한다
+                    ChatSegmentKind.EtaLevel when !settings.EtaLevelColorSync => EtaLevelRangeBrush(segment.Text, settings),
                     ChatSegmentKind.Character when !settings.EtaCharacterColorSync => ChatBrushResolver.ToBrush(settings.EtaCharacterColor),
                     ChatSegmentKind.IdTag when !settings.IdTagColorSync => ChatBrushResolver.ToBrush(settings.IdTagColor),
                     _ => null,

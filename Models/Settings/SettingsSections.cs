@@ -59,9 +59,7 @@ namespace TWChatOverlay.Models
         public bool TimestampColorSync { get; set; } = true;
         public bool IdTagColorSync { get; set; } = true;
         public string SenderIdColor { get; set; } = "#E8EAE9";
-        public string EtaLevelColor { get; set; } = "#FFD84A";
         // 에타 레벨 구간별 색상: 켜면 동기화/개별 색 대신 레벨 구간에 따라 칠한다 (레벨 0은 에타 정보 없음 → 표기 자체를 생략)
-        public bool EtaLevelRangeColors { get; set; } = false;
         public string EtaLevelRange1Color { get; set; } = "#C8CDD2"; // 1~20
         public string EtaLevelRange2Color { get; set; } = "#7EE081"; // 21~40
         public string EtaLevelRange3Color { get; set; } = "#5AC8E8"; // 41~60
