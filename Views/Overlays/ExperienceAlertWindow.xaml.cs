@@ -85,9 +85,9 @@ namespace TWChatOverlay.Views
         {
             try
             {
-                long currentEok = 0;
+                decimal currentEok = 0m;
                 if (ExperienceAlertWindowService.TryGetStateSnapshot(_settings, out var snapshot))
-                    currentEok = snapshot.TotalExp / 100_000_000L;
+                    currentEok = snapshot.TotalExp / 100_000_000m;
 
                 var dialog = new ExpEditDialog(currentEok, _settings.EnableExperienceLimitAlert)
                 {
@@ -100,7 +100,7 @@ namespace TWChatOverlay.Views
 
                 _settings.EnableExperienceLimitAlert = dialog.ResultAlertEnabled;
 
-                long totalExp = checked(dialog.ResultEok * 100_000_000L);
+                long totalExp = dialog.ResultTotalExp;
 
                 // 설정의 '현재 누적 경험치(억)' [적용]과 동일한 반영 경로
                 _settings.ExperienceLimitTotalExp = totalExp;
@@ -108,9 +108,9 @@ namespace TWChatOverlay.Views
                 ConfigService.Save(_settings);
                 ExperienceAlertWindowService.ApplyStateSnapshot(new ExperienceAlertStateSnapshot { TotalExp = totalExp });
                 ExperienceWeeklyRefreshService.MarkCurrentWeekRefreshed(_settings, DateTime.Now);
-                AppLogger.Info($"Applied manual total exp from alert-window edit. Eok={dialog.ResultEok:N0}, TotalExp={totalExp:N0}");
+                AppLogger.Info($"Applied manual total exp from alert-window edit. Eok={dialog.ResultEokValue:0.##}, TotalExp={totalExp:N0}");
 
-                SetMessage($"누적 경험치 {dialog.ResultEok:N0}억");
+                SetMessage($"누적 경험치 {dialog.ResultEokValue:0.##}억");
             }
             catch (Exception ex)
             {
@@ -121,13 +121,14 @@ namespace TWChatOverlay.Views
         /// <summary>누적 알림 ON/OFF + 누적 경험치(억) 입력 다이얼로그 — 좌표/도움말 창과 같은 다크·민트 스타일.</summary>
         private sealed class ExpEditDialog : Window
         {
-            public long ResultEok { get; private set; }
+            public long ResultTotalExp { get; private set; }
+            public decimal ResultEokValue { get; private set; }
             public bool ResultAlertEnabled { get; private set; }
 
             private readonly System.Windows.Controls.TextBox _input;
             private readonly System.Windows.Controls.CheckBox _alertToggle;
 
-            public ExpEditDialog(long currentEok, bool alertEnabled)
+            public ExpEditDialog(decimal currentEok, bool alertEnabled)
             {
                 WindowStyle = WindowStyle.None;
                 AllowsTransparency = true;
@@ -173,7 +174,7 @@ namespace TWChatOverlay.Views
                     Width = 72,
                     Height = 26,
                     FontSize = 13,
-                    Text = currentEok.ToString(),
+                    Text = currentEok.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture),
                     VerticalContentAlignment = VerticalAlignment.Center,
                     TextAlignment = TextAlignment.Right,
                     Padding = new Thickness(4, 0, 4, 0),
@@ -182,7 +183,10 @@ namespace TWChatOverlay.Views
                     BorderBrush = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(0x2A, 0x33, 0x2E)),
                     CaretBrush = System.Windows.Media.Brushes.White,
                 };
-                _input.PreviewTextInput += (_, args) => args.Handled = !long.TryParse(args.Text, out long _);
+                // 숫자와 소수점 하나만 허용 (예: 151.5)
+                _input.PreviewTextInput += (_, args) =>
+                    args.Handled = !(long.TryParse(args.Text, out long _)
+                                     || (args.Text == "." && !_input.Text.Contains('.')));
 
                 var unit = new System.Windows.Controls.TextBlock
                 {
@@ -268,13 +272,15 @@ namespace TWChatOverlay.Views
                 string normalized = (_input.Text ?? string.Empty).Replace(",", string.Empty).Replace("억", string.Empty).Trim();
                 if (normalized.Length == 0)
                     normalized = "0";
-                if (!long.TryParse(normalized, out long eok) || eok < 0)
+                if (!decimal.TryParse(normalized, System.Globalization.NumberStyles.Number,
+                        System.Globalization.CultureInfo.InvariantCulture, out decimal eok) || eok < 0)
                 {
                     _input.BorderBrush = System.Windows.Media.Brushes.IndianRed;
                     return;
                 }
 
-                ResultEok = eok;
+                ResultEokValue = eok;
+                ResultTotalExp = (long)(eok * 100_000_000m);
                 ResultAlertEnabled = _alertToggle.IsChecked == true;
                 DialogResult = true;
                 Close();
