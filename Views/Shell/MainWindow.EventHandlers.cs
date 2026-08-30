@@ -90,6 +90,21 @@ namespace TWChatOverlay.Views
 
         private void OnSettingsPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
         {
+            // 추가 기능 위치 미리보기 중 토글이 바뀌면 해당 탭의 창 표시를 다시 계산한다
+            // (활성화하면 즉시 나타나고, 끄면 사라진다)
+            if (_isAddonPositionMode && e.PropertyName is
+                nameof(_settings.EnableExperienceLimitAlert) or
+                nameof(_settings.EnableAbandonRoadCountAlert) or
+                nameof(_settings.EnableCravingPleasureCountAlert) or
+                nameof(_settings.ShowAbandonRoadSummaryWindow) or
+                nameof(_settings.ShowEtosDirectionAlert) or
+                nameof(_settings.ShowRecaptureSupplyMap) or
+                nameof(_settings.ShowItemDropAlert) or
+                nameof(_settings.EnableBuffTrackerAlert))
+            {
+                try { ShowSettingsPositionWindows(); } catch (Exception ex) { AppLogger.Warn("Addon preview refresh failed.", ex); }
+            }
+
             Dispatcher.Invoke(() =>
             {
                 if (e.PropertyName == nameof(_settings.FontFamily) || e.PropertyName == nameof(_settings.FontSize))

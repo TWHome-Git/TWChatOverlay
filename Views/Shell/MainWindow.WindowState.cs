@@ -335,34 +335,44 @@ namespace TWChatOverlay.Views
             int nav = _addonPositionPreviewTabIndex / 10;
             int sub = _addonPositionPreviewTabIndex % 10;
 
+            // 각 창은 해당 기능이 활성화(토글 ON)된 경우에만 미리보기를 띄운다
             switch (nav)
             {
-                case 1: // 경험치 추적: 일반 탭에서만 누적 알림 창
-                    if (sub == 0)
+                case 1: // 경험치 추적: 일반 탭 + 누적 알림 켜짐
+                    if (sub == 0 && _settings.EnableExperienceLimitAlert)
                         ExperienceAlertWindowService.ShowPositionPreview(_settings, force: true);
                     break;
                 case 2: // 던전 도우미
                     switch (sub)
                     {
                         case 2: // 이클립스: 에토스 방향 + 보급품 탈환 미니 지도
-                            var etosHelper = SubAddonWindow.Instance ?? CreateSubAddonWindow();
-                            etosHelper?.ApplyPositionPreviewVisibility(true);
-                            RecaptureSupplyAlertService.ShowPositionPreview(_settings, force: true);
+                            if (_settings.ShowEtosDirectionAlert)
+                            {
+                                var etosHelper = SubAddonWindow.Instance ?? CreateSubAddonWindow();
+                                etosHelper?.ApplyPositionPreviewVisibility(true);
+                            }
+                            if (_settings.ShowRecaptureSupplyMap)
+                                RecaptureSupplyAlertService.ShowPositionPreview(_settings, force: true);
                             break;
                         case 3: // 어밴던로드: 던전 카운터 + 통계 창
-                            DungeonCountDisplayWindowService.ShowPositionPreview(_settings, force: true);
-                            ShowAbandonRoadSummaryWindow(previewMode: true, restartLifetime: false, activateWindow: false, forcePreview: true);
-                            if (_AbandonRoadSummaryWindow != null)
-                                _AbandonRoadSummaryWindow.Topmost = true;
+                            if (_settings.EnableAbandonRoadCountAlert)
+                                DungeonCountDisplayWindowService.ShowPositionPreview(_settings, force: true);
+                            if (_settings.ShowAbandonRoadSummaryWindow)
+                            {
+                                ShowAbandonRoadSummaryWindow(previewMode: true, restartLifetime: false, activateWindow: false, forcePreview: true);
+                                if (_AbandonRoadSummaryWindow != null)
+                                    _AbandonRoadSummaryWindow.Topmost = true;
+                            }
                             break;
                         case 4: // 갈망하는 즐거움: 던전 카운터
-                            DungeonCountDisplayWindowService.ShowPositionPreview(_settings, force: true);
+                            if (_settings.EnableCravingPleasureCountAlert)
+                                DungeonCountDisplayWindowService.ShowPositionPreview(_settings, force: true);
                             break;
                             // 0(룬·테시스)·1(어비스)는 소리 알림뿐이라 창 없음
                     }
                     break;
-                case 3: // 아이템 알림: 획득 알림 탭에서만 도우미 창
-                    if (sub == 0)
+                case 3: // 아이템 알림: 획득 알림 탭 + 획득 알림 켜짐
+                    if (sub == 0 && _settings.ShowItemDropAlert)
                     {
                         var itemHelper = ItemDropHelperWindow.Instance ?? CreateItemDropHelperWindow();
                         if (itemHelper != null)
@@ -373,16 +383,19 @@ namespace TWChatOverlay.Views
                         }
                     }
                     break;
-                case 4: // 버프 추적
-                    var buffHelper = BuffTrackerHelperWindow.Instance ?? CreateBuffTrackerHelperWindow();
-                    if (buffHelper != null)
+                case 4: // 버프 추적 켜짐
+                    if (_settings.EnableBuffTrackerAlert)
                     {
-                        ApplyStoredPosition(buffHelper, _settings.BuffTrackerWindowLeft, _settings.BuffTrackerWindowTop);
-                        if (!buffHelper.IsVisible)
-                            buffHelper.Show();
+                        var buffHelper = BuffTrackerHelperWindow.Instance ?? CreateBuffTrackerHelperWindow();
+                        if (buffHelper != null)
+                        {
+                            ApplyStoredPosition(buffHelper, _settings.BuffTrackerWindowLeft, _settings.BuffTrackerWindowTop);
+                            if (!buffHelper.IsVisible)
+                                buffHelper.Show();
+                        }
                     }
                     break;
-                case 5: // 필드 보스: 알림 팝업 위치
+                case 5: // 필드 보스: 알림 팝업 위치 (보스별 토글이라 항상 표시)
                     BossAlertToastWindow.ShowPositionPreview(_settings);
                     break;
             }
