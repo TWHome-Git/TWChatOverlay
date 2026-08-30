@@ -695,10 +695,15 @@ namespace TWChatOverlay.Views
 
             try
             {
-                UpdateStartupLoadingProgress(35, "원본 로그를 읽는 중입니다.");
+                // 1단계(전경): 최근 1주일 로그만 즉시 처리해 빠르게 시작한다.
+                // 그보다 과거 로그는 시작 완료 후 백그라운드에서 이어서 처리한다.
+                DateTime recentCutoff = DateTime.Today.AddDays(-7);
+                UpdateStartupLoadingProgress(35, "최근 로그를 읽는 중입니다.");
                 ReadableLogArchiveService.LogArchiveInitializationResult archiveResult = await Task.Run(async () =>
                 {
-                    Func<DateTime, bool>? dateFilter = onlyToday ? (d => d.Date == DateTime.Today) : null;
+                    Func<DateTime, bool> dateFilter = onlyToday
+                        ? (d => d.Date == DateTime.Today)
+                        : (d => d.Date >= recentCutoff);
                     ReadableLogArchiveService.LogArchiveInitializationResult result = await _readableLogArchiveService.EnsureInitializedFromRawLogsAsync(
                         _settings.ChatLogFolderPath,
                         _logAnalysisService,
@@ -707,10 +712,11 @@ namespace TWChatOverlay.Views
                         {
                             double ratio = total <= 0 ? 0 : (double)current / total;
                             double progress = 35 + (ratio * 50.0);
-                            UpdateStartupLoadingProgress(progress, "원본 로그를 읽는 중입니다.", dateText);
+                            UpdateStartupLoadingProgress(progress, "최근 로그를 읽는 중입니다.", dateText);
                         },
                         dateFilter,
-                        cancellationToken).ConfigureAwait(false);
+                        cancellationToken,
+                        updateCheckpoint: false).ConfigureAwait(false);
 
                     _readableLogArchiveService.MigrateContentArchiveIfNeeded();
                     return result;
@@ -755,6 +761,54 @@ namespace TWChatOverlay.Views
 
             UpdateStartupLoadingProgress(100, "초기화가 완료되었습니다.");
             CloseStartupLoadingWindow();
+
+            // 2단계(백그라운드): 1주일 이전 과거 로그를 조용히 이어서 아카이브한다.
+            StartBackgroundLogBackfill();
+        }
+
+        private bool _backgroundLogBackfillStarted;
+
+        /// <summary>1주일 이전 과거 로그를 백그라운드에서 아카이브한다. (시작 시 최근 로그만 전경 처리)</summary>
+        private void StartBackgroundLogBackfill()
+        {
+            if (_backgroundLogBackfillStarted)
+                return;
+            _backgroundLogBackfillStarted = true;
+
+            _ = Task.Run(async () =>
+            {
+                try
+                {
+                    AppLogger.Info("Background log backfill started (older than 7 days).");
+                    await _readableLogArchiveService.EnsureInitializedFromRawLogsAsync(
+                        _settings.ChatLogFolderPath,
+                        _logAnalysisService,
+                        IsContentCompletionRelevantLog,
+                        onProgressText: null,
+                        sourceDateFilter: null,
+                        cancellationToken: CancellationToken.None,
+                        updateCheckpoint: true).ConfigureAwait(false);
+                    AppLogger.Info("Background log backfill completed.");
+
+                    // 과거 데이터가 채워졌으니 어밴던 주간 합계 등을 최신 상태로 갱신
+                    await Dispatcher.InvokeAsync(() =>
+                    {
+                        try
+                        {
+                            _AbandonWeeklySummary = _readableLogArchiveService.LoadAbandonWeeklySummary(DateTime.Today);
+                            _AbandonWeeklySummaryWeekKey = GetIsoWeekKey(DateTime.Today);
+                        }
+                        catch (Exception ex)
+                        {
+                            AppLogger.Warn("Failed to refresh abandon summary after backfill.", ex);
+                        }
+                    });
+                }
+                catch (Exception ex)
+                {
+                    AppLogger.Warn("Background log backfill failed.", ex);
+                }
+            });
         }
 
         private async Task InitializeStartupDataAsync()
