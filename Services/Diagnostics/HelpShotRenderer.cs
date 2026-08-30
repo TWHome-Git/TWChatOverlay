@@ -5,6 +5,7 @@ using System.Windows.Controls;
 using System.Windows.Documents;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using TWChatOverlay.Models;
 
 namespace TWChatOverlay.Services
 {
@@ -118,38 +119,35 @@ namespace TWChatOverlay.Services
             Save(outDir, "chat_clone_basic.png", CloneMock(activeShout: false));
             Save(outDir, "chat_clone_shout.png", CloneMock(activeShout: true));
 
-            // ── 외치기: 토스트 팝업 ──
+            // ── 외치기: 토스트 팝업 (실제 창) ──
             Save(outDir, "shout_toast_off.png", PanelToggle(false,
                 Line(ShoutCol, ("외치기 : 잡템 일괄 삽니다 [상점왕]", ShoutCol)),
                 DimLine("(채팅창에만 표시 — 팝업 없음)")));
             Save(outDir, "shout_toast_on.png", PanelToggle(true,
                 Line(ShoutCol, ("외치기 : 잡템 일괄 삽니다 [상점왕]", ShoutCol)),
-                ToastMock("외치기", "잡템 일괄 삽니다 [상점왕]", ShoutCol)));
+                RealShoutToast("잡템 일괄 삽니다 [상점왕]")));
 
-            // ── 외치기: 닉네임 자동복사 ──
+            // ── 외치기: 닉네임 자동복사 (실제 창) ──
             Save(outDir, "shout_autocopy_off.png", PanelToggle(false,
-                ToastMock("외치기", "잡템 일괄 삽니다 [상점왕]", ShoutCol),
+                RealShoutToast("잡템 일괄 삽니다 [상점왕]"),
                 DimLine("(클립보드 변화 없음)")));
             Save(outDir, "shout_autocopy_on.png", PanelToggle(true,
-                ToastMock("외치기", "잡템 일괄 삽니다 [상점왕]", ShoutCol),
+                RealShoutToast("잡템 일괄 삽니다 [상점왕]"),
                 Chip("클립보드에 '상점왕' 복사됨")));
 
-            // ── 외치기: 토스트 글자 크기 ──
+            // ── 외치기: 토스트 글자 크기 (실제 창) ──
             Save(outDir, "shout_toast_font_13.png", Panel("크기 13",
-                ToastMockSized(13, "외치기", "각인 도와드려요 [세공사]", ShoutCol)));
+                RealShoutToast("각인 도와드려요 [세공사]", 13)));
             Save(outDir, "shout_toast_font_20.png", Panel("크기 20",
-                ToastMockSized(20, "외치기", "각인 도와드려요 [세공사]", ShoutCol)));
+                RealShoutToast("각인 도와드려요 [세공사]", 20)));
 
             // ── 화면: 투명도 ──
             Save(outDir, "display_opacity_100.png", OpacityMock(0xF2, "투명도 100%"));
             Save(outDir, "display_opacity_50.png", OpacityMock(0x66, "투명도 50%"));
 
-            // ── 화면: 잠금 해제 모드 ──
-            Save(outDir, "display_unlock_off.png", Panel("잠금 상태",
-                Line(NormalCol, ("모비딕 : 사냥 가실 분?", NormalCol)),
-                DimLine("(창 이동·크기 변경 불가)")));
-            Save(outDir, "display_unlock_on.png", Panel("잠금 해제 — 드래그로 이동",
-                UnlockMock()));
+            // ── 화면: 잠금 해제 모드 (실제 격자 배경 재현) ──
+            Save(outDir, "display_unlock_off.png", UnlockMock(unlocked: false));
+            Save(outDir, "display_unlock_on.png", UnlockMock(unlocked: true));
 
             // ── 화면: 메뉴 바 가로형 ──
             Save(outDir, "display_menu_h_off.png", PanelToggle(false, MenuBarMock(horizontal: false)));
@@ -168,35 +166,35 @@ namespace TWChatOverlay.Services
                 Line(ShoutCol, ("외치기 : 클럽원 모집 [달빛클럽]", ShoutCol)),
                 DimLine("(키워드: @룬 재료)")));
 
-            // ── 경험치 추적 ──
+            // ── 경험치 추적 (실제 뷰) ──
             Save(outDir, "exp_tracker_off.png", PanelToggle(false,
                 DimLine("(추적 창 표시 안 함)")));
-            Save(outDir, "exp_tracker_on.png", PanelToggle(true, TrackerMock()));
+            Save(outDir, "exp_tracker_on.png", PanelToggle(true, RealExpTracker()));
 
-            // ── 경험치 누적 알림 ──
+            // ── 경험치 누적 알림 (실제 창) ──
             Save(outDir, "exp_cum_off.png", PanelToggle(false,
                 DimLine("(누적 표시 없음)")));
             Save(outDir, "exp_cum_on.png", PanelToggle(true,
-                ToastMock("누적 경험치", "1,234.5억  (+1.2억)", GoldCol)));
+                RealExpAlert("누적 경험치 1,234.5억")));
 
-            // ── 저효율 알림 ──
+            // ── 저효율 알림 (실제 창) ──
             Save(outDir, "exp_loweff_off.png", PanelToggle(false,
                 DimLine("(효율이 떨어져도 알림 없음)")));
             Save(outDir, "exp_loweff_on.png", PanelToggle(true,
-                ToastMock("저효율 알림", "최근 획득이 기준치 미만입니다", Color.FromRgb(0xFF, 0x5A, 0x5A))));
+                RealExpAlert("저효율: 최근 획득이 기준치 미만입니다")));
 
-            // ── 아이템 획득 알림 ──
+            // ── 아이템 획득 알림 (실제 창) ──
             Save(outDir, "item_drop_off.png", PanelToggle(false,
                 Line(SystemCol, ("[설계자의 반지] 을 획득하였습니다.", SystemCol)),
                 DimLine("(알림 없음)")));
             Save(outDir, "item_drop_on.png", PanelToggle(true,
                 Line(SystemCol, ("[설계자의 반지] 을 획득하였습니다.", SystemCol)),
-                ToastMock("아이템 획득", "설계자의 반지", SystemCol)));
+                RealItemToast("설계자의 반지", ItemDropGrade.Rare)));
 
-            // ── 버프 추적 ──
+            // ── 버프 추적 (실제 창) ──
             Save(outDir, "buff_tracker_off.png", PanelToggle(false,
                 DimLine("(버프 추적 창 표시 안 함)")));
-            Save(outDir, "buff_tracker_on.png", PanelToggle(true, BuffMock()));
+            Save(outDir, "buff_tracker_on.png", PanelToggle(true, RealBuffTracker()));
 
             // ── 필드 보스 알림 ──
             Save(outDir, "boss_alert_3min.png", Panel("3분 전",
@@ -204,22 +202,22 @@ namespace TWChatOverlay.Services
             Save(outDir, "boss_alert_spawn.png", Panel("5초 전",
                 ToastMock("필드 보스", "아르칸이 곧 등장합니다!", Color.FromRgb(0xFF, 0x5A, 0x5A))));
 
-            // ── 던전 도우미 알림들 ──
+            // ── 던전 도우미 알림들 (실제 창) ──
             Save(outDir, "dungeon_wave_off.png", PanelToggle(false, DimLine("(웨이브가 끝나도 알림 없음)")));
             Save(outDir, "dungeon_wave_on.png", PanelToggle(true,
-                ToastMock("던전 도우미", "웨이브 종료!", Mint)));
+                RealDungeonAlert("웨이브 종료")));
             Save(outDir, "dungeon_reflect_off.png", PanelToggle(false, DimLine("(반사 패턴 알림 없음)")));
             Save(outDir, "dungeon_reflect_on.png", PanelToggle(true,
-                ToastMock("어비스", "반사 패턴! 공격을 멈추세요", Color.FromRgb(0xFF, 0x5A, 0x5A))));
+                RealDungeonAlert("반사 패턴!")));
             Save(outDir, "dungeon_abandon_count_off.png", PanelToggle(false, DimLine("(입장해도 알림 없음)")));
             Save(outDir, "dungeon_abandon_count_on.png", PanelToggle(true,
-                ToastMock("어밴던로드", "입장 3회", Mint)));
+                RealDungeonAlert("어밴던로드 입장 3회")));
             Save(outDir, "dungeon_abandon_gold_off.png", PanelToggle(false, DimLine("(합계 창 표시 안 함)")));
             Save(outDir, "dungeon_abandon_gold_on.png", PanelToggle(true,
-                ToastMock("어밴던로드 주간 합계", "12,340,000 골드", GoldCol)));
+                RealDungeonAlert("어밴던로드 주간 합계 12,340,000 골드")));
             Save(outDir, "dungeon_craving_count_off.png", PanelToggle(false, DimLine("(입장해도 알림 없음)")));
             Save(outDir, "dungeon_craving_count_on.png", PanelToggle(true,
-                ToastMock("갈망하는 즐거움", "입장 2회", Mint)));
+                RealDungeonAlert("갈망하는 즐거움 입장 2회")));
         }
 
         // ===== 조립 헬퍼 =====
@@ -337,6 +335,118 @@ namespace TWChatOverlay.Services
             };
         }
 
+        // ===== 실제 프로그램 창 렌더: 진짜 창/뷰를 인스턴스화해 그 모습 그대로 찍는다 =====
+
+        private static readonly FontFamily RealFont = new("Malgun Gothic");
+
+        /// <summary>창을 화면에 띄우지 않고 루트 비주얼만 분리해 렌더 대상으로 쓴다.</summary>
+        private static FrameworkElement WindowRoot(Window w)
+        {
+            var root = (FrameworkElement)w.Content;
+            // 분리하면 창에 걸린 DataContext 상속이 끊기므로 루트에 로컬 값으로 옮긴다
+            // (분리 전 root.DataContext는 상속값을 돌려주므로 null 검사로는 거를 수 없다)
+            if (w.DataContext != null)
+                root.DataContext = w.DataContext;
+            w.Content = null;
+            try { w.Close(); } catch { }
+            root.HorizontalAlignment = HorizontalAlignment.Left;
+            return root;
+        }
+
+        /// <summary>실제 외치기 토스트 창.</summary>
+        private static FrameworkElement RealShoutToast(string message, double? fontSize = null)
+        {
+            var settings = new ChatSettings();
+            if (fontSize.HasValue)
+                settings.ShoutToastFontSize = fontSize.Value;
+            var root = WindowRoot(new Views.ShoutToastWindow(message, RealFont, settings));
+            root.MaxWidth = 306;
+            return root;
+        }
+
+        /// <summary>실제 경험치 알림 창.</summary>
+        private static FrameworkElement RealExpAlert(string message)
+        {
+            var w = new Views.ExperienceAlertWindow(new ChatSettings());
+            w.SetMessage(message);
+            var root = WindowRoot(w);
+            root.MaxWidth = 306;
+            return root;
+        }
+
+        /// <summary>실제 던전 알림 창 (입장 횟수·웨이브 등 공용).</summary>
+        private static FrameworkElement RealDungeonAlert(string message)
+        {
+            var root = WindowRoot(new Views.DungeonCountDisplayWindow(message, RealFont, durationSeconds: 0, new ChatSettings()));
+            root.MaxWidth = 306;
+            return root;
+        }
+
+        /// <summary>실제 아이템 획득 토스트 창.</summary>
+        private static FrameworkElement RealItemToast(string itemName, ItemDropGrade grade)
+        {
+            var root = WindowRoot(new Views.ItemDropToastWindow(itemName, grade, RealFont));
+            root.MaxWidth = 306;
+            return root;
+        }
+
+        /// <summary>실제 경험치 추적 뷰 + 견본 값.</summary>
+        private static FrameworkElement RealExpTracker()
+        {
+            return new Views.ExpTrackerView
+            {
+                DataContext = new ExpTrackerSample(),
+                Width = 300,
+                HorizontalAlignment = HorizontalAlignment.Left,
+            };
+        }
+
+        private sealed class ExpTrackerSample
+        {
+            public string TotalExpValueDisplay { get; } = "852.4억";
+            public string ExpPerHourDisplay { get; } = "82.3억";
+            public string LastGainedExpDisplay { get; } = "+152만";
+            public string GainCountDisplay { get; } = "128";
+            public bool ShowGainCountDisplay { get; } = true;
+            public bool IsMeasurementStopped { get; } = false;
+            public System.Windows.Input.ICommand? ResetExpCommand { get; } = null;
+        }
+
+        /// <summary>실제 버프 추적 창 + 견본 버프 (Has* 세터가 private이라 같은 모양의 견본 DataContext로 교체).</summary>
+        private static FrameworkElement RealBuffTracker()
+        {
+            var settings = new ChatSettings();
+            var tracker = new BuffTrackerService(settings, suppressEndSound: true);
+            var root = WindowRoot(new Views.BuffTrackerWindow(tracker, settings));
+            root.DataContext = new BuffTrackerSample();
+            root.MaxWidth = 306;
+            return root;
+        }
+
+        private sealed class BuffTrackerSample
+        {
+            public bool HasRareBuffs { get; } = true;
+            public bool HasExpBuffs { get; } = true;
+            public System.Collections.ObjectModel.ObservableCollection<BuffTrackerService.BuffDisplayItem> ActiveRareBuffs { get; } = new();
+            public System.Collections.ObjectModel.ObservableCollection<BuffTrackerService.BuffDisplayItem> ActiveExpBuffs { get; } = new();
+
+            public BuffTrackerSample()
+            {
+                ActiveRareBuffs.Add(new BuffTrackerService.BuffDisplayItem("레어 하트", "00:08", BuffIcon("RareHeart.png"), 0, isRare: true));
+                ActiveExpBuffs.Add(new BuffTrackerService.BuffDisplayItem("경험의 하트", "14:32", BuffIcon("ExpHeart.png"), 0));
+                ActiveExpBuffs.Add(new BuffTrackerService.BuffDisplayItem("EOS", "02:05", BuffIcon("EOS.png"), 1));
+            }
+
+            private static ImageSource? BuffIcon(string file)
+            {
+                try
+                {
+                    return new BitmapImage(new Uri($"pack://application:,,,/Data/images/Buff/{file}", UriKind.Absolute));
+                }
+                catch { return null; }
+            }
+        }
+
         /// <summary>알림 토스트 목업: 민트 테두리 작은 창 + 제목/본문.</summary>
         private static FrameworkElement ToastMock(string title, string body, Color bodyColor)
             => ToastMockSized(12, title, body, bodyColor);
@@ -434,46 +544,141 @@ namespace TWChatOverlay.Services
             };
         }
 
-        /// <summary>잠금 해제 모드 목업: 민트 테두리 채팅 판 + 좌표·크기 안내 칩.</summary>
-        private static FrameworkElement UnlockMock()
+        /// <summary>
+        /// 잠금 해제 모드 목업: 실제 UiLockService.BackdropWindow와 동일한
+        /// 민트 격자(32px, 50% 불투명)를 게임 화면 배경 위에 깔고 창과 좌표 칩을 얹는다.
+        /// </summary>
+        private static FrameworkElement UnlockMock(bool unlocked)
         {
             var chat = new StackPanel { Margin = new Thickness(10, 6, 10, 6) };
             chat.Children.Add(Line(NormalCol, ("모비딕 : 사냥 가실 분?", NormalCol)));
 
-            var stack = new StackPanel();
-            stack.Children.Add(new Border
+            var windowStack = new StackPanel
             {
-                Background = new SolidColorBrush(Color.FromArgb(0xE0, PanelBg.R, PanelBg.G, PanelBg.B)),
-                BorderBrush = new SolidColorBrush(Mint),
-                BorderThickness = new Thickness(2),
+                HorizontalAlignment = HorizontalAlignment.Left,
+                Margin = new Thickness(24, 22, 0, 22),
+            };
+            windowStack.Children.Add(new Border
+            {
+                Width = 210,
+                Background = new SolidColorBrush(Color.FromArgb(0xE8, PanelBg.R, PanelBg.G, PanelBg.B)),
+                BorderBrush = unlocked ? new SolidColorBrush(Mint) : new SolidColorBrush(BorderCol),
+                BorderThickness = new Thickness(unlocked ? 2 : 1),
                 CornerRadius = new CornerRadius(4),
                 Child = chat,
             });
-            stack.Children.Add(Chip("X: 120  Y: 340  가로: 320  세로: 180"));
-            return stack;
+            if (unlocked)
+                windowStack.Children.Add(Chip("X: 120  Y: 340  가로: 320  세로: 180"));
+
+            var backdrop = new Grid();
+            backdrop.Children.Add(new Border
+            {
+                Background = new LinearGradientBrush(
+                    Color.FromRgb(0x4A, 0x6B, 0x3A), Color.FromRgb(0x2C, 0x44, 0x28), 45),
+            });
+            if (unlocked)
+            {
+                // 실제 배치 기준 격자와 동일: 민트 2px 선, 32px 칸, 전체 50% 불투명
+                backdrop.Children.Add(new System.Windows.Shapes.Rectangle
+                {
+                    Opacity = 0.5,
+                    Fill = CreateUnlockGridBrush(),
+                });
+            }
+            backdrop.Children.Add(windowStack);
+            backdrop.Children.Add(Badge(unlocked ? "잠금 해제 — 드래그로 이동" : "잠금 상태"));
+
+            return new Border
+            {
+                Width = PanelWidth,
+                BorderBrush = new SolidColorBrush(BorderCol),
+                BorderThickness = new Thickness(1),
+                CornerRadius = new CornerRadius(6),
+                ClipToBounds = true,
+                Child = backdrop,
+            };
         }
 
-        /// <summary>메뉴 바 목업: 아이콘 사각형을 세로/가로로 배치.</summary>
+        /// <summary>UiLockService.BackdropWindow.CreateGridBrush와 동일한 격자 브러시.</summary>
+        private static DrawingBrush CreateUnlockGridBrush()
+        {
+            var line = Color.FromArgb(0x70, 0x0C, 0xD2, 0x9D);
+            var pen = new Pen(new SolidColorBrush(line), 2);
+            var drawing = new GeometryDrawing
+            {
+                Pen = pen,
+                Geometry = new GeometryGroup
+                {
+                    Children =
+                    {
+                        new LineGeometry(new Point(0, 0), new Point(32, 0)),
+                        new LineGeometry(new Point(0, 0), new Point(0, 32)),
+                    }
+                }
+            };
+            var brush = new DrawingBrush(drawing)
+            {
+                TileMode = TileMode.Tile,
+                Viewport = new Rect(0, 0, 32, 32),
+                ViewportUnits = BrushMappingMode.Absolute,
+            };
+            brush.Freeze();
+            return brush;
+        }
+
+        /// <summary>메뉴 바 목업: 실제 메뉴 아이콘(채팅/일일주간/달력/외치기/설정/종료)과 최소화 버튼을 세로/가로로 배치.</summary>
         private static FrameworkElement MenuBarMock(bool horizontal)
         {
+            string[] iconFiles = { "Chat.png", "DailyWeekly.png", "Calendar.png", "Shout.png", "Setting.png", "Exit.png" };
+
             var icons = new StackPanel
             {
                 Orientation = horizontal ? Orientation.Horizontal : Orientation.Vertical,
                 HorizontalAlignment = HorizontalAlignment.Left,
             };
-            for (int i = 0; i < 4; i++)
+            foreach (string file in iconFiles)
             {
-                icons.Children.Add(new Border
+                var image = new System.Windows.Controls.Image
                 {
-                    Width = 20,
-                    Height = 20,
+                    Width = 22,
+                    Height = 22,
+                    Stretch = Stretch.Uniform,
                     Margin = new Thickness(3),
-                    CornerRadius = new CornerRadius(4),
-                    Background = new SolidColorBrush(Color.FromArgb(0x50, Mint.R, Mint.G, Mint.B)),
-                    BorderBrush = new SolidColorBrush(Mint),
-                    BorderThickness = new Thickness(1),
-                });
+                };
+                try
+                {
+                    image.Source = new BitmapImage(
+                        new Uri($"pack://application:,,,/Data/images/MenuIcon/{file}", UriKind.Absolute));
+                }
+                catch { }
+                icons.Children.Add(image);
             }
+
+            // 최소화 텍스트 버튼: 세로 바는 가로 글자, 가로 바는 세로 글자
+            var minText = new TextBlock
+            {
+                Text = horizontal ? "최\n소\n화" : "최소화",
+                FontSize = 9,
+                LineHeight = 10,
+                Foreground = new SolidColorBrush(SubText),
+                FontFamily = new FontFamily("Malgun Gothic"),
+                TextAlignment = TextAlignment.Center,
+                HorizontalAlignment = HorizontalAlignment.Center,
+                VerticalAlignment = VerticalAlignment.Center,
+            };
+            icons.Children.Add(new Border
+            {
+                Margin = new Thickness(3),
+                Padding = new Thickness(3, 2, 3, 2),
+                CornerRadius = new CornerRadius(3),
+                Background = new SolidColorBrush(Color.FromRgb(0x22, 0x2A, 0x26)),
+                BorderBrush = new SolidColorBrush(BorderCol),
+                BorderThickness = new Thickness(1),
+                VerticalAlignment = VerticalAlignment.Center,
+                HorizontalAlignment = HorizontalAlignment.Center,
+                Child = minText,
+            });
+
             var bar = new Border
             {
                 Background = new SolidColorBrush(Color.FromRgb(0x18, 0x1F, 0x1C)),
