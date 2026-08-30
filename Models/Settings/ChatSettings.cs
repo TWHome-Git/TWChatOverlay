@@ -721,6 +721,17 @@ namespace TWChatOverlay.Models
             }
         }
         [JsonIgnore]
+        public bool BossAlertOriginOfDoomEntryCountdown
+        {
+            get => Alerts.Boss.OriginOfDoomEntryCountdown;
+            set
+            {
+                if (Alerts.Boss.OriginOfDoomEntryCountdown == value) return;
+                Alerts.Boss.OriginOfDoomEntryCountdown = value;
+                OnPropertyChanged();
+            }
+        }
+        [JsonIgnore]
         public Dictionary<string, BossAlertConfig> BossAlertConfigs
         {
             get => Alerts.Boss.Configs;
