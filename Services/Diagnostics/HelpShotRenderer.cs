@@ -258,6 +258,7 @@ namespace TWChatOverlay.Services
                 DimLine("(키워드: @세크리드 주화 주머니)")));
 
             Save(outDir, "readme_exp_tracker.png", PanelPlain(RealExpTracker()));
+            Save(outDir, "readme_exp_cum.png", PanelPlain(RealExpAlert("경험치 150억 누적 달성")));
             Save(outDir, "readme_abandon_count.png", PanelPlain(RealDungeonAlert("어밴던로드 - 필멸의 땅 3/10")));
             Save(outDir, "readme_abandon_gold.png", PanelPlain(RealAbandonSummary()));
 
@@ -270,6 +271,31 @@ namespace TWChatOverlay.Services
             // 일일/주간 컨텐츠 창 — 실제 창의 일반 상태와 설정 상태
             Save(outDir, "readme_daily_weekly.png", RealDailyWeekly(settingsOpen: false));
             Save(outDir, "readme_daily_weekly_settings.png", RealDailyWeekly(settingsOpen: true));
+
+            // 수익 월별 통계 달력 — 실제 창 + 샘플 데이터
+            Save(outDir, "readme_item_calendar.png", RealItemCalendar());
+        }
+
+        /// <summary>실제 수익 월별 통계(달력) 창 — 이번 달 달력에 샘플 획득 내역을 채워 찍는다.</summary>
+        private static FrameworkElement RealItemCalendar()
+        {
+            var settings = new ChatSettings();
+            var w = new Views.ItemCalendarWindow(settings, new LogAnalysisService(settings));
+
+            DateTime monthStart = new(DateTime.Today.Year, DateTime.Today.Month, 1);
+            var samples = new System.Collections.Generic.List<ItemLogSnapshotEntry>
+            {
+                new() { Date = monthStart.AddDays(4), ItemName = "설계자의 반지", DisplayName = "설계자의 반지", Grade = ItemDropGrade.Rare, Count = 1 },
+                new() { Date = monthStart.AddDays(11), ItemName = "세크리드 주화", DisplayName = "세크리드 주화", Grade = ItemDropGrade.Normal, Count = 3 },
+                new() { Date = monthStart.AddDays(11), ItemName = "경험의 정수", DisplayName = "경험의 정수", Grade = ItemDropGrade.Normal, Count = 1, ExperienceEssenceCount = 1 },
+                new() { Date = monthStart.AddDays(19), ItemName = "레어의 심장", DisplayName = "레어의 심장", Grade = ItemDropGrade.Rare, Count = 1 },
+            };
+            w.ApplySampleMonthForRender(samples);
+
+            var root = WindowRoot(w);
+            root.Width = 1430;
+            root.Height = 880;
+            return root;
         }
 
         /// <summary>배지 없는 어두운 채팅 판 (README 삽입용).</summary>
@@ -1161,7 +1187,9 @@ namespace TWChatOverlay.Services
 
         private static void Save(string outDir, string fileName, FrameworkElement visual)
         {
-            visual.Measure(new Size(PanelWidth, double.PositiveInfinity));
+            // 명시 폭이 기본 판 폭보다 큰 요소(달력 등 넓은 실제 창)는 그 폭으로 측정한다
+            double measureWidth = !double.IsNaN(visual.Width) && visual.Width > PanelWidth ? visual.Width : PanelWidth;
+            visual.Measure(new Size(measureWidth, double.PositiveInfinity));
             visual.Arrange(new Rect(visual.DesiredSize));
             visual.UpdateLayout();
 

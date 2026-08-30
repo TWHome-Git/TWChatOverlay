@@ -25,7 +25,12 @@ namespace TWChatOverlay
                     ? e.Args[shotArg + 1]
                     : System.IO.Path.Combine(System.IO.Path.GetTempPath(), "twchat_helpshots");
                 try { HelpShotRenderer.RenderAll(outDir); }
-                catch (Exception ex) { AppLogger.Error("Help shot rendering failed.", ex); }
+                catch (Exception ex)
+                {
+                    AppLogger.Error("Help shot rendering failed.", ex);
+                    // 디버그 로깅이 꺼져 있어도 원인을 확인할 수 있게 출력 폴더에 남긴다
+                    try { System.IO.File.WriteAllText(System.IO.Path.Combine(outDir, "_render_error.txt"), ex.ToString()); } catch { }
+                }
                 Shutdown();
                 return;
             }

@@ -244,6 +244,14 @@ namespace TWChatOverlay.Views
             SetLoadingState(false, string.Empty);
         }
 
+        /// <summary>도움말/README 렌더 전용: 주어진 샘플 스냅샷으로 이번 달 달력을 구성한다. (파일 IO 없음)</summary>
+        internal void ApplySampleMonthForRender(IReadOnlyList<ItemLogSnapshotEntry> snapshots)
+        {
+            DateTime monthStart = GetMonthStart(DateTime.Today);
+            ApplyLoadedMonth(monthStart, snapshots, new AbandonMonthlySummarySnapshotEntry { MonthStart = monthStart });
+            SetLoadingState(false, string.Empty);
+        }
+
         private (List<ItemLogSnapshotEntry> Snapshots, AbandonMonthlySummarySnapshotEntry AbandonSummary) BuildMonthData(DateTime monthStart)
         {
             var snapshots = new List<ItemLogSnapshotEntry>();

@@ -40,6 +40,9 @@
   <img alt="경험치 추적" src="Data/images/Help/readme_exp_tracker.png" width="480" />
 
 * **누적 경험치 알림** — '경험의 정수' 교환 후 목표 누적치 도달 시 알림 (이벤트·퀘스트 경험치는 인식되지 않을 수 있음)
+
+  <img alt="누적 경험치 알림" src="Data/images/Help/readme_exp_cum.png" width="480" />
+
 * **저효율 알림** — 기준치 이하 경험치 획득 시 음성 알림
 
 ### 던전 도우미
@@ -65,7 +68,9 @@
   <img alt="아이템 획득 알림" src="Data/images/Help/readme_item_drop.png" width="480" />
 
 * **아이템 필터** — 기본 필터에 원하는 아이템을 추가/제거, 필터 저장·불러오기 지원
-* **수익 월별 통계** — 획득 아이템의 월별 수익 달력
+* **수익 월별 통계** — 획득 아이템·마정석·경험의 정수를 월별 달력으로 집계
+
+  <img alt="수익 월별 통계 달력" src="Data/images/Help/readme_item_calendar.png" width="640" />
 
 ### 버프 추적 (참고용)
 * 버프 시작을 감지해 남은 시간 표시, 종료 시 사운드 알림
