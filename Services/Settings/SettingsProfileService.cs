@@ -18,7 +18,14 @@ namespace TWChatOverlay.Services
     /// </summary>
     public static class SettingsProfileService
     {
-        public static readonly string[] DefaultProfileNames = { "프로필 1", "프로필 2" };
+        public static readonly string[] DefaultProfileNames = { "Profile 1", "Profile 2" };
+
+        // 구버전 한글 기본 프로필 파일명 → 영어 이름으로 이관
+        private static readonly (string Old, string New)[] LegacyRenames =
+        {
+            ("프로필 1", "Profile 1"),
+            ("프로필 2", "Profile 2"),
+        };
 
         private static readonly string ProfilesDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Profiles");
         private static readonly JsonSerializerOptions Options = new()
@@ -31,6 +38,7 @@ namespace TWChatOverlay.Services
         /// <summary>기본 2개 + 추가로 저장된 프로필 이름 목록 (기본이 항상 앞).</summary>
         public static List<string> GetProfileNames()
         {
+            MigrateLegacyNames();
             var names = new List<string>(DefaultProfileNames);
             try
             {
@@ -154,17 +162,39 @@ namespace TWChatOverlay.Services
             }
         }
 
-        /// <summary>"프로필 3"부터 비어 있는 새 이름을 제안한다.</summary>
+        /// <summary>"Profile 3"부터 비어 있는 새 이름을 제안한다.</summary>
         public static string SuggestNewName()
         {
             var taken = new HashSet<string>(GetProfileNames(), StringComparer.Ordinal);
             for (int i = 3; i < 100; i++)
             {
-                string candidate = $"프로필 {i}";
+                string candidate = $"Profile {i}";
                 if (!taken.Contains(candidate))
                     return candidate;
             }
-            return $"프로필 {DateTime.Now:HHmmss}";
+            return $"Profile {DateTime.Now:HHmmss}";
+        }
+
+        /// <summary>구버전 한글 기본 프로필 파일("프로필 1.json" 등)을 영어 이름으로 이관한다.</summary>
+        private static void MigrateLegacyNames()
+        {
+            try
+            {
+                foreach (var (oldName, newName) in LegacyRenames)
+                {
+                    string oldPath = PathFor(oldName);
+                    string newPath = PathFor(newName);
+                    if (File.Exists(oldPath) && !File.Exists(newPath))
+                    {
+                        File.Move(oldPath, newPath);
+                        AppLogger.Info($"Settings profile renamed. '{oldName}' -> '{newName}'");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                AppLogger.Warn("Failed to migrate legacy profile names.", ex);
+            }
         }
 
         private static string PathFor(string name)
