@@ -458,19 +458,6 @@
                             <Border Style="{StaticResource SettingsRowStyle}">
                                 <DockPanel>
                                     <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
-                                        <CheckBox Style="{StaticResource SyncLinkCheckBoxStyle}" IsChecked="{Binding EtaLevelColorSync}"/>
-                                        <Button Width="26" Height="14" Margin="0,0,10,0" Background="{Binding EtaLevelColor}" IsEnabled="{Binding EtaLevelColorEditable}" Command="{Binding ColorPickCommand}" CommandParameter="EtaLevel" Style="{StaticResource ColorPickerButtonStyle}" ToolTip="동기화를 끄면 지정할 수 있습니다"/>
-                                        <CheckBox IsChecked="{Binding ShowEtaLevel}" Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
-                                    </StackPanel>
-                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                        <TextBlock Text="에타 레벨" Style="{StaticResource SettingsRowLabelStyle}"/>
-                                        <Button Style="{StaticResource HelpButtonStyle}" Tag="chat.id.eta_level" Click="Help_Click"/>
-                                    </StackPanel>
-                                </DockPanel>
-                            </Border>
-                            <Border Style="{StaticResource SettingsRowStyle}">
-                                <DockPanel>
-                                    <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
                                         <CheckBox Style="{StaticResource SyncLinkCheckBoxStyle}" IsChecked="{Binding SenderIdColorSync}"/>
                                         <Button Width="26" Height="14" Margin="0,0,62,0" Background="{Binding SenderIdColor}" IsEnabled="{Binding SenderIdColorEditable}" Command="{Binding ColorPickCommand}" CommandParameter="SenderId" Style="{StaticResource ColorPickerButtonStyle}" ToolTip="동기화를 끄면 지정할 수 있습니다"/>
                                     </StackPanel>
@@ -480,23 +467,32 @@
                                     </StackPanel>
                                 </DockPanel>
                             </Border>
-                            <!-- 에타 레벨의 소분류: 라벨·토글은 다른 행과 같은 272 정렬, 아래에 구간 스펙트럼 바 -->
+                            <Border Style="{StaticResource SettingsRowStyle}">
+                                <DockPanel>
+                                    <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
+                                        <CheckBox Style="{StaticResource SyncLinkCheckBoxStyle}" IsChecked="{Binding EtaLevelColorSync}" ToolTip="색상 동기화 — 켜면 줄 색을 따르고, 끄면 아래 레벨별 색을 사용"/>
+                                        <CheckBox IsChecked="{Binding ShowEtaLevel}" Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
+                                    </StackPanel>
+                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                        <TextBlock Text="에타 레벨" Style="{StaticResource SettingsRowLabelStyle}"/>
+                                        <Button Style="{StaticResource HelpButtonStyle}" Tag="chat.id.eta_level" Click="Help_Click"/>
+                                    </StackPanel>
+                                </DockPanel>
+                            </Border>
+                            <!-- 에타 레벨의 소분류: 동기화 해제 시 사용되는 레벨별(구간) 색 -->
                             <Border Style="{StaticResource SettingsRowWideStyle}">
                                 <StackPanel>
-                                    <DockPanel>
-                                        <CheckBox DockPanel.Dock="Right" IsChecked="{Binding EtaLevelRangeColors}" Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
-                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="14,0,0,0">
-                                            <TextBlock Text="레벨별 색상" Style="{StaticResource SettingsRowLabelStyle}" ToolTip="에타 레벨 구간에 따라 [레벨] 색을 다르게 표시"/>
-                                            <Button Style="{StaticResource HelpButtonStyle}" Tag="chat.id.eta_range" Click="Help_Click"/>
-                                        </StackPanel>
-                                    </DockPanel>
+                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="14,0,0,0">
+                                        <TextBlock Text="레벨별 색상" Style="{StaticResource SettingsRowLabelStyle}" ToolTip="에타 레벨 '동기화'를 끄면 구간에 따라 이 색이 적용됩니다"/>
+                                        <Button Style="{StaticResource HelpButtonStyle}" Tag="chat.id.eta_range" Click="Help_Click"/>
+                                    </StackPanel>
                                     <Border Margin="28,8,0,2" HorizontalAlignment="Left" BorderBrush="{DynamicResource SeparatorBrush}" BorderThickness="1" CornerRadius="3">
                                         <UniformGrid Columns="5" Width="440" Height="22">
-                                            <Button Content="1~20" Background="{Binding EtaLevelRange1Color}" IsEnabled="{Binding EtaLevelRangeColors}" Command="{Binding ColorPickCommand}" CommandParameter="EtaLevelRange1" Style="{StaticResource EtaRangeSegmentStyle}"/>
-                                            <Button Content="21~40" Background="{Binding EtaLevelRange2Color}" IsEnabled="{Binding EtaLevelRangeColors}" Command="{Binding ColorPickCommand}" CommandParameter="EtaLevelRange2" Style="{StaticResource EtaRangeSegmentStyle}"/>
-                                            <Button Content="41~60" Background="{Binding EtaLevelRange3Color}" IsEnabled="{Binding EtaLevelRangeColors}" Command="{Binding ColorPickCommand}" CommandParameter="EtaLevelRange3" Style="{StaticResource EtaRangeSegmentStyle}"/>
-                                            <Button Content="61~80" Background="{Binding EtaLevelRange4Color}" IsEnabled="{Binding EtaLevelRangeColors}" Command="{Binding ColorPickCommand}" CommandParameter="EtaLevelRange4" Style="{StaticResource EtaRangeSegmentStyle}"/>
-                                            <Button Content="81~" Background="{Binding EtaLevelRange5Color}" IsEnabled="{Binding EtaLevelRangeColors}" Command="{Binding ColorPickCommand}" CommandParameter="EtaLevelRange5" Style="{StaticResource EtaRangeSegmentStyle}"/>
+                                            <Button Content="1~20" Background="{Binding EtaLevelRange1Color}" IsEnabled="{Binding EtaLevelColorEditable}" Command="{Binding ColorPickCommand}" CommandParameter="EtaLevelRange1" Style="{StaticResource EtaRangeSegmentStyle}"/>
+                                            <Button Content="21~40" Background="{Binding EtaLevelRange2Color}" IsEnabled="{Binding EtaLevelColorEditable}" Command="{Binding ColorPickCommand}" CommandParameter="EtaLevelRange2" Style="{StaticResource EtaRangeSegmentStyle}"/>
+                                            <Button Content="41~60" Background="{Binding EtaLevelRange3Color}" IsEnabled="{Binding EtaLevelColorEditable}" Command="{Binding ColorPickCommand}" CommandParameter="EtaLevelRange3" Style="{StaticResource EtaRangeSegmentStyle}"/>
+                                            <Button Content="61~80" Background="{Binding EtaLevelRange4Color}" IsEnabled="{Binding EtaLevelColorEditable}" Command="{Binding ColorPickCommand}" CommandParameter="EtaLevelRange4" Style="{StaticResource EtaRangeSegmentStyle}"/>
+                                            <Button Content="81~" Background="{Binding EtaLevelRange5Color}" IsEnabled="{Binding EtaLevelColorEditable}" Command="{Binding ColorPickCommand}" CommandParameter="EtaLevelRange5" Style="{StaticResource EtaRangeSegmentStyle}"/>
                                         </UniformGrid>
                                     </Border>
                                 </StackPanel>

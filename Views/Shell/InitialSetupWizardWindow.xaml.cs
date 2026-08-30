@@ -547,7 +547,7 @@ namespace TWChatOverlay.Views
             reflectionVol.SetBinding(Slider.ValueProperty, new Binding(nameof(ChatSettings.ReflectionPatternAlertVolumePercent)) { Source = _settings, Mode = BindingMode.TwoWay });
             panel.Children.Add(reflectionVol);
             panel.Children.Add(CreateCheckRow("어밴던로드 횟수 알림", nameof(ChatSettings.EnableAbandonRoadCountAlert)));
-            panel.Children.Add(CreateCheckRow("어밴던로드 누적 금액 알림", nameof(ChatSettings.ShowAbandonRoadSummaryWindow)));
+            panel.Children.Add(CreateCheckRow("어밴던로드 통계", nameof(ChatSettings.ShowAbandonRoadSummaryWindow)));
             panel.Children.Add(CreateCheckRow("갈망하는 즐거움 횟수 알림", nameof(ChatSettings.EnableCravingPleasureCountAlert)));
             panel.Children.Add(new TextBlock { Text = "던전 카운터 지속시간(초)", Foreground = ThemeBrushes.Get("TextBrush", Brushes.White), Margin = new Thickness(0, 8, 0, 4) });
             var dur = new TextBox { Height = 30, VerticalContentAlignment = VerticalAlignment.Center };
