@@ -53,7 +53,8 @@ namespace TWChatOverlay.Services
                     BossAlertConfig config = _settings.GetOrCreateBossAlertConfig(boss.Id);
                     if (CheckAlarm(boss, now, config.Alert3MinutesBefore, TimeSpan.FromMinutes(3), "3분 전") ||
                         CheckAlarm(boss, now, config.Alert1MinuteBefore, TimeSpan.FromMinutes(1), "1분 전") ||
-                        CheckAlarm(boss, now, config.AlertAtSpawn, TimeSpan.FromSeconds(5), "5초 전"))
+                        CheckAlarm(boss, now, config.AlertAtSpawn, TimeSpan.FromSeconds(5), "5초 전") ||
+                        CheckEntryCountdownStart(boss, now))
                     {
                         triggered = true;
                         break;
@@ -93,13 +94,48 @@ namespace TWChatOverlay.Services
 
                 AppLogger.Info($"Boss alarm triggered. Boss='{boss.Name}', Trigger='{label}', Occurrence='{occurrence:yyyy-MM-dd HH:mm:ss}'");
                 NotificationService.PlayAlert(ResolveSoundFile(boss.Id, offsetBefore));
-                // 팝업 알림: 보스 출현 5초 후 자동으로 닫힌다
-                Views.BossAlertToastWindow.ShowAlert(boss.Name, label, occurrence, _settings);
+                // 팝업 알림: 보스 출현 5초 후(입장 카운트다운은 종료 후) 자동으로 닫힌다
+                Views.BossAlertToastWindow.ShowAlert(boss.Name, label, occurrence, _settings, GetEntryWindow(boss.Id, _settings));
                 return true;
             }
 
             return false;
         }
+
+        /// <summary>
+        /// 혼란한 대지: 등장 시각에 입장 가능 시간(3분) 카운트다운 팝업을 띄운다.
+        /// 사전 알림(1분/5초 전)이 꺼져 있어도 이 토글이 켜져 있으면 등장 시점에 팝업이 열린다. (사운드 없음)
+        /// </summary>
+        private bool CheckEntryCountdownStart(BossTimerService.BossTimerDefinition boss, DateTime now)
+        {
+            TimeSpan? entryWindow = GetEntryWindow(boss.Id, _settings);
+            if (entryWindow == null)
+                return false;
+
+            foreach (DateTime occurrence in GetOccurrencesCached(boss, now))
+            {
+                TimeSpan elapsed = now - occurrence;
+                if (elapsed < TimeSpan.Zero || elapsed > LateFireWindow)
+                    continue;
+
+                string fireKey = $"{boss.Id}|{occurrence:yyyyMMddHHmmss}|entry";
+                if (!_firedKeys.Add(fireKey))
+                    continue;
+
+                AppLogger.Info($"Boss entry countdown started. Boss='{boss.Name}', Occurrence='{occurrence:yyyy-MM-dd HH:mm:ss}'");
+                Views.BossAlertToastWindow.ShowAlert(boss.Name, "등장", occurrence, _settings, entryWindow);
+                return true;
+            }
+
+            return false;
+        }
+
+        /// <summary>혼란한 대지에서 입장 시간 카운트가 켜져 있으면 입장 가능 시간(3분)을 반환.</summary>
+        internal static TimeSpan? GetEntryWindow(string bossId, ChatSettings? settings)
+            => string.Equals(bossId, "Confused Land", StringComparison.OrdinalIgnoreCase)
+               && settings?.BossAlertConfusedLandEntryCountdown == true
+                ? TimeSpan.FromMinutes(3)
+                : null;
 
         /// <summary>어제~내일 출현 시각을 보스별로 캐시해 반환한다. 날짜가 바뀌면 갱신.</summary>
         private DateTime[] GetOccurrencesCached(BossTimerService.BossTimerDefinition boss, DateTime now)
@@ -138,7 +174,7 @@ namespace TWChatOverlay.Services
 
             AppLogger.Info($"Boss alarm TEST fired. Boss='{bossName}', Trigger='{label}'");
             NotificationService.PlayAlert(ResolveSoundFile(bossId, offset));
-            Views.BossAlertToastWindow.ShowAlert(bossName, label, DateTime.Now.Add(offset), settings);
+            Views.BossAlertToastWindow.ShowAlert(bossName, label, DateTime.Now.Add(offset), settings, GetEntryWindow(bossId, settings));
         }
 
         private static string ResolveSoundFile(string bossId, TimeSpan offsetBefore)

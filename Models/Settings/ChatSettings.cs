@@ -710,6 +710,17 @@ namespace TWChatOverlay.Models
             }
         }
         [JsonIgnore]
+        public bool BossAlertConfusedLandEntryCountdown
+        {
+            get => Alerts.Boss.ConfusedLandEntryCountdown;
+            set
+            {
+                if (Alerts.Boss.ConfusedLandEntryCountdown == value) return;
+                Alerts.Boss.ConfusedLandEntryCountdown = value;
+                OnPropertyChanged();
+            }
+        }
+        [JsonIgnore]
         public Dictionary<string, BossAlertConfig> BossAlertConfigs
         {
             get => Alerts.Boss.Configs;
