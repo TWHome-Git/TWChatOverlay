@@ -907,42 +907,6 @@
                         <StackPanel x:Name="ProfileListPanel"/>
                         <Button Content="+ 새 프로필 추가" Width="140" Height="26" Padding="0" HorizontalAlignment="Left"
                                 Margin="0,10,0,16" Click="AddProfile_Click" Style="{StaticResource SecondaryButtonStyle}" FontSize="12"/>
-
-                        <Border Style="{StaticResource SettingsTabStripStyle}">
-                            <StackPanel Orientation="Horizontal">
-                                <RadioButton Content="채팅창 위치 프리셋" IsChecked="True" GroupName="PresetTabs" IsHitTestVisible="False" Style="{StaticResource SettingsTabStyle}"/>
-                            </StackPanel>
-                        </Border>
-                        <WrapPanel>
-                            <Border Style="{StaticResource SettingsRowStyle}">
-                                <DockPanel>
-                                    <ComboBox DockPanel.Dock="Right" Width="110" Height="26"
-                                              SelectedIndex="{Binding SelectedPresetIndex, Mode=TwoWay}"
-                                              Style="{StaticResource DarkComboBoxStyle}">
-                                        <ComboBoxItem Content="프리셋 1"/>
-                                        <ComboBoxItem Content="프리셋 2"/>
-                                        <ComboBoxItem Content="프리셋 3"/>
-                                    </ComboBox>
-                                    <TextBlock Text="프리셋 선택" Style="{StaticResource SettingsRowLabelStyle}"/>
-                                </DockPanel>
-                            </Border>
-                            <Border Style="{StaticResource SettingsRowStyle}">
-                                <DockPanel>
-                                    <TextBlock DockPanel.Dock="Right" Text="{Binding CurrentPositionDisplay}" Foreground="{DynamicResource TextBrush}" VerticalAlignment="Center" FontSize="12"/>
-                                    <TextBlock Text="현재 채팅창 위치" Style="{StaticResource SettingsRowLabelStyle}"/>
-                                </DockPanel>
-                            </Border>
-                            <Border Style="{StaticResource SettingsRowWideStyle}">
-                                <DockPanel>
-                                    <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
-                                        <Button Content="현재 위치 저장" Width="110" Height="26" Padding="0" Command="{Binding SaveOrLoadPresetCommand}" CommandParameter="Save" Style="{StaticResource SimButtonStyle}" FontSize="12" Margin="0,0,8,0"/>
-                                        <Button Content="불러오기" Width="90" Height="26" Padding="0" Command="{Binding SaveOrLoadPresetCommand}" CommandParameter="Load" Style="{StaticResource SecondaryButtonStyle}" FontSize="12"/>
-                                    </StackPanel>
-                                    <TextBlock Text="선택한 프리셋에" Style="{StaticResource SettingsRowLabelStyle}"/>
-                                </DockPanel>
-                            </Border>
-                        </WrapPanel>
-                        <TextBlock Text="프리셋마다 채팅창 위치를 따로 저장해 두고 전환할 수 있습니다" Style="{StaticResource SettingsRowHintStyle}" Margin="0,6,0,0"/>
                     </StackPanel>
 
                     <!-- ===================== 추가 기능: 키워드 알림 ===================== -->
