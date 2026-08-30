@@ -29,6 +29,7 @@ namespace TWChatOverlay.Views
         private readonly DispatcherTimer _countdownTimer;
         private DateTime _countdownOccurrence;
         private string _countdownBossName = string.Empty;
+        private TimeSpan? _entryWindow;
         private ChatSettings? _settings;
         private bool _isDragging;
 
@@ -118,13 +119,14 @@ namespace TWChatOverlay.Views
         }
 
         /// <summary>
-        /// 초 단위 카운트다운 시작 ("아칸 등장 59초 전" → … → "5초 전"부터 붉은색).
-        /// 출현 시각이 되면 '곧 등장!'으로 바뀐다. 1분 전 알림부터 사용한다.
+        /// 초 단위 카운트다운 시작 ("아칸 등장 59초 전" → … → "곧 등장! 5초"부터 붉은색).
+        /// entryWindow가 있으면(혼란한 대지) 등장 후 그 시간 동안 입장 가능 카운트다운을 이어서 표시한다.
         /// </summary>
-        public void StartCountdown(string bossName, DateTime occurrence)
+        public void StartCountdown(string bossName, DateTime occurrence, TimeSpan? entryWindow = null)
         {
             _countdownBossName = bossName;
             _countdownOccurrence = occurrence;
+            _entryWindow = entryWindow;
             UpdateCountdownText();
             _countdownTimer.Start();
         }
@@ -134,6 +136,27 @@ namespace TWChatOverlay.Views
             TimeSpan remaining = _countdownOccurrence - DateTime.Now;
             if (remaining <= TimeSpan.Zero)
             {
+                if (_entryWindow is TimeSpan entryWindow)
+                {
+                    // 등장 후: 입장 가능 시간 카운트다운 (혼란한 대지 3분)
+                    TimeSpan entryRemaining = _countdownOccurrence + entryWindow - DateTime.Now;
+                    if (entryRemaining <= TimeSpan.Zero)
+                    {
+                        _countdownTimer.Stop();
+                        _bodyText.Text = $"{_countdownBossName} 입장 종료";
+                        _bodyText.SetResourceReference(TextBlock.ForegroundProperty, "TextBrush");
+                        return;
+                    }
+
+                    int entrySeconds = (int)Math.Ceiling(entryRemaining.TotalSeconds);
+                    string entryText = entrySeconds >= 60
+                        ? $"{entrySeconds / 60}분 {entrySeconds % 60:00}초"
+                        : $"{entrySeconds}초";
+                    _bodyText.Text = $"{_countdownBossName} 입장 가능 {entryText}";
+                    _bodyText.SetResourceReference(TextBlock.ForegroundProperty, "OverlayTitleAccentTextBrush");
+                    return;
+                }
+
                 _countdownTimer.Stop();
                 _bodyText.Text = $"{_countdownBossName} 등장!";
                 _bodyText.Foreground = new SolidColorBrush(DangerCol);
@@ -236,7 +259,7 @@ namespace TWChatOverlay.Views
         /// 알림 팝업 표시(싱글턴 재사용). 보스 출현 시각 + 5초에 자동으로 닫는다.
         /// 이후 단계 알림이 오면 문구를 갱신하고 닫힘 시각을 다시 계산한다.
         /// </summary>
-        public static void ShowAlert(string bossName, string label, DateTime occurrence, ChatSettings? settings)
+        public static void ShowAlert(string bossName, string label, DateTime occurrence, ChatSettings? settings, TimeSpan? entryWindow = null)
         {
             if (TrayAllWindowsService.IsTrayed)
                 return; // 트레이 최소화 중에는 알림 창을 띄우지 않는다
@@ -253,14 +276,16 @@ namespace TWChatOverlay.Views
                 }
                 else
                 {
-                    window.StartCountdown(bossName, occurrence);
+                    window.StartCountdown(bossName, occurrence, entryWindow);
                 }
                 window.SetPreviewMode(false);
 
-                // 3분 전은 5초 뒤, 카운트다운은 보스 출현 5초 후 삭제 (이미 지났으면 5초만 유지)
+                // 닫힘 시각: 3분 전은 5초 뒤, 입장 카운트다운은 입장 종료 후 3초, 그 외는 출현 5초 후
                 TimeSpan lifetime = isThreeMinute
                     ? TimeSpan.FromSeconds(5)
-                    : occurrence.AddSeconds(5) - DateTime.Now;
+                    : entryWindow is TimeSpan entry
+                        ? occurrence + entry + TimeSpan.FromSeconds(3) - DateTime.Now
+                        : occurrence.AddSeconds(5) - DateTime.Now;
                 if (lifetime < TimeSpan.FromSeconds(5))
                     lifetime = TimeSpan.FromSeconds(5);
                 window._closeTimer.Stop();

@@ -180,6 +180,8 @@ namespace TWChatOverlay.Models
     {
         public double Volume { get; set; } = 1.0;
         public double ToastFontSize { get; set; } = 18.0;
+        /// <summary>혼란한 대지: 등장 후 입장 가능 시간(3분)을 팝업으로 카운트다운.</summary>
+        public bool ConfusedLandEntryCountdown { get; set; } = true;
         public Dictionary<string, BossAlertConfig> Configs { get; set; } = new(StringComparer.OrdinalIgnoreCase);
     }
 

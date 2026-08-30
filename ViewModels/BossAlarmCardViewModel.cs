@@ -66,6 +66,24 @@ namespace TWChatOverlay.ViewModels
             }
         }
 
+        /// <summary>혼란한 대지 카드에만 '입장 시간 카운트' 토글을 노출한다.</summary>
+        public bool IsConfusedLand => string.Equals(BossId, "Confused Land", StringComparison.OrdinalIgnoreCase);
+
+        /// <summary>혼란한 대지: 등장 후 입장 가능 3분을 팝업으로 카운트다운.</summary>
+        public bool EntryCountdown
+        {
+            get => _settings.BossAlertConfusedLandEntryCountdown;
+            set
+            {
+                if (_settings.BossAlertConfusedLandEntryCountdown == value)
+                    return;
+
+                _settings.BossAlertConfusedLandEntryCountdown = value;
+                OnPropertyChanged();
+                SaveSettings();
+            }
+        }
+
         public void UpdateScheduleText(string value)
         {
             if (string.Equals(ScheduleText, value, StringComparison.Ordinal))
