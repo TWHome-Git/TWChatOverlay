@@ -279,6 +279,7 @@ namespace TWChatOverlay.Views
 
             var right = new StackPanel { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Center };
             right.Children.Add(MakeButton("저장", enabled: true, (_, _) => SaveProfile(name)));
+            right.Children.Add(MakeButton("이름 변경", enabled: exists, (_, _) => RenameProfile(name)));
             right.Children.Add(MakeButton("불러오기", enabled: exists, (_, _) => LoadProfile(name)));
             if (!isDefault)
                 right.Children.Add(MakeButton("삭제", enabled: true, (_, _) => DeleteProfile(name), danger: true));
@@ -347,6 +348,134 @@ namespace TWChatOverlay.Views
 
             Services.SettingsProfileService.Delete(name);
             RefreshProfileList();
+        }
+
+        private void RenameProfile(string name)
+        {
+            var dialog = new ProfileNameDialog(name) { Owner = Window.GetWindow(this) };
+            if (dialog.ShowDialog() != true)
+                return;
+
+            if (!Services.SettingsProfileService.Rename(name, dialog.ResultName, out string? error))
+            {
+                ConfirmDialogWindow.Confirm(Window.GetWindow(this), error ?? "이름을 바꾸지 못했습니다.", "확인", "닫기");
+                return;
+            }
+
+            RefreshProfileList();
+        }
+
+        /// <summary>프로필 이름 입력 다이얼로그 — 다른 팝업들과 같은 다크·민트 스타일.</summary>
+        private sealed class ProfileNameDialog : Window
+        {
+            public string ResultName { get; private set; } = string.Empty;
+
+            private readonly TextBox _input;
+
+            public ProfileNameDialog(string currentName)
+            {
+                WindowStyle = WindowStyle.None;
+                AllowsTransparency = true;
+                Background = System.Windows.Media.Brushes.Transparent;
+                ShowInTaskbar = false;
+                Topmost = true;
+                ResizeMode = ResizeMode.NoResize;
+                SizeToContent = SizeToContent.WidthAndHeight;
+                WindowStartupLocation = WindowStartupLocation.CenterOwner;
+                Services.WindowFontService.Apply(this);
+
+                var mint = System.Windows.Media.Color.FromRgb(0x0C, 0xD2, 0x9D);
+
+                var title = new TextBlock
+                {
+                    Text = "프로필 이름 변경",
+                    FontSize = 13,
+                    FontWeight = FontWeights.Bold,
+                    Foreground = new System.Windows.Media.SolidColorBrush(mint),
+                    Margin = new Thickness(0, 0, 0, 8),
+                };
+
+                _input = new TextBox
+                {
+                    Width = 180,
+                    Height = 26,
+                    FontSize = 13,
+                    Text = currentName,
+                    VerticalContentAlignment = VerticalAlignment.Center,
+                    Padding = new Thickness(4, 0, 4, 0),
+                    Background = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(0x1A, 0x22, 0x1E)),
+                    Foreground = System.Windows.Media.Brushes.White,
+                    BorderBrush = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(0x2A, 0x33, 0x2E)),
+                    CaretBrush = System.Windows.Media.Brushes.White,
+                };
+
+                Button MakeDialogButton(string text, bool isPrimary)
+                {
+                    var button = new Button
+                    {
+                        Content = text,
+                        Width = 56,
+                        Height = 28,
+                        Padding = new Thickness(0),
+                        Margin = new Thickness(isPrimary ? 0 : 6, 0, 0, 0),
+                        FontSize = 12,
+                        VerticalContentAlignment = VerticalAlignment.Center,
+                        Cursor = System.Windows.Input.Cursors.Hand,
+                    };
+                    button.SetResourceReference(StyleProperty, "SecondaryButtonStyle");
+                    return button;
+                }
+
+                var applyButton = MakeDialogButton("적용", isPrimary: true);
+                applyButton.Click += (_, _) => TryAccept();
+                var cancelButton = MakeDialogButton("취소", isPrimary: false);
+                cancelButton.Click += (_, _) => { DialogResult = false; Close(); };
+
+                var buttonRow = new StackPanel
+                {
+                    Orientation = Orientation.Horizontal,
+                    HorizontalAlignment = HorizontalAlignment.Right,
+                    Margin = new Thickness(0, 10, 0, 0),
+                };
+                buttonRow.Children.Add(applyButton);
+                buttonRow.Children.Add(cancelButton);
+
+                var root = new StackPanel();
+                root.Children.Add(title);
+                root.Children.Add(_input);
+                root.Children.Add(buttonRow);
+
+                Content = new Border
+                {
+                    Padding = new Thickness(14, 10, 14, 12),
+                    CornerRadius = new CornerRadius(6),
+                    Background = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromArgb(0xF6, 0x10, 0x16, 0x14)),
+                    BorderBrush = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(0x2A, 0x33, 0x2E)),
+                    BorderThickness = new Thickness(1),
+                    Child = root,
+                };
+
+                Loaded += (_, _) => { _input.Focus(); _input.SelectAll(); };
+                PreviewKeyDown += (_, args) =>
+                {
+                    if (args.Key == Key.Enter) { TryAccept(); args.Handled = true; }
+                    else if (args.Key == Key.Escape) { DialogResult = false; Close(); args.Handled = true; }
+                };
+            }
+
+            private void TryAccept()
+            {
+                string name = (_input.Text ?? string.Empty).Trim();
+                if (name.Length == 0)
+                {
+                    _input.BorderBrush = System.Windows.Media.Brushes.IndianRed;
+                    return;
+                }
+
+                ResultName = name;
+                DialogResult = true;
+                Close();
+            }
         }
 
         /// <summary>내보낸 프로필(.json) 파일을 골라 현재 설정에 적용한다.</summary>

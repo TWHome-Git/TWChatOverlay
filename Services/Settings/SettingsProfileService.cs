@@ -143,6 +143,47 @@ namespace TWChatOverlay.Services
             }
         }
 
+        /// <summary>저장된 프로필의 이름을 바꾼다(파일 이름 변경). 실패 사유는 error로 돌려준다.</summary>
+        public static bool Rename(string oldName, string newName, out string? error)
+        {
+            error = null;
+            newName = (newName ?? string.Empty).Trim();
+
+            if (string.IsNullOrWhiteSpace(newName))
+            {
+                error = "이름을 입력해 주세요.";
+                return false;
+            }
+            if (string.Equals(oldName, newName, StringComparison.Ordinal))
+                return true;
+
+            try
+            {
+                string oldPath = PathFor(oldName);
+                string newPath = PathFor(newName);
+                if (!File.Exists(oldPath))
+                {
+                    error = "저장된 프로필이 없습니다.";
+                    return false;
+                }
+                if (File.Exists(newPath) || GetProfileNames().Contains(newName, StringComparer.Ordinal))
+                {
+                    error = "같은 이름의 프로필이 이미 있습니다.";
+                    return false;
+                }
+
+                File.Move(oldPath, newPath);
+                AppLogger.Info($"Settings profile renamed. '{oldName}' -> '{newName}'");
+                return true;
+            }
+            catch (Exception ex)
+            {
+                AppLogger.Error($"Failed to rename settings profile '{oldName}' -> '{newName}'.", ex);
+                error = "이름을 바꾸지 못했습니다.";
+                return false;
+            }
+        }
+
         /// <summary>추가 프로필 삭제. 기본 프로필은 파일만 지워지고 목록에는 남는다.</summary>
         public static bool Delete(string name)
         {
