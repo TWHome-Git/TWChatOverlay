@@ -327,6 +327,47 @@ namespace TWChatOverlay.Views
             RefreshProfileList();
         }
 
+        /// <summary>내보낸 프로필(.json) 파일을 골라 현재 설정에 적용한다.</summary>
+        private void ImportProfileFile_Click(object sender, RoutedEventArgs e)
+        {
+            if (DataContext is not ViewModels.SettingsViewModel viewModel)
+                return;
+
+            var dialog = new Microsoft.Win32.OpenFileDialog
+            {
+                Title = "프로필 파일 불러오기",
+                Filter = "설정 프로필 (*.json)|*.json|모든 파일 (*.*)|*.*",
+            };
+            if (dialog.ShowDialog(Window.GetWindow(this)) != true)
+                return;
+
+            if (!ConfirmDialogWindow.Confirm(Window.GetWindow(this),
+                    $"'{System.IO.Path.GetFileName(dialog.FileName)}' 파일을 불러올까요?\n현재 설정이 모두 이 파일의 내용으로 바뀝니다.", "불러오기"))
+                return;
+
+            if (!viewModel.LoadProfileFromFile(dialog.FileName))
+                ConfirmDialogWindow.Confirm(Window.GetWindow(this), "프로필 파일을 불러오지 못했습니다.\n올바른 설정 파일인지 확인해 주세요.", "확인", "닫기");
+        }
+
+        /// <summary>현 시점의 모든 설정을 프로필 파일로 내보낸다.</summary>
+        private void ExportProfileFile_Click(object sender, RoutedEventArgs e)
+        {
+            if (DataContext is not ViewModels.SettingsViewModel viewModel)
+                return;
+
+            var dialog = new Microsoft.Win32.SaveFileDialog
+            {
+                Title = "프로필 파일로 내보내기",
+                FileName = $"TWChat_프로필_{System.DateTime.Now:yyyyMMdd_HHmm}.json",
+                Filter = "설정 프로필 (*.json)|*.json",
+            };
+            if (dialog.ShowDialog(Window.GetWindow(this)) != true)
+                return;
+
+            if (!viewModel.ExportCurrentSettings(dialog.FileName))
+                ConfirmDialogWindow.Confirm(Window.GetWindow(this), "프로필 파일을 저장하지 못했습니다.", "확인", "닫기");
+        }
+
         private void SettingsView_PreviewKeyDown(object? sender, KeyEventArgs e)
         {
             if (e.Key == Key.Escape)

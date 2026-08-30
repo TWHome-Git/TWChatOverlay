@@ -85,12 +85,15 @@ namespace TWChatOverlay.Services
 
         /// <summary>프로필 파일을 읽어 설정 인스턴스로 돌려준다.</summary>
         public static bool TryLoad(string name, out ChatSettings loaded)
+            => TryLoadFile(PathFor(name), out loaded);
+
+        /// <summary>임의의 프로필(.json) 파일을 읽어 설정 인스턴스로 돌려준다. (파일에서 불러오기)</summary>
+        public static bool TryLoadFile(string path, out ChatSettings loaded)
         {
             loaded = null!;
             try
             {
-                string path = PathFor(name);
-                if (!File.Exists(path))
+                if (string.IsNullOrWhiteSpace(path) || !File.Exists(path))
                     return false;
 
                 var settings = JsonSerializer.Deserialize<ChatSettings>(File.ReadAllText(path), Options);
@@ -103,7 +106,31 @@ namespace TWChatOverlay.Services
             }
             catch (Exception ex)
             {
-                AppLogger.Error($"Failed to load settings profile '{name}'.", ex);
+                AppLogger.Error($"Failed to load settings profile file '{path}'.", ex);
+                return false;
+            }
+        }
+
+        /// <summary>현 시점 설정 전체를 지정한 파일로 내보낸다. (파일로 저장)</summary>
+        public static bool ExportToFile(string path, ChatSettings settings)
+        {
+            if (string.IsNullOrWhiteSpace(path) || settings == null)
+                return false;
+
+            try
+            {
+                string? directory = Path.GetDirectoryName(path);
+                if (!string.IsNullOrEmpty(directory))
+                    Directory.CreateDirectory(directory);
+
+                string json = JsonSerializer.Serialize(settings, Options);
+                File.WriteAllText(path, json, new UTF8Encoding(false));
+                AppLogger.Info($"Settings profile exported to '{path}'.");
+                return true;
+            }
+            catch (Exception ex)
+            {
+                AppLogger.Error($"Failed to export settings profile to '{path}'.", ex);
                 return false;
             }
         }

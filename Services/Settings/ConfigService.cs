@@ -18,7 +18,6 @@ namespace TWChatOverlay.Services
     public static class ConfigService
     {
         private static readonly string FilePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "settings.json");
-        private static readonly string BackupFilePath = FilePath + ".bak";
         private static readonly object _saveLock = new();
         private static readonly TimeSpan SaveDebounce = TimeSpan.FromMilliseconds(250);
         private static readonly JsonSerializerOptions _options = new JsonSerializerOptions
@@ -175,30 +174,9 @@ namespace TWChatOverlay.Services
             File.WriteAllText(tempPath, json, new UTF8Encoding(false));
 
             if (File.Exists(FilePath))
-            {
-                // 손상된 파일이 정상 백업을 덮어쓰지 않도록, 파싱되는 파일만 백업한다
-                if (IsParseableJsonFile(FilePath))
-                    File.Copy(FilePath, BackupFilePath, overwrite: true);
                 File.Replace(tempPath, FilePath, null);
-            }
             else
-            {
                 File.Move(tempPath, FilePath);
-                File.Copy(FilePath, BackupFilePath, overwrite: true);
-            }
-        }
-
-        private static bool IsParseableJsonFile(string path)
-        {
-            try
-            {
-                JsonNode.Parse(File.ReadAllText(path));
-                return true;
-            }
-            catch
-            {
-                return false;
-            }
         }
 
         private static void CleanupTempFile()
@@ -297,37 +275,6 @@ namespace TWChatOverlay.Services
             catch (Exception ex)
             {
                 AppLogger.Error("Failed to load settings.", ex);
-            }
-
-            // 주 파일이 없거나 손상됨: 백업(.bak)에서 복구를 시도한다
-            try
-            {
-                if (File.Exists(BackupFilePath))
-                {
-                    string bakJson = File.ReadAllText(BackupFilePath);
-                    ChatSettings? recovered = null;
-                    if (JsonNode.Parse(bakJson) is JsonObject bakObj)
-                    {
-                        recovered = SettingsMigration.IsLegacyFormat(bakObj)
-                            ? SettingsMigration.FromLegacy(bakObj, _options)
-                            : JsonSerializer.Deserialize<ChatSettings>(bakJson, _options);
-                    }
-
-                    if (recovered != null)
-                    {
-                        recovered.EnsureLoadedDefaults();
-                        MigrateDungeonItemConfigKeys(recovered);
-                        AppLogger.IsEnabled = recovered.EnableDebugLogging;
-                        _lastSavedJson = null;
-                        Save(recovered);
-                        AppLogger.Warn("Settings file was corrupted or missing; recovered from backup.");
-                        return recovered;
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                AppLogger.Error("Failed to recover settings from backup.", ex);
             }
 
             AppLogger.Warn("Settings file was missing or unreadable. Default settings will be used.");
