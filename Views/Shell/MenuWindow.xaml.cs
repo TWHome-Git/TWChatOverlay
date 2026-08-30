@@ -538,6 +538,9 @@ namespace TWChatOverlay.Views
                 SetButtonActive(BtnMemo, memo.IsEditorModeVisible);
         }
 
+        /// <summary>잠금 해제 종료 후 설정 복귀 등 외부에서 설정 창을 열 때 사용.</summary>
+        internal void OpenSettingsFromExternal() => OpenSettings();
+
         private void OpenSettings()
         {
             try
