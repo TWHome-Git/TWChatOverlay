@@ -444,7 +444,7 @@
                                 <DockPanel>
                                     <CheckBox DockPanel.Dock="Right" IsChecked="{Binding ShowCategoryPrefix}" Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
                                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                        <TextBlock Text="종류 말머리" Style="{StaticResource SettingsRowLabelStyle}"/>
+                                        <TextBlock Text="말머리" Style="{StaticResource SettingsRowLabelStyle}"/>
                                         <Button Style="{StaticResource HelpButtonStyle}" Tag="chat.filter.category_prefix" Click="Help_Click"/>
                                     </StackPanel>
                                 </DockPanel>

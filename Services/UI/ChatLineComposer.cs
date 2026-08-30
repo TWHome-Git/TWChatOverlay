@@ -28,8 +28,10 @@ namespace TWChatOverlay.Services
     {
         private static readonly Regex LeadingTimestampRegex = new(@"^\s*\[[^\]]+\]\s*", RegexOptions.Compiled);
         private static readonly Regex ShoutTrailingSenderRegex = new(@"\[(?<id>[^\[\]]+)\]\s*$", RegexOptions.Compiled);
-        // 종류 말머리 켜짐일 때 "외치기 : 내용 [보낸이]" → "[외치기] 보낸이 : 내용" 재구성용
+        // 말머리 켜짐일 때 "외치기 : 내용 [보낸이]" → "[외치기] 보낸이 : 내용" 재구성용
         private static readonly Regex ShoutRestructureRegex = new(@"^외치기\s*:\s*(?<msg>.*?)\s*\[(?<id>[^\[\]]+)\]\s*$", RegexOptions.Compiled);
+        // 말머리 재구성 시 외치기 원문 끝의 링크 표식(Click/From)은 지운다
+        private static readonly Regex ShoutTrailingMarkerRegex = new(@"\s*(?:Click|From)\s*$", RegexOptions.Compiled);
 
         public static List<ChatSegment> Compose(string text, LogParser.ParseResult log, ChatSettings settings)
         {
@@ -56,10 +58,11 @@ namespace TWChatOverlay.Services
                     Match shout = ShoutRestructureRegex.Match(rest);
                     if (shout.Success)
                     {
+                        string msg = ShoutTrailingMarkerRegex.Replace(shout.Groups["msg"].Value, string.Empty);
                         segments.Add(new ChatSegment("[외치기] ", ChatSegmentKind.Body));
                         segments.Add(new ChatSegment(shout.Groups["id"].Value, ChatSegmentKind.SenderId));
                         segments.AddRange(BuildDecorations(log, settings));
-                        segments.Add(new ChatSegment(" : " + shout.Groups["msg"].Value, ChatSegmentKind.Body));
+                        segments.Add(new ChatSegment(" : " + msg, ChatSegmentKind.Body));
                         return segments;
                     }
                     // 재구성 실패(보낸이 괄호가 없는 줄 등)면 원문 그대로 아래 일반 처리로

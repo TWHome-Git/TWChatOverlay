@@ -107,8 +107,9 @@ namespace TWChatOverlay.Services
                 new[] { "chat_clone_basic.png", "chat_clone_shout.png" }),
 
             ["chat.filter.category_prefix"] = (
-                "종류 말머리",
-                "각 채팅 줄 앞에 [일반]/[팀]/[클럽]/[외치기]/[시스템] 종류를 붙여 한눈에 구분합니다.\n",
+                "말머리",
+                "각 채팅 줄 앞에 [일반]/[팀]/[클럽]/[외치기]/[시스템] 종류를 붙여 한눈에 구분합니다.\n" +
+                "말머리 사용 시 외치기 끝의 Click/From 표식은 지워서 표시합니다.\n",
                 new[] { "chat_category_prefix_off.png", "chat_category_prefix_on.png" }),
 
             // ===== 외치기 =====
