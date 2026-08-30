@@ -29,7 +29,6 @@ namespace TWChatOverlay.Models
             Ui = source.Ui ?? new UiSection();
             Hotkeys = source.Hotkeys ?? new HotkeysSection();
             SystemConfig = source.SystemConfig ?? new SystemSection();
-            Presets = source.Presets ?? new PresetsSection();
             _enableDebugLogging = source.EnableDebugLogging;
         }
 
@@ -49,7 +48,6 @@ namespace TWChatOverlay.Models
             Ui = new UiSection();
             Hotkeys = new HotkeysSection();
             SystemConfig = new SystemSection();
-            Presets = new PresetsSection();
 
             _enableDebugLogging = false;
         }

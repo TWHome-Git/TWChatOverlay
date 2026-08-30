@@ -36,7 +36,6 @@ namespace TWChatOverlay.Models
         public bool ShowClub { get; set; } = true;
         public bool ShowShout { get; set; } = true;
         public bool ShowSystem { get; set; } = true;
-        public bool ShowWhisper { get; set; } = true;
         public bool ShowClubBoss { get; set; } = true;
         /// <summary>각 줄 앞에 [일반]/[팀]/[클럽]/[시스템] 종류 말머리를 붙인다.</summary>
         public bool ShowCategoryPrefix { get; set; } = false;
@@ -97,7 +96,6 @@ namespace TWChatOverlay.Models
         public IdDisplaySettings IdDisplay { get; set; } = new();
         public ChatFontSettings Font { get; set; } = new();
         public string MainTabTag { get; set; } = "Basic";
-        public bool AlwaysVisible { get; set; } = false;
         public ChatCloneSettings Clone1 { get; set; } = new();
         public ChatCloneSettings Clone2 { get; set; } = new();
     }
@@ -277,7 +275,6 @@ namespace TWChatOverlay.Models
     {
         public string Exit { get; set; } = string.Empty;
         public string ToggleOverlay { get; set; } = string.Empty;
-        public string ToggleAlwaysVisible { get; set; } = string.Empty;
         public string ToggleDailyWeekly { get; set; } = string.Empty;
         public string ToggleSettings { get; set; } = string.Empty;
         public string ToggleTrayAll { get; set; } = string.Empty;
@@ -292,11 +289,4 @@ namespace TWChatOverlay.Models
         public bool StartupTodayOnlyBootstrapCompleted { get; set; } = false;
     }
 
-    public class PresetsSection
-    {
-        public int LastSelected { get; set; } = 1;
-        public WindowPositionPreset Slot1 { get; set; } = new("프리셋 1", 0, 0);
-        public WindowPositionPreset Slot2 { get; set; } = new("프리셋 2", 0, 0);
-        public WindowPositionPreset Slot3 { get; set; } = new("프리셋 3", 0, 0);
-    }
 }

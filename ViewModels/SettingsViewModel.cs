@@ -21,7 +21,6 @@ namespace TWChatOverlay.ViewModels
         private readonly Action? _onSettingsReset;
         private readonly Action? _onHotKeysChanged;
         private readonly Func<System.Threading.Tasks.Task<bool>>? _onManualLogReload;
-        private int _selectedPresetNumber = 1;
         private bool _isManualLogReloadRunning;
         private bool _isManualUpdateRunning;
 
@@ -30,7 +29,6 @@ namespace TWChatOverlay.ViewModels
         public ICommand ExitAppCommand { get; }
         public ICommand ManualUpdateCommand { get; }
         public ICommand ManualLogReloadCommand { get; }
-        public ICommand SaveOrLoadPresetCommand { get; }
         public ICommand ApplyHotkeysCommand { get; }
         public ICommand CancelHotkeysCommand { get; }
         public ICommand ResetHotkeysToDefaultCommand { get; }
@@ -429,33 +427,6 @@ namespace TWChatOverlay.ViewModels
             }
         }
 
-        /// <summary>콤보박스 SelectedIndex(0-base) ↔ 프리셋 번호(1-base) 변환용.</summary>
-        public int SelectedPresetIndex
-        {
-            get => SelectedPresetNumber - 1;
-            set => SelectedPresetNumber = value + 1;
-        }
-
-        public int SelectedPresetNumber
-        {
-            get => _selectedPresetNumber;
-            set
-            {
-                if (_selectedPresetNumber != value)
-                {
-                    _selectedPresetNumber = value;
-                    _settings.LastSelectedPresetNumber = value;
-                    OnPropertyChanged();
-                    OnPropertyChanged(nameof(SelectedPresetIndex));
-                    ApplySelectedPresetToOffsets();
-                    SaveSettings();
-                    AppLogger.Info($"Selected preset changed to {_selectedPresetNumber}.");
-                }
-            }
-        }
-
-        public string CurrentPositionDisplay => _settings.CurrentPositionDisplay;
-
         public string ExitHotKey
         {
             get => _settings.ExitHotKey;
@@ -683,14 +654,11 @@ namespace TWChatOverlay.ViewModels
             ExitAppCommand = new RelayCommand<object?>(_ => ExecuteExitApp());
             ManualUpdateCommand = new RelayCommand<object?>(async _ => await ExecuteManualUpdateAsync(), _ => !_isManualUpdateRunning);
             ManualLogReloadCommand = new RelayCommand<object?>(async _ => await ExecuteManualLogReloadAsync());
-            SaveOrLoadPresetCommand = new RelayCommand<string?>(ExecuteSaveOrLoadPreset);
             ApplyHotkeysCommand = new RelayCommand<object?>(_ => ExecuteApplyHotkeys());
             CancelHotkeysCommand = new RelayCommand<object?>(_ => ExecuteCancelHotkeys());
             ResetHotkeysToDefaultCommand = new RelayCommand<object?>(_ => ExecuteResetHotkeysToDefault());
 
             AvailableFonts = new ObservableCollection<string>(FontService.GetAvailableFonts());
-            _selectedPresetNumber = _settings.LastSelectedPresetNumber;
-            ApplySelectedPresetToOffsets();
             _settings.PropertyChanged += SettingsOnPropertyChanged;
             AppLogger.Info("SettingsViewModel initialized.");
         }
@@ -707,10 +675,6 @@ namespace TWChatOverlay.ViewModels
             else if (e.PropertyName == nameof(ChatSettings.LineMargin))
             {
                 OnPropertyChanged(nameof(LineMargin));
-            }
-            else if (e.PropertyName == nameof(ChatSettings.CurrentPositionDisplay))
-            {
-                OnPropertyChanged(nameof(CurrentPositionDisplay));
             }
             else if (e.PropertyName == nameof(ChatSettings.ChatCloneWindow1IsOpen))
             {
@@ -1026,78 +990,6 @@ namespace TWChatOverlay.ViewModels
             {
                 return Brushes.White;
             }
-        }
-
-        /// <summary>
-        /// 프리셋 저장 또는 로드
-        /// </summary>
-        public void ExecuteSaveOrLoadPreset(string? action)
-        {
-            if (string.IsNullOrEmpty(action)) return;
-
-            var mainWindow = Application.Current?.Windows.OfType<MainWindow>().FirstOrDefault();
-            if (mainWindow == null) return;
-
-            switch (action)
-            {
-                case "Save":
-                    _settings.SavePreset(_selectedPresetNumber, mainWindow.Left, mainWindow.Top, _settings.LineMarginLeft, _settings.LineMargin);
-                    _settings.UpdatePositionDisplay(_settings.LineMarginLeft, _settings.LineMargin);
-                    OnPropertyChanged(nameof(CurrentPositionDisplay));
-                    ConfigService.Save(_settings);
-                    AppLogger.Info($"Saved preset {_selectedPresetNumber}.");
-                    MessageBox.Show($"프리셋 {_selectedPresetNumber}에 현재 위치가 저장되었습니다.");
-                    break;
-                case "Load":
-                    var preset = _settings.GetPreset(_selectedPresetNumber);
-                    if (preset != null && preset.HasMarginData)
-                    {
-                        _settings.LineMarginLeft = preset.Left;
-                        _settings.LineMargin = preset.Top;
-                        OnPropertyChanged(nameof(LineMarginLeft));
-                        OnPropertyChanged(nameof(LineMargin));
-
-                        if (!OverlayPresetPositionService.TryApplyByMargin(mainWindow, _settings))
-                        {
-                            mainWindow.Left = preset.Left;
-                            mainWindow.Top = preset.Top;
-                        }
-
-                        _settings.UpdatePositionDisplay(_settings.LineMarginLeft, _settings.LineMargin);
-                        OnPropertyChanged(nameof(CurrentPositionDisplay));
-                        ConfigService.Save(_settings);
-                        AppLogger.Info($"Loaded preset {_selectedPresetNumber}.");
-                    }
-                    else
-                    {
-                        AppLogger.Warn($"Preset {_selectedPresetNumber} has no saved coordinates.");
-                        MessageBox.Show($"프리셋 {_selectedPresetNumber}에는 저장된 좌표가 없습니다.");
-                    }
-                    break;
-            }
-        }
-
-        private void ApplySelectedPresetToOffsets()
-        {
-            var preset = _settings.GetPreset(_selectedPresetNumber);
-            if (preset == null)
-            {
-                return;
-            }
-
-            if (!preset.HasMarginData)
-            {
-                AppLogger.Debug($"Preset {_selectedPresetNumber} is empty. Skipping auto-apply.");
-                return;
-            }
-
-            _settings.LineMarginLeft = preset.Left;
-            _settings.LineMargin = preset.Top;
-            _settings.UpdatePositionDisplay(_settings.LineMarginLeft, _settings.LineMargin);
-
-            OnPropertyChanged(nameof(LineMarginLeft));
-            OnPropertyChanged(nameof(LineMargin));
-            OnPropertyChanged(nameof(CurrentPositionDisplay));
         }
 
         public void ResolveHotKeyConflict(string targetPropertyName, string? hotKeyValue)

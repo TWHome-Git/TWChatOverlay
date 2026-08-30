@@ -47,7 +47,7 @@ namespace TWChatOverlay.Models
                 if (property.Name is nameof(ChatSettings.Version)
                     or nameof(ChatSettings.Chat) or nameof(ChatSettings.Shout) or nameof(ChatSettings.Alerts)
                     or nameof(ChatSettings.Windows) or nameof(ChatSettings.Ui) or nameof(ChatSettings.Hotkeys)
-                    or nameof(ChatSettings.SystemConfig) or nameof(ChatSettings.Presets))
+                    or nameof(ChatSettings.SystemConfig))
                     continue;
 
                 try
