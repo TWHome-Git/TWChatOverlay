@@ -135,17 +135,23 @@ namespace TWChatOverlay.Views
             if (remaining <= TimeSpan.Zero)
             {
                 _countdownTimer.Stop();
-                _bodyText.Text = $"{_countdownBossName} 곧 등장!";
+                _bodyText.Text = $"{_countdownBossName} 등장!";
                 _bodyText.Foreground = new SolidColorBrush(DangerCol);
                 return;
             }
 
             int totalSeconds = (int)Math.Ceiling(remaining.TotalSeconds);
-            _bodyText.Text = $"{_countdownBossName} 등장 {totalSeconds}초 전";
             if (totalSeconds <= 5)
+            {
+                // 등장 임박: "곧 등장!" + 초 카운트다운 (5초 → 1초)
+                _bodyText.Text = $"{_countdownBossName} 곧 등장! {totalSeconds}초";
                 _bodyText.Foreground = new SolidColorBrush(DangerCol);
+            }
             else
+            {
+                _bodyText.Text = $"{_countdownBossName} 등장 {totalSeconds}초 전";
                 _bodyText.SetResourceReference(TextBlock.ForegroundProperty, "TextBrush");
+            }
         }
 
         protected override void OnSourceInitialized(EventArgs e)
