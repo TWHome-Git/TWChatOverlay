@@ -1422,13 +1422,13 @@
                                                 <TextBlock Text="5초 전" Foreground="{DynamicResource TextBrush}" FontSize="12" VerticalAlignment="Center"/>
                                                 <CheckBox Grid.Column="1" IsChecked="{Binding AlertAtSpawn, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
                                             </Grid>
-                                            <!-- 혼란한 대지(3분)·파멸의 기원(6분): 등장 후 입장 가능 시간 카운트다운 -->
+                                            <!-- 혼란한 대지(4분)·파멸의 기원(6분): 등장 후 입장 가능 시간 카운트다운 -->
                                             <Grid Margin="0,6,0,0" Visibility="{Binding HasEntryCountdown, Converter={StaticResource BooleanToVisibilityConverter}}">
                                                 <Grid.ColumnDefinitions>
                                                     <ColumnDefinition Width="*"/>
                                                     <ColumnDefinition Width="Auto"/>
                                                 </Grid.ColumnDefinitions>
-                                                <TextBlock Text="입장 시간 카운트" Foreground="{DynamicResource TextBrush}" FontSize="12" VerticalAlignment="Center" ToolTip="등장 후 입장 가능 시간(혼란한 대지 3분, 파멸의 기원 6분)을 팝업으로 카운트다운"/>
+                                                <TextBlock Text="입장 시간 카운트" Foreground="{DynamicResource TextBrush}" FontSize="12" VerticalAlignment="Center" ToolTip="등장 후 입장 가능 시간(혼란한 대지 4분, 파멸의 기원 6분)을 팝업으로 카운트다운"/>
                                                 <CheckBox Grid.Column="1" IsChecked="{Binding EntryCountdown, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
                                             </Grid>
                                         </StackPanel>
