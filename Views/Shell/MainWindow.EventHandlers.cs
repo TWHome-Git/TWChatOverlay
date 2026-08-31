@@ -162,10 +162,6 @@ namespace TWChatOverlay.Views
                 {
                     RefreshExpTrackerWindow();
                 }
-                else if (e.PropertyName == nameof(_settings.ShowBuffTrackerWindow))
-                {
-                    ApplyBuffTrackerHelperWindowSettings();
-                }
                 else if (e.PropertyName == nameof(_settings.EnableBuffTrackerAlert))
                 {
                     ApplyBuffTrackerWindowSettings();

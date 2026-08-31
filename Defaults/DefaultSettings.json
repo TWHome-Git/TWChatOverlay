@@ -355,8 +355,8 @@
     "Buff": {
       "Enabled": true,
       "EndSound": true,
-      "EndSoundVolume": 1,
-      "ShowMaxSizeWindow": false
+      "EndSoundVolume": 1
+      
     },
     "Boss": {
       "Volume": 1,

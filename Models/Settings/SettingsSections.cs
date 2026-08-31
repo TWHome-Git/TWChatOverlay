@@ -173,7 +173,6 @@ namespace TWChatOverlay.Models
         public bool Enabled { get; set; } = false;
         public bool EndSound { get; set; } = false;
         public double EndSoundVolume { get; set; } = 1.0;
-        public bool ShowMaxSizeWindow { get; set; } = false;
     }
 
     public class BossAlertSettings

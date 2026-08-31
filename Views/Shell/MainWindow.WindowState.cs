@@ -645,7 +645,10 @@ namespace TWChatOverlay.Views
         {
             try
             {
-                if (!_isAddonPositionMode && !_settings.ShowBuffTrackerWindow && BuffTrackerHelperWindow.Instance == null)
+                // 도우미(최대 크기 미리보기) 창은 위치 조정 모드에서만 표시한다.
+                // 구버전의 '상시 표시' 설정(ShowMaxSizeWindow)은 UI에서 제거되어 여기서도 무시한다 —
+                // 켜진 채 업데이트한 사용자에게 샘플(30:00) 창이 영구히 남던 문제.
+                if (!_isAddonPositionMode && BuffTrackerHelperWindow.Instance == null)
                     return;
 
                 var helper = BuffTrackerHelperWindow.Instance ?? CreateBuffTrackerHelperWindow();
@@ -657,8 +660,7 @@ namespace TWChatOverlay.Views
                 if (_settings.BuffTrackerWindowTop.HasValue)
                     helper.Top = _settings.BuffTrackerWindowTop.Value;
 
-                // Keep the helper window in sync with its own setting, not the main overlay.
-                if (_isAddonPositionMode || _settings.ShowBuffTrackerWindow)
+                if (_isAddonPositionMode)
                 {
                     if (!helper.IsVisible)
                         helper.Show();

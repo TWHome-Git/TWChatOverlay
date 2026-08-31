@@ -51,7 +51,6 @@ namespace TWChatOverlay.ViewModels
         private string _customDropItemStatus = string.Empty;
         private bool _enableBuffTrackerAlert;
         private bool _enableBuffTrackerEndSound;
-        private bool _showBuffTrackerWindow;
         private double _itemDropAlertVolumePercent;
         private double _highlightAlertVolumePercent;
         private double _magicCircleAlertVolumePercent;
@@ -238,12 +237,6 @@ namespace TWChatOverlay.ViewModels
             set => SetSetting(ref _enableBuffTrackerEndSound, value, (settings, newValue) => settings.EnableBuffTrackerEndSound = newValue);
         }
 
-        public bool ShowBuffTrackerWindow
-        {
-            get => _showBuffTrackerWindow;
-            set => SetSetting(ref _showBuffTrackerWindow, value, (settings, newValue) => settings.ShowBuffTrackerWindow = newValue);
-        }
-
         private double _dungeonCountDisplayFontSize;
         private double _experienceAlertFontSize;
         private double _itemDropToastFontSize;
@@ -398,7 +391,6 @@ namespace TWChatOverlay.ViewModels
                 : "사용자 정의 필터를 사용 중입니다.";
             _enableBuffTrackerAlert = _settings.EnableBuffTrackerAlert;
             _enableBuffTrackerEndSound = _settings.EnableBuffTrackerEndSound;
-            _showBuffTrackerWindow = _settings.ShowBuffTrackerWindow;
             _itemDropAlertVolumePercent = _settings.ItemDropAlertVolumePercent;
             _dungeonCountDisplayFontSize = _settings.DungeonCountDisplayFontSize;
             _cravingPleasureCountFontSize = _settings.CravingPleasureCountFontSize;

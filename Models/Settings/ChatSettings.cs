@@ -671,8 +671,6 @@ namespace TWChatOverlay.Models
             get => Math.Round(Alerts.Buff.EndSoundVolume * 100.0, 0);
             set => BuffTrackerEndSoundVolume = Math.Max(0.0, Math.Min(100.0, value)) / 100.0;
         }
-        [JsonIgnore]
-        public bool ShowBuffTrackerWindow { get => Alerts.Buff.ShowMaxSizeWindow; set { Alerts.Buff.ShowMaxSizeWindow = value; OnPropertyChanged(); } }
 
         #endregion
 
