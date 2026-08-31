@@ -72,7 +72,7 @@ namespace TWChatOverlay.ViewModels
         /// <summary>입장 시간 카운트 토글을 노출할 보스(혼란한 대지·파멸의 기원)인지.</summary>
         public bool HasEntryCountdown => IsConfusedLand || IsOriginOfDoom;
 
-        /// <summary>등장 후 입장 가능 시간(혼란한 대지 3분, 파멸의 기원 6분)을 팝업으로 카운트다운.</summary>
+        /// <summary>등장 후 입장 가능 시간(혼란한 대지 4분, 파멸의 기원 6분)을 팝업으로 카운트다운.</summary>
         public bool EntryCountdown
         {
             get => IsOriginOfDoom

@@ -138,7 +138,7 @@ namespace TWChatOverlay.Views
             {
                 if (_entryWindow is TimeSpan entryWindow)
                 {
-                    // 등장 후: 입장 가능 시간 카운트다운 (혼란한 대지 3분)
+                    // 등장 후: 입장 가능 시간 카운트다운 (혼란한 대지 4분·파멸의 기원 6분)
                     TimeSpan entryRemaining = _countdownOccurrence + entryWindow - DateTime.Now;
                     if (entryRemaining <= TimeSpan.Zero)
                     {
