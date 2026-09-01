@@ -162,6 +162,11 @@ namespace TWChatOverlay.Views
                 {
                     RefreshExpTrackerWindow();
                 }
+                else if (e.PropertyName == nameof(_settings.UnifiedToastStack))
+                {
+                    // 통합/분리 전환: 미리보기가 떠 있으면 새 모드로 다시 그리고, 열린 알림도 재배치
+                    ToastStackService.RefreshPreviews(_settings);
+                }
                 else if (e.PropertyName == nameof(_settings.EnableBuffTrackerAlert))
                 {
                     ApplyBuffTrackerWindowSettings();

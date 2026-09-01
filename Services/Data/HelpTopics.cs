@@ -148,6 +148,14 @@ namespace TWChatOverlay.Services
                 "이동 중에는 좌표·크기 안내 창이 최상단에 표시됩니다.\n",
                 new[] { "display_unlock_off.png", "display_unlock_on.png" }),
 
+            ["display.toast_unified"] = (
+                "알림 표시 위치 통합",
+                "켜면 외치기·던전 도우미·누적 경험치·아이템 획득·필드 보스 알림이\n" +
+                "하나의 기준 위치에서 위→아래로 차례로 쌓입니다 (기본).\n" +
+                "끄면 4.x처럼 알림 종류마다 각자의 위치에 따로 표시됩니다.\n" +
+                "위치는 잠금 해제 모드에서 '알림 위치' 미리보기 창을 끌어 조정합니다.",
+                null),
+
             ["display.menu_horizontal"] = (
                 "메뉴 바 가로형",
                 "메뉴 아이콘 바를 가로형으로 바꿉니다. 끄면 세로형(기본)입니다.",
