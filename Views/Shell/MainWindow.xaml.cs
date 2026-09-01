@@ -843,6 +843,9 @@ namespace TWChatOverlay.Views
                     ApplyBuffTrackerHelperWindowSettings();
                     TryPrewarmDisplayWindows();
                     InitializeNativeServices();
+#if DEBUG
+                    ChatLatencyHud.EnsureVisible(); // 디버그: 지연 HUD를 시작부터 표시
+#endif
                 }, DispatcherPriority.Background);
 
                 if (shouldRunStartupLogInitialization)
