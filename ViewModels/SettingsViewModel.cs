@@ -335,6 +335,13 @@ namespace TWChatOverlay.ViewModels
             set { if (_settings.IdTagColorSync == value) return; _settings.IdTagColorSync = value; OnPropertyChanged(); OnPropertyChanged(nameof(IdTagColorEditable)); _onColorsUpdated?.Invoke("Decoration"); SaveSettings(); }
         }
 
+        /// <summary>클럽 보스 공지 색 동기화: 켜면 클럽 색을 따르고, 끄면 전용 색을 쓴다.</summary>
+        public bool ClubBossColorSync
+        {
+            get => _settings.ClubBossColorSync;
+            set { if (_settings.ClubBossColorSync == value) return; _settings.ClubBossColorSync = value; OnPropertyChanged(); OnPropertyChanged(nameof(ClubBossColorEditable)); _onColorsUpdated?.Invoke("Decoration"); SaveSettings(); }
+        }
+
         public Brush EtaLevelRange1Color => StringToBrush(_settings.EtaLevelRange1Color);
         public Brush EtaLevelRange2Color => StringToBrush(_settings.EtaLevelRange2Color);
         public Brush EtaLevelRange3Color => StringToBrush(_settings.EtaLevelRange3Color);
@@ -346,6 +353,9 @@ namespace TWChatOverlay.ViewModels
         public bool EtaCharacterColorEditable => !_settings.EtaCharacterColorSync;
         public bool TimestampColorEditable => !_settings.TimestampColorSync;
         public bool IdTagColorEditable => !_settings.IdTagColorSync;
+        public bool ClubBossColorEditable => !_settings.ClubBossColorSync;
+
+        public Brush ClubBossColor => StringToBrush(_settings.ClubBossColor);
 
         public Brush SenderIdColor => StringToBrush(_settings.SenderIdColor);
         public Brush EtaCharacterColor => StringToBrush(_settings.EtaCharacterColor);
@@ -715,6 +725,7 @@ namespace TWChatOverlay.ViewModels
                 "Timestamp" => TimestampColor,
                 "IdTag" => IdTagColor,
                 "SenderId" => SenderIdColor,
+                "ClubBoss" => ClubBossColor,
                 "EtaLevelRange1" => EtaLevelRange1Color,
                 "EtaLevelRange2" => EtaLevelRange2Color,
                 "EtaLevelRange3" => EtaLevelRange3Color,
@@ -739,6 +750,7 @@ namespace TWChatOverlay.ViewModels
                 OnPropertyChanged(nameof(TimestampColor));
                 OnPropertyChanged(nameof(IdTagColor));
                 OnPropertyChanged(nameof(SenderIdColor));
+                OnPropertyChanged(nameof(ClubBossColor));
                 OnPropertyChanged(nameof(EtaLevelRange1Color));
                 OnPropertyChanged(nameof(EtaLevelRange2Color));
                 OnPropertyChanged(nameof(EtaLevelRange3Color));
@@ -847,6 +859,9 @@ namespace TWChatOverlay.ViewModels
             OnPropertyChanged(nameof(EtaLevelRange3Color));
             OnPropertyChanged(nameof(EtaLevelRange4Color));
             OnPropertyChanged(nameof(EtaLevelRange5Color));
+            OnPropertyChanged(nameof(ClubBossColorSync));
+            OnPropertyChanged(nameof(ClubBossColorEditable));
+            OnPropertyChanged(nameof(ClubBossColor));
             OnPropertyChanged(nameof(ShowShoutToastPopup));
             OnPropertyChanged(nameof(AutoCopyShoutNickname));
             OnPropertyChanged(nameof(ShoutToastDurationSeconds));

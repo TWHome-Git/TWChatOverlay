@@ -151,7 +151,7 @@ namespace TWChatOverlay.Services
             buffer.RemoveRange(0, buffer.Count - _maxCountPerTab);
         }
 
-        public void UpdateAllBrushes(Func<ChatCategory, SolidColorBrush> brushFactory)
+        public void UpdateAllBrushes(Func<LogParser.ParseResult, SolidColorBrush> brushFactory)
         {
             if (brushFactory == null) return;
 
@@ -161,7 +161,7 @@ namespace TWChatOverlay.Services
                 {
                     foreach (var log in pair.Value)
                     {
-                        log.Brush = brushFactory(log.Category);
+                        log.Brush = brushFactory(log);
                     }
 
                     // 이미 그려진 문단은 옛 브러시를 물고 있으므로 소비자가 전체를 다시 그리게 한다

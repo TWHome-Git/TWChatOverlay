@@ -42,7 +42,9 @@ namespace TWChatOverlay.Services
             _alertLogAnalyzer.Analyze(context);
 
             var parsed = context.Result;
-            parsed.Brush = ChatBrushResolver.Resolve(_settings, parsed.Category);
+            parsed.IsClubBossMessage = parsed.Category == ChatCategory.Club &&
+                                       IgnoredChatMessageService.IsIgnoredClubMessage(parsed.FormattedText);
+            parsed.Brush = ChatBrushResolver.Resolve(_settings, parsed.Category, parsed.IsClubBossMessage);
 
             bool isRareTrackedItem = parsed.IsTrackedItemDrop &&
                                      (parsed.TrackedItemGrade == ItemDropGrade.Rare ||
@@ -100,9 +102,7 @@ namespace TWChatOverlay.Services
 
         private bool IsHiddenByChatFilter(LogParser.ParseResult parsed)
         {
-            if (parsed.Category == ChatCategory.Club &&
-                !_settings.ShowClubBoss &&
-                IgnoredChatMessageService.IsIgnoredClubMessage(parsed.FormattedText))
+            if (parsed.IsClubBossMessage && !_settings.ShowClubBoss)
             {
                 return true;
             }

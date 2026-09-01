@@ -68,6 +68,9 @@ namespace TWChatOverlay.Models
         public string EtaCharacterColor { get; set; } = "#5AC8E8";
         public string TimestampColor { get; set; } = "#9AA0A6";
         public string IdTagColor { get; set; } = "#B4BBC2";
+        // 클럽 보스 공지 줄 색: 동기화를 끄면 클럽 색 대신 이 색을 쓴다
+        public bool ClubBossColorSync { get; set; } = true;
+        public string ClubBossColor { get; set; } = "#00FF00";
     }
 
     public class ChatFontSettings

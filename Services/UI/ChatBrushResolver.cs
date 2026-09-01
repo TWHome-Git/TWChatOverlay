@@ -40,6 +40,15 @@ namespace TWChatOverlay.Services
             });
         }
 
+        /// <summary>클럽 보스 공지 줄은 동기화가 꺼져 있으면 전용 색을 쓴다.</summary>
+        public static SolidColorBrush Resolve(ChatSettings settings, ChatCategory category, bool isClubBossMessage)
+        {
+            if (isClubBossMessage && !settings.ClubBossColorSync)
+                return ToBrush(settings.ClubBossColor);
+
+            return Resolve(settings, category);
+        }
+
         public static SolidColorBrush Resolve(ChatSettings settings, ChatCategory category)
         {
             string hex = category switch

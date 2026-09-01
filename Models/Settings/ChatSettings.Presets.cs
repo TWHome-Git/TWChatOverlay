@@ -15,6 +15,7 @@
                 case "Timestamp": TimestampColor = hex; break;
                 case "IdTag": IdTagColor = hex; break;
                 case "SenderId": SenderIdColor = hex; break;
+                case "ClubBoss": ClubBossColor = hex; break;
                 case "EtaLevelRange1": EtaLevelRange1Color = hex; break;
                 case "EtaLevelRange2": EtaLevelRange2Color = hex; break;
                 case "EtaLevelRange3": EtaLevelRange3Color = hex; break;
