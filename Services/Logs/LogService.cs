@@ -60,7 +60,10 @@ namespace TWChatOverlay.Services
         // _lastTailBytes: 직전에 읽은 내용의 끝 바이트(원본과 대조), _resyncAnchorText: 마지막으로
         // 소비한 완결 줄의 메시지 부분(타임스탬프 뒤) — 재작성으로 시각이 바뀌어도 내용으로 위치를 되찾는다.
         private byte[] _lastTailBytes = Array.Empty<byte>();
-        private string _resyncAnchorText = string.Empty;
+        // 마지막으로 소비한 줄들의 메시지 부분(타임스탬프 뒤), 오래된 → 최신.
+        // 사냥 중엔 같은 메시지(경험치 등)가 반복되므로 한 줄이 아니라 연속 시퀀스로 위치를 판정한다.
+        private readonly List<string> _resyncAnchors = new();
+        private const int ResyncAnchorCount = 6;
         private const int TailVerifyLength = 256;
         private const int ResyncSearchBack = 128 * 1024;
         private const int ResyncSearchForward = 4096;
@@ -419,12 +422,7 @@ namespace TWChatOverlay.Services
                     return; // 연속성 유지 — 정상 경로
                 }
 
-                // 오프셋이 어긋남 → 마지막 소비 줄의 메시지 내용(타임스탬프 제외)으로 위치를 되찾는다
-                byte[] anchor = _resyncAnchorText.Length >= 6
-                    ? _logEncoding.GetBytes(_resyncAnchorText)
-                    : Array.Empty<byte>();
-
-                if (anchor.Length > 0)
+                // 오프셋이 어긋남 → 마지막 소비 줄들의 메시지 시퀀스(타임스탬프 제외)로 위치를 되찾는다
                 {
                     long searchStart = Math.Max(0, _lastPosition - ResyncSearchBack);
                     long searchEnd = Math.Min(length, _lastPosition + ResyncSearchForward);
@@ -433,15 +431,9 @@ namespace TWChatOverlay.Services
                     _logStream.Seek(searchStart, SeekOrigin.Begin);
                     if (ReadExactly(window, windowLen) == windowLen)
                     {
-                        int found = LastIndexOfBytes(window, anchor);
-                        if (found >= 0)
+                        long newPos = TryFindResyncPosition(window, searchStart);
+                        if (newPos >= 0)
                         {
-                            // 앵커 줄의 끝(개행 다음)부터 다시 읽는다
-                            int lineEnd = found + anchor.Length;
-                            while (lineEnd < windowLen && window[lineEnd] != (byte)'\n')
-                                lineEnd++;
-                            long newPos = searchStart + Math.Min(lineEnd + 1, windowLen);
-
                             AppLogger.Warn($"Log tail was rewritten by the game. Resynced read position {_lastPosition} -> {newPos}.");
                             _lastPosition = newPos;
                             _pendingRawContent = string.Empty;
@@ -452,9 +444,10 @@ namespace TWChatOverlay.Services
                     }
                 }
 
-                // 되찾지 못함 → 파일이 통째로 바뀐 것으로 보고 처음부터 다시 (기존 잘림 처리와 동일 의미)
-                AppLogger.Warn("Log tail no longer matches and anchor resync failed. Restarting from file beginning.");
-                _lastPosition = 0;
+                // 되찾지 못함 → 현재 위치를 유지하되 다음 줄 경계로 스냅한다 (조각 줄 방지).
+                // 전체 재읽기는 수천 줄 중복을 쏟아내므로 하지 않는다 — 파일 교체는 길이 축소 경로가 잡는다.
+                AppLogger.Warn("Log tail no longer matches and sequence resync failed. Snapping to next line boundary.");
+                SnapToNextLineBoundary(length);
                 _pendingRawContent = string.Empty;
                 _logDecoder.Reset();
                 _lastTailBytes = Array.Empty<byte>();
@@ -471,16 +464,17 @@ namespace TWChatOverlay.Services
         /// </summary>
         private void UpdateResyncAnchor(IReadOnlyList<string> lines)
         {
-            for (int i = lines.Count - 1; i >= 0; i--)
+            foreach (string raw in lines)
             {
-                string line = lines[i].Trim();
+                string line = raw.Trim();
                 int cut = line.IndexOf("</font>", StringComparison.OrdinalIgnoreCase);
                 string message = cut >= 0 ? line[(cut + 7)..].Trim() : line;
-                if (message.Length >= 6)
-                {
-                    _resyncAnchorText = message;
-                    return;
-                }
+                if (message.Length < 6)
+                    continue;
+
+                _resyncAnchors.Add(message);
+                if (_resyncAnchors.Count > ResyncAnchorCount)
+                    _resyncAnchors.RemoveAt(0);
             }
         }
 
@@ -529,15 +523,147 @@ namespace TWChatOverlay.Services
             return total;
         }
 
-        private static int LastIndexOfBytes(byte[] haystack, byte[] needle)
+        private static readonly byte[] FontCloseBytes = System.Text.Encoding.ASCII.GetBytes("</font>");
+
+        /// <summary>
+        /// 재기록된 창(window) 안에서 마지막 소비 줄 시퀀스와 가장 잘 맞는 위치를 찾는다.
+        /// 후보 줄의 메시지가 최신 앵커와 같고, 그 앞 줄들이 이전 앵커들과 연속으로 일치할수록 높은 점수.
+        /// 동점이면 기존 읽기 위치에 가장 가까운 후보를 고른다 (반복 메시지 오인 방지).
+        /// 반환: 파일 절대 위치(그 줄의 개행 다음), 실패 시 -1.
+        /// </summary>
+        private long TryFindResyncPosition(byte[] window, long windowStart)
         {
-            for (int i = haystack.Length - needle.Length; i >= 0; i--)
+            if (_resyncAnchors.Count == 0)
+                return -1;
+
+            // 창을 줄 단위로 나눈다. cp949 트레일 바이트 범위(0x41~)에 0x0A가 없어 '\n' 분리는 안전하다.
+            var lineStarts = new List<int> { 0 };
+            for (int i = 0; i < window.Length; i++)
+            {
+                if (window[i] == (byte)'\n' && i + 1 < window.Length)
+                    lineStarts.Add(i + 1);
+            }
+
+            var anchorBytes = _resyncAnchors.Select(a => _logEncoding.GetBytes(a)).ToArray();
+            long expectedOffset = _lastPosition - windowStart;
+
+            int bestScore = 0;
+            long bestDistance = long.MaxValue;
+            long bestResume = -1;
+
+            for (int li = lineStarts.Count - 1; li >= 0; li--)
+            {
+                int start = lineStarts[li];
+                int end = li + 1 < lineStarts.Count ? lineStarts[li + 1] - 1 : window.Length; // '\n' 앞까지
+                if (!LineMessageEquals(window, start, end, anchorBytes[^1]))
+                    continue;
+
+                // 앞 줄들이 이전 앵커들과 연속으로 일치하는 개수를 센다
+                int score = 1;
+                for (int k = 2; k <= anchorBytes.Length && li - (k - 1) >= 0; k++)
+                {
+                    int ps = lineStarts[li - (k - 1)];
+                    int pe = lineStarts[li - (k - 2)] - 1;
+                    if (!LineMessageEquals(window, ps, pe, anchorBytes[^k]))
+                        break;
+                    score++;
+                }
+
+                long resume = li + 1 < lineStarts.Count ? lineStarts[li + 1] : window.Length;
+                long distance = Math.Abs(resume - expectedOffset);
+                if (score > bestScore || (score == bestScore && distance < bestDistance))
+                {
+                    bestScore = score;
+                    bestDistance = distance;
+                    bestResume = resume;
+                }
+            }
+
+            // 앵커가 여러 개면 최소 2줄 연속 일치를 요구한다 (반복 한 줄 오인 방지)
+            int required = Math.Min(2, _resyncAnchors.Count);
+            if (bestScore < required || bestResume < 0)
+                return -1;
+
+            return windowStart + bestResume;
+        }
+
+        private static readonly byte[] BrCloseBytes = System.Text.Encoding.ASCII.GetBytes("</br>");
+        private static readonly byte[] BrOpenBytes = System.Text.Encoding.ASCII.GetBytes("<br>");
+
+        /// <summary>
+        /// 줄 바이트 구간의 메시지 부분(첫 &lt;/font&gt; 뒤)이 앵커와 같은지.
+        /// 앵커는 줄 분리 시 &lt;/br&gt;이 제거된 텍스트에서 왔으므로 바이트 쪽도 끝의 br 태그를 떼고 비교한다.
+        /// </summary>
+        private static bool LineMessageEquals(byte[] window, int start, int end, byte[] anchor)
+        {
+            int cut = IndexOfBytes(window, start, end, FontCloseBytes);
+            int msgStart = cut >= 0 ? cut + FontCloseBytes.Length : start;
+            int msgEnd = end;
+
+            static void TrimRange(byte[] bytes, ref int s, ref int e)
+            {
+                while (s < e && (bytes[s] == (byte)' ' || bytes[s] == (byte)'\t'))
+                    s++;
+                while (e > s && (bytes[e - 1] == (byte)' ' || bytes[e - 1] == (byte)'\r' || bytes[e - 1] == (byte)'\t'))
+                    e--;
+            }
+
+            TrimRange(window, ref msgStart, ref msgEnd);
+
+            if (msgEnd - msgStart >= BrCloseBytes.Length &&
+                window.AsSpan(msgEnd - BrCloseBytes.Length, BrCloseBytes.Length).SequenceEqual(BrCloseBytes))
+                msgEnd -= BrCloseBytes.Length;
+            else if (msgEnd - msgStart >= BrOpenBytes.Length &&
+                     window.AsSpan(msgEnd - BrOpenBytes.Length, BrOpenBytes.Length).SequenceEqual(BrOpenBytes))
+                msgEnd -= BrOpenBytes.Length;
+
+            TrimRange(window, ref msgStart, ref msgEnd);
+
+            return msgEnd - msgStart == anchor.Length &&
+                   window.AsSpan(msgStart, anchor.Length).SequenceEqual(anchor);
+        }
+
+        private static int IndexOfBytes(byte[] haystack, int start, int end, byte[] needle)
+        {
+            for (int i = start; i <= end - needle.Length; i++)
             {
                 if (haystack.AsSpan(i, needle.Length).SequenceEqual(needle))
                     return i;
             }
 
             return -1;
+        }
+
+        /// <summary>현재 위치가 줄 중간일 수 있을 때, 다음 '\n' 직후로 스냅해 조각 줄을 피한다.</summary>
+        private void SnapToNextLineBoundary(long length)
+        {
+            try
+            {
+                _logStream!.Seek(_lastPosition, SeekOrigin.Begin);
+                var buffer = new byte[4096];
+                long pos = _lastPosition;
+                while (pos < length)
+                {
+                    int read = _logStream.Read(buffer, 0, (int)Math.Min(buffer.Length, length - pos));
+                    if (read <= 0)
+                        break;
+
+                    for (int i = 0; i < read; i++)
+                    {
+                        if (buffer[i] == (byte)'\n')
+                        {
+                            _lastPosition = pos + i + 1;
+                            return;
+                        }
+                    }
+
+                    pos += read;
+                }
+            }
+            catch (Exception ex)
+            {
+                AppLogger.Warn("Failed to snap log position to line boundary.", ex);
+            }
         }
 
         /// <summary>
