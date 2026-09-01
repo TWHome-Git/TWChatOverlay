@@ -9,7 +9,8 @@ namespace TWChatOverlay.Services
     /// <summary>분석이 끝난 로그 한 줄. UI는 이 결과를 소비만 한다.</summary>
     public sealed record AnalyzedLogEvent(
         LogFeedItem Source,
-        MainLogPipelineAnalysis Analysis)
+        MainLogPipelineAnalysis Analysis,
+        DateTime AnalyzedAtUtc = default) // 분석 완료 시각 — 지연 구간 분해 계측용
     {
         public string Html => Source.Html;
         public bool IsRealTime => Source.IsRealTime;
@@ -86,7 +87,7 @@ namespace TWChatOverlay.Services
                 try
                 {
                     var analysis = _coordinator.Analyze(item.Html, item.IsRealTime);
-                    analyzed = new AnalyzedLogEvent(item, analysis);
+                    analyzed = new AnalyzedLogEvent(item, analysis, DateTime.UtcNow);
                 }
                 catch (Exception ex)
                 {
@@ -124,7 +125,12 @@ namespace TWChatOverlay.Services
             {
                 try
                 {
-                    _dispatcher.BeginInvoke(new Action(FlushToUi), DispatcherPriority.Background);
+                    // 실시간 줄은 Input 우선순위로 — Background는 타이머·유휴 작업에 밀려
+                    // 수백 ms 지연될 수 있다. 시작 백필은 UI를 막지 않게 Background 유지.
+                    var priority = analyzed.IsStartupBackfill
+                        ? DispatcherPriority.Background
+                        : DispatcherPriority.Input;
+                    _dispatcher.BeginInvoke(new Action(FlushToUi), priority);
                 }
                 catch (Exception ex)
                 {
