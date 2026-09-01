@@ -139,6 +139,11 @@ namespace TWChatOverlay.Views
                         var context = CreateLogPipelineContext(item.Html, item.IsRealTime, item.IsStartupBackfill, deferUiScroll: true);
                         context.PipelineAnalysis = item.Analysis; // 백그라운드에서 이미 분석됨
                         ProcessLogPipelineContext(context);
+#if DEBUG
+                        // 디버그 빌드: 로그 시각 대비 표시 지연 HUD
+                        if (item.IsRealTime && !item.IsStartupBackfill)
+                            ChatLatencyHud.Report(item.Analysis?.Primary?.Parsed?.FormattedText);
+#endif
                     }
                     catch (Exception ex)
                     {
