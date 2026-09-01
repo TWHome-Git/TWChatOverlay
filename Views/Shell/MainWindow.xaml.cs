@@ -371,7 +371,7 @@ namespace TWChatOverlay.Views
 
         private void OnColorsUpdatedFromSettings(string _)
         {
-            _logTabBufferStore.UpdateAllBrushes(category => ChatBrushResolver.Resolve(_settings, category));
+            _logTabBufferStore.UpdateAllBrushes(log => ChatBrushResolver.Resolve(_settings, log.Category, log.IsClubBossMessage));
             ChatWindowHub.NotifyBuffersChanged();
 
             RequestRefreshLogDisplay();

@@ -30,6 +30,8 @@ namespace TWChatOverlay
             public string? SenderId { get; set; } = null;
             public string? RawSenderId { get; set; } = null;
             public bool HasLeadingBodyWhitespace { get; set; } = false;
+            /// <summary>클럽 보스 공지 줄인지 ([클럽 보스] 포함) — 표시 여부·개별 색상에 사용.</summary>
+            public bool IsClubBossMessage { get; set; } = false;
         }
 
         public static ParseResult ParseLine(string html, ChatSettings settings)

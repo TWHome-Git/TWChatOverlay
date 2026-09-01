@@ -132,6 +132,10 @@ namespace TWChatOverlay.Models
         public string EtaCharacterColor { get => Chat.IdDisplay.EtaCharacterColor; set { Chat.IdDisplay.EtaCharacterColor = value; OnPropertyChanged(); } }
         [JsonIgnore]
         public string TimestampColor { get => Chat.IdDisplay.TimestampColor; set { Chat.IdDisplay.TimestampColor = value; OnPropertyChanged(); } }
+        [JsonIgnore]
+        public bool ClubBossColorSync { get => Chat.IdDisplay.ClubBossColorSync; set { Chat.IdDisplay.ClubBossColorSync = value; OnPropertyChanged(); } }
+        [JsonIgnore]
+        public string ClubBossColor { get => Chat.IdDisplay.ClubBossColor; set { Chat.IdDisplay.ClubBossColor = value; OnPropertyChanged(); } }
         // 에타 레벨 구간별 색상 (동기화 해제 시 적용)
         [JsonIgnore]
         public string EtaLevelRange1Color { get => Chat.IdDisplay.EtaLevelRange1Color; set { Chat.IdDisplay.EtaLevelRange1Color = value; OnPropertyChanged(); } }

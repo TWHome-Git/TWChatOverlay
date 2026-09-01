@@ -74,7 +74,9 @@ namespace TWChatOverlay.Services
 
             ["chat.id.club_boss"] = (
                 "클럽 보스 메시지",
-                "클럽 보스 관련 공지(생성/참가/퇴장/문 닫힘 등)를 채팅창에 표시할지 정합니다.\n",
+                "클럽 보스 관련 공지(생성/참가/퇴장/문 닫힘 등)를 채팅창에 표시할지 정합니다.\n" +
+                "'동기화'를 끄면 색 버튼으로 클럽 보스 공지만의 색을 따로 지정할 수 있습니다.\n" +
+                "(동기화가 켜져 있으면 클럽 채팅 색을 그대로 따릅니다)\n",
                 new[] { "chat_id_club_boss_off.png", "chat_id_club_boss_on.png" }),
 
             ["chat.id.timestamp"] = (
