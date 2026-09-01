@@ -24,9 +24,10 @@ namespace TWChatOverlay.Services
         private const double GraphWindowSeconds = 300; // 그래프 표시 범위: 최근 5분
         private const double StatsWindowSeconds = 60;  // 텍스트 통계 범위: 최근 1분
 
-        private static readonly Queue<(DateTime At, double Seconds)> Samples = new();
+        private static readonly Queue<(DateTime At, double Seconds, double UiSeconds)> Samples = new();
         private static readonly object Sync = new();
         private static double _last;
+        private static double _lastUi;
         private static double _lastLogStamp = -1;
         private static DateTime _lastUiUpdate = DateTime.MinValue;
         private static HudWindow? _window;
@@ -35,20 +36,22 @@ namespace TWChatOverlay.Services
         /// 실시간 줄이 UI에 추가될 때 호출.
         /// 핵심 지표는 앱 지연(파일에서 읽은 순간 → 화면 표시, ms 단위 정밀).
         /// </summary>
-        public static void Report(string? formattedText, DateTime readAtUtc)
+        public static void Report(string? formattedText, DateTime readAtUtc, DateTime analyzedAtUtc = default)
         {
             DateTime nowUtc = DateTime.UtcNow;
 
-            // 앱 파이프라인 지연 (읽기 → 표시)
+            // 앱 파이프라인 지연 (읽기 → 표시), UI 구간(분석 완료 → 표시) 분해 포함
             if (readAtUtc != default)
             {
                 double appSeconds = (nowUtc - readAtUtc).TotalSeconds;
+                double uiSeconds = analyzedAtUtc != default ? (nowUtc - analyzedAtUtc).TotalSeconds : 0;
                 if (appSeconds >= 0 && appSeconds <= 30)
                 {
                     lock (Sync)
                     {
                         _last = appSeconds;
-                        Samples.Enqueue((nowUtc, appSeconds));
+                        _lastUi = Math.Max(0, uiSeconds);
+                        Samples.Enqueue((nowUtc, appSeconds, Math.Max(0, uiSeconds)));
                         while (Samples.Count > 0 && (nowUtc - Samples.Peek().At).TotalSeconds > GraphWindowSeconds)
                             Samples.Dequeue();
                     }
@@ -88,33 +91,36 @@ namespace TWChatOverlay.Services
             try
             {
                 DateTime nowUtc = DateTime.UtcNow;
-                double last, lastStamp, avg = 0, max = 0;
+                double last, lastUi, lastStamp, avg = 0, max = 0, uiAvg = 0, uiMax = 0;
                 int count = 0;
-                List<(DateTime At, double Seconds)> snapshot;
+                List<(DateTime At, double Seconds, double UiSeconds)> snapshot;
                 lock (Sync)
                 {
                     last = _last;
+                    lastUi = _lastUi;
                     lastStamp = _lastLogStamp;
                     snapshot = Samples.ToList();
                 }
 
-                foreach (var (at, s) in snapshot)
+                foreach (var (at, s, ui) in snapshot)
                 {
                     if ((nowUtc - at).TotalSeconds > StatsWindowSeconds)
                         continue;
                     count++;
                     avg += s;
+                    uiAvg += ui;
                     if (s > max) max = s;
+                    if (ui > uiMax) uiMax = ui;
                 }
-                if (count > 0) avg /= count;
+                if (count > 0) { avg /= count; uiAvg /= count; }
 
                 if (_window == null || !_window.IsLoaded)
                     _window = new HudWindow();
 
                 string stampText = lastStamp >= 0 ? $"{lastStamp:F1}s" : "-";
                 _window.SetText(
-                    $"앱 지연(읽기→표시)  최근 {last * 1000:F0}ms · 1분 평균 {avg * 1000:F0}ms · 최대 {max * 1000:F0}ms · n={count}\n" +
-                    $"로그 시각 대비 {stampText}  (초 단위 양자화 + 게임 기록 지연 포함 — 참고용)");
+                    $"앱 지연(읽기→표시)  최근 {last * 1000:F0}ms (읽기·분석 {(last - lastUi) * 1000:F0} + UI {lastUi * 1000:F0}) · 1분 평균 {avg * 1000:F0}ms · 최대 {max * 1000:F0}ms\n" +
+                    $"UI 구간 1분 평균 {uiAvg * 1000:F0}ms · 최대 {uiMax * 1000:F0}ms · n={count}   |   로그 시각 대비 {stampText} (참고용)");
                 _window.DrawGraph(snapshot, nowUtc);
                 if (!_window.IsVisible)
                     _window.Show();
@@ -255,20 +261,20 @@ namespace TWChatOverlay.Services
             public void SetText(string text) => _text.Text = text;
 
             /// <summary>최근 5분 표본을 폴리라인으로 그린다. 세로축은 관측 최대(최소 120ms)에 맞춰 스케일.</summary>
-            public void DrawGraph(IReadOnlyList<(DateTime At, double Seconds)> samples, DateTime nowUtc)
+            public void DrawGraph(IReadOnlyList<(DateTime At, double Seconds, double UiSeconds)> samples, DateTime nowUtc)
             {
                 if (_graphHost.Visibility != Visibility.Visible)
                     return;
 
                 double maxSeconds = 0.12; // 최소 눈금 120ms — 100ms 기준선이 항상 보이게
-                foreach (var (_, s) in samples)
+                foreach (var (_, s, _) in samples)
                 {
                     if (s > maxSeconds) maxSeconds = s;
                 }
                 maxSeconds *= 1.1;
 
                 var points = new PointCollection();
-                foreach (var (at, s) in samples)
+                foreach (var (at, s, _) in samples)
                 {
                     double age = (nowUtc - at).TotalSeconds;
                     if (age < 0 || age > GraphWindowSeconds)

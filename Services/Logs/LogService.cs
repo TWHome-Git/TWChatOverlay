@@ -126,7 +126,7 @@ namespace TWChatOverlay.Services
 
             try { Stop(); } catch (Exception ex) { AppLogger.Warn("Failed to stop LogService during dispose.", ex); }
             try { _pollingTimer.Dispose(); } catch (Exception ex) { AppLogger.Warn("Failed to dispose polling timer.", ex); }
-            try { FlushConsumedCheckpoint(); } catch (Exception ex) { AppLogger.Warn("Failed to flush checkpoint during dispose.", ex); }
+            try { FlushConsumedCheckpoint(force: true); } catch (Exception ex) { AppLogger.Warn("Failed to flush checkpoint during dispose.", ex); }
             lock (_lockObj) { CloseStream(); }
             GC.SuppressFinalize(this);
         }
@@ -792,9 +792,16 @@ namespace TWChatOverlay.Services
             }
         }
 
+        private DateTime _lastCheckpointSaveUtc = DateTime.MinValue;
+
         /// <summary>UI가 알린 소비 위치를 체크포인트로 저장한다. 폴링 스레드(및 Dispose)에서만 호출.</summary>
-        private void FlushConsumedCheckpoint()
+        private void FlushConsumedCheckpoint(bool force = false)
         {
+            // 줄마다 파일을 쓰면 백신 검사 등으로 폴링이 수백 ms 막힐 수 있다 — 1초로 스로틀.
+            // (크래시 시 유실 창이 최대 1초로 늘어날 뿐, 재시작하면 그 구간은 다시 읽힌다)
+            if (!force && (DateTime.UtcNow - _lastCheckpointSaveUtc).TotalSeconds < 1.0)
+                return;
+
             string? path;
             long position;
             lock (_consumedSync)
@@ -814,6 +821,7 @@ namespace TWChatOverlay.Services
                     return;
 
                 SaveCheckpoint(position);
+                _lastCheckpointSaveUtc = DateTime.UtcNow;
             }
         }
 
