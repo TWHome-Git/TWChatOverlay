@@ -766,6 +766,16 @@
                                     </StackPanel>
                                 </DockPanel>
                             </Border>
+                            <Border Style="{StaticResource SettingsRowStyle}">
+                                <DockPanel>
+                                    <CheckBox DockPanel.Dock="Right" IsChecked="{Binding UnifiedToastStack}" Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
+                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                        <TextBlock Text="알림 표시 위치 통합" Style="{StaticResource SettingsRowLabelStyle}"
+                                                   ToolTip="켜면 외치기·던전·경험치·아이템·필드 보스 알림이 한 위치에 쌓이고, 끄면 종류별 위치에 각각 표시됩니다"/>
+                                        <Button Style="{StaticResource HelpButtonStyle}" Tag="display.toast_unified" Click="Help_Click"/>
+                                    </StackPanel>
+                                </DockPanel>
+                            </Border>
                         </WrapPanel>
                     </StackPanel>
 

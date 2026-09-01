@@ -928,6 +928,13 @@ namespace TWChatOverlay.Models
             get => Windows.ToastStack.Top;
             set { if (Windows.ToastStack.Top == value) return; Windows.ToastStack.Top = value; OnPropertyChanged(); }
         }
+        /// <summary>알림 표시 위치 통합 여부. false면 알림 종류별로 각자의 저장 위치에 표시.</summary>
+        [JsonIgnore]
+        public bool UnifiedToastStack
+        {
+            get => Windows.UnifiedToastStack;
+            set { if (Windows.UnifiedToastStack == value) return; Windows.UnifiedToastStack = value; OnPropertyChanged(); }
+        }
 
         [JsonIgnore]
         public double? BossAlertToastWindowWidth

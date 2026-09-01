@@ -406,7 +406,7 @@ namespace TWChatOverlay.Services
                 "BuffTrackerWindow" => "버프 추적",
                 "ShoutToastWindow" => "외치기 팝업",
                 "MessengerEtaToastWindow" => "1:1 대화 에타 표시",
-                "ToastStackPreviewWindow" => "알림 표시 위치",
+                "ToastStackPreviewWindow" => string.IsNullOrWhiteSpace(window.Title) ? "알림 표시 위치" : window.Title,
                 "RecaptureSupplyWindow" => "보급품 탈환",
                 _ => string.IsNullOrWhiteSpace(window.Title) ? window.GetType().Name : window.Title,
             };

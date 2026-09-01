@@ -216,6 +216,8 @@ namespace TWChatOverlay.Models
         public WindowRect BossAlertToast { get; set; } = new();
         /// <summary>통합 알림 스택(외치기·던전·경험치·아이템·보스) 기준 위치.</summary>
         public WindowRect ToastStack { get; set; } = new();
+        /// <summary>알림 표시 위치 통합 여부. false면 알림 종류별로 각자의 저장 위치에 표시한다.</summary>
+        public bool UnifiedToastStack { get; set; } = true;
         public WindowRect DungeonCountDisplay { get; set; } = new();
         public WindowRect ExpTracker { get; set; } = new();
         public WindowRect Clone1 { get; set; } = new();

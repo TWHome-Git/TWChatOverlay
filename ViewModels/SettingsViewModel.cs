@@ -206,6 +206,19 @@ namespace TWChatOverlay.ViewModels
             }
         }
 
+        /// <summary>알림 표시 위치 통합: 켜면 모든 알림이 한 위치에 쌓이고, 끄면 종류별 위치에 각각 표시.</summary>
+        public bool UnifiedToastStack
+        {
+            get => _settings.UnifiedToastStack;
+            set
+            {
+                if (_settings.UnifiedToastStack == value) return;
+                _settings.UnifiedToastStack = value;
+                OnPropertyChanged();
+                SaveSettings();
+            }
+        }
+
         public bool MenuWindowHorizontal
         {
             get => _settings.MenuWindowHorizontal;
