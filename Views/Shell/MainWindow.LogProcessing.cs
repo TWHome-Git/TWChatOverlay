@@ -142,7 +142,7 @@ namespace TWChatOverlay.Views
 #if DEBUG
                         // 디버그 빌드: 로그 시각 대비 표시 지연 HUD
                         if (item.IsRealTime && !item.IsStartupBackfill)
-                            ChatLatencyHud.Report(item.Analysis?.Primary?.Parsed?.FormattedText);
+                            ChatLatencyHud.Report(item.Analysis?.Primary?.Parsed?.FormattedText, item.Source.ReadAtUtc);
 #endif
                     }
                     catch (Exception ex)

@@ -18,7 +18,8 @@ namespace TWChatOverlay.Services
         bool IsRealTime,
         bool IsStartupBackfill,
         string SourcePath = "",
-        long CheckpointPosition = -1);
+        long CheckpointPosition = -1,
+        DateTime ReadAtUtc = default); // 파일에서 읽은 시각 — 앱 파이프라인 지연 계측용
 
     public sealed class LogPipelineCheckpoint
     {
@@ -740,7 +741,7 @@ namespace TWChatOverlay.Services
                 if (!string.IsNullOrWhiteSpace(logTimeText))
                     _lastLogTimeText = logTimeText;
 
-                OnNewLogRead?.Invoke(new LogFeedItem(normalized, isRealTime, isStartupBackfill, sourcePath, checkpointPosition));
+                OnNewLogRead?.Invoke(new LogFeedItem(normalized, isRealTime, isStartupBackfill, sourcePath, checkpointPosition, DateTime.UtcNow));
             }
         }
 

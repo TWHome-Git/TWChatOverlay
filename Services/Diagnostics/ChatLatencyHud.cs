@@ -26,42 +26,57 @@ namespace TWChatOverlay.Services
         private static DateTime _lastUiUpdate = DateTime.MinValue;
         private static HudWindow? _window;
 
-        /// <summary>실시간 줄이 UI에 추가될 때 호출. 타임스탬프가 없거나 비정상 값이면 무시.</summary>
-        public static void Report(string? formattedText)
+        private static double _lastLogStamp = -1;
+
+        /// <summary>
+        /// 실시간 줄이 UI에 추가될 때 호출.
+        /// 핵심 지표는 앱 지연(파일에서 읽은 순간 → 화면 표시, ms 단위 정밀) —
+        /// 로그 타임스탬프 대비 값은 초 단위 양자화 + 게임 기록 지연이 섞여 참고용으로만 보여준다.
+        /// </summary>
+        public static void Report(string? formattedText, DateTime readAtUtc)
         {
-            if (string.IsNullOrEmpty(formattedText))
-                return;
+            DateTime nowUtc = DateTime.UtcNow;
 
-            Match match = TimeRegex.Match(formattedText);
-            if (!match.Success)
-                return;
-
-            DateTime now = DateTime.Now;
-            var logTime = new DateTime(now.Year, now.Month, now.Day,
-                int.Parse(match.Groups["h"].Value),
-                int.Parse(match.Groups["m"].Value),
-                int.Parse(match.Groups["s"].Value));
-
-            // 자정 직후: 로그 시각이 미래로 보이면 전날로 본다
-            if (logTime > now.AddSeconds(5))
-                logTime = logTime.AddDays(-1);
-
-            double seconds = (now - logTime).TotalSeconds;
-            if (seconds < 0 || seconds > 30)
-                return; // 백필/시계 이상은 제외
-
-            lock (Sync)
+            // 앱 파이프라인 지연 (읽기 → 표시)
+            if (readAtUtc != default)
             {
-                _last = seconds;
-                Samples.Enqueue((now, seconds));
-                while (Samples.Count > 0 && (now - Samples.Peek().At).TotalSeconds > 60)
-                    Samples.Dequeue();
+                double appSeconds = (nowUtc - readAtUtc).TotalSeconds;
+                if (appSeconds >= 0 && appSeconds <= 30)
+                {
+                    lock (Sync)
+                    {
+                        _last = appSeconds;
+                        Samples.Enqueue((nowUtc, appSeconds));
+                        while (Samples.Count > 0 && (nowUtc - Samples.Peek().At).TotalSeconds > 60)
+                            Samples.Dequeue();
+                    }
+                }
+            }
+
+            // 참고용: 로그 타임스탬프 대비 (초 단위라 0~1초 오차 내재)
+            if (!string.IsNullOrEmpty(formattedText))
+            {
+                Match match = TimeRegex.Match(formattedText);
+                if (match.Success)
+                {
+                    DateTime now = DateTime.Now;
+                    var logTime = new DateTime(now.Year, now.Month, now.Day,
+                        int.Parse(match.Groups["h"].Value),
+                        int.Parse(match.Groups["m"].Value),
+                        int.Parse(match.Groups["s"].Value));
+                    if (logTime > now.AddSeconds(5))
+                        logTime = logTime.AddDays(-1);
+
+                    double stamp = (now - logTime).TotalSeconds;
+                    if (stamp >= 0 && stamp <= 30)
+                        _lastLogStamp = stamp;
+                }
             }
 
             // UI 갱신은 250ms 스로틀
-            if ((now - _lastUiUpdate).TotalMilliseconds < 250)
+            if ((nowUtc - _lastUiUpdate).TotalMilliseconds < 250)
                 return;
-            _lastUiUpdate = now;
+            _lastUiUpdate = nowUtc;
 
             Application.Current?.Dispatcher.BeginInvoke(new Action(UpdateWindow));
         }
@@ -70,11 +85,12 @@ namespace TWChatOverlay.Services
         {
             try
             {
-                double last, avg = 0, max = 0;
+                double last, avg = 0, max = 0, lastStamp;
                 int count;
                 lock (Sync)
                 {
                     last = _last;
+                    lastStamp = _lastLogStamp;
                     count = Samples.Count;
                     foreach (var (_, s) in Samples)
                     {
@@ -87,14 +103,38 @@ namespace TWChatOverlay.Services
                 if (_window == null || !_window.IsLoaded)
                     _window = new HudWindow();
 
-                _window.SetText($"표시 지연(로그 시각 대비)  최근 {last:F2}s · 1분 평균 {avg:F2}s · 최대 {max:F2}s · n={count}");
+                string stampText = lastStamp >= 0 ? $"{lastStamp:F1}s" : "-";
+                _window.SetText(
+                    $"앱 지연(읽기→표시)  최근 {last * 1000:F0}ms · 1분 평균 {avg * 1000:F0}ms · 최대 {max * 1000:F0}ms · n={count}\n" +
+                    $"로그 시각 대비 {stampText}  (초 단위 양자화 + 게임 기록 지연 포함 — 참고용)");
                 if (!_window.IsVisible)
                     _window.Show();
+
+                PositionAtMainWindowTop(_window);
             }
             catch (Exception ex)
             {
                 AppLogger.Warn("Chat latency HUD update failed.", ex);
             }
+        }
+
+        /// <summary>메인 채팅창 맨 윗줄에 도킹한다 (위 공간이 없으면 창 안쪽 상단).</summary>
+        private static void PositionAtMainWindowTop(HudWindow hud)
+        {
+            try
+            {
+                var main = MainWindowHost.Current as Window;
+                if (main == null || !main.IsVisible)
+                    return;
+
+                hud.UpdateLayout();
+                double hudHeight = hud.ActualHeight > 0 ? hud.ActualHeight : hud.Height;
+
+                hud.Left = main.Left + 6;
+                double above = main.Top - hudHeight - 2;
+                hud.Top = above >= SystemParameters.VirtualScreenTop ? above : main.Top + 4;
+            }
+            catch { }
         }
 
         private sealed class HudWindow : Window
@@ -131,14 +171,6 @@ namespace TWChatOverlay.Services
                     Child = _text,
                 };
                 Content = root;
-
-                root.MouseLeftButtonDown += (_, e) =>
-                {
-                    if (e.ButtonState == MouseButtonState.Pressed)
-                    {
-                        try { DragMove(); } catch { }
-                    }
-                };
             }
 
             public void SetText(string text) => _text.Text = text;
