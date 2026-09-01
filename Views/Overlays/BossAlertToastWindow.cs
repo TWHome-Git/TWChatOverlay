@@ -29,6 +29,7 @@ namespace TWChatOverlay.Views
         private readonly DispatcherTimer _countdownTimer;
         private DateTime _countdownOccurrence;
         private string _countdownBossName = string.Empty;
+        private string? _lastCountdownText;
         private TimeSpan? _entryWindow;
         private ChatSettings? _settings;
         private bool _isDragging;
@@ -114,7 +115,9 @@ namespace TWChatOverlay.Views
                 try { Close(); } catch { }
             };
 
-            _countdownTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
+            // 1초 간격 타이머는 UI가 잠깐 바쁘면 틱이 밀려 숫자가 2~3초씩 건너뛴다.
+            // 200ms 간격 + Render 우선순위로 촘촘히 확인하되, 표시할 초가 바뀔 때만 텍스트를 갱신한다.
+            _countdownTimer = new DispatcherTimer(DispatcherPriority.Render) { Interval = TimeSpan.FromMilliseconds(200) };
             _countdownTimer.Tick += (_, _) => UpdateCountdownText();
         }
 
@@ -127,6 +130,7 @@ namespace TWChatOverlay.Views
             _countdownBossName = bossName;
             _countdownOccurrence = occurrence;
             _entryWindow = entryWindow;
+            _lastCountdownText = null;
             UpdateCountdownText();
             _countdownTimer.Start();
         }
@@ -143,7 +147,7 @@ namespace TWChatOverlay.Views
                     if (entryRemaining <= TimeSpan.Zero)
                     {
                         _countdownTimer.Stop();
-                        _bodyText.Text = $"{_countdownBossName} 입장 종료";
+                        SetCountdownText($"{_countdownBossName} 입장 종료");
                         _bodyText.SetResourceReference(TextBlock.ForegroundProperty, "TextBrush");
                         return;
                     }
@@ -152,13 +156,13 @@ namespace TWChatOverlay.Views
                     string entryText = entrySeconds >= 60
                         ? $"{entrySeconds / 60}분 {entrySeconds % 60:00}초"
                         : $"{entrySeconds}초";
-                    _bodyText.Text = $"{_countdownBossName} 입장 가능 {entryText}";
-                    _bodyText.SetResourceReference(TextBlock.ForegroundProperty, "OverlayTitleAccentTextBrush");
+                    if (SetCountdownText($"{_countdownBossName} 입장 가능 {entryText}"))
+                        _bodyText.SetResourceReference(TextBlock.ForegroundProperty, "OverlayTitleAccentTextBrush");
                     return;
                 }
 
                 _countdownTimer.Stop();
-                _bodyText.Text = $"{_countdownBossName} 등장!";
+                SetCountdownText($"{_countdownBossName} 등장!");
                 _bodyText.Foreground = new SolidColorBrush(DangerCol);
                 return;
             }
@@ -167,14 +171,25 @@ namespace TWChatOverlay.Views
             if (totalSeconds <= 5)
             {
                 // 등장 임박: "곧 등장!" + 초 카운트다운 (5초 → 1초)
-                _bodyText.Text = $"{_countdownBossName} 곧 등장! {totalSeconds}초";
-                _bodyText.Foreground = new SolidColorBrush(DangerCol);
+                if (SetCountdownText($"{_countdownBossName} 곧 등장! {totalSeconds}초"))
+                    _bodyText.Foreground = new SolidColorBrush(DangerCol);
             }
             else
             {
-                _bodyText.Text = $"{_countdownBossName} 등장 {totalSeconds}초 전";
-                _bodyText.SetResourceReference(TextBlock.ForegroundProperty, "TextBrush");
+                if (SetCountdownText($"{_countdownBossName} 등장 {totalSeconds}초 전"))
+                    _bodyText.SetResourceReference(TextBlock.ForegroundProperty, "TextBrush");
             }
+        }
+
+        /// <summary>표시할 문구가 바뀌었을 때만 갱신한다 (200ms 틱마다 불필요한 레이아웃 방지). 바뀌었으면 true.</summary>
+        private bool SetCountdownText(string text)
+        {
+            if (string.Equals(_lastCountdownText, text, StringComparison.Ordinal))
+                return false;
+
+            _lastCountdownText = text;
+            _bodyText.Text = text;
+            return true;
         }
 
         protected override void OnSourceInitialized(EventArgs e)
