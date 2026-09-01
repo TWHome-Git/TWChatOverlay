@@ -31,6 +31,48 @@ namespace TWChatOverlay.Services
         private static double _lastLogStamp = -1;
         private static DateTime _lastUiUpdate = DateTime.MinValue;
         private static HudWindow? _window;
+        private static bool _followHooked;
+
+        /// <summary>
+        /// 시작 시 호출(디버그 빌드): 표본이 없어도 HUD를 바로 띄우고,
+        /// 메인 채팅창 이동을 따라가도록 연결한다.
+        /// </summary>
+        public static void EnsureVisible()
+        {
+            Application.Current?.Dispatcher.BeginInvoke(new Action(() =>
+            {
+                try
+                {
+                    if (_window == null || !_window.IsLoaded)
+                        _window = new HudWindow();
+
+                    if (Samples.Count == 0)
+                        _window.SetText("앱 지연 HUD — 표본 대기 중 (실시간 채팅이 들어오면 측정 시작)");
+
+                    if (!_window.IsVisible)
+                        _window.Show();
+                    PositionAtMainWindowTop(_window);
+                    HookMainWindowFollow();
+                }
+                catch (Exception ex)
+                {
+                    AppLogger.Warn("Chat latency HUD show failed.", ex);
+                }
+            }));
+        }
+
+        /// <summary>메인 채팅창 이동/크기 변경 시 HUD가 즉시 따라가게 한다. (1회만 연결)</summary>
+        private static void HookMainWindowFollow()
+        {
+            if (_followHooked)
+                return;
+            if (MainWindowHost.Current is not Window main)
+                return;
+
+            _followHooked = true;
+            main.LocationChanged += (_, _) => { if (_window != null) PositionAtMainWindowTop(_window); };
+            main.SizeChanged += (_, _) => { if (_window != null) PositionAtMainWindowTop(_window); };
+        }
 
         /// <summary>
         /// 실시간 줄이 UI에 추가될 때 호출.
@@ -126,6 +168,7 @@ namespace TWChatOverlay.Services
                     _window.Show();
 
                 PositionAtMainWindowTop(_window);
+                HookMainWindowFollow();
             }
             catch (Exception ex)
             {
