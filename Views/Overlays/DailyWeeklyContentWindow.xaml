@@ -12,8 +12,19 @@
         WindowStyle="None"
         Topmost="True"
         ShowInTaskbar="False"
-        WindowStartupLocation="CenterScreen"
-        ResizeMode="CanResize">
+        WindowStartupLocation="CenterScreen">
+    <!-- 평상시에는 가장자리 리사이즈를 잠가 오조작을 막고(그립으로만 조절),
+         설정 화면에서는 가장자리 드래그도 허용한다 -->
+    <Window.Style>
+        <Style TargetType="Window">
+            <Setter Property="ResizeMode" Value="NoResize"/>
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding IsSettingsOpen}" Value="True">
+                    <Setter Property="ResizeMode" Value="CanResize"/>
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+    </Window.Style>
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVis"/>
         <converters:AddValueConverter x:Key="AddValueConverter"/>
@@ -521,26 +532,28 @@
                 </DockPanel>
             </Border>
 
-            <!-- 리사이즈 핸들: 항상 표시해 크기 조절이 가능함을 드러낸다 -->
-            <Border Grid.Row="2" HorizontalAlignment="Right" VerticalAlignment="Bottom"
-                    Width="20" Height="20" Cursor="SizeNWSE" Panel.ZIndex="10"
-                    MouseLeftButtonDown="ResizeGrip_MouseLeftButtonDown"
-                    ToolTip="드래그해서 크기 조절">
-                <Border.Style>
-                    <Style TargetType="Border">
-                        <Setter Property="Background" Value="Transparent"/>
-                        <Setter Property="CornerRadius" Value="0,0,8,0"/>
-                        <Style.Triggers>
+            <!-- 리사이즈 그립: 항상 표시. Thumb 드래그 방식이라 평상시(NoResize)에도
+                 이 그립을 잡았을 때만 크기가 조절된다 -->
+            <Thumb Grid.Row="2" HorizontalAlignment="Right" VerticalAlignment="Bottom"
+                   Width="20" Height="20" Cursor="SizeNWSE" Panel.ZIndex="10"
+                   ToolTip="드래그해서 크기 조절"
+                   DragDelta="ResizeGrip_DragDelta" DragCompleted="ResizeGrip_DragCompleted">
+                <Thumb.Template>
+                    <ControlTemplate TargetType="Thumb">
+                        <Border x:Name="GripBg" Background="Transparent" CornerRadius="0,0,8,0">
+                            <Path Data="M 0,16 L 16,0 M 5,16 L 16,5 M 10,16 L 16,10"
+                                  Stroke="{DynamicResource OverlaySubtleTextBrush}" StrokeThickness="1.5" Opacity="0.8"
+                                  StrokeStartLineCap="Round" StrokeEndLineCap="Round"
+                                  HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter Property="Background" Value="{DynamicResource OverlayTabHoverBrush}"/>
+                                <Setter TargetName="GripBg" Property="Background" Value="{DynamicResource OverlayTabHoverBrush}"/>
                             </Trigger>
-                        </Style.Triggers>
-                    </Style>
-                </Border.Style>
-                <Path Data="M 0,16 L 16,0 M 5,16 L 16,5 M 10,16 L 16,10"
-                      Stroke="{DynamicResource OverlaySubtleTextBrush}" StrokeThickness="1.5" Opacity="0.8"
-                      StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
-            </Border>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Thumb.Template>
+            </Thumb>
 
             <Border Grid.RowSpan="3" Background="{DynamicResource OverlayLoadingMaskBrush}" Panel.ZIndex="100">
                 <Border.Style>
