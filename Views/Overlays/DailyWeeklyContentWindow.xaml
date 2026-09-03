@@ -6,22 +6,14 @@
         xmlns:converters="clr-namespace:TWChatOverlay.Converters"
         Title="일일/주간 컨텐츠"
         Width="280" Height="540"
+        MinWidth="220" MinHeight="36"
         Background="Transparent"
         AllowsTransparency="True"
         WindowStyle="None"
         Topmost="True"
         ShowInTaskbar="False"
-        WindowStartupLocation="CenterScreen">
-    <Window.Style>
-        <Style TargetType="Window">
-            <Setter Property="ResizeMode" Value="NoResize"/>
-            <Style.Triggers>
-                <DataTrigger Binding="{Binding IsSettingsOpen}" Value="True">
-                    <Setter Property="ResizeMode" Value="CanResize"/>
-                </DataTrigger>
-            </Style.Triggers>
-        </Style>
-    </Window.Style>
+        WindowStartupLocation="CenterScreen"
+        ResizeMode="CanResize">
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVis"/>
         <converters:AddValueConverter x:Key="AddValueConverter"/>
@@ -529,18 +521,19 @@
                 </DockPanel>
             </Border>
 
-            <!-- 설정 모드 리사이즈 핸들 -->
+            <!-- 리사이즈 핸들: 항상 표시해 크기 조절이 가능함을 드러낸다 -->
             <Border Grid.Row="2" HorizontalAlignment="Right" VerticalAlignment="Bottom"
                     Width="20" Height="20" Cursor="SizeNWSE" Panel.ZIndex="10"
                     MouseLeftButtonDown="ResizeGrip_MouseLeftButtonDown"
-                    Background="Transparent">
+                    ToolTip="드래그해서 크기 조절">
                 <Border.Style>
                     <Style TargetType="Border">
-                        <Setter Property="Visibility" Value="Collapsed"/>
+                        <Setter Property="Background" Value="Transparent"/>
+                        <Setter Property="CornerRadius" Value="0,0,8,0"/>
                         <Style.Triggers>
-                            <DataTrigger Binding="{Binding IsSettingsOpen}" Value="True">
-                                <Setter Property="Visibility" Value="Visible"/>
-                            </DataTrigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="{DynamicResource OverlayTabHoverBrush}"/>
+                            </Trigger>
                         </Style.Triggers>
                     </Style>
                 </Border.Style>
