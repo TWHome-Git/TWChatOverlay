@@ -1418,13 +1418,17 @@ namespace TWChatOverlay.Views
         [System.Runtime.InteropServices.DllImport("user32.dll")]
         private static extern IntPtr SendMessage(IntPtr hWnd, int msg, IntPtr wp, IntPtr lp);
 
-        private void ResizeGrip_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        /// <summary>그립 드래그로만 크기를 조절한다. (평상시 ResizeMode=NoResize에서도 동작)</summary>
+        private void ResizeGrip_DragDelta(object sender, System.Windows.Controls.Primitives.DragDeltaEventArgs e)
         {
-            if (e.LeftButton == MouseButtonState.Pressed)
-            {
-                var hwnd = new System.Windows.Interop.WindowInteropHelper(this).Handle;
-                SendMessage(hwnd, 0x00A1, (IntPtr)17, IntPtr.Zero);
-            }
+            Width = Math.Max(MinWidth, Width + e.HorizontalChange);
+            if (!_isBodyCollapsed)
+                Height = Math.Max(MinHeight, Height + e.VerticalChange);
+        }
+
+        private void ResizeGrip_DragCompleted(object sender, System.Windows.Controls.Primitives.DragCompletedEventArgs e)
+        {
+            try { PersistWindowPosition(); } catch { }
         }
 
         private void Close_Click(object sender, RoutedEventArgs e)
