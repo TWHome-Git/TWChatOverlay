@@ -129,6 +129,9 @@ namespace TWChatOverlay.Views
 
             // 보급품 탈환 미니 지도 위치/크기
             RecaptureSupplyAlertService.ShowPositionPreview(_settings, force: true);
+
+            // 심연의 보물창고 주간 통계 (기능 켜짐 시)
+            TreasurySummaryWindow.ShowPositionPreview(_settings);
         }
 
         /// <summary>인스펙터의 넛지/크기 입력으로 메인 창이 조정되면 즉시 저장한다.</summary>
@@ -155,6 +158,7 @@ namespace TWChatOverlay.Views
             ToastStackService.ClosePositionPreview();
             MessengerEtaToastService.ClosePositionPreview(_settings);
             RecaptureSupplyAlertService.ClosePositionPreview();
+            TreasurySummaryWindow.ClosePositionPreview();
             CloseAddonPositionPreviewWindows(savePositions: true, restoreNormalWindows: true);
             RefreshExpTrackerWindow();
         }

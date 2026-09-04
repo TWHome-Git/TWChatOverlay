@@ -408,6 +408,7 @@ namespace TWChatOverlay.Services
                 "MessengerEtaToastWindow" => "1:1 대화 에타 표시",
                 "ToastStackPreviewWindow" => string.IsNullOrWhiteSpace(window.Title) ? "알림 표시 위치" : window.Title,
                 "RecaptureSupplyWindow" => "보급품 탈환",
+                "TreasurySummaryWindow" => "보물창고 통계",
                 _ => string.IsNullOrWhiteSpace(window.Title) ? window.GetType().Name : window.Title,
             };
         }

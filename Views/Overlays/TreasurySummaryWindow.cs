@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
@@ -30,9 +31,12 @@ namespace TWChatOverlay.Views
         private readonly TextBlock _totalText;
         private readonly TextBlock _averageText;
         private readonly DispatcherTimer _closeTimer;
+        private readonly ChatSettings _settings;
+        private bool _isPreview;
 
         private TreasurySummaryWindow(ChatSettings settings)
         {
+            _settings = settings;
             WindowStyle = WindowStyle.None;
             AllowsTransparency = true;
             Background = Brushes.Transparent;
@@ -129,11 +133,30 @@ namespace TWChatOverlay.Views
             root.SetResourceReference(Border.BorderBrushProperty, "OverlayWindowBorderBrush");
             Content = root;
 
-            // 어밴던로드 통계창과 같은 위치 (없으면 화면 중앙 상단)
+            // 자체 저장 위치 → 없으면 어밴던로드 통계창 위치 → 없으면 화면 중앙 상단
             var (left, top) = ToastPresentationHelper.ResolveBasePosition(
-                settings.AbandonRoadSummaryWindowLeft, settings.AbandonRoadSummaryWindowTop, 384, 160);
+                settings.TreasurySummaryWindowLeft ?? settings.AbandonRoadSummaryWindowLeft,
+                settings.TreasurySummaryWindowTop ?? settings.AbandonRoadSummaryWindowTop,
+                384, 160);
             Left = left;
             Top = top;
+
+            // 잠금 해제 모드에서 드래그로 이동 (자체 위치로 저장 — 어밴던 통계창과 독립)
+            root.MouseLeftButtonDown += (_, e) =>
+            {
+                UiLockService.Select(this);
+                if (!UiLockService.IsUnlocked || e.ButtonState != MouseButtonState.Pressed)
+                    return;
+                try { DragMove(); } catch { }
+            };
+            LocationChanged += (_, _) =>
+            {
+                if (!IsVisible || !UiLockService.IsUnlocked)
+                    return;
+                _settings.TreasurySummaryWindowLeft = Left;
+                _settings.TreasurySummaryWindowTop = Top;
+                ConfigService.SaveDeferred(_settings);
+            };
 
             _closeTimer = new DispatcherTimer { Interval = AutoCloseDelay };
             _closeTimer.Tick += (_, _) =>
@@ -182,7 +205,8 @@ namespace TWChatOverlay.Views
                 : "-";
 
             _closeTimer.Stop();
-            _closeTimer.Start();
+            if (!_isPreview)
+                _closeTimer.Start();
         }
 
         /// <summary>통계 창을 띄우거나 갱신한다 (UI 스레드 마샬링 포함).</summary>
@@ -198,6 +222,7 @@ namespace TWChatOverlay.Views
                     if (_instance == null || !_instance.IsLoaded)
                         _instance = new TreasurySummaryWindow(settings);
 
+                    _instance._isPreview = false;
                     _instance.UpdateState(runCounts, currentRun);
                     if (!_instance.IsVisible)
                         _instance.Show();
@@ -206,6 +231,44 @@ namespace TWChatOverlay.Views
                 catch (Exception ex)
                 {
                     AppLogger.Warn("Failed to show treasury summary window.", ex);
+                }
+            }));
+        }
+
+        /// <summary>잠금 해제 모드용 위치 미리보기: 예시 데이터로 표시하고 자동 닫힘을 멈춘다.</summary>
+        public static void ShowPositionPreview(ChatSettings settings)
+        {
+            if (settings == null || !settings.EnableTreasuryGoldCountAlert)
+                return; // 기능이 꺼져 있으면 배치할 창도 없다
+
+            Application.Current?.Dispatcher.BeginInvoke(new Action(() =>
+            {
+                try
+                {
+                    if (_instance == null || !_instance.IsLoaded)
+                        _instance = new TreasurySummaryWindow(settings);
+
+                    _instance._isPreview = true;
+                    _instance.UpdateState(new[] { 12, 9, 11 }, 3);
+                    if (!_instance.IsVisible)
+                        _instance.Show();
+                    TopmostWindowHelper.BringToTopmost(_instance);
+                }
+                catch (Exception ex)
+                {
+                    AppLogger.Warn("Failed to show treasury summary preview.", ex);
+                }
+            }));
+        }
+
+        /// <summary>잠금 해제 종료 시 미리보기 창을 닫는다 (실제 세션 창은 유지).</summary>
+        public static void ClosePositionPreview()
+        {
+            Application.Current?.Dispatcher.BeginInvoke(new Action(() =>
+            {
+                if (_instance?._isPreview == true)
+                {
+                    try { _instance.Close(); } catch { }
                 }
             }));
         }

@@ -844,6 +844,18 @@ namespace TWChatOverlay.Models
             get => Windows.AbandonRoadSummary.Top;
             set { if (Windows.AbandonRoadSummary.Top == value) return; Windows.AbandonRoadSummary.Top = value; OnPropertyChanged(); }
         }
+        [JsonIgnore]
+        public double? TreasurySummaryWindowLeft
+        {
+            get => Windows.TreasurySummary.Left;
+            set { if (Windows.TreasurySummary.Left == value) return; Windows.TreasurySummary.Left = value; OnPropertyChanged(); }
+        }
+        [JsonIgnore]
+        public double? TreasurySummaryWindowTop
+        {
+            get => Windows.TreasurySummary.Top;
+            set { if (Windows.TreasurySummary.Top == value) return; Windows.TreasurySummary.Top = value; OnPropertyChanged(); }
+        }
 
         [JsonIgnore]
         public double? ShoutToastWindowLeft

@@ -217,6 +217,8 @@ namespace TWChatOverlay.Models
         public WindowRect BuffTracker { get; set; } = new() { Left = 0.0, Top = 0.0 };
         public WindowRect ItemCalendar { get; set; } = new() { Left = 0.0, Top = 0.0 };
         public WindowRect AbandonRoadSummary { get; set; } = new() { Left = 0.0, Top = 0.0 };
+        /// <summary>심연의 보물창고 주간 통계 창 위치 (미설정 시 어밴던로드 통계창 위치를 따른다).</summary>
+        public WindowRect TreasurySummary { get; set; } = new();
         public WindowRect ShoutToast { get; set; } = new();
         public WindowRect MessengerToast { get; set; } = new();
         public WindowRect RecaptureSupply { get; set; } = new();
