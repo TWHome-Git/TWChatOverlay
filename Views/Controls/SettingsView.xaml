@@ -1142,6 +1142,16 @@
                                     <TextBlock Text="반사 패턴 볼륨" Style="{StaticResource SettingsRowLabelStyle}"/>
                                 </DockPanel>
                             </Border>
+                            <Border Style="{StaticResource SettingsRowStyle}">
+                                <DockPanel>
+                                    <CheckBox DockPanel.Dock="Right" IsChecked="{Binding EnableTreasuryGoldCountAlert, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
+                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                        <TextBlock Text="보물창고 금화 카운트" Style="{StaticResource SettingsRowLabelStyle}"
+                                                   ToolTip="심연의 보물창고 입장 후 금화 주머니 획득 개수를 알림 창으로 표시"/>
+                                        <Button Style="{StaticResource HelpButtonStyle}" Tag="dungeon.treasury_gold" Click="Help_Click"/>
+                                    </StackPanel>
+                                </DockPanel>
+                            </Border>
                         </WrapPanel>
                         </StackPanel>
 

@@ -63,7 +63,56 @@ namespace TWChatOverlay.Services
             if (TryShowAbandonRoad(text))
                 return;
 
-            TryShowCravingPleasure(text);
+            if (TryShowCravingPleasure(text))
+                return;
+
+            TryShowTreasuryGoldPouch(text);
+        }
+
+        // ── 심연의 보물창고: 입장 후 금화 주머니 획득 카운트 ──
+        // 금화 주머니는 다른 컨텐츠에서도 나올 수 있어, 입장 로그 이후 세션 시간 안에서만 센다.
+        private static readonly TimeSpan TreasurySessionDuration = TimeSpan.FromMinutes(10);
+        private int _treasuryGoldPouchCount;
+        private DateTime _treasurySessionStartedUtc = DateTime.MinValue;
+
+        private bool TryShowTreasuryGoldPouch(string text)
+        {
+            if (!_settings.EnableTreasuryGoldCountAlert)
+                return false;
+
+            // 입장 로그 → 세션 시작 (카운트만 리셋, 창은 첫 획득 때 표시)
+            if (text.Contains("심연의 보물창고 입장 횟수:", StringComparison.Ordinal))
+            {
+                _treasuryGoldPouchCount = 0;
+                _treasurySessionStartedUtc = DateTime.UtcNow;
+                return true;
+            }
+
+            // "이름 : 금화 주머니를 획득 했습니다." (본인/파티원 공통, 띄어쓰기 변형 허용)
+            if (text.Contains("금화 주머니를 획득", StringComparison.Ordinal))
+            {
+                if (DateTime.UtcNow - _treasurySessionStartedUtc > TreasurySessionDuration)
+                    return false; // 보물창고 밖(세션 종료 후) 획득은 무시
+
+                _treasuryGoldPouchCount++;
+                ShowTreasuryCount();
+                return true;
+            }
+
+            return false;
+        }
+
+        private const string SeedPouchIconUri = "pack://application:,,,/Data/images/Item/시드.png";
+
+        private void ShowTreasuryCount()
+        {
+            DungeonCountDisplayWindowService.ShowMessage(
+                "심연의 보물창고",
+                $"금화 주머니 {_treasuryGoldPouchCount}개 획득",
+                _settings.AbandonRoadCountAlertDurationSeconds,
+                _settings,
+                _settings.DungeonCountDisplayFontSize,
+                SeedPouchIconUri);
         }
 
         private bool TryShowAbandonRoad(string text)

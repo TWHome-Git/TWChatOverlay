@@ -40,6 +40,7 @@ namespace TWChatOverlay.ViewModels
         private bool _enableReflectionPatternAlert;
         private bool _showEtosHelperWindow;
         private bool _enableAbandonRoadCountAlert;
+        private bool _enableTreasuryGoldCountAlert;
         private bool _showAbandonRoadSummaryWindow;
         private bool _enableCravingPleasureCountAlert;
         private bool _showDungeonCountDisplayWindow;
@@ -169,6 +170,13 @@ namespace TWChatOverlay.ViewModels
         {
             get => _enableAbandonRoadCountAlert;
             set => SetSetting(ref _enableAbandonRoadCountAlert, value, (settings, newValue) => settings.EnableAbandonRoadCountAlert = newValue);
+        }
+
+        /// <summary>심연의 보물창고: 입장 후 금화 주머니 획득 카운트 표시.</summary>
+        public bool EnableTreasuryGoldCountAlert
+        {
+            get => _enableTreasuryGoldCountAlert;
+            set => SetSetting(ref _enableTreasuryGoldCountAlert, value, (settings, newValue) => settings.EnableTreasuryGoldCountAlert = newValue);
         }
 
         public bool ShowAbandonRoadSummaryWindow
@@ -378,6 +386,7 @@ namespace TWChatOverlay.ViewModels
             _enableReflectionPatternAlert = _settings.EnableReflectionPatternAlert;
             _showEtosHelperWindow = _settings.ShowEtosHelperWindow;
             _enableAbandonRoadCountAlert = _settings.EnableAbandonRoadCountAlert;
+            _enableTreasuryGoldCountAlert = _settings.EnableTreasuryGoldCountAlert;
             _showAbandonRoadSummaryWindow = _settings.ShowAbandonRoadSummaryWindow;
             _enableCravingPleasureCountAlert = _settings.EnableCravingPleasureCountAlert;
             _showDungeonCountDisplayWindow = _settings.ShowDungeonCountDisplayWindow;
