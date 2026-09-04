@@ -16,13 +16,17 @@ namespace TWChatOverlay.Services
         private readonly Dictionary<string, DateTime[]> _occurrenceCache = new(StringComparer.Ordinal);
         private DateTime _occurrenceCacheDate = DateTime.MinValue;
 
-        /// <summary>틱이 늦게 와도 이 시간 안이면 알람을 놓치지 않고 울린다.</summary>
-        private static readonly TimeSpan LateFireWindow = TimeSpan.FromSeconds(2);
+        /// <summary>
+        /// 틱이 늦게 와도 이 시간 안이면 알람을 놓치지 않고 울린다.
+        /// 자정(0시 보스)에는 로그 롤오버·일일 리셋이 몰려 타이머가 수 초 밀릴 수 있어 넉넉히 잡는다.
+        /// </summary>
+        private static readonly TimeSpan LateFireWindow = TimeSpan.FromSeconds(10);
 
         public BossAlarmSchedulerService(ChatSettings settings)
         {
             _settings = settings;
-            _timer = new DispatcherTimer
+            // Background 우선순위 타이머는 자정 부하에 밀린다 — 알람 정확성을 위해 Normal로 돈다
+            _timer = new DispatcherTimer(DispatcherPriority.Normal)
             {
                 Interval = TimeSpan.FromSeconds(1)
             };
@@ -114,8 +118,10 @@ namespace TWChatOverlay.Services
 
             foreach (DateTime occurrence in GetOccurrencesCached(boss, now))
             {
+                // 입장 카운트다운은 등장 직후를 놓쳤어도 입장 가능 시간이 남아 있으면 늦게라도 띄운다
+                // (예: 자정 부하로 0시 정각 틱을 놓친 경우 — 남은 시간은 벽시계 기준으로 정확히 표시됨)
                 TimeSpan elapsed = now - occurrence;
-                if (elapsed < TimeSpan.Zero || elapsed > LateFireWindow)
+                if (elapsed < TimeSpan.Zero || elapsed >= entryWindow.Value)
                     continue;
 
                 string fireKey = $"{boss.Id}|{occurrence:yyyyMMddHHmmss}|entry";
