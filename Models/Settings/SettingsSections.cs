@@ -149,6 +149,9 @@ namespace TWChatOverlay.Models
         public bool AbandonRoadCountAlert { get; set; } = false;
         /// <summary>심연의 보물창고: 입장 후 금화 주머니 획득 카운트 표시.</summary>
         public bool TreasuryGoldCountAlert { get; set; } = false;
+        /// <summary>심연의 보물창고 주간 상태: 주 키(ISO)와 회차별 금화 주머니 획득 수.</summary>
+        public string TreasuryWeekKey { get; set; } = string.Empty;
+        public List<int> TreasuryRunCounts { get; set; } = new();
         public bool ShowAbandonRoadSummaryWindow { get; set; } = false;
         public bool CravingPleasureCountAlert { get; set; } = false;
         public bool ShowCountDisplayWindow { get; set; } = false;

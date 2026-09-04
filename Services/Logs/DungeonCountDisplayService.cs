@@ -69,10 +69,16 @@ namespace TWChatOverlay.Services
             TryShowTreasuryGoldPouch(text);
         }
 
-        // ── 심연의 보물창고: 입장 후 금화 주머니 획득 카운트 ──
-        // 금화 주머니는 다른 컨텐츠에서도 나올 수 있어, 입장 로그 이후 세션 시간 안에서만 센다.
-        private static readonly TimeSpan TreasurySessionDuration = TimeSpan.FromMinutes(10);
-        private int _treasuryGoldPouchCount;
+        // ── 심연의 보물창고: 주간(1~7회차) 금화 주머니 획득 통계 ──
+        // 금화 주머니는 다른 컨텐츠에서도 나올 수 있어, 입장 로그 이후 세션 시간(약 2분) 안에서만 센다.
+        // 회차별 획득 수는 설정(Alerts.Dungeon.TreasuryRunCounts)에 주 단위로 저장된다.
+        private static readonly TimeSpan TreasurySessionDuration = TimeSpan.FromSeconds(150); // 2분 30초
+
+        private static readonly Regex TreasuryEntryRegex = new(
+            @"심연의\s*보물창고\s*입장\s*횟수:\s*\[?\s*(?<run>\d+)\s*회",
+            RegexOptions.Compiled);
+
+        private int _treasuryCurrentRun;
         private DateTime _treasurySessionStartedUtc = DateTime.MinValue;
 
         private bool TryShowTreasuryGoldPouch(string text)
@@ -80,39 +86,45 @@ namespace TWChatOverlay.Services
             if (!_settings.EnableTreasuryGoldCountAlert)
                 return false;
 
-            // 입장 로그 → 세션 시작 (카운트만 리셋, 창은 첫 획득 때 표시)
-            if (text.Contains("심연의 보물창고 입장 횟수:", StringComparison.Ordinal))
+            var dungeon = _settings.Alerts.Dungeon;
+
+            // 입장 로그 → 회차 확정 + 세션 시작 (주가 바뀌었으면 통계 리셋)
+            Match entry = TreasuryEntryRegex.Match(text);
+            if (entry.Success && int.TryParse(entry.Groups["run"].Value, out int run))
             {
-                _treasuryGoldPouchCount = 0;
+                string weekKey = LogTextClassifier.GetIsoWeekKey(DateTime.Today);
+                if (!string.Equals(dungeon.TreasuryWeekKey, weekKey, StringComparison.Ordinal))
+                {
+                    dungeon.TreasuryWeekKey = weekKey;
+                    dungeon.TreasuryRunCounts.Clear();
+                }
+
+                run = Math.Clamp(run, 1, 7);
+                while (dungeon.TreasuryRunCounts.Count < run)
+                    dungeon.TreasuryRunCounts.Add(0);
+                dungeon.TreasuryRunCounts[run - 1] = 0; // 이번 회차 새로 시작
+
+                _treasuryCurrentRun = run;
                 _treasurySessionStartedUtc = DateTime.UtcNow;
+                ConfigService.SaveDeferred(_settings);
+                Views.TreasurySummaryWindow.ShowOrUpdate(_settings, dungeon.TreasuryRunCounts.ToArray(), run);
                 return true;
             }
 
-            // "이름 : 금화 주머니를 획득 했습니다." (본인/파티원 공통, 띄어쓰기 변형 허용)
+            // "금화 주머니를 획득 했습니다." (띄어쓰기 변형 허용) — 세션 안에서만 집계
             if (text.Contains("금화 주머니를 획득", StringComparison.Ordinal))
             {
-                if (DateTime.UtcNow - _treasurySessionStartedUtc > TreasurySessionDuration)
+                if (_treasuryCurrentRun <= 0 ||
+                    DateTime.UtcNow - _treasurySessionStartedUtc > TreasurySessionDuration)
                     return false; // 보물창고 밖(세션 종료 후) 획득은 무시
 
-                _treasuryGoldPouchCount++;
-                ShowTreasuryCount();
+                dungeon.TreasuryRunCounts[_treasuryCurrentRun - 1]++;
+                ConfigService.SaveDeferred(_settings);
+                Views.TreasurySummaryWindow.ShowOrUpdate(_settings, dungeon.TreasuryRunCounts.ToArray(), _treasuryCurrentRun);
                 return true;
             }
 
             return false;
-        }
-
-        private const string SeedPouchIconUri = "pack://application:,,,/Data/images/Item/시드.png";
-
-        private void ShowTreasuryCount()
-        {
-            DungeonCountDisplayWindowService.ShowMessage(
-                "심연의 보물창고",
-                $"금화 주머니 {_treasuryGoldPouchCount}개 획득",
-                _settings.AbandonRoadCountAlertDurationSeconds,
-                _settings,
-                _settings.DungeonCountDisplayFontSize,
-                SeedPouchIconUri);
         }
 
         private bool TryShowAbandonRoad(string text)
