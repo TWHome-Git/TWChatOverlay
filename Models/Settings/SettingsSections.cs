@@ -147,6 +147,8 @@ namespace TWChatOverlay.Models
         public bool ReflectionPatternAlert { get; set; } = false;
         public double ReflectionPatternVolume { get; set; } = 1.0;
         public bool AbandonRoadCountAlert { get; set; } = false;
+        /// <summary>심연의 보물창고: 입장 후 금화 주머니 획득 카운트 표시.</summary>
+        public bool TreasuryGoldCountAlert { get; set; } = false;
         public bool ShowAbandonRoadSummaryWindow { get; set; } = false;
         public bool CravingPleasureCountAlert { get; set; } = false;
         public bool ShowCountDisplayWindow { get; set; } = false;

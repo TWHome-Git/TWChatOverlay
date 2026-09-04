@@ -114,6 +114,14 @@ namespace TWChatOverlay.Services
                 "말머리 사용 시 외치기 끝의 Click/From 표식은 지워서 표시합니다.\n",
                 new[] { "chat_category_prefix_off.png", "chat_category_prefix_on.png" }),
 
+            ["dungeon.treasury_gold"] = (
+                "보물창고 금화 카운트",
+                "심연의 보물창고에 입장하면 카운트가 시작되고,\n" +
+                "본인·파티원의 '금화 주머니를 획득 했습니다' 로그가 뜰 때마다\n" +
+                "누적 개수를 알림 창(금화 주머니 N개 획득)으로 보여줍니다.\n" +
+                "다시 입장하면 0부터 새로 셉니다.",
+                null),
+
             // ===== 외치기 =====
 
             ["shout.toast"] = (

@@ -30,15 +30,25 @@
                            FontWeight="SemiBold"
                            TextAlignment="Center"/>
 
-                <TextBlock x:Name="MessageTextBlock"
-                           Grid.Row="1"
-                           Margin="0,4,0,0"
-                           Foreground="{DynamicResource TextBrush}"
-                           FontSize="18"
-                           FontWeight="Bold"
-                           TextAlignment="Center"
+                <StackPanel Grid.Row="1"
+                            Margin="0,4,0,0"
+                            Orientation="Horizontal"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center">
+                    <Image x:Name="MessageIcon"
+                           Width="26" Height="26"
+                           Margin="0,0,8,0"
                            VerticalAlignment="Center"
-                           TextTrimming="CharacterEllipsis"/>
+                           RenderOptions.BitmapScalingMode="NearestNeighbor"
+                           Visibility="Collapsed"/>
+                    <TextBlock x:Name="MessageTextBlock"
+                               Foreground="{DynamicResource TextBrush}"
+                               FontSize="18"
+                               FontWeight="Bold"
+                               TextAlignment="Center"
+                               VerticalAlignment="Center"
+                               TextTrimming="CharacterEllipsis"/>
+                </StackPanel>
             </Grid>
 
             <!-- 잠금 해제(위치 미리보기) 공통 라벨 -->

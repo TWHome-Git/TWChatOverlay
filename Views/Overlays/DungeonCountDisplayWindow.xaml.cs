@@ -55,6 +55,27 @@ namespace TWChatOverlay.Views
             PreviewLabel.FontSize = size;
         }
 
+        /// <summary>메시지 왼쪽 아이콘 (금화 주머니 카운트 등). null이면 숨김.</summary>
+        public void SetIcon(string? packUri)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(packUri))
+                {
+                    MessageIcon.Visibility = Visibility.Collapsed;
+                    MessageIcon.Source = null;
+                    return;
+                }
+
+                MessageIcon.Source = new System.Windows.Media.Imaging.BitmapImage(new Uri(packUri, UriKind.Absolute));
+                MessageIcon.Visibility = Visibility.Visible;
+            }
+            catch
+            {
+                MessageIcon.Visibility = Visibility.Collapsed;
+            }
+        }
+
         /// <summary>위치 미리보기: 통일 라벨("던전 카운트 알림창")만 표시.</summary>
         public void SetPreviewMode(bool isPreview)
         {

@@ -25,6 +25,10 @@ namespace TWChatOverlay.Services
         }
 
         public static void Show(string dungeonName, int currentCount, int maxCount, int durationSeconds, ChatSettings settings, double? fontSize = null)
+            => ShowMessage(dungeonName, $"{dungeonName} {currentCount}/{maxCount}", durationSeconds, settings, fontSize);
+
+        /// <summary>N/최대 형식이 아닌 자유 문구용 (예: 심연의 보물창고 금화 주머니 카운트). iconUri는 메시지 왼쪽 아이콘.</summary>
+        public static void ShowMessage(string dungeonName, string message, int durationSeconds, ChatSettings settings, double? fontSize = null, string? iconUri = null)
         {
             if (TrayAllWindowsService.IsTrayed)
                 return; // 트레이 최소화 중에는 알림 창을 띄우지 않는다
@@ -36,18 +40,19 @@ namespace TWChatOverlay.Services
 
             Application.Current.Dispatcher.BeginInvoke(new Action(() =>
             {
-                string message = $"{dungeonName} {currentCount}/{maxCount}";
                 if (ActiveWindowsByKey.TryGetValue(dungeonName, out DungeonCountDisplayWindow? existing) &&
                     existing.IsLoaded)
                 {
                     existing.SetSettings(settings);
                     if (fontSize.HasValue)
                         existing.SetFontSize(fontSize.Value);
+                    existing.SetIcon(iconUri);
                     existing.UpdateDisplay(message, durationSeconds);
                     return;
                 }
 
                 var window = new DungeonCountDisplayWindow(message, ResolveFont(), durationSeconds, settings);
+                window.SetIcon(iconUri);
                 window.Closed += (_, _) =>
                 {
                     ActiveWindows.Remove(window);
