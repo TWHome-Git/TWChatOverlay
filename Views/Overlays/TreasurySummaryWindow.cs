@@ -22,7 +22,7 @@ namespace TWChatOverlay.Views
     {
         private const int MaxRuns = 7;
         private const string SeedPouchIconUri = "pack://application:,,,/Data/images/Item/시드.png";
-        private static readonly TimeSpan AutoCloseDelay = TimeSpan.FromSeconds(160); // 세션 2분 30초 + 여유
+        private static readonly TimeSpan AutoCloseDelay = TimeSpan.FromSeconds(30); // 마지막 획득 후 30초 무획득이면 닫힘
 
         private static TreasurySummaryWindow? _instance;
 
@@ -33,6 +33,7 @@ namespace TWChatOverlay.Views
         private readonly DispatcherTimer _closeTimer;
         private readonly ChatSettings _settings;
         private bool _isPreview;
+        private bool _isManual; // 바로가기 버튼으로 연 경우 — 자동 닫힘 없음
 
         private TreasurySummaryWindow(ChatSettings settings)
         {
@@ -74,8 +75,23 @@ namespace TWChatOverlay.Views
             RenderOptions.SetBitmapScalingMode(icon, BitmapScalingMode.NearestNeighbor);
             try { icon.Source = new BitmapImage(new Uri(SeedPouchIconUri, UriKind.Absolute)); } catch { }
 
+            var closeButton = new Button
+            {
+                Content = "닫기",
+                Height = 22,
+                MinWidth = 40,
+                Padding = new Thickness(8, 0, 8, 0),
+                FontSize = 11,
+                Cursor = System.Windows.Input.Cursors.Hand,
+                VerticalAlignment = VerticalAlignment.Top,
+            };
+            closeButton.SetResourceReference(StyleProperty, "SecondaryButtonStyle");
+            closeButton.Click += (_, _) => { try { Close(); } catch { } };
+
             var header = new DockPanel { Margin = new Thickness(0, 0, 0, 8) };
             header.Children.Add(icon);
+            DockPanel.SetDock(closeButton, Dock.Right);
+            header.Children.Add(closeButton);
             var titleStack = new StackPanel();
             titleStack.Children.Add(title);
             titleStack.Children.Add(subtitle);
@@ -205,7 +221,7 @@ namespace TWChatOverlay.Views
                 : "-";
 
             _closeTimer.Stop();
-            if (!_isPreview)
+            if (!_isPreview && !_isManual)
                 _closeTimer.Start();
         }
 
@@ -223,6 +239,7 @@ namespace TWChatOverlay.Views
                         _instance = new TreasurySummaryWindow(settings);
 
                     _instance._isPreview = false;
+                    _instance._isManual = false;
                     _instance.UpdateState(runCounts, currentRun);
                     if (!_instance.IsVisible)
                         _instance.Show();
@@ -231,6 +248,33 @@ namespace TWChatOverlay.Views
                 catch (Exception ex)
                 {
                     AppLogger.Warn("Failed to show treasury summary window.", ex);
+                }
+            }));
+        }
+
+        /// <summary>바로가기 버튼용: 저장된 이번 주 통계를 표시한다 (자동 닫힘 없음, 닫기 버튼으로 닫는다).</summary>
+        public static void ShowStored(ChatSettings settings)
+        {
+            if (settings == null)
+                return;
+
+            Application.Current?.Dispatcher.BeginInvoke(new Action(() =>
+            {
+                try
+                {
+                    if (_instance == null || !_instance.IsLoaded)
+                        _instance = new TreasurySummaryWindow(settings);
+
+                    _instance._isPreview = false;
+                    _instance._isManual = true;
+                    _instance.UpdateState(settings.Alerts.Dungeon.TreasuryRunCounts.ToArray(), currentRun: 0);
+                    if (!_instance.IsVisible)
+                        _instance.Show();
+                    TopmostWindowHelper.BringToTopmost(_instance);
+                }
+                catch (Exception ex)
+                {
+                    AppLogger.Warn("Failed to show stored treasury summary.", ex);
                 }
             }));
         }

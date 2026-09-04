@@ -1337,6 +1337,21 @@ namespace TWChatOverlay.Views
         private static string NormalizeLogText(string rawLog)
             => DailyWeeklyLogParser.NormalizeLogText(rawLog);
 
+        /// <summary>통계 바로가기: 주간 득템 통계 (달력 아카이브를 이번 주 범위로 집계).</summary>
+        private void WeeklyItemStats_Click(object sender, RoutedEventArgs e)
+            => WeeklyItemSummaryWindow.ShowWindow();
+
+        /// <summary>통계 바로가기: 어밴던로드 통계 창.</summary>
+        private void AbandonStats_Click(object sender, RoutedEventArgs e)
+        {
+            var main = Application.Current?.Windows.OfType<MainWindow>().FirstOrDefault();
+            main?.ShowAbandonRoadSummaryWindow();
+        }
+
+        /// <summary>통계 바로가기: 심연의 보물창고 주간 통계 (저장된 이번 주 데이터).</summary>
+        private void TreasuryStats_Click(object sender, RoutedEventArgs e)
+            => TreasurySummaryWindow.ShowStored(_settings);
+
         private async void Settings_Click(object sender, RoutedEventArgs e)
         {
             IsSettingsOpen = !IsSettingsOpen;
