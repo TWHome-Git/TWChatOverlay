@@ -107,6 +107,7 @@
             <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="34"/>
+                <RowDefinition Height="Auto"/>
                 <RowDefinition x:Name="BodyRow" Height="*"/>
                 <RowDefinition x:Name="FooterRow" Height="36"/>
             </Grid.RowDefinitions>
@@ -135,7 +136,23 @@
                     </StackPanel>
                 </Grid>
             </Border>
-            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Padding="8,4">
+
+            <!-- 통계 바로가기 -->
+            <Border Grid.Row="1" Background="{DynamicResource OverlaySurfaceBackgroundBrush}" Padding="8,4">
+                <UniformGrid Columns="3">
+                    <Button Content="주간 득템 통계" Click="WeeklyItemStats_Click"
+                            Height="22" Padding="4,0" FontSize="11" Cursor="Hand" Margin="0,0,4,0"
+                            Style="{DynamicResource SecondaryButtonStyle}"/>
+                    <Button Content="어밴던로드 통계" Click="AbandonStats_Click"
+                            Height="22" Padding="4,0" FontSize="11" Cursor="Hand" Margin="0,0,4,0"
+                            Style="{DynamicResource SecondaryButtonStyle}"/>
+                    <Button Content="보물창고 통계" Click="TreasuryStats_Click"
+                            Height="22" Padding="4,0" FontSize="11" Cursor="Hand"
+                            Style="{DynamicResource SecondaryButtonStyle}"/>
+                </UniformGrid>
+            </Border>
+
+            <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto" Padding="8,4">
                 <ScrollViewer.Style>
                     <Style TargetType="ScrollViewer" BasedOn="{StaticResource ChatScrollViewerStyle}">
                         <Setter Property="Visibility" Value="Visible"/>
@@ -441,7 +458,7 @@
                     </ItemsControl>
                 </StackPanel>
             </ScrollViewer>
-            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Padding="8,4">
+            <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto" Padding="8,4">
                 <ScrollViewer.Style>
                     <Style TargetType="ScrollViewer" BasedOn="{StaticResource ChatScrollViewerStyle}">
                         <Setter Property="Visibility" Value="Collapsed"/>
@@ -516,7 +533,7 @@
                 </StackPanel>
             </ScrollViewer>
 
-            <Border Grid.Row="2" Background="{DynamicResource OverlaySurfaceBackgroundBrush}" CornerRadius="0,0,8,8" Padding="10,0">
+            <Border Grid.Row="3" Background="{DynamicResource OverlaySurfaceBackgroundBrush}" CornerRadius="0,0,8,8" Padding="10,0">
                 <DockPanel VerticalAlignment="Center">
                     <Button DockPanel.Dock="Right" Content="갱신" Click="Reset_Click"
                             Width="60" Height="24" Background="{DynamicResource OverlayCardBackgroundBrush}" Foreground="{DynamicResource TextBrush}"
@@ -534,7 +551,7 @@
 
             <!-- 리사이즈 그립: 항상 표시. Thumb 드래그 방식이라 평상시(NoResize)에도
                  이 그립을 잡았을 때만 크기가 조절된다 -->
-            <Thumb Grid.Row="2" HorizontalAlignment="Right" VerticalAlignment="Bottom"
+            <Thumb Grid.Row="3" HorizontalAlignment="Right" VerticalAlignment="Bottom"
                    Width="20" Height="20" Cursor="SizeNWSE" Panel.ZIndex="10"
                    ToolTip="드래그해서 크기 조절"
                    DragDelta="ResizeGrip_DragDelta" DragCompleted="ResizeGrip_DragCompleted">

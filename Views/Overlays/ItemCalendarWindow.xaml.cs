@@ -244,6 +244,31 @@ namespace TWChatOverlay.Views
             SetLoadingState(false, string.Empty);
         }
 
+        /// <summary>
+        /// 주간 득템 통계용: 기간 내 아이템 획득 스냅샷을 읽는다 (달력과 같은 아카이브 소스).
+        /// </summary>
+        internal static List<ItemLogSnapshotEntry> ReadItemSnapshotsForRange(DateTime startDate, DateTime endDate)
+        {
+            var result = new List<ItemLogSnapshotEntry>();
+            if (!Directory.Exists(ItemDirectoryPath))
+                return result;
+
+            foreach (string path in Directory.EnumerateFiles(ItemDirectoryPath, "*.html").OrderBy(p => p, StringComparer.OrdinalIgnoreCase))
+            {
+                foreach (var entry in ReadItemEntries(path))
+                {
+                    if (entry.LogDate.Date < startDate.Date || entry.LogDate.Date > endDate.Date)
+                        continue;
+
+                    var snapshot = CreateItemSnapshot(entry);
+                    if (snapshot != null)
+                        result.Add(snapshot);
+                }
+            }
+
+            return result;
+        }
+
         /// <summary>도움말/README 렌더 전용: 주어진 샘플 스냅샷으로 이번 달 달력을 구성한다. (파일 IO 없음)</summary>
         internal void ApplySampleMonthForRender(IReadOnlyList<ItemLogSnapshotEntry> snapshots)
         {
