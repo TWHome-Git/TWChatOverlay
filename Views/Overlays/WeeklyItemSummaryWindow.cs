@@ -19,8 +19,14 @@ namespace TWChatOverlay.Views
     {
         private static WeeklyItemSummaryWindow? _instance;
 
-        private WeeklyItemSummaryWindow()
+        private readonly ChatSettings? _settings;
+        private readonly TextBlock _seedValueText;
+        private readonly DateTime _weekStart;
+        private readonly DateTime _weekEnd;
+
+        private WeeklyItemSummaryWindow(ChatSettings? settings)
         {
+            _settings = settings;
             WindowStyle = WindowStyle.None;
             AllowsTransparency = true;
             Background = Brushes.Transparent;
@@ -35,6 +41,8 @@ namespace TWChatOverlay.Views
             DateTime today = DateTime.Today;
             DateTime weekStart = today.AddDays(-(((int)today.DayOfWeek + 6) % 7)); // 월요일 시작
             DateTime weekEnd = weekStart.AddDays(6);
+            _weekStart = weekStart;
+            _weekEnd = weekEnd;
 
             var title = new TextBlock
             {
@@ -85,6 +93,7 @@ namespace TWChatOverlay.Views
 
             var body = new StackPanel();
             body.Children.Add(header);
+            body.Children.Add(BuildSeedRow(out _seedValueText));
             body.Children.Add(scroll);
 
             var root = new Border
@@ -106,6 +115,77 @@ namespace TWChatOverlay.Views
                     try { DragMove(); } catch { }
                 }
             };
+        }
+
+        /// <summary>클리어 보상 시드 (주간) 행 — 실측 합산과 체크리스트 기반 예상치를 함께 표시.</summary>
+        private static UIElement BuildSeedRow(out TextBlock valueText)
+        {
+            var row = new DockPanel { Margin = new Thickness(2, 0, 2, 8) };
+
+            valueText = new TextBlock
+            {
+                Text = "계산 중…",
+                FontSize = 13,
+                FontWeight = FontWeights.SemiBold,
+                VerticalAlignment = VerticalAlignment.Center,
+            };
+            valueText.SetResourceReference(TextBlock.ForegroundProperty, "OverlayTitleAccentTextBrush");
+            DockPanel.SetDock(valueText, Dock.Right);
+            row.Children.Add(valueText);
+
+            var labelPanel = new StackPanel { Orientation = Orientation.Horizontal };
+            try
+            {
+                var icon = new Image
+                {
+                    Width = 18,
+                    Height = 18,
+                    Margin = new Thickness(0, 0, 6, 0),
+                    VerticalAlignment = VerticalAlignment.Center,
+                    Source = new System.Windows.Media.Imaging.BitmapImage(
+                        new Uri("pack://application:,,,/Data/images/Item/시드.png")),
+                };
+                RenderOptions.SetBitmapScalingMode(icon, BitmapScalingMode.NearestNeighbor);
+                labelPanel.Children.Add(icon);
+            }
+            catch { }
+
+            var label = new TextBlock
+            {
+                Text = "클리어 보상 시드",
+                FontSize = 13,
+                VerticalAlignment = VerticalAlignment.Center,
+            };
+            label.SetResourceReference(TextBlock.ForegroundProperty, "TextBrush");
+            labelPanel.Children.Add(label);
+            row.Children.Add(labelPanel);
+            return row;
+        }
+
+        /// <summary>주간 로그를 스캔해 실측 시드 합계를 채우고, 체크리스트 기준 예상치를 병기한다.</summary>
+        private async void LoadSeedSummaryAsync()
+        {
+            if (_settings is null)
+            {
+                _seedValueText.Text = "-";
+                return;
+            }
+
+            string expected = WeeklySeedRewardService.FormatSeed(
+                WeeklySeedRewardService.ComputeExpectedWeeklySeed(_settings));
+            try
+            {
+                long actual = await WeeklySeedRewardService.SumWeeklyClearSeedAsync(
+                    _settings.ChatLogFolderPath, _weekStart, _weekEnd);
+                if (!IsLoaded) return;
+                _seedValueText.Text = $"{WeeklySeedRewardService.FormatSeed(actual)} / 예상 {expected}";
+            }
+            catch (Exception ex)
+            {
+                AppLogger.Warn("Failed to compute weekly seed summary.", ex);
+                if (IsLoaded)
+                    _seedValueText.Text = $"- / 예상 {expected}";
+            }
         }
 
         private static void BuildRows(StackPanel panel, DateTime weekStart, DateTime weekEnd)
@@ -202,7 +282,7 @@ namespace TWChatOverlay.Views
         }
 
         /// <summary>창을 연다 (이미 열려 있으면 최신 데이터로 다시 연다).</summary>
-        public static void ShowWindow()
+        public static void ShowWindow(ChatSettings? settings = null)
         {
             try
             {
@@ -211,9 +291,10 @@ namespace TWChatOverlay.Views
                     try { _instance.Close(); } catch { }
                 }
 
-                _instance = new WeeklyItemSummaryWindow();
+                _instance = new WeeklyItemSummaryWindow(settings);
                 _instance.Show();
                 TopmostWindowHelper.BringToTopmost(_instance);
+                _instance.LoadSeedSummaryAsync();
             }
             catch (Exception ex)
             {
