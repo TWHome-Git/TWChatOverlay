@@ -222,9 +222,16 @@ namespace TWChatOverlay.Views
 
             int total = runCounts.Sum();
             _totalText.Text = $"{total}개 · {FormatGoldValue(total)}";
-            _averageText.Text = runCounts.Count > 0
-                ? $"{(double)total / runCounts.Count:F1}개"
-                : "-";
+            if (runCounts.Count > 0)
+            {
+                double average = (double)total / runCounts.Count;
+                long averageSeed = (long)Math.Round(average * GoldPouchSeedValue);
+                _averageText.Text = $"{average:F1}개 · {WeeklySeedRewardService.FormatSeed(averageSeed)}";
+            }
+            else
+            {
+                _averageText.Text = "-";
+            }
 
             _closeTimer.Stop();
             if (!_isPreview && !_isManual)
