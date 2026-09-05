@@ -342,12 +342,12 @@ namespace TWChatOverlay.Views
                 };
                 try
                 {
-                    string? iconUri = ItemCalendarEntryViewModel.GetIconUri(name);
-                    if (iconUri != null)
+                    var iconSource = ItemIconLoader.LoadTrimmed(ItemCalendarEntryViewModel.GetIconUri(name));
+                    if (iconSource != null)
                     {
                         var iconImage = new Image
                         {
-                            Source = new System.Windows.Media.Imaging.BitmapImage(new Uri(iconUri)),
+                            Source = iconSource,
                             Stretch = Stretch.Uniform,
                         };
                         RenderOptions.SetBitmapScalingMode(iconImage, BitmapScalingMode.NearestNeighbor);
