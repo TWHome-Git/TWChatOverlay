@@ -226,6 +226,14 @@ namespace TWChatOverlay.Views
         }
 
         /// <summary>통계 창을 띄우거나 갱신한다 (UI 스레드 마샬링 포함).</summary>
+        /// <summary>도움말/README 렌더 전용: 창을 띄우지 않고 샘플 데이터가 채워진 인스턴스를 만든다.</summary>
+        internal static TreasurySummaryWindow CreateForRender(ChatSettings settings, IReadOnlyList<int> runCounts, int currentRun)
+        {
+            var window = new TreasurySummaryWindow(settings);
+            window.UpdateState(runCounts, currentRun);
+            return window;
+        }
+
         public static void ShowOrUpdate(ChatSettings settings, IReadOnlyList<int> runCounts, int currentRun)
         {
             if (TrayAllWindowsService.IsTrayed)
