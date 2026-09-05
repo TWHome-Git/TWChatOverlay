@@ -117,7 +117,7 @@ namespace TWChatOverlay.Views
             };
         }
 
-        /// <summary>클리어 보상 시드 (주간) 행 — 실측 합산과 체크리스트 기반 예상치를 함께 표시.</summary>
+        /// <summary>클리어 보상 시드 (주간) 행 — 실측 합산과 체크리스트 기반 주간 한도를 함께 표시.</summary>
         private static UIElement BuildSeedRow(out TextBlock valueText)
         {
             var row = new DockPanel { Margin = new Thickness(2, 0, 2, 8) };
@@ -162,7 +162,7 @@ namespace TWChatOverlay.Views
             return row;
         }
 
-        /// <summary>주간 로그를 스캔해 실측 시드 합계를 채우고, 체크리스트 기준 예상치를 병기한다.</summary>
+        /// <summary>주간 로그를 스캔해 실측 시드 합계를 채우고, 체크리스트 기준 주간 한도를 병기한다.</summary>
         private async void LoadSeedSummaryAsync()
         {
             if (_settings is null)
@@ -178,13 +178,13 @@ namespace TWChatOverlay.Views
                 long actual = await WeeklySeedRewardService.SumWeeklyClearSeedAsync(
                     _settings.ChatLogFolderPath, _weekStart, _weekEnd);
                 if (!IsLoaded) return;
-                _seedValueText.Text = $"{WeeklySeedRewardService.FormatSeed(actual)} / 예상 {expected}";
+                _seedValueText.Text = $"{WeeklySeedRewardService.FormatSeed(actual)} / 한도 {expected}";
             }
             catch (Exception ex)
             {
                 AppLogger.Warn("Failed to compute weekly seed summary.", ex);
                 if (IsLoaded)
-                    _seedValueText.Text = $"- / 예상 {expected}";
+                    _seedValueText.Text = $"- / 한도 {expected}";
             }
         }
 
