@@ -104,7 +104,24 @@ namespace TWChatOverlay.Views
             var titleStack = new StackPanel();
             titleStack.Children.Add(title);
             titleStack.Children.Add(subtitleRow);
-            header.Children.Add(titleStack);
+            var titleRow = new StackPanel { Orientation = Orientation.Horizontal };
+            try
+            {
+                var titleIcon = new Image
+                {
+                    Width = 26,
+                    Height = 26,
+                    Margin = new Thickness(0, 0, 8, 0),
+                    VerticalAlignment = VerticalAlignment.Center,
+                    Source = new System.Windows.Media.Imaging.BitmapImage(
+                        new Uri("pack://application:,,,/Data/images/Item/설계자의_반지.png")),
+                };
+                RenderOptions.SetBitmapScalingMode(titleIcon, BitmapScalingMode.NearestNeighbor);
+                titleRow.Children.Add(titleIcon);
+            }
+            catch { }
+            titleRow.Children.Add(titleStack);
+            header.Children.Add(titleRow);
 
             _listPanel = new StackPanel();
             BuildRows(_listPanel, weekStart, weekEnd);
