@@ -14,6 +14,7 @@ namespace TWChatOverlay.Services
         public static string ContentDirectory => Path.Combine(Root, "Content");
         public static string AbandonDirectory => Path.Combine(Root, "Abandon");
         public static string SeedDirectory => Path.Combine(Root, "Seed");
+        public static string TreasuryDirectory => Path.Combine(Root, "Treasury");
         public static string StateDirectory => Path.Combine(Root, "_state");
     }
 }

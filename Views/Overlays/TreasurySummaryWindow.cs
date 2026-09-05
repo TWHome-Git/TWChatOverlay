@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -304,12 +305,50 @@ namespace TWChatOverlay.Views
                     if (!_instance.IsVisible)
                         _instance.Show();
                     TopmostWindowHelper.BringToTopmost(_instance);
+
+                    // 실시간 감지가 놓친 판(기능 꺼짐·앱 미실행)까지 이번 주 로그 아카이브로 복원
+                    _ = RefreshFromLogArchiveAsync(settings);
                 }
                 catch (Exception ex)
                 {
                     AppLogger.Warn("Failed to show stored treasury summary.", ex);
                 }
             }));
+        }
+
+        /// <summary>이번 주 보물창고 이력을 로그 아카이브에서 재집계해 창과 저장값을 갱신한다.</summary>
+        private static async Task RefreshFromLogArchiveAsync(ChatSettings settings)
+        {
+            try
+            {
+                DateTime today = DateTime.Today;
+                DateTime weekStart = today.AddDays(-(((int)today.DayOfWeek + 6) % 7));
+                var (counts, _) = await TreasuryHistoryService.GetWeekAsync(settings.ChatLogFolderPath, weekStart);
+
+                Application.Current?.Dispatcher.BeginInvoke(new Action(() =>
+                {
+                    try
+                    {
+                        var dungeon = settings.Alerts.Dungeon;
+                        dungeon.TreasuryWeekKey = LogTextClassifier.GetIsoWeekKey(today);
+                        dungeon.TreasuryRunCounts.Clear();
+                        foreach (int count in counts)
+                            dungeon.TreasuryRunCounts.Add(count);
+                        ConfigService.SaveDeferred(settings);
+
+                        if (_instance?.IsLoaded == true && _instance.IsVisible && _instance._isManual)
+                            _instance.UpdateState(counts, currentRun: 0);
+                    }
+                    catch (Exception ex)
+                    {
+                        AppLogger.Warn("Failed to apply rebuilt treasury counts.", ex);
+                    }
+                }));
+            }
+            catch (Exception ex)
+            {
+                AppLogger.Warn("Failed to rebuild treasury counts from log archive.", ex);
+            }
         }
 
         /// <summary>잠금 해제 모드용 위치 미리보기: 예시 데이터로 표시하고 자동 닫힘을 멈춘다.</summary>
