@@ -22,8 +22,13 @@ namespace TWChatOverlay.Views
         private readonly ChatSettings? _settings;
         private readonly TextBlock _seedGeneralText;
         private readonly TextBlock _seedRubiconaText;
-        private readonly DateTime _weekStart;
-        private readonly DateTime _weekEnd;
+        private readonly TextBlock _subtitleText;
+        private readonly Button _prevWeekButton;
+        private readonly Button _nextWeekButton;
+        private readonly StackPanel _listPanel;
+        private DateTime _weekStart;
+        private DateTime _weekEnd;
+        private int _loadVersion;
 
         private WeeklyItemSummaryWindow(ChatSettings? settings)
         {
@@ -53,13 +58,29 @@ namespace TWChatOverlay.Views
             };
             title.SetResourceReference(TextBlock.ForegroundProperty, "OverlayTitleAccentTextBrush");
 
-            var subtitle = new TextBlock
+            _subtitleText = new TextBlock
             {
                 Text = $"{weekStart:M.d(ddd)} ~ {weekEnd:M.d(ddd)}",
                 FontSize = 11,
+                VerticalAlignment = VerticalAlignment.Center,
+                Margin = new Thickness(4, 0, 4, 0),
+            };
+            _subtitleText.SetResourceReference(TextBlock.ForegroundProperty, "OverlayHintTextBrush");
+
+            _prevWeekButton = CreateWeekNavButton("◀");
+            _prevWeekButton.Click += (_, _) => ChangeWeek(-1);
+            _nextWeekButton = CreateWeekNavButton("▶");
+            _nextWeekButton.Click += (_, _) => ChangeWeek(1);
+            _nextWeekButton.IsEnabled = false;
+
+            var subtitleRow = new StackPanel
+            {
+                Orientation = Orientation.Horizontal,
                 Margin = new Thickness(0, 2, 0, 0),
             };
-            subtitle.SetResourceReference(TextBlock.ForegroundProperty, "OverlayHintTextBrush");
+            subtitleRow.Children.Add(_prevWeekButton);
+            subtitleRow.Children.Add(_subtitleText);
+            subtitleRow.Children.Add(_nextWeekButton);
 
             var closeButton = new Button
             {
@@ -79,17 +100,17 @@ namespace TWChatOverlay.Views
             header.Children.Add(closeButton);
             var titleStack = new StackPanel();
             titleStack.Children.Add(title);
-            titleStack.Children.Add(subtitle);
+            titleStack.Children.Add(subtitleRow);
             header.Children.Add(titleStack);
 
-            var listPanel = new StackPanel();
-            BuildRows(listPanel, weekStart, weekEnd);
+            _listPanel = new StackPanel();
+            BuildRows(_listPanel, weekStart, weekEnd);
 
             var scroll = new ScrollViewer
             {
                 VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
                 MaxHeight = 420,
-                Content = listPanel,
+                Content = _listPanel,
             };
 
             var body = new StackPanel();
@@ -117,6 +138,49 @@ namespace TWChatOverlay.Views
                     try { DragMove(); } catch { }
                 }
             };
+        }
+
+        private static Button CreateWeekNavButton(string glyph)
+        {
+            var button = new Button
+            {
+                Content = glyph,
+                Width = 22,
+                Height = 18,
+                FontSize = 9,
+                Padding = new Thickness(0),
+                Cursor = Cursors.Hand,
+                VerticalAlignment = VerticalAlignment.Center,
+            };
+            button.SetResourceReference(StyleProperty, "SecondaryButtonStyle");
+            return button;
+        }
+
+        private static DateTime GetCurrentWeekStart()
+        {
+            DateTime today = DateTime.Today;
+            return today.AddDays(-(((int)today.DayOfWeek + 6) % 7));
+        }
+
+        /// <summary>표시 주를 이동하고 아이템 목록·시드 행을 해당 주 기준으로 다시 집계한다.</summary>
+        private void ChangeWeek(int deltaWeeks)
+        {
+            DateTime currentWeekStart = GetCurrentWeekStart();
+            DateTime target = _weekStart.AddDays(7 * deltaWeeks);
+            if (target > currentWeekStart)
+                target = currentWeekStart;
+
+            _weekStart = target;
+            _weekEnd = target.AddDays(6);
+            _subtitleText.Text = $"{_weekStart:M.d(ddd)} ~ {_weekEnd:M.d(ddd)}";
+            _nextWeekButton.IsEnabled = _weekStart < currentWeekStart;
+
+            _listPanel.Children.Clear();
+            BuildRows(_listPanel, _weekStart, _weekEnd);
+
+            _seedGeneralText.Text = "계산 중…";
+            _seedRubiconaText.Text = "계산 중…";
+            LoadSeedSummaryAsync();
         }
 
         /// <summary>클리어 보상 시드 행 — 실측 합산과 체크리스트 기반 주간 한도를 함께 표시.</summary>
@@ -164,9 +228,13 @@ namespace TWChatOverlay.Views
             return row;
         }
 
-        /// <summary>주간 로그를 스캔해 실측 시드 합계를 채우고, 체크리스트 기준 주간 한도를 병기한다.</summary>
+        /// <summary>
+        /// 주간 로그를 스캔해 실측 시드 합계를 채운다. 이번 주에는 체크리스트 기준 주간 한도를
+        /// 병기하고, 과거 주에는 실측값만 표시한다 (당시 한도가 지금과 다를 수 있음).
+        /// </summary>
         private async void LoadSeedSummaryAsync()
         {
+            int version = ++_loadVersion;
             if (_settings is null)
             {
                 _seedGeneralText.Text = "-";
@@ -174,6 +242,7 @@ namespace TWChatOverlay.Views
                 return;
             }
 
+            bool isCurrentWeek = _weekStart == GetCurrentWeekStart();
             var (generalCap, rubiconaCap) = WeeklySeedRewardService.ComputeWeeklySeedCaps(_settings);
             string generalCapText = WeeklySeedRewardService.FormatSeed(generalCap);
             string rubiconaCapText = WeeklySeedRewardService.FormatSeed(rubiconaCap);
@@ -181,17 +250,19 @@ namespace TWChatOverlay.Views
             {
                 var (general, rubicona) = await WeeklySeedRewardService.SumWeeklyClearSeedAsync(
                     _settings.ChatLogFolderPath, _weekStart, _weekEnd);
-                if (!IsLoaded) return;
-                _seedGeneralText.Text = $"{WeeklySeedRewardService.FormatSeed(general)} / {generalCapText}";
-                _seedRubiconaText.Text = $"{WeeklySeedRewardService.FormatSeed(rubicona)} / {rubiconaCapText}";
+                if (!IsLoaded || version != _loadVersion) return;
+                string generalText = WeeklySeedRewardService.FormatSeed(general);
+                string rubiconaText = WeeklySeedRewardService.FormatSeed(rubicona);
+                _seedGeneralText.Text = isCurrentWeek ? $"{generalText} / {generalCapText}" : generalText;
+                _seedRubiconaText.Text = isCurrentWeek ? $"{rubiconaText} / {rubiconaCapText}" : rubiconaText;
             }
             catch (Exception ex)
             {
                 AppLogger.Warn("Failed to compute weekly seed summary.", ex);
-                if (IsLoaded)
+                if (IsLoaded && version == _loadVersion)
                 {
-                    _seedGeneralText.Text = $"- / {generalCapText}";
-                    _seedRubiconaText.Text = $"- / {rubiconaCapText}";
+                    _seedGeneralText.Text = isCurrentWeek ? $"- / {generalCapText}" : "-";
+                    _seedRubiconaText.Text = isCurrentWeek ? $"- / {rubiconaCapText}" : "-";
                 }
             }
         }
@@ -222,7 +293,7 @@ namespace TWChatOverlay.Views
             {
                 var empty = new TextBlock
                 {
-                    Text = "이번 주 획득 기록이 없습니다.",
+                    Text = "해당 주의 획득 기록이 없습니다.",
                     FontSize = 12,
                     Margin = new Thickness(2, 4, 2, 4),
                 };

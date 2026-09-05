@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using TWChatOverlay.Models;
@@ -170,8 +171,8 @@ namespace TWChatOverlay.Services
 
         /// <summary>
         /// 주간 범위의 게임 로그에서 클리어 보상 시드 획득 줄을 직접 합산 — 일반과 루비코나 분리.
-        /// 루비코나 몫은 시드 줄 주변(앞 3줄/뒤 8줄)의 "레이티아/설계자 퇴치 보상" 줄로 판별한다
-        /// (금액 2억만으로는 최후의 결전과 구분되지 않음).
+        /// 지나간 날짜의 결과는 Logs/_state의 일 단위 캐시에 보관해 각 로그 파일을 한 번만 스캔한다
+        /// (게임은 당일 파일에만 이어 쓰므로 지난 날 합계는 불변).
         /// </summary>
         public static async Task<(long General, long Rubicona)> SumWeeklyClearSeedAsync(
             string logDir, DateTime weekStart, DateTime weekEnd)
@@ -183,102 +184,188 @@ namespace TWChatOverlay.Services
                 if (string.IsNullOrWhiteSpace(logDir) || !Directory.Exists(logDir))
                     return (general, rubicona);
 
-                var encoding = Encoding.GetEncoding(949);
-                var seedEvents = new List<(int LineIndex, long Value)>();
-                var markerIndices = new List<int>();
-
-                for (DateTime day = weekStart.Date; day <= weekEnd.Date; day = day.AddDays(1))
+                DateTime today = DateTime.Today;
+                bool cacheDirty = false;
+                lock (CacheLock)
                 {
-                    string path = Path.Combine(logDir, $"TWChatLog_{day:yyyy_MM_dd}.html");
-                    if (!File.Exists(path))
-                        continue;
-
-                    try
+                    var cache = LoadDailyCache();
+                    for (DateTime day = weekStart.Date; day <= weekEnd.Date; day = day.AddDays(1))
                     {
-                        seedEvents.Clear();
-                        markerIndices.Clear();
+                        if (day > today)
+                            break;
 
-                        using var fs = new FileStream(path, FileMode.Open, FileAccess.Read,
-                            FileShare.ReadWrite | FileShare.Delete);
-                        using var reader = new StreamReader(fs, encoding, detectEncodingFromByteOrderMarks: true);
-                        string? line;
-                        int lineIndex = -1;
-                        while ((line = reader.ReadLine()) != null)
+                        string key = day.ToString("yyyy-MM-dd");
+                        long[]? entry;
+                        if (day < today && cache.TryGetValue(key, out entry) && entry?.Length == 2)
                         {
-                            lineIndex++;
-                            bool hasReward = line.Contains("보상으로", StringComparison.Ordinal);
-                            bool hasPartial = line.Contains("획득 제한으로", StringComparison.Ordinal);
-                            if (!hasReward && !hasPartial)
-                                continue;
-
-                            string text = HtmlTagRegex.Replace(line, string.Empty);
-
-                            if (hasPartial)
-                            {
-                                var partial = PartialSeedRegex.Match(text);
-                                if (partial.Success)
-                                {
-                                    long clipped = 0;
-                                    if (partial.Groups["eok"].Success)
-                                        clipped += long.Parse(partial.Groups["eok"].Value) * Eok;
-                                    if (partial.Groups["man"].Success)
-                                        clipped += long.Parse(partial.Groups["man"].Value) * Man;
-                                    general += clipped;
-                                }
-                                continue;
-                            }
-
-                            // 보급품 탈환은 한 판에 "콘텐츠 클리어 보상으로 3000만 SEED"와
-                            // "보급품 탈환 성공 보상으로 … 3000만 Seed" 두 줄이 찍힌다(실수령은 3000만 1회).
-                            // 중복 합산을 막기 위해 내용 중복인 성공 보상 줄은 제외한다.
-                            if (text.Contains("보급품 탈환 성공 보상으로", StringComparison.Ordinal))
-                                continue;
-
-                            if (text.Contains("퇴치 보상으로", StringComparison.Ordinal) &&
-                                (text.Contains("레이티아", StringComparison.Ordinal) ||
-                                 text.Contains("설계자", StringComparison.Ordinal)))
-                            {
-                                markerIndices.Add(lineIndex);
-                                continue;
-                            }
-
-                            if (!text.Contains("를 획득했", StringComparison.Ordinal))
-                                continue;
-
-                            var match = SeedRewardRegex.Match(text);
-                            if (!match.Success)
-                                continue;
-
-                            long value = 0;
-                            if (match.Groups["eok"].Success)
-                                value += long.Parse(match.Groups["eok"].Value) * Eok;
-                            if (match.Groups["man"].Success)
-                                value += long.Parse(match.Groups["man"].Value) * Man;
-                            if (value > 0)
-                                seedEvents.Add((lineIndex, value));
+                            general += entry[0];
+                            rubicona += entry[1];
+                            continue;
                         }
 
-                        int markerCursor = 0;
-                        foreach (var (index, value) in seedEvents)
+                        string path = Path.Combine(logDir, $"TWChatLog_{day:yyyy_MM_dd}.html");
+                        if (!File.Exists(path))
                         {
-                            while (markerCursor < markerIndices.Count && markerIndices[markerCursor] < index - 3)
-                                markerCursor++;
-                            bool isRubicona = markerCursor < markerIndices.Count &&
-                                              markerIndices[markerCursor] <= index + 8;
-                            if (isRubicona)
-                                rubicona += value;
-                            else
-                                general += value;
+                            // 파일이 없는 지난 날도 캐시해 매번 디스크 확인을 피한다
+                            if (day < today && !cache.ContainsKey(key))
+                            {
+                                cache[key] = new long[] { 0, 0 };
+                                cacheDirty = true;
+                            }
+                            continue;
+                        }
+
+                        var (g, r) = ScanDayFile(path);
+                        general += g;
+                        rubicona += r;
+
+                        // 당일 파일은 아직 자라는 중이므로 캐시하지 않는다
+                        if (day < today)
+                        {
+                            cache[key] = new long[] { g, r };
+                            cacheDirty = true;
                         }
                     }
-                    catch (Exception ex)
-                    {
-                        AppLogger.Warn($"Failed to scan seed rewards from {path}.", ex);
-                    }
+
+                    if (cacheDirty)
+                        SaveDailyCache(cache);
                 }
 
                 return (general, rubicona);
             }).ConfigureAwait(false);
+        }
+
+        /// <summary>하루치 로그 파일에서 (일반, 루비코나) 시드 합계를 스캔.</summary>
+        private static (long General, long Rubicona) ScanDayFile(string path)
+        {
+            long general = 0;
+            long rubicona = 0;
+            var seedEvents = new List<(int LineIndex, long Value)>();
+            var markerIndices = new List<int>();
+
+            try
+            {
+                var encoding = Encoding.GetEncoding(949);
+                using var fs = new FileStream(path, FileMode.Open, FileAccess.Read,
+                    FileShare.ReadWrite | FileShare.Delete);
+                using var reader = new StreamReader(fs, encoding, detectEncodingFromByteOrderMarks: true);
+                string? line;
+                int lineIndex = -1;
+                while ((line = reader.ReadLine()) != null)
+                {
+                    lineIndex++;
+                    bool hasReward = line.Contains("보상으로", StringComparison.Ordinal);
+                    bool hasPartial = line.Contains("획득 제한으로", StringComparison.Ordinal);
+                    if (!hasReward && !hasPartial)
+                        continue;
+
+                    string text = HtmlTagRegex.Replace(line, string.Empty);
+
+                    if (hasPartial)
+                    {
+                        var partial = PartialSeedRegex.Match(text);
+                        if (partial.Success)
+                        {
+                            long clipped = 0;
+                            if (partial.Groups["eok"].Success)
+                                clipped += long.Parse(partial.Groups["eok"].Value) * Eok;
+                            if (partial.Groups["man"].Success)
+                                clipped += long.Parse(partial.Groups["man"].Value) * Man;
+                            general += clipped;
+                        }
+                        continue;
+                    }
+
+                    // 보급품 탈환은 한 판에 "콘텐츠 클리어 보상으로 3000만 SEED"와
+                    // "보급품 탈환 성공 보상으로 … 3000만 Seed" 두 줄이 찍힌다(실수령은 3000만 1회).
+                    // 중복 합산을 막기 위해 내용 중복인 성공 보상 줄은 제외한다.
+                    if (text.Contains("보급품 탈환 성공 보상으로", StringComparison.Ordinal))
+                        continue;
+
+                    if (text.Contains("퇴치 보상으로", StringComparison.Ordinal) &&
+                        (text.Contains("레이티아", StringComparison.Ordinal) ||
+                         text.Contains("설계자", StringComparison.Ordinal)))
+                    {
+                        markerIndices.Add(lineIndex);
+                        continue;
+                    }
+
+                    if (!text.Contains("를 획득했", StringComparison.Ordinal))
+                        continue;
+
+                    var match = SeedRewardRegex.Match(text);
+                    if (!match.Success)
+                        continue;
+
+                    long value = 0;
+                    if (match.Groups["eok"].Success)
+                        value += long.Parse(match.Groups["eok"].Value) * Eok;
+                    if (match.Groups["man"].Success)
+                        value += long.Parse(match.Groups["man"].Value) * Man;
+                    if (value > 0)
+                        seedEvents.Add((lineIndex, value));
+                }
+
+                // 루비코나 몫은 시드 줄 주변(앞 3줄/뒤 8줄)의 "레이티아/설계자 퇴치 보상" 줄로 판별
+                // (금액 2억만으로는 최후의 결전과 구분되지 않음)
+                int markerCursor = 0;
+                foreach (var (index, value) in seedEvents)
+                {
+                    while (markerCursor < markerIndices.Count && markerIndices[markerCursor] < index - 3)
+                        markerCursor++;
+                    bool isRubicona = markerCursor < markerIndices.Count &&
+                                      markerIndices[markerCursor] <= index + 8;
+                    if (isRubicona)
+                        rubicona += value;
+                    else
+                        general += value;
+                }
+            }
+            catch (Exception ex)
+            {
+                AppLogger.Warn($"Failed to scan seed rewards from {path}.", ex);
+            }
+
+            return (general, rubicona);
+        }
+
+        private static readonly object CacheLock = new();
+        private static Dictionary<string, long[]>? _dailyCache;
+
+        private static string DailyCachePath => Path.Combine(LogStoragePaths.StateDirectory, "seed_daily.json");
+
+        private static Dictionary<string, long[]> LoadDailyCache()
+        {
+            if (_dailyCache is not null)
+                return _dailyCache;
+
+            try
+            {
+                if (File.Exists(DailyCachePath))
+                {
+                    string json = File.ReadAllText(DailyCachePath);
+                    _dailyCache = JsonSerializer.Deserialize<Dictionary<string, long[]>>(json);
+                }
+            }
+            catch (Exception ex)
+            {
+                AppLogger.Warn("Failed to load seed daily cache.", ex);
+            }
+
+            return _dailyCache ??= new Dictionary<string, long[]>();
+        }
+
+        private static void SaveDailyCache(Dictionary<string, long[]> cache)
+        {
+            try
+            {
+                Directory.CreateDirectory(LogStoragePaths.StateDirectory);
+                File.WriteAllText(DailyCachePath, JsonSerializer.Serialize(cache));
+            }
+            catch (Exception ex)
+            {
+                AppLogger.Warn("Failed to save seed daily cache.", ex);
+            }
         }
 
         /// <summary>시드 금액을 "93.15억" / "8500만" 형태로 표기.</summary>
