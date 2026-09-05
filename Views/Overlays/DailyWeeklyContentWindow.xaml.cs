@@ -1339,7 +1339,7 @@ namespace TWChatOverlay.Views
 
         /// <summary>통계 바로가기: 주간 득템 통계 (달력 아카이브를 이번 주 범위로 집계).</summary>
         private void WeeklyItemStats_Click(object sender, RoutedEventArgs e)
-            => WeeklyItemSummaryWindow.ShowWindow();
+            => WeeklyItemSummaryWindow.ShowWindow(_settings);
 
         /// <summary>통계 바로가기: 어밴던로드 통계 창.</summary>
         private void AbandonStats_Click(object sender, RoutedEventArgs e)
