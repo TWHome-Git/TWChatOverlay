@@ -300,7 +300,12 @@ namespace TWChatOverlay.Views
                 .Where(s => !string.IsNullOrWhiteSpace(s.ItemName))
                 .GroupBy(s => (Name: ItemCalendarEntryViewModel.ApplyDisplayNameAlias(s.DisplayName ?? s.ItemName ?? string.Empty), s.Grade))
                 .Select(g => (g.Key.Name, g.Key.Grade, Count: g.Sum(s => Math.Max(1, s.Count))))
-                .OrderByDescending(x => x.Grade == ItemDropGrade.Rare || x.Grade == ItemDropGrade.Special)
+                .OrderBy(x => x.Grade switch
+                {
+                    ItemDropGrade.Special => 0,
+                    ItemDropGrade.Rare => 1,
+                    _ => 2,
+                })
                 .ThenByDescending(x => x.Count)
                 .ThenBy(x => x.Name, StringComparer.Ordinal)
                 .ToList();
