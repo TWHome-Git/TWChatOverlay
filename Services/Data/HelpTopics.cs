@@ -120,7 +120,7 @@ namespace TWChatOverlay.Services
                 "이번 주 1~7회차의 획득 개수와 합계·회차 평균이 갱신됩니다.\n" +
                 "주가 바뀌면 자동으로 새로 집계하며,\n" +
                 "일일/주간 컨텐츠 창의 '보물창고 통계' 버튼으로 언제든 다시 볼 수 있습니다.",
-                null),
+                new[] { "dungeon_treasury_gold_off.png", "dungeon_treasury_gold_on.png" }),
 
             // ===== 외치기 =====
 
