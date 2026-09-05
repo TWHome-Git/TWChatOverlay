@@ -146,6 +146,7 @@ namespace TWChatOverlay.Models
             ["세크리드룬스톤"] = "세크리드_룬스톤.png",
             ["세크리드주화"] = "세크리드_주화.png",
             ["세크주머니"] = "세크리드_주화_주머니.png",
+            ["주화주머니"] = "세크리드_주화_주머니.png",
             ["에모티스"] = "에모티스.png",
             // 장비류는 표시명이 묶음이라 대표 아이콘(소드) 사용
             ["어비스장비"] = "어비스_소드.png",
@@ -427,16 +428,25 @@ namespace TWChatOverlay.Models
         /// 원본 아이템명에 전용 아이콘이 있으면 원본명을 그대로 표시하고
         /// (예: '이클립스 장비' 대신 '이클립스 부츠'), 없으면 줄임 표시명(abbr)을 쓴다.
         /// </summary>
+        // 표시명 개명 이력: 과거 아카이브에 저장된 옛 이름도 새 이름으로 보여준다
+        private static readonly Dictionary<string, string> DisplayNameAliases = new(StringComparer.Ordinal)
+        {
+            ["세크 주머니"] = "주화 주머니",
+        };
+
+        public static string ApplyDisplayNameAlias(string name)
+            => DisplayNameAliases.TryGetValue(name, out string? alias) ? alias : name;
+
         public static string ResolvePreferredDisplayName(string? itemName, string? displayName)
         {
             if (!string.IsNullOrWhiteSpace(itemName))
             {
                 string normalized = itemName.Replace(" ", "", StringComparison.Ordinal);
                 if (IconFilesByName.ContainsKey(normalized))
-                    return itemName;
+                    return ApplyDisplayNameAlias(itemName);
             }
 
-            return string.IsNullOrWhiteSpace(displayName) ? (itemName ?? "아이템") : displayName!;
+            return ApplyDisplayNameAlias(string.IsNullOrWhiteSpace(displayName) ? (itemName ?? "아이템") : displayName!);
         }
         public Brush BorderBrush => Grade switch
         {

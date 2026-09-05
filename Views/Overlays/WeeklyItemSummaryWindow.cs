@@ -283,7 +283,7 @@ namespace TWChatOverlay.Views
 
             var aggregated = snapshots
                 .Where(s => !string.IsNullOrWhiteSpace(s.ItemName))
-                .GroupBy(s => (Name: s.DisplayName ?? s.ItemName ?? string.Empty, s.Grade))
+                .GroupBy(s => (Name: ItemCalendarEntryViewModel.ApplyDisplayNameAlias(s.DisplayName ?? s.ItemName ?? string.Empty), s.Grade))
                 .Select(g => (g.Key.Name, g.Key.Grade, Count: g.Sum(s => Math.Max(1, s.Count))))
                 .OrderByDescending(x => x.Grade == ItemDropGrade.Rare || x.Grade == ItemDropGrade.Special)
                 .ThenByDescending(x => x.Count)
