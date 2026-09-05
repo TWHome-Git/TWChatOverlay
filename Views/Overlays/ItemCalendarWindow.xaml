@@ -147,7 +147,23 @@
                         Padding="10"
                         Margin="0,0,10,0">
                     <Grid>
-                        <ItemsControl ItemsSource="{Binding Days}">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+
+                        <!-- 요일 헤더 (월요일 시작) -->
+                        <UniformGrid Columns="7" Margin="4,0,4,2">
+                            <TextBlock Text="월" HorizontalAlignment="Center" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource OverlayInfoTextBrush}"/>
+                            <TextBlock Text="화" HorizontalAlignment="Center" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource OverlayInfoTextBrush}"/>
+                            <TextBlock Text="수" HorizontalAlignment="Center" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource OverlayInfoTextBrush}"/>
+                            <TextBlock Text="목" HorizontalAlignment="Center" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource OverlayInfoTextBrush}"/>
+                            <TextBlock Text="금" HorizontalAlignment="Center" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource OverlayInfoTextBrush}"/>
+                            <TextBlock Text="토" HorizontalAlignment="Center" FontSize="12" FontWeight="SemiBold" Foreground="#7EC8FF"/>
+                            <TextBlock Text="일" HorizontalAlignment="Center" FontSize="12" FontWeight="SemiBold" Foreground="#FF6B6B"/>
+                        </UniformGrid>
+
+                        <ItemsControl Grid.Row="1" ItemsSource="{Binding Days}">
                             <ItemsControl.ItemsPanel>
                                 <ItemsPanelTemplate>
                                     <UniformGrid Columns="7"/>
@@ -345,7 +361,8 @@
                             </ItemsControl.ItemTemplate>
                         </ItemsControl>
 
-                        <Border Background="{DynamicResource OverlayLoadingMaskBrush}"
+                        <Border Grid.RowSpan="2"
+                                Background="{DynamicResource OverlayLoadingMaskBrush}"
                                 CornerRadius="8"
                                 Visibility="{Binding IsLoading, Converter={StaticResource BooleanToVisibilityConverter}}">
                             <StackPanel HorizontalAlignment="Center"
