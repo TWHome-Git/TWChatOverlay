@@ -41,6 +41,7 @@ namespace TWChatOverlay.Views
         private int _loadVersion;
         private bool _isPreviewMode;
         private DateTime _autoCloseAtUtc = DateTime.MinValue;
+        private DateTime _displayWeekStart;
 
         public event PropertyChangedEventHandler? PropertyChanged;
 
@@ -55,6 +56,7 @@ namespace TWChatOverlay.Views
             DataContext = this;
             _autoCloseTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(250) };
             _autoCloseTimer.Tick += AutoCloseTimer_Tick;
+            _displayWeekStart = GetCurrentWeekRange().WeekStart;
             UpdateHeaderText(GetCurrentWeekRange());
         }
 
@@ -128,10 +130,30 @@ namespace TWChatOverlay.Views
 
         public bool IsAutoClosePending => !_isPreviewMode && _autoCloseTimer.IsEnabled && _autoCloseAtUtc > DateTime.UtcNow;
 
+        /// <summary>표시 주를 이동한다 (이번 주 이후로는 이동 불가).</summary>
+        private void ChangeWeek(int deltaWeeks)
+        {
+            DateTime currentWeekStart = GetCurrentWeekRange().WeekStart;
+            DateTime target = _displayWeekStart.AddDays(7 * deltaWeeks);
+            if (target > currentWeekStart)
+                target = currentWeekStart;
+
+            // 과거 주를 보는 동안에는 자동 닫힘을 멈춘다 (사용자가 조작 중)
+            _autoCloseTimer.Stop();
+            _autoCloseAtUtc = DateTime.MinValue;
+            _ = LoadWeekAsync(target);
+        }
+
+        private void PrevWeek_Click(object sender, RoutedEventArgs e) => ChangeWeek(-1);
+
+        private void NextWeek_Click(object sender, RoutedEventArgs e) => ChangeWeek(1);
+
         private async Task LoadWeekAsync(DateTime today)
         {
             int version = ++_loadVersion;
             var (weekStart, weekEnd) = GetCurrentWeekRange(today);
+            _displayWeekStart = weekStart;
+            NextWeekButton.IsEnabled = weekStart < GetCurrentWeekRange().WeekStart;
             UpdateHeaderText((weekStart, weekEnd));
             IsLoading = true;
 
@@ -238,6 +260,10 @@ namespace TWChatOverlay.Views
 
         public void UpdateSummary(AbandonSummaryValue summary)
         {
+            // 실시간 갱신은 이번 주 데이터 — 과거 주를 보는 중이면 화면을 덮어쓰지 않는다
+            if (_displayWeekStart != GetCurrentWeekRange().WeekStart)
+                return;
+
             SummaryText = $"어밴던로드 주간 합계: {FormatManAmount(summary.NetProfitMan)}";
 
             StoneEntries.Clear();
