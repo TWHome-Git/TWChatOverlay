@@ -309,6 +309,7 @@ namespace TWChatOverlay.Views
                 };
                 empty.SetResourceReference(TextBlock.ForegroundProperty, "OverlayHintTextBrush");
                 panel.Children.Add(empty);
+                AddExperienceEssenceRow(panel, weekStart, weekEnd);
                 return;
             }
 
@@ -359,6 +360,52 @@ namespace TWChatOverlay.Views
             totalLabel.SetResourceReference(TextBlock.ForegroundProperty, "TextBrush");
             totalRow.Children.Add(totalLabel);
             panel.Children.Add(totalRow);
+
+            AddExperienceEssenceRow(panel, weekStart, weekEnd);
+        }
+
+        /// <summary>목록 맨 아래에 해당 주의 경험의 정수 합계 행을 추가한다 (달력과 같은 Exp 아카이브 소스).</summary>
+        private static void AddExperienceEssenceRow(StackPanel panel, DateTime weekStart, DateTime weekEnd)
+        {
+            long essenceCount = 0;
+            try
+            {
+                essenceCount = ItemCalendarWindow.ReadExperienceEssenceCountForRange(weekStart, weekEnd);
+            }
+            catch (Exception ex)
+            {
+                AppLogger.Warn("Failed to read weekly experience essence count.", ex);
+            }
+
+            var row = new DockPanel { Margin = new Thickness(2, 4, 2, 1) };
+
+            var value = new TextBlock { Text = $"x{essenceCount:N0}", FontSize = 13, FontWeight = FontWeights.SemiBold };
+            value.SetResourceReference(TextBlock.ForegroundProperty, "OverlayExpAccentBrush");
+            DockPanel.SetDock(value, Dock.Right);
+            row.Children.Add(value);
+
+            var labelPanel = new StackPanel { Orientation = Orientation.Horizontal };
+            try
+            {
+                var icon = new Image
+                {
+                    Width = 18,
+                    Height = 18,
+                    Margin = new Thickness(0, 0, 6, 0),
+                    VerticalAlignment = VerticalAlignment.Center,
+                    Source = new System.Windows.Media.Imaging.BitmapImage(
+                        new Uri("pack://application:,,,/Data/images/Item/경험의 정수.png")),
+                };
+                RenderOptions.SetBitmapScalingMode(icon, BitmapScalingMode.NearestNeighbor);
+                labelPanel.Children.Add(icon);
+            }
+            catch { }
+
+            var name = new TextBlock { Text = "경험의 정수", FontSize = 13, VerticalAlignment = VerticalAlignment.Center };
+            name.SetResourceReference(TextBlock.ForegroundProperty, "OverlayExpAccentBrush");
+            labelPanel.Children.Add(name);
+            row.Children.Add(labelPanel);
+            panel.Children.Add(row);
         }
 
         protected override void OnSourceInitialized(EventArgs e)

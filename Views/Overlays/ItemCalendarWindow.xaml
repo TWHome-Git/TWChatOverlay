@@ -383,6 +383,40 @@
                                     Padding="9"
                                     Margin="0,0,0,10">
                                 <StackPanel>
+                                    <TextBlock Text="클리어 보상 시드 합계"
+                                               Foreground="{DynamicResource OverlayTitleAccentTextBrush}"
+                                               FontSize="{Binding ItemCalendarFontSize, Converter={StaticResource AddValueConverter}, ConverterParameter=1}"
+                                               FontWeight="SemiBold"
+                                               Margin="0,0,0,8"/>
+
+                                    <Border Background="{DynamicResource OverlayCardBackgroundBrush}"
+                                            BorderBrush="{DynamicResource OverlayCardBorderBrush}"
+                                            BorderThickness="1"
+                                            CornerRadius="6"
+                                            Padding="8,6">
+                                        <StackPanel>
+                                            <TextBlock Text="{Binding MonthlySeedTotalText}"
+                                                       Foreground="{DynamicResource OverlayExpAccentBrush}"
+                                                       FontSize="{Binding ItemCalendarFontSize}"
+                                                       FontWeight="SemiBold"
+                                                       TextTrimming="CharacterEllipsis"/>
+                                            <TextBlock Text="{Binding MonthlySeedDetailText}"
+                                                       Foreground="{DynamicResource OverlayInfoTextBrush}"
+                                                       FontSize="{Binding ItemCalendarFontSize}"
+                                                       Margin="0,2,0,0"
+                                                       TextTrimming="CharacterEllipsis"/>
+                                        </StackPanel>
+                                    </Border>
+                                </StackPanel>
+                            </Border>
+
+                            <Border Background="{DynamicResource OverlaySurfaceBackgroundBrush}"
+                                    BorderBrush="{DynamicResource OverlayCardBorderBrush}"
+                                    BorderThickness="1"
+                                    CornerRadius="8"
+                                    Padding="9"
+                                    Margin="0,0,0,10">
+                                <StackPanel>
                                     <TextBlock Text="어밴던로드 누적 합계"
                                                Foreground="{DynamicResource OverlayTitleAccentTextBrush}"
                                                FontSize="{Binding ItemCalendarFontSize, Converter={StaticResource AddValueConverter}, ConverterParameter=1}"
