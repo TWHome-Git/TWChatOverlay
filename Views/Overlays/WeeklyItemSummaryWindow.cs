@@ -312,7 +312,6 @@ namespace TWChatOverlay.Views
                 DockPanel.SetDock(countText, Dock.Right);
                 row.Children.Add(countText);
 
-                bool isRare = grade == ItemDropGrade.Rare || grade == ItemDropGrade.Special;
                 var nameText = new TextBlock
                 {
                     Text = name,
@@ -320,8 +319,19 @@ namespace TWChatOverlay.Views
                     TextTrimming = TextTrimming.CharacterEllipsis,
                     Margin = new Thickness(0, 0, 8, 0),
                 };
-                nameText.SetResourceReference(TextBlock.ForegroundProperty,
-                    isRare ? "OverlayTitleAccentTextBrush" : "OverlayInfoTextBrush");
+                // 아이템 필터(획득 알림·달력)와 동일한 등급 색상을 따른다
+                switch (grade)
+                {
+                    case ItemDropGrade.Rare:
+                        nameText.Foreground = new SolidColorBrush(Color.FromRgb(0xFF, 0xD8, 0x4A));
+                        break;
+                    case ItemDropGrade.Special:
+                        nameText.Foreground = new SolidColorBrush(Color.FromRgb(0xFF, 0x7E, 0xDB));
+                        break;
+                    default:
+                        nameText.SetResourceReference(TextBlock.ForegroundProperty, "OverlayInfoTextBrush");
+                        break;
+                }
                 row.Children.Add(nameText);
                 panel.Children.Add(row);
             }
