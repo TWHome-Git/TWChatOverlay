@@ -51,6 +51,7 @@ namespace TWChatOverlay.Views
             _ = logAnalysisService ?? throw new ArgumentNullException(nameof(logAnalysisService));
 
             InitializeComponent();
+            WindowFontService.Apply(this); // 앱 공통 폰트 적용 (주간 득템 통계 창과 동일)
 
             SettingsHostZOrder.Register(this); // 설정 창이 열려 있으면 그 아래로 표시
             DataContext = this;
