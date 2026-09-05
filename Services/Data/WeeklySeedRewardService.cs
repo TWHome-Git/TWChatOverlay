@@ -368,6 +368,20 @@ namespace TWChatOverlay.Services
             }
         }
 
+        // 게임의 주간 버킷 한도 이력: 2026-07-20 주부터 66억, 그 이전은 60억 (로그 실측으로 확인)
+        private static readonly DateTime WeeklyCap66Since = new(2026, 7, 20);
+
+        /// <summary>
+        /// 주간 표시용 보정: 과거 로그에는 일간 컨텐츠(군영 퀘스트류) 시드에 식별 문구가 없어
+        /// 주간 몫으로 합산된다. 당시 주간 한도를 넘는 초과분을 일간 몫으로 옮긴다.
+        /// </summary>
+        public static (long Weekly, long Daily) SplitWeeklyDaily(DateTime weekStart, long general, long rubicona)
+        {
+            long cap = weekStart >= WeeklyCap66Since ? 66L * Eok : 60L * Eok;
+            long overflow = Math.Max(0, general - cap);
+            return (general - overflow, rubicona + overflow);
+        }
+
         /// <summary>시드 금액을 "93.15억" / "8500만" 형태로 표기.</summary>
         public static string FormatSeed(long seed)
         {
