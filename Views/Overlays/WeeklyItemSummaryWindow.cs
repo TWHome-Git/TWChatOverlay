@@ -24,6 +24,7 @@ namespace TWChatOverlay.Views
         private readonly TextBlock _seedRubiconaText;
         private readonly TextBlock _seedOtherText;
         private readonly UIElement _seedOtherRow;
+        private readonly TextBlock _essenceValueText;
         private readonly TextBlock _subtitleText;
         private readonly Button _prevWeekButton;
         private readonly Button _nextWeekButton;
@@ -118,12 +119,16 @@ namespace TWChatOverlay.Views
             var body = new StackPanel();
             body.Children.Add(header);
             body.Children.Add(BuildSeedRow("클리어 보상 시드 (일반지역)", new Thickness(2, 0, 2, 2), out _seedGeneralText));
-            body.Children.Add(BuildSeedRow("클리어 보상 시드 (루비코나)", new Thickness(2, 0, 2, 8), out _seedRubiconaText));
+            body.Children.Add(BuildSeedRow("클리어 보상 시드 (루비코나)", new Thickness(2, 0, 2, 2), out _seedRubiconaText));
             // 과거(개편 전) 주에만 존재하는 한도 외 몫 — 값이 있을 때만 표시
-            _seedOtherRow = BuildSeedRow("클리어 보상 시드 (기타)", new Thickness(2, 0, 2, 8), out _seedOtherText);
+            _seedOtherRow = BuildSeedRow("클리어 보상 시드 (기타)", new Thickness(2, 0, 2, 2), out _seedOtherText);
             _seedOtherRow.Visibility = Visibility.Collapsed;
             body.Children.Add(_seedOtherRow);
+            body.Children.Add(CreateDivider());
             body.Children.Add(scroll);
+            body.Children.Add(CreateDivider());
+            body.Children.Add(BuildEssenceRow(out _essenceValueText));
+            RefreshEssenceCount();
 
             var root = new Border
             {
@@ -183,6 +188,7 @@ namespace TWChatOverlay.Views
 
             _listPanel.Children.Clear();
             BuildRows(_listPanel, _weekStart, _weekEnd);
+            RefreshEssenceCount();
 
             _seedGeneralText.Text = "계산 중…";
             _seedRubiconaText.Text = "계산 중…";
@@ -309,7 +315,6 @@ namespace TWChatOverlay.Views
                 };
                 empty.SetResourceReference(TextBlock.ForegroundProperty, "OverlayHintTextBrush");
                 panel.Children.Add(empty);
-                AddExperienceEssenceRow(panel, weekStart, weekEnd);
                 return;
             }
 
@@ -346,43 +351,24 @@ namespace TWChatOverlay.Views
                 panel.Children.Add(row);
             }
 
-            var divider = new Border { Height = 1, Margin = new Thickness(0, 6, 0, 6) };
-            divider.SetResourceReference(Border.BackgroundProperty, "SeparatorBrush");
-            panel.Children.Add(divider);
-
-            int total = aggregated.Sum(x => x.Count);
-            var totalRow = new DockPanel { Margin = new Thickness(2, 1, 2, 1) };
-            var totalValue = new TextBlock { Text = $"x{total}", FontSize = 14, FontWeight = FontWeights.Bold };
-            totalValue.SetResourceReference(TextBlock.ForegroundProperty, "OverlayTitleAccentTextBrush");
-            DockPanel.SetDock(totalValue, Dock.Right);
-            totalRow.Children.Add(totalValue);
-            var totalLabel = new TextBlock { Text = "총 획득", FontSize = 14, FontWeight = FontWeights.Bold };
-            totalLabel.SetResourceReference(TextBlock.ForegroundProperty, "TextBrush");
-            totalRow.Children.Add(totalLabel);
-            panel.Children.Add(totalRow);
-
-            AddExperienceEssenceRow(panel, weekStart, weekEnd);
         }
 
-        /// <summary>목록 맨 아래에 해당 주의 경험의 정수 합계 행을 추가한다 (달력과 같은 Exp 아카이브 소스).</summary>
-        private static void AddExperienceEssenceRow(StackPanel panel, DateTime weekStart, DateTime weekEnd)
+        private static Border CreateDivider()
         {
-            long essenceCount = 0;
-            try
-            {
-                essenceCount = ItemCalendarWindow.ReadExperienceEssenceCountForRange(weekStart, weekEnd);
-            }
-            catch (Exception ex)
-            {
-                AppLogger.Warn("Failed to read weekly experience essence count.", ex);
-            }
+            var divider = new Border { Height = 1, Margin = new Thickness(0, 6, 0, 6) };
+            divider.SetResourceReference(Border.BackgroundProperty, "SeparatorBrush");
+            return divider;
+        }
 
-            var row = new DockPanel { Margin = new Thickness(2, 4, 2, 1) };
+        /// <summary>경험의 정수 고정 행 (목록 아래 경계선 밑에 표시).</summary>
+        private static UIElement BuildEssenceRow(out TextBlock valueText)
+        {
+            var row = new DockPanel { Margin = new Thickness(2, 0, 2, 0) };
 
-            var value = new TextBlock { Text = $"x{essenceCount:N0}", FontSize = 13, FontWeight = FontWeights.SemiBold };
-            value.SetResourceReference(TextBlock.ForegroundProperty, "OverlayExpAccentBrush");
-            DockPanel.SetDock(value, Dock.Right);
-            row.Children.Add(value);
+            valueText = new TextBlock { Text = "-", FontSize = 13, FontWeight = FontWeights.SemiBold };
+            valueText.SetResourceReference(TextBlock.ForegroundProperty, "OverlayExpAccentBrush");
+            DockPanel.SetDock(valueText, Dock.Right);
+            row.Children.Add(valueText);
 
             var labelPanel = new StackPanel { Orientation = Orientation.Horizontal };
             try
@@ -405,7 +391,22 @@ namespace TWChatOverlay.Views
             name.SetResourceReference(TextBlock.ForegroundProperty, "OverlayExpAccentBrush");
             labelPanel.Children.Add(name);
             row.Children.Add(labelPanel);
-            panel.Children.Add(row);
+            return row;
+        }
+
+        /// <summary>표시 중인 주의 경험의 정수 합계를 다시 읽는다 (달력과 같은 Exp 아카이브 소스).</summary>
+        private void RefreshEssenceCount()
+        {
+            long essenceCount = 0;
+            try
+            {
+                essenceCount = ItemCalendarWindow.ReadExperienceEssenceCountForRange(_weekStart, _weekEnd);
+            }
+            catch (Exception ex)
+            {
+                AppLogger.Warn("Failed to read weekly experience essence count.", ex);
+            }
+            _essenceValueText.Text = $"x{essenceCount:N0}";
         }
 
         protected override void OnSourceInitialized(EventArgs e)
