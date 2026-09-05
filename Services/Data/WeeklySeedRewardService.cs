@@ -107,8 +107,8 @@ namespace TWChatOverlay.Services
             new("응시하는 슬픔(어려움)", 14L * Eok),
         };
 
-        /// <summary>체크리스트에서 켜진 항목 기준 주간 클리어 보상 시드 예상 최대치.</summary>
-        public static long ComputeExpectedWeeklySeed(ChatSettings settings)
+        /// <summary>체크리스트에서 켜진 항목 기준 주간 시드 한도 — 일반(루비코나 제외)과 루비코나 분리.</summary>
+        public static (long General, long Rubicona) ComputeWeeklySeedCaps(ChatSettings settings)
         {
             long weekly = 0;
             bool eclipseFirst = true;
@@ -145,7 +145,7 @@ namespace TWChatOverlay.Services
             }
             rubicona = Math.Min(rubicona, RubiconaBucketCap);
 
-            return weekly + rubicona;
+            return (weekly, rubicona);
         }
 
         private static bool IsItemEnabled(ChatSettings settings, string itemName)
@@ -162,16 +162,25 @@ namespace TWChatOverlay.Services
 
         private static readonly Regex HtmlTagRegex = new("<[^>]+>", RegexOptions.Compiled);
 
-        /// <summary>주간 범위의 게임 로그에서 클리어 보상 시드 획득 줄을 직접 합산.</summary>
-        public static async Task<long> SumWeeklyClearSeedAsync(string logDir, DateTime weekStart, DateTime weekEnd)
+        /// <summary>
+        /// 주간 범위의 게임 로그에서 클리어 보상 시드 획득 줄을 직접 합산 — 일반과 루비코나 분리.
+        /// 루비코나 몫은 시드 줄 주변(앞 3줄/뒤 8줄)의 "레이티아/설계자 퇴치 보상" 줄로 판별한다
+        /// (금액 2억만으로는 최후의 결전과 구분되지 않음).
+        /// </summary>
+        public static async Task<(long General, long Rubicona)> SumWeeklyClearSeedAsync(
+            string logDir, DateTime weekStart, DateTime weekEnd)
         {
             return await Task.Run(() =>
             {
-                long total = 0;
+                long general = 0;
+                long rubicona = 0;
                 if (string.IsNullOrWhiteSpace(logDir) || !Directory.Exists(logDir))
-                    return total;
+                    return (general, rubicona);
 
                 var encoding = Encoding.GetEncoding(949);
+                var seedEvents = new List<(int LineIndex, long Value)>();
+                var markerIndices = new List<int>();
+
                 for (DateTime day = weekStart.Date; day <= weekEnd.Date; day = day.AddDays(1))
                 {
                     string path = Path.Combine(logDir, $"TWChatLog_{day:yyyy_MM_dd}.html");
@@ -180,16 +189,29 @@ namespace TWChatOverlay.Services
 
                     try
                     {
+                        seedEvents.Clear();
+                        markerIndices.Clear();
+
                         using var fs = new FileStream(path, FileMode.Open, FileAccess.Read,
                             FileShare.ReadWrite | FileShare.Delete);
                         using var reader = new StreamReader(fs, encoding, detectEncodingFromByteOrderMarks: true);
                         string? line;
+                        int lineIndex = -1;
                         while ((line = reader.ReadLine()) != null)
                         {
+                            lineIndex++;
                             if (!line.Contains("보상으로", StringComparison.Ordinal))
                                 continue;
 
                             string text = HtmlTagRegex.Replace(line, string.Empty);
+                            if (text.Contains("퇴치 보상으로", StringComparison.Ordinal) &&
+                                (text.Contains("레이티아", StringComparison.Ordinal) ||
+                                 text.Contains("설계자", StringComparison.Ordinal)))
+                            {
+                                markerIndices.Add(lineIndex);
+                                continue;
+                            }
+
                             if (!text.Contains("를 획득했", StringComparison.Ordinal))
                                 continue;
 
@@ -202,7 +224,21 @@ namespace TWChatOverlay.Services
                                 value += long.Parse(match.Groups["eok"].Value) * Eok;
                             if (match.Groups["man"].Success)
                                 value += long.Parse(match.Groups["man"].Value) * Man;
-                            total += value;
+                            if (value > 0)
+                                seedEvents.Add((lineIndex, value));
+                        }
+
+                        int markerCursor = 0;
+                        foreach (var (index, value) in seedEvents)
+                        {
+                            while (markerCursor < markerIndices.Count && markerIndices[markerCursor] < index - 3)
+                                markerCursor++;
+                            bool isRubicona = markerCursor < markerIndices.Count &&
+                                              markerIndices[markerCursor] <= index + 8;
+                            if (isRubicona)
+                                rubicona += value;
+                            else
+                                general += value;
                         }
                     }
                     catch (Exception ex)
@@ -211,7 +247,7 @@ namespace TWChatOverlay.Services
                     }
                 }
 
-                return total;
+                return (general, rubicona);
             }).ConfigureAwait(false);
         }
 

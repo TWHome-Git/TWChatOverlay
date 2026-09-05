@@ -20,7 +20,8 @@ namespace TWChatOverlay.Views
         private static WeeklyItemSummaryWindow? _instance;
 
         private readonly ChatSettings? _settings;
-        private readonly TextBlock _seedValueText;
+        private readonly TextBlock _seedGeneralText;
+        private readonly TextBlock _seedRubiconaText;
         private readonly DateTime _weekStart;
         private readonly DateTime _weekEnd;
 
@@ -93,7 +94,8 @@ namespace TWChatOverlay.Views
 
             var body = new StackPanel();
             body.Children.Add(header);
-            body.Children.Add(BuildSeedRow(out _seedValueText));
+            body.Children.Add(BuildSeedRow("클리어 보상 시드 (일반)", new Thickness(2, 0, 2, 2), out _seedGeneralText));
+            body.Children.Add(BuildSeedRow("클리어 보상 시드 (루비코나)", new Thickness(2, 0, 2, 8), out _seedRubiconaText));
             body.Children.Add(scroll);
 
             var root = new Border
@@ -117,10 +119,10 @@ namespace TWChatOverlay.Views
             };
         }
 
-        /// <summary>클리어 보상 시드 (주간) 행 — 실측 합산과 체크리스트 기반 주간 한도를 함께 표시.</summary>
-        private static UIElement BuildSeedRow(out TextBlock valueText)
+        /// <summary>클리어 보상 시드 행 — 실측 합산과 체크리스트 기반 주간 한도를 함께 표시.</summary>
+        private static UIElement BuildSeedRow(string labelText, Thickness margin, out TextBlock valueText)
         {
-            var row = new DockPanel { Margin = new Thickness(2, 0, 2, 8) };
+            var row = new DockPanel { Margin = margin };
 
             valueText = new TextBlock
             {
@@ -152,7 +154,7 @@ namespace TWChatOverlay.Views
 
             var label = new TextBlock
             {
-                Text = "클리어 보상 시드",
+                Text = labelText,
                 FontSize = 13,
                 VerticalAlignment = VerticalAlignment.Center,
             };
@@ -167,24 +169,30 @@ namespace TWChatOverlay.Views
         {
             if (_settings is null)
             {
-                _seedValueText.Text = "-";
+                _seedGeneralText.Text = "-";
+                _seedRubiconaText.Text = "-";
                 return;
             }
 
-            string expected = WeeklySeedRewardService.FormatSeed(
-                WeeklySeedRewardService.ComputeExpectedWeeklySeed(_settings));
+            var (generalCap, rubiconaCap) = WeeklySeedRewardService.ComputeWeeklySeedCaps(_settings);
+            string generalCapText = WeeklySeedRewardService.FormatSeed(generalCap);
+            string rubiconaCapText = WeeklySeedRewardService.FormatSeed(rubiconaCap);
             try
             {
-                long actual = await WeeklySeedRewardService.SumWeeklyClearSeedAsync(
+                var (general, rubicona) = await WeeklySeedRewardService.SumWeeklyClearSeedAsync(
                     _settings.ChatLogFolderPath, _weekStart, _weekEnd);
                 if (!IsLoaded) return;
-                _seedValueText.Text = $"{WeeklySeedRewardService.FormatSeed(actual)} / {expected}";
+                _seedGeneralText.Text = $"{WeeklySeedRewardService.FormatSeed(general)} / {generalCapText}";
+                _seedRubiconaText.Text = $"{WeeklySeedRewardService.FormatSeed(rubicona)} / {rubiconaCapText}";
             }
             catch (Exception ex)
             {
                 AppLogger.Warn("Failed to compute weekly seed summary.", ex);
                 if (IsLoaded)
-                    _seedValueText.Text = $"- / {expected}";
+                {
+                    _seedGeneralText.Text = $"- / {generalCapText}";
+                    _seedRubiconaText.Text = $"- / {rubiconaCapText}";
+                }
             }
         }
 
