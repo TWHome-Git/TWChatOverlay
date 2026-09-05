@@ -28,7 +28,7 @@ namespace TWChatOverlay.Services
         private static readonly TimeSpan UpdateMetadataTimeout = TimeSpan.FromSeconds(8);
         private static readonly TimeSpan UpdateDownloadTimeout = TimeSpan.FromMinutes(15);
 
-        private sealed record ReleaseInfo(string TagName, Version LatestVersion, string ReleaseBody, string? DownloadUrl);
+        private sealed record ReleaseInfo(string TagName, Version LatestVersion, string ReleaseBody, string? DownloadUrl, bool IsPrerelease = false);
 
         public static Version GetCurrentVersion()
             => Assembly.GetExecutingAssembly().GetName().Version ?? new Version(0, 0, 0);
@@ -44,7 +44,8 @@ namespace TWChatOverlay.Services
                 AppLogger.Info($"Starting update check. ForceInstallLatest={forceInstallLatest}, ShowNoUpdateMessage={showNoUpdateMessage}");
                 using var metadataClient = CreateClient(UpdateMetadataTimeout);
 
-                ReleaseInfo? release = await GetLatestReleaseInfoAsync(metadataClient).ConfigureAwait(false);
+                // 수동 업데이트는 베타(프리릴리즈)를 포함한 최신 릴리즈를, 자동 확인은 정식 릴리즈만 본다
+                ReleaseInfo? release = await GetLatestReleaseInfoAsync(metadataClient, includePrerelease: forceInstallLatest).ConfigureAwait(false);
                 if (release == null)
                 {
                     AppLogger.Warn($"Update check returned no release metadata after {stopwatch.ElapsedMilliseconds} ms.");
@@ -110,10 +111,11 @@ namespace TWChatOverlay.Services
             }
         }
 
-        private static async Task<ReleaseInfo?> GetLatestReleaseInfoAsync(HttpClient client)
+        private static async Task<ReleaseInfo?> GetLatestReleaseInfoAsync(HttpClient client, bool includePrerelease = false)
         {
             using var cts = new CancellationTokenSource(UpdateMetadataTimeout);
-            using var response = await client.GetAsync(LatestReleaseUrl, cts.Token).ConfigureAwait(false);
+            string url = includePrerelease ? RemoteEndpoints.ReleaseListApi : LatestReleaseUrl;
+            using var response = await client.GetAsync(url, cts.Token).ConfigureAwait(false);
             if (!response.IsSuccessStatusCode)
             {
                 AppLogger.Warn($"Update metadata request returned HTTP {(int)response.StatusCode}.");
@@ -122,8 +124,24 @@ namespace TWChatOverlay.Services
 
             string json = await response.Content.ReadAsStringAsync(cts.Token).ConfigureAwait(false);
             using var doc = JsonDocument.Parse(json);
-            var root = doc.RootElement;
 
+            if (!includePrerelease)
+                return ParseReleaseElement(doc.RootElement);
+
+            // 목록은 생성일 내림차순 — 초안을 제외한 가장 최근 릴리즈(베타 포함)를 고른다
+            foreach (var element in doc.RootElement.EnumerateArray())
+            {
+                bool isDraft = element.TryGetProperty("draft", out var draftEl) && draftEl.GetBoolean();
+                if (isDraft)
+                    continue;
+                return ParseReleaseElement(element);
+            }
+
+            return null;
+        }
+
+        private static ReleaseInfo? ParseReleaseElement(JsonElement root)
+        {
             string? tagName = root.GetProperty("tag_name").GetString();
             if (string.IsNullOrWhiteSpace(tagName))
                 return null;
@@ -131,8 +149,9 @@ namespace TWChatOverlay.Services
             Version latestVersion = ParseVersion(tagName);
             string releaseBody = root.TryGetProperty("body", out var bodyEl) ? bodyEl.GetString() ?? string.Empty : string.Empty;
             string? downloadUrl = FindZipAssetUrl(root);
+            bool isPrerelease = root.TryGetProperty("prerelease", out var preEl) && preEl.GetBoolean();
 
-            return new ReleaseInfo(tagName.Trim(), latestVersion, releaseBody.Trim(), downloadUrl);
+            return new ReleaseInfo(tagName.Trim(), latestVersion, releaseBody.Trim(), downloadUrl, isPrerelease);
         }
 
         private static HttpClient CreateClient(TimeSpan timeout)
@@ -150,7 +169,7 @@ namespace TWChatOverlay.Services
         {
             string windowTitle = forceInstallLatest ? "수동 업데이트" : "업데이트 알림";
             string headline = forceInstallLatest
-                ? "현재 버전을 다시 설치합니다."
+                ? (release.IsPrerelease ? "베타 버전을 설치합니다." : "최신 버전을 다시 설치합니다.")
                 : "업데이트 내역";
             string footerHint = forceInstallLatest
                 ? "업데이트를 시작하면 앱이 잠시 종료되고 최신 파일이 다시 설치됩니다."
@@ -160,6 +179,8 @@ namespace TWChatOverlay.Services
             string latestText = release.TagName.StartsWith("v", StringComparison.OrdinalIgnoreCase)
                 ? release.TagName
                 : $"v{release.TagName}";
+            if (release.IsPrerelease)
+                latestText += " (베타)";
 
             return InvokeOnUIAsync(() =>
             {
@@ -304,6 +325,10 @@ namespace TWChatOverlay.Services
         private static Version ParseVersion(string tag)
         {
             string cleaned = tag.TrimStart('v', 'V');
+            // 베타 태그(v5.1.0-beta 등)는 접미사를 떼고 버전만 파싱한다
+            int suffixIndex = cleaned.IndexOf('-');
+            if (suffixIndex > 0)
+                cleaned = cleaned[..suffixIndex];
             return Version.TryParse(cleaned, out var version) ? version : new Version(0, 0, 0);
         }
 
