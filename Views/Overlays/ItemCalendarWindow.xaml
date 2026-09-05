@@ -123,12 +123,12 @@
                                 VerticalAlignment="Center">
                         <TextBlock Text="아이템 획득 내역"
                                    Foreground="{DynamicResource OverlayTitleAccentTextBrush}"
-                                   FontSize="16"
-                                   FontWeight="SemiBold"
+                                   FontSize="18"
+                                   FontWeight="Bold"
                                    HorizontalAlignment="Center"/>
                         <TextBlock Text="{Binding MonthText}"
                                    Foreground="{DynamicResource OverlayHintTextBrush}"
-                                   FontSize="11"
+                                   FontSize="12"
                                    HorizontalAlignment="Center"
                                    Margin="0,2,0,0"/>
                     </StackPanel>
