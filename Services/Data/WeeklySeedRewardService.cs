@@ -431,7 +431,7 @@ namespace TWChatOverlay.Services
                 sb.AppendLine("</head>");
                 sb.AppendLine("<body>");
                 sb.AppendLine("<h1>시드 획득 내역</h1>");
-                sb.AppendLine("<p class=\"note\">TWChatOverlay가 게임 로그에서 수집한 클리어 보상 시드 기록입니다. 파란색은 일간(루비코나), 주황색은 주간 한도 직전 부분 지급입니다. 앱이 다시 읽는 데이터 파일이므로 내용을 직접 수정하지 마세요.</p>");
+                sb.AppendLine("<p class=\"note\">TWChatOverlay가 게임 로그에서 수집한 클리어 보상 시드 기록입니다. 파란색은 루비코나, 주황색은 주간 한도 직전 부분 지급입니다. 앱이 다시 읽는 데이터 파일이므로 내용을 직접 수정하지 마세요.</p>");
 
                 foreach (var weekGroup in archive
                              .GroupBy(kv => GetWeekStartOf(ParseDateKey(kv.Key)))
@@ -447,7 +447,7 @@ namespace TWChatOverlay.Services
                             else weekly += entry.Amount;
                         }
 
-                    sb.AppendLine($"<h2 data-week=\"{ws:yyyy-MM-dd}\">{ws:M/d(ddd)} ~ {we:M/d(ddd)} — 주간 {FormatSeed(weekly)} · 일간 {FormatSeed(daily)} · 합계 {FormatSeed(weekly + daily)}</h2>");
+                    sb.AppendLine($"<h2 data-week=\"{ws:yyyy-MM-dd}\">{ws:M/d(ddd)} ~ {we:M/d(ddd)} — 일반지역 {FormatSeed(weekly)} · 루비코나 {FormatSeed(daily)} · 합계 {FormatSeed(weekly + daily)}</h2>");
 
                     foreach (var kv in weekGroup.OrderBy(kv => kv.Key, StringComparer.Ordinal))
                     {
@@ -460,7 +460,7 @@ namespace TWChatOverlay.Services
 
                         string dayLabel = kv.Value.Count == 0
                             ? "기록 없음"
-                            : $"주간 {FormatSeed(dayWeekly)} · 일간 {FormatSeed(dayDaily)}";
+                            : $"일반지역 {FormatSeed(dayWeekly)} · 루비코나 {FormatSeed(dayDaily)}";
                         sb.AppendLine($"<h3 class=\"day\" data-day=\"{kv.Key}\">{ParseDateKey(kv.Key):M/d(ddd)} — {dayLabel}</h3>");
 
                         foreach (var entry in kv.Value)
