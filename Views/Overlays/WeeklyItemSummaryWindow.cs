@@ -178,13 +178,13 @@ namespace TWChatOverlay.Views
                 long actual = await WeeklySeedRewardService.SumWeeklyClearSeedAsync(
                     _settings.ChatLogFolderPath, _weekStart, _weekEnd);
                 if (!IsLoaded) return;
-                _seedValueText.Text = $"{WeeklySeedRewardService.FormatSeed(actual)} / 한도 {expected}";
+                _seedValueText.Text = $"{WeeklySeedRewardService.FormatSeed(actual)} / {expected}";
             }
             catch (Exception ex)
             {
                 AppLogger.Warn("Failed to compute weekly seed summary.", ex);
                 if (IsLoaded)
-                    _seedValueText.Text = $"- / 한도 {expected}";
+                    _seedValueText.Text = $"- / {expected}";
             }
         }
 
