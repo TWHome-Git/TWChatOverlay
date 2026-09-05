@@ -204,6 +204,13 @@ namespace TWChatOverlay.Services
                                 continue;
 
                             string text = HtmlTagRegex.Replace(line, string.Empty);
+
+                            // 보급품 탈환은 한 판에 "콘텐츠 클리어 보상으로 3000만 SEED"와
+                            // "보급품 탈환 성공 보상으로 … 3000만 Seed" 두 줄이 찍힌다(실수령은 3000만 1회).
+                            // 중복 합산을 막기 위해 내용 중복인 성공 보상 줄은 제외한다.
+                            if (text.Contains("보급품 탈환 성공 보상으로", StringComparison.Ordinal))
+                                continue;
+
                             if (text.Contains("퇴치 보상으로", StringComparison.Ordinal) &&
                                 (text.Contains("레이티아", StringComparison.Ordinal) ||
                                  text.Contains("설계자", StringComparison.Ordinal)))
