@@ -467,7 +467,8 @@ namespace TWChatOverlay.Views
             if (string.IsNullOrWhiteSpace(entry.ItemName))
                 return null;
 
-            string displayName = DropItemResolver.GetTrackedItemDisplayName(entry.ItemName);
+            string displayName = ItemCalendarEntryViewModel.ApplyDisplayNameAlias(
+                DropItemResolver.GetTrackedItemDisplayName(entry.ItemName));
             if (string.IsNullOrWhiteSpace(displayName))
                 displayName = entry.ItemName;
 
@@ -713,7 +714,8 @@ namespace TWChatOverlay.Views
                 ItemName = itemLog.TrackedItemName,
                 DisplayName = string.IsNullOrWhiteSpace(itemLog.TrackedItemName)
                     ? "아이템"
-                    : DropItemResolver.GetTrackedItemDisplayName(itemLog.TrackedItemName),
+                    : ItemCalendarEntryViewModel.ApplyDisplayNameAlias(
+                        DropItemResolver.GetTrackedItemDisplayName(itemLog.TrackedItemName)),
                 Grade = itemLog.TrackedItemGrade,
                 Count = Math.Max(1, itemLog.TrackedItemCount),
                 FormattedText = itemLog.FormattedText
