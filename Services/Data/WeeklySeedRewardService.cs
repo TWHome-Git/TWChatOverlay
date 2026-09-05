@@ -160,6 +160,12 @@ namespace TWChatOverlay.Services
             @"(?:(?<eok>\d+)\s*억)?\s*(?:(?<man>\d+)\s*만)?\s*(?:SEED|Seed)를 획득했",
             RegexOptions.Compiled);
 
+        // 주간 한도 직전 마지막 클리어는 잔여분만 지급되며 별도 문구로 찍힌다:
+        // "SEED 주간 획득 제한으로 1억 3000만 SEED만 획득되었습니다."
+        private static readonly Regex PartialSeedRegex = new(
+            @"SEED 주간 획득 제한으로\s*(?:(?<eok>\d+)\s*억)?\s*(?:(?<man>\d+)\s*만)?\s*SEED만 획득되었",
+            RegexOptions.Compiled);
+
         private static readonly Regex HtmlTagRegex = new("<[^>]+>", RegexOptions.Compiled);
 
         /// <summary>
@@ -200,10 +206,27 @@ namespace TWChatOverlay.Services
                         while ((line = reader.ReadLine()) != null)
                         {
                             lineIndex++;
-                            if (!line.Contains("보상으로", StringComparison.Ordinal))
+                            bool hasReward = line.Contains("보상으로", StringComparison.Ordinal);
+                            bool hasPartial = line.Contains("획득 제한으로", StringComparison.Ordinal);
+                            if (!hasReward && !hasPartial)
                                 continue;
 
                             string text = HtmlTagRegex.Replace(line, string.Empty);
+
+                            if (hasPartial)
+                            {
+                                var partial = PartialSeedRegex.Match(text);
+                                if (partial.Success)
+                                {
+                                    long clipped = 0;
+                                    if (partial.Groups["eok"].Success)
+                                        clipped += long.Parse(partial.Groups["eok"].Value) * Eok;
+                                    if (partial.Groups["man"].Success)
+                                        clipped += long.Parse(partial.Groups["man"].Value) * Man;
+                                    general += clipped;
+                                }
+                                continue;
+                            }
 
                             // 보급품 탈환은 한 판에 "콘텐츠 클리어 보상으로 3000만 SEED"와
                             // "보급품 탈환 성공 보상으로 … 3000만 Seed" 두 줄이 찍힌다(실수령은 3000만 1회).
