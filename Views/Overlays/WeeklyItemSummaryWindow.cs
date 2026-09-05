@@ -115,8 +115,8 @@ namespace TWChatOverlay.Views
 
             var body = new StackPanel();
             body.Children.Add(header);
-            body.Children.Add(BuildSeedRow("클리어 보상 시드 (주간)", new Thickness(2, 0, 2, 2), out _seedGeneralText));
-            body.Children.Add(BuildSeedRow("클리어 보상 시드 (일간)", new Thickness(2, 0, 2, 8), out _seedRubiconaText));
+            body.Children.Add(BuildSeedRow("클리어 보상 시드 (일반지역)", new Thickness(2, 0, 2, 2), out _seedGeneralText));
+            body.Children.Add(BuildSeedRow("클리어 보상 시드 (루비코나)", new Thickness(2, 0, 2, 8), out _seedRubiconaText));
             body.Children.Add(scroll);
 
             var root = new Border
