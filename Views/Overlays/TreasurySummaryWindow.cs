@@ -28,6 +28,7 @@ namespace TWChatOverlay.Views
 
         private readonly TextBlock[] _runValues = new TextBlock[MaxRuns];
         private readonly TextBlock[] _runLabels = new TextBlock[MaxRuns];
+        private readonly Image[] _runIcons = new Image[MaxRuns];
         private readonly TextBlock _totalText;
         private readonly TextBlock _averageText;
         private readonly DispatcherTimer _closeTimer;
@@ -65,16 +66,6 @@ namespace TWChatOverlay.Views
             };
             subtitle.SetResourceReference(TextBlock.ForegroundProperty, "OverlayHintTextBrush");
 
-            var icon = new Image
-            {
-                Width = 30,
-                Height = 30,
-                Margin = new Thickness(0, 0, 10, 0),
-                VerticalAlignment = VerticalAlignment.Center,
-            };
-            RenderOptions.SetBitmapScalingMode(icon, BitmapScalingMode.NearestNeighbor);
-            try { icon.Source = new BitmapImage(new Uri(SeedPouchIconUri, UriKind.Absolute)); } catch { }
-
             var closeButton = new Button
             {
                 Content = "닫기",
@@ -89,7 +80,6 @@ namespace TWChatOverlay.Views
             closeButton.Click += (_, _) => { try { Close(); } catch { } };
 
             var header = new DockPanel { Margin = new Thickness(0, 0, 0, 8) };
-            header.Children.Add(icon);
             DockPanel.SetDock(closeButton, Dock.Right);
             header.Children.Add(closeButton);
             var titleStack = new StackPanel();
@@ -103,10 +93,31 @@ namespace TWChatOverlay.Views
             for (int i = 0; i < MaxRuns; i++)
             {
                 var row = new DockPanel { Margin = new Thickness(2, 1, 2, 1) };
-                _runValues[i] = new TextBlock { FontSize = 13, FontWeight = FontWeights.SemiBold };
+                _runValues[i] = new TextBlock
+                {
+                    FontSize = 13,
+                    FontWeight = FontWeights.SemiBold,
+                    VerticalAlignment = VerticalAlignment.Center,
+                };
                 _runValues[i].SetResourceReference(TextBlock.ForegroundProperty, "TextBrush");
-                DockPanel.SetDock(_runValues[i], Dock.Right);
-                row.Children.Add(_runValues[i]);
+
+                // 개수 앞 금화 주머니 아이콘 (기록 없는 회차에서는 숨김)
+                _runIcons[i] = new Image
+                {
+                    Width = 16,
+                    Height = 16,
+                    Margin = new Thickness(0, 0, 5, 0),
+                    VerticalAlignment = VerticalAlignment.Center,
+                    Visibility = Visibility.Collapsed,
+                };
+                RenderOptions.SetBitmapScalingMode(_runIcons[i], BitmapScalingMode.NearestNeighbor);
+                try { _runIcons[i].Source = new BitmapImage(new Uri(SeedPouchIconUri, UriKind.Absolute)); } catch { }
+
+                var valuePanel = new StackPanel { Orientation = Orientation.Horizontal };
+                valuePanel.Children.Add(_runIcons[i]);
+                valuePanel.Children.Add(_runValues[i]);
+                DockPanel.SetDock(valuePanel, Dock.Right);
+                row.Children.Add(valuePanel);
 
                 _runLabels[i] = new TextBlock { Text = $"{i + 1}회차", FontSize = 13 };
                 _runLabels[i].SetResourceReference(TextBlock.ForegroundProperty, "OverlayInfoTextBrush");
@@ -214,6 +225,7 @@ namespace TWChatOverlay.Views
             {
                 bool started = i < runCounts.Count;
                 _runValues[i].Text = started ? $"{runCounts[i]}개 · {FormatGoldValue(runCounts[i])}" : "-";
+                _runIcons[i].Visibility = started ? Visibility.Visible : Visibility.Collapsed;
                 bool isCurrent = i == currentRun - 1;
                 _runLabels[i].FontWeight = isCurrent ? FontWeights.Bold : FontWeights.Normal;
                 _runValues[i].SetResourceReference(TextBlock.ForegroundProperty,

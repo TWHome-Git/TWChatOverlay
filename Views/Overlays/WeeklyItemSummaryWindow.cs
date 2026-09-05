@@ -104,24 +104,7 @@ namespace TWChatOverlay.Views
             var titleStack = new StackPanel();
             titleStack.Children.Add(title);
             titleStack.Children.Add(subtitleRow);
-            var titleRow = new StackPanel { Orientation = Orientation.Horizontal };
-            try
-            {
-                var titleIcon = new Image
-                {
-                    Width = 26,
-                    Height = 26,
-                    Margin = new Thickness(0, 0, 8, 0),
-                    VerticalAlignment = VerticalAlignment.Center,
-                    Source = new System.Windows.Media.Imaging.BitmapImage(
-                        new Uri("pack://application:,,,/Data/images/Item/설계자의_반지.png")),
-                };
-                RenderOptions.SetBitmapScalingMode(titleIcon, BitmapScalingMode.NearestNeighbor);
-                titleRow.Children.Add(titleIcon);
-            }
-            catch { }
-            titleRow.Children.Add(titleStack);
-            header.Children.Add(titleRow);
+            header.Children.Add(titleStack);
 
             _listPanel = new StackPanel();
             BuildRows(_listPanel, weekStart, weekEnd);
@@ -348,6 +331,32 @@ namespace TWChatOverlay.Views
                 countText.SetResourceReference(TextBlock.ForegroundProperty, "TextBrush");
                 DockPanel.SetDock(countText, Dock.Right);
                 row.Children.Add(countText);
+
+                // 아이템 아이콘 (달력과 같은 매핑; 없는 아이템은 빈 자리로 이름 정렬 유지)
+                var iconHost = new Border
+                {
+                    Width = 18,
+                    Height = 18,
+                    Margin = new Thickness(0, 0, 6, 0),
+                    VerticalAlignment = VerticalAlignment.Center,
+                };
+                try
+                {
+                    string? iconUri = ItemCalendarEntryViewModel.GetIconUri(name);
+                    if (iconUri != null)
+                    {
+                        var iconImage = new Image
+                        {
+                            Source = new System.Windows.Media.Imaging.BitmapImage(new Uri(iconUri)),
+                            Stretch = Stretch.Uniform,
+                        };
+                        RenderOptions.SetBitmapScalingMode(iconImage, BitmapScalingMode.NearestNeighbor);
+                        iconHost.Child = iconImage;
+                    }
+                }
+                catch { }
+                DockPanel.SetDock(iconHost, Dock.Left);
+                row.Children.Add(iconHost);
 
                 var nameText = new TextBlock
                 {
