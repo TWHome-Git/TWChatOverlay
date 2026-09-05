@@ -32,7 +32,7 @@
     <Border Background="{DynamicResource OverlayWindowBackgroundBrush}"
             BorderBrush="{DynamicResource OverlayWindowBorderBrush}"
             BorderThickness="1"
-            CornerRadius="4"
+            CornerRadius="12"
             Padding="14">
         <Grid>
             <Grid.RowDefinitions>
@@ -41,7 +41,7 @@
             </Grid.RowDefinitions>
 
             <Border Background="{DynamicResource OverlaySurfaceAltBackgroundBrush}"
-                    CornerRadius="4"
+                    CornerRadius="10"
                     Padding="10"
                     MouseLeftButtonDown="TitleBar_MouseLeftButtonDown">
                 <Grid>
@@ -109,21 +109,26 @@
                                 FontSize="11"
                                 Style="{DynamicResource SecondaryButtonStyle}"
                                 Click="Refresh_Click"/>
-                        <Button Content="X"
-                                Style="{StaticResource WindowCloseButtonStyle}"
+                        <Button Content="닫기"
+                                Height="22"
+                                MinWidth="40"
+                                Padding="8,0"
+                                FontSize="11"
+                                Cursor="Hand"
+                                Style="{DynamicResource SecondaryButtonStyle}"
                                 Click="Close_Click"/>
                     </StackPanel>
 
                     <StackPanel HorizontalAlignment="Center"
                                 VerticalAlignment="Center">
                         <TextBlock Text="아이템 획득 내역"
-                                   Foreground="{DynamicResource TextBrush}"
-                                   FontSize="18"
-                                   FontWeight="Bold"
+                                   Foreground="{DynamicResource OverlayTitleAccentTextBrush}"
+                                   FontSize="16"
+                                   FontWeight="SemiBold"
                                    HorizontalAlignment="Center"/>
                         <TextBlock Text="{Binding MonthText}"
-                                   Foreground="{DynamicResource OverlayInfoTextBrush}"
-                                   FontSize="12"
+                                   Foreground="{DynamicResource OverlayHintTextBrush}"
+                                   FontSize="11"
                                    HorizontalAlignment="Center"
                                    Margin="0,2,0,0"/>
                     </StackPanel>
@@ -138,7 +143,7 @@
 
                 <Border Grid.Column="0"
                         Background="{DynamicResource OverlayShellBackgroundBrush}"
-                        CornerRadius="4"
+                        CornerRadius="10"
                         Padding="10"
                         Margin="0,0,10,0">
                     <Grid>
@@ -152,7 +157,7 @@
                                 <DataTemplate>
                                     <Border Margin="4"
                                             Padding="10"
-                                            CornerRadius="4"
+                                            CornerRadius="8"
                                             BorderThickness="1"
                                             BorderBrush="{DynamicResource OverlayCardBorderBrush}"
                                             Background="{DynamicResource OverlayCardBackgroundBrush}"
@@ -166,7 +171,7 @@
                                             <Border Background="Transparent"
                                                     BorderBrush="{DynamicResource OverlayCardBorderBrush}"
                                                     BorderThickness="1"
-                                                    CornerRadius="3"
+                                                    CornerRadius="6"
                                                     Padding="6,4">
                                                 <TextBlock Text="{Binding DateLabel}"
                                                            Foreground="{DynamicResource TextBrush}"
@@ -214,7 +219,7 @@
                                                             <Border Background="{DynamicResource OverlayCardBackgroundBrush}"
                                                                     BorderBrush="{Binding BorderBrush}"
                                                                     BorderThickness="1"
-                                                                    CornerRadius="2"
+                                                                    CornerRadius="5"
                                                                     Padding="4,3"
                                                                     Margin="0,0,4,4"
                                                                     ToolTip="{Binding DisplayText}">
@@ -341,7 +346,7 @@
                         </ItemsControl>
 
                         <Border Background="{DynamicResource OverlayLoadingMaskBrush}"
-                                CornerRadius="3"
+                                CornerRadius="8"
                                 Visibility="{Binding IsLoading, Converter={StaticResource BooleanToVisibilityConverter}}">
                             <StackPanel HorizontalAlignment="Center"
                                         VerticalAlignment="Center"
@@ -365,7 +370,7 @@
 
                 <Border Grid.Column="1"
                         Background="{DynamicResource OverlayShellBackgroundBrush}"
-                        CornerRadius="4"
+                        CornerRadius="10"
                         Padding="10">
                     <ScrollViewer VerticalScrollBarVisibility="Hidden"
                                   HorizontalScrollBarVisibility="Disabled"
@@ -374,12 +379,12 @@
                             <Border Background="{DynamicResource OverlaySurfaceBackgroundBrush}"
                                     BorderBrush="{DynamicResource OverlayCardBorderBrush}"
                                     BorderThickness="1"
-                                    CornerRadius="4"
+                                    CornerRadius="8"
                                     Padding="9"
                                     Margin="0,0,0,10">
                                 <StackPanel>
                                     <TextBlock Text="어밴던로드 누적 합계"
-                                               Foreground="{DynamicResource TextBrush}"
+                                               Foreground="{DynamicResource OverlayTitleAccentTextBrush}"
                                                FontSize="{Binding ItemCalendarFontSize, Converter={StaticResource AddValueConverter}, ConverterParameter=1}"
                                                FontWeight="SemiBold"
                                                Margin="0,0,0,8"/>
@@ -387,7 +392,7 @@
                                     <Border Background="{DynamicResource OverlayCardBackgroundBrush}"
                                             BorderBrush="{DynamicResource OverlayCardBorderBrush}"
                                             BorderThickness="1"
-                                            CornerRadius="3"
+                                            CornerRadius="6"
                                             Padding="8,6"
                                             Margin="0,0,0,8">
                                         <TextBlock Text="{Binding MonthlyAbandonSeedText}"
@@ -443,11 +448,11 @@
                             <Border Background="{DynamicResource OverlaySurfaceBackgroundBrush}"
                                     BorderBrush="{DynamicResource OverlayCardBorderBrush}"
                                     BorderThickness="1"
-                                    CornerRadius="4"
+                                    CornerRadius="8"
                                     Padding="9">
                                 <StackPanel>
                                     <TextBlock Text="아이템 득템 누적 합계"
-                                               Foreground="{DynamicResource TextBrush}"
+                                               Foreground="{DynamicResource OverlayTitleAccentTextBrush}"
                                                FontSize="{Binding ItemCalendarFontSize, Converter={StaticResource AddValueConverter}, ConverterParameter=1}"
                                                FontWeight="SemiBold"
                                                Margin="0,0,0,8"/>
@@ -490,12 +495,12 @@
                             <Border Background="{DynamicResource OverlaySurfaceBackgroundBrush}"
                                     BorderBrush="{DynamicResource OverlayCardBorderBrush}"
                                     BorderThickness="1"
-                                    CornerRadius="4"
+                                    CornerRadius="8"
                                     Padding="9"
                                     Margin="0,10,0,0">
                                 <StackPanel>
                                     <TextBlock Text="경험의 정수 누적 합계"
-                                               Foreground="{DynamicResource TextBrush}"
+                                               Foreground="{DynamicResource OverlayTitleAccentTextBrush}"
                                                FontSize="{Binding ItemCalendarFontSize, Converter={StaticResource AddValueConverter}, ConverterParameter=1}"
                                                FontWeight="SemiBold"
                                                Margin="0,0,0,8"/>
@@ -503,7 +508,7 @@
                                     <Border Background="{DynamicResource OverlayCardBackgroundBrush}"
                                             BorderBrush="{DynamicResource OverlayCardBorderBrush}"
                                             BorderThickness="1"
-                                            CornerRadius="3"
+                                            CornerRadius="6"
                                             Padding="8,6">
                                         <DockPanel LastChildFill="True">
                                             <StackPanel Orientation="Horizontal"
