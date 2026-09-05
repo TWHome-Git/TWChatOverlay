@@ -149,6 +149,66 @@ namespace TWChatOverlay.Views
             }
         }
 
+        private string _monthlySeedTotalText = string.Empty;
+        public string MonthlySeedTotalText
+        {
+            get => _monthlySeedTotalText;
+            private set
+            {
+                if (_monthlySeedTotalText == value)
+                    return;
+                _monthlySeedTotalText = value;
+                OnPropertyChanged(nameof(MonthlySeedTotalText));
+            }
+        }
+
+        private string _monthlySeedDetailText = string.Empty;
+        public string MonthlySeedDetailText
+        {
+            get => _monthlySeedDetailText;
+            private set
+            {
+                if (_monthlySeedDetailText == value)
+                    return;
+                _monthlySeedDetailText = value;
+                OnPropertyChanged(nameof(MonthlySeedDetailText));
+            }
+        }
+
+        /// <summary>
+        /// 클리어 보상 시드 월 합계 — 주간 시작일(월요일)이 표시 중인 달에 속하는 주들을 통째로 합산한다
+        /// (어밴던로드 주간 통계와 동일한 주 단위 기준).
+        /// </summary>
+        private async Task RefreshMonthlySeedSummaryAsync(DateTime monthStart)
+        {
+            try
+            {
+                DateTime monthEnd = monthStart.AddMonths(1).AddDays(-1);
+                int diff = ((int)monthStart.DayOfWeek + 6) % 7;
+                DateTime firstMonday = diff == 0 ? monthStart : monthStart.AddDays(7 - diff);
+
+                long general = 0;
+                long rubicona = 0;
+                for (DateTime monday = firstMonday; monday <= monthEnd; monday = monday.AddDays(7))
+                {
+                    var (g, r) = await WeeklySeedRewardService.SumWeeklyClearSeedAsync(
+                        _settings.ChatLogFolderPath, monday, monday.AddDays(6));
+                    general += g;
+                    rubicona += r;
+                }
+
+                if (_currentMonthStart != monthStart)
+                    return;
+
+                MonthlySeedTotalText = $"클리어 보상 시드 합계: {WeeklySeedRewardService.FormatSeed(general + rubicona)}";
+                MonthlySeedDetailText = $"일반지역 {WeeklySeedRewardService.FormatSeed(general)} · 루비코나 {WeeklySeedRewardService.FormatSeed(rubicona)}";
+            }
+            catch (Exception ex)
+            {
+                AppLogger.Warn("Failed to refresh monthly seed summary.", ex);
+            }
+        }
+
         public string MonthText
         {
             get => _monthText;
@@ -233,6 +293,8 @@ namespace TWChatOverlay.Views
                 MonthlyAbandonSummary.Clear();
                 MonthlyAbandonSeedText = "어밴던로드 누적 합계: 0 Seed";
                 MonthlyExperienceEssenceSeedText = "경험의 정수 누적 합계: 0개";
+                MonthlySeedTotalText = "클리어 보상 시드 합계: 0";
+                MonthlySeedDetailText = string.Empty;
                 SetLoadingState(false, "로그를 불러오지 못했습니다.");
                 return;
             }
@@ -242,6 +304,7 @@ namespace TWChatOverlay.Views
 
             ApplyLoadedMonth(monthStart, data.Snapshots, data.AbandonSummary);
             SetLoadingState(false, string.Empty);
+            _ = RefreshMonthlySeedSummaryAsync(monthStart);
         }
 
         /// <summary>
@@ -269,11 +332,37 @@ namespace TWChatOverlay.Views
             return result;
         }
 
+        /// <summary>
+        /// 주간 득템 통계용: 기간 내 경험의 정수 획득 개수를 합산한다 (달력과 같은 아카이브 소스).
+        /// </summary>
+        internal static long ReadExperienceEssenceCountForRange(DateTime startDate, DateTime endDate)
+        {
+            long total = 0;
+            if (!Directory.Exists(ExpDirectoryPath))
+                return total;
+
+            foreach (string path in Directory.EnumerateFiles(ExpDirectoryPath, "*.html").OrderBy(p => p, StringComparer.OrdinalIgnoreCase))
+            {
+                foreach (var entry in ReadExpEntries(path))
+                {
+                    if (entry.LogDate.Date < startDate.Date || entry.LogDate.Date > endDate.Date)
+                        continue;
+
+                    if (TryExtractExperienceEssenceGain(entry.Text, out int gain))
+                        total += gain;
+                }
+            }
+
+            return total;
+        }
+
         /// <summary>도움말/README 렌더 전용: 주어진 샘플 스냅샷으로 이번 달 달력을 구성한다. (파일 IO 없음)</summary>
         internal void ApplySampleMonthForRender(IReadOnlyList<ItemLogSnapshotEntry> snapshots)
         {
             DateTime monthStart = GetMonthStart(DateTime.Today);
             ApplyLoadedMonth(monthStart, snapshots, new AbandonMonthlySummarySnapshotEntry { MonthStart = monthStart });
+            MonthlySeedTotalText = "클리어 보상 시드 합계: 376.15억";
+            MonthlySeedDetailText = "일반지역 264.15억 · 루비코나 112억";
             SetLoadingState(false, string.Empty);
         }
 
