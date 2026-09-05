@@ -1048,6 +1048,26 @@ namespace TWChatOverlay.Views
         private void Refresh_Click(object sender, RoutedEventArgs e)
             => _ = RefreshCurrentMonthAsync();
 
+        private void Help_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is not System.Windows.Controls.Button button || button.Tag is not string key)
+                return;
+
+            System.Windows.Point? anchor = null;
+            try
+            {
+                // 버튼 오른쪽 살짝 위 지점 (장치 px → DIP 변환)
+                var devicePoint = button.PointToScreen(new System.Windows.Point(button.ActualWidth + 8, -4));
+                var source = PresentationSource.FromVisual(button);
+                anchor = source?.CompositionTarget != null
+                    ? source.CompositionTarget.TransformFromDevice.Transform(devicePoint)
+                    : devicePoint;
+            }
+            catch { }
+
+            HelpWindow.ShowTopic(key, this, anchor);
+        }
+
         private void Close_Click(object sender, RoutedEventArgs e)
             => Close();
 

@@ -27,6 +27,42 @@
             <Setter Property="FontSize" Value="12"/>
             <Setter Property="MinWidth" Value="34"/>
         </Style>
+        <!-- 도움말 [?] 버튼 (설정 화면과 동일한 모양) -->
+        <Style x:Key="HelpButtonStyle" TargetType="Button">
+            <Setter Property="Width" Value="16"/>
+            <Setter Property="Height" Value="16"/>
+            <Setter Property="Margin" Value="7,0,0,0"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Focusable" Value="False"/>
+            <Setter Property="ToolTip" Value="집계 방식 설명"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Bd"
+                                Background="Transparent"
+                                BorderBrush="{DynamicResource OverlayHintTextBrush}"
+                                BorderThickness="1"
+                                CornerRadius="8">
+                            <TextBlock x:Name="Glyph"
+                                       Text="?"
+                                       FontSize="10"
+                                       FontWeight="Bold"
+                                       Foreground="{DynamicResource OverlayHintTextBrush}"
+                                       HorizontalAlignment="Center"
+                                       VerticalAlignment="Center"
+                                       Margin="0,-1,0,0"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource OverlayAccentTextBrush}"/>
+                                <Setter TargetName="Glyph" Property="Foreground" Value="{DynamicResource OverlayAccentTextBrush}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
     </Window.Resources>
 
     <Border Background="{DynamicResource OverlayWindowBackgroundBrush}"
@@ -121,11 +157,15 @@
 
                     <StackPanel HorizontalAlignment="Center"
                                 VerticalAlignment="Center">
-                        <TextBlock Text="아이템 획득 내역"
-                                   Foreground="{DynamicResource OverlayTitleAccentTextBrush}"
-                                   FontSize="18"
-                                   FontWeight="Bold"
-                                   HorizontalAlignment="Center"/>
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                            <TextBlock Text="아이템 획득 내역"
+                                       Foreground="{DynamicResource OverlayTitleAccentTextBrush}"
+                                       FontSize="18"
+                                       FontWeight="Bold"/>
+                            <Button Style="{StaticResource HelpButtonStyle}"
+                                    Tag="calendar.aggregation"
+                                    Click="Help_Click"/>
+                        </StackPanel>
                         <TextBlock Text="{Binding MonthText}"
                                    Foreground="{DynamicResource OverlayHintTextBrush}"
                                    FontSize="12"

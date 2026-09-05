@@ -158,6 +158,14 @@ namespace TWChatOverlay.Services
                 "이동 중에는 좌표·크기 안내 창이 최상단에 표시됩니다.\n",
                 new[] { "display_unlock_off.png", "display_unlock_on.png" }),
 
+            ["calendar.aggregation"] = (
+                "달력 집계 방식",
+                "클리어 보상 시드와 어밴던로드 누적 합계는 주 시작일인 '월요일'이\n" +
+                "이 달에 포함된 주간만 모아서 합산합니다.\n" +
+                "예) 월요일이 지난달 말이면 그 주는 지난달 합계에 포함됩니다.\n" +
+                "달력의 일별 아이템·경험의 정수 표시는 실제 날짜 기준입니다.",
+                null),
+
             ["display.toast_unified"] = (
                 "알림 표시 위치 통합",
                 "켜면 외치기·던전 도우미·누적 경험치·아이템 획득·필드 보스 알림이\n" +
