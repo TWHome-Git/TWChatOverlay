@@ -25,5 +25,7 @@ namespace TWChatOverlay.Services
         public const string AppRepoOwner = "TWHome-Git";
         public const string AppRepoName = "TWChatOverlay";
         public const string LatestReleaseApi = "https://api.github.com/repos/" + AppRepoOwner + "/" + AppRepoName + "/releases/latest";
+        // 프리릴리즈(베타) 포함 목록 — 수동 업데이트에서 사용. /releases/latest는 프리릴리즈를 제외한다.
+        public const string ReleaseListApi = "https://api.github.com/repos/" + AppRepoOwner + "/" + AppRepoName + "/releases?per_page=10";
     }
 }
