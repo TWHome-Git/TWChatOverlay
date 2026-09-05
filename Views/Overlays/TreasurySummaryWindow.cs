@@ -202,12 +202,18 @@ namespace TWChatOverlay.Views
             base.OnClosed(e);
         }
 
+        // 금화 주머니 1개당 시드 가치 (50만)
+        private const long GoldPouchSeedValue = 500_000;
+
+        private static string FormatGoldValue(long count)
+            => WeeklySeedRewardService.FormatSeed(count * GoldPouchSeedValue);
+
         private void UpdateState(IReadOnlyList<int> runCounts, int currentRun)
         {
             for (int i = 0; i < MaxRuns; i++)
             {
                 bool started = i < runCounts.Count;
-                _runValues[i].Text = started ? $"{runCounts[i]}개" : "-";
+                _runValues[i].Text = started ? $"{runCounts[i]}개 · {FormatGoldValue(runCounts[i])}" : "-";
                 bool isCurrent = i == currentRun - 1;
                 _runLabels[i].FontWeight = isCurrent ? FontWeights.Bold : FontWeights.Normal;
                 _runValues[i].SetResourceReference(TextBlock.ForegroundProperty,
@@ -215,7 +221,7 @@ namespace TWChatOverlay.Views
             }
 
             int total = runCounts.Sum();
-            _totalText.Text = $"{total}개";
+            _totalText.Text = $"{total}개 · {FormatGoldValue(total)}";
             _averageText.Text = runCounts.Count > 0
                 ? $"{(double)total / runCounts.Count:F1}개"
                 : "-";
