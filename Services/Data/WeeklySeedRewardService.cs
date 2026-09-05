@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
+using System.Linq;
+using System.Net;
 using System.Text;
-using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using TWChatOverlay.Models;
@@ -170,9 +172,10 @@ namespace TWChatOverlay.Services
         private static readonly Regex HtmlTagRegex = new("<[^>]+>", RegexOptions.Compiled);
 
         /// <summary>
-        /// 주간 범위의 게임 로그에서 클리어 보상 시드 획득 줄을 직접 합산 — 일반과 루비코나 분리.
-        /// 지나간 날짜의 결과는 Logs/_state의 일 단위 캐시에 보관해 각 로그 파일을 한 번만 스캔한다
-        /// (게임은 당일 파일에만 이어 쓰므로 지난 날 합계는 불변).
+        /// 주간 범위의 클리어 보상 시드를 합산 — 주간(일반)과 일간(루비코나) 분리.
+        /// 결과는 Logs/Seed/SeedHistory.html 한 파일에 원본 줄과 함께 보관한다.
+        /// 지나간 날짜는 보관본을 재사용하므로 게임 로그 파일은 각각 한 번만 스캔되고,
+        /// 게임 로그를 삭제해도 보관된 이력은 유지된다.
         /// </summary>
         public static async Task<(long General, long Rubicona)> SumWeeklyClearSeedAsync(
             string logDir, DateTime weekStart, DateTime weekEnd)
@@ -181,66 +184,63 @@ namespace TWChatOverlay.Services
             {
                 long general = 0;
                 long rubicona = 0;
-                if (string.IsNullOrWhiteSpace(logDir) || !Directory.Exists(logDir))
-                    return (general, rubicona);
-
                 DateTime today = DateTime.Today;
-                bool cacheDirty = false;
-                lock (CacheLock)
+
+                lock (ArchiveLock)
                 {
-                    var cache = LoadDailyCache();
+                    var archive = LoadArchive();
+                    bool dirty = false;
+
                     for (DateTime day = weekStart.Date; day <= weekEnd.Date; day = day.AddDays(1))
                     {
                         if (day > today)
                             break;
 
                         string key = day.ToString("yyyy-MM-dd");
-                        long[]? entry;
-                        if (day < today && cache.TryGetValue(key, out entry) && entry?.Length == 2)
+                        if (!(day < today && archive.TryGetValue(key, out List<SeedEntry>? entries)))
                         {
-                            general += entry[0];
-                            rubicona += entry[1];
-                            continue;
+                            // 미보관 날짜(또는 아직 자라는 오늘 파일)는 게임 로그를 스캔한다
+                            string path = string.IsNullOrWhiteSpace(logDir)
+                                ? string.Empty
+                                : Path.Combine(logDir, $"TWChatLog_{day:yyyy_MM_dd}.html");
+                            entries = path.Length > 0 && File.Exists(path)
+                                ? ScanDayFile(path)
+                                : new List<SeedEntry>();
+
+                            archive.TryGetValue(key, out var previous);
+                            if (previous is null || previous.Count != entries.Count || SumOf(previous) != SumOf(entries))
+                                dirty = true;
+                            archive[key] = entries;
                         }
 
-                        string path = Path.Combine(logDir, $"TWChatLog_{day:yyyy_MM_dd}.html");
-                        if (!File.Exists(path))
+                        foreach (var entry in entries!)
                         {
-                            // 파일이 없는 지난 날도 캐시해 매번 디스크 확인을 피한다
-                            if (day < today && !cache.ContainsKey(key))
-                            {
-                                cache[key] = new long[] { 0, 0 };
-                                cacheDirty = true;
-                            }
-                            continue;
-                        }
-
-                        var (g, r) = ScanDayFile(path);
-                        general += g;
-                        rubicona += r;
-
-                        // 당일 파일은 아직 자라는 중이므로 캐시하지 않는다
-                        if (day < today)
-                        {
-                            cache[key] = new long[] { g, r };
-                            cacheDirty = true;
+                            if (entry.Kind == KindDaily)
+                                rubicona += entry.Amount;
+                            else
+                                general += entry.Amount;
                         }
                     }
 
-                    if (cacheDirty)
-                        SaveDailyCache(cache);
+                    if (dirty)
+                        SaveArchive(archive);
                 }
 
                 return (general, rubicona);
             }).ConfigureAwait(false);
         }
 
-        /// <summary>하루치 로그 파일에서 (일반, 루비코나) 시드 합계를 스캔.</summary>
-        private static (long General, long Rubicona) ScanDayFile(string path)
+        private const string KindWeekly = "weekly";   // 주간 버킷
+        private const string KindDaily = "daily";     // 일간 버킷 (루비코나 환희·슬픔)
+        private const string KindPartial = "partial"; // 주간 한도 직전 부분 지급 (주간 버킷에 합산)
+
+        private sealed record SeedEntry(string Kind, long Amount, string Text);
+
+        /// <summary>하루치 게임 로그에서 시드 획득 줄을 추출·분류한다.</summary>
+        private static List<SeedEntry> ScanDayFile(string path)
         {
-            long general = 0;
-            long rubicona = 0;
-            var seedEvents = new List<(int LineIndex, long Value)>();
+            var entries = new List<SeedEntry>();
+            var seedEvents = new List<(int LineIndex, long Value, string Text)>();
             var markerIndices = new List<int>();
 
             try
@@ -271,7 +271,8 @@ namespace TWChatOverlay.Services
                                 clipped += long.Parse(partial.Groups["eok"].Value) * Eok;
                             if (partial.Groups["man"].Success)
                                 clipped += long.Parse(partial.Groups["man"].Value) * Man;
-                            general += clipped;
+                            if (clipped > 0)
+                                entries.Add(new SeedEntry(KindPartial, clipped, text.Trim()));
                         }
                         continue;
                     }
@@ -303,22 +304,19 @@ namespace TWChatOverlay.Services
                     if (match.Groups["man"].Success)
                         value += long.Parse(match.Groups["man"].Value) * Man;
                     if (value > 0)
-                        seedEvents.Add((lineIndex, value));
+                        seedEvents.Add((lineIndex, value, text.Trim()));
                 }
 
                 // 루비코나 몫은 시드 줄 주변(앞 3줄/뒤 8줄)의 "레이티아/설계자 퇴치 보상" 줄로 판별
                 // (금액 2억만으로는 최후의 결전과 구분되지 않음)
                 int markerCursor = 0;
-                foreach (var (index, value) in seedEvents)
+                foreach (var (index, value, lineText) in seedEvents)
                 {
                     while (markerCursor < markerIndices.Count && markerIndices[markerCursor] < index - 3)
                         markerCursor++;
                     bool isRubicona = markerCursor < markerIndices.Count &&
                                       markerIndices[markerCursor] <= index + 8;
-                    if (isRubicona)
-                        rubicona += value;
-                    else
-                        general += value;
+                    entries.Add(new SeedEntry(isRubicona ? KindDaily : KindWeekly, value, lineText));
                 }
             }
             catch (Exception ex)
@@ -326,45 +324,157 @@ namespace TWChatOverlay.Services
                 AppLogger.Warn($"Failed to scan seed rewards from {path}.", ex);
             }
 
-            return (general, rubicona);
+            return entries;
         }
 
-        private static readonly object CacheLock = new();
-        private static Dictionary<string, long[]>? _dailyCache;
+        private static readonly object ArchiveLock = new();
+        private static SortedDictionary<string, List<SeedEntry>>? _archive;
 
-        private static string DailyCachePath => Path.Combine(LogStoragePaths.StateDirectory, "seed_daily.json");
+        private static string ArchivePath => Path.Combine(LogStoragePaths.SeedDirectory, "SeedHistory.html");
 
-        private static Dictionary<string, long[]> LoadDailyCache()
+        private static readonly Regex ArchiveEntryRegex = new(
+            "<div class=\"seed (?<kind>weekly|daily|partial)\" data-date=\"(?<date>\\d{4}-\\d{2}-\\d{2})\" data-amount=\"(?<amount>\\d+)\">(?<text>.*?)</div>",
+            RegexOptions.Compiled);
+
+        private static readonly Regex ArchiveDayRegex = new(
+            "class=\"day\" data-day=\"(?<date>\\d{4}-\\d{2}-\\d{2})\"",
+            RegexOptions.Compiled);
+
+        private static DateTime ParseDateKey(string key)
+            => DateTime.ParseExact(key, "yyyy-MM-dd", CultureInfo.InvariantCulture);
+
+        private static DateTime GetWeekStartOf(DateTime date)
+            => date.AddDays(-(((int)date.DayOfWeek + 6) % 7));
+
+        private static long SumOf(List<SeedEntry> entries)
         {
-            if (_dailyCache is not null)
-                return _dailyCache;
+            long sum = 0;
+            foreach (var entry in entries)
+                sum += entry.Amount;
+            return sum;
+        }
 
+        private static SortedDictionary<string, List<SeedEntry>> LoadArchive()
+        {
+            if (_archive is not null)
+                return _archive;
+
+            var result = new SortedDictionary<string, List<SeedEntry>>(StringComparer.Ordinal);
             try
             {
-                if (File.Exists(DailyCachePath))
+                if (File.Exists(ArchivePath))
                 {
-                    string json = File.ReadAllText(DailyCachePath);
-                    _dailyCache = JsonSerializer.Deserialize<Dictionary<string, long[]>>(json);
+                    foreach (string line in File.ReadLines(ArchivePath))
+                    {
+                        var dayMatch = ArchiveDayRegex.Match(line);
+                        if (dayMatch.Success)
+                        {
+                            string dayKey = dayMatch.Groups["date"].Value;
+                            if (!result.ContainsKey(dayKey))
+                                result[dayKey] = new List<SeedEntry>();
+                            continue;
+                        }
+
+                        var entryMatch = ArchiveEntryRegex.Match(line);
+                        if (!entryMatch.Success)
+                            continue;
+
+                        string key = entryMatch.Groups["date"].Value;
+                        if (!result.TryGetValue(key, out var list))
+                        {
+                            list = new List<SeedEntry>();
+                            result[key] = list;
+                        }
+                        list.Add(new SeedEntry(
+                            entryMatch.Groups["kind"].Value,
+                            long.Parse(entryMatch.Groups["amount"].Value),
+                            WebUtility.HtmlDecode(entryMatch.Groups["text"].Value)));
+                    }
                 }
+
+                // 구버전 합계 캐시는 아카이브로 대체되었으므로 정리한다
+                string legacyCache = Path.Combine(LogStoragePaths.StateDirectory, "seed_daily.json");
+                if (File.Exists(legacyCache))
+                    File.Delete(legacyCache);
             }
             catch (Exception ex)
             {
-                AppLogger.Warn("Failed to load seed daily cache.", ex);
+                AppLogger.Warn("Failed to load seed history archive.", ex);
             }
 
-            return _dailyCache ??= new Dictionary<string, long[]>();
+            return _archive = result;
         }
 
-        private static void SaveDailyCache(Dictionary<string, long[]> cache)
+        /// <summary>아카이브를 주별 섹션·합계가 붙은 열람용 HTML로 통째로 다시 쓴다.</summary>
+        private static void SaveArchive(SortedDictionary<string, List<SeedEntry>> archive)
         {
             try
             {
-                Directory.CreateDirectory(LogStoragePaths.StateDirectory);
-                File.WriteAllText(DailyCachePath, JsonSerializer.Serialize(cache));
+                Directory.CreateDirectory(LogStoragePaths.SeedDirectory);
+
+                var sb = new StringBuilder();
+                sb.AppendLine("<!doctype html>");
+                sb.AppendLine("<html lang=\"ko\">");
+                sb.AppendLine("<head>");
+                sb.AppendLine("  <meta charset=\"utf-8\" />");
+                sb.AppendLine("  <title>시드 획득 내역</title>");
+                sb.AppendLine("  <style>");
+                sb.AppendLine("    body{background:#111;color:#eee;font-family:'Malgun Gothic',sans-serif;font-size:13px;line-height:1.5;padding:16px;}");
+                sb.AppendLine("    h1{font-size:17px;margin:0 0 4px;}");
+                sb.AppendLine("    h2{color:#9ad3ff;border-bottom:1px solid rgba(154,211,255,.35);padding-bottom:4px;margin:20px 0 8px;font-size:15px;}");
+                sb.AppendLine("    h3{color:#c9d1d9;margin:10px 0 4px;font-size:13px;font-weight:600;}");
+                sb.AppendLine("    .seed{margin:1px 0;color:#aab3bb;}");
+                sb.AppendLine("    .seed.daily{color:#7ec8ff;}");
+                sb.AppendLine("    .seed.partial{color:#ffc266;}");
+                sb.AppendLine("    .note{color:#888;margin:0 0 8px;}");
+                sb.AppendLine("  </style>");
+                sb.AppendLine("</head>");
+                sb.AppendLine("<body>");
+                sb.AppendLine("<h1>시드 획득 내역</h1>");
+                sb.AppendLine("<p class=\"note\">TWChatOverlay가 게임 로그에서 수집한 클리어 보상 시드 기록입니다. 파란색은 일간(루비코나), 주황색은 주간 한도 직전 부분 지급입니다. 앱이 다시 읽는 데이터 파일이므로 내용을 직접 수정하지 마세요.</p>");
+
+                foreach (var weekGroup in archive
+                             .GroupBy(kv => GetWeekStartOf(ParseDateKey(kv.Key)))
+                             .OrderBy(g => g.Key))
+                {
+                    DateTime ws = weekGroup.Key;
+                    DateTime we = ws.AddDays(6);
+                    long weekly = 0, daily = 0;
+                    foreach (var kv in weekGroup)
+                        foreach (var entry in kv.Value)
+                        {
+                            if (entry.Kind == KindDaily) daily += entry.Amount;
+                            else weekly += entry.Amount;
+                        }
+
+                    sb.AppendLine($"<h2 data-week=\"{ws:yyyy-MM-dd}\">{ws:M/d(ddd)} ~ {we:M/d(ddd)} — 주간 {FormatSeed(weekly)} · 일간 {FormatSeed(daily)} · 합계 {FormatSeed(weekly + daily)}</h2>");
+
+                    foreach (var kv in weekGroup.OrderBy(kv => kv.Key, StringComparer.Ordinal))
+                    {
+                        long dayWeekly = 0, dayDaily = 0;
+                        foreach (var entry in kv.Value)
+                        {
+                            if (entry.Kind == KindDaily) dayDaily += entry.Amount;
+                            else dayWeekly += entry.Amount;
+                        }
+
+                        string dayLabel = kv.Value.Count == 0
+                            ? "기록 없음"
+                            : $"주간 {FormatSeed(dayWeekly)} · 일간 {FormatSeed(dayDaily)}";
+                        sb.AppendLine($"<h3 class=\"day\" data-day=\"{kv.Key}\">{ParseDateKey(kv.Key):M/d(ddd)} — {dayLabel}</h3>");
+
+                        foreach (var entry in kv.Value)
+                            sb.AppendLine($"<div class=\"seed {entry.Kind}\" data-date=\"{kv.Key}\" data-amount=\"{entry.Amount}\">{WebUtility.HtmlEncode(entry.Text)}</div>");
+                    }
+                }
+
+                sb.AppendLine("</body>");
+                sb.AppendLine("</html>");
+                File.WriteAllText(ArchivePath, sb.ToString(), new UTF8Encoding(encoderShouldEmitUTF8Identifier: true));
             }
             catch (Exception ex)
             {
-                AppLogger.Warn("Failed to save seed daily cache.", ex);
+                AppLogger.Warn("Failed to save seed history archive.", ex);
             }
         }
 
