@@ -88,7 +88,7 @@
             <ItemsControl Grid.Row="2" ItemsSource="{Binding StoneEntries}">
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
-                        <DockPanel Margin="2,1,2,1" LastChildFill="True">
+                        <DockPanel Margin="2,4,2,4" LastChildFill="True">
                             <TextBlock Text="{Binding CountText}"
                                        Foreground="{Binding CountForegroundHex}"
                                        FontSize="13"
