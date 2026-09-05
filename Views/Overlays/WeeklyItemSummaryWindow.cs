@@ -22,6 +22,8 @@ namespace TWChatOverlay.Views
         private readonly ChatSettings? _settings;
         private readonly TextBlock _seedGeneralText;
         private readonly TextBlock _seedRubiconaText;
+        private readonly TextBlock _seedOtherText;
+        private readonly UIElement _seedOtherRow;
         private readonly TextBlock _subtitleText;
         private readonly Button _prevWeekButton;
         private readonly Button _nextWeekButton;
@@ -117,6 +119,10 @@ namespace TWChatOverlay.Views
             body.Children.Add(header);
             body.Children.Add(BuildSeedRow("클리어 보상 시드 (일반지역)", new Thickness(2, 0, 2, 2), out _seedGeneralText));
             body.Children.Add(BuildSeedRow("클리어 보상 시드 (루비코나)", new Thickness(2, 0, 2, 8), out _seedRubiconaText));
+            // 과거(개편 전) 주에만 존재하는 한도 외 몫 — 값이 있을 때만 표시
+            _seedOtherRow = BuildSeedRow("클리어 보상 시드 (기타)", new Thickness(2, 0, 2, 8), out _seedOtherText);
+            _seedOtherRow.Visibility = Visibility.Collapsed;
+            body.Children.Add(_seedOtherRow);
             body.Children.Add(scroll);
 
             var root = new Border
@@ -180,6 +186,7 @@ namespace TWChatOverlay.Views
 
             _seedGeneralText.Text = "계산 중…";
             _seedRubiconaText.Text = "계산 중…";
+            _seedOtherRow.Visibility = Visibility.Collapsed;
             LoadSeedSummaryAsync();
         }
 
@@ -251,11 +258,13 @@ namespace TWChatOverlay.Views
                 var (general, rubicona) = await WeeklySeedRewardService.SumWeeklyClearSeedAsync(
                     _settings.ChatLogFolderPath, _weekStart, _weekEnd);
                 if (!IsLoaded || version != _loadVersion) return;
-                (general, rubicona) = WeeklySeedRewardService.SplitWeeklyDaily(_weekStart, general, rubicona);
+                (general, long other) = WeeklySeedRewardService.SplitWeeklyOverflow(_weekStart, general);
                 string generalText = WeeklySeedRewardService.FormatSeed(general);
                 string rubiconaText = WeeklySeedRewardService.FormatSeed(rubicona);
                 _seedGeneralText.Text = isCurrentWeek ? $"{generalText} / {generalCapText}" : generalText;
                 _seedRubiconaText.Text = isCurrentWeek ? $"{rubiconaText} / {rubiconaCapText}" : rubiconaText;
+                _seedOtherRow.Visibility = other > 0 ? Visibility.Visible : Visibility.Collapsed;
+                _seedOtherText.Text = WeeklySeedRewardService.FormatSeed(other);
             }
             catch (Exception ex)
             {
