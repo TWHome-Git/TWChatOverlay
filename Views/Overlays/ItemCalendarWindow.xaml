@@ -156,7 +156,7 @@
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
                                     <Border Margin="4"
-                                            Padding="10"
+                                            Padding="8,6,8,6"
                                             CornerRadius="8"
                                             BorderThickness="1"
                                             BorderBrush="{DynamicResource OverlayCardBorderBrush}"
@@ -172,7 +172,7 @@
                                                     BorderBrush="{DynamicResource OverlayCardBorderBrush}"
                                                     BorderThickness="1"
                                                     CornerRadius="6"
-                                                    Padding="6,4">
+                                                    Padding="6,2">
                                                 <TextBlock Text="{Binding DateLabel}"
                                                            Foreground="{DynamicResource TextBrush}"
                                                            FontSize="12"
@@ -181,12 +181,12 @@
                                             </Border>
 
                                             <ScrollViewer Grid.Row="1"
-                                                          Margin="0,10,0,0"
+                                                          Margin="0,6,0,0"
                                                           VerticalScrollBarVisibility="Hidden"
                                                           HorizontalScrollBarVisibility="Disabled"
                                                           CanContentScroll="False"
                                                           VerticalAlignment="Stretch"
-                                                          Padding="0,0,0,20">
+                                                          Padding="0,0,0,14">
                                                 <!-- Top 고정: 스크롤 영역이 세로로 늘려도 항목 높이가 커지지 않게 -->
                                                 <ItemsControl ItemsSource="{Binding Entries}" VerticalAlignment="Top">
                                                     <ItemsControl.Style>
