@@ -16,6 +16,8 @@ namespace TWChatOverlay
             public string FormattedText { get; set; } = "";
             public SolidColorBrush Brush { get; set; } = Brushes.White;
             public ChatCategory Category { get; set; } = ChatCategory.Unknown;
+            /// <summary>외치기 줄의 세부 종류(무료/유료/공지). Category가 Shout일 때만 뜻이 있다.</summary>
+            public ShoutKind ShoutKind { get; set; } = ShoutKind.Notice;
             public bool IsSuccess { get; set; } = false;
             public bool IsHighlight { get; set; } = false;
             public bool IsMagicCircleAlert { get; set; } = false;
@@ -44,7 +46,7 @@ namespace TWChatOverlay
         {
             return tabTag switch
             {
-                "Basic" => IsVisible(log.Category, settings),
+                "Basic" => IsVisible(log, settings),
                 "General" => log.Category is ChatCategory.NormalSelf or ChatCategory.Normal && settings.ShowNormal,
                 "Team" => log.Category == ChatCategory.Team,
                 "Club" => log.Category == ChatCategory.Club,
@@ -54,6 +56,22 @@ namespace TWChatOverlay
                 "All" => true,
                 _ => false
             };
+        }
+
+        /// <summary>줄 단위 표시 여부. 외치기는 무료/유료/공지 종류별 설정을 따른다.</summary>
+        public static bool IsVisible(ParseResult log, ChatSettings settings)
+        {
+            if (log.Category == ChatCategory.Shout)
+            {
+                return log.ShoutKind switch
+                {
+                    ShoutKind.Free => settings.ShowFreeShout,
+                    ShoutKind.Paid => settings.ShowPaidShout,
+                    _ => settings.ShowNoticeShout,
+                };
+            }
+
+            return IsVisible(log.Category, settings);
         }
 
         public static bool IsVisible(ChatCategory category, ChatSettings settings)

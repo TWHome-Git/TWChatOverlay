@@ -138,6 +138,48 @@ namespace TWChatOverlay.ViewModels
             }
         }
 
+        public bool ShowFreeShout
+        {
+            get => _settings.ShowFreeShout;
+            set
+            {
+                if (_settings.ShowFreeShout != value)
+                {
+                    _settings.ShowFreeShout = value;
+                    OnPropertyChanged();
+                    SaveSettings();
+                }
+            }
+        }
+
+        public bool ShowPaidShout
+        {
+            get => _settings.ShowPaidShout;
+            set
+            {
+                if (_settings.ShowPaidShout != value)
+                {
+                    _settings.ShowPaidShout = value;
+                    OnPropertyChanged();
+                    SaveSettings();
+                }
+            }
+        }
+
+        public bool ShowNoticeShout
+        {
+            get => _settings.ShowNoticeShout;
+            set
+            {
+                if (_settings.ShowNoticeShout != value)
+                {
+                    _settings.ShowNoticeShout = value;
+                    OnPropertyChanged();
+                    SaveSettings();
+                }
+            }
+        }
+
         public bool ShowEtaLevel
         {
             get => _settings.ShowEtaLevel;
@@ -201,6 +243,20 @@ namespace TWChatOverlay.ViewModels
             {
                 if (_settings.OverlaysAlwaysOnTop == value) return;
                 _settings.OverlaysAlwaysOnTop = value;
+                OnPropertyChanged();
+                SaveSettings();
+            }
+        }
+
+        /// <summary>항상 위를 다시 올릴 대상 프로세스 이름(쉼표 구분). 이 앱이 전경일 때만 오버레이를 재승격한다.</summary>
+        public string TopmostGuardProcessNames
+        {
+            get => _settings.TopmostGuardProcessNames;
+            set
+            {
+                string next = value ?? string.Empty;
+                if (string.Equals(_settings.TopmostGuardProcessNames, next, StringComparison.Ordinal)) return;
+                _settings.TopmostGuardProcessNames = next;
                 OnPropertyChanged();
                 SaveSettings();
             }
@@ -380,6 +436,21 @@ namespace TWChatOverlay.ViewModels
         public Brush ShoutColor
         {
             get => StringToBrush(_settings.ShoutColor);
+        }
+
+        public Brush FreeShoutColor
+        {
+            get => StringToBrush(_settings.FreeShoutColor);
+        }
+
+        public Brush PaidShoutColor
+        {
+            get => StringToBrush(_settings.PaidShoutColor);
+        }
+
+        public Brush NoticeShoutColor
+        {
+            get => StringToBrush(_settings.NoticeShoutColor);
         }
 
         public Brush SystemColor
@@ -720,6 +791,9 @@ namespace TWChatOverlay.ViewModels
                 "Team" => TeamColor,
                 "Club" => ClubColor,
                 "Shout" => ShoutColor,
+                "ShoutFree" => FreeShoutColor,
+                "ShoutPaid" => PaidShoutColor,
+                "ShoutNotice" => NoticeShoutColor,
                 "System" => SystemColor,
                 "EtaCharacter" => EtaCharacterColor,
                 "Timestamp" => TimestampColor,
@@ -745,6 +819,9 @@ namespace TWChatOverlay.ViewModels
                 OnPropertyChanged(nameof(TeamColor));
                 OnPropertyChanged(nameof(ClubColor));
                 OnPropertyChanged(nameof(ShoutColor));
+                OnPropertyChanged(nameof(FreeShoutColor));
+                OnPropertyChanged(nameof(PaidShoutColor));
+                OnPropertyChanged(nameof(NoticeShoutColor));
                 OnPropertyChanged(nameof(SystemColor));
                 OnPropertyChanged(nameof(EtaCharacterColor));
                 OnPropertyChanged(nameof(TimestampColor));
@@ -835,6 +912,9 @@ namespace TWChatOverlay.ViewModels
             OnPropertyChanged(nameof(ShowClub));
             OnPropertyChanged(nameof(ShowClubBoss));
             OnPropertyChanged(nameof(ShowShout));
+            OnPropertyChanged(nameof(ShowFreeShout));
+            OnPropertyChanged(nameof(ShowPaidShout));
+            OnPropertyChanged(nameof(ShowNoticeShout));
             OnPropertyChanged(nameof(ShowSystem));
             OnPropertyChanged(nameof(ShowEtaLevel));
             OnPropertyChanged(nameof(ShowEtaCharacter));
@@ -871,6 +951,9 @@ namespace TWChatOverlay.ViewModels
             OnPropertyChanged(nameof(TeamColor));
             OnPropertyChanged(nameof(ClubColor));
             OnPropertyChanged(nameof(ShoutColor));
+            OnPropertyChanged(nameof(FreeShoutColor));
+            OnPropertyChanged(nameof(PaidShoutColor));
+            OnPropertyChanged(nameof(NoticeShoutColor));
             OnPropertyChanged(nameof(SystemColor));
             OnPropertyChanged(nameof(FontSize));
             OnPropertyChanged(nameof(FontFamily));

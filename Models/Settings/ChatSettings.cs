@@ -100,6 +100,21 @@ namespace TWChatOverlay.Models
         [JsonIgnore]
         public string ShoutColor { get => Chat.Filters.ShoutColor; set { Chat.Filters.ShoutColor = value; OnPropertyChanged(); } }
 
+        // 외치기 세부 종류. 값이 없으면 기존 ShowShout·ShoutColor를 물려받아 옛 설정 파일과 그대로 이어진다.
+        // 유료 외치기 색만은 물려받을 값이 없을 때 게임의 외치기 색(#C896C8)을 써서 무료와 구분되게 한다.
+        [JsonIgnore]
+        public bool ShowFreeShout { get => Chat.Filters.ShowFreeShout ?? Chat.Filters.ShowShout; set { Chat.Filters.ShowFreeShout = value; OnPropertyChanged(); } }
+        [JsonIgnore]
+        public bool ShowPaidShout { get => Chat.Filters.ShowPaidShout ?? Chat.Filters.ShowShout; set { Chat.Filters.ShowPaidShout = value; OnPropertyChanged(); } }
+        [JsonIgnore]
+        public bool ShowNoticeShout { get => Chat.Filters.ShowNoticeShout ?? Chat.Filters.ShowShout; set { Chat.Filters.ShowNoticeShout = value; OnPropertyChanged(); } }
+        [JsonIgnore]
+        public string FreeShoutColor { get => Chat.Filters.FreeShoutColor ?? Chat.Filters.ShoutColor; set { Chat.Filters.FreeShoutColor = value; OnPropertyChanged(); } }
+        [JsonIgnore]
+        public string PaidShoutColor { get => Chat.Filters.PaidShoutColor ?? "#C896C8"; set { Chat.Filters.PaidShoutColor = value; OnPropertyChanged(); } }
+        [JsonIgnore]
+        public string NoticeShoutColor { get => Chat.Filters.NoticeShoutColor ?? Chat.Filters.ShoutColor; set { Chat.Filters.NoticeShoutColor = value; OnPropertyChanged(); } }
+
         #endregion
 
         #region 아이디 표시 (facade)
@@ -1158,6 +1173,9 @@ namespace TWChatOverlay.Models
         /// <summary>오버레이 항상 위. 끄면 처음 실행 때만 위에 두고, 이후에는 일반 창처럼 동작.</summary>
         [JsonIgnore]
         public bool OverlaysAlwaysOnTop { get => Ui.OverlaysAlwaysOnTop; set { Ui.OverlaysAlwaysOnTop = value; OnPropertyChanged(); } }
+        /// <summary>항상 위를 다시 올릴 대상 프로세스 이름(쉼표 구분). 이 앱이 전경일 때만 오버레이를 재승격한다.</summary>
+        [JsonIgnore]
+        public string TopmostGuardProcessNames { get => Ui.TopmostGuardProcessNames; set { Ui.TopmostGuardProcessNames = value ?? string.Empty; OnPropertyChanged(); } }
 
         /// <summary>메인·서브 채팅창과 자동으로 뜨는 창의 통합 배경 불투명도(%). 20~100. 텍스트는 항상 불투명.</summary>
         [JsonIgnore]

@@ -44,6 +44,14 @@ namespace TWChatOverlay.Models
         public string ClubColor { get; set; } = "#00FF00";
         public string SystemColor { get; set; } = "#FFFF00";
         public string ShoutColor { get; set; } = "#FF8000";
+        // 외치기 세부 종류(무료 From / 유료 Click / 공지). null이면 위의 ShowShout·ShoutColor를 그대로 물려받는다.
+        // 옛 설정 파일을 그대로 써도 기존 외치기 색·표시가 세 종류 모두에 이어지게 하기 위한 것이다.
+        public bool? ShowFreeShout { get; set; }
+        public bool? ShowPaidShout { get; set; }
+        public bool? ShowNoticeShout { get; set; }
+        public string? FreeShoutColor { get; set; }
+        public string? PaidShoutColor { get; set; }
+        public string? NoticeShoutColor { get; set; }
     }
 
     public class IdDisplaySettings
@@ -282,6 +290,11 @@ namespace TWChatOverlay.Models
         public double OverlayOpacityPercent { get; set; } = 96.0;
         /// <summary>오버레이 항상 위. 끄면 처음 실행 때만 위에 두고, 이후에는 일반 창처럼 다른 앱 뒤로 내려간다.</summary>
         public bool OverlaysAlwaysOnTop { get; set; } = true;
+        /// <summary>
+        /// 항상 위를 다시 올릴 대상 프로세스 이름(쉼표 구분, .exe 없이). 이 프로그램이 전경이 될 때만 오버레이를 최상단으로 재승격한다.
+        /// 캡처 도구 같은 다른 앱이 전경이 될 때는 손대지 않아 그 위로 올라가지 않는다. 게임 클라이언트는 InphaseNXD로 뜬다.
+        /// </summary>
+        public string TopmostGuardProcessNames { get; set; } = "InphaseNXD, Talesweaver";
         /// <summary>따로 여는 창(달력·컨텐츠·어밴던)의 배경 불투명도(%). 키는 OverlayOpacityService의 그룹 키.</summary>
         public Dictionary<string, double> OverlayOpacityByGroup { get; set; } = new(StringComparer.OrdinalIgnoreCase);
         public bool WindowSnapEnabled { get; set; } = false;

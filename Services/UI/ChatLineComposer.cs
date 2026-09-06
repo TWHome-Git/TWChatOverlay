@@ -32,6 +32,8 @@ namespace TWChatOverlay.Services
         private static readonly Regex ShoutRestructureRegex = new(@"^외치기\s*:\s*(?<msg>.*?)\s*\[(?<id>[^\[\]]+)\]\s*$", RegexOptions.Compiled);
         // 말머리 재구성 시 외치기 원문 끝의 링크 표식(Click/From)은 지운다
         private static readonly Regex ShoutTrailingMarkerRegex = new(@"\s*(?:Click|From)\s*$", RegexOptions.Compiled);
+        // 말머리 켜짐일 때 공지형 외치기 앞머리 "외치기 : "를 떼어 내기 위한 것
+        private static readonly Regex NoticeShoutHeadRegex = new(@"^외치기\s*:\s*", RegexOptions.Compiled);
 
         public static List<ChatSegment> Compose(string text, LogParser.ParseResult log, ChatSettings settings)
         {
@@ -55,17 +57,28 @@ namespace TWChatOverlay.Services
             {
                 if (log.Category == ChatCategory.Shout)
                 {
-                    Match shout = ShoutRestructureRegex.Match(rest);
-                    if (shout.Success)
+                    // 무료/유료는 색으로만 가르고 말머리는 같다.
+                    // 공지형(룬 마스터 달성·강화 성공, 꼬리표 없음)은 원문 앞머리 "외치기 :"를 떼고 [공지]를 붙인다.
+                    // 다른 외치기가 "[외치기] 보낸이 : 내용"으로 바뀌는 것과 같은 모양이 된다. 색은 종류별 설정을 따른다.
+                    if (log.ShoutKind == ShoutKind.Notice)
                     {
-                        string msg = ShoutTrailingMarkerRegex.Replace(shout.Groups["msg"].Value, string.Empty);
-                        segments.Add(new ChatSegment("[외치기] ", ChatSegmentKind.Body));
-                        segments.Add(new ChatSegment(shout.Groups["id"].Value, ChatSegmentKind.SenderId));
-                        segments.AddRange(BuildDecorations(log, settings));
-                        segments.Add(new ChatSegment(" : " + msg, ChatSegmentKind.Body));
-                        return segments;
+                        rest = NoticeShoutHeadRegex.Replace(rest, string.Empty);
+                        segments.Add(new ChatSegment("[공지] ", ChatSegmentKind.Body));
                     }
-                    // 재구성 실패(보낸이 괄호가 없는 줄 등)면 원문 그대로 아래 일반 처리로
+                    else
+                    {
+                        Match shout = ShoutRestructureRegex.Match(rest);
+                        if (shout.Success)
+                        {
+                            string msg = ShoutTrailingMarkerRegex.Replace(shout.Groups["msg"].Value, string.Empty);
+                            segments.Add(new ChatSegment("[외치기] ", ChatSegmentKind.Body));
+                            segments.Add(new ChatSegment(shout.Groups["id"].Value, ChatSegmentKind.SenderId));
+                            segments.AddRange(BuildDecorations(log, settings));
+                            segments.Add(new ChatSegment(" : " + msg, ChatSegmentKind.Body));
+                            return segments;
+                        }
+                        // 재구성 실패(보낸이 괄호가 없는 줄 등)면 원문 그대로 아래 일반 처리로
+                    }
                 }
                 else
                 {

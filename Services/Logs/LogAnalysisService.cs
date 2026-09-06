@@ -44,7 +44,7 @@ namespace TWChatOverlay.Services
             var parsed = context.Result;
             parsed.IsClubBossMessage = parsed.Category == ChatCategory.Club &&
                                        IgnoredChatMessageService.IsIgnoredClubMessage(parsed.FormattedText);
-            parsed.Brush = ChatBrushResolver.Resolve(_settings, parsed.Category, parsed.IsClubBossMessage);
+            parsed.Brush = ChatBrushResolver.Resolve(_settings, parsed);
 
             bool isRareTrackedItem = parsed.IsTrackedItemDrop &&
                                      (parsed.TrackedItemGrade == ItemDropGrade.Rare ||
@@ -85,7 +85,7 @@ namespace TWChatOverlay.Services
             if (parsed.Category is ChatCategory.NormalSelf or ChatCategory.Normal)
                 tabs.Add("General");
 
-            if (LogParser.IsVisible(parsed.Category, _settings))
+            if (LogParser.IsVisible(parsed, _settings))
                 tabs.Add("Basic");
 
             if (parsed.Category == ChatCategory.Team)

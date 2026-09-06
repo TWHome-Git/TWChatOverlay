@@ -13,7 +13,13 @@
       "TeamColor": "#00BFFF",
       "ClubColor": "#00FF00",
       "SystemColor": "#FFFF00",
-      "ShoutColor": "#FF8000"
+      "ShoutColor": "#FF8000",
+      "ShowFreeShout": true,
+      "ShowPaidShout": true,
+      "ShowNoticeShout": true,
+      "FreeShoutColor": "#FF8000",
+      "PaidShoutColor": "#C896C8",
+      "NoticeShoutColor": "#FF8000"
     },
     "IdDisplay": {
       "ShowEtaLevel": true,
@@ -490,6 +496,7 @@
   "Ui": {
     "OverlayOpacityPercent": 100,
     "OverlaysAlwaysOnTop": false,
+    "TopmostGuardProcessNames": "InphaseNXD, Talesweaver",
     "OverlayOpacityByGroup": {
       "Calendar": 100,
       "Content": 100,

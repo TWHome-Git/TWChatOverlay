@@ -111,6 +111,7 @@ namespace TWChatOverlay.Services
             ["chat.filter.category_prefix"] = (
                 "말머리",
                 "각 채팅 줄 앞에 [일반]/[팀]/[클럽]/[외치기]/[시스템] 종류를 붙여 한눈에 구분합니다.\n" +
+                "룬 마스터 달성·강화 성공 같은 시스템 공지형 외치기는 앞의 '외치기 :'를 떼고 [공지]를 붙입니다.\n" +
                 "말머리 사용 시 외치기 끝의 Click/From 표식은 지워서 표시합니다.\n",
                 new[] { "chat_category_prefix_off.png", "chat_category_prefix_on.png" }),
 
@@ -181,7 +182,9 @@ namespace TWChatOverlay.Services
 
             ["display.always_on_top"] = (
                 "항상 위",
-                "켜면 다른 앱이 앞으로 와도 오버레이 창들을 계속 맨 위로 유지합니다.\n" +
+                "켜면 게임이 앞으로 와서 오버레이를 가릴 때 창들을 다시 맨 위로 올립니다.\n" +
+                "아래 '복구 대상 프로그램'에 적힌 프로그램(기본: 게임 클라이언트)이 앞으로 올 때만 그렇게 하고,\n" +
+                "캡처 도구 같은 다른 프로그램이 앞으로 올 때는 손대지 않아 그 위로 튀어나오지 않습니다.\n" +
                 "끄면 z-순서를 건드리지 않아 처음 실행 상태 그대로 OS에 맡깁니다.\n" +
                 "메뉴 바는 이 설정과 무관하게 항상 맨 위에 유지됩니다.",
                 new[] { "display_ontop_off.png", "display_ontop_on.png" }),
