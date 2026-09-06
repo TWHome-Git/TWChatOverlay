@@ -339,7 +339,7 @@ namespace TWChatOverlay.Models
         [JsonIgnore]
         public bool UseAlertSound { get => Alerts.Keyword.UseSound; set { Alerts.Keyword.UseSound = value; OnPropertyChanged(); } }
         [JsonIgnore]
-        public string KeywordInput { get => Alerts.Keyword.Keywords; set { Alerts.Keyword.Keywords = value; OnPropertyChanged(); } }
+        public string KeywordInput { get => Alerts.Keyword.Keywords; set { Alerts.Keyword.Keywords = value ?? string.Empty; OnPropertyChanged(); } }
         [JsonIgnore]
         public double HighlightAlertVolume
         {
@@ -598,6 +598,23 @@ namespace TWChatOverlay.Models
         /// <summary>보급품 탈환 진입 시 미니 지도 창 표시.</summary>
         [JsonIgnore]
         public bool ShowRecaptureSupplyMap { get => Alerts.Dungeon.ShowRecaptureSupplyMap; set { Alerts.Dungeon.ShowRecaptureSupplyMap = value; OnPropertyChanged(); } }
+        /// <summary>보급품 탈환에서 경보 장치 해제 문구가 뜨면 발판 색 순서 창 표시.</summary>
+        [JsonIgnore]
+        public bool ShowRecaptureSupplyPadOrder { get => Alerts.Dungeon.ShowRecaptureSupplyPadOrder; set { Alerts.Dungeon.ShowRecaptureSupplyPadOrder = value; OnPropertyChanged(); } }
+        /// <summary>발판 순서 창 지속 시간(초).</summary>
+        [JsonIgnore]
+        public int RecaptureSupplyPadOrderDurationSeconds
+        {
+            // 옛 설정 파일에 0으로 남아 있어도 빈칸이 아니라 기본 10초로 읽히게 한다
+            get => Alerts.Dungeon.RecaptureSupplyPadOrderDurationSeconds < 1 ? 10 : Alerts.Dungeon.RecaptureSupplyPadOrderDurationSeconds;
+            set
+            {
+                int clamped = Math.Max(1, Math.Min(300, value));
+                if (Alerts.Dungeon.RecaptureSupplyPadOrderDurationSeconds == clamped) return;
+                Alerts.Dungeon.RecaptureSupplyPadOrderDurationSeconds = clamped;
+                OnPropertyChanged();
+            }
+        }
         [JsonIgnore]
         public Dictionary<string, DungeonItemConfig> DungeonItemConfigs
         {
@@ -906,6 +923,30 @@ namespace TWChatOverlay.Models
         {
             get => Windows.RecaptureSupply.Height;
             set { if (Windows.RecaptureSupply.Height == value) return; Windows.RecaptureSupply.Height = value; OnPropertyChanged(); }
+        }
+        [JsonIgnore]
+        public double? RecaptureSupplyPadOrderWindowLeft
+        {
+            get => Windows.RecaptureSupplyPadOrder.Left;
+            set { if (Windows.RecaptureSupplyPadOrder.Left == value) return; Windows.RecaptureSupplyPadOrder.Left = value; OnPropertyChanged(); }
+        }
+        [JsonIgnore]
+        public double? RecaptureSupplyPadOrderWindowTop
+        {
+            get => Windows.RecaptureSupplyPadOrder.Top;
+            set { if (Windows.RecaptureSupplyPadOrder.Top == value) return; Windows.RecaptureSupplyPadOrder.Top = value; OnPropertyChanged(); }
+        }
+        [JsonIgnore]
+        public double? RecaptureSupplyPadOrderWindowWidth
+        {
+            get => Windows.RecaptureSupplyPadOrder.Width;
+            set { if (Windows.RecaptureSupplyPadOrder.Width == value) return; Windows.RecaptureSupplyPadOrder.Width = value; OnPropertyChanged(); }
+        }
+        [JsonIgnore]
+        public double? RecaptureSupplyPadOrderWindowHeight
+        {
+            get => Windows.RecaptureSupplyPadOrder.Height;
+            set { if (Windows.RecaptureSupplyPadOrder.Height == value) return; Windows.RecaptureSupplyPadOrder.Height = value; OnPropertyChanged(); }
         }
 
         [JsonIgnore]

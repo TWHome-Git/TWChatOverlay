@@ -163,6 +163,10 @@ namespace TWChatOverlay.Models
         public double CravingFontSize { get; set; } = 18.0;
         /// <summary>보급품 탈환 진입 시 미니 지도 창 표시.</summary>
         public bool ShowRecaptureSupplyMap { get; set; } = true;
+        /// <summary>보급품 탈환에서 경보 장치 해제 문구가 뜨면 발판 색 순서 창 표시.</summary>
+        public bool ShowRecaptureSupplyPadOrder { get; set; } = true;
+        /// <summary>발판 순서 창 지속 시간(초).</summary>
+        public int RecaptureSupplyPadOrderDurationSeconds { get; set; } = 10;
         public Dictionary<string, DungeonItemConfig> ItemConfigs { get; set; } = new();
     }
 
@@ -222,6 +226,8 @@ namespace TWChatOverlay.Models
         public WindowRect ShoutToast { get; set; } = new();
         public WindowRect MessengerToast { get; set; } = new();
         public WindowRect RecaptureSupply { get; set; } = new();
+        /// <summary>보급품 탈환 발판 순서 창 위치 (미설정 시 화면 가운데).</summary>
+        public WindowRect RecaptureSupplyPadOrder { get; set; } = new();
         public WindowRect ExperienceLimitAlert { get; set; } = new();
         public WindowRect BossAlertToast { get; set; } = new();
         /// <summary>통합 알림 스택(외치기·던전·경험치·아이템·보스) 기준 위치.</summary>

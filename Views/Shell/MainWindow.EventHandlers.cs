@@ -90,6 +90,10 @@ namespace TWChatOverlay.Views
 
         private void OnSettingsPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
         {
+            // 설정 화면의 단순 설정은 ChatSettings에 직접 바인딩되어 ViewModel의 저장 경로를 거치지 않는다.
+            // 원본이 바뀌면 여기서 디바운스 저장한다. (250ms 안에 몰리는 변경은 한 번만 쓴다)
+            ConfigService.SaveDeferred(_settings);
+
             // 추가 기능 위치 미리보기 중 토글이 바뀌면 해당 탭의 창 표시를 다시 계산한다
             // (활성화하면 즉시 나타나고, 끄면 사라진다)
             if (_isAddonPositionMode && e.PropertyName is
