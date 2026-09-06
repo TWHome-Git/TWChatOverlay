@@ -130,6 +130,9 @@ namespace TWChatOverlay.Views
             // 보급품 탈환 미니 지도 위치/크기
             RecaptureSupplyAlertService.ShowPositionPreview(_settings, force: true);
 
+            // 보급품 탈환 발판 순서 창 위치
+            RecaptureSupplyPadOrderService.ShowPositionPreview(_settings);
+
             // 심연의 보물창고 주간 통계 (기능 켜짐 시)
             TreasurySummaryWindow.ShowPositionPreview(_settings);
         }
@@ -158,6 +161,7 @@ namespace TWChatOverlay.Views
             ToastStackService.ClosePositionPreview();
             MessengerEtaToastService.ClosePositionPreview(_settings);
             RecaptureSupplyAlertService.ClosePositionPreview();
+            RecaptureSupplyPadOrderService.ClosePositionPreview();
             TreasurySummaryWindow.ClosePositionPreview();
             CloseAddonPositionPreviewWindows(savePositions: true, restoreNormalWindows: true);
             RefreshExpTrackerWindow();
@@ -304,6 +308,8 @@ namespace TWChatOverlay.Views
                             }
                             if (_settings.ShowRecaptureSupplyMap)
                                 RecaptureSupplyAlertService.ShowPositionPreview(_settings, force: true);
+                            if (_settings.ShowRecaptureSupplyPadOrder)
+                                RecaptureSupplyPadOrderService.ShowPositionPreview(_settings);
                             break;
                         case 3: // 어밴던로드: 알림 앵커 + 통계 창
                             if (_settings.EnableAbandonRoadCountAlert)
@@ -363,6 +369,7 @@ namespace TWChatOverlay.Views
 
             ToastStackService.ClosePositionPreview();
             RecaptureSupplyAlertService.ClosePositionPreview();
+            RecaptureSupplyPadOrderService.ClosePositionPreview();
             SubAddonWindow.Instance?.Hide();
             ItemDropHelperWindow.Instance?.Close();
             BuffTrackerHelperWindow.Instance?.Close();

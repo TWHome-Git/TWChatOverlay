@@ -17,8 +17,17 @@ namespace TWChatOverlay.Services
             @"경보\s*장치\s*4개를\s*모두\s*해제하고\s*보급품이\s*보관\s*되어\s*있는\s*막사를\s*찾으시오\.",
             RegexOptions.Compiled);
         private static readonly Regex CompletionRegex = new(
-            @"보급품\s*탈환에\s*성공하였",
+            @"보급품\s*탈환에\s*(?:성공|실패)\s*하였",
             RegexOptions.Compiled);
+
+        // 진입 문구에서 켜고 성공/실패 문구에서 끈다. 발판 순서 알림은 이 사이에서만 본다.
+        // 종료 줄을 놓쳐도 영원히 켜져 있지 않게 30분이 지나면 꺼진 것으로 친다.
+        private static readonly TimeSpan RunSafetyLimit = TimeSpan.FromMinutes(30);
+        private static DateTime _runStartedUtc = DateTime.MinValue;
+
+        /// <summary>보급품 탈환에 들어가 있는 동안 true.</summary>
+        public static bool IsInRun =>
+            _runStartedUtc != DateTime.MinValue && DateTime.UtcNow - _runStartedUtc < RunSafetyLimit;
 
         private static readonly HttpClient HttpClient = new()
         {
@@ -58,19 +67,24 @@ namespace TWChatOverlay.Services
 
         public static void Observe(string formattedText)
         {
-            if (TrayAllWindowsService.IsTrayed)
-                return; // 트레이 최소화 중에는 알림 창을 띄우지 않는다
+            if (string.IsNullOrWhiteSpace(formattedText))
+                return;
 
-            if (string.IsNullOrWhiteSpace(formattedText) || !TriggerRegex.IsMatch(formattedText))
+            if (TriggerRegex.IsMatch(formattedText))
             {
-                if (!string.IsNullOrWhiteSpace(formattedText) && CompletionRegex.IsMatch(formattedText))
-                {
-                    Close();
-                }
+                // 트레이 최소화 중에도 진행 중 표시는 켠다. 창만 띄우지 않는다.
+                _runStartedUtc = DateTime.UtcNow;
+                if (!TrayAllWindowsService.IsTrayed)
+                    _ = ShowAsync();
                 return;
             }
 
-            _ = ShowAsync();
+            if (CompletionRegex.IsMatch(formattedText))
+            {
+                _runStartedUtc = DateTime.MinValue;
+                Close();
+                RecaptureSupplyPadOrderService.Close();
+            }
         }
 
         /// <summary>잠금 해제 모드에서 위치/크기를 조정할 수 있게 지도 창을 미리보기로 띄운다.</summary>

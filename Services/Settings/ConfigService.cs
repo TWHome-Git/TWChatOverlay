@@ -270,6 +270,7 @@ namespace TWChatOverlay.Services
         public static ChatSettings Load()
         {
             MigrateFileLocation();
+            EnsureFactoryDefaultsFile();
 
             try
             {
@@ -358,6 +359,80 @@ namespace TWChatOverlay.Services
             AppLogger.IsEnabled = defaultSettings.EnableDebugLogging;
             Save(defaultSettings);
             return defaultSettings;
+        }
+
+        /// <summary>
+        /// 공장 기본 설정 파일을 현재 스키마에 맞춰 둔다. 실행 파일만 바꿔 넣어 파일이 옛 버전이거나
+        /// 아예 없는 경우를 위한 것이다.
+        /// - 없으면: 코드 기본값(new ChatSettings)으로 새로 만든다.
+        /// - 있으면: 파일에 적힌 값은 그대로 두고, 빠진 키만 코드 기본값으로 채우고 사라진 키는 지운다.
+        /// 프로그램 폴더에 쓸 수 없는 환경이면 조용히 넘어간다. 읽는 쪽은 파일이 없어도 코드 기본값으로 동작한다.
+        /// </summary>
+        public static void EnsureFactoryDefaultsFile()
+        {
+            try
+            {
+                string? dir = Path.GetDirectoryName(FactoryDefaultsPath);
+                if (!string.IsNullOrEmpty(dir))
+                    Directory.CreateDirectory(dir);
+
+                if (!File.Exists(FactoryDefaultsPath))
+                {
+                    var fresh = new ChatSettings();
+                    fresh.EnsureLoadedDefaults();
+                    File.WriteAllText(FactoryDefaultsPath, JsonSerializer.Serialize(fresh, _options), Encoding.UTF8);
+                    AppLogger.Info("Factory default settings file was missing; created from code defaults.");
+                    return;
+                }
+
+                string currentJson = File.ReadAllText(FactoryDefaultsPath);
+                if (JsonNode.Parse(currentJson) is not JsonObject currentObj)
+                    return; // 손상된 파일은 건드리지 않는다. TryLoadFactoryDefaults가 경고를 남기고 코드 기본값으로 간다.
+
+                // 파일을 객체로 읽으면 빠진 키는 코드 기본값으로 채워진다. 그걸 다시 직렬화한 것이 "현재 스키마" 기준이다.
+                var parsed = JsonSerializer.Deserialize<ChatSettings>(currentJson, _options);
+                if (parsed == null)
+                    return;
+                parsed.EnsureLoadedDefaults();
+                if (JsonNode.Parse(JsonSerializer.Serialize(parsed, _options)) is not JsonObject referenceObj)
+                    return;
+
+                bool changed = AddMissingKeysRecursive(currentObj, referenceObj);
+                if (RemoveObsoleteKeysRecursive(currentObj, referenceObj))
+                    changed = true;
+                if (!changed)
+                    return;
+
+                File.WriteAllText(FactoryDefaultsPath, currentObj.ToJsonString(_options), Encoding.UTF8);
+                AppLogger.Info("Factory default settings file was updated to the current schema.");
+            }
+            catch (Exception ex)
+            {
+                AppLogger.Warn("Failed to ensure factory default settings file.", ex);
+            }
+        }
+
+        /// <summary>reference에는 있는데 current에 없는 키를 reference 값으로 채운다. 값이 있는 키는 건드리지 않는다.</summary>
+        private static bool AddMissingKeysRecursive(JsonObject current, JsonObject reference)
+        {
+            bool changed = false;
+            foreach (var pair in reference)
+            {
+                if (!current.ContainsKey(pair.Key))
+                {
+                    current[pair.Key] = pair.Value?.DeepClone();
+                    changed = true;
+                    continue;
+                }
+
+                if (current[pair.Key] is JsonObject currentChild && pair.Value is JsonObject referenceChild)
+                {
+                    if (AddMissingKeysRecursive(currentChild, referenceChild))
+                        changed = true;
+                }
+            }
+
+            return changed;
         }
 
         /// <summary>

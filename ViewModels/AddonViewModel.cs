@@ -24,41 +24,16 @@ namespace TWChatOverlay.ViewModels
     public class AddonViewModel : ViewModelBase
     {
         private readonly ChatSettings _settings;
+
+        /// <summary>부수 효과가 없는 단순 설정은 화면이 이 원본에 바로 바인딩한다. (예: {Binding Settings.ShowRecaptureSupplyMap})</summary>
+        public ChatSettings Settings => _settings;
         private readonly BossAlarmCardViewModelProvider _bossAlarmCardProvider;
 
-        private bool _useAlertColor;
-        private bool _useAlertSound;
-        private bool _useMagicCircleAlert;
-        private string _keywordInput;
-        private bool _showExpTracker;
-        private bool _isExpAlarmEnabled;
         private bool _enableExperienceLimitAlert;
-        private bool _showExperienceLimitAlertWindow;
         private long _expAlarmThresholdMan;
-        private bool _showDailyWeeklyContentOverlay;
-        private bool _showEtosDirectionAlert;
-        private bool _enableReflectionPatternAlert;
-        private bool _showEtosHelperWindow;
-        private bool _enableAbandonRoadCountAlert;
-        private bool _enableTreasuryGoldCountAlert;
-        private bool _showAbandonRoadSummaryWindow;
-        private bool _enableCravingPleasureCountAlert;
-        private bool _showDungeonCountDisplayWindow;
-        private int _AbandonRoadCountAlertDurationSeconds;
-        private bool _showItemDropAlert;
-        private bool _showItemDropHelperWindow;
         private bool _useCustomDropItemFilter;
         private string _customDropItemJson = string.Empty;
         private string _customDropItemStatus = string.Empty;
-        private bool _enableBuffTrackerAlert;
-        private bool _enableBuffTrackerEndSound;
-        private double _itemDropAlertVolumePercent;
-        private double _highlightAlertVolumePercent;
-        private double _magicCircleAlertVolumePercent;
-        private double _reflectionPatternAlertVolumePercent;
-        private double _expBuffAlertVolumePercent;
-        private double _buffTrackerEndSoundVolumePercent;
-        private double _bossAlertVolumePercent;
         private string _experienceLimitTotalExp = "0";
 
         public ObservableCollection<BossAlarmCardViewModel> BossAlarmCards { get; } = new();
@@ -71,42 +46,6 @@ namespace TWChatOverlay.ViewModels
         public ICommand SaveCustomDropItemFilterCommand { get; }
         public ICommand ApplyExperienceLimitStateCommand { get; }
 
-        public bool UseAlertColor
-        {
-            get => _useAlertColor;
-            set => SetSetting(ref _useAlertColor, value, (settings, newValue) => settings.UseAlertColor = newValue);
-        }
-
-        public bool UseAlertSound
-        {
-            get => _useAlertSound;
-            set => SetSetting(ref _useAlertSound, value, (settings, newValue) => settings.UseAlertSound = newValue);
-        }
-
-        public bool UseMagicCircleAlert
-        {
-            get => _useMagicCircleAlert;
-            set => SetSetting(ref _useMagicCircleAlert, value, (settings, newValue) => settings.UseMagicCircleAlert = newValue);
-        }
-
-        public string KeywordInput
-        {
-            get => _keywordInput;
-            set => SetSetting(ref _keywordInput, value ?? string.Empty, (settings, newValue) => settings.KeywordInput = newValue);
-        }
-
-        public bool ShowExpTracker
-        {
-            get => _showExpTracker;
-            set => SetSetting(ref _showExpTracker, value, (settings, newValue) => settings.ShowExpTracker = newValue);
-        }
-
-        public bool IsExpAlarmEnabled
-        {
-            get => _isExpAlarmEnabled;
-            set => SetSetting(ref _isExpAlarmEnabled, value, (settings, newValue) => settings.IsExpAlarmEnabled = newValue);
-        }
-
         public bool EnableExperienceLimitAlert
         {
             get => _enableExperienceLimitAlert;
@@ -117,12 +56,6 @@ namespace TWChatOverlay.ViewModels
                     RefreshExperienceLimitState();
                 }
             }
-        }
-
-        public bool ShowExperienceLimitAlertWindow
-        {
-            get => _showExperienceLimitAlertWindow;
-            set => SetSetting(ref _showExperienceLimitAlertWindow, value, (settings, newValue) => settings.ShowExperienceLimitAlertWindow = newValue);
         }
 
         public string ExperienceLimitTotalExp
@@ -140,79 +73,6 @@ namespace TWChatOverlay.ViewModels
                 long newThreshold = value * 10000L;
                 SetSetting(ref _expAlarmThresholdMan, newThreshold, (settings, threshold) => settings.ExpAlarmThreshold = threshold);
             }
-        }
-
-        public bool ShowDailyWeeklyContentOverlay
-        {
-            get => _showDailyWeeklyContentOverlay;
-            set => SetSetting(ref _showDailyWeeklyContentOverlay, value, (settings, newValue) => settings.ShowDailyWeeklyContentOverlay = newValue);
-        }
-
-        public bool ShowEtosDirectionAlert
-        {
-            get => _showEtosDirectionAlert;
-            set => SetSetting(ref _showEtosDirectionAlert, value, (settings, newValue) => settings.ShowEtosDirectionAlert = newValue);
-        }
-
-        public bool EnableReflectionPatternAlert
-        {
-            get => _enableReflectionPatternAlert;
-            set => SetSetting(ref _enableReflectionPatternAlert, value, (settings, newValue) => settings.EnableReflectionPatternAlert = newValue);
-        }
-
-        public bool ShowEtosHelperWindow
-        {
-            get => _showEtosHelperWindow;
-            set => SetSetting(ref _showEtosHelperWindow, value, (settings, newValue) => settings.ShowEtosHelperWindow = newValue);
-        }
-
-        public bool EnableAbandonRoadCountAlert
-        {
-            get => _enableAbandonRoadCountAlert;
-            set => SetSetting(ref _enableAbandonRoadCountAlert, value, (settings, newValue) => settings.EnableAbandonRoadCountAlert = newValue);
-        }
-
-        /// <summary>심연의 보물창고: 입장 후 금화 주머니 획득 카운트 표시.</summary>
-        public bool EnableTreasuryGoldCountAlert
-        {
-            get => _enableTreasuryGoldCountAlert;
-            set => SetSetting(ref _enableTreasuryGoldCountAlert, value, (settings, newValue) => settings.EnableTreasuryGoldCountAlert = newValue);
-        }
-
-        public bool ShowAbandonRoadSummaryWindow
-        {
-            get => _showAbandonRoadSummaryWindow;
-            set => SetSetting(ref _showAbandonRoadSummaryWindow, value, (settings, newValue) => settings.ShowAbandonRoadSummaryWindow = newValue);
-        }
-
-        public bool EnableCravingPleasureCountAlert
-        {
-            get => _enableCravingPleasureCountAlert;
-            set => SetSetting(ref _enableCravingPleasureCountAlert, value, (settings, newValue) => settings.EnableCravingPleasureCountAlert = newValue);
-        }
-
-        public bool ShowDungeonCountDisplayWindow
-        {
-            get => _showDungeonCountDisplayWindow;
-            set => SetSetting(ref _showDungeonCountDisplayWindow, value, (settings, newValue) => settings.ShowDungeonCountDisplayWindow = newValue);
-        }
-
-        public int AbandonRoadCountAlertDurationSeconds
-        {
-            get => _AbandonRoadCountAlertDurationSeconds;
-            set => SetSetting(ref _AbandonRoadCountAlertDurationSeconds, value, (settings, newValue) => settings.AbandonRoadCountAlertDurationSeconds = newValue);
-        }
-
-        public bool ShowItemDropAlert
-        {
-            get => _showItemDropAlert;
-            set => SetSetting(ref _showItemDropAlert, value, (settings, newValue) => settings.ShowItemDropAlert = newValue);
-        }
-
-        public bool ShowItemDropHelperWindow
-        {
-            get => _showItemDropHelperWindow;
-            set => SetSetting(ref _showItemDropHelperWindow, value, (settings, newValue) => settings.ShowItemDropHelperWindow = newValue);
         }
 
         public bool UseCustomDropItemFilter
@@ -233,18 +93,6 @@ namespace TWChatOverlay.ViewModels
             private set => SetProperty(ref _customDropItemStatus, value);
         }
 
-        public bool EnableBuffTrackerAlert
-        {
-            get => _enableBuffTrackerAlert;
-            set => SetSetting(ref _enableBuffTrackerAlert, value, (settings, newValue) => settings.EnableBuffTrackerAlert = newValue);
-        }
-
-        public bool EnableBuffTrackerEndSound
-        {
-            get => _enableBuffTrackerEndSound;
-            set => SetSetting(ref _enableBuffTrackerEndSound, value, (settings, newValue) => settings.EnableBuffTrackerEndSound = newValue);
-        }
-
         private double _dungeonCountDisplayFontSize;
         private double _experienceAlertFontSize;
         private double _itemDropToastFontSize;
@@ -260,8 +108,6 @@ namespace TWChatOverlay.ViewModels
         }
 
         private double _cravingPleasureCountFontSize;
-        private int _cravingPleasureCountAlertDurationSeconds;
-        private bool _showRecaptureSupplyMap;
 
         public double CravingPleasureCountFontSize
         {
@@ -271,18 +117,6 @@ namespace TWChatOverlay.ViewModels
                 if (SetSetting(ref _cravingPleasureCountFontSize, value, (settings, newValue) => settings.CravingPleasureCountFontSize = newValue))
                     DungeonCountDisplayWindowService.ApplyFontSize(value);
             }
-        }
-
-        public int CravingPleasureCountAlertDurationSeconds
-        {
-            get => _cravingPleasureCountAlertDurationSeconds;
-            set => SetSetting(ref _cravingPleasureCountAlertDurationSeconds, value, (settings, newValue) => settings.CravingPleasureCountAlertDurationSeconds = newValue);
-        }
-
-        public bool ShowRecaptureSupplyMap
-        {
-            get => _showRecaptureSupplyMap;
-            set => SetSetting(ref _showRecaptureSupplyMap, value, (settings, newValue) => settings.ShowRecaptureSupplyMap = newValue);
         }
 
         public double ExperienceAlertFontSize
@@ -319,48 +153,6 @@ namespace TWChatOverlay.ViewModels
             }
         }
 
-        public double ItemDropAlertVolumePercent
-        {
-            get => _itemDropAlertVolumePercent;
-            set => SetSetting(ref _itemDropAlertVolumePercent, value, (settings, newValue) => settings.ItemDropAlertVolumePercent = newValue);
-        }
-
-        public double HighlightAlertVolumePercent
-        {
-            get => _highlightAlertVolumePercent;
-            set => SetSetting(ref _highlightAlertVolumePercent, value, (settings, newValue) => settings.HighlightAlertVolumePercent = newValue);
-        }
-
-        public double MagicCircleAlertVolumePercent
-        {
-            get => _magicCircleAlertVolumePercent;
-            set => SetSetting(ref _magicCircleAlertVolumePercent, value, (settings, newValue) => settings.MagicCircleAlertVolumePercent = newValue);
-        }
-
-        public double ReflectionPatternAlertVolumePercent
-        {
-            get => _reflectionPatternAlertVolumePercent;
-            set => SetSetting(ref _reflectionPatternAlertVolumePercent, value, (settings, newValue) => settings.ReflectionPatternAlertVolumePercent = newValue);
-        }
-
-        public double ExpBuffAlertVolumePercent
-        {
-            get => _expBuffAlertVolumePercent;
-            set => SetSetting(ref _expBuffAlertVolumePercent, value, (settings, newValue) => settings.ExpBuffAlertVolumePercent = newValue);
-        }
-
-        public double BuffTrackerEndSoundVolumePercent
-        {
-            get => _buffTrackerEndSoundVolumePercent;
-            set => SetSetting(ref _buffTrackerEndSoundVolumePercent, value, (settings, newValue) => settings.BuffTrackerEndSoundVolumePercent = newValue);
-        }
-
-        public double BossAlertVolumePercent
-        {
-            get => _bossAlertVolumePercent;
-            set => SetSetting(ref _bossAlertVolumePercent, value, (settings, newValue) => settings.BossAlertVolumePercent = newValue);
-        }
-
         public AddonViewModel(ChatSettings settings)
         {
             _settings = settings ?? throw new ArgumentNullException(nameof(settings));
@@ -372,47 +164,17 @@ namespace TWChatOverlay.ViewModels
             SaveCustomDropItemFilterCommand = new RelayCommand(_ => SaveCustomDropItemFilter());
             ApplyExperienceLimitStateCommand = new RelayCommand(_ => ApplyExperienceLimitState());
 
-            _useAlertColor = _settings.UseAlertColor;
-            _useAlertSound = _settings.UseAlertSound;
-            _useMagicCircleAlert = _settings.UseMagicCircleAlert;
-            _keywordInput = _settings.KeywordInput;
-            _showExpTracker = _settings.ShowExpTracker;
-            _isExpAlarmEnabled = _settings.IsExpAlarmEnabled;
             _enableExperienceLimitAlert = _settings.EnableExperienceLimitAlert;
-            _showExperienceLimitAlertWindow = _settings.ShowExperienceLimitAlertWindow;
             _expAlarmThresholdMan = _settings.ExpAlarmThreshold;
-            _showDailyWeeklyContentOverlay = _settings.ShowDailyWeeklyContentOverlay;
-            _showEtosDirectionAlert = _settings.ShowEtosDirectionAlert;
-            _enableReflectionPatternAlert = _settings.EnableReflectionPatternAlert;
-            _showEtosHelperWindow = _settings.ShowEtosHelperWindow;
-            _enableAbandonRoadCountAlert = _settings.EnableAbandonRoadCountAlert;
-            _enableTreasuryGoldCountAlert = _settings.EnableTreasuryGoldCountAlert;
-            _showAbandonRoadSummaryWindow = _settings.ShowAbandonRoadSummaryWindow;
-            _enableCravingPleasureCountAlert = _settings.EnableCravingPleasureCountAlert;
-            _showDungeonCountDisplayWindow = _settings.ShowDungeonCountDisplayWindow;
-            _AbandonRoadCountAlertDurationSeconds = _settings.AbandonRoadCountAlertDurationSeconds;
-            _showItemDropAlert = _settings.ShowItemDropAlert;
-            _showItemDropHelperWindow = _settings.ShowItemDropHelperWindow;
             _useCustomDropItemFilter = _settings.UseCustomDropItemFilter;
             _customDropItemJson = _settings.CustomDropItemJson;
             _customDropItemStatus = !_useCustomDropItemFilter
                 ? "기본 GitHub 드롭 테이블을 사용 중입니다."
                 : "사용자 정의 필터를 사용 중입니다.";
-            _enableBuffTrackerAlert = _settings.EnableBuffTrackerAlert;
-            _enableBuffTrackerEndSound = _settings.EnableBuffTrackerEndSound;
-            _itemDropAlertVolumePercent = _settings.ItemDropAlertVolumePercent;
             _dungeonCountDisplayFontSize = _settings.DungeonCountDisplayFontSize;
             _cravingPleasureCountFontSize = _settings.CravingPleasureCountFontSize;
-            _cravingPleasureCountAlertDurationSeconds = _settings.CravingPleasureCountAlertDurationSeconds;
-            _showRecaptureSupplyMap = _settings.ShowRecaptureSupplyMap;
             _experienceAlertFontSize = _settings.ExperienceAlertFontSize;
             _itemDropToastFontSize = _settings.ItemDropToastFontSize;
-            _highlightAlertVolumePercent = _settings.HighlightAlertVolumePercent;
-            _magicCircleAlertVolumePercent = _settings.MagicCircleAlertVolumePercent;
-            _reflectionPatternAlertVolumePercent = _settings.ReflectionPatternAlertVolumePercent;
-            _expBuffAlertVolumePercent = _settings.ExpBuffAlertVolumePercent;
-            _buffTrackerEndSoundVolumePercent = _settings.BuffTrackerEndSoundVolumePercent;
-            _bossAlertVolumePercent = _settings.BossAlertVolumePercent;
             _bossAlertToastFontSize = _settings.BossAlertToastFontSize;
             ReplaceBossAlarmCards(_bossAlarmCardProvider.CreateCards());
             _ = InitializeBossAlarmCardsAsync();
@@ -441,6 +203,26 @@ namespace TWChatOverlay.ViewModels
 
         private void Settings_PropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
         {
+            // 빈 이름 = 설정 전체 교체(초기화·프로필 불러오기). 여기 남아 있는 사본 필드를 모두 원본으로 되돌린다.
+            // 단순 통과 설정은 Settings 속성으로 원본에 직접 바인딩되어 있어 따로 할 일이 없다.
+            if (string.IsNullOrEmpty(e.PropertyName))
+            {
+                SyncFromSettings(ref _enableExperienceLimitAlert, _settings.EnableExperienceLimitAlert, nameof(EnableExperienceLimitAlert));
+                if (_expAlarmThresholdMan != _settings.ExpAlarmThreshold)
+                {
+                    _expAlarmThresholdMan = _settings.ExpAlarmThreshold;
+                    OnPropertyChanged(nameof(ExpAlarmThresholdMan));
+                }
+                SyncFromSettings(ref _dungeonCountDisplayFontSize, _settings.DungeonCountDisplayFontSize, nameof(DungeonCountDisplayFontSize));
+                SyncFromSettings(ref _cravingPleasureCountFontSize, _settings.CravingPleasureCountFontSize, nameof(CravingPleasureCountFontSize));
+                SyncFromSettings(ref _experienceAlertFontSize, _settings.ExperienceAlertFontSize, nameof(ExperienceAlertFontSize));
+                SyncFromSettings(ref _itemDropToastFontSize, _settings.ItemDropToastFontSize, nameof(ItemDropToastFontSize));
+                SyncFromSettings(ref _bossAlertToastFontSize, _settings.BossAlertToastFontSize, nameof(BossAlertToastFontSize));
+                OnPropertyChanged(nameof(Settings));
+                RefreshExperienceLimitState();
+                return;
+            }
+
             switch (e.PropertyName)
             {
                 case nameof(ChatSettings.DungeonCountDisplayFontSize):
@@ -461,9 +243,9 @@ namespace TWChatOverlay.ViewModels
             }
         }
 
-        private void SyncFromSettings(ref double field, double value, string propertyName)
+        private void SyncFromSettings<T>(ref T field, T value, string propertyName)
         {
-            if (field.Equals(value))
+            if (EqualityComparer<T>.Default.Equals(field, value))
                 return;
             field = value;
             OnPropertyChanged(propertyName);

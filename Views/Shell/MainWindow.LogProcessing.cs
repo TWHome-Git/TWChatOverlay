@@ -321,6 +321,7 @@ namespace TWChatOverlay.Views
                 GuardSideEffect("recapture-essence", () =>
                 {
                     RecaptureSupplyAlertService.Observe(parseResult.FormattedText);
+                    RecaptureSupplyPadOrderService.Observe(parseResult.FormattedText);
                     if (IsExperienceEssenceExchangeLog(parseResult.FormattedText))
                         _itemCalendarWindow?.ApplyRealtimeExperienceEssenceLog(parseResult.FormattedText, DateTime.Today);
                 });
