@@ -256,6 +256,7 @@ namespace TWChatOverlay.Views
             }
 
             bool isCurrentWeek = _weekStart == GetCurrentWeekStart();
+            // 아페티리아 난이도(일반 7.35억/어려움 8.4억)는 로그로 판별하므로 주간 스캔 뒤에 예상치를 계산한다
             var (generalCap, rubiconaCap) = WeeklySeedRewardService.ComputeWeeklySeedCaps(_settings);
             string generalCapText = WeeklySeedRewardService.FormatSeed(generalCap);
             string rubiconaCapText = WeeklySeedRewardService.FormatSeed(rubiconaCap);
@@ -264,6 +265,10 @@ namespace TWChatOverlay.Views
                 var (general, rubicona) = await WeeklySeedRewardService.SumWeeklyClearSeedAsync(
                     _settings.ChatLogFolderPath, _weekStart, _weekEnd);
                 if (!IsLoaded || version != _loadVersion) return;
+                bool apetiriaHard = WeeklySeedRewardService.GetApetiriaHard(_weekStart, _weekEnd);
+                (generalCap, rubiconaCap) = WeeklySeedRewardService.ComputeWeeklySeedCaps(_settings, apetiriaHard);
+                generalCapText = WeeklySeedRewardService.FormatSeed(generalCap);
+                rubiconaCapText = WeeklySeedRewardService.FormatSeed(rubiconaCap);
                 (general, long other) = WeeklySeedRewardService.SplitWeeklyOverflow(_weekStart, general);
                 string generalText = WeeklySeedRewardService.FormatSeed(general);
                 string rubiconaText = WeeklySeedRewardService.FormatSeed(rubicona);

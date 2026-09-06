@@ -97,9 +97,12 @@ namespace TWChatOverlay.Services
             }),
         };
 
-        // 아페티리아 일반/어려움(EX)은 택1 — 둘 다 켜져 있으면 큰 쪽만 반영 (이클립스 그룹 한도에 포함)
-        private static readonly Entry ApetiriaNormal = new("아페티리아", 735L * Man * 100);
-        private static readonly Entry ApetiriaEx = new("아페티리아 EX", 840L * Man * 100);
+        // 아페티리아는 체크리스트 항목 하나("아페티리아")가 일반/어려움을 같이 다루는데 주간 시드가 다르다
+        // (일반 3500만×3×7 = 7.35억, 어려움 4000만×3×7 = 8.4억). 난이도는 로그 마커로 판별한다
+        // (GetApetiriaHard). 아페티리아 EX는 시드를 주지 않는다.
+        private const string ApetiriaItemName = "아페티리아";
+        private const long ApetiriaNormalWeeklySeed = 735L * Man * 100;
+        private const long ApetiriaHardWeeklySeed = 840L * Man * 100;
 
         // 루비코나(환희·슬픔) — 각 보스·난이도 하루 2억 × 7일
         private static readonly Entry[] RubiconaEntries =
@@ -110,8 +113,11 @@ namespace TWChatOverlay.Services
             new("응시하는 슬픔(어려움)", 14L * Eok),
         };
 
-        /// <summary>체크리스트에서 켜진 항목 기준 주간 시드 한도 — 일반(루비코나 제외)과 루비코나 분리.</summary>
-        public static (long General, long Rubicona) ComputeWeeklySeedCaps(ChatSettings settings)
+        /// <summary>
+        /// 체크리스트에서 켜진 항목 기준 주간 시드 한도 — 일반(루비코나 제외)과 루비코나 분리.
+        /// <paramref name="apetiriaHard"/>는 이번 주 아페티리아 난이도(GetApetiriaHard, 기본 어려움).
+        /// </summary>
+        public static (long General, long Rubicona) ComputeWeeklySeedCaps(ChatSettings settings, bool apetiriaHard = true)
         {
             long weekly = 0;
             bool eclipseFirst = true;
@@ -127,12 +133,8 @@ namespace TWChatOverlay.Services
                 if (eclipseFirst)
                 {
                     eclipseFirst = false;
-                    long apetiria = 0;
-                    if (IsItemEnabled(settings, ApetiriaEx.ItemName))
-                        apetiria = ApetiriaEx.WeeklySeed;
-                    else if (IsItemEnabled(settings, ApetiriaNormal.ItemName))
-                        apetiria = ApetiriaNormal.WeeklySeed;
-                    sum += apetiria;
+                    if (IsItemEnabled(settings, ApetiriaItemName))
+                        sum += apetiriaHard ? ApetiriaHardWeeklySeed : ApetiriaNormalWeeklySeed;
                 }
 
                 weekly += Math.Min(sum, group.Cap);
@@ -197,18 +199,24 @@ namespace TWChatOverlay.Services
                             break;
 
                         string key = day.ToString("yyyy-MM-dd");
-                        if (!(day < today && archive.TryGetValue(key, out List<SeedEntry>? entries)))
+                        string path = string.IsNullOrWhiteSpace(logDir)
+                            ? string.Empty
+                            : Path.Combine(logDir, $"TWChatLog_{day:yyyy_MM_dd}.html");
+                        bool fileExists = path.Length > 0 && File.Exists(path);
+
+                        // 구버전 스캔으로 보관된 날짜는 게임 로그가 아직 있으면 한 번 다시 읽는다
+                        List<SeedEntry>? entries = null;
+                        bool reusable = day < today && archive.TryGetValue(key, out entries) &&
+                                        (_scannedDays.Contains(key) || !fileExists);
+                        if (!reusable || entries is null)
                         {
                             // 미보관 날짜(또는 아직 자라는 오늘 파일)는 게임 로그를 스캔한다
-                            string path = string.IsNullOrWhiteSpace(logDir)
-                                ? string.Empty
-                                : Path.Combine(logDir, $"TWChatLog_{day:yyyy_MM_dd}.html");
-                            entries = path.Length > 0 && File.Exists(path)
-                                ? ScanDayFile(path)
-                                : new List<SeedEntry>();
+                            entries = fileExists ? ScanDayFile(path) : new List<SeedEntry>();
 
                             archive.TryGetValue(key, out var previous);
                             if (previous is null || previous.Count != entries.Count || SumOf(previous) != SumOf(entries))
+                                dirty = true;
+                            if (fileExists && _scannedDays.Add(key))
                                 dirty = true;
                             archive[key] = entries;
                         }
@@ -233,8 +241,50 @@ namespace TWChatOverlay.Services
         private const string KindWeekly = "weekly";   // 주간 버킷
         private const string KindDaily = "daily";     // 일간 버킷 (루비코나 환희·슬픔)
         private const string KindPartial = "partial"; // 주간 한도 직전 부분 지급 (주간 버킷에 합산)
+        private const string KindMarker = "marker";   // 금액 없는 판별용 줄 (아페티리아 난이도)
 
         private sealed record SeedEntry(string Kind, long Amount, string Text);
+
+        // 난이도 판별 마커: 어려움은 "[아페티리아 어려움 보상 상자] 아이템을 1개 획득하였습니다."가 클리어마다 찍힌다.
+        // 일반은 고유 문구가 없으므로 "아페티리아 클리어 횟수:" 줄만 있고 그날 어려움 상자가 없으면 일반으로 본다.
+        // ("아페티리아(EX) 클리어 횟수:"는 다른 컨텐츠라 제외)
+        private const string ApetiriaHardMarker = "[아페티리아 어려움 보상 상자]";
+        private const string ApetiriaClearMarker = "아페티리아 클리어 횟수:";
+
+        /// <summary>
+        /// 아페티리아 난이도 판별: 어려움이면 true, 일반이면 false.
+        /// 기본은 어려움이고, 이번 주 로그에서 어려움 상자 없이 클리어한 날이 마지막이면 일반으로 축소한다.
+        /// 이번 주에 아직 안 돌았으면 어려움으로 둔다.
+        /// SumWeeklyClearSeedAsync로 주간 범위를 스캔한 뒤에 호출해야 이번 주 로그가 반영된다.
+        /// </summary>
+        public static bool GetApetiriaHard(DateTime weekStart, DateTime weekEnd)
+        {
+            lock (ArchiveLock)
+            {
+                var archive = LoadArchive();
+                string startKey = weekStart.ToString("yyyy-MM-dd");
+                string endKey = weekEnd.ToString("yyyy-MM-dd");
+
+                foreach (var kv in archive.Reverse())
+                {
+                    if (string.CompareOrdinal(kv.Key, endKey) > 0)
+                        continue;
+                    if (string.CompareOrdinal(kv.Key, startKey) < 0)
+                        break;
+                    bool hard = false, cleared = false;
+                    foreach (var entry in kv.Value)
+                    {
+                        if (entry.Kind != KindMarker) continue;
+                        if (entry.Text == ApetiriaHardMarker) hard = true;
+                        else if (entry.Text == ApetiriaClearMarker) cleared = true;
+                    }
+                    if (hard) return true;
+                    if (cleared) return false;
+                }
+
+                return true;
+            }
+        }
 
         /// <summary>하루치 게임 로그에서 시드 획득 줄을 추출·분류한다.</summary>
         private static List<SeedEntry> ScanDayFile(string path)
@@ -256,10 +306,26 @@ namespace TWChatOverlay.Services
                     lineIndex++;
                     bool hasReward = line.Contains("보상으로", StringComparison.Ordinal);
                     bool hasPartial = line.Contains("획득 제한으로", StringComparison.Ordinal);
-                    if (!hasReward && !hasPartial)
+                    bool hasApetiria = line.Contains("아페티리아", StringComparison.Ordinal);
+                    if (!hasReward && !hasPartial && !hasApetiria)
                         continue;
 
                     string text = HtmlTagRegex.Replace(line, string.Empty);
+
+                    if (hasApetiria)
+                    {
+                        // 난이도 판별용 마커 — 같은 마커가 연달아 나오면 하나만 남긴다
+                        string? marker = null;
+                        if (text.Contains(ApetiriaHardMarker, StringComparison.Ordinal))
+                            marker = ApetiriaHardMarker;
+                        else if (text.Contains(ApetiriaClearMarker, StringComparison.Ordinal))
+                            marker = ApetiriaClearMarker;
+                        if (marker is not null &&
+                            (entries.Count == 0 || entries[^1].Kind != KindMarker || entries[^1].Text != marker))
+                            entries.Add(new SeedEntry(KindMarker, 0, marker));
+                        if (!hasReward && !hasPartial)
+                            continue;
+                    }
 
                     if (hasPartial)
                     {
@@ -330,14 +396,18 @@ namespace TWChatOverlay.Services
         private static readonly object ArchiveLock = new();
         private static SortedDictionary<string, List<SeedEntry>>? _archive;
 
+        // 현재 스캔 규칙으로 읽은 날짜 — 규칙이 바뀌면(마커 추가 등) 번호를 올려 구버전 보관분을 다시 읽게 한다
+        private const int ScanVersion = 2;
+        private static readonly HashSet<string> _scannedDays = new(StringComparer.Ordinal);
+
         private static string ArchivePath => Path.Combine(LogStoragePaths.SeedDirectory, "SeedHistory.html");
 
         private static readonly Regex ArchiveEntryRegex = new(
-            "<div class=\"seed (?<kind>weekly|daily|partial)\" data-date=\"(?<date>\\d{4}-\\d{2}-\\d{2})\" data-amount=\"(?<amount>\\d+)\">(?<text>.*?)</div>",
+            "<div class=\"seed (?<kind>weekly|daily|partial|marker)\" data-date=\"(?<date>\\d{4}-\\d{2}-\\d{2})\" data-amount=\"(?<amount>\\d+)\">(?<text>.*?)</div>",
             RegexOptions.Compiled);
 
         private static readonly Regex ArchiveDayRegex = new(
-            "class=\"day\" data-day=\"(?<date>\\d{4}-\\d{2}-\\d{2})\"",
+            "class=\"day\" data-day=\"(?<date>\\d{4}-\\d{2}-\\d{2})\"(?: data-scan=\"(?<scan>\\d+)\")?",
             RegexOptions.Compiled);
 
         private static DateTime ParseDateKey(string key)
@@ -372,6 +442,9 @@ namespace TWChatOverlay.Services
                             string dayKey = dayMatch.Groups["date"].Value;
                             if (!result.ContainsKey(dayKey))
                                 result[dayKey] = new List<SeedEntry>();
+                            if (dayMatch.Groups["scan"].Success &&
+                                int.Parse(dayMatch.Groups["scan"].Value) >= ScanVersion)
+                                _scannedDays.Add(dayKey);
                             continue;
                         }
 
@@ -426,6 +499,7 @@ namespace TWChatOverlay.Services
                 sb.AppendLine("    .seed{margin:1px 0;color:#aab3bb;}");
                 sb.AppendLine("    .seed.daily{color:#7ec8ff;}");
                 sb.AppendLine("    .seed.partial{color:#ffc266;}");
+                sb.AppendLine("    .seed.marker{color:#666;}");
                 sb.AppendLine("    .note{color:#888;margin:0 0 8px;}");
                 sb.AppendLine("  </style>");
                 sb.AppendLine("</head>");
@@ -461,7 +535,8 @@ namespace TWChatOverlay.Services
                         string dayLabel = kv.Value.Count == 0
                             ? "기록 없음"
                             : $"일반지역 {FormatSeed(dayWeekly)} · 루비코나 {FormatSeed(dayDaily)}";
-                        sb.AppendLine($"<h3 class=\"day\" data-day=\"{kv.Key}\">{ParseDateKey(kv.Key):M/d(ddd)} — {dayLabel}</h3>");
+                        string scanAttr = _scannedDays.Contains(kv.Key) ? $" data-scan=\"{ScanVersion}\"" : string.Empty;
+                        sb.AppendLine($"<h3 class=\"day\" data-day=\"{kv.Key}\"{scanAttr}>{ParseDateKey(kv.Key):M/d(ddd)} — {dayLabel}</h3>");
 
                         foreach (var entry in kv.Value)
                             sb.AppendLine($"<div class=\"seed {entry.Kind}\" data-date=\"{kv.Key}\" data-amount=\"{entry.Amount}\">{WebUtility.HtmlEncode(entry.Text)}</div>");
@@ -488,9 +563,20 @@ namespace TWChatOverlay.Services
         /// </summary>
         public static (long Weekly, long Other) SplitWeeklyOverflow(DateTime weekStart, long general)
         {
-            long cap = weekStart >= WeeklyCap66Since ? 66L * Eok : 60L * Eok;
+            long cap = GetBucketCaps(weekStart).General;
             long overflow = Math.Max(0, general - cap);
             return (general - overflow, overflow);
+        }
+
+        /// <summary>
+        /// 게임이 정한 주간 획득 한도 — 일반지역(루비코나 제외)과 루비코나.
+        /// 화면의 "실측 / 한도"에서 뒤 숫자로 쓴다. 체크리스트에서 무엇을 켰는지와는 무관하다.
+        /// (켜 둔 항목 기준 합은 ComputeWeeklySeedCaps — 안 도는 컨텐츠가 있으면 한도보다 작게 나와 헷갈린다)
+        /// </summary>
+        public static (long General, long Rubicona) GetBucketCaps(DateTime weekStart)
+        {
+            long general = weekStart >= WeeklyCap66Since ? WeeklyBucketCap : 60L * Eok;
+            return (general, RubiconaBucketCap);
         }
 
         /// <summary>시드 금액을 "93.15억" / "8500만" 형태로 표기.</summary>
