@@ -790,13 +790,6 @@
                             </Border>
                             <Border Style="{StaticResource SettingsRowStyle}">
                                 <DockPanel>
-                                    <TextBox DockPanel.Dock="Right" Width="200" Text="{Binding TopmostGuardProcessNames, UpdateSourceTrigger=LostFocus}" Style="{StaticResource SettingsRowInputStyle}"/>
-                                    <TextBlock Text="항상 위 복구 대상 프로그램" Style="{StaticResource SettingsRowLabelStyle}"
-                                               ToolTip="이 프로그램이 앞으로 올 때만 오버레이를 다시 최상단으로 올립니다(쉼표로 여러 개, .exe 생략).&#10;캡처 도구처럼 여기 없는 프로그램이 앞으로 오면 그 위로 올라가지 않습니다.&#10;게임 클라이언트는 InphaseNXD 입니다."/>
-                                </DockPanel>
-                            </Border>
-                            <Border Style="{StaticResource SettingsRowStyle}">
-                                <DockPanel>
                                     <CheckBox DockPanel.Dock="Right" IsChecked="{Binding UnifiedToastStack}" Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
                                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                                         <TextBlock Text="알림 표시 위치 통합" Style="{StaticResource SettingsRowLabelStyle}"
