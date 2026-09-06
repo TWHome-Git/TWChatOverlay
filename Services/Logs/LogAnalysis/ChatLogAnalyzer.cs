@@ -17,6 +17,10 @@ namespace TWChatOverlay.Services.LogAnalysis
             @"\[(?<userId>[^\[\]]+)\]\s*$",
             RegexOptions.Compiled);
 
+        // 외치기 꼬리표: "… From [이름]"은 무료, "… Click [이름]"은 유료. 둘 다 없으면 시스템 공지형(룬 마스터 달성·강화 성공 등)
+        private static readonly Regex FreeShoutTailRegex = new(@"\bFrom\s*\[[^\[\]]+\]\s*$", RegexOptions.Compiled);
+        private static readonly Regex PaidShoutTailRegex = new(@"\bClick\s*\[[^\[\]]+\]\s*$", RegexOptions.Compiled);
+
         private static readonly Regex WhitespaceRunRegex = new(@"\s+", RegexOptions.Compiled);
 
         // 카테고리 판별용 브러시 — 줄마다 새로 만들지 않도록 Frozen 정적 인스턴스 재사용
@@ -53,6 +57,8 @@ namespace TWChatOverlay.Services.LogAnalysis
             var (category, brush) = GetCategoryByColor(chatColor);
             context.Result.Category = category;
             context.Result.Brush = brush;
+            if (category == ChatCategory.Shout)
+                context.Result.ShoutKind = ResolveShoutKind(chatContent);
             context.Result.SenderId = ExtractSenderId(chatContent, category);
             context.Result.RawSenderId = ExtractRawSenderId(decodedContent, category);
             context.Result.HasLeadingBodyWhitespace = !string.IsNullOrEmpty(decodedContent) && char.IsWhiteSpace(decodedContent[0]);
@@ -61,6 +67,13 @@ namespace TWChatOverlay.Services.LogAnalysis
             context.MessageOnly = ExtractMessageOnly(chatContent);
             context.Result.FormattedText = $"{timeRaw} {chatContent}";
             context.IsSuccess = true;
+        }
+
+        private static ShoutKind ResolveShoutKind(string chatContent)
+        {
+            if (FreeShoutTailRegex.IsMatch(chatContent)) return ShoutKind.Free;
+            if (PaidShoutTailRegex.IsMatch(chatContent)) return ShoutKind.Paid;
+            return ShoutKind.Notice;
         }
 
         private static string ExtractMessageOnly(string chatContent)

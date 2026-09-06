@@ -40,6 +40,23 @@ namespace TWChatOverlay.Services
             });
         }
 
+        /// <summary>줄 단위 색. 외치기는 무료/유료/공지 종류별 색을, 클럽 보스 공지는 전용 색을 쓴다.</summary>
+        public static SolidColorBrush Resolve(ChatSettings settings, LogParser.ParseResult log)
+        {
+            if (log.Category == ChatCategory.Shout)
+            {
+                string hex = log.ShoutKind switch
+                {
+                    ShoutKind.Free => settings.FreeShoutColor,
+                    ShoutKind.Paid => settings.PaidShoutColor,
+                    _ => settings.NoticeShoutColor,
+                };
+                return ToBrush(hex);
+            }
+
+            return Resolve(settings, log.Category, log.IsClubBossMessage);
+        }
+
         /// <summary>클럽 보스 공지 줄은 동기화가 꺼져 있으면 전용 색을 쓴다.</summary>
         public static SolidColorBrush Resolve(ChatSettings settings, ChatCategory category, bool isClubBossMessage)
         {

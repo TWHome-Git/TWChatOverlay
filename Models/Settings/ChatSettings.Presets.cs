@@ -11,6 +11,9 @@
                 case "Team": TeamColor = hex; break;
                 case "Club": ClubColor = hex; break;
                 case "Shout": ShoutColor = hex; break;
+                case "ShoutFree": FreeShoutColor = hex; break;
+                case "ShoutPaid": PaidShoutColor = hex; break;
+                case "ShoutNotice": NoticeShoutColor = hex; break;
                 case "EtaCharacter": EtaCharacterColor = hex; break;
                 case "Timestamp": TimestampColor = hex; break;
                 case "IdTag": IdTagColor = hex; break;

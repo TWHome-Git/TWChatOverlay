@@ -425,10 +425,28 @@
                             <Border Style="{StaticResource SettingsRowStyle}">
                                 <DockPanel>
                                     <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
-                                        <Button Width="26" Height="14" Margin="0,0,10,0" Background="{Binding ShoutColor}" Command="{Binding ColorPickCommand}" CommandParameter="Shout" Style="{StaticResource ColorPickerButtonStyle}"/>
-                                        <CheckBox IsChecked="{Binding ShowShout}" Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
+                                        <Button Width="26" Height="14" Margin="0,0,10,0" Background="{Binding FreeShoutColor}" Command="{Binding ColorPickCommand}" CommandParameter="ShoutFree" Style="{StaticResource ColorPickerButtonStyle}"/>
+                                        <CheckBox IsChecked="{Binding ShowFreeShout}" Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
                                     </StackPanel>
-                                    <TextBlock Text="외치기" Style="{StaticResource SettingsRowLabelStyle}"/>
+                                    <TextBlock Text="외치기 · 무료 (From)" Style="{StaticResource SettingsRowLabelStyle}" ToolTip="줄 끝이 'From [이름]'인 외치기"/>
+                                </DockPanel>
+                            </Border>
+                            <Border Style="{StaticResource SettingsRowStyle}">
+                                <DockPanel>
+                                    <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
+                                        <Button Width="26" Height="14" Margin="0,0,10,0" Background="{Binding PaidShoutColor}" Command="{Binding ColorPickCommand}" CommandParameter="ShoutPaid" Style="{StaticResource ColorPickerButtonStyle}"/>
+                                        <CheckBox IsChecked="{Binding ShowPaidShout}" Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
+                                    </StackPanel>
+                                    <TextBlock Text="외치기 · 유료 (Click)" Style="{StaticResource SettingsRowLabelStyle}" ToolTip="줄 끝이 'Click [이름]'인 외치기"/>
+                                </DockPanel>
+                            </Border>
+                            <Border Style="{StaticResource SettingsRowStyle}">
+                                <DockPanel>
+                                    <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
+                                        <Button Width="26" Height="14" Margin="0,0,10,0" Background="{Binding NoticeShoutColor}" Command="{Binding ColorPickCommand}" CommandParameter="ShoutNotice" Style="{StaticResource ColorPickerButtonStyle}"/>
+                                        <CheckBox IsChecked="{Binding ShowNoticeShout}" Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
+                                    </StackPanel>
+                                    <TextBlock Text="외치기 · 공지" Style="{StaticResource SettingsRowLabelStyle}" ToolTip="From/Click 꼬리표가 없는 외치기 — 룬 마스터 달성, 강화 성공 같은 시스템 공지"/>
                                 </DockPanel>
                             </Border>
                             <Border Style="{StaticResource SettingsRowStyle}">
@@ -768,6 +786,13 @@
                                         <TextBlock Text="항상 위" Style="{StaticResource SettingsRowLabelStyle}"/>
                                         <Button Style="{StaticResource HelpButtonStyle}" Tag="display.always_on_top" Click="Help_Click"/>
                                     </StackPanel>
+                                </DockPanel>
+                            </Border>
+                            <Border Style="{StaticResource SettingsRowStyle}">
+                                <DockPanel>
+                                    <TextBox DockPanel.Dock="Right" Width="200" Text="{Binding TopmostGuardProcessNames, UpdateSourceTrigger=LostFocus}" Style="{StaticResource SettingsRowInputStyle}"/>
+                                    <TextBlock Text="항상 위 복구 대상 프로그램" Style="{StaticResource SettingsRowLabelStyle}"
+                                               ToolTip="이 프로그램이 앞으로 올 때만 오버레이를 다시 최상단으로 올립니다(쉼표로 여러 개, .exe 생략).&#10;캡처 도구처럼 여기 없는 프로그램이 앞으로 오면 그 위로 올라가지 않습니다.&#10;게임 클라이언트는 InphaseNXD 입니다."/>
                                 </DockPanel>
                             </Border>
                             <Border Style="{StaticResource SettingsRowStyle}">

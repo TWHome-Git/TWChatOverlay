@@ -300,7 +300,9 @@ namespace TWChatOverlay.Views
                         }
                     }
 
-                    if (_settings.ShowShoutToastPopup && isActualShout && allowLiveShoutActions)
+                    // 표시를 꺼 둔 종류(무료/유료/공지)의 외치기는 토스트도 띄우지 않는다
+                    if (_settings.ShowShoutToastPopup && isActualShout && allowLiveShoutActions &&
+                        LogParser.IsVisible(parseResult, _settings))
                         ShoutToastService.Show(parseResult, _settings);
                 });
             }

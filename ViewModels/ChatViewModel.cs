@@ -143,7 +143,7 @@ namespace TWChatOverlay.ViewModels
         /// </summary>
         public void UpdateAllLogColors()
         {
-            _tabLogBuffers.UpdateAllBrushes(log => ChatBrushResolver.Resolve(_settings, log.Category, log.IsClubBossMessage));
+            _tabLogBuffers.UpdateAllBrushes(log => ChatBrushResolver.Resolve(_settings, log));
             RefreshLogDisplay();
         }
 
