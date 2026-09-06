@@ -82,15 +82,16 @@ namespace TWChatOverlay.Services
                 _window.SetMessage(message);
                 _window.SetPreviewMode(isPreview);
 
+                // 통합 알림 스택: 자리를 먼저 받고 그 자리에서 보인다.
+                // Show 뒤에 붙이면 옛 위치에서 잠깐 보이는 사이 다른 알림이 같은 칸을 잡아 겹쳤다.
+                var (left, top) = ToastStackService.Attach(_window);
+                _window.Left = left;
+                _window.Top = top;
+
                 if (!_window.IsVisible)
                 {
                     _window.Show();
                 }
-
-                // 통합 알림 스택: 앵커 위치에서 다른 알림들 아래로 배치
-                var (left, top) = ToastStackService.Attach(_window);
-                _window.Left = left;
-                _window.Top = top;
 
                 _window.BringToFront();
             }));
