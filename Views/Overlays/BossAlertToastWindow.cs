@@ -348,21 +348,23 @@ namespace TWChatOverlay.Views
 
         private static void ShowAtStoredPosition(BossAlertToastWindow window, ChatSettings? settings)
         {
-            if (!window.IsVisible)
+            bool needsShow = !window.IsVisible;
+            if (needsShow)
             {
                 // 저장된 크기 복원 (기본 420x72)
                 if (settings?.BossAlertToastWindowWidth is double width && width >= window.MinWidth)
                     window.Width = width;
                 if (settings?.BossAlertToastWindowHeight is double height && height >= window.MinHeight)
                     window.Height = height;
-
-                window.Show();
             }
 
-            // 통합 알림 스택: 앵커 위치에서 다른 알림들 아래로 배치
+            // 통합 알림 스택: 자리를 먼저 받고 그 자리에서 보인다 (Show 뒤에 붙이면 겹칠 수 있다)
             var (left, top) = ToastStackService.Attach(window);
             window.Left = left;
             window.Top = top;
+
+            if (needsShow)
+                window.Show();
         }
     }
 }

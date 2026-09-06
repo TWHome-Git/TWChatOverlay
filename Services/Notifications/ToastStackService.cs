@@ -97,58 +97,103 @@ namespace TWChatOverlay.Services
         {
             string key = GroupKeyFor(toast);
 
-            // 모드가 바뀌었을 수 있으므로 다른 그룹에서 제거 후 현재 그룹에 넣는다
-            foreach (var list in Stacks.Values)
-                list.Remove(toast);
-
             if (!Stacks.TryGetValue(key, out var stack))
             {
                 stack = new List<Window>();
                 Stacks[key] = stack;
             }
-            stack.Add(toast);
+
+            // 모드가 바뀌었을 수 있으므로 다른 그룹에서는 뺀다.
+            // 같은 그룹에 이미 있으면 자리를 그대로 둔다. 경험치 알림처럼 창을 재사용하는 알림이
+            // 메시지만 바꿔 다시 붙을 때 끝으로 옮기면, 옛 자리에 남은 다른 창들과 겹친다.
+            foreach (var (otherKey, list) in Stacks)
+            {
+                if (otherKey != key)
+                    list.Remove(toast);
+            }
+            if (!stack.Contains(toast))
+                stack.Add(toast);
 
             if (Subscribed.Add(toast))
             {
                 toast.Closed += (_, _) =>
                 {
                     Subscribed.Remove(toast);
-                    foreach (var list in Stacks.Values)
-                        list.Remove(toast);
-                    Reflow();
+                    Detach(toast);
+                };
+                // Close가 아니라 Hide로 사라지는 창(트레이 최소화 등)도 자리를 비운다.
+                // 서비스가 Attach 없이 다시 Show하면 스택 끝에 붙여 자리를 새로 준다.
+                toast.IsVisibleChanged += (_, args) =>
+                {
+                    if (args.NewValue is false)
+                    {
+                        if (IsAttached(toast))
+                            Detach(toast);
+                    }
+                    else if (!IsAttached(toast))
+                    {
+                        Attach(toast);
+                        Reflow();
+                    }
                 };
                 toast.SizeChanged += (_, _) => Reflow();
             }
 
+            // 스택에 든 창은 아직 Show 전이라도 자리를 잡은 것으로 센다.
+            // 예전엔 보이는 창만 셌는데, 두 알림이 붙어서 뜨면 서로를 빼고 같은 칸을 잡아 겹쳤다.
             var (left, top) = GetAnchorFor(key);
             double y = top + PreviewSlotHeight(key);
             foreach (Window window in stack)
             {
                 if (ReferenceEquals(window, toast))
                     break;
-                if (!window.IsVisible)
-                    continue;
                 y += EffectiveHeight(window) + Gap;
             }
 
+            // 붙인 창 아래에 있던 창들도 제자리로. 붙인 창 자체는 호출한 쪽이 받은 좌표로 띄운다.
+            ReflowGroup(key, skip: toast);
+
             return (left, y);
+        }
+
+        private static bool IsAttached(Window toast)
+        {
+            foreach (var list in Stacks.Values)
+            {
+                if (list.Contains(toast))
+                    return true;
+            }
+            return false;
+        }
+
+        /// <summary>스택에서 빼고 나머지를 다시 배치한다. Closed·Hide 양쪽에서 부른다.</summary>
+        private static void Detach(Window toast)
+        {
+            bool removed = false;
+            foreach (var list in Stacks.Values)
+                removed |= list.Remove(toast);
+            if (removed)
+                Reflow();
         }
 
         /// <summary>모든 그룹을 앵커 기준으로 다시 배치한다.</summary>
         public static void Reflow()
         {
-            try
+            foreach (string key in Stacks.Keys.Concat(Previews.Keys).Distinct().ToList())
             {
-                foreach (string key in Stacks.Keys.Concat(Previews.Keys).Distinct().ToList())
+                try
+                {
                     ReflowGroup(key);
-            }
-            catch (Exception ex)
-            {
-                AppLogger.Warn("Toast stack reflow failed.", ex);
+                }
+                catch (Exception ex)
+                {
+                    AppLogger.Warn($"Toast stack reflow failed for group '{key}'.", ex);
+                }
             }
         }
 
-        private static void ReflowGroup(string key)
+        /// <param name="skip">자리는 세되 옮기지는 않을 창. Attach 직후 호출한 쪽이 직접 띄우는 창에 쓴다.</param>
+        private static void ReflowGroup(string key, Window? skip = null)
         {
             var (left, top) = GetAnchorFor(key);
             double y = top;
@@ -165,11 +210,22 @@ namespace TWChatOverlay.Services
 
             foreach (Window window in stack.ToList())
             {
-                if (!window.IsVisible)
+                if (ReferenceEquals(window, skip))
+                {
+                    y += EffectiveHeight(window) + Gap;
                     continue;
+                }
 
-                window.Left = left;
-                MoveWindowTop(window, y);
+                // 창 하나가 옮겨지지 않아도(닫히는 중 등) 나머지는 계속 배치한다
+                try
+                {
+                    window.Left = left;
+                    MoveWindowTop(window, y);
+                }
+                catch (Exception ex)
+                {
+                    AppLogger.Warn("Toast stack could not move a window; skipping it.", ex);
+                }
                 y += EffectiveHeight(window) + Gap;
             }
         }
@@ -179,8 +235,14 @@ namespace TWChatOverlay.Services
                 ? EffectiveHeight(preview) + Gap
                 : 0;
 
+        // 아직 레이아웃 전이면 지정 높이를, 그것도 없으면(SizeToContent) 기본 높이를 쓴다. NaN이 섞이면 아래 창이 전부 제자리를 잃는다.
         private static double EffectiveHeight(Window window)
-            => window.ActualHeight > 0 ? window.ActualHeight : window.Height;
+        {
+            if (window.ActualHeight > 0) return window.ActualHeight;
+            if (!double.IsNaN(window.Height) && window.Height > 0) return window.Height;
+            if (!double.IsNaN(window.MinHeight) && window.MinHeight > 0) return window.MinHeight;
+            return 72;
+        }
 
         private static void MoveWindowTop(Window window, double top)
         {
