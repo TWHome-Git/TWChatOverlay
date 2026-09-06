@@ -248,20 +248,6 @@ namespace TWChatOverlay.ViewModels
             }
         }
 
-        /// <summary>항상 위를 다시 올릴 대상 프로세스 이름(쉼표 구분). 이 앱이 전경일 때만 오버레이를 재승격한다.</summary>
-        public string TopmostGuardProcessNames
-        {
-            get => _settings.TopmostGuardProcessNames;
-            set
-            {
-                string next = value ?? string.Empty;
-                if (string.Equals(_settings.TopmostGuardProcessNames, next, StringComparison.Ordinal)) return;
-                _settings.TopmostGuardProcessNames = next;
-                OnPropertyChanged();
-                SaveSettings();
-            }
-        }
-
         /// <summary>알림 표시 위치 통합: 켜면 모든 알림이 한 위치에 쌓이고, 끄면 종류별 위치에 각각 표시.</summary>
         public bool UnifiedToastStack
         {

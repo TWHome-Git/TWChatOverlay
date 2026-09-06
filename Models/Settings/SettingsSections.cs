@@ -293,6 +293,7 @@ namespace TWChatOverlay.Models
         /// <summary>
         /// 항상 위를 다시 올릴 대상 프로세스 이름(쉼표 구분, .exe 없이). 이 프로그램이 전경이 될 때만 오버레이를 최상단으로 재승격한다.
         /// 캡처 도구 같은 다른 앱이 전경이 될 때는 손대지 않아 그 위로 올라가지 않는다. 게임 클라이언트는 InphaseNXD로 뜬다.
+        /// 설정 화면에는 내지 않는다. 게임 실행 파일 이름이 바뀌었을 때 settings.json에서만 고치는 값이다.
         /// </summary>
         public string TopmostGuardProcessNames { get; set; } = "InphaseNXD, Talesweaver";
         /// <summary>따로 여는 창(달력·컨텐츠·어밴던)의 배경 불투명도(%). 키는 OverlayOpacityService의 그룹 키.</summary>
