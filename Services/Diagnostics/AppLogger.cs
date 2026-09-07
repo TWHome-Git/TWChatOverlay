@@ -86,8 +86,14 @@ namespace TWChatOverlay.Services
 
         private static void Write(LogLevel level, string message, string? caller)
         {
-            if (!_isEnabled) return;
-            if (level < _minimumLevel) return;
+            // 경고 이상은 디버그 로깅이 꺼져 있어도 항상 기록한다 —
+            // 채팅 누락 같은 문제의 사후 추적에 필요한 최소한의 근거를 남기기 위함.
+            bool bypassGates = level >= LogLevel.WARN;
+            if (!bypassGates)
+            {
+                if (!_isEnabled) return;
+                if (level < _minimumLevel) return;
+            }
 
             string levelLabel = level switch
             {

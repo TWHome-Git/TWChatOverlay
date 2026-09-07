@@ -635,13 +635,18 @@ namespace TWChatOverlay.Services
             return -1;
         }
 
-        /// <summary>현재 위치가 줄 중간일 수 있을 때, 다음 '\n' 직후로 스냅해 조각 줄을 피한다.</summary>
+        /// <summary>
+        /// 현재 위치가 줄 중간일 수 있을 때, 다음 '\n' 직후로 스냅해 조각 줄을 피한다.
+        /// 이 경로는 줄 하나를 잃을 수 있으므로, 건너뛴 내용을 로그에 남겨 사후 추적을 가능하게 한다.
+        /// </summary>
         private void SnapToNextLineBoundary(long length)
         {
             try
             {
+                long snapStart = _lastPosition;
                 _logStream!.Seek(_lastPosition, SeekOrigin.Begin);
                 var buffer = new byte[4096];
+                var skippedBytes = new List<byte>(512);
                 long pos = _lastPosition;
                 while (pos < length)
                 {
@@ -651,9 +656,12 @@ namespace TWChatOverlay.Services
 
                     for (int i = 0; i < read; i++)
                     {
+                        if (skippedBytes.Count < 512)
+                            skippedBytes.Add(buffer[i]);
                         if (buffer[i] == (byte)'\n')
                         {
                             _lastPosition = pos + i + 1;
+                            LogSkippedSpan(snapStart, _lastPosition, skippedBytes);
                             return;
                         }
                     }
@@ -665,6 +673,23 @@ namespace TWChatOverlay.Services
             {
                 AppLogger.Warn("Failed to snap log position to line boundary.", ex);
             }
+        }
+
+        /// <summary>스냅으로 건너뛴 구간의 내용을 경고 로그로 남긴다 (채팅 누락 추적 근거).</summary>
+        private static void LogSkippedSpan(long start, long end, List<byte> skippedBytes)
+        {
+            try
+            {
+                string preview = System.Text.Encoding.GetEncoding(949)
+                    .GetString(skippedBytes.ToArray())
+                    .Replace("\r", string.Empty)
+                    .Replace("\n", string.Empty);
+                preview = System.Text.RegularExpressions.Regex.Replace(preview, "<[^>]+>", string.Empty).Trim();
+                if (preview.Length > 300)
+                    preview = preview[..300] + "…";
+                AppLogger.Warn($"Snap skipped {end - start} bytes ({start} -> {end}). Skipped content: '{preview}'");
+            }
+            catch { }
         }
 
         /// <summary>
