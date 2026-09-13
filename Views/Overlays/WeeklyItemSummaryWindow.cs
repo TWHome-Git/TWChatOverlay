@@ -53,6 +53,10 @@ namespace TWChatOverlay.Views
             _weekStart = weekStart;
             _weekEnd = weekEnd;
 
+            // 시드 줄이 실시간으로 기록되거나 보충 스캔이 끝나면 열려 있는 창의 시드 행을 다시 채운다
+            WeeklySeedRewardService.Changed += OnSeedArchiveChanged;
+            Closed += (_, _) => WeeklySeedRewardService.Changed -= OnSeedArchiveChanged;
+
             var title = new TextBlock
             {
                 Text = "주간 득템 통계",
@@ -241,8 +245,22 @@ namespace TWChatOverlay.Views
             return row;
         }
 
+        private void OnSeedArchiveChanged()
+        {
+            // 백그라운드 스레드에서 올라온다. 이미 진행 중인 계산은 _loadVersion으로 무효화된다.
+            try
+            {
+                Dispatcher.BeginInvoke(new Action(() =>
+                {
+                    if (IsLoaded)
+                        LoadSeedSummaryAsync();
+                }), System.Windows.Threading.DispatcherPriority.Background);
+            }
+            catch { }
+        }
+
         /// <summary>
-        /// 주간 로그를 스캔해 실측 시드 합계를 채운다. 이번 주에는 체크리스트 기준 주간 한도를
+        /// 보관본에서 실측 시드 합계를 채운다. 이번 주에는 체크리스트 기준 주간 한도를
         /// 병기하고, 과거 주에는 실측값만 표시한다 (당시 한도가 지금과 다를 수 있음).
         /// </summary>
         private async void LoadSeedSummaryAsync()

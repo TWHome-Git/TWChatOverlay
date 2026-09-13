@@ -184,6 +184,9 @@ namespace TWChatOverlay.Views
                     if (!evt.IsRealTime && !evt.IsStartupBackfill)
                         return; // 과거 로그 표시 전용은 집계/아카이브 부수효과 없음
 
+                    // 클리어 보상 시드는 줄이 들어올 때 바로 기록한다 (통계 창은 보관본만 읽는다)
+                    WeeklySeedRewardService.ObserveLiveLine(evt.Source.SourcePath, evt.Html, evt.Source.CheckpointPosition);
+
                     var primary = evt.Analysis.Primary;
                     if (!primary.IsSuccess)
                         return;
@@ -217,6 +220,9 @@ namespace TWChatOverlay.Views
             _logService.InitialLogsLoaded += () =>
             {
                 Dispatcher.BeginInvoke(new Action(() => RequestRefreshLogDisplay()), DispatcherPriority.ApplicationIdle);
+                // 시작·날짜 전환 시점: 앱이 못 본 구간(꺼져 있던 동안, 오늘 켜기 전)의 시드 줄을 한 번 보충한다.
+                // LogService가 실시간 읽기 시작 위치를 정한 뒤에 돌아야 그 사이 줄이 빠지지 않는다.
+                _ = WeeklySeedRewardService.CatchUpAsync(_settings.ChatLogFolderPath);
             };
             BlacklistService.BlacklistChanged += () =>
             {
