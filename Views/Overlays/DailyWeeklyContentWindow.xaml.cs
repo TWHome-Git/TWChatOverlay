@@ -264,14 +264,50 @@ namespace TWChatOverlay.Views
 
         public bool HasCompletedItems => _completedItems.Count > 0;
 
-        public string ProgressDisplay =>
-            $"{TrackItems.Count(i => !i.IsSubItem && i.IsEnabled && i.IsCleared)} / {TrackItems.Count(i => !i.IsSubItem && i.IsEnabled)} 완료";
+        public string ProgressDisplay => FormatProgress(CountLeafItems(TrackItems));
 
-        public string DailyProgressDisplay =>
-            $"{DailyContentItems.Count(i => !i.IsSubItem && i.IsEnabled && !i.IsWeekly && i.IsCleared)} / {DailyContentItems.Count(i => !i.IsSubItem && i.IsEnabled && !i.IsWeekly)} 완료";
+        public string DailyProgressDisplay => FormatProgress(CountLeafItems(DailyContentItems, i => !i.IsWeekly));
 
-        public string WeeklyProgressDisplay =>
-            $"{WeeklyContentItems.Count(i => !i.IsSubItem && i.IsEnabled && i.IsCleared)} / {WeeklyContentItems.Count(i => !i.IsSubItem && i.IsEnabled)} 완료";
+        public string WeeklyProgressDisplay => FormatProgress(CountLeafItems(WeeklyContentItems));
+
+        private static string FormatProgress((int Cleared, int Total) progress) => $"{progress.Cleared} / {progress.Total} 완료";
+
+        /// <summary>
+        /// 완료 개수는 실제 컨텐츠(말단 항목)만 센다. 일일/주간·지역·코어 마스터 같은 묶음은 항목을 나누는
+        /// 제목일 뿐이므로 개수에 넣지 않고, 묶음이 꺼져 있으면 그 안의 항목도 세지 않는다.
+        /// 목록에는 묶음과 그 안의 항목이 모두 평면으로 들어 있으므로, 다른 항목의 자식이 아닌 것만 뿌리로 잡아 내려간다.
+        /// </summary>
+        private static (int Cleared, int Total) CountLeafItems(
+            IEnumerable<DailyWeeklyContentLog> items,
+            Func<DailyWeeklyContentLog, bool>? leafFilter = null)
+        {
+            var list = items as IList<DailyWeeklyContentLog> ?? items.ToList();
+            var children = new HashSet<DailyWeeklyContentLog>(ReferenceEqualityComparer.Instance);
+            foreach (var item in list)
+                if (item.HasChildren)
+                    foreach (var child in item.Children!)
+                        children.Add(child);
+
+            int cleared = 0, total = 0;
+            foreach (var item in list)
+                if (!children.Contains(item))
+                    Visit(item);
+            return (cleared, total);
+
+            void Visit(DailyWeeklyContentLog node)
+            {
+                if (!node.IsEnabled) return;
+                if (node.HasChildren)
+                {
+                    foreach (var child in node.Children!)
+                        Visit(child);
+                    return;
+                }
+                if (leafFilter is not null && !leafFilter(node)) return;
+                total++;
+                if (node.IsCleared) cleared++;
+            }
+        }
 
         private bool _isSettingsOpen;
         public bool IsLoading
