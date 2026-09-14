@@ -167,7 +167,7 @@ namespace TWChatOverlay.Views
                     var source = batch[i].Source;
                     if (source.CheckpointPosition >= 0 && !string.IsNullOrEmpty(source.SourcePath))
                     {
-                        try { _logService.NotifyConsumed(source.SourcePath, source.CheckpointPosition); } catch { }
+                        try { _logService?.NotifyConsumed(source.SourcePath, source.CheckpointPosition); } catch { }
                         break;
                     }
                 }

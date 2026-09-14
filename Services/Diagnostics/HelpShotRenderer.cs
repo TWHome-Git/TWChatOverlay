@@ -558,13 +558,19 @@ namespace TWChatOverlay.Services
                 ActiveExpBuffs.Add(new BuffTrackerService.BuffDisplayItem("EOS", "02:05", BuffIcon("EOS.png"), 1));
             }
 
-            private static ImageSource? BuffIcon(string file)
+            private static ImageSource BuffIcon(string file)
             {
                 try
                 {
                     return new BitmapImage(new Uri($"pack://application:,,,/Data/images/Buff/{file}", UriKind.Absolute));
                 }
-                catch { return null; }
+                catch
+                {
+                    // 리소스가 없어도 예시 렌더링은 계속되도록 빈 이미지로 대체한다 (BuffDisplayItem은 null 아이콘을 받지 않는다)
+                    var empty = new DrawingImage();
+                    empty.Freeze();
+                    return empty;
+                }
             }
         }
 
