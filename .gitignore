@@ -376,3 +376,6 @@ CLAUDE.md
 
 # 다른 프로젝트 폴더가 딸려 들어가는 것 방지
 repos/
+
+# 세션 인수인계 문서 (로컬 전용)
+SESSION_HISTORY.md
