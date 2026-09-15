@@ -107,19 +107,34 @@ namespace TWChatOverlay.Services
                     _window = null;
             };
 
-            if (settings?.RecaptureSupplyPadOrderWindowLeft is double left &&
-                settings.RecaptureSupplyPadOrderWindowTop is double top)
-            {
-                window.WindowStartupLocation = WindowStartupLocation.Manual;
-                window.Left = left;
-                window.Top = top;
-            }
-            if (settings?.RecaptureSupplyPadOrderWindowWidth is double width && width >= window.MinWidth)
-                window.Width = width;
-            if (settings?.RecaptureSupplyPadOrderWindowHeight is double height && height >= window.MinHeight)
-                window.Height = height;
+            if (settings != null)
+                ApplyStoredBounds(window, settings);
 
             return window;
+        }
+
+        /// <summary>발판 순서 창이 떠 있으면 설정에 저장된 위치/크기로 옮긴다. 설정 전체 교체(프로필 불러오기) 뒤에 쓴다.</summary>
+        public static void ApplyStoredBounds(ChatSettings settings)
+        {
+            if (settings == null)
+                return;
+
+            Application.Current.Dispatcher.BeginInvoke(new Action(() =>
+            {
+                var window = _window;
+                if (window == null || !window.IsLoaded)
+                    return;
+                ApplyStoredBounds(window, settings);
+            }));
+        }
+
+        private static void ApplyStoredBounds(RecaptureSupplyPadOrderWindow window, ChatSettings settings)
+        {
+            if (settings.RecaptureSupplyPadOrderWindowLeft.HasValue && settings.RecaptureSupplyPadOrderWindowTop.HasValue)
+                window.WindowStartupLocation = WindowStartupLocation.Manual;
+            WindowPlacement.ApplyStoredBounds(window,
+                settings.RecaptureSupplyPadOrderWindowLeft, settings.RecaptureSupplyPadOrderWindowTop,
+                settings.RecaptureSupplyPadOrderWindowWidth, settings.RecaptureSupplyPadOrderWindowHeight);
         }
 
         private static ChatSettings? GetSharedSettings()

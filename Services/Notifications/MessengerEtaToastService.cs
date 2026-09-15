@@ -80,6 +80,15 @@ namespace TWChatOverlay.Services
             }));
         }
 
+        /// <summary>위치 미리보기가 떠 있으면 설정에 저장된 위치로 다시 옮긴다. 설정 전체 교체(프로필 불러오기) 뒤에 쓴다.</summary>
+        public static void ReapplyPreviewPosition(ChatSettings settings)
+        {
+            if (settings == null || _previewToast?.IsVisible != true)
+                return;
+
+            ShowPositionPreview(settings, force: true);
+        }
+
         public static void ClosePositionPreview(ChatSettings settings)
         {
             Application.Current.Dispatcher.BeginInvoke(new Action(() =>

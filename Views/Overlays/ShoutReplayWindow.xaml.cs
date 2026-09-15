@@ -77,18 +77,16 @@ namespace TWChatOverlay.Views
         private void ShoutReplayWindow_Loaded(object sender, RoutedEventArgs e)
         {
             EnsureMouseHitTestEnabled();
-            if (_settings.ShoutReplayWindowLeft.HasValue && _settings.ShoutReplayWindowTop.HasValue)
-            {
-                Left = _settings.ShoutReplayWindowLeft.Value;
-                Top = _settings.ShoutReplayWindowTop.Value;
-            }
-
-            if (_settings.ShoutReplayWindowWidth.HasValue && _settings.ShoutReplayWindowWidth.Value >= MinWidth)
-                Width = _settings.ShoutReplayWindowWidth.Value;
-            if (_settings.ShoutReplayWindowHeight.HasValue && _settings.ShoutReplayWindowHeight.Value >= MinHeight)
-                Height = _settings.ShoutReplayWindowHeight.Value;
-
+            ApplyStoredBounds();
             Services.OsSnapGuard.Disable(this); // 상단 드래그 시 OS 스냅(최대화) 차단
+        }
+
+        /// <summary>설정에 저장된 위치/크기로 맞춘다. 시작 시와 설정 전체 교체(프로필 불러오기) 뒤에 쓴다.</summary>
+        public void ApplyStoredBounds()
+        {
+            Services.WindowPlacement.ApplyStoredBounds(this,
+                _settings.ShoutReplayWindowLeft, _settings.ShoutReplayWindowTop,
+                _settings.ShoutReplayWindowWidth, _settings.ShoutReplayWindowHeight);
         }
 
         private void ShoutReplayWindow_Closing(object? sender, System.ComponentModel.CancelEventArgs e)

@@ -39,8 +39,7 @@ namespace TWChatOverlay.Views
                 if (settings.MenuWindowLeft.HasValue && settings.MenuWindowTop.HasValue)
                 {
                     WindowStartupLocation = WindowStartupLocation.Manual;
-                    Left = settings.MenuWindowLeft.Value;
-                    Top = settings.MenuWindowTop.Value;
+                    WindowPlacement.ApplyStored(this, settings.MenuWindowLeft, settings.MenuWindowTop);
                 }
 
                 ApplyMenuOrientation(settings.MenuWindowHorizontal);
@@ -69,6 +68,29 @@ namespace TWChatOverlay.Views
             TrayAllWindowsService.TrayStateChanged += OnTrayStateChanged;
             ApplyMinimizeHighlight(TrayAllWindowsService.IsTrayed);
             AppLogger.Info("Menu window initialized.");
+        }
+
+        /// <summary>
+        /// 메뉴 바와 메뉴 바가 여는 창(메모, 외치기 다시보기)을 설정에 저장된 위치로 옮긴다.
+        /// 설정 전체 교체(프로필 불러오기) 뒤에 쓴다.
+        /// </summary>
+        public void ApplyStoredPosition()
+        {
+            try
+            {
+                var settings = GetSharedSettings();
+                WindowPlacement.ApplyStored(this, settings.MenuWindowLeft, settings.MenuWindowTop);
+            }
+            catch (Exception ex) { AppLogger.Warn("Failed to apply stored menu window position.", ex); }
+
+            try
+            {
+                if (_memoWindow?.IsLoaded == true)
+                    _memoWindow.ApplyStoredPosition();
+                if (_shoutReplayWindow?.IsLoaded == true)
+                    _shoutReplayWindow.ApplyStoredBounds();
+            }
+            catch (Exception ex) { AppLogger.Warn("Failed to apply stored positions of menu-owned windows.", ex); }
         }
 
         private void MenuWindow_LocationChanged(object? sender, EventArgs e)

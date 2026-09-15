@@ -196,7 +196,7 @@ namespace TWChatOverlay.Views
                         primary,
                         IsContentCompletionRelevantLog(primary.Parsed.FormattedText));
                 });
-            _settingsViewModel = new SettingsViewModel(_settings, OnColorsUpdatedFromSettings, ConfirmExit, OnSettingsResetFromSettings, ApplyHotKeys, ExecuteManualLogReloadFromSettingsAsync);
+            _settingsViewModel = new SettingsViewModel(_settings, OnColorsUpdatedFromSettings, ConfirmExit, OnSettingsResetFromSettings, ApplyHotKeys, ExecuteManualLogReloadFromSettingsAsync, OnSettingsReplacedFromSettings);
 
             _expService = new ExperienceService(_settings);
             _expTrackerViewModel = new ExpTrackerViewModel(_expService, _settings);
@@ -383,12 +383,14 @@ namespace TWChatOverlay.Views
             RequestRefreshLogDisplay();
         }
 
-        private void OnSettingsResetFromSettings()
+        /// <summary>설정이 통째로 바뀐 뒤(프로필 불러오기/파일 불러오기) 화면·창 위치·핫키를 다시 맞춘다. 마법사는 띄우지 않는다.</summary>
+        private void OnSettingsReplacedFromSettings()
         {
             ApplyInitialSettings();
+            ReapplyStoredWindowPositions();
             RequestRefreshLogDisplay();
             try { ApplyHotKeys(); }
-            catch (Exception ex) { AppLogger.Warn("Failed to reapply hotkeys after settings reset.", ex); }
+            catch (Exception ex) { AppLogger.Warn("Failed to reapply hotkeys after settings replacement.", ex); }
 
             try
             {
@@ -398,6 +400,12 @@ namespace TWChatOverlay.Views
                 }
             }
             catch { }
+        }
+
+        /// <summary>설정 초기화 뒤: 화면을 다시 맞추고 설정 마법사를 다시 띄운다.</summary>
+        private void OnSettingsResetFromSettings()
+        {
+            OnSettingsReplacedFromSettings();
 
             _pendingInitialSetupWizard = true;
             Dispatcher.BeginInvoke(new Action(TryShowInitialSetupWizardIfNeeded), DispatcherPriority.Background);

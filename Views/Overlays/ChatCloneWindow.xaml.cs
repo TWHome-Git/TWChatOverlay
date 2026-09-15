@@ -22,6 +22,7 @@ namespace TWChatOverlay.Views
         private string _currentTabTag = "General";
         private bool _isInitialized;
         private bool _isResizingWindow;
+        private bool _isApplyingStoredPosition;
         private readonly DispatcherTimer _tabAutoHideTimer = new() { Interval = TimeSpan.FromSeconds(2.5) };
 
         public event PropertyChangedEventHandler? PropertyChanged;
@@ -295,7 +296,7 @@ namespace TWChatOverlay.Views
 
         private void HandleLocationChanged()
         {
-            if (_isResizingWindow)
+            if (_isResizingWindow || _isApplyingStoredPosition)
                 return;
 
             SyncPositionToSettings();
@@ -314,11 +315,12 @@ namespace TWChatOverlay.Views
 
         private void Settings_PropertyChanged(object? sender, PropertyChangedEventArgs e)
         {
-            // 빈 이름 = 설정 전체 교체(프로필/초기화/마법사) — 폰트·탭·문서를 모두 다시 맞춘다
+            // 빈 이름 = 설정 전체 교체(프로필/초기화/마법사) — 위치·폰트·탭·문서를 모두 다시 맞춘다
             if (string.IsNullOrEmpty(e.PropertyName))
             {
                 Dispatcher.BeginInvoke(new Action(() =>
                 {
+                    ApplyStoredPosition();
                     OnPropertyChanged(nameof(FollowMainFont));
                     OnPropertyChanged(nameof(SelectedFontFamily));
                     OnPropertyChanged(nameof(SelectedFontSize));
@@ -669,19 +671,17 @@ namespace TWChatOverlay.Views
 
         private void ApplyStoredPosition()
         {
-            if (_slot == 1)
+            // 옮기는 동안의 LocationChanged 저장은 막는다 (중간 상태가 설정에 남지 않게)
+            _isApplyingStoredPosition = true;
+            try
             {
-                if (_settings.ChatCloneWindow1Left.HasValue)
-                    Left = _settings.ChatCloneWindow1Left.Value;
-                if (_settings.ChatCloneWindow1Top.HasValue)
-                    Top = _settings.ChatCloneWindow1Top.Value;
+                WindowPlacement.ApplyStored(this,
+                    _slot == 1 ? _settings.ChatCloneWindow1Left : _settings.ChatCloneWindow2Left,
+                    _slot == 1 ? _settings.ChatCloneWindow1Top : _settings.ChatCloneWindow2Top);
             }
-            else if (_slot == 2)
+            finally
             {
-                if (_settings.ChatCloneWindow2Left.HasValue)
-                    Left = _settings.ChatCloneWindow2Left.Value;
-                if (_settings.ChatCloneWindow2Top.HasValue)
-                    Top = _settings.ChatCloneWindow2Top.Value;
+                _isApplyingStoredPosition = false;
             }
         }
 

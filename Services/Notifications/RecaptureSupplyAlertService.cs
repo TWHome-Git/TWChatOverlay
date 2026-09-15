@@ -158,20 +158,7 @@ namespace TWChatOverlay.Services
                 }
 
                 if (settings != null)
-                {
-                    if (settings.RecaptureSupplyWindowLeft.HasValue)
-                        _window.Left = settings.RecaptureSupplyWindowLeft.Value;
-                    if (settings.RecaptureSupplyWindowTop.HasValue)
-                        _window.Top = settings.RecaptureSupplyWindowTop.Value;
-                    if (settings.RecaptureSupplyWindowWidth.HasValue)
-                        _window.Width = settings.RecaptureSupplyWindowWidth.Value;
-                    if (settings.RecaptureSupplyWindowHeight.HasValue)
-                        _window.Height = settings.RecaptureSupplyWindowHeight.Value;
-                    if (!settings.RecaptureSupplyWindowLeft.HasValue || !settings.RecaptureSupplyWindowTop.HasValue)
-                        _window.WindowStartupLocation = WindowStartupLocation.CenterScreen;
-                    else
-                        _window.WindowStartupLocation = WindowStartupLocation.Manual;
-                }
+                    ApplyStoredBounds(_window, settings);
 
                 if (!_window.IsVisible)
                 {
@@ -180,6 +167,32 @@ namespace TWChatOverlay.Services
 
                 TopmostWindowHelper.BringToTopmost(_window);
             });
+        }
+
+        /// <summary>지도 창이 떠 있으면 설정에 저장된 위치/크기로 옮긴다. 설정 전체 교체(프로필 불러오기) 뒤에 쓴다.</summary>
+        public static void ApplyStoredBounds(ChatSettings settings)
+        {
+            if (settings == null)
+                return;
+
+            Application.Current.Dispatcher.BeginInvoke(new Action(() =>
+            {
+                var window = _window;
+                if (window == null || !window.IsLoaded)
+                    return;
+                ApplyStoredBounds(window, settings);
+            }));
+        }
+
+        private static void ApplyStoredBounds(RecaptureSupplyWindow window, ChatSettings settings)
+        {
+            bool hasStoredPosition = settings.RecaptureSupplyWindowLeft.HasValue && settings.RecaptureSupplyWindowTop.HasValue;
+            WindowPlacement.ApplyStoredBounds(window,
+                settings.RecaptureSupplyWindowLeft, settings.RecaptureSupplyWindowTop,
+                settings.RecaptureSupplyWindowWidth, settings.RecaptureSupplyWindowHeight);
+            window.WindowStartupLocation = hasStoredPosition
+                ? WindowStartupLocation.Manual
+                : WindowStartupLocation.CenterScreen;
         }
 
         private static ChatSettings? GetSharedSettings()

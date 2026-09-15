@@ -36,6 +36,10 @@ namespace TWChatOverlay.Views
         }
 
         private void SubMenuWindow_Loaded(object sender, RoutedEventArgs e)
+            => ApplyStoredPosition();
+
+        /// <summary>설정에 저장된 위치로 옮긴다. 시작 시와 설정 전체 교체(프로필 불러오기) 뒤에 쓴다.</summary>
+        public void ApplyStoredPosition()
         {
             try
             {

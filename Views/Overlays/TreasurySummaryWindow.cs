@@ -378,6 +378,26 @@ namespace TWChatOverlay.Views
         }
 
         /// <summary>잠금 해제 종료 시 미리보기 창을 닫는다 (실제 세션 창은 유지).</summary>
+        /// <summary>창이 떠 있으면 설정에 저장된 위치로 옮긴다. 설정 전체 교체(프로필 불러오기) 뒤에 쓴다.</summary>
+        public static void ApplyStoredPosition(ChatSettings settings)
+        {
+            if (settings == null)
+                return;
+
+            Application.Current.Dispatcher.BeginInvoke(new Action(() =>
+            {
+                var window = _instance;
+                if (window == null || !window.IsLoaded)
+                    return;
+
+                var (left, top) = ToastPresentationHelper.ResolveBasePosition(
+                    settings.TreasurySummaryWindowLeft ?? settings.AbandonRoadSummaryWindowLeft,
+                    settings.TreasurySummaryWindowTop ?? settings.AbandonRoadSummaryWindowTop,
+                    384, 160);
+                WindowPlacement.ApplyStored(window, left, top);
+            }));
+        }
+
         public static void ClosePositionPreview()
         {
             Application.Current?.Dispatcher.BeginInvoke(new Action(() =>

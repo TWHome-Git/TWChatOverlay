@@ -119,7 +119,7 @@ namespace TWChatOverlay.Views
             if (!_dailyWeeklyContentOverlay.IsVisible)
             {
                 _dailyWeeklyContentOverlay.Owner = this;
-                ApplyStoredPosition(_dailyWeeklyContentOverlay, _settings.DailyWeeklyContentOverlayLeft, _settings.DailyWeeklyContentOverlayTop);
+                WindowPlacement.ApplyStored(_dailyWeeklyContentOverlay, _settings.DailyWeeklyContentOverlayLeft, _settings.DailyWeeklyContentOverlayTop);
                 _dailyWeeklyContentOverlay.WindowStartupLocation = WindowStartupLocation.Manual;
                 _dailyWeeklyContentOverlay.Show();
             }
@@ -180,7 +180,7 @@ namespace TWChatOverlay.Views
             if (!_itemCalendarWindow.IsVisible)
             {
                 _itemCalendarWindow.Owner = this;
-                ApplyStoredPosition(_itemCalendarWindow, _settings.ItemCalendarWindowLeft, _settings.ItemCalendarWindowTop);
+                WindowPlacement.ApplyStored(_itemCalendarWindow, _settings.ItemCalendarWindowLeft, _settings.ItemCalendarWindowTop);
                 _itemCalendarWindow.WindowStartupLocation = WindowStartupLocation.Manual;
                 _itemCalendarWindow.Show();
             }
@@ -243,7 +243,7 @@ namespace TWChatOverlay.Views
             if (!wasVisible)
             {
                 _AbandonRoadSummaryWindow.Owner = this;
-                ApplyStoredPosition(_AbandonRoadSummaryWindow, _settings.AbandonRoadSummaryWindowLeft, _settings.AbandonRoadSummaryWindowTop);
+                WindowPlacement.ApplyStored(_AbandonRoadSummaryWindow, _settings.AbandonRoadSummaryWindowLeft, _settings.AbandonRoadSummaryWindowTop);
                 _AbandonRoadSummaryWindow.WindowStartupLocation = WindowStartupLocation.Manual;
                 _AbandonRoadSummaryWindow.ShowActivated = activateWindow;
                 _AbandonRoadSummaryWindow.Show();

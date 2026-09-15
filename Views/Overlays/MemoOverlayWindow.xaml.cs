@@ -53,15 +53,34 @@ namespace TWChatOverlay.Views
             Close();
         }
 
+        /// <summary>
+        /// 설정에 저장된 위치로 옮긴다. 설정 전체 교체(프로필 불러오기) 뒤에 쓴다.
+        /// 글만 보기 모드면 실제로 보이는 글 전용 창을 옮긴다.
+        /// </summary>
+        public void ApplyStoredPosition()
+        {
+            _settings ??= ResolveSharedSettings();
+            if (_settings == null)
+                return;
+
+            bool wasApplying = _isApplyingLoadedState;
+            _isApplyingLoadedState = true; // 옮기는 동안의 LocationChanged 저장은 막는다
+            try
+            {
+                Window target = (_isOverlayMode && _textOnly?.IsVisible == true) ? _textOnly : this;
+                WindowPlacement.ApplyStored(target, _settings.MemoOverlayWindowLeft, _settings.MemoOverlayWindowTop);
+            }
+            finally
+            {
+                _isApplyingLoadedState = wasApplying;
+            }
+        }
+
         private void MemoOverlayWindow_Loaded(object sender, RoutedEventArgs e)
         {
             _isApplyingLoadedState = true;
             _settings ??= ResolveSharedSettings();
-            if (_settings.MemoOverlayWindowLeft.HasValue && _settings.MemoOverlayWindowTop.HasValue)
-            {
-                Left = _settings.MemoOverlayWindowLeft.Value;
-                Top = _settings.MemoOverlayWindowTop.Value;
-            }
+            WindowPlacement.ApplyStored(this, _settings.MemoOverlayWindowLeft, _settings.MemoOverlayWindowTop);
             MemoTextBox.Text = _settings.MemoOverlayText ?? string.Empty;
             FontSizeSlider.Value = _settings.MemoOverlayFontSize <= 0 ? 20.0 : _settings.MemoOverlayFontSize;
             MemoTextBox.FontWeight = _settings.MemoOverlayBold ? FontWeights.Bold : FontWeights.Normal;

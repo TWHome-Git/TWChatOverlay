@@ -119,7 +119,7 @@ namespace TWChatOverlay.Views
             var buffHelper = BuffTrackerHelperWindow.Instance ?? CreateBuffTrackerHelperWindow();
             if (buffHelper != null)
             {
-                ApplyStoredPosition(buffHelper, _settings.BuffTrackerWindowLeft, _settings.BuffTrackerWindowTop);
+                WindowPlacement.ApplyStored(buffHelper, _settings.BuffTrackerWindowLeft, _settings.BuffTrackerWindowTop);
                 if (!buffHelper.IsVisible)
                     buffHelper.Show();
             }
@@ -338,7 +338,7 @@ namespace TWChatOverlay.Views
                         var buffHelper = BuffTrackerHelperWindow.Instance ?? CreateBuffTrackerHelperWindow();
                         if (buffHelper != null)
                         {
-                            ApplyStoredPosition(buffHelper, _settings.BuffTrackerWindowLeft, _settings.BuffTrackerWindowTop);
+                            WindowPlacement.ApplyStored(buffHelper, _settings.BuffTrackerWindowLeft, _settings.BuffTrackerWindowTop);
                             if (!buffHelper.IsVisible)
                                 buffHelper.Show();
                         }
@@ -393,12 +393,59 @@ namespace TWChatOverlay.Views
             }
         }
 
-        private static void ApplyStoredPosition(Window window, double? left, double? top)
+        /// <summary>
+        /// 설정이 통째로 바뀐 뒤(프로필 불러오기) 이미 떠 있는 창들을 새 설정의 저장 위치로 옮긴다.
+        /// 각 창은 이동·종료 때 자기 위치를 설정에 다시 쓰므로, 옮기지 않으면 예전 위치가 프로필 값을 덮어쓴다.
+        /// 아직 만들어지지 않은 창은 나중에 열릴 때 설정값을 읽으므로 손대지 않는다.
+        /// </summary>
+        private void ReapplyStoredWindowPositions()
         {
-            if (left.HasValue)
-                window.Left = left.Value;
-            if (top.HasValue)
-                window.Top = top.Value;
+            // 메인 채팅창: 스티키 서비스는 잠금 해제/위치 조정 모드에서 저장 좌표로 되돌리지 않으므로 직접 옮긴다
+            try
+            {
+                WindowPlacement.ApplyStored(this, _settings.LineMarginLeft, _settings.LineMargin);
+                _stickyService?.UpdatePositionImmediately();
+            }
+            catch (Exception ex) { AppLogger.Warn("Failed to reapply main window position.", ex); }
+
+            try
+            {
+                foreach (var menu in Application.Current.Windows.OfType<MenuWindow>().ToList())
+                    menu.ApplyStoredPosition();
+                foreach (var sub in Application.Current.Windows.OfType<SubMenuWindow>().ToList())
+                    sub.ApplyStoredPosition();
+            }
+            catch (Exception ex) { AppLogger.Warn("Failed to reapply menu window positions.", ex); }
+
+            ApplySubAddonWindowSettings();
+            ApplyItemDropHelperWindowSettings();
+            ApplyBuffTrackerWindowSettings();
+            ApplyBuffTrackerHelperWindowSettings();
+
+            try
+            {
+                if (_dailyWeeklyContentOverlay != null)
+                    WindowPlacement.ApplyStored(_dailyWeeklyContentOverlay, _settings.DailyWeeklyContentOverlayLeft, _settings.DailyWeeklyContentOverlayTop);
+                if (_itemCalendarWindow != null)
+                    WindowPlacement.ApplyStored(_itemCalendarWindow, _settings.ItemCalendarWindowLeft, _settings.ItemCalendarWindowTop);
+                if (_AbandonRoadSummaryWindow != null)
+                    WindowPlacement.ApplyStored(_AbandonRoadSummaryWindow, _settings.AbandonRoadSummaryWindowLeft, _settings.AbandonRoadSummaryWindowTop);
+                _expTrackerWindow?.ApplyStoredPosition(_settings.ExpTrackerWindowLeft, _settings.ExpTrackerWindowTop, _settings.ExpTrackerWindowRight);
+            }
+            catch (Exception ex) { AppLogger.Warn("Failed to reapply overlay window positions.", ex); }
+
+            // 잠금 해제 미리보기로 떠 있을 수 있는 창들 — 각 서비스가 창이 없으면 아무것도 하지 않는다
+            try
+            {
+                TreasurySummaryWindow.ApplyStoredPosition(_settings);
+                RecaptureSupplyAlertService.ApplyStoredBounds(_settings);
+                RecaptureSupplyPadOrderService.ApplyStoredBounds(_settings);
+                MessengerEtaToastService.ReapplyPreviewPosition(_settings);
+            }
+            catch (Exception ex) { AppLogger.Warn("Failed to reapply preview window positions.", ex); }
+
+            // 알림 스택(외치기·던전·경험치·아이템·필드 보스)은 앵커를 설정에서 읽으므로 재정렬만 하면 된다
+            try { ToastStackService.Reflow(); } catch { }
         }
 
         private void SyncMarginsFromWindowPosition(double windowLeft, double windowTop)
@@ -487,15 +534,8 @@ namespace TWChatOverlay.Views
                     return;
                 }
 
-                if (_settings.SubAddonWindowLeft.HasValue)
-                {
-                    helper.Left = _settings.SubAddonWindowLeft.Value;
-                }
-
-                if (_settings.SubAddonWindowTop.HasValue)
-                {
-                    helper.Top = _settings.SubAddonWindowTop.Value;
-                }
+                // 창이 이동 시 위치를 설정에 되쓰므로, Left를 바꾼 뒤 설정에서 Top을 읽으면 옛 값이 나온다 — 먼저 읽어 둔다
+                WindowPlacement.ApplyStored(helper, _settings.SubAddonWindowLeft, _settings.SubAddonWindowTop);
 
                 helper.ApplyPinnedVisibility();
             }
@@ -516,10 +556,7 @@ namespace TWChatOverlay.Views
                 if (helper == null)
                     return;
 
-                if (_settings.ItemDropWindowLeft.HasValue)
-                    helper.Left = _settings.ItemDropWindowLeft.Value;
-                if (_settings.ItemDropWindowTop.HasValue)
-                    helper.Top = _settings.ItemDropWindowTop.Value;
+                WindowPlacement.ApplyStored(helper, _settings.ItemDropWindowLeft, _settings.ItemDropWindowTop);
 
                 if (_isAddonPositionMode || _settings.ShowItemDropHelperWindow)
                 {
@@ -550,10 +587,7 @@ namespace TWChatOverlay.Views
                 if (window == null)
                     return;
 
-                if (_settings.BuffTrackerWindowLeft.HasValue)
-                    window.Left = _settings.BuffTrackerWindowLeft.Value;
-                if (_settings.BuffTrackerWindowTop.HasValue)
-                    window.Top = _settings.BuffTrackerWindowTop.Value;
+                WindowPlacement.ApplyStored(window, _settings.BuffTrackerWindowLeft, _settings.BuffTrackerWindowTop);
 
                 // Buff tracker visibility is managed independently from the main chat overlay.
                 window.ApplyVisibility();
@@ -666,10 +700,7 @@ namespace TWChatOverlay.Views
                 if (helper == null)
                     return;
 
-                if (_settings.BuffTrackerWindowLeft.HasValue)
-                    helper.Left = _settings.BuffTrackerWindowLeft.Value;
-                if (_settings.BuffTrackerWindowTop.HasValue)
-                    helper.Top = _settings.BuffTrackerWindowTop.Value;
+                WindowPlacement.ApplyStored(helper, _settings.BuffTrackerWindowLeft, _settings.BuffTrackerWindowTop);
 
                 if (_isAddonPositionMode)
                 {

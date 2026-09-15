@@ -19,6 +19,7 @@ namespace TWChatOverlay.ViewModels
         private readonly Action<string>? _onColorsUpdated;
         private readonly Action? _onExit;
         private readonly Action? _onSettingsReset;
+        private readonly Action? _onSettingsReplaced;
         private readonly Action? _onHotKeysChanged;
         private readonly Func<System.Threading.Tasks.Task<bool>>? _onManualLogReload;
         private bool _isManualLogReloadRunning;
@@ -713,12 +714,14 @@ namespace TWChatOverlay.ViewModels
         public SettingsViewModel(ChatSettings settings, Action<string>? onColorsUpdated = null,
                                  Action? onExit = null, Action? onSettingsReset = null,
                                  Action? onHotKeysChanged = null,
-                                 Func<System.Threading.Tasks.Task<bool>>? onManualLogReload = null)
+                                 Func<System.Threading.Tasks.Task<bool>>? onManualLogReload = null,
+                                 Action? onSettingsReplaced = null)
         {
             _settings = settings ?? throw new ArgumentNullException(nameof(settings));
             _onColorsUpdated = onColorsUpdated;
             _onExit = onExit;
             _onSettingsReset = onSettingsReset;
+            _onSettingsReplaced = onSettingsReplaced;
             _onHotKeysChanged = onHotKeysChanged;
             _onManualLogReload = onManualLogReload;
 
@@ -858,11 +861,7 @@ namespace TWChatOverlay.ViewModels
             if (factoryDefaults == null)
                 return false;
 
-            string existingLogPath = _settings.ChatLogFolderPath ?? string.Empty;
-            bool applied = ApplySettingsSnapshot(factoryDefaults, "factory defaults (setup wizard)");
-            if (applied && !string.IsNullOrWhiteSpace(existingLogPath))
-                _settings.ChatLogFolderPath = existingLogPath;
-            return applied;
+            return ApplySettingsSnapshot(factoryDefaults, "factory defaults (setup wizard)");
         }
 
         /// <summary>현재 설정 전체를 프로필로 저장.</summary>
@@ -880,13 +879,32 @@ namespace TWChatOverlay.ViewModels
         public bool ExportCurrentSettings(string path)
             => SettingsProfileService.ExportToFile(path, _settings);
 
+        /// <summary>
+        /// 불러온 설정을 현재 설정에 통째로 적용한다. 프로필/파일에는 이 PC의 실행 상태
+        /// (마법사 완료 여부, 시작 로그 읽기 플래그, 채팅 로그 경로, 디버그 로깅)가 함께 저장되어 있으므로
+        /// 그 값들은 덮어쓰지 않고 현재 것을 유지한다. 설정 초기화와 달리 마법사는 띄우지 않는다.
+        /// </summary>
         private bool ApplySettingsSnapshot(ChatSettings loaded, string source)
         {
+            bool wizardCompleted = _settings.InitialSetupWizardCompleted;
+            bool startupLogReadCanceled = _settings.StartupLogReadCanceled;
+            bool startupBootstrapCompleted = _settings.StartupTodayOnlyBootstrapCompleted;
+            string chatLogFolderPath = _settings.ChatLogFolderPath ?? string.Empty;
+            bool enableDebugLogging = _settings.EnableDebugLogging;
+
             _settings.ApplyFrom(loaded);
+
+            _settings.InitialSetupWizardCompleted = wizardCompleted;
+            _settings.StartupLogReadCanceled = startupLogReadCanceled;
+            _settings.StartupTodayOnlyBootstrapCompleted = startupBootstrapCompleted;
+            if (!string.IsNullOrWhiteSpace(chatLogFolderPath))
+                _settings.ChatLogFolderPath = chatLogFolderPath;
+            _settings.EnableDebugLogging = enableDebugLogging;
+
             AppLogger.Info($"Settings snapshot applied from {source}.");
             NotifyAllSettingsChanged();
             SaveSettings();
-            _onSettingsReset?.Invoke();
+            (_onSettingsReplaced ?? _onSettingsReset)?.Invoke();
             return true;
         }
 
