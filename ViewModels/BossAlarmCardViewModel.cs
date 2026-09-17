@@ -15,6 +15,7 @@ namespace TWChatOverlay.ViewModels
             BossId = boss.Id;
             Name = boss.Name;
             ScheduleText = BossTimerService.BuildScheduleText(boss);
+            EntryMinutes = BossTimerService.GetEntryMinutes(boss);
             _config = _settings.GetOrCreateBossAlertConfig(BossId);
         }
 
@@ -69,15 +70,22 @@ namespace TWChatOverlay.ViewModels
         private bool IsConfusedLand => string.Equals(BossId, "Confused Land", StringComparison.OrdinalIgnoreCase);
         private bool IsOriginOfDoom => string.Equals(BossId, "Origin of Doom", StringComparison.OrdinalIgnoreCase);
 
-        /// <summary>입장 시간 카운트 토글을 노출할 보스(혼란한 대지·파멸의 기원)인지.</summary>
-        public bool HasEntryCountdown => IsConfusedLand || IsOriginOfDoom;
+        /// <summary>입장 시간 카운트 토글을 노출할 보스인지 (혼란한 대지·파멸의 기원, JSON에 entryMinutes가 있는 보스).</summary>
+        public bool HasEntryCountdown => EntryMinutes.HasValue;
 
-        /// <summary>등장 후 입장 가능 시간(혼란한 대지 4분, 파멸의 기원 6분)을 팝업으로 카운트다운.</summary>
+        /// <summary>등장 후 입장 가능 시간(분).</summary>
+        public int? EntryMinutes { get; }
+
+        public string EntryCountdownToolTip => EntryMinutes.HasValue
+            ? $"등장 후 입장 가능 시간({EntryMinutes.Value}분)을 팝업으로 카운트다운"
+            : string.Empty;
+
+        /// <summary>등장 후 입장 가능 시간을 팝업으로 카운트다운.</summary>
         public bool EntryCountdown
         {
-            get => IsOriginOfDoom
-                ? _settings.BossAlertOriginOfDoomEntryCountdown
-                : _settings.BossAlertConfusedLandEntryCountdown;
+            get => IsOriginOfDoom ? _settings.BossAlertOriginOfDoomEntryCountdown
+                : IsConfusedLand ? _settings.BossAlertConfusedLandEntryCountdown
+                : _config.EntryCountdown ?? true;
             set
             {
                 if (EntryCountdown == value)
@@ -85,8 +93,10 @@ namespace TWChatOverlay.ViewModels
 
                 if (IsOriginOfDoom)
                     _settings.BossAlertOriginOfDoomEntryCountdown = value;
-                else
+                else if (IsConfusedLand)
                     _settings.BossAlertConfusedLandEntryCountdown = value;
+                else
+                    _config.EntryCountdown = value;
                 OnPropertyChanged();
                 SaveSettings();
             }

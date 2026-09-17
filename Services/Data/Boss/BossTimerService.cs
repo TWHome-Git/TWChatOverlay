@@ -101,9 +101,12 @@ namespace TWChatOverlay.Services
 
             if (string.Equals(boss.Schedule.Type, "hourly", StringComparison.OrdinalIgnoreCase))
             {
-                return boss.Schedule.Minute == 0
+                var minutes = HourlyMinutes(boss.Schedule);
+                string hourly = minutes.Count == 1 && minutes[0] == 0
                     ? "매시 정각"
-                    : $"매시 {boss.Schedule.Minute:00}분";
+                    : "매시 " + string.Join(" / ", minutes.Select(static m => $"{m:00}분"));
+                int? entry = GetEntryMinutes(boss);
+                return entry.HasValue ? $"{hourly} (입장 {entry.Value}분)" : hourly;
             }
 
             if (boss.Schedule.Rules is { Count: > 0 })
@@ -136,7 +139,7 @@ namespace TWChatOverlay.Services
 
             if (string.Equals(boss.Schedule.Type, "hourly", StringComparison.OrdinalIgnoreCase))
             {
-                return boss.Schedule.Minute >= 0 && boss.Schedule.Minute <= 59;
+                return HourlyMinutes(boss.Schedule).Count > 0;
             }
 
             if (boss.Schedule.Rules is { Count: > 0 })
@@ -153,10 +156,11 @@ namespace TWChatOverlay.Services
 
             if (string.Equals(boss.Schedule.Type, "hourly", StringComparison.OrdinalIgnoreCase))
             {
-                int minute = Math.Clamp(boss.Schedule.Minute, 0, 59);
+                var minutes = HourlyMinutes(boss.Schedule);
                 for (int hour = 0; hour < 24; hour++)
                 {
-                    yield return new DateTime(date.Year, date.Month, date.Day, hour, minute, 0, date.Kind);
+                    foreach (int minute in minutes)
+                        yield return new DateTime(date.Year, date.Month, date.Day, hour, minute, 0, date.Kind);
                 }
 
                 yield break;
@@ -195,6 +199,29 @@ namespace TWChatOverlay.Services
 
                 yield return date.Date.Add(time);
             }
+        }
+
+        /// <summary>hourly 등장 분 목록 (minutes가 있으면 그것, 없으면 minute 하나). 0~59만, 오름차순.</summary>
+        private static List<int> HourlyMinutes(BossTimerSchedule schedule)
+            => (schedule.Minutes is { Count: > 0 } ? schedule.Minutes : new List<int> { schedule.Minute })
+                .Where(static m => m >= 0 && m <= 59)
+                .Distinct()
+                .OrderBy(static m => m)
+                .ToList();
+
+        /// <summary>
+        /// 등장 후 입장 가능 시간(분). JSON의 entryMinutes가 우선이고, 없으면 기존 보스 기본값(혼란한 대지 4분, 파멸의 기원 6분).
+        /// 입장 카운트가 없는 보스는 null.
+        /// </summary>
+        public static int? GetEntryMinutes(BossTimerDefinition boss)
+        {
+            if (boss.Schedule?.EntryMinutes is int minutes && minutes > 0)
+                return minutes;
+            if (string.Equals(boss.Id, "Confused Land", StringComparison.OrdinalIgnoreCase))
+                return 4;
+            if (string.Equals(boss.Id, "Origin of Doom", StringComparison.OrdinalIgnoreCase))
+                return 6;
+            return null;
         }
 
         /// <summary>출현 시각이 규칙의 기간(from 포함 ~ until 미포함) 안인지. 기간을 안 적었으면 항상.</summary>
@@ -306,6 +333,14 @@ namespace TWChatOverlay.Services
 
             [JsonPropertyName("minute")]
             public int Minute { get; set; }
+
+            /// <summary>hourly 전용: 매시 여러 분에 등장할 때 ([20, 50]). 있으면 minute 대신 쓴다 (minute은 옛 버전용).</summary>
+            [JsonPropertyName("minutes")]
+            public List<int>? Minutes { get; set; }
+
+            /// <summary>등장 후 입장 가능 시간(분). 있으면 설정에 '입장 시간 카운트' 토글이 생기고 등장 시각에 카운트다운 팝업을 띄운다.</summary>
+            [JsonPropertyName("entryMinutes")]
+            public int? EntryMinutes { get; set; }
 
             /// <summary>
             /// 날짜 규칙 목록 (fixed 전용). 있으면 times 대신 규칙들의 합으로 출현 시각을 만든다.

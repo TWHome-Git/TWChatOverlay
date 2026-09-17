@@ -139,15 +139,20 @@ namespace TWChatOverlay.Services
         /// <summary>입장 시간 카운트가 켜진 보스의 입장 가능 시간 — 혼란한 대지 4분, 파멸의 기원 6분.</summary>
         internal static TimeSpan? GetEntryWindow(string bossId, ChatSettings? settings)
         {
-            if (string.Equals(bossId, "Confused Land", StringComparison.OrdinalIgnoreCase)
-                && settings?.BossAlertConfusedLandEntryCountdown == true)
-                return TimeSpan.FromMinutes(4);
+            var boss = BossTimerService.GetBosses()
+                .FirstOrDefault(b => string.Equals(b.Id, bossId, StringComparison.OrdinalIgnoreCase));
+            int? minutes = boss != null ? BossTimerService.GetEntryMinutes(boss) : null;
+            if (minutes == null || settings == null)
+                return null;
 
-            if (string.Equals(bossId, "Origin of Doom", StringComparison.OrdinalIgnoreCase)
-                && settings?.BossAlertOriginOfDoomEntryCountdown == true)
-                return TimeSpan.FromMinutes(6);
+            // 혼란한 대지·파멸의 기원은 기존 설정값을 그대로 쓰고, 나머지(이벤트 등)는 보스별 설정 (기본 켜짐)
+            bool enabled = string.Equals(bossId, "Confused Land", StringComparison.OrdinalIgnoreCase)
+                ? settings.BossAlertConfusedLandEntryCountdown
+                : string.Equals(bossId, "Origin of Doom", StringComparison.OrdinalIgnoreCase)
+                    ? settings.BossAlertOriginOfDoomEntryCountdown
+                    : settings.GetOrCreateBossAlertConfig(bossId).EntryCountdown ?? true;
 
-            return null;
+            return enabled ? TimeSpan.FromMinutes(minutes.Value) : null;
         }
 
         /// <summary>어제~내일 출현 시각을 보스별로 캐시해 반환한다. 날짜가 바뀌면 갱신.</summary>

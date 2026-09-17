@@ -12,5 +12,9 @@ namespace TWChatOverlay.Models
 
         [JsonPropertyOrder(3)]
         public bool AlertAtSpawn { get; set; }
+
+        /// <summary>등장 후 입장 가능 시간 카운트다운 (JSON에 entryMinutes가 있는 보스). null이면 켜짐.</summary>
+        [JsonPropertyOrder(4)]
+        public bool? EntryCountdown { get; set; }
     }
 }
