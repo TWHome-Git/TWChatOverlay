@@ -36,16 +36,10 @@ namespace TWChatOverlay.Services
 
         private static IReadOnlyList<BossTimerDefinition> _bosses = CreateFallbackBosses();
 
-        // 이벤트 기간 한정 추가 등장(기본 시간표는 건드리지 않는다). 기간이 지나면 자연히 무시된다.
-        private static IReadOnlyList<BossTimerEvent> _events = Array.Empty<BossTimerEvent>();
-
         public static event Action? BossesUpdated;
 
         public static IReadOnlyList<BossTimerDefinition> GetBosses()
             => _bosses;
-
-        public static IReadOnlyList<BossTimerEvent> GetEvents()
-            => _events;
 
         public static async Task EnsureLoadedAsync(bool forceRefresh = false)
         {
@@ -75,12 +69,9 @@ namespace TWChatOverlay.Services
                     return;
 
                 _bosses = ordered;
-                _events = (payload.Events ?? new List<BossTimerEvent>())
-                    .Where(static ev => ev.Additions != null && ev.Additions.Count > 0 && ev.TryGetPeriod(out _, out _))
-                    .ToList();
                 await RemoteResourceManifestService.MarkResourceVersionAppliedAsync("BossTimer.json").ConfigureAwait(false);
                 BossesUpdated?.Invoke();
-                AppLogger.Info($"Boss timer data loaded. Count={ordered.Count}, Events={_events.Count}");
+                AppLogger.Info($"Boss timer data loaded. Count={ordered.Count}");
             }
             catch (Exception ex)
             {
@@ -107,21 +98,7 @@ namespace TWChatOverlay.Services
             if (boss.Schedule.Times == null || boss.Schedule.Times.Count == 0)
                 return "-";
 
-            string text = string.Join(" / ", boss.Schedule.Times);
-
-            // 오늘 진행 중인 이벤트의 추가 등장만 덧붙인다 (끝난 이벤트는 표시하지 않는다)
-            DateTime today = DateTime.Today;
-            foreach (BossTimerEvent ev in _events)
-            {
-                if (!ev.IsActiveOn(today))
-                    continue;
-
-                string? summary = ev.BuildSummary(boss.Id);
-                if (!string.IsNullOrEmpty(summary))
-                    text += "\n" + summary;
-            }
-
-            return text;
+            return string.Join(" / ", boss.Schedule.Times);
         }
 
         public static bool HasDisplayableSchedule(BossTimerDefinition boss)
@@ -157,24 +134,13 @@ namespace TWChatOverlay.Services
             if (boss.Schedule.Times == null)
                 yield break;
 
-            var occurrences = new SortedSet<DateTime>();
             foreach (string value in boss.Schedule.Times)
             {
                 if (!TimeSpan.TryParse(value, out TimeSpan time))
                     continue;
 
-                occurrences.Add(date.Date.Add(time));
+                yield return date.Date.Add(time);
             }
-
-            // 이벤트 기간 안의 추가 등장 시각을 합친다 (기본 시각과 겹치면 한 번만)
-            foreach (BossTimerEvent ev in _events)
-            {
-                foreach (DateTime occurrence in ev.GetAdditionalOccurrences(boss.Id, date))
-                    occurrences.Add(occurrence);
-            }
-
-            foreach (DateTime occurrence in occurrences)
-                yield return occurrence;
         }
 
         private static IReadOnlyList<BossTimerDefinition> CreateFallbackBosses()
@@ -253,9 +219,6 @@ namespace TWChatOverlay.Services
         {
             [JsonPropertyName("bosses")]
             public List<BossTimerDefinition> Bosses { get; set; } = new();
-
-            [JsonPropertyName("events")]
-            public List<BossTimerEvent>? Events { get; set; }
         }
     }
 }
