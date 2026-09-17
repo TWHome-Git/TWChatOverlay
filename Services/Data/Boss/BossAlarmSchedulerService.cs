@@ -31,6 +31,13 @@ namespace TWChatOverlay.Services
                 Interval = TimeSpan.FromSeconds(1)
             };
             _timer.Tick += Timer_Tick;
+
+            // 원격 시간표(이벤트 추가 등장 포함)가 나중에 도착하면 오늘치 캐시를 버려 새 시각을 바로 반영한다
+            BossTimerService.BossesUpdated += () => _timer.Dispatcher.BeginInvoke(() =>
+            {
+                _occurrenceCache.Clear();
+                _occurrenceCacheDate = DateTime.MinValue;
+            });
         }
 
         public void Start()
