@@ -8,6 +8,15 @@ namespace TWChatOverlay.Services.LogAnalysis
         private const string DetachedForceExpText = "별동대 토벌 보상으로 경험치 1억을 획득했습니다.";
         private const long DetachedForceExpValue = 100_000_000L;
 
+        // "아름다운 음율의 힘으로 경험치가 상승하였습니다. 경험치 상승량 : 8억" —
+        // 증가량이 뒤에 한글 단위로 따로 적히는 문구. 숫자가 붙어 있지 않아 아래 ExpRegexes로는 잡히지 않는다.
+        private static readonly Regex ExpAmountRegex = new(
+            @"경험치\s*(?:상승량|획득량|증가량)\s*[:：]?\s*(?<amount>(?:[\d,]+\s*[조억만]?\s*)+)",
+            RegexOptions.Compiled);
+
+        // "1조 2000억 3만" 처럼 한글 단위가 섞인 수. 단위가 없으면 그대로 더한다.
+        private static readonly Regex KoreanUnitRegex = new(@"(?<num>[\d,]+)\s*(?<unit>[조억만])?", RegexOptions.Compiled);
+
         private static readonly Regex[] ExpRegexes =
         {
             new(@"\uACBD\uD5D8\uCE58(?:\uAC00|\uC744|\uB97C)?\s*\[?(?<exp>[\d,]+)\]?\s*(?:\uC744|\uB97C)?\s*\uD68D\uB4DD(?:\uD558\uC600|\uD588)\uC2B5\uB2C8\uB2E4\.?", RegexOptions.Compiled),
@@ -41,6 +50,14 @@ namespace TWChatOverlay.Services.LogAnalysis
                 return;
             }
 
+            // 상승량이 따로 적히는 문구는 시스템 줄에서만 센다 (다른 사람이 채팅으로 같은 말을 해도 세지 않게)
+            Match amountMatch = context.IsSystemLog ? ExpAmountRegex.Match(normalized) : Match.Empty;
+            if (amountMatch.Success && TryParseKoreanAmount(amountMatch.Groups["amount"].Value, out long amount))
+            {
+                context.Result.GainedExp = amount;
+                return;
+            }
+
             Match? expMatch = null;
             foreach (var regex in ExpRegexes)
             {
@@ -65,6 +82,30 @@ namespace TWChatOverlay.Services.LogAnalysis
 
                 context.Result.GainedExp = expValue;
             }
+        }
+
+        /// <summary>"8억", "1조 2000억", "35000" 꼴의 수를 숫자로. 하나도 못 읽으면 false.</summary>
+        private static bool TryParseKoreanAmount(string text, out long value)
+        {
+            value = 0;
+            bool any = false;
+            foreach (Match match in KoreanUnitRegex.Matches(text))
+            {
+                string digits = match.Groups["num"].Value.Replace(",", string.Empty);
+                if (digits.Length == 0 || !long.TryParse(digits, out long number))
+                    continue;
+
+                long unit = match.Groups["unit"].Value switch
+                {
+                    "조" => 1_000_000_000_000L,
+                    "억" => 100_000_000L,
+                    "만" => 10_000L,
+                    _ => 1L,
+                };
+                value += number * unit;
+                any = true;
+            }
+            return any && value > 0;
         }
     }
 }
