@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -13,12 +14,15 @@ namespace TWChatOverlay.Views
     /// <summary>
     /// 필드 보스 알림 팝업. 던전 도우미 알림 창과 같은 시각 언어(가운데 민트 타이틀 + 굵은 본문)로
     /// "필드 보스 / 아칸 등장 3분 전"을 표시하고, 보스 출현 5초 후 자동으로 닫힌다.
-    /// 같은 창을 재사용해 이후 알림(1분 전/5초 전)이 오면 문구만 갱신한다.
+    /// 창은 보스마다 하나씩 쓴다. 같은 보스의 이후 알림(1분 전/5초 전)은 그 창의 문구만 갱신하고,
+    /// 다른 보스의 알림은 새 창으로 떠서 알림 스택에 함께 쌓인다
+    /// (창이 하나뿐이면 입장 가능 카운트다운 도중 다른 보스 알림이 오면서 카운트다운이 사라진다).
     /// 잠금 해제 모드에서 위치를 조정할 수 있고, 위치는 설정에 저장된다.
     /// </summary>
     public sealed class BossAlertToastWindow : Window
     {
-        private static BossAlertToastWindow? _instance;
+        private static readonly Dictionary<string, BossAlertToastWindow> Instances = new(StringComparer.Ordinal);
+        private string _bossKey = string.Empty;
 
         private static readonly Color DangerCol = Color.FromRgb(0xFF, 0x5A, 0x5A);
 
@@ -209,9 +213,9 @@ namespace TWChatOverlay.Views
             try { _closeTimer.Stop(); } catch { }
             try { _countdownTimer.Stop(); } catch { }
             SyncPositionToSettings(save: true);
-            if (ReferenceEquals(_instance, this))
+            if (Instances.TryGetValue(_bossKey, out var mine) && ReferenceEquals(mine, this))
             {
-                _instance = null;
+                Instances.Remove(_bossKey);
             }
             base.OnClosed(e);
         }
@@ -281,7 +285,7 @@ namespace TWChatOverlay.Views
 
             try
             {
-                var window = EnsureInstance(settings);
+                var window = EnsureInstance(bossName, settings);
                 // 3분 전: 정적 문구를 5초만 표시 후 닫는다. 1분 전부터는 초 단위 카운트다운.
                 bool isThreeMinute = string.Equals(label, "3분 전", StringComparison.Ordinal);
                 if (isThreeMinute)
@@ -323,27 +327,34 @@ namespace TWChatOverlay.Views
         /// <summary>설정 슬라이더 변경을 열려 있는 알림 창에 즉시 반영한다.</summary>
         public static void ApplyFontSize(double size)
         {
-            try { _instance?.SetFontSize(size); } catch { }
+            try
+            {
+                foreach (var window in Instances.Values)
+                    window.SetFontSize(size);
+            }
+            catch { }
         }
 
         /// <summary>통합 알림 스택 앵커 미리보기로 위임.</summary>
         public static void ClosePositionPreview()
             => ToastStackService.ClosePositionPreview();
 
-        private static BossAlertToastWindow EnsureInstance(ChatSettings? settings)
+        /// <summary>보스마다 창 하나. 같은 보스의 다음 단계 알림은 그 창을 다시 쓰고, 다른 보스는 새 창을 얻는다.</summary>
+        private static BossAlertToastWindow EnsureInstance(string bossName, ChatSettings? settings)
         {
-            if (_instance == null || !_instance.IsLoaded)
+            string key = bossName ?? string.Empty;
+            if (!Instances.TryGetValue(key, out var window) || !window.IsLoaded)
             {
-                _instance = new BossAlertToastWindow();
-                _instance.Closed += (_, _) => { };
+                window = new BossAlertToastWindow { _bossKey = key };
+                Instances[key] = window;
             }
 
             if (settings != null)
             {
-                _instance._settings = settings;
-                _instance.SetFontSize(settings.BossAlertToastFontSize);
+                window._settings = settings;
+                window.SetFontSize(settings.BossAlertToastFontSize);
             }
-            return _instance;
+            return window;
         }
 
         private static void ShowAtStoredPosition(BossAlertToastWindow window, ChatSettings? settings)

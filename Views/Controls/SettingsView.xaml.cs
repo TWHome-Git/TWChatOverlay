@@ -284,6 +284,10 @@ namespace TWChatOverlay.Views
             AddonItemPanel.Visibility = NavAddonItem.IsChecked == true ? Visibility.Visible : Visibility.Collapsed;
             AddonBuffPanel.Visibility = NavAddonBuff.IsChecked == true ? Visibility.Visible : Visibility.Collapsed;
             AddonBossPanel.Visibility = NavAddonBoss.IsChecked == true ? Visibility.Visible : Visibility.Collapsed;
+            // 보스 카드는 BossTimer.json을 읽은 시점의 내용으로 만들어진다. 화면을 열 때마다 다시 만들어,
+            // 앱을 켜 둔 사이에 보스나 옵션(입장 시간 카운트 등)이 늘어나도 재시작 없이 보이게 한다.
+            if (AddonBossPanel.Visibility == Visibility.Visible && _addonViewModel != null)
+                _ = _addonViewModel.RefreshBossAlarmCardsAsync();
             DebugOptionsBorder.Visibility = _debugOptionsAllowed ? Visibility.Visible : Visibility.Collapsed;
             BossAlertTestBorder.Visibility = _debugOptionsAllowed ? Visibility.Visible : Visibility.Collapsed;
         }
