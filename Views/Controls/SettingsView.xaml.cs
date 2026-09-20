@@ -127,6 +127,7 @@ namespace TWChatOverlay.Views
                         : DungeonTabEclipse.IsChecked == true ? 2
                         : DungeonTabAbandon.IsChecked == true ? 3
                         : DungeonTabCraving.IsChecked == true ? 4
+                        : DungeonTabTimer.IsChecked == true ? 5
                         : 0;
                     return 20 + sub;
                 }

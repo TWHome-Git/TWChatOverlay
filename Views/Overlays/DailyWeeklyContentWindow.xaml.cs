@@ -56,8 +56,8 @@ namespace TWChatOverlay.Views
         private const string SilbanItemName = "실반";
         private const string LuminousItemName = "루미너스";
         private const string LuminousExItemName = "루미너스(EX)";
-        private const string EclipseBossRaidItemName = "이클립스 보스";
-        private const string EclipseSubjugationItemName = "이클립스 토벌전";
+        internal const string EclipseBossRaidItemName = "이클립스 보스";
+        internal const string EclipseSubjugationItemName = "이클립스 토벌전";
         private const string SupplyRetrievalItemName = "보급품 탈환";
         private const string MoonQueensTrainingCenterItemName = "훈련소";
         private const string DetachedForceSubjugationItemName = "별동대";
@@ -72,15 +72,15 @@ namespace TWChatOverlay.Views
         private const string CravingPleasureItemName = "갈망하는 즐거움";
         private const string VestigeItemName = "베스티지";
         private const string OrlyDefenseHellItemName = "오를리 방어전 지옥";
-        private const string NestOfShinjoHardItemName = "신조의 둥지 어려움";
-        private const string ApetiriaItemName = "아페티리아";
+        internal const string NestOfShinjoHardItemName = "신조의 둥지 어려움";
+        internal const string ApetiriaItemName = "아페티리아";
         private const string AbandonRoadGroupName = "어밴던로드";
         private const string SiegeOfSiochanheimBossesItemName = "시오칸 하임 보스 토벌전";
         private const string SiochanheimOdinAllOutWarItemName = "시오칸 하임 오딘 전면전";
         private const string CatacombsHellModeItemName = "카타콤 지옥";
         private const string PravaDefenseItemName = "프라바 방어전";
         private const string CleaningPartTimeJobItemName = "청소 아르바이트";
-        private const string ApetiriaExItemName = "아페티리아 EX";
+        internal const string ApetiriaExItemName = "아페티리아 EX";
         private const string EclipseCoreMasterGroupName = "이클립스 코어 마스터";
         private const string AbysCoreMasterGroupName = "어비스 코어 마스터";
         private const string MercurialCoreMasterGroupName = "머큐리얼 코어 마스터";
@@ -90,25 +90,25 @@ namespace TWChatOverlay.Views
         private const string SilaironCoreDungeonItemName = "실라이론 코어 마스터 던전";
         private const string SilbanCoreDungeonItemName = "실반 코어 마스터 던전";
         private const string LuminousCoreDungeonItemName = "루미너스 코어 마스터 던전";
-        private const string FinalBattleItemName = "최후의 결전";
-        private const string FollowingJoyNormalItemName = "추종하는 환희(일반)";
-        private const string GazingSorrowNormalItemName = "응시하는 슬픔(일반)";
-        private const string FollowingJoyHardItemName = "추종하는 환희(어려움)";
-        private const string GazingSorrowHardItemName = "응시하는 슬픔(어려움)";
-        private const string AfterimageOfJoyItemName = "환희의 잔상";
+        internal const string FinalBattleItemName = "최후의 결전";
+        internal const string FollowingJoyNormalItemName = "추종하는 환희(일반)";
+        internal const string GazingSorrowNormalItemName = "응시하는 슬픔(일반)";
+        internal const string FollowingJoyHardItemName = "추종하는 환희(어려움)";
+        internal const string GazingSorrowHardItemName = "응시하는 슬픔(어려움)";
+        internal const string AfterimageOfJoyItemName = "환희의 잔상";
         private const string EtaDailyChallengeItemName = "에타 일일 도전 과제";
         private const string EtaWillQuestItemName = "에타의 의지 퀘스트";
 
-        private const string LokagosCoreMasterItemName = "로카고스 코어 마스터";
-        private const string EthosCoreMasterItemName = "에토스 코어 마스터";
-        private const string CheriaCoreMasterItemName = "체리아 코어 마스터";
-        private const string MatiaCoreMasterItemName = "마티아 코어 마스터";
-        private const string LycosCoreMasterItemName = "라이코스 코어 마스터";
-        private const string TyrorosCoreMasterItemName = "티로로스 코어 마스터";
+        internal const string LokagosCoreMasterItemName = "로카고스 코어 마스터";
+        internal const string EthosCoreMasterItemName = "에토스 코어 마스터";
+        internal const string CheriaCoreMasterItemName = "체리아 코어 마스터";
+        internal const string MatiaCoreMasterItemName = "마티아 코어 마스터";
+        internal const string LycosCoreMasterItemName = "라이코스 코어 마스터";
+        internal const string TyrorosCoreMasterItemName = "티로로스 코어 마스터";
 
-        private const string AbyssDepthOneCoreMasterItemName = "심층Ⅰ 코어 마스터";
-        private const string AbyssDepthTwoCoreMasterItemName = "심층Ⅱ 코어 마스터";
-        private const string AbyssDepthThreeCoreMasterItemName = "심층Ⅲ 코어 마스터";
+        internal const string AbyssDepthOneCoreMasterItemName = "심층Ⅰ 코어 마스터";
+        internal const string AbyssDepthTwoCoreMasterItemName = "심층Ⅱ 코어 마스터";
+        internal const string AbyssDepthThreeCoreMasterItemName = "심층Ⅲ 코어 마스터";
 
         private const string SallionCoreMasterItemName = SallionItemName;
         private const string SeleanaCoreMasterItemName = SeleanaItemName;
@@ -117,57 +117,57 @@ namespace TWChatOverlay.Views
         private const string LuminousCoreMasterItemName = LuminousItemName;
         private const string LuminousExCoreMasterItemName = LuminousExItemName;
 
-        private const string AbyssDepthOneItemName = "어비스 - 심층Ⅰ";
-        private const string AbyssDepthTwoItemName = "어비스 - 심층Ⅱ";
-        private const string AbyssDepthThreeItemName = "어비스 - 심층Ⅲ";
+        internal const string AbyssDepthOneItemName = "어비스 - 심층Ⅰ";
+        internal const string AbyssDepthTwoItemName = "어비스 - 심층Ⅱ";
+        internal const string AbyssDepthThreeItemName = "어비스 - 심층Ⅲ";
         private const string AbyssBossExItemName = "어비스 보스전(EX)";
-        private const string AbyssHellGroupName = "어비스 지옥";
-        private const string RelicItemName = "렐릭";
+        internal const string AbyssHellGroupName = "어비스 지옥";
+        internal const string RelicItemName = "렐릭";
 
-        private const string LokagosItemName = "로카고스";
-        private const string EthosItemName = "에토스";
-        private const string CheriaItemName = "체리아";
-        private const string MatiaItemName = "마티아";
-        private const string TyrorosItemName = "티로로스";
-        private const string LycosItemName = "라이코스";
+        internal const string LokagosItemName = "로카고스";
+        internal const string EthosItemName = "에토스";
+        internal const string CheriaItemName = "체리아";
+        internal const string MatiaItemName = "마티아";
+        internal const string TyrorosItemName = "티로로스";
+        internal const string LycosItemName = "라이코스";
 
         private const string ImmortalLandItemName = "필멸의 땅";
         private const string CardiffItemName = "카디프";
         private const string OrlanneItemName = "오를란느";
 
-        private const string LokagosLogKeyword = "이클립스 보스전(로카고스) 클리어 횟수:";
-        private const string EthosLogKeyword = "이클립스 보스전(에토스) 클리어 횟수:";
-        private const string CheriaLogKeyword = "이클립스 보스전(체리아) 클리어 횟수:";
-        private const string MatiaLogKeyword = "이클립스 보스전(마티아) 클리어 횟수:";
-        private const string TyrorosLogKeyword = "이클립스 보스전(티로로스) 클리어 횟수:";
-        private const string LycosLogKeyword = "이클립스 보스전(라이코스) 클리어 횟수:";
+        internal const string LokagosLogKeyword = "이클립스 보스전(로카고스) 클리어 횟수:";
+        internal const string EthosLogKeyword = "이클립스 보스전(에토스) 클리어 횟수:";
+        internal const string CheriaLogKeyword = "이클립스 보스전(체리아) 클리어 횟수:";
+        internal const string MatiaLogKeyword = "이클립스 보스전(마티아) 클리어 횟수:";
+        internal const string TyrorosLogKeyword = "이클립스 보스전(티로로스) 클리어 횟수:";
+        internal const string LycosLogKeyword = "이클립스 보스전(라이코스) 클리어 횟수:";
 
         private const string ImmortalLandLogKeyword = "이번 주 어밴던로드 필멸의 땅 지역의 도전 횟수는";
         private const string CardiffLogKeyword = "이번 주 어밴던로드 카디프 지역의 도전 횟수는";
         private const string OrlanneLogKeyword = "이번 주 어밴던로드 오를란느 지역의 도전 횟수는";
 
-        private const string AbyssDepthOneLogKeyword = "어비스 - 심층Ⅰ(보스전) 플레이를 이번 주에 7회 중";
-        private const string AbyssDepthTwoLogKeyword = "어비스 - 심층Ⅱ(보스전) 플레이를 이번 주에 7회 중";
-        private const string AbyssDepthThreeLogKeyword = "어비스 - 심층Ⅲ(보스전) 플레이를 이번 주에 7회 중";
+        internal const string AbyssDepthOneLogKeyword = "어비스 - 심층Ⅰ(보스전) 플레이를 이번 주에 7회 중";
+        internal const string AbyssDepthTwoLogKeyword = "어비스 - 심층Ⅱ(보스전) 플레이를 이번 주에 7회 중";
+        internal const string AbyssDepthThreeLogKeyword = "어비스 - 심층Ⅲ(보스전) 플레이를 이번 주에 7회 중";
         private const string AbyssBossExLogKeyword = "어비스 보스전(EX) 클리어 횟수:";
 
         private const string CleaningPartTimeJobLogKeyword = "청소 아르바이트 보상 조건을 달성하였습니다.";
         private const string PravaDefenseLogKeyword = "프라바 방어전 성공 보상으로 경험치 1000만을 획득";
         private const string CatacombsHellModeLogKeyword = "이번 주 사명의 계승자 닉스 보상을";
-        private const string NestOfShinjoLogKeyword = "이번 주 신조 보상을";
-        private const string ApetiriaLogKeyword = "아페티리아 클리어 횟수:";
+        internal const string NestOfShinjoLogKeyword = "이번 주 신조 보상을";
+        internal const string ApetiriaLogKeyword = "아페티리아 클리어 횟수:";
         private const string SiegeOfSiochanheimBossesLogKeyword = "시오칸하임 - 보스 토벌전의 클리어 횟수 :";
         private const string SiochanheimOdinAllOutWarLogKeyword = "시오칸하임 - 오딘 전면전의 클리어 횟수 :";
-        private const string ApetiriaExLogKeyword = "아페티리아(EX) 클리어 횟수:";
-        private const string LokagosCoreMasterLogKeyword = "로카고스 코어 마스터 클리어 횟수:";
-        private const string EthosCoreMasterLogKeyword = "에토스 코어 마스터 클리어 횟수:";
-        private const string CheriaCoreMasterLogKeyword = "체리아 코어 마스터 클리어 횟수:";
-        private const string MatiaCoreMasterLogKeyword = "마티아 코어 마스터 클리어 횟수:";
-        private const string LycosCoreMasterLogKeyword = "라이코스 코어 마스터 클리어 횟수:";
-        private const string TyrorosCoreMasterLogKeyword = "티로로스 코어 마스터 클리어 횟수:";
-        private const string AbyssDepthOneCoreMasterLogKeyword = "코어 마스터 - 심층Ⅰ 클리어 횟수:";
-        private const string AbyssDepthTwoCoreMasterLogKeyword = "코어 마스터 - 심층Ⅱ 클리어 횟수:";
-        private const string AbyssDepthThreeCoreMasterLogKeyword = "코어 마스터 - 심층Ⅲ 클리어 횟수:";
+        internal const string ApetiriaExLogKeyword = "아페티리아(EX) 클리어 횟수:";
+        internal const string LokagosCoreMasterLogKeyword = "로카고스 코어 마스터 클리어 횟수:";
+        internal const string EthosCoreMasterLogKeyword = "에토스 코어 마스터 클리어 횟수:";
+        internal const string CheriaCoreMasterLogKeyword = "체리아 코어 마스터 클리어 횟수:";
+        internal const string MatiaCoreMasterLogKeyword = "마티아 코어 마스터 클리어 횟수:";
+        internal const string LycosCoreMasterLogKeyword = "라이코스 코어 마스터 클리어 횟수:";
+        internal const string TyrorosCoreMasterLogKeyword = "티로로스 코어 마스터 클리어 횟수:";
+        internal const string AbyssDepthOneCoreMasterLogKeyword = "코어 마스터 - 심층Ⅰ 클리어 횟수:";
+        internal const string AbyssDepthTwoCoreMasterLogKeyword = "코어 마스터 - 심층Ⅱ 클리어 횟수:";
+        internal const string AbyssDepthThreeCoreMasterLogKeyword = "코어 마스터 - 심층Ⅲ 클리어 횟수:";
         private const string SallionCoreMasterLogKeyword = "샐리온 클리어 횟수:";
         private const string SeleanaCoreMasterLogKeyword = "샐레아나 클리어 횟수:";
         private const string SilaironCoreMasterLogKeyword = "실라이론 클리어 횟수:";
@@ -179,16 +179,16 @@ namespace TWChatOverlay.Views
         private const string SilaironCoreDungeonLogKeyword = "실라이론 코어 마스터 던전 클리어 횟수:";
         private const string SilbanCoreDungeonLogKeyword = "실반 코어 마스터 던전 클리어 횟수:";
         private const string LuminousCoreDungeonLogKeyword = "루미너스 코어 마스터 던전 클리어 횟수:";
-        private const string FinalBattleLogKeyword = "티로로스의 계략을 막아내었습니다. 잠시 후 기억의 숲 전초기지로 이동됩니다.";
-        private const string FollowingJoyNormalLogKeyword = "레이티아 퇴치 보상으로 레이티아 보상 상자 (일반) 1개, 루비코나 코어 상자 20개를";
-        private const string GazingSorrowNormalLogKeyword = "설계자 퇴치 보상으로 설계자 보상 상자 (일반) 1개, 루비코나 코어 상자 20개를 획득";
-        private const string FollowingJoyHardLogKeyword = "레이티아 퇴치 보상으로 레이티아 보상 상자 (어려움) 1개, 루비코나 코어 상자 30개";
-        private const string GazingSorrowHardLogKeyword = "설계자 퇴치 보상으로 설계자 보상 상자 (어려움) 1개, 루비코나 코어 상자 30개";
-        private const string AfterimageOfJoyLogKeyword = "[환희의 레이티아 보상 상자] 아이템을 1개 획득하였습니다.";
+        internal const string FinalBattleLogKeyword = "티로로스의 계략을 막아내었습니다. 잠시 후 기억의 숲 전초기지로 이동됩니다.";
+        internal const string FollowingJoyNormalLogKeyword = "레이티아 퇴치 보상으로 레이티아 보상 상자 (일반) 1개, 루비코나 코어 상자 20개를";
+        internal const string GazingSorrowNormalLogKeyword = "설계자 퇴치 보상으로 설계자 보상 상자 (일반) 1개, 루비코나 코어 상자 20개를 획득";
+        internal const string FollowingJoyHardLogKeyword = "레이티아 퇴치 보상으로 레이티아 보상 상자 (어려움) 1개, 루비코나 코어 상자 30개";
+        internal const string GazingSorrowHardLogKeyword = "설계자 퇴치 보상으로 설계자 보상 상자 (어려움) 1개, 루비코나 코어 상자 30개";
+        internal const string AfterimageOfJoyLogKeyword = "[환희의 레이티아 보상 상자] 아이템을 1개 획득하였습니다.";
         private const string EtaDailyChallengeLogKeyword = "[에타의 의지 레벨업 상자]을(를) 1개 습득했습니다.";
         private const string EtaWillQuestLogKeyword = "[루이나 및 제네로 일반 상자]을(를) 1개 습득했습니다.";
 
-        private const string EclipseSubjugationLogKeyword = "이클립스 보스 토벌전 클리어 횟수:";
+        internal const string EclipseSubjugationLogKeyword = "이클립스 보스 토벌전 클리어 횟수:";
         private const string SupplyRetrievalLogKeyword = "보급품 탈환 클리어 횟수:";
         private const string MoonQueensTrainingCenterLogKeyword = "달여왕 군대 훈련소 클리어 횟수:";
         private const string DetachedForceSubjugationLogKeyword = "별동대 토벌 클리어 횟수:";
@@ -197,7 +197,7 @@ namespace TWChatOverlay.Views
         private const string CoreDungeonLogKeyword = "보스 몬스터를 퇴치하세요.";
         private const string CoreDungeonLogKeyword2 = "던전을 클리어 하였습니다. 곧 마을로 돌아가게 됩니다.";
         private const string ExcavationSiteLogKeyword = "모든 일반지역을 토벌하여";
-        private const string RelicLogKeyword = "?고대 렐릭의 성소? - 주간 무료 클리어 횟수 :";
+        internal const string RelicLogKeyword = "?고대 렐릭의 성소? - 주간 무료 클리어 횟수 :";
         private const string RelicWeeklyClearToken1 = "고대 렐릭의 성소";
         private const string RelicWeeklyClearToken2 = "주간 무료 클리어 횟수";
         private const string FreeClearCountKeyword = "오늘 무료 클리어 횟수 : 1/1 회";
@@ -277,6 +277,69 @@ namespace TWChatOverlay.Views
         /// 제목일 뿐이므로 개수에 넣지 않고, 묶음이 꺼져 있으면 그 안의 항목도 세지 않는다.
         /// 목록에는 묶음과 그 안의 항목이 모두 평면으로 들어 있으므로, 다른 항목의 자식이 아닌 것만 뿌리로 잡아 내려간다.
         /// </summary>
+        /// <summary>
+        /// 이름이 같은 추적 항목(하위 항목 포함)의 현재 횟수/최대 횟수를 돌려준다. 던전 타이머의 진행도 표시에 쓴다.
+        /// 이 창에 보이는 숫자(VisualCountDisplay)와 같은 규칙이다: 횟수 항목은 현재/최대, 체크만 하는 항목은 0/1 또는 1/1.
+        /// 이 창에서 꺼 둔 항목은 표시하지 않으므로 false.
+        /// </summary>
+        public bool TryGetItemProgress(string name, out int current, out int max)
+        {
+            current = 0;
+            max = 0;
+            if (string.IsNullOrWhiteSpace(name))
+                return false;
+
+            DailyWeeklyContentLog? found = FindTrackItem(name);
+            if (found == null || !found.IsEnabled)
+                return false;
+
+            if (found.HasCount)
+            {
+                current = found.CurrentCount;
+                max = found.MaxCount;
+            }
+            else
+            {
+                current = found.IsCleared ? 1 : 0;
+                max = 1;
+            }
+            return true;
+        }
+
+        /// <summary>이름이 같은 추적 항목이 이 창에서 켜져 있는지. 항목이 없으면 null.</summary>
+        public bool? IsItemEnabled(string name)
+        {
+            if (string.IsNullOrWhiteSpace(name))
+                return null;
+            return FindTrackItem(name)?.IsEnabled;
+        }
+
+        private DailyWeeklyContentLog? FindTrackItem(string name)
+        {
+            foreach (var item in TrackItems)
+            {
+                var found = Find(item);
+                if (found != null)
+                    return found;
+            }
+            return null;
+
+            DailyWeeklyContentLog? Find(DailyWeeklyContentLog node)
+            {
+                if (string.Equals(node.Name, name, StringComparison.Ordinal))
+                    return node;
+                if (!node.HasChildren)
+                    return null;
+                foreach (var child in node.Children!)
+                {
+                    var hit = Find(child);
+                    if (hit != null)
+                        return hit;
+                }
+                return null;
+            }
+        }
+
         private static (int Cleared, int Total) CountLeafItems(
             IEnumerable<DailyWeeklyContentLog> items,
             Func<DailyWeeklyContentLog, bool>? leafFilter = null)
@@ -1633,7 +1696,7 @@ namespace TWChatOverlay.Views
             }
         }
 
-        private static DateTime GetWeeklyResetKey(DateTime now)
+        internal static DateTime GetWeeklyResetKey(DateTime now)
         {
             int diff = (7 + (int)now.DayOfWeek - (int)DayOfWeek.Monday) % 7;
             return now.Date.AddDays(-diff);

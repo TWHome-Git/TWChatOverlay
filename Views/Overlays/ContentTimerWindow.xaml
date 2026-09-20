@@ -1,0 +1,109 @@
+<Window x:Class="TWChatOverlay.Views.ContentTimerWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="던전 타이머"
+        SizeToContent="WidthAndHeight"
+        WindowStyle="None"
+        AllowsTransparency="True"
+        Background="Transparent"
+        ResizeMode="NoResize"
+        ShowInTaskbar="False"
+        ShowActivated="False"
+        Topmost="True"
+        WindowStartupLocation="CenterScreen">
+    <!-- 크기는 글자 크기 설정에 맞춰 내용대로 잡힌다 (설정 - 던전 도우미 - 이클립스 - 타이머 글자 크기) -->
+    <Border x:Name="RootBorder"
+            Background="{DynamicResource OverlayWindowBackgroundBrush}"
+            BorderBrush="{DynamicResource OverlayAccentBorderBrush}"
+            BorderThickness="1.4"
+            CornerRadius="12"
+            Padding="12,8,14,10">
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- 왼쪽: 던전 목록. 클릭하면 그 던전 기록으로 바로 간다 -->
+            <Border x:Name="GroupListPanel"
+                    Grid.Column="0"
+                    BorderBrush="{DynamicResource ControlBorderBrush}"
+                    BorderThickness="0,0,1,0"
+                    Margin="0,0,12,0"
+                    Padding="0,0,10,0">
+                <StackPanel x:Name="GroupList" VerticalAlignment="Top"/>
+            </Border>
+
+            <!-- 오른쪽: 제목줄 + 표 -->
+            <Grid Grid.Column="1">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <!-- 제목줄: 던전 이름 (진행도) · 난이도. 잠금 해제 모드에서 잡고 끌 수 있다 -->
+                <Grid x:Name="TitleBar"
+                      Grid.Row="0"
+                      MinHeight="22"
+                      Background="Transparent"
+                      Margin="0,0,0,6"
+                      MouseLeftButtonDown="TitleBar_MouseLeftButtonDown">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <TextBlock x:Name="TitleText"
+                               Grid.Column="0"
+                               Foreground="{DynamicResource TextBrush}"
+                               FontSize="15"
+                               FontWeight="SemiBold"
+                               VerticalAlignment="Center"
+                               Margin="0,0,16,0"/>
+
+                    <!-- 던전 묶음 앞뒤로 넘기기 -->
+                    <Button x:Name="PrevGroupButton"
+                            Grid.Column="1"
+                            VerticalAlignment="Center"
+                            Margin="0,0,4,0"
+                            Click="PrevGroup_Click"
+                            Content="&lt;"
+                            ToolTip="이전 던전"
+                            Style="{StaticResource WindowSmallButtonStyle}"/>
+                    <Button x:Name="NextGroupButton"
+                            Grid.Column="2"
+                            VerticalAlignment="Center"
+                            Margin="0,0,8,0"
+                            Click="NextGroup_Click"
+                            Content="&gt;"
+                            ToolTip="다음 던전"
+                            Style="{StaticResource WindowSmallButtonStyle}"/>
+
+                    <!-- 작은 모드 ↔ 전체 모드. 내용은 코드에서 "작게"/"크게"로 바꾼다 -->
+                    <Button x:Name="ModeButton"
+                            Grid.Column="3"
+                            VerticalAlignment="Center"
+                            Margin="0,0,8,0"
+                            Click="ModeButton_Click"
+                            Content="작게"
+                            ToolTip="작은 모드 / 전체 모드"
+                            Style="{StaticResource WindowSmallButtonStyle}"/>
+
+                    <Button x:Name="CloseButton"
+                            Grid.Column="4"
+                            HorizontalAlignment="Right"
+                            VerticalAlignment="Center"
+                            Click="CloseButton_Click"
+                            Content="X"
+                            Style="{StaticResource WindowCloseButtonStyle}"/>
+                </Grid>
+
+                <!-- 구간 × (지난주 평균 | 직전 판 | 최근 판) 표. 코드에서 채운다 -->
+                <Grid x:Name="TableGrid" Grid.Row="1"/>
+            </Grid>
+        </Grid>
+    </Border>
+</Window>

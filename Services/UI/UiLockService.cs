@@ -343,6 +343,7 @@ namespace TWChatOverlay.Services
                 TWChatOverlay.Views.ItemDropHelperWindow => (s => s.ItemDropToastFontSize, (s, v) => s.ItemDropToastFontSize = v),
                 TWChatOverlay.Views.MessengerEtaToastWindow => (s => s.MessengerEtaFontSize, (s, v) => s.MessengerEtaFontSize = v),
                 TWChatOverlay.Views.BossAlertToastWindow => (s => s.BossAlertToastFontSize, (s, v) => s.BossAlertToastFontSize = v),
+                TWChatOverlay.Views.ContentTimerWindow => (s => s.ContentTimerFontSize, (s, v) => s.ContentTimerFontSize = v),
                 _ => ((Func<Models.ChatSettings, double>, Action<Models.ChatSettings, double>)?)null,
             };
 

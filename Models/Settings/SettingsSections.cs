@@ -175,6 +175,14 @@ namespace TWChatOverlay.Models
         public bool ShowRecaptureSupplyPadOrder { get; set; } = true;
         /// <summary>발판 순서 창 지속 시간(초).</summary>
         public int RecaptureSupplyPadOrderDurationSeconds { get; set; } = 10;
+        /// <summary>컨텐츠 타이머 창 표시 (아페티리아 입장~클리어 소요 시간).</summary>
+        public bool ShowContentTimer { get; set; } = true;
+        /// <summary>컨텐츠 타이머 클리어 결과를 남겨 두는 시간(초). 지나면 창이 닫힌다.</summary>
+        public int ContentTimerResultSeconds { get; set; } = 30;
+        /// <summary>컨텐츠 타이머 창 글자 크기. 창 크기는 이 값에 맞춰 내용대로 잡힌다.</summary>
+        public double ContentTimerFontSize { get; set; } = 16.0;
+        /// <summary>던전 타이머 기록 창을 마지막에 작은 모드로 봤는지 (메뉴 버튼으로 열 때 그 모드로 연다)</summary>
+        public bool ContentTimerCompact { get; set; }
         public Dictionary<string, DungeonItemConfig> ItemConfigs { get; set; } = new();
     }
 
@@ -236,6 +244,8 @@ namespace TWChatOverlay.Models
         public WindowRect RecaptureSupply { get; set; } = new();
         /// <summary>보급품 탈환 발판 순서 창 위치 (미설정 시 화면 가운데).</summary>
         public WindowRect RecaptureSupplyPadOrder { get; set; } = new();
+        /// <summary>컨텐츠 타이머 창 위치/크기 (미설정 시 화면 가운데).</summary>
+        public WindowRect ContentTimer { get; set; } = new();
         public WindowRect ExperienceLimitAlert { get; set; } = new();
         public WindowRect BossAlertToast { get; set; } = new();
         /// <summary>통합 알림 스택(외치기·던전·경험치·아이템·보스) 기준 위치.</summary>

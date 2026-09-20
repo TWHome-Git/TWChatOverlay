@@ -329,6 +329,11 @@ namespace TWChatOverlay.Views
                 });
             }
 
+            // 던전 타이머: 보스 대사(일반 흰 글)와 시스템 줄을 모두 보므로 종류를 가리지 않는다.
+            // 실시간 줄만 본다 — 시작 시 과거 로그를 다시 읽으며 타이머가 도는 것을 막는다.
+            if (shouldRunLiveUiEffects)
+                GuardSideEffect("dungeon-timer", () => ContentTimerService.Observe(parseResult.FormattedText));
+
             if (analysis.ShouldRunDailyWeeklyContent || analysis.IsSystemLog)
             GuardSideEffect("abandon-summary", () =>
             {
@@ -638,6 +643,41 @@ namespace TWChatOverlay.Views
                 return true;
 
             return false;
+        }
+
+        /// <summary>
+        /// 일일/주간 컨텐츠 추적 항목의 현재 횟수/최대 횟수. 던전 타이머의 진행도 표시(아페티리아 3/7)에 쓴다.
+        /// 추적 창이 아직 없으면 만들어서 읽는다 (실시간 처리용으로 어차피 만들어지는 창이다). UI 스레드에서 부른다.
+        /// </summary>
+        public bool TryGetDailyWeeklyItemProgress(string name, out int current, out int max)
+        {
+            current = 0;
+            max = 0;
+            try
+            {
+                EnsureDailyWeeklyWindowForRealtimeProcessing();
+                return _dailyWeeklyContentOverlay?.TryGetItemProgress(name, out current, out max) == true;
+            }
+            catch (Exception ex)
+            {
+                AppLogger.Warn($"Failed to read daily/weekly progress for '{name}'.", ex);
+                return false;
+            }
+        }
+
+        /// <summary>일일/주간 컨텐츠 창에서 그 항목을 켜 뒀는지. 항목이 없거나 창을 못 만들면 null.</summary>
+        public bool? IsDailyWeeklyItemEnabled(string name)
+        {
+            try
+            {
+                EnsureDailyWeeklyWindowForRealtimeProcessing();
+                return _dailyWeeklyContentOverlay?.IsItemEnabled(name);
+            }
+            catch (Exception ex)
+            {
+                AppLogger.Warn($"Failed to read daily/weekly item state for '{name}'.", ex);
+                return null;
+            }
         }
 
         private void EnsureDailyWeeklyWindowForRealtimeProcessing()

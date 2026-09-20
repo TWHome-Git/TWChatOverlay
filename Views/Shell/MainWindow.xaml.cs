@@ -859,6 +859,7 @@ namespace TWChatOverlay.Views
                     InitializeNativeServices();
 #if DEBUG
                     ChatLatencyHud.EnsureVisible(); // 디버그: 지연 HUD를 시작부터 표시
+                    ContentTimerService.EnsureVisibleForDebug(_settings); // 디버그: 던전 타이머 창을 항상 표시
 #endif
                 }, DispatcherPriority.Background);
 
@@ -959,6 +960,9 @@ namespace TWChatOverlay.Views
                     _settings.StartupTodayOnlyBootstrapCompleted = true;
                     ConfigService.SaveDeferred(_settings);
                 }
+
+                // 던전 타이머: 최근 며칠치 로그 파일에서 지난 판 기록을 복원한다 (백그라운드, 실패해도 시작에 영향 없음)
+                _ = ContentTimerService.BackfillFromLogsAsync(_settings.ChatLogFolderPath);
             }
             catch (OperationCanceledException)
             {

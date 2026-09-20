@@ -66,6 +66,11 @@ namespace TWChatOverlay.Views
 
             UiLockService.UnlockChanged += OnUnlockChanged;
             TrayAllWindowsService.TrayStateChanged += OnTrayStateChanged;
+            // 던전 타이머 기록 창이 열려 있으면 버튼을 켜진 상태로 표시
+            ContentTimerService.WindowVisibilityChanged += visible =>
+            {
+                try { Dispatcher.Invoke(() => SetButtonActive(BtnTimer, visible)); } catch { }
+            };
             ApplyMinimizeHighlight(TrayAllWindowsService.IsTrayed);
             AppLogger.Info("Menu window initialized.");
         }
@@ -168,8 +173,8 @@ namespace TWChatOverlay.Views
 
             RootPanel.Orientation = horizontal ? Orientation.Horizontal : Orientation.Vertical;
             MenuBody.Orientation = horizontal ? Orientation.Horizontal : Orientation.Vertical;
-            ButtonsGrid.Rows = horizontal ? 1 : 9;
-            ButtonsGrid.Columns = horizontal ? 9 : 1;
+            ButtonsGrid.Rows = horizontal ? 1 : 10;
+            ButtonsGrid.Columns = horizontal ? 10 : 1;
 
             if (horizontal)
             {
@@ -417,6 +422,9 @@ namespace TWChatOverlay.Views
                     break;
                 case "BtnMemo":
                     OpenMemo();
+                    break;
+                case "BtnTimer":
+                    ContentTimerService.ToggleManualWindow(GetSharedSettings());
                     break;
                 case "BtnSettings":
                     OpenSettings();

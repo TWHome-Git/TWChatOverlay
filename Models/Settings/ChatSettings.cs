@@ -630,6 +630,47 @@ namespace TWChatOverlay.Models
                 OnPropertyChanged();
             }
         }
+        /// <summary>컨텐츠 타이머 창 표시 (아페티리아 입장~클리어 소요 시간).</summary>
+        [JsonIgnore]
+        public bool ShowContentTimer { get => Alerts.Dungeon.ShowContentTimer; set { if (Alerts.Dungeon.ShowContentTimer == value) return; Alerts.Dungeon.ShowContentTimer = value; OnPropertyChanged(); } }
+        /// <summary>컨텐츠 타이머 클리어 결과 유지 시간(초).</summary>
+        [JsonIgnore]
+        public int ContentTimerResultSeconds
+        {
+            get => Alerts.Dungeon.ContentTimerResultSeconds < 1 ? 30 : Alerts.Dungeon.ContentTimerResultSeconds;
+            set
+            {
+                int clamped = Math.Max(1, Math.Min(300, value));
+                if (Alerts.Dungeon.ContentTimerResultSeconds == clamped) return;
+                Alerts.Dungeon.ContentTimerResultSeconds = clamped;
+                OnPropertyChanged();
+            }
+        }
+        /// <summary>컨텐츠 타이머 창 글자 크기(10~40).</summary>
+        [JsonIgnore]
+        public double ContentTimerFontSize
+        {
+            get => Alerts.Dungeon.ContentTimerFontSize < 10.0 ? 16.0 : Alerts.Dungeon.ContentTimerFontSize;
+            set
+            {
+                double clamped = Math.Max(10.0, Math.Min(40.0, value));
+                if (Math.Abs(Alerts.Dungeon.ContentTimerFontSize - clamped) < 0.0001) return;
+                Alerts.Dungeon.ContentTimerFontSize = clamped;
+                OnPropertyChanged();
+            }
+        }
+        /// <summary>던전 타이머 기록 창을 마지막에 작은 모드로 봤는지. 메뉴 버튼으로 열 때 이 모드로 연다.</summary>
+        [JsonIgnore]
+        public bool ContentTimerCompact
+        {
+            get => Alerts.Dungeon.ContentTimerCompact;
+            set
+            {
+                if (Alerts.Dungeon.ContentTimerCompact == value) return;
+                Alerts.Dungeon.ContentTimerCompact = value;
+                OnPropertyChanged();
+            }
+        }
         [JsonIgnore]
         public Dictionary<string, DungeonItemConfig> DungeonItemConfigs
         {
@@ -962,6 +1003,30 @@ namespace TWChatOverlay.Models
         {
             get => Windows.RecaptureSupplyPadOrder.Height;
             set { if (Windows.RecaptureSupplyPadOrder.Height == value) return; Windows.RecaptureSupplyPadOrder.Height = value; OnPropertyChanged(); }
+        }
+        [JsonIgnore]
+        public double? ContentTimerWindowLeft
+        {
+            get => Windows.ContentTimer.Left;
+            set { if (Windows.ContentTimer.Left == value) return; Windows.ContentTimer.Left = value; OnPropertyChanged(); }
+        }
+        [JsonIgnore]
+        public double? ContentTimerWindowTop
+        {
+            get => Windows.ContentTimer.Top;
+            set { if (Windows.ContentTimer.Top == value) return; Windows.ContentTimer.Top = value; OnPropertyChanged(); }
+        }
+        [JsonIgnore]
+        public double? ContentTimerWindowWidth
+        {
+            get => Windows.ContentTimer.Width;
+            set { if (Windows.ContentTimer.Width == value) return; Windows.ContentTimer.Width = value; OnPropertyChanged(); }
+        }
+        [JsonIgnore]
+        public double? ContentTimerWindowHeight
+        {
+            get => Windows.ContentTimer.Height;
+            set { if (Windows.ContentTimer.Height == value) return; Windows.ContentTimer.Height = value; OnPropertyChanged(); }
         }
 
         [JsonIgnore]
