@@ -55,6 +55,7 @@
                         <ColumnDefinition Width="Auto"/>
                         <ColumnDefinition Width="Auto"/>
                         <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
 
                     <TextBlock x:Name="TitleText"
@@ -83,9 +84,19 @@
                             ToolTip="다음 던전"
                             Style="{StaticResource WindowSmallButtonStyle}"/>
 
+                    <!-- 이 던전의 전체 기록 추이를 새 창(그래프)으로 연다 -->
+                    <Button x:Name="DetailButton"
+                            Grid.Column="3"
+                            VerticalAlignment="Center"
+                            Margin="0,0,8,0"
+                            Click="DetailButton_Click"
+                            Content="자세히"
+                            ToolTip="첫 기록부터 지금까지의 클리어 시간 추이를 그래프로 봅니다"
+                            Style="{StaticResource WindowSmallButtonStyle}"/>
+
                     <!-- 작은 모드 ↔ 전체 모드. 내용은 코드에서 "작게"/"크게"로 바꾼다 -->
                     <Button x:Name="ModeButton"
-                            Grid.Column="3"
+                            Grid.Column="4"
                             VerticalAlignment="Center"
                             Margin="0,0,8,0"
                             Click="ModeButton_Click"
@@ -94,7 +105,7 @@
                             Style="{StaticResource WindowSmallButtonStyle}"/>
 
                     <Button x:Name="CloseButton"
-                            Grid.Column="4"
+                            Grid.Column="5"
                             HorizontalAlignment="Right"
                             VerticalAlignment="Center"
                             Click="CloseButton_Click"

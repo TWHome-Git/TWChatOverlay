@@ -242,6 +242,7 @@ namespace TWChatOverlay.Views
             GroupListPanel.Visibility = full;
             PrevGroupButton.Visibility = full;
             NextGroupButton.Visibility = full;
+            DetailButton.Visibility = full; // 클리어 순간의 작은 창에는 두지 않는다
             ModeButton.Content = _compact ? "크게" : "작게";
 
             int hiddenGridColumn = HiddenColumnInCompact + 1;
@@ -640,6 +641,15 @@ namespace TWChatOverlay.Views
         }
 
         /// <summary>&lt; &gt; 버튼: 던전 묶음을 앞뒤로 넘긴다. 결과 자동 닫힘은 멈춘다.</summary>
+        /// <summary>지금 보고 있는 던전 묶음의 기록 추이를 새 창으로 연다.</summary>
+        private void DetailButton_Click(object sender, RoutedEventArgs e)
+        {
+            string groupKey = string.IsNullOrEmpty(_selectedGroupKey)
+                ? AppServices.Get<ContentTimerService>().Groups[0].Key
+                : _selectedGroupKey;
+            DungeonTimerDetailWindow.ShowFor(groupKey);
+        }
+
         private void PrevGroup_Click(object sender, RoutedEventArgs e) => AppServices.Get<ContentTimerService>().ShowNextGroup(-1);
         private void NextGroup_Click(object sender, RoutedEventArgs e) => AppServices.Get<ContentTimerService>().ShowNextGroup(+1);
 

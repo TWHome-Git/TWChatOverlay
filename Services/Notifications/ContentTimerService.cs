@@ -8,6 +8,7 @@ using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Text.Unicode;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using TWChatOverlay.Models;
@@ -937,6 +938,28 @@ namespace TWChatOverlay.Services
         // 키 = "기록키/난이도" → 그 던전에서 가장 빨랐던 판
         private Dictionary<string, DungeonRunRecord>? _best;
         private bool _bestDirty;
+
+        // ===== 전체 기록 아카이브 =====
+        // 두 주만 남는 기록 파일과 달리 지우지 않는다. 월별 파일(yyyy-MM.jsonl)에 판 하나를 한 줄로 덧붙이므로
+        // 기록이 수만 건이 돼도 판이 끝날 때 쓰는 양은 한 줄이다.
+        private static readonly string ArchiveDirectoryPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Config", "DungeonTimerArchive");
+        private static readonly string ArchiveScanMarkerPath = Path.Combine(ArchiveDirectoryPath, "_fullscan.json");
+        /// <summary>던전 정의가 크게 바뀌어 과거 로그를 다시 뽑아야 할 때만 올린다.</summary>
+        private const int ArchiveScanVersion = 1;
+        private static readonly JsonSerializerOptions ArchiveJsonOptions = new()
+        {
+            WriteIndented = false,
+            Encoder = JavaScriptEncoder.Create(UnicodeRanges.All),
+        };
+        // 기록키/난이도 → 이미 보관한 판의 끝난 시각(초). 같은 판을 두 번 적지 않기 위한 색인
+        private Dictionary<string, HashSet<long>>? _archiveIndex;
+        private bool _archiveAppended;
+
+        /// <summary>아카이브에 판이 더해지면 발생 (실시간 클리어, 과거 로그 추출). 기록 추이 창이 다시 그린다.</summary>
+        public event Action? ArchiveChanged;
+
+        /// <summary>과거 로그 전체에서 기록을 뽑는 1회성 작업이 도는 중인지.</summary>
+        public bool IsArchiveScanRunning { get; private set; }
         /// <summary>가운데 열을 최고 기록으로 보여주는 중인지 ("직전 판" 머리글을 누르면 바뀐다).</summary>
         private bool _showBest;
         /// <summary>마지막으로 그린 표의 재료 — 머리글을 눌러 같은 내용을 다시 그릴 때 쓴다.</summary>
@@ -1371,7 +1394,11 @@ namespace TWChatOverlay.Services
             {
                 try
                 {
-                    DateTime oldest = LastWeekStart(DateTime.Now);
+                    // 평소에는 지난주 월요일부터만 읽는다 (앱이 꺼져 있던 동안의 판 복원).
+                    // 전체 기록 아카이브를 아직 만든 적이 없으면 이번 한 번만 남아 있는 로그 전부에서 기록을 뽑고, 끝나면 표시를 남겨 다시 읽지 않는다.
+                    bool fullScan = !IsArchiveFullScanDone();
+                    IsArchiveScanRunning = fullScan;
+                    DateTime oldest = fullScan ? DateTime.MinValue : LastWeekStart(DateTime.Now);
                     int foundTotal = 0, addedTotal = 0, filesRead = 0;
                     var files = Directory.EnumerateFiles(folder, "TWChatLog_*.html")
                         .Select(path => (Path: path, Day: ParseLogFileDate(path)))
@@ -1400,12 +1427,25 @@ namespace TWChatOverlay.Services
                         filesRead++;
                         foundTotal += found.Count;
                         addedTotal += MergeHistory(found);
+                        NotifyArchiveChangedIfAppended();
+
+                        // 전체 추출은 파일이 많다 — 게임과 채팅 표시를 방해하지 않게 파일 사이에 숨을 돌린다
+                        if (fullScan)
+                            Thread.Sleep(20);
                     }
 
-                    AppLogger.Info($"Dungeon timer backfill finished. Files={filesRead}, runs found={foundTotal}, added={addedTotal}.");
+                    if (fullScan)
+                    {
+                        MarkArchiveFullScanDone(filesRead, foundTotal);
+                        IsArchiveScanRunning = false;
+                        try { ArchiveChanged?.Invoke(); } catch { }
+                    }
+
+                    AppLogger.Info($"Dungeon timer backfill finished. FullScan={fullScan}, Files={filesRead}, runs found={foundTotal}, added={addedTotal}.");
                 }
                 catch (Exception ex)
                 {
+                    IsArchiveScanRunning = false;
                     AppLogger.Warn("Dungeon timer backfill failed.", ex);
                 }
             });
@@ -1498,6 +1538,7 @@ namespace TWChatOverlay.Services
                 SaveHistory();
                 SaveBestIfDirty();
             }
+            NotifyArchiveChangedIfAppended();
         }
 
         /// <summary>과거 로그에서 찾은 판들을 합친다. 새로 들어간 개수를 돌려준다.</summary>
@@ -1514,7 +1555,7 @@ namespace TWChatOverlay.Services
                 }
                 if (added > 0)
                     SaveHistory();
-                    SaveBestIfDirty();
+                SaveBestIfDirty();
                 return added;
             }
         }
@@ -1528,6 +1569,9 @@ namespace TWChatOverlay.Services
             // 합계는 언제나 구간 합 — 옛 파일(판 전체 경과 시간으로 저장)도 여기서 맞춘다
             if (record.Segments.Count > 0)
                 record.TotalSeconds = record.Segments.Values.Sum();
+
+            // 두 주 기록의 중복 판정·정리와 무관하게, 처음 보는 판이면 전체 기록에 남긴다
+            ArchiveAppendIfNewUnlocked(record);
 
             string key = HistoryKey(record.DungeonKey, record.Difficulty ?? string.Empty);
             if (!_history!.TryGetValue(key, out var list))
@@ -1543,6 +1587,163 @@ namespace TWChatOverlay.Services
             TrimUnlocked(list);
             UpdateBestUnlocked(key, record);
             return true;
+        }
+
+        // ===== 전체 기록 아카이브 =====
+
+        /// <summary>난이도를 구분하는 던전인지 (기록 추이 창의 난이도 선택용).</summary>
+        public bool DefinitionHasDifficulty(DungeonDefinition def) => HasDifficulty(def);
+
+        /// <summary>묶음에 속한 기록 정의들 (어비스 심층Ⅰ·Ⅱ·Ⅲ, 이클립스 보스 6종 등).</summary>
+        public IReadOnlyList<DungeonDefinition> GetGroupMembers(string groupKey)
+            => RecordDefinitions.Where(d => d.GroupKey == groupKey).ToList();
+
+        /// <summary>이 던전의 전체 기록 (모든 난이도, 오래된 것 → 최근 순). 파일을 읽으므로 UI 스레드 밖에서 부른다.</summary>
+        public IReadOnlyList<DungeonRunRecord> GetArchive(DungeonDefinition def)
+        {
+            var result = new List<DungeonRunRecord>();
+            lock (SyncRoot)
+            {
+                EnsureHistoryLoaded(); // 두 주 기록 파일에만 있던 판도 이때 아카이브로 옮겨진다
+                foreach (DungeonRunRecord record in ReadArchiveUnlocked())
+                {
+                    if (record.DungeonKey != def.Key)
+                        continue;
+                    if (!HasDifficulty(def))
+                        record.Difficulty = string.Empty;
+                    else
+                        record.Difficulty ??= def.NormalLabel;
+                    result.Add(record);
+                }
+            }
+            result.Sort((a, b) => a.EndedAt.CompareTo(b.EndedAt));
+            return result;
+        }
+
+        private IEnumerable<DungeonRunRecord> ReadArchiveUnlocked()
+        {
+            if (!Directory.Exists(ArchiveDirectoryPath))
+                yield break;
+
+            foreach (string file in Directory.EnumerateFiles(ArchiveDirectoryPath, "*.jsonl").OrderBy(f => f, StringComparer.Ordinal))
+            {
+                IEnumerable<string> lines;
+                try { lines = File.ReadAllLines(file, Encoding.UTF8); }
+                catch (Exception ex)
+                {
+                    AppLogger.Warn($"Failed to read dungeon timer archive '{file}'.", ex);
+                    continue;
+                }
+
+                foreach (string line in lines)
+                {
+                    if (string.IsNullOrWhiteSpace(line))
+                        continue;
+                    DungeonRunRecord? record = null;
+                    try { record = JsonSerializer.Deserialize<DungeonRunRecord>(line, ArchiveJsonOptions); }
+                    catch { /* 깨진 줄은 건너뛴다 */ }
+                    if (record != null && !string.IsNullOrEmpty(record.DungeonKey))
+                        yield return record;
+                }
+            }
+        }
+
+        private void EnsureArchiveIndexUnlocked()
+        {
+            if (_archiveIndex != null)
+                return;
+
+            _archiveIndex = new Dictionary<string, HashSet<long>>(StringComparer.Ordinal);
+            foreach (DungeonRunRecord record in ReadArchiveUnlocked())
+                ArchiveIndexSet(record).Add(ToUnixSeconds(record.EndedAt));
+        }
+
+        private HashSet<long> ArchiveIndexSet(DungeonRunRecord record)
+        {
+            string key = HistoryKey(record.DungeonKey, record.Difficulty ?? string.Empty);
+            if (!_archiveIndex!.TryGetValue(key, out var set))
+            {
+                set = new HashSet<long>();
+                _archiveIndex[key] = set;
+            }
+            return set;
+        }
+
+        private static long ToUnixSeconds(DateTime at) => (long)(at - DateTime.UnixEpoch).TotalSeconds;
+
+        /// <summary>
+        /// 처음 보는 판이면 그 달 파일 끝에 한 줄로 덧붙인다. 같은 판 판정은 두 주 기록과 같이 끝난 시각 5초 이내.
+        /// SyncRoot를 쥔 채로 부른다.
+        /// </summary>
+        private void ArchiveAppendIfNewUnlocked(DungeonRunRecord record)
+        {
+            try
+            {
+                if (record.EndedAt == default || string.IsNullOrEmpty(record.DungeonKey))
+                    return;
+
+                EnsureArchiveIndexUnlocked();
+                HashSet<long> seen = ArchiveIndexSet(record);
+                long at = ToUnixSeconds(record.EndedAt);
+                for (long t = at - 4; t <= at + 4; t++)
+                {
+                    if (seen.Contains(t))
+                        return;
+                }
+
+                Directory.CreateDirectory(ArchiveDirectoryPath);
+                string file = Path.Combine(ArchiveDirectoryPath, record.EndedAt.ToString("yyyy-MM", System.Globalization.CultureInfo.InvariantCulture) + ".jsonl");
+                File.AppendAllText(file, JsonSerializer.Serialize(record, ArchiveJsonOptions) + Environment.NewLine, new UTF8Encoding(false));
+                seen.Add(at);
+                _archiveAppended = true;
+            }
+            catch (Exception ex)
+            {
+                AppLogger.Warn("Failed to append dungeon timer archive.", ex);
+            }
+        }
+
+        private void NotifyArchiveChangedIfAppended()
+        {
+            bool appended;
+            lock (SyncRoot)
+            {
+                appended = _archiveAppended;
+                _archiveAppended = false;
+            }
+            if (!appended)
+                return;
+            try { ArchiveChanged?.Invoke(); } catch { }
+        }
+
+        /// <summary>과거 로그 전체 추출을 이미 마쳤는지. 표시 파일이 없거나 추출 버전이 낮으면 아직이다.</summary>
+        private bool IsArchiveFullScanDone()
+        {
+            try
+            {
+                if (!File.Exists(ArchiveScanMarkerPath))
+                    return false;
+                using var doc = JsonDocument.Parse(File.ReadAllText(ArchiveScanMarkerPath));
+                return doc.RootElement.TryGetProperty("Version", out var v) && v.GetInt32() >= ArchiveScanVersion;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        private void MarkArchiveFullScanDone(int files, int runs)
+        {
+            try
+            {
+                Directory.CreateDirectory(ArchiveDirectoryPath);
+                var marker = new { Version = ArchiveScanVersion, CompletedAt = DateTime.Now, Files = files, Runs = runs };
+                File.WriteAllText(ArchiveScanMarkerPath, JsonSerializer.Serialize(marker, JsonOptions), new UTF8Encoding(false));
+            }
+            catch (Exception ex)
+            {
+                AppLogger.Warn("Failed to write dungeon timer archive scan marker.", ex);
+            }
         }
 
         // ===== 최고 기록 =====
