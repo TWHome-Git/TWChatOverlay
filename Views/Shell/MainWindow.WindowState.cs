@@ -594,6 +594,10 @@ namespace TWChatOverlay.Views
                 if (BuffTrackerWindow.Instance == null && !shouldShow)
                     return;
 
+                // 트레이로 숨은 동안 만들면 표시되지 않은 채 남아 복원 후에도 안 보인다 — 복원 시 다시 판단한다
+                if (BuffTrackerWindow.Instance == null && TrayAllWindowsService.IsTrayed)
+                    return;
+
                 var window = BuffTrackerWindow.Instance ?? CreateBuffTrackerWindow();
                 if (window == null)
                     return;

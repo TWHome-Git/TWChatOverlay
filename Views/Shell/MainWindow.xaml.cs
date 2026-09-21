@@ -462,7 +462,15 @@ namespace TWChatOverlay.Views
 
                 _stickyService = new WindowStickyService(this, _settings);
                 _stickyService.AuxiliaryWindowVisibilityChanged += StickyService_AuxiliaryWindowVisibilityChanged;
-                TrayAllWindowsService.TrayStateChanged += _ => _stickyService?.UpdatePositionImmediately();
+                TrayAllWindowsService.TrayStateChanged += trayed =>
+                {
+                    _stickyService?.UpdatePositionImmediately();
+
+                    // 트레이로 숨은 동안에는 버프 창이 스스로 표시를 바꾸지 않으므로,
+                    // 복원 시점에 지금 버프 상태로 다시 판단한다 (숨을 때 닫혀 있었거나 그 사이 버프가 바뀐 경우).
+                    if (!trayed)
+                        Dispatcher.BeginInvoke(new Action(ApplyBuffTrackerWindowSettings), DispatcherPriority.Background);
+                };
                 _stickyService.Start();
                 _stickyService.UpdatePositionImmediately();
                 _bossAlarmSchedulerService = new BossAlarmSchedulerService(_settings);
