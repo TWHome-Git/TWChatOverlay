@@ -112,6 +112,10 @@ namespace TWChatOverlay.Services
                         if (!reference.TryGetTarget(out var w)) continue;
                         try
                         {
+                            // 숨어 있는 동안 스스로 닫힌 창(알림 토스트 등)은 다시 열 수 없다 — 조용히 건너뛴다
+                            if (new System.Windows.Interop.WindowInteropHelper(w).Handle == IntPtr.Zero)
+                                continue;
+
                             w.Show();
                             if (w.WindowState == WindowState.Minimized)
                                 w.WindowState = WindowState.Normal;
