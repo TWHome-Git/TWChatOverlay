@@ -64,7 +64,7 @@ namespace TWChatOverlay.Views
             }
             catch (Exception ex) { AppLogger.Warn("Failed to subscribe menu window to main window state.", ex); }
 
-            UiLockService.UnlockChanged += OnUnlockChanged;
+            AppServices.Get<UiLockService>().UnlockChanged += OnUnlockChanged;
             AppServices.Get<TrayAllWindowsService>().TrayStateChanged += OnTrayStateChanged;
             // 던전 타이머 기록 창이 열려 있으면 버튼을 켜진 상태로 표시
             AppServices.Get<ContentTimerService>().WindowVisibilityChanged += visible =>
@@ -295,7 +295,7 @@ namespace TWChatOverlay.Views
             {
                 try
                 {
-                    UiLockService.UnlockChanged -= OnUnlockChanged;
+                    AppServices.Get<UiLockService>().UnlockChanged -= OnUnlockChanged;
                     if (_subscribedMainWindow != null)
                     {
                         _subscribedMainWindow.OverlayVisibilityChanged -= Main_OverlayVisibilityChanged;
@@ -370,7 +370,7 @@ namespace TWChatOverlay.Views
                     OpenTwPage();
                     break;
                 case "BtnUnlock":
-                    UiLockService.Toggle();
+                    AppServices.Get<UiLockService>().Toggle();
                     break;
                 case "BtnChat":
                     OpenChat();

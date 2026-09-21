@@ -119,7 +119,7 @@ namespace TWChatOverlay.Services
                     return;
 
                 // 잠금 해제 모드는 배경/배너/인스펙터가 자체적으로 z-순서를 관리한다
-                if (UiLockService.IsUnlocked)
+                if (AppServices.Get<UiLockService>().IsUnlocked)
                     return;
 
                 //  - 항상 위 ON: 게임이 전경이 될 때 오버레이를 최상단 밴드로 재승격

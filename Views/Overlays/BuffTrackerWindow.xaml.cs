@@ -28,7 +28,7 @@ namespace TWChatOverlay.Views
             _tracker.PropertyChanged += Tracker_PropertyChanged;
             _tracker.ActiveRareBuffs.CollectionChanged += TrackerBuffs_CollectionChanged;
             _tracker.ActiveExpBuffs.CollectionChanged += TrackerBuffs_CollectionChanged;
-            UiLockService.UnlockChanged += OnUnlockChanged;
+            AppServices.Get<UiLockService>().UnlockChanged += OnUnlockChanged;
             // 표시는 호출자(ApplyBuffTrackerWindowSettings)가 위치를 맞춘 뒤 ApplyVisibility로 결정한다
         }
 
@@ -43,7 +43,7 @@ namespace TWChatOverlay.Views
             _tracker.PropertyChanged -= Tracker_PropertyChanged;
             _tracker.ActiveRareBuffs.CollectionChanged -= TrackerBuffs_CollectionChanged;
             _tracker.ActiveExpBuffs.CollectionChanged -= TrackerBuffs_CollectionChanged;
-            UiLockService.UnlockChanged -= OnUnlockChanged;
+            AppServices.Get<UiLockService>().UnlockChanged -= OnUnlockChanged;
 
             if (ReferenceEquals(Instance, this))
                 Instance = null;
@@ -72,7 +72,7 @@ namespace TWChatOverlay.Views
                 return;
 
             // 잠금 해제 중에는 최대 크기 미리보기(도우미 창)가 대신 표시된다
-            if (UiLockService.IsUnlocked)
+            if (AppServices.Get<UiLockService>().IsUnlocked)
                 return;
 
             if (_settings.EnableBuffTrackerAlert && _tracker.HasAnyActiveBuffs)
@@ -118,7 +118,7 @@ namespace TWChatOverlay.Views
                 IntPtr hwnd = new WindowInteropHelper(this).EnsureHandle();
                 int exStyle = NativeMethods.GetWindowLong(hwnd, NativeMethods.GWL_EXSTYLE) | NativeMethods.WS_EX_TOOLWINDOW;
 
-                if (UiLockService.IsUnlocked)
+                if (AppServices.Get<UiLockService>().IsUnlocked)
                     exStyle &= ~NativeMethods.WS_EX_TRANSPARENT;
                 else
                     exStyle |= NativeMethods.WS_EX_TRANSPARENT;

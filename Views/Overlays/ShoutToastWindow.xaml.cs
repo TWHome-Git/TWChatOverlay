@@ -183,7 +183,7 @@ namespace TWChatOverlay.Views
         {
             if (!_isPreviewMode)
             {
-                UiLockService.Select(this);
+                AppServices.Get<UiLockService>().Select(this);
                 return;
             }
 

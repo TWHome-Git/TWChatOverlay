@@ -186,7 +186,7 @@ namespace TWChatOverlay.Views
         protected override bool PersistBounds(ChatSettings settings)
         {
             // 자동으로 뜰 때의 위치는 기본 위치 계산 결과이므로, 사용자가 잠금 해제 중 옮긴 것만 저장한다
-            if (!IsVisible || !UiLockService.IsUnlocked)
+            if (!IsVisible || !AppServices.Get<UiLockService>().IsUnlocked)
                 return false;
 
             settings.TreasurySummaryWindowLeft = Left;

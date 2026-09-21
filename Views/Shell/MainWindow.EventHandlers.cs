@@ -55,8 +55,8 @@ namespace TWChatOverlay.Views
         /// <summary>잠금 해제 모드에서는 창의 아무 곳이나 잡고 드래그해 이동할 수 있다. (레이아웃 변화 없음 → 위치 오차 없음)</summary>
         private void MainBorder_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
-            if (!UiLockService.IsUnlocked) return;
-            UiLockService.Select(this);
+            if (!AppServices.Get<UiLockService>().IsUnlocked) return;
+            AppServices.Get<UiLockService>().Select(this);
             if (e.ButtonState != MouseButtonState.Pressed) return;
 
             try

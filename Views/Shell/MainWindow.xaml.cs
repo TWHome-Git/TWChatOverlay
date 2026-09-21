@@ -93,7 +93,7 @@ namespace TWChatOverlay.Views
             _mainTabAutoHideTimer.Tick += (_, _) => HideMainTabs();
 
             _settings = AppServices.Get<ChatSettings>();
-            UiLockService.SnapEnabled = _settings.WindowSnapEnabled;
+            AppServices.Get<UiLockService>().SnapEnabled = _settings.WindowSnapEnabled;
             AppServices.Get<IOverlayOpacityService>().Initialize();
             if (!_settings.InitialSetupWizardCompleted)
             {
@@ -180,8 +180,8 @@ namespace TWChatOverlay.Views
             // Closing 시점에 종료를 표시해야 "사용자가 닫음"으로 오인해 IsOpen=false를 저장하지 않는다
             this.Closing += (_, _) => AppServices.Get<ChatWindowHub>().BeginShutdown();
             this.Closed += MainWindow_Closed;
-            UiLockService.UnlockChanged += OnUiUnlockChanged;
-            UiLockService.WindowAdjusted += OnUnlockWindowAdjusted;
+            AppServices.Get<UiLockService>().UnlockChanged += OnUiUnlockChanged;
+            AppServices.Get<UiLockService>().WindowAdjusted += OnUnlockWindowAdjusted;
             AppLogger.Info("Main window initialized.");
 
             ShowStartupLoadingWindow();
@@ -193,8 +193,8 @@ namespace TWChatOverlay.Views
         private void MainWindow_Closed(object? sender, EventArgs e)
         {
             
-            try { UiLockService.UnlockChanged -= OnUiUnlockChanged; } catch { }
-            try { UiLockService.WindowAdjusted -= OnUnlockWindowAdjusted; } catch { }
+            try { AppServices.Get<UiLockService>().UnlockChanged -= OnUiUnlockChanged; } catch { }
+            try { AppServices.Get<UiLockService>().WindowAdjusted -= OnUnlockWindowAdjusted; } catch { }
             try { _mainTabAutoHideTimer.Stop(); } catch { }
             try { _logAnalysisPipeline?.Dispose(); } catch { }
             try
@@ -264,7 +264,7 @@ namespace TWChatOverlay.Views
                 return;
 
             // 잠금 해제, 또는 추가 기능 > 경험치 추적 > 일반 탭에서만 미리보기로 표시한다
-            bool previewMode = UiLockService.IsUnlocked ||
+            bool previewMode = AppServices.Get<UiLockService>().IsUnlocked ||
                                (_isAddonPositionMode && _addonPositionPreviewTabIndex == 10);
 
             if (_settings.ShowExpTracker && (previewMode || _expService.IsTrackerActive))
@@ -392,7 +392,7 @@ namespace TWChatOverlay.Views
                             AppServices.Get<TrayAllWindowsService>().Toggle();
                             break;
                         case HotKeyService.TOGGLE_UNLOCK_ID:
-                            UiLockService.Toggle();
+                            AppServices.Get<UiLockService>().Toggle();
                             break;
                     }
                 };

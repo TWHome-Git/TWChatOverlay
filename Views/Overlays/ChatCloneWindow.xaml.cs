@@ -711,7 +711,7 @@ namespace TWChatOverlay.Views
 
         private void SavePositionToSettings()
         {
-            if (!UiLockService.IsUnlocked)
+            if (!AppServices.Get<UiLockService>().IsUnlocked)
                 return;
 
             if (_slot == 1)
@@ -730,7 +730,7 @@ namespace TWChatOverlay.Views
 
         private void SyncPositionToSettings()
         {
-            if (!UiLockService.IsUnlocked)
+            if (!AppServices.Get<UiLockService>().IsUnlocked)
                 return;
 
             SavePositionToSettings();

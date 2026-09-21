@@ -95,7 +95,7 @@ namespace TWChatOverlay.Services
             ApplyTopmost();
 
             // 잠금 해제 모드에서는 드래그 중인 창을 저장 좌표로 되돌리지 않는다.
-            if (UiLockService.IsUnlocked)
+            if (AppServices.Get<UiLockService>().IsUnlocked)
             {
                 NotifyAuxiliaryWindowVisibilityChanged(true);
                 return;

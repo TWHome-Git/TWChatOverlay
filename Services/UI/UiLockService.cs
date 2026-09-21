@@ -12,37 +12,37 @@ namespace TWChatOverlay.Services
     /// 모드가 켜지면 화면 전체가 살짝 어두워지며 격자가 표시되고(클릭 통과),
     /// 주 모니터 상단 중앙에 안내/완료 배너가 뜹니다. 모드를 끝내면 모든 창이 잠깁니다.
     /// </summary>
-    public static class UiLockService
+    public sealed class UiLockService
     {
-        private static BackdropWindow? _backdrop;
-        private static BannerWindow? _banner;
-        private static HighlightWindow? _highlight;
-        private static InspectorWindow? _inspector;
-        private static Window? _selected;
+        private BackdropWindow? _backdrop;
+        private BannerWindow? _banner;
+        private HighlightWindow? _highlight;
+        private InspectorWindow? _inspector;
+        private Window? _selected;
 
-        public static bool IsUnlocked { get; private set; }
+        public bool IsUnlocked { get; private set; }
 
         /// <summary>자석 스냅 모드. 시작 시 설정에서 로드되고 배너의 토글로 바뀐다.</summary>
-        public static bool SnapEnabled { get; set; }
+        public bool SnapEnabled { get; set; }
 
-        private static bool _isAdjustingSelected; // 인스펙터發 이동/크기 변경 중 (스냅 제외)
-        private static bool _isSnappingSelected;  // 스냅 적용 중 재진입 방지
+        private bool _isAdjustingSelected; // 인스펙터發 이동/크기 변경 중 (스냅 제외)
+        private bool _isSnappingSelected;  // 스냅 적용 중 재진입 방지
 
         /// <summary>잠금 해제 모드의 보조 UI(격자/배너/하이라이트/인스펙터)인지 — 스냅 대상에서 제외.</summary>
         public static bool IsUnlockChrome(Window window)
             => window is BackdropWindow or BannerWindow or HighlightWindow or InspectorWindow;
 
         /// <summary>현재 선택된(편집 중인) 창. 잠금 해제 모드에서만 값이 있다.</summary>
-        public static Window? SelectedWindow => _selected;
+        public Window? SelectedWindow => _selected;
 
         /// <summary>모드 변경 시 발생. 인자 = 새 잠금 해제 상태.</summary>
-        public static event Action<bool>? UnlockChanged;
+        public event Action<bool>? UnlockChanged;
 
         /// <summary>설정 화면에서 잠금 해제로 들어온 경우, 종료 시 설정 창으로 복귀하기 위한 플래그.</summary>
-        public static bool ReturnToSettingsOnLock { get; set; }
+        public bool ReturnToSettingsOnLock { get; set; }
 
         /// <summary>복귀 플래그를 읽고 초기화한다.</summary>
-        public static bool ConsumeReturnToSettings()
+        public bool ConsumeReturnToSettings()
         {
             bool value = ReturnToSettingsOnLock;
             ReturnToSettingsOnLock = false;
@@ -50,11 +50,11 @@ namespace TWChatOverlay.Services
         }
 
         /// <summary>넛지/크기 입력으로 창 위치·크기가 바뀐 뒤 발생. 창별 저장 로직을 연결한다.</summary>
-        public static event Action<Window>? WindowAdjusted;
+        public event Action<Window>? WindowAdjusted;
 
-        public static void Toggle() => Set(!IsUnlocked);
+        public void Toggle() => Set(!IsUnlocked);
 
-        public static void Set(bool unlocked)
+        public void Set(bool unlocked)
         {
             if (IsUnlocked == unlocked) return;
             IsUnlocked = unlocked;
@@ -91,7 +91,7 @@ namespace TWChatOverlay.Services
         /// 잠금 해제 모드에서 창을 선택한다(드래그 시작 시 각 창의 핸들러가 호출).
         /// 선택된 창은 하이라이트 테두리와 인스펙터(1px 이동/크기 조절)로 편집한다.
         /// </summary>
-        public static void Select(Window? window)
+        public void Select(Window? window)
         {
             if (!IsUnlocked || window == null) return;
             if (ReferenceEquals(_selected, window))
@@ -124,9 +124,9 @@ namespace TWChatOverlay.Services
             }
         }
 
-        private static void Selected_Closed(object? sender, EventArgs e) => ClearSelection();
+        private void Selected_Closed(object? sender, EventArgs e) => ClearSelection();
 
-        private static void Selected_BoundsChanged(object? sender, EventArgs e)
+        private void Selected_BoundsChanged(object? sender, EventArgs e)
         {
             if (_selected == null) return;
 
@@ -144,10 +144,10 @@ namespace TWChatOverlay.Services
             _inspector?.RefreshValues();
         }
 
-        private static void Selected_SizeChanged(object? sender, SizeChangedEventArgs e)
+        private void Selected_SizeChanged(object? sender, SizeChangedEventArgs e)
             => Selected_BoundsChanged(sender, EventArgs.Empty);
 
-        private static void DetachSelectionHandlers()
+        private void DetachSelectionHandlers()
         {
             if (_selected == null) return;
             _selected.Closed -= Selected_Closed;
@@ -156,7 +156,7 @@ namespace TWChatOverlay.Services
             _selected = null;
         }
 
-        private static void ClearSelection()
+        private void ClearSelection()
         {
             DetachSelectionHandlers();
             // 선택 UI도 대기시키지 않고 닫는다 — 다음 선택 때 새로 만든다
@@ -165,7 +165,7 @@ namespace TWChatOverlay.Services
         }
 
         /// <summary>보조 창을 닫고 참조를 비운다. 이미 닫혔거나 예외가 나도 무시.</summary>
-        private static void CloseQuietly<T>(ref T? window) where T : Window
+        private void CloseQuietly<T>(ref T? window) where T : Window
         {
             var target = window;
             window = null;
@@ -173,7 +173,7 @@ namespace TWChatOverlay.Services
             try { target.Close(); } catch { }
         }
 
-        internal static void NudgeSelected(int dx, int dy)
+        internal void NudgeSelected(int dx, int dy)
         {
             var window = _selected;
             if (window == null) return;
@@ -196,7 +196,7 @@ namespace TWChatOverlay.Services
         }
 
         /// <summary>인스펙터 좌표 입력으로 선택된 창을 지정 위치로 옮긴다.</summary>
-        internal static void MoveSelected(double? left, double? top)
+        internal void MoveSelected(double? left, double? top)
         {
             var window = _selected;
             if (window == null) return;
@@ -230,7 +230,7 @@ namespace TWChatOverlay.Services
             return upper < lower ? lower : Math.Max(lower, Math.Min(upper, value));
         }
 
-        internal static void ResizeSelected(double? width, double? height)
+        internal void ResizeSelected(double? width, double? height)
         {
             var window = _selected;
             if (window == null) return;
@@ -295,7 +295,7 @@ namespace TWChatOverlay.Services
         }
 
         /// <summary>인스펙터 슬라이더로 선택된 창의 투명도를 지정하고 창별로 저장한다.</summary>
-        internal static void SetSelectedOpacity(double percent)
+        internal void SetSelectedOpacity(double percent)
         {
             var window = _selected;
             if (window == null) return;
@@ -334,7 +334,7 @@ namespace TWChatOverlay.Services
         }
 
         /// <summary>선택된 창이 폰트 크기 조절을 지원하면 (읽기, 쓰기) 접근자를 돌려준다.</summary>
-        private static (Func<Models.ChatSettings, double> Get, Action<Models.ChatSettings, double> Set)? GetFontAccessor(Window window)
+        private (Func<Models.ChatSettings, double> Get, Action<Models.ChatSettings, double> Set)? GetFontAccessor(Window window)
             => window switch
             {
                 TWChatOverlay.Views.DungeonCountDisplayWindow => (s => s.DungeonCountDisplayFontSize, (s, v) => s.DungeonCountDisplayFontSize = v),
@@ -347,7 +347,7 @@ namespace TWChatOverlay.Services
                 _ => ((Func<Models.ChatSettings, double>, Action<Models.ChatSettings, double>)?)null,
             };
 
-        internal static double? GetSelectedFontSize()
+        internal double? GetSelectedFontSize()
         {
             var window = _selected;
             var accessor = window == null ? null : GetFontAccessor(window);
@@ -357,7 +357,7 @@ namespace TWChatOverlay.Services
         }
 
         /// <summary>인스펙터 슬라이더로 선택된 알림창의 폰트 크기를 지정·저장하고 즉시 반영한다.</summary>
-        internal static void SetSelectedFontSize(double size)
+        internal void SetSelectedFontSize(double size)
         {
             var window = _selected;
             if (window == null) return;
@@ -437,7 +437,7 @@ namespace TWChatOverlay.Services
         /// 백드롭보다 우리 오버레이 창/배너가 위에 오도록 Topmost 밴드 최상단으로 재삽입한다.
         /// (백드롭이 나중에 Show되면 같은 밴드 최상단에 끼어들어 격자가 오버레이 위에 그려짐)
         /// </summary>
-        private static void RaiseOverlaysAboveBackdrop()
+        private void RaiseOverlaysAboveBackdrop()
         {
             var app = Application.Current;
             if (app == null) return;
@@ -567,18 +567,18 @@ namespace TWChatOverlay.Services
                 };
                 snapButton.SetResourceReference(FrameworkElement.StyleProperty, "SimButtonStyle");
                 void RefreshSnapButton() =>
-                    snapButton.Content = SnapEnabled ? "자석 ON" : "자석 OFF";
+                    snapButton.Content = AppServices.Get<UiLockService>().SnapEnabled ? "자석 ON" : "자석 OFF";
                 RefreshSnapButton();
                 snapButton.Click += (_, _) =>
                 {
-                    SnapEnabled = !SnapEnabled;
+                    AppServices.Get<UiLockService>().SnapEnabled = !AppServices.Get<UiLockService>().SnapEnabled;
                     RefreshSnapButton();
                     try
                     {
                         var settings = ToastPresentationHelper.FindSharedSettings();
                         if (settings != null)
                         {
-                            settings.WindowSnapEnabled = SnapEnabled;
+                            settings.WindowSnapEnabled = AppServices.Get<UiLockService>().SnapEnabled;
                             ConfigService.SaveDeferred(settings);
                         }
                     }
@@ -597,7 +597,7 @@ namespace TWChatOverlay.Services
                     Foreground = Brushes.White,
                 };
                 doneButton.SetResourceReference(FrameworkElement.StyleProperty, "SimButtonStyle");
-                doneButton.Click += (_, _) => Set(false);
+                doneButton.Click += (_, _) => AppServices.Get<UiLockService>().Set(false);
                 panel.Children.Add(doneButton);
 
                 banner.Child = panel;
@@ -609,7 +609,7 @@ namespace TWChatOverlay.Services
 
                 PreviewKeyDown += (_, e) =>
                 {
-                    if (e.Key == Key.Escape) Set(false);
+                    if (e.Key == Key.Escape) AppServices.Get<UiLockService>().Set(false);
                 };
             }
 
@@ -762,7 +762,7 @@ namespace TWChatOverlay.Services
                 {
                     _opacityText.Text = $"{(int)Math.Round(e.NewValue)}%";
                     if (_suppressOpacityEvent) return;
-                    SetSelectedOpacity(e.NewValue);
+                    AppServices.Get<UiLockService>().SetSelectedOpacity(e.NewValue);
                 };
 
                 var opacityRow = new StackPanel
@@ -807,7 +807,7 @@ namespace TWChatOverlay.Services
                 {
                     _fontText.Text = $"{(int)Math.Round(e.NewValue)}";
                     if (_suppressFontEvent) return;
-                    SetSelectedFontSize(e.NewValue);
+                    AppServices.Get<UiLockService>().SetSelectedFontSize(e.NewValue);
                 };
 
                 _fontRow = new StackPanel
@@ -858,7 +858,7 @@ namespace TWChatOverlay.Services
 
                 PreviewKeyDown += (_, e) =>
                 {
-                    if (e.Key == Key.Escape) Set(false);
+                    if (e.Key == Key.Escape) AppServices.Get<UiLockService>().Set(false);
                 };
             }
 
@@ -879,7 +879,7 @@ namespace TWChatOverlay.Services
                     BorderBrush = new SolidColorBrush(BorderCol),
                     ToolTip = "1px 이동 (길게 누르면 반복)",
                 };
-                button.Click += (_, _) => NudgeSelected(dx, dy);
+                button.Click += (_, _) => AppServices.Get<UiLockService>().NudgeSelected(dx, dy);
                 return button;
             }
 
@@ -948,7 +948,7 @@ namespace TWChatOverlay.Services
 
             private void SyncFontSlider()
             {
-                double? size = GetSelectedFontSize();
+                double? size = AppServices.Get<UiLockService>().GetSelectedFontSize();
                 _fontRow.Visibility = size.HasValue ? Visibility.Visible : Visibility.Collapsed;
                 if (!size.HasValue) return;
 
@@ -1072,7 +1072,7 @@ namespace TWChatOverlay.Services
                     return;
                 }
 
-                MoveSelected(left, top);
+                AppServices.Get<UiLockService>().MoveSelected(left, top);
 
                 // 화면 밖으로 나가지 않게 보정될 수 있으므로 실제 값으로 되돌려 보여준다
                 _xBox.Text = ((int)Math.Round(target.Left)).ToString();
@@ -1092,7 +1092,7 @@ namespace TWChatOverlay.Services
                     return;
                 }
 
-                ResizeSelected(width, height);
+                AppServices.Get<UiLockService>().ResizeSelected(width, height);
                 RefreshValues();
             }
 

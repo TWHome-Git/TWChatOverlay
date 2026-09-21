@@ -120,7 +120,7 @@ namespace TWChatOverlay.Services
         /// <summary>잠금 해제 모드의 자석 스냅. 설정(WindowSnapEnabled)이 꺼져 있으면 아무것도 하지 않는다.</summary>
         public bool TryApplyMagneticSnap(Window movingWindow, double threshold = 14.0)
         {
-            if (!UiLockService.SnapEnabled)
+            if (!AppServices.Get<UiLockService>().SnapEnabled)
                 return false;
 
             if (movingWindow == null)

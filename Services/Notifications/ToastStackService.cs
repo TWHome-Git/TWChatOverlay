@@ -418,7 +418,7 @@ namespace TWChatOverlay.Services
                 // 잠금 해제 모드에서는 다른 창처럼 선택 시 인스펙터(X/Y 입력·넛지)로도 편집 가능
                 root.MouseLeftButtonDown += (_, e) =>
                 {
-                    UiLockService.Select(this);
+                    AppServices.Get<UiLockService>().Select(this);
                     if (e.ButtonState != MouseButtonState.Pressed)
                         return;
                     try { DragMove(); } catch { }

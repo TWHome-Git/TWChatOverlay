@@ -379,7 +379,7 @@ namespace TWChatOverlay.Views
         /// <summary>가운데 열 머리글 클릭: 직전 판 ↔ 최고 기록. 잠금 해제(위치 조정) 중에는 창을 끌어 옮기는 중이라 넘긴다.</summary>
         private void PreviousHeader_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
         {
-            if (UiLockService.IsUnlocked || _isPreviewMode)
+            if (AppServices.Get<UiLockService>().IsUnlocked || _isPreviewMode)
                 return;
             AppServices.Get<ContentTimerService>().TogglePreviousColumn();
             e.Handled = true;

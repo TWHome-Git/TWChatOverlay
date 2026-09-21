@@ -702,7 +702,7 @@ namespace TWChatOverlay.Services
         }
 
         /// <summary>
-        /// 잠금 해제 모드 목업: 실제 UiLockService.BackdropWindow와 동일한
+        /// 잠금 해제 모드 목업: 실제 AppServices.Get<UiLockService>().BackdropWindow와 동일한
         /// 민트 격자(32px, 50% 불투명)를 게임 화면 배경 위에 깔고 창과 좌표 칩을 얹는다.
         /// </summary>
         private static FrameworkElement UnlockMock(bool unlocked)

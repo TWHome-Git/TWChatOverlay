@@ -177,7 +177,7 @@ namespace TWChatOverlay.Views
         {
             try
             {
-                if (msg != WM_NCHITTEST || !UiLockService.IsUnlocked)
+                if (msg != WM_NCHITTEST || !AppServices.Get<UiLockService>().IsUnlocked)
                     return IntPtr.Zero;
 
                 Point screenPoint = new(

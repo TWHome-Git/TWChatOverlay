@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Interop;
@@ -95,10 +95,10 @@ namespace TWChatOverlay.Views
         /// <returns>드래그를 시작했으면 true.</returns>
         protected bool TryBeginDrag(MouseButtonEventArgs e, bool markHandled = false)
         {
-            if (DragRequiresUnlock && !UiLockService.IsUnlocked)
+            if (DragRequiresUnlock && !AppServices.Get<UiLockService>().IsUnlocked)
                 return false;
 
-            UiLockService.Select(this); // 잠금 상태면 내부에서 무시된다
+            AppServices.Get<UiLockService>().Select(this); // 잠금 상태면 내부에서 무시된다
             if (e.ButtonState != MouseButtonState.Pressed || e.LeftButton != MouseButtonState.Pressed)
                 return false;
 

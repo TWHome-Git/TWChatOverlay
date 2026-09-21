@@ -74,8 +74,8 @@ namespace TWChatOverlay.Views
         private void UnlockMode_Click(object sender, RoutedEventArgs e)
         {
             // 설정에서 들어간 잠금 해제는 종료 시 설정 창으로 복귀한다
-            Services.UiLockService.ReturnToSettingsOnLock = !OnlyChatMode;
-            Services.UiLockService.Set(true);
+            Services.AppServices.Get<Services.UiLockService>().ReturnToSettingsOnLock = !OnlyChatMode;
+            Services.AppServices.Get<Services.UiLockService>().Set(true);
             if (!OnlyChatMode)
             {
                 try { Window.GetWindow(this)?.Close(); } catch { }
