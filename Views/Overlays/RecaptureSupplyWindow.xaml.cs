@@ -1,14 +1,16 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Interop;
 using System.Windows.Media.Imaging;
+using TWChatOverlay.Models;
 using TWChatOverlay.Services;
 
 namespace TWChatOverlay.Views
 {
-    public partial class RecaptureSupplyWindow : Window
+    /// <summary>보급품 탈환 지도 창. 잠금 해제 모드에서 창 어디를 잡아도 이동하고, 가장자리로 크기를 조절한다.</summary>
+    public partial class RecaptureSupplyWindow : OverlayWindowBase
     {
         private const double MinimumWindowWidth = 240;
         private const double MinimumWindowHeight = 180;
@@ -27,59 +29,23 @@ namespace TWChatOverlay.Views
         public RecaptureSupplyWindow(string imagePath)
         {
             InitializeComponent();
-            SettingsHostZOrder.Register(this); // 설정 창이 열려 있으면 그 아래로 표시
-            WindowFontService.Apply(this);
             SourceInitialized += RecaptureSupplyWindow_SourceInitialized;
             // 잠금 해제 모드에서는 창 어디를 잡아도 선택+드래그 가능
-            PreviewMouseLeftButtonDown += UnlockDrag_PreviewMouseLeftButtonDown;
-            SizeChanged += (_, _) => PersistBoundsDeferred();
-            LocationChanged += (_, _) => PersistBoundsDeferred();
+            PreviewMouseLeftButtonDown += (_, e) => TryBeginDrag(e, markHandled: true);
             LoadImage(imagePath);
         }
 
-        private void UnlockDrag_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        protected override void PersistBounds(ChatSettings settings)
         {
-            if (!UiLockService.IsUnlocked) return;
-            UiLockService.Select(this);
-            if (e.ButtonState != MouseButtonState.Pressed)
+            if (!IsVisible)
                 return;
 
-            try
-            {
-                DragMove();
-            }
-            catch
-            {
-            }
-
-            PersistBoundsDeferred();
-            e.Handled = true;
-        }
-
-        /// <summary>현재 위치/크기를 공유 설정에 지연 저장한다. (드래그·리사이즈·인스펙터 조정 공용)</summary>
-        private void PersistBoundsDeferred()
-        {
-            if (!IsLoaded || !IsVisible)
-                return;
-
-            try
-            {
-                foreach (Window window in Application.Current.Windows)
-                {
-                    if (window is MainWindow main && main.DataContext is Models.ChatSettings settings)
-                    {
-                        settings.RecaptureSupplyWindowLeft = Left;
-                        settings.RecaptureSupplyWindowTop = Top;
-                        if (ActualWidth > 0)
-                            settings.RecaptureSupplyWindowWidth = ActualWidth;
-                        if (ActualHeight > 0)
-                            settings.RecaptureSupplyWindowHeight = ActualHeight;
-                        ConfigService.SaveDeferred(settings);
-                        return;
-                    }
-                }
-            }
-            catch { }
+            settings.RecaptureSupplyWindowLeft = Left;
+            settings.RecaptureSupplyWindowTop = Top;
+            if (ActualWidth > 0)
+                settings.RecaptureSupplyWindowWidth = ActualWidth;
+            if (ActualHeight > 0)
+                settings.RecaptureSupplyWindowHeight = ActualHeight;
         }
 
         private void RecaptureSupplyWindow_SourceInitialized(object? sender, EventArgs e)
@@ -114,18 +80,7 @@ namespace TWChatOverlay.Views
         }
 
         private void TitleBar_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
-        {
-            if (!UiLockService.IsUnlocked) return;
-            UiLockService.Select(this);
-            try
-            {
-                if (e.ButtonState == MouseButtonState.Pressed)
-                {
-                    DragMove();
-                }
-            }
-            catch { }
-        }
+            => TryBeginDrag(e);
 
         private void CloseButton_Click(object sender, RoutedEventArgs e)
         {

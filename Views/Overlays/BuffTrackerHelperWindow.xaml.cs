@@ -1,31 +1,28 @@
-﻿using System;
+using System;
 using System.Linq;
-using System.Windows;
 using System.Windows.Input;
 using TWChatOverlay.Models;
 using TWChatOverlay.Services;
 
 namespace TWChatOverlay.Views
 {
-    public partial class BuffTrackerHelperWindow : Window
+    /// <summary>잠금 해제 모드에서 버프 추적창의 최대 크기를 보여주는 미리보기 창. 위치는 실제 버프창과 함께 움직인다.</summary>
+    public partial class BuffTrackerHelperWindow : OverlayWindowBase
     {
         public static BuffTrackerHelperWindow? Instance { get; private set; }
 
         public BuffTrackerHelperWindow()
         {
             InitializeComponent();
-            SettingsHostZOrder.Register(this); // 설정 창이 열려 있으면 그 아래로 표시
-            WindowFontService.Apply(this);
             Instance = this;
             var previewItems = BuffTrackerService.CreatePreviewItems();
             PreviewRareItems.ItemsSource = previewItems.Where(item => item.IsRare).ToList();
             PreviewExpItems.ItemsSource = previewItems.Where(item => !item.IsRare).ToList();
-            LocationChanged += (_, _) => SyncPositionToSettings();
         }
 
         protected override void OnClosed(EventArgs e)
         {
-            CommitPositionToSettings();
+            PersistBoundsNow();
 
             if (ReferenceEquals(Instance, this))
                 Instance = null;
@@ -34,53 +31,12 @@ namespace TWChatOverlay.Views
         }
 
         private void RootBorder_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+            => TryBeginDrag(e);
+
+        protected override void PersistBounds(ChatSettings settings)
         {
-            if (!UiLockService.IsUnlocked) return;
-            UiLockService.Select(this);
-            if (e.ButtonState != MouseButtonState.Pressed)
-                return;
-
-            try { DragMove(); } catch { }
-            finally
-            {
-                CommitPositionToSettings();
-            }
-        }
-
-        private void SyncPositionToSettings()
-        {
-            try
-            {
-                foreach (Window window in Application.Current.Windows)
-                {
-                    if (window is MainWindow mainWindow && mainWindow.DataContext is ChatSettings settings)
-                    {
-                        settings.SetBuffTrackerWindowPosition(Left, Top, notify: false);
-                        SyncTrackerWindowPosition();
-
-                        break;
-                    }
-                }
-            }
-            catch { }
-        }
-
-        private void CommitPositionToSettings()
-        {
-            try
-            {
-                foreach (Window window in Application.Current.Windows)
-                {
-                    if (window is MainWindow mainWindow && mainWindow.DataContext is ChatSettings settings)
-                    {
-                        settings.SetBuffTrackerWindowPosition(Left, Top, notify: false);
-                        SyncTrackerWindowPosition();
-                        ConfigService.SaveDeferred(settings);
-                        break;
-                    }
-                }
-            }
-            catch { }
+            settings.SetBuffTrackerWindowPosition(Left, Top, notify: false);
+            SyncTrackerWindowPosition();
         }
 
         private void SyncTrackerWindowPosition()

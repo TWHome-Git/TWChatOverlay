@@ -1,12 +1,11 @@
-﻿using System;
-using System.Windows;
+using System;
 using System.Windows.Input;
 using TWChatOverlay.Models;
-using TWChatOverlay.Services;
 
 namespace TWChatOverlay.Views
 {
-    public partial class ItemDropHelperWindow : Window
+    /// <summary>잠금 해제 모드에서 아이템 획득 알림의 위치·크기를 보여주는 미리보기 창.</summary>
+    public partial class ItemDropHelperWindow : OverlayWindowBase
     {
         public static ItemDropHelperWindow? Instance { get; private set; }
 
@@ -19,10 +18,7 @@ namespace TWChatOverlay.Views
         public ItemDropHelperWindow()
         {
             InitializeComponent();
-            SettingsHostZOrder.Register(this); // 설정 창이 열려 있으면 그 아래로 표시
-            WindowFontService.Apply(this);
             Instance = this;
-            LocationChanged += (_, _) => SyncPositionToSettings();
         }
 
         protected override void OnClosed(EventArgs e)
@@ -34,30 +30,12 @@ namespace TWChatOverlay.Views
         }
 
         private void RootBorder_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
-        {
-            if (!UiLockService.IsUnlocked) return;
-            UiLockService.Select(this);
-            if (e.ButtonState != MouseButtonState.Pressed)
-                return;
+            => TryBeginDrag(e);
 
-            WindowDragBehavior.BeginDrag(this, e);
-        }
-
-        private void SyncPositionToSettings()
+        protected override void PersistBounds(ChatSettings settings)
         {
-            try
-            {
-                foreach (Window window in Application.Current.Windows)
-                {
-                    if (window is MainWindow mainWindow && mainWindow.DataContext is ChatSettings settings)
-                    {
-                        settings.ItemDropWindowLeft = Left;
-                        settings.ItemDropWindowTop = Top;
-                        break;
-                    }
-                }
-            }
-            catch { }
+            settings.ItemDropWindowLeft = Left;
+            settings.ItemDropWindowTop = Top;
         }
     }
 }
