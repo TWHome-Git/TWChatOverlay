@@ -7,7 +7,7 @@
         ShowInTaskbar="False"
         Visibility="Visible"
         Title="TW Chat Overlay" Height="230" Width="538"
-        MinHeight="100" MinWidth="538"
+        MinHeight="100" MinWidth="338"
         WindowStyle="None" AllowsTransparency="True" Topmost="True"
         Background="Transparent"
         ResizeMode="NoResize">

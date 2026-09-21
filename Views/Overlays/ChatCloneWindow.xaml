@@ -11,7 +11,7 @@
         Height="230"
         Width="538"
         MinHeight="180"
-        MinWidth="538"
+        MinWidth="338"
         WindowStyle="None"
         AllowsTransparency="True"
         Topmost="True"
