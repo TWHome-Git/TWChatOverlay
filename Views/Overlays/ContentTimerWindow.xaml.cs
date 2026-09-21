@@ -177,6 +177,7 @@ namespace TWChatOverlay.Views
 
             _fontScale = scale;
             TitleText.FontSize = Scaled(15);
+            FootnoteText.FontSize = Scaled(11);
             if (_titleSubRun != null)
                 _titleSubRun.FontSize = Scaled(ProgressBaseFontSize);
             foreach (Button item in _groupButtons.Values)

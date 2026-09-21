@@ -44,6 +44,7 @@
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
                 </Grid.RowDefinitions>
 
                 <!-- 제목줄: 던전 이름 (진행도) · 난이도. 잠금 해제 모드에서 잡고 끌 수 있다 -->
@@ -128,6 +129,22 @@
                         Padding="14,8,16,10">
                     <Grid x:Name="TableGrid"/>
                 </Border>
+
+                <!-- 각주: 오른쪽 아래 구석에 힌트 글씨로. 너비를 표(열 너비가 고정된 TableGrid)에 묶어 두어 작은 모드에서도 창을 넓히지 않고 줄바꿈된다.
+                     전체 모드에서는 왼쪽 던전 목록이 더 길어 남는 아래쪽 공간에 놓이므로 창 높이가 늘지 않는다. -->
+                <TextBlock x:Name="FootnoteText"
+                           Grid.Row="2"
+                           Width="{Binding ActualWidth, ElementName=TableGrid}"
+                           Margin="0,7,6,0"
+                           HorizontalAlignment="Right"
+                           VerticalAlignment="Bottom"
+                           TextAlignment="Right"
+                           TextWrapping="Wrap"
+                           FontSize="11"
+                           Foreground="{DynamicResource OverlayHintTextBrush}">
+                    <Run Text="ⓘ" Foreground="{DynamicResource OverlayTitleAccentTextBrush}"/>
+                    <Run Text=" 로그를 통해 얻은 예측 클리어 시간입니다"/>
+                </TextBlock>
             </Grid>
         </Grid>
     </Border>
