@@ -1,13 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+using System;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Interop;
 using System.Windows.Media;
-using System.Windows.Threading;
 
 namespace TWChatOverlay.Services
 {
@@ -31,11 +27,6 @@ namespace TWChatOverlay.Services
 
         private static bool _isAdjustingSelected; // 인스펙터發 이동/크기 변경 중 (스냅 제외)
         private static bool _isSnappingSelected;  // 스냅 적용 중 재진입 방지
-
-        // 잠금 해제 모드에서 숨길 창(표시 이름 기준). 배너 목록의 체크를 풀면 들어가고 설정에 저장된다.
-        private static readonly HashSet<string> _hiddenNames = new(StringComparer.Ordinal);
-        // 이번 잠금 해제 동안 필터로 숨긴 창들 — 완료 시 다시 보여 준다.
-        private static readonly List<Window> _hiddenByFilter = new();
 
         /// <summary>잠금 해제 모드의 보조 UI(격자/배너/하이라이트/인스펙터)인지 — 스냅 대상에서 제외.</summary>
         public static bool IsUnlockChrome(Window window)
@@ -72,7 +63,6 @@ namespace TWChatOverlay.Services
             {
                 if (unlocked)
                 {
-                    LoadHiddenNamesFromSettings();
                     _backdrop ??= new BackdropWindow();
                     _banner ??= new BannerWindow();
                     _backdrop.Show();
@@ -82,7 +72,6 @@ namespace TWChatOverlay.Services
                 else
                 {
                     ClearSelection();
-                    RestoreFilteredWindows();
                     // 격자 백드롭은 가상 화면 전체 크기의 투명 창이라 숨겨두면 그만큼 메모리를 계속 차지한다.
                     // 잠금 해제가 끝나면 닫고, 다음 진입 때 새로 만든다.
                     CloseQuietly(ref _banner);
@@ -96,194 +85,7 @@ namespace TWChatOverlay.Services
 
             AppLogger.Info($"UI unlock mode -> {unlocked}.");
             UnlockChanged?.Invoke(unlocked);
-
-            if (unlocked)
-            {
-                // 각 기능이 미리보기 창을 띄운 뒤(핸들러들이 동기로 Show) 숨김 목록을 적용한다. 늦게 뜨는 창을 위해 한 번 더.
-                var dispatcher = Application.Current?.Dispatcher;
-                dispatcher?.BeginInvoke(new Action(ApplyUnlockVisibilityFilter), DispatcherPriority.Loaded);
-                dispatcher?.BeginInvoke(new Action(ApplyUnlockVisibilityFilter), DispatcherPriority.ApplicationIdle);
-            }
         }
-
-        #region 잠금 해제 창 선택 (배너 목록)
-
-        /// <summary>잠금 해제 모드에서 배치 대상이 되는 창인지 (보조 UI·메뉴·설정·대화상자 제외).</summary>
-        private static bool IsPositionableWindow(Window window)
-        {
-            if (IsUnlockChrome(window))
-                return false;
-
-            return window is not (TWChatOverlay.Views.MenuWindow
-                or TWChatOverlay.Views.SubMenuWindow
-                or TWChatOverlay.Views.InitialSetupWizardWindow
-                or TWChatOverlay.Views.HelpWindow
-                or TWChatOverlay.Views.ConfirmDialogWindow
-                or TWChatOverlay.Views.TrayRestoreProxyWindow);
-        }
-
-        /// <summary>배너 목록에 보여 줄 창 이름과 현재 표시 여부. 지금 떠 있는 창(필터로 숨긴 것 포함)만 나열한다.</summary>
-        public static IReadOnlyList<(string Name, bool IsShown)> GetUnlockWindowChoices()
-        {
-            var result = new List<(string Name, bool IsShown)>();
-            var app = Application.Current;
-            if (app == null) return result;
-
-            var seen = new HashSet<string>(StringComparer.Ordinal);
-            foreach (Window window in app.Windows)
-            {
-                if (!IsPositionableWindow(window))
-                    continue;
-                if (!window.IsVisible && !_hiddenByFilter.Contains(window))
-                    continue;
-
-                string name = GetFriendlyName(window);
-                if (string.IsNullOrWhiteSpace(name) || !seen.Add(name))
-                    continue;
-
-                result.Add((name, !_hiddenNames.Contains(name)));
-            }
-
-            // 채팅창을 맨 앞에, 나머지는 이름순
-            result.Sort((a, b) =>
-            {
-                if (a.Name == "채팅창") return -1;
-                if (b.Name == "채팅창") return 1;
-                return string.Compare(a.Name, b.Name, StringComparison.CurrentCulture);
-            });
-            return result;
-        }
-
-        /// <summary>배너 목록의 체크 변경. 즉시 숨기거나 되살리고 설정에 저장한다.</summary>
-        public static void SetUnlockWindowShown(string name, bool shown)
-        {
-            if (string.IsNullOrWhiteSpace(name)) return;
-
-            bool changed = shown ? _hiddenNames.Remove(name) : _hiddenNames.Add(name);
-            if (!changed) return;
-
-            try
-            {
-                var settings = ToastPresentationHelper.FindSharedSettings();
-                if (settings != null)
-                {
-                    settings.UnlockHiddenWindows = _hiddenNames.OrderBy(n => n, StringComparer.Ordinal).ToList();
-                    ConfigService.SaveDeferred(settings);
-                }
-            }
-            catch (Exception ex)
-            {
-                AppLogger.Warn("Failed to save unlock window filter.", ex);
-            }
-
-            if (IsUnlocked)
-                ApplyUnlockVisibilityFilter();
-        }
-
-        private static void LoadHiddenNamesFromSettings()
-        {
-            _hiddenNames.Clear();
-            try
-            {
-                var settings = ToastPresentationHelper.FindSharedSettings();
-                if (settings?.UnlockHiddenWindows != null)
-                {
-                    foreach (string name in settings.UnlockHiddenWindows)
-                        if (!string.IsNullOrWhiteSpace(name))
-                            _hiddenNames.Add(name);
-                }
-            }
-            catch (Exception ex)
-            {
-                AppLogger.Warn("Failed to load unlock window filter.", ex);
-            }
-        }
-
-        /// <summary>숨김 목록에 있는 창은 숨기고, 목록에서 빠진 창은 다시 보여 준다.</summary>
-        private static void ApplyUnlockVisibilityFilter()
-        {
-            if (!IsUnlocked) return;
-            var app = Application.Current;
-            if (app == null) return;
-
-            try
-            {
-                // 되살릴 창: 필터로 숨겼는데 이제 목록에 없는 것
-                foreach (Window window in _hiddenByFilter.ToList())
-                {
-                    if (_hiddenNames.Contains(GetFriendlyName(window)))
-                        continue;
-                    _hiddenByFilter.Remove(window);
-                    ShowQuietly(window);
-                }
-
-                // 숨길 창: 보이는데 목록에 있는 것
-                foreach (Window window in app.Windows.Cast<Window>().ToList())
-                {
-                    if (!IsPositionableWindow(window) || !window.IsVisible)
-                        continue;
-                    if (!_hiddenNames.Contains(GetFriendlyName(window)))
-                        continue;
-
-                    if (ReferenceEquals(window, _selected))
-                        ClearSelection();
-                    _hiddenByFilter.Add(window);
-                    // 잠금 해제 중 설정 변경 등으로 기능 창이 스스로 다시 Show()되면 도로 숨긴다
-                    window.IsVisibleChanged -= FilteredWindow_IsVisibleChanged;
-                    window.IsVisibleChanged += FilteredWindow_IsVisibleChanged;
-                    try { window.Hide(); } catch { }
-                }
-
-                RaiseOverlaysAboveBackdrop();
-            }
-            catch (Exception ex)
-            {
-                AppLogger.Warn("Failed to apply unlock window filter.", ex);
-            }
-        }
-
-        /// <summary>완료 시: 필터로 숨겼던 창을 원래대로 보여 준다 (이후 각 기능이 미리보기를 닫는다).</summary>
-        private static void RestoreFilteredWindows()
-        {
-            foreach (Window window in _hiddenByFilter.ToList())
-                ShowQuietly(window);
-            _hiddenByFilter.Clear();
-        }
-
-        private static void FilteredWindow_IsVisibleChanged(object sender, DependencyPropertyChangedEventArgs e)
-        {
-            if (sender is not Window window || !window.IsVisible)
-                return;
-
-            if (!IsUnlocked || !_hiddenByFilter.Contains(window) || !_hiddenNames.Contains(GetFriendlyName(window)))
-                return;
-
-            window.Dispatcher.BeginInvoke(new Action(() =>
-            {
-                try
-                {
-                    if (IsUnlocked && _hiddenByFilter.Contains(window) && window.IsVisible)
-                        window.Hide();
-                }
-                catch { }
-            }), DispatcherPriority.Loaded);
-        }
-
-        private static void ShowQuietly(Window window)
-        {
-            window.IsVisibleChanged -= FilteredWindow_IsVisibleChanged;
-            try
-            {
-                // 이미 닫힌 창(핸들 없음)은 되살릴 수 없다
-                if (new WindowInteropHelper(window).Handle == IntPtr.Zero)
-                    return;
-                if (!window.IsVisible)
-                    window.Show();
-            }
-            catch { }
-        }
-
-        #endregion
 
         /// <summary>
         /// 잠금 해제 모드에서 창을 선택한다(드래그 시작 시 각 창의 핸들러가 호출).
@@ -745,7 +547,7 @@ namespace TWChatOverlay.Services
                 var panel = new StackPanel { Orientation = Orientation.Horizontal };
                 var text = new TextBlock
                 {
-                    Text = "잠금 해제 모드 — 창을 클릭해 선택하고 드래그해 배치하세요 · 여기에 마우스를 올리면 표시할 창 선택",
+                    Text = "잠금 해제 모드 — 창을 클릭해 선택하고 드래그해 배치하세요",
                     FontSize = 13,
                     FontWeight = FontWeights.Bold,
                     VerticalAlignment = VerticalAlignment.Center,
@@ -800,92 +602,6 @@ namespace TWChatOverlay.Services
 
                 banner.Child = panel;
                 Content = banner;
-
-                // 배너에 마우스를 올리면 아래로 "표시할 창" 목록이 열린다. 체크를 풀면 그 창은 잠금 해제 화면에서 숨는다.
-                var choiceList = new StackPanel();
-                var popupBorder = new Border
-                {
-                    Padding = new Thickness(12, 8, 12, 10),
-                    CornerRadius = new CornerRadius(3),
-                    BorderThickness = new Thickness(1),
-                    MinWidth = 220,
-                };
-                popupBorder.SetResourceReference(Border.BackgroundProperty, "OverlayWindowBackgroundBrush");
-                popupBorder.SetResourceReference(Border.BorderBrushProperty, "OverlayAccentBorderBrush");
-                var popupPanel = new StackPanel();
-                var popupTitle = new TextBlock
-                {
-                    Text = "잠금 해제 화면에 표시할 창",
-                    FontSize = 12,
-                    FontWeight = FontWeights.Bold,
-                    Margin = new Thickness(0, 0, 0, 6),
-                };
-                popupTitle.SetResourceReference(TextBlock.ForegroundProperty, "OverlayInfoTextBrush");
-                popupPanel.Children.Add(popupTitle);
-                popupPanel.Children.Add(choiceList);
-                popupBorder.Child = popupPanel;
-
-                var popup = new Popup
-                {
-                    PlacementTarget = banner,
-                    Placement = PlacementMode.Bottom,
-                    StaysOpen = true,
-                    AllowsTransparency = true,
-                    PopupAnimation = PopupAnimation.Fade,
-                    VerticalOffset = 4,
-                    Child = popupBorder,
-                };
-
-                void RebuildChoices()
-                {
-                    choiceList.Children.Clear();
-                    foreach (var (name, isShown) in GetUnlockWindowChoices())
-                    {
-                        var check = new CheckBox
-                        {
-                            Content = name,
-                            IsChecked = isShown,
-                            Foreground = Brushes.White,
-                            FontSize = 12,
-                            Margin = new Thickness(0, 2, 0, 2),
-                            Cursor = Cursors.Hand,
-                        };
-                        string captured = name;
-                        check.Checked += (_, _) => SetUnlockWindowShown(captured, true);
-                        check.Unchecked += (_, _) => SetUnlockWindowShown(captured, false);
-                        choiceList.Children.Add(check);
-                    }
-
-                    if (choiceList.Children.Count == 0)
-                    {
-                        var empty = new TextBlock { Text = "표시 중인 창이 없습니다", FontSize = 12 };
-                        empty.SetResourceReference(TextBlock.ForegroundProperty, "OverlayInfoTextBrush");
-                        choiceList.Children.Add(empty);
-                    }
-                }
-
-                // 배너와 팝업 사이를 오갈 수 있게, 둘 다 벗어난 뒤 잠시 후에 닫는다
-                var closeTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(350) };
-                closeTimer.Tick += (_, _) =>
-                {
-                    closeTimer.Stop();
-                    if (!banner.IsMouseOver && !popupBorder.IsMouseOver)
-                        popup.IsOpen = false;
-                };
-                void OpenPopup()
-                {
-                    closeTimer.Stop();
-                    if (!popup.IsOpen)
-                    {
-                        RebuildChoices();
-                        popup.IsOpen = true;
-                    }
-                }
-                banner.MouseEnter += (_, _) => OpenPopup();
-                popupBorder.MouseEnter += (_, _) => closeTimer.Stop();
-                banner.MouseLeave += (_, _) => closeTimer.Start();
-                popupBorder.MouseLeave += (_, _) => closeTimer.Start();
-                Closed += (_, _) => { closeTimer.Stop(); popup.IsOpen = false; };
 
                 // 주 모니터 상단 중앙 배치 (크기 확정 후)
                 Loaded += (_, _) => PositionTopCenter();

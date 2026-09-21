@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text.Json.Serialization;
 
@@ -309,8 +309,6 @@ namespace TWChatOverlay.Models
         /// <summary>따로 여는 창(달력·컨텐츠·어밴던)의 배경 불투명도(%). 키는 OverlayOpacityService의 그룹 키.</summary>
         public Dictionary<string, double> OverlayOpacityByGroup { get; set; } = new(StringComparer.OrdinalIgnoreCase);
         public bool WindowSnapEnabled { get; set; } = false;
-        /// <summary>잠금 해제 모드에서 숨길 창의 표시 이름 목록 (배너 목록에서 체크를 푼 창). 비어 있으면 모두 표시.</summary>
-        public List<string> UnlockHiddenWindows { get; set; } = new();
         public MenuBarSettings MenuBar { get; set; } = new();
         public DailyWeeklyUiSettings DailyWeekly { get; set; } = new();
         public CalendarUiSettings Calendar { get; set; } = new();

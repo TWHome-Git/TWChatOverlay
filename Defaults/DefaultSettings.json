@@ -1,4 +1,4 @@
-﻿{
+{
   "Version": 2,
   "Chat": {
     "Filters": {
@@ -503,7 +503,6 @@
       "Abaddon": 100
     },
     "WindowSnapEnabled": false,
-    "UnlockHiddenWindows": [],
     "MenuBar": {
       "Pinned": false,
       "Horizontal": false
