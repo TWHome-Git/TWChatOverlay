@@ -31,6 +31,60 @@ namespace TWChatOverlay.Services
                 Interval = TimeSpan.FromSeconds(1)
             };
             _timer.Tick += Timer_Tick;
+
+            // 원격 시간표가 나중에 도착하면 오늘치 출현 캐시를 버려 새 시각을 바로 반영한다 (자정까지 옛 시각을 쓰지 않게)
+            BossTimerService.BossesUpdated += () => _timer.Dispatcher.BeginInvoke(new Action(() =>
+            {
+                _occurrenceCache.Clear();
+                _occurrenceCacheDate = DateTime.MinValue;
+            }));
+
+            // 트레이 최소화 중에는 알림 창을 띄우지 않으므로, 복귀하면 아직 유효한 알림(등장 임박·입장 가능)을 다시 띄운다
+            AppServices.Get<TrayAllWindowsService>().TrayStateChanged += trayed =>
+            {
+                if (!trayed)
+                    _timer.Dispatcher.BeginInvoke(new Action(ShowAlertsStillValidAfterRestore), DispatcherPriority.Background);
+            };
+        }
+
+        /// <summary>
+        /// 트레이 복귀 직후: 최소화 중에 울린(창은 못 띄운) 알림 가운데 아직 의미 있는 것만 다시 띄운다.
+        /// 등장까지 남은 시간이 켜 둔 사전 알림 범위 안이면 카운트다운을, 등장 후 입장 가능 시간이 남았으면 입장 카운트다운을 보여 준다.
+        /// 소리는 최소화 중에 이미 났으므로 다시 내지 않는다.
+        /// </summary>
+        private void ShowAlertsStillValidAfterRestore()
+        {
+            try
+            {
+                DateTime now = DateTime.Now;
+                foreach (var boss in BossTimerService.GetBosses())
+                {
+                    BossAlertConfig config = _settings.GetOrCreateBossAlertConfig(boss.Id, boss.EnabledByDefault);
+                    TimeSpan? entryWindow = GetEntryWindow(boss.Id, _settings);
+
+                    // 켜 둔 사전 알림 중 가장 이른 것 (3분 전 > 1분 전 > 5초 전)
+                    TimeSpan? lead = config.Alert3MinutesBefore ? TimeSpan.FromMinutes(3)
+                        : config.Alert1MinuteBefore ? TimeSpan.FromMinutes(1)
+                        : config.AlertAtSpawn ? TimeSpan.FromSeconds(5)
+                        : null;
+
+                    foreach (DateTime occurrence in GetOccurrencesCached(boss, now))
+                    {
+                        bool beforeSpawnInLead = lead.HasValue && now < occurrence && now >= occurrence - lead.Value;
+                        bool inEntryWindow = entryWindow.HasValue && now >= occurrence && now < occurrence + entryWindow.Value;
+                        if (!beforeSpawnInLead && !inEntryWindow)
+                            continue;
+
+                        AppLogger.Info($"Boss alert re-shown after tray restore. Boss='{boss.Name}', Occurrence='{occurrence:yyyy-MM-dd HH:mm:ss}'");
+                        Views.BossAlertToastWindow.ShowAlert(boss.Name, inEntryWindow ? "등장" : "복귀", occurrence, _settings, entryWindow);
+                        break; // 보스당 하나
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                AppLogger.Warn("Failed to re-show boss alerts after tray restore.", ex);
+            }
         }
 
         public void Start()
