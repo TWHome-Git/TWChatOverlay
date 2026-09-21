@@ -311,7 +311,7 @@ namespace TWChatOverlay.Views
             {
                 DateTime today = DateTime.Today;
                 DateTime weekStart = today.AddDays(-(((int)today.DayOfWeek + 6) % 7));
-                var (counts, _) = await TreasuryHistoryService.GetWeekAsync(settings.ChatLogFolderPath, weekStart);
+                var (counts, _) = await AppServices.Get<TreasuryHistoryService>().GetWeekAsync(settings.ChatLogFolderPath, weekStart);
 
                 Application.Current?.Dispatcher.BeginInvoke(new Action(() =>
                 {

@@ -113,6 +113,8 @@ namespace TWChatOverlay
                 services.AddSingleton<MessengerLogWatcherService>();
                 services.AddSingleton<BuffTrackerService>();
                 services.AddSingleton<LogService>();
+                services.AddSingleton<TreasuryHistoryService>();
+                services.AddSingleton<EtaRankingService>();
                 services.AddSingleton<UiLockService>();
                 services.AddSingleton<ContentTimerService>();
                 services.AddSingleton<ForegroundTopmostGuard>();

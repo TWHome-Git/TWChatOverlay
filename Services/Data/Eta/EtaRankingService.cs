@@ -15,7 +15,7 @@ namespace TWChatOverlay.Services
     /// <summary>
     /// Loads ETA ranking data, refreshes the remote cache, and builds profile indexes.
     /// </summary>
-    public static class EtaRankingService
+    public sealed class EtaRankingService
     {
         private const string EtaRankingUrl = RemoteEndpoints.EtaRanking;
         private static readonly TimeSpan CacheTtl = TimeSpan.FromHours(6);
@@ -26,7 +26,7 @@ namespace TWChatOverlay.Services
             Timeout = TimeSpan.FromSeconds(5)
         };
 
-        private static readonly RemoteJsonCacheClient CacheClient = new(
+        private readonly RemoteJsonCacheClient CacheClient = new(
             "EtaRankingService",
             EtaRankingUrl,
             CacheTtl,
@@ -57,13 +57,13 @@ namespace TWChatOverlay.Services
             [18] = "\uC608\uD504\uB128"
         };
 
-        private static Dictionary<string, EtaProfileResolver.EtaProfile> _profiles = new(StringComparer.OrdinalIgnoreCase);
-        private static IReadOnlyList<EtaProfileResolver.EtaRankingEntry> _rankings = Array.Empty<EtaProfileResolver.EtaRankingEntry>();
-        private static DateTime? _payloadDateLocal;
-        private static int _isInitialized;
-        private static readonly SemaphoreSlim LoadLock = new(1, 1);
+        private Dictionary<string, EtaProfileResolver.EtaProfile> _profiles = new(StringComparer.OrdinalIgnoreCase);
+        private IReadOnlyList<EtaProfileResolver.EtaRankingEntry> _rankings = Array.Empty<EtaProfileResolver.EtaRankingEntry>();
+        private DateTime? _payloadDateLocal;
+        private int _isInitialized;
+        private readonly SemaphoreSlim LoadLock = new(1, 1);
 
-        public static void InitializeAsync()
+        public void InitializeAsync()
         {
             if (Interlocked.Exchange(ref _isInitialized, 1) != 0)
                 return;
@@ -71,7 +71,7 @@ namespace TWChatOverlay.Services
             _ = EnsureLoadedAsync();
         }
 
-        public static async Task EnsureLoadedAsync()
+        public async Task EnsureLoadedAsync()
         {
             if (_rankings.Count > 0)
                 return;
@@ -90,7 +90,7 @@ namespace TWChatOverlay.Services
             }
         }
 
-        public static async Task<bool> ForceRefreshAsync()
+        public async Task<bool> ForceRefreshAsync()
         {
             await LoadLock.WaitAsync().ConfigureAwait(false);
             try
@@ -107,7 +107,7 @@ namespace TWChatOverlay.Services
             }
         }
 
-        public static bool TryGetProfile(string userId, out EtaProfileResolver.EtaProfile profile)
+        public bool TryGetProfile(string userId, out EtaProfileResolver.EtaProfile profile)
         {
             profile = default;
             if (string.IsNullOrEmpty(userId))
@@ -116,7 +116,7 @@ namespace TWChatOverlay.Services
             return _profiles.TryGetValue(userId, out profile);
         }
 
-        public static IReadOnlyList<EtaProfileResolver.EtaRankingEntry> GetRankings(string? characterName = null)
+        public IReadOnlyList<EtaProfileResolver.EtaRankingEntry> GetRankings(string? characterName = null)
         {
             if (string.IsNullOrWhiteSpace(characterName) || characterName == "\uC804\uCCB4")
                 return _rankings;
@@ -124,7 +124,7 @@ namespace TWChatOverlay.Services
             return _rankings.Where(x => x.CharacterName == characterName).ToList();
         }
 
-        public static bool IsRefreshCompletedForCurrentCycle()
+        public bool IsRefreshCompletedForCurrentCycle()
         {
             if (!_payloadDateLocal.HasValue)
                 return false;
@@ -134,12 +134,12 @@ namespace TWChatOverlay.Services
             return _payloadDateLocal.Value.Date == cycleDate;
         }
 
-        public static DateTime? GetLastPayloadDate()
+        public DateTime? GetLastPayloadDate()
         {
             return _payloadDateLocal;
         }
 
-        public static void DeleteCache()
+        public void DeleteCache()
         {
             try
             {
@@ -152,7 +152,7 @@ namespace TWChatOverlay.Services
             }
         }
 
-        private static async Task LoadRankingsAsync()
+        private async Task LoadRankingsAsync()
         {
             try
             {
@@ -168,7 +168,7 @@ namespace TWChatOverlay.Services
             }
         }
 
-        private static bool TryApplyRankingJson(string json)
+        private bool TryApplyRankingJson(string json)
         {
             try
             {

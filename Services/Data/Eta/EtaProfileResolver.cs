@@ -9,22 +9,22 @@ namespace TWChatOverlay.Services
     public static class EtaProfileResolver
     {
         public static void InitializeAsync()
-            => EtaRankingService.InitializeAsync();
+            => AppServices.Get<EtaRankingService>().InitializeAsync();
 
         public static Task EnsureLoadedAsync()
-            => EtaRankingService.EnsureLoadedAsync();
+            => AppServices.Get<EtaRankingService>().EnsureLoadedAsync();
 
         public static Task<bool> ForceRefreshAsync()
-            => EtaRankingService.ForceRefreshAsync();
+            => AppServices.Get<EtaRankingService>().ForceRefreshAsync();
 
         public static bool TryGetProfile(string userId, out EtaProfile profile)
-            => EtaRankingService.TryGetProfile(userId, out profile);
+            => AppServices.Get<EtaRankingService>().TryGetProfile(userId, out profile);
 
         public static IReadOnlyList<EtaRankingEntry> GetRankings(string? characterName = null)
-            => EtaRankingService.GetRankings(characterName);
+            => AppServices.Get<EtaRankingService>().GetRankings(characterName);
 
         public static void DeleteCache()
-            => EtaRankingService.DeleteCache();
+            => AppServices.Get<EtaRankingService>().DeleteCache();
 
         public readonly record struct EtaProfile(int Level, string CharacterName);
         public readonly record struct EtaRankingEntry(int CharacterCode, string CharacterName, string UserId, int Level, int Essence, int OriginalOrder);

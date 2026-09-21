@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -16,7 +16,7 @@ namespace TWChatOverlay.Services
     /// 지나간 날짜는 한 번만 스캔하고 오늘만 매번 다시 읽으므로, 실시간 감지가 꺼져 있던
     /// (앱 미실행 포함) 동안의 판도 로그가 남아있는 한 복원된다.
     /// </summary>
-    public static class TreasuryHistoryService
+    public sealed class TreasuryHistoryService
     {
         private const int MaxRuns = 7;
 
@@ -36,10 +36,10 @@ namespace TWChatOverlay.Services
         // Kind: "entry" (amount = 회차) / "gold" (금화 1개, amount = 회차)
         private sealed record TreasuryEvent(string Kind, int Run, string Text);
 
-        private static readonly object ArchiveLock = new();
-        private static SortedDictionary<string, List<TreasuryEvent>>? _archive;
+        private readonly object ArchiveLock = new();
+        private SortedDictionary<string, List<TreasuryEvent>>? _archive;
 
-        private static string ArchivePath => Path.Combine(LogStoragePaths.TreasuryDirectory, "TreasuryHistory.html");
+        private string ArchivePath => Path.Combine(LogStoragePaths.TreasuryDirectory, "TreasuryHistory.html");
 
         private static readonly Regex ArchiveEntryRegex = new(
             "<div class=\"tw (?<kind>entry|gold)\" data-date=\"(?<date>\\d{4}-\\d{2}-\\d{2})\" data-run=\"(?<run>\\d+)\">(?<text>.*?)</div>",
@@ -53,7 +53,7 @@ namespace TWChatOverlay.Services
         /// 주간(월~일) 보물창고 회차별 금화 개수를 로그 아카이브 기준으로 집계한다.
         /// 반환: 회차별 개수 배열(시작된 회차까지), 마지막으로 시작한 회차.
         /// </summary>
-        public static async Task<(int[] Counts, int LastRun)> GetWeekAsync(string logDir, DateTime weekStart)
+        public async Task<(int[] Counts, int LastRun)> GetWeekAsync(string logDir, DateTime weekStart)
         {
             return await Task.Run(() =>
             {
@@ -177,7 +177,7 @@ namespace TWChatOverlay.Services
                 int.Parse(m.Groups["s"].Value));
         }
 
-        private static SortedDictionary<string, List<TreasuryEvent>> LoadArchive()
+        private SortedDictionary<string, List<TreasuryEvent>> LoadArchive()
         {
             if (_archive is not null)
                 return _archive;
@@ -224,7 +224,7 @@ namespace TWChatOverlay.Services
         }
 
         /// <summary>아카이브를 주별 섹션·합계가 붙은 열람용 HTML로 통째로 다시 쓴다.</summary>
-        private static void SaveArchive(SortedDictionary<string, List<TreasuryEvent>> archive)
+        private void SaveArchive(SortedDictionary<string, List<TreasuryEvent>> archive)
         {
             try
             {
@@ -282,10 +282,10 @@ namespace TWChatOverlay.Services
             }
         }
 
-        private static DateTime ParseDateKey(string key)
+        private DateTime ParseDateKey(string key)
             => DateTime.ParseExact(key, "yyyy-MM-dd", CultureInfo.InvariantCulture);
 
-        private static DateTime GetWeekStartOf(DateTime date)
+        private DateTime GetWeekStartOf(DateTime date)
             => date.AddDays(-(((int)date.DayOfWeek + 6) % 7));
     }
 }
