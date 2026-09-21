@@ -1,4 +1,5 @@
-﻿<Window x:Class="TWChatOverlay.Views.DebugLogTestWindow"
+﻿<ov:OverlayWindowBase x:Class="TWChatOverlay.Views.DebugLogTestWindow"
+        xmlns:ov="clr-namespace:TWChatOverlay.Views"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -16,7 +17,7 @@
         Background="Transparent"
         Loaded="Window_Loaded"
         Closing="Window_Closing">
-    <Window.Resources>
+    <ov:OverlayWindowBase.Resources>
         <Style x:Key="DebugCategoryRadioStyle" TargetType="RadioButton">
             <Setter Property="Foreground" Value="{DynamicResource OverlayInfoTextBrush}"/>
             <Setter Property="Background" Value="{DynamicResource OverlayCardBackgroundBrush}"/>
@@ -97,7 +98,7 @@
                 </DataTrigger>
             </DataTemplate.Triggers>
         </DataTemplate>
-    </Window.Resources>
+    </ov:OverlayWindowBase.Resources>
 
     <Border Background="{DynamicResource OverlayWindowBackgroundBrush}"
             BorderBrush="{DynamicResource OverlayWindowBorderBrush}"
@@ -275,4 +276,4 @@
             </Border>
         </Grid>
     </Border>
-</Window>
+</ov:OverlayWindowBase>

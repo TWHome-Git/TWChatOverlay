@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -20,7 +20,7 @@ using TWChatOverlay.Services;
 
 namespace TWChatOverlay.Views
 {
-    public partial class ShoutReplayWindow : Window
+    public partial class ShoutReplayWindow : OverlayWindowBase
     {
         private static readonly Regex DivLogRegex = new("<div\\s+class=\"log\\s+shout\"[^>]*>(?<text>.*?)</div>", RegexOptions.IgnoreCase | RegexOptions.Compiled);
         private static readonly Regex ShoutTrailingUserIdRegex = new(@"\[(?<id>[^\[\]]+)\]\s*$", RegexOptions.Compiled);
@@ -35,7 +35,6 @@ namespace TWChatOverlay.Views
         {
             InitializeComponent();
             _settings = settings;
-            WindowFontService.Apply(this);
             LogRichText.FontSize = _settings.ShoutReplayFontSize;
             FontSizeSlider.Value = _settings.ShoutReplayFontSize;
             FontSizeText.Text = $"{_settings.ShoutReplayFontSize:F0}px";
@@ -46,17 +45,13 @@ namespace TWChatOverlay.Views
                 _ = LoadDateAsync(_dates[^1]);
         }
 
+        // 외치기 다시 보기 창은 잠금 모드와 무관하게 항상 이동 가능
+        protected override bool KeepBelowSettingsHost => false;
+        protected override bool DragRequiresUnlock => false;
+        protected override bool PersistBoundsOnChange => false;
+
         private void TitleBar_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
-        {
-            if (e.ButtonState == MouseButtonState.Pressed)
-            {
-                try
-                {
-                    DragMove();
-                }
-                catch { }
-            }
-        }
+            => TryBeginDrag(e);
 
         private void CloseButton_Click(object sender, RoutedEventArgs e)
         {

@@ -17,7 +17,7 @@ using TWChatOverlay.Services;
 
 namespace TWChatOverlay.Views
 {
-    public partial class AbandonRoadSummaryWindow : Window, INotifyPropertyChanged
+    public partial class AbandonRoadSummaryWindow : OverlayWindowBase, INotifyPropertyChanged
     {
         private static readonly string AbandonDirectoryPath = LogStoragePaths.AbandonDirectory;
         private static readonly Regex AbandonEntryRegex = new(
@@ -51,9 +51,6 @@ namespace TWChatOverlay.Views
             _ = logAnalysisService ?? throw new ArgumentNullException(nameof(logAnalysisService));
 
             InitializeComponent();
-            WindowFontService.Apply(this); // 앱 공통 폰트 적용 (주간 득템 통계 창과 동일)
-
-            SettingsHostZOrder.Register(this); // 설정 창이 열려 있으면 그 아래로 표시
             DataContext = this;
             _autoCloseTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(250) };
             _autoCloseTimer.Tick += AutoCloseTimer_Tick;
@@ -341,13 +338,11 @@ namespace TWChatOverlay.Views
             return $"{sign}{eok:N0}억 {man:N0}만";
         }
 
+        // 위치 저장은 MainWindow가 닫힐 때 처리한다
+        protected override bool PersistBoundsOnChange => false;
+
         private void TitleBar_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
-        {
-            if (!UiLockService.IsUnlocked) return;
-            UiLockService.Select(this);
-            if (e.ButtonState == MouseButtonState.Pressed)
-                DragMove();
-        }
+            => TryBeginDrag(e);
 
         private void Close_Click(object sender, RoutedEventArgs e)
         {

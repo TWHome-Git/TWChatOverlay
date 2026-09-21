@@ -12,7 +12,7 @@ using TWChatOverlay.Services;
 
 namespace TWChatOverlay.Views
 {
-    public partial class ShoutToastWindow : Window
+    public partial class ShoutToastWindow : OverlayWindowBase
     {
         private static readonly Regex HtmlTagRegex = new("<[^>]+>", RegexOptions.Compiled);
         private static readonly Regex ShoutPrefixRegex = new(
@@ -32,7 +32,6 @@ namespace TWChatOverlay.Views
 
             InitializeComponent();
 
-            SettingsHostZOrder.Register(this); // 설정 창이 열려 있으면 그 아래로 표시
             FontFamily = fontFamily;
             ToastText.FontFamily = fontFamily;
             ApplyToastSettings();
@@ -176,24 +175,22 @@ namespace TWChatOverlay.Views
             base.OnClosed(e);
         }
 
+        protected override bool ApplyAppFont => false;          // 생성자 인자의 폰트를 쓴다
+        protected override bool PersistBoundsOnChange => false; // 위치는 알림 스택이 정한다
+
+        /// <summary>실제 알림은 스택이 배치하므로 미리보기일 때만 끌 수 있다. 선택 하이라이트는 항상 허용.</summary>
         private void RootBorder_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
-            if (!UiLockService.IsUnlocked) return;
-            UiLockService.Select(this);
-            if (!_isPreviewMode || e.ButtonState != MouseButtonState.Pressed)
+            if (!_isPreviewMode)
+            {
+                UiLockService.Select(this);
                 return;
+            }
 
-            try
-            {
-                BeginAnimation(TopProperty, null);
-                BeginAnimation(LeftProperty, null);
-                DragMove();
-            }
-            catch { }
-            finally
-            {
+            BeginAnimation(TopProperty, null);
+            BeginAnimation(LeftProperty, null);
+            if (TryBeginDrag(e))
                 SyncPositionToSettings(saveImmediately: true);
-            }
         }
 
         private void StartCloseAnimation()

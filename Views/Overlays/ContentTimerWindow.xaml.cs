@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.ComponentModel;
 using System.Globalization;
 using System.Linq;
@@ -21,7 +21,7 @@ namespace TWChatOverlay.Views
     /// 진행 중에는 아무것도 보여주지 않고, 클리어되는 순간 결과를 지정한 시간 동안 남긴 뒤 저절로 닫힌다.
     /// 창 크기는 '타이머 글자 크기' 설정에 맞춰 잡히고, 잠금 해제 모드에서 끌어서 옮길 수 있다.
     /// </summary>
-    public partial class ContentTimerWindow : Window
+    public partial class ContentTimerWindow : OverlayWindowBase
     {
         private static readonly string[] ColumnHeaders = { "지난주", "직전 판", "최근 판" };
         private const int CurrentColumn = ContentTimerService.CurrentColumn;
@@ -91,8 +91,6 @@ namespace TWChatOverlay.Views
         {
             _settings = settings;
             InitializeComponent();
-            SettingsHostZOrder.Register(this); // 설정 창이 열려 있으면 그 아래로 표시
-            WindowFontService.Apply(this);
 
             _lifetimeTimer = new DispatcherTimer();
             _lifetimeTimer.Tick += (_, _) =>
@@ -102,7 +100,7 @@ namespace TWChatOverlay.Views
             };
 
             // 잠금 해제 모드에서는 창 어디를 잡아도 선택+드래그 가능
-            PreviewMouseLeftButtonDown += UnlockDrag_PreviewMouseLeftButtonDown;
+            PreviewMouseLeftButtonDown += (_, e) => TryBeginDrag(e, markHandled: true);
             LocationChanged += (_, _) => PersistPositionDeferred();
 
             BuildGroupList();
@@ -622,36 +620,12 @@ namespace TWChatOverlay.Views
 
         // ===== 이동 · 저장 =====
 
-        private void UnlockDrag_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
-        {
-            if (!UiLockService.IsUnlocked) return;
-            UiLockService.Select(this);
-            if (e.ButtonState != MouseButtonState.Pressed)
-                return;
-
-            try
-            {
-                DragMove();
-            }
-            catch
-            {
-            }
-
-            PersistPositionDeferred();
-            e.Handled = true;
-        }
+        // 위치 저장은 이 창의 PersistPositionDeferred가 맡는다 (모드·크기 저장과 함께)
+        protected override bool PersistBoundsOnChange => false;
+        protected override void OnDragCompleted() => PersistPositionDeferred();
 
         private void TitleBar_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
-        {
-            if (!UiLockService.IsUnlocked) return;
-            UiLockService.Select(this);
-            try
-            {
-                if (e.ButtonState == MouseButtonState.Pressed)
-                    DragMove();
-            }
-            catch { }
-        }
+            => TryBeginDrag(e);
 
         /// <summary>작게/크게 버튼: 작은 모드 ↔ 전체 모드. 바꾼 모드는 설정에 남겨 다음에 메뉴 버튼으로 열 때 그 모드로 연다.</summary>
         private void ModeButton_Click(object sender, RoutedEventArgs e)

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.ObjectModel;
 using System.Windows;
 using System.Windows.Controls;
@@ -6,7 +6,7 @@ using System.Windows.Input;
 
 namespace TWChatOverlay.Views
 {
-    public partial class DebugLogTestWindow : Window
+    public partial class DebugLogTestWindow : OverlayWindowBase
     {
         public static DebugLogTestWindow? Instance { get; private set; }
 
@@ -53,11 +53,14 @@ namespace TWChatOverlay.Views
             e.Cancel = true;
         }
 
+        // 디버그 창: 앱 폰트·설정창 z-순서·위치 저장 없이 항상 이동만 가능 (기존 동작 유지)
+        protected override bool KeepBelowSettingsHost => false;
+        protected override bool ApplyAppFont => false;
+        protected override bool DragRequiresUnlock => false;
+        protected override bool PersistBoundsOnChange => false;
+
         private void TitleBar_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
-        {
-            if (e.ButtonState == MouseButtonState.Pressed)
-                DragMove();
-        }
+            => TryBeginDrag(e);
 
         private void Close_Click(object sender, RoutedEventArgs e)
         {

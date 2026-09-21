@@ -20,14 +20,14 @@ namespace TWChatOverlay.Views
     /// XAML 창은 루트를 &lt;ov:OverlayWindowBase&gt;로, 코드 창은 : OverlayWindowBase 로 바꾸면 된다.
     /// 창별 정책은 virtual 프로퍼티로 조정한다 (예: 달력·메모처럼 잠금 상태에서도 끌 수 있는 창은 DragRequiresUnlock=false).
     /// </summary>
-    public abstract class OverlayWindowBase : Window
+    public class OverlayWindowBase : Window
     {
         private bool _commonSetupDone;
         private bool _hasLoadedOnce;
         private bool _isDragging;
         private int _suppressPersistDepth;
 
-        protected OverlayWindowBase()
+        public OverlayWindowBase()
         {
             Loaded += (_, _) => _hasLoadedOnce = true;
             LocationChanged += OnOverlayBoundsChanged;

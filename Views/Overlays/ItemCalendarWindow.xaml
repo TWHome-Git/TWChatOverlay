@@ -1,4 +1,5 @@
-﻿<Window x:Class="TWChatOverlay.Views.ItemCalendarWindow"
+﻿<ov:OverlayWindowBase x:Class="TWChatOverlay.Views.ItemCalendarWindow"
+        xmlns:ov="clr-namespace:TWChatOverlay.Views"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:views="clr-namespace:TWChatOverlay.Views"
@@ -18,7 +19,7 @@
         ShowInTaskbar="False"
         Topmost="True"
         Loaded="Window_Loaded">
-    <Window.Resources>
+    <ov:OverlayWindowBase.Resources>
         <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
         <converters:AddValueConverter x:Key="AddValueConverter"/>
         <Style x:Key="CalendarTitleButtonStyle" TargetType="Button" BasedOn="{StaticResource SecondaryButtonStyle}">
@@ -63,7 +64,7 @@
                 </Setter.Value>
             </Setter>
         </Style>
-    </Window.Resources>
+    </ov:OverlayWindowBase.Resources>
 
     <Border Background="{DynamicResource OverlayWindowBackgroundBrush}"
             BorderBrush="{DynamicResource OverlayWindowBorderBrush}"
@@ -626,4 +627,4 @@
             </Grid>
         </Grid>
     </Border>
-</Window>
+</ov:OverlayWindowBase>

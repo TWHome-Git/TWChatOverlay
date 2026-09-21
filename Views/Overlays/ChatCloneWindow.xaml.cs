@@ -13,7 +13,7 @@ using TWChatOverlay.Services;
 
 namespace TWChatOverlay.Views
 {
-    public partial class ChatCloneWindow : Window, INotifyPropertyChanged
+    public partial class ChatCloneWindow : OverlayWindowBase, INotifyPropertyChanged
     {
         private readonly ChatSettings _settings;
         private readonly LogDocumentRenderer _renderer = new(200);
@@ -605,24 +605,21 @@ namespace TWChatOverlay.Views
             Close();
         }
 
+        // 서브 채팅창: 폰트·z-순서·위치 저장은 기존 로직(ChatWindowHub·자체 핸들러)이 맡는다
+        protected override bool KeepBelowSettingsHost => false;
+        protected override bool ApplyAppFont => false;
+        protected override bool PersistBoundsOnChange => false;
+
+        protected override void OnDragCompleted()
+        {
+            ChatWindowHub.TryApplyMagneticSnap(this);
+            SyncPositionToSettings();
+        }
+
         /// <summary>잠금 해제 모드에서는 창의 아무 곳이나 잡고 드래그해 이동할 수 있다.</summary>
         private void UnlockDrag_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
-            if (!UiLockService.IsUnlocked) return;
-            UiLockService.Select(this);
-            if (e.ButtonState != MouseButtonState.Pressed) return;
-
-            try
-            {
-                DragMove();
-            }
-            catch { }
-            finally
-            {
-                ChatWindowHub.TryApplyMagneticSnap(this);
-                SyncPositionToSettings();
-            }
-            e.Handled = true;
+            TryBeginDrag(e, markHandled: true);
         }
 
         private void TopResize_DragDelta(object sender, System.Windows.Controls.Primitives.DragDeltaEventArgs e)

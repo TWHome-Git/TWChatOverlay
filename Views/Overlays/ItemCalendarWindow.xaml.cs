@@ -19,7 +19,7 @@ using TWChatOverlay.Services;
 
 namespace TWChatOverlay.Views
 {
-    public partial class ItemCalendarWindow : Window, INotifyPropertyChanged
+    public partial class ItemCalendarWindow : OverlayWindowBase, INotifyPropertyChanged
     {
         private static readonly string LogsRootDirectoryPath = LogStoragePaths.RootDirectory;
         private static readonly string ItemDirectoryPath = LogStoragePaths.ItemDirectory;
@@ -81,7 +81,6 @@ namespace TWChatOverlay.Views
             _ = logAnalysisService ?? throw new ArgumentNullException(nameof(logAnalysisService));
 
             InitializeComponent();
-            WindowFontService.Apply(this);
             OsSnapGuard.Disable(this); // 상단 드래그 시 OS 스냅(최대화) 차단
             DataContext = this;
 
@@ -1071,12 +1070,13 @@ namespace TWChatOverlay.Views
         private void Close_Click(object sender, RoutedEventArgs e)
             => Close();
 
-        // 달력 창은 잠금 모드와 무관하게 항상 이동 가능
+        // 달력 창은 잠금 모드와 무관하게 항상 이동 가능. 위치 저장은 MainWindow가 맡는다.
+        protected override bool KeepBelowSettingsHost => false;
+        protected override bool DragRequiresUnlock => false;
+        protected override bool PersistBoundsOnChange => false;
+
         private void TitleBar_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
-        {
-            if (e.ButtonState == MouseButtonState.Pressed)
-                DragMove();
-        }
+            => TryBeginDrag(e);
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {

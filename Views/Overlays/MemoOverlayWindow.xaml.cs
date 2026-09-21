@@ -9,7 +9,7 @@ using TWChatOverlay.Models;
 
 namespace TWChatOverlay.Views
 {
-    public partial class MemoOverlayWindow : Window
+    public partial class MemoOverlayWindow : OverlayWindowBase
     {
         private MemoTextOnlyWindow? _textOnly;
         private bool _isOverlayMode;
@@ -22,7 +22,6 @@ namespace TWChatOverlay.Views
         public MemoOverlayWindow(ChatSettings? sharedSettings = null)
         {
             InitializeComponent();
-            WindowFontService.Apply(this);
             _settings = sharedSettings;
             Loaded += MemoOverlayWindow_Loaded;
             Closing += MemoOverlayWindow_Closing;
@@ -33,18 +32,13 @@ namespace TWChatOverlay.Views
             Closed += MemoOverlayWindow_Closed;
         }
 
-        // 메모 창은 잠금 모드와 무관하게 항상 이동 가능
+        // 메모 창은 잠금 모드와 무관하게 항상 이동 가능. 위치 저장은 이 창의 LocationChanged 핸들러가 맡는다.
+        protected override bool KeepBelowSettingsHost => false;
+        protected override bool DragRequiresUnlock => false;
+        protected override bool PersistBoundsOnChange => false;
+
         private void TitleBar_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
-        {
-            if (e.ButtonState == MouseButtonState.Pressed)
-            {
-                try
-                {
-                    DragMove();
-                }
-                catch { }
-            }
-        }
+            => TryBeginDrag(e);
 
         private void CloseButton_Click(object sender, RoutedEventArgs e)
         {

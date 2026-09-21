@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
@@ -15,7 +15,7 @@ namespace TWChatOverlay.Views
     /// 주간 득템 통계 창: 달력(수익 월별 통계)이 쓰는 아이템 아카이브를 이번 주(월~일) 범위로
     /// 집계해 아이템별 획득 개수를 보여준다. 일일/주간 컨텐츠 창의 바로가기 버튼으로 연다.
     /// </summary>
-    public sealed class WeeklyItemSummaryWindow : Window
+    public sealed class WeeklyItemSummaryWindow : OverlayWindowBase
     {
         private static WeeklyItemSummaryWindow? _instance;
 
@@ -45,7 +45,6 @@ namespace TWChatOverlay.Views
             Width = 384;
             SizeToContent = SizeToContent.Height;
             WindowStartupLocation = WindowStartupLocation.CenterScreen;
-            WindowFontService.Apply(this);
 
             DateTime today = DateTime.Today;
             DateTime weekStart = today.AddDays(-(((int)today.DayOfWeek + 6) % 7)); // 월요일 시작
@@ -145,15 +144,14 @@ namespace TWChatOverlay.Views
             root.SetResourceReference(Border.BorderBrushProperty, "OverlayWindowBorderBrush");
             Content = root;
 
-            // 제목 영역 드래그로 이동
-            root.MouseLeftButtonDown += (_, e) =>
-            {
-                if (e.ButtonState == MouseButtonState.Pressed)
-                {
-                    try { DragMove(); } catch { }
-                }
-            };
+            // 제목 영역 드래그로 이동 (잠금과 무관)
+            root.MouseLeftButtonDown += (_, e) => TryBeginDrag(e);
         }
+
+        protected override bool KeepBelowSettingsHost => false;
+        protected override bool UseToolWindowStyle => true;
+        protected override bool DragRequiresUnlock => false;
+        protected override bool PersistBoundsOnChange => false;
 
         private static Button CreateWeekNavButton(string glyph)
         {
@@ -461,18 +459,6 @@ namespace TWChatOverlay.Views
                 AppLogger.Warn("Failed to read weekly experience essence count.", ex);
             }
             _essenceValueText.Text = $"x{essenceCount:N0}";
-        }
-
-        protected override void OnSourceInitialized(EventArgs e)
-        {
-            base.OnSourceInitialized(e);
-            try
-            {
-                IntPtr hwnd = new WindowInteropHelper(this).EnsureHandle();
-                int exStyle = NativeMethods.GetWindowLong(hwnd, NativeMethods.GWL_EXSTYLE);
-                NativeMethods.SetWindowLong(hwnd, NativeMethods.GWL_EXSTYLE, exStyle | NativeMethods.WS_EX_TOOLWINDOW);
-            }
-            catch { }
         }
 
         protected override void OnClosed(EventArgs e)

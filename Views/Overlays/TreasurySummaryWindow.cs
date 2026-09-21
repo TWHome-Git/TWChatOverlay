@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -19,7 +19,7 @@ namespace TWChatOverlay.Views
     /// 어밴던로드 통계창과 같은 위치·크기 계열로 표시되며, 세션(입장 후 2분 30초)이 끝나고
     /// 잠시 뒤 자동으로 닫힌다.
     /// </summary>
-    public sealed class TreasurySummaryWindow : Window
+    public sealed class TreasurySummaryWindow : OverlayWindowBase
     {
         private const int MaxRuns = 7;
         private const string SeedPouchIconUri = "pack://application:,,,/Data/images/Item/시드.png";
@@ -49,7 +49,6 @@ namespace TWChatOverlay.Views
             ResizeMode = ResizeMode.NoResize;
             Width = 384;
             SizeToContent = SizeToContent.Height;
-            WindowFontService.Apply(this);
 
             var title = new TextBlock
             {
@@ -170,21 +169,7 @@ namespace TWChatOverlay.Views
             Top = top;
 
             // 잠금 해제 모드에서 드래그로 이동 (자체 위치로 저장 — 어밴던 통계창과 독립)
-            root.MouseLeftButtonDown += (_, e) =>
-            {
-                UiLockService.Select(this);
-                if (!UiLockService.IsUnlocked || e.ButtonState != MouseButtonState.Pressed)
-                    return;
-                try { DragMove(); } catch { }
-            };
-            LocationChanged += (_, _) =>
-            {
-                if (!IsVisible || !UiLockService.IsUnlocked)
-                    return;
-                _settings.TreasurySummaryWindowLeft = Left;
-                _settings.TreasurySummaryWindowTop = Top;
-                ConfigService.SaveDeferred(_settings);
-            };
+            root.MouseLeftButtonDown += (_, e) => TryBeginDrag(e);
 
             _closeTimer = new DispatcherTimer { Interval = AutoCloseDelay };
             _closeTimer.Tick += (_, _) =>
@@ -194,16 +179,19 @@ namespace TWChatOverlay.Views
             };
         }
 
-        protected override void OnSourceInitialized(EventArgs e)
+        protected override bool KeepBelowSettingsHost => false;
+        protected override bool UseToolWindowStyle => true;
+        protected override ChatSettings? ResolveSettings() => _settings;
+
+        protected override bool PersistBounds(ChatSettings settings)
         {
-            base.OnSourceInitialized(e);
-            try
-            {
-                IntPtr hwnd = new WindowInteropHelper(this).EnsureHandle();
-                int exStyle = NativeMethods.GetWindowLong(hwnd, NativeMethods.GWL_EXSTYLE);
-                NativeMethods.SetWindowLong(hwnd, NativeMethods.GWL_EXSTYLE, exStyle | NativeMethods.WS_EX_TOOLWINDOW);
-            }
-            catch { }
+            // 자동으로 뜰 때의 위치는 기본 위치 계산 결과이므로, 사용자가 잠금 해제 중 옮긴 것만 저장한다
+            if (!IsVisible || !UiLockService.IsUnlocked)
+                return false;
+
+            settings.TreasurySummaryWindowLeft = Left;
+            settings.TreasurySummaryWindowTop = Top;
+            return true;
         }
 
         protected override void OnClosed(EventArgs e)

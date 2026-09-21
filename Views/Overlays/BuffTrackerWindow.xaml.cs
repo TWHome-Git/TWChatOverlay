@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Windows;
@@ -10,7 +10,7 @@ using TWChatOverlay.Services;
 
 namespace TWChatOverlay.Views
 {
-    public partial class BuffTrackerWindow : Window
+    public partial class BuffTrackerWindow : OverlayWindowBase
     {
         public static BuffTrackerWindow? Instance { get; private set; }
 
@@ -21,8 +21,6 @@ namespace TWChatOverlay.Views
         public BuffTrackerWindow(BuffTrackerService tracker, ChatSettings settings)
         {
             InitializeComponent();
-            SettingsHostZOrder.Register(this); // 설정 창이 열려 있으면 그 아래로 표시
-            WindowFontService.Apply(this);
             Instance = this;
             _tracker = tracker;
             _settings = settings;
@@ -82,7 +80,7 @@ namespace TWChatOverlay.Views
                 if (!IsVisible)
                     Show();
 
-                BringToFront();
+                RefreshTopmost();
                 QueueTopmostRefresh();
             }
             else if (IsVisible)
@@ -92,25 +90,24 @@ namespace TWChatOverlay.Views
             }
         }
 
+        // 위치는 드래그가 끝났을 때만 저장한다 (표시 중 위치는 도우미 창이 밀어 넣는다)
+        protected override bool PersistBoundsOnChange => false;
+        protected override ChatSettings? ResolveSettings() => _settings;
+
         private void RootBorder_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+            => TryBeginDrag(e, markHandled: true);
+
+        protected override bool PersistBounds(ChatSettings settings)
         {
-            if (!UiLockService.IsUnlocked) return;
-            UiLockService.Select(this);
-            if (e.ButtonState != MouseButtonState.Pressed)
-                return;
-
-            WindowDragBehavior.BeginDrag(this, e);
-
             // 드래그가 끝난 현재 위치를 공유 설정에 저장하고 도우미 창과 동기화
-            _settings.SetBuffTrackerWindowPosition(Left, Top, notify: false);
+            settings.SetBuffTrackerWindowPosition(Left, Top, notify: false);
             var helper = BuffTrackerHelperWindow.Instance;
             if (helper != null)
             {
                 helper.Left = Left;
                 helper.Top = Top;
             }
-            ConfigService.SaveDeferred(_settings);
-            e.Handled = true;
+            return true;
         }
 
         /// <summary>평소에는 클릭 통과, 잠금 해제 모드에서는 잡고 끌 수 있게 통과를 해제한다.</summary>
@@ -147,7 +144,8 @@ namespace TWChatOverlay.Views
             catch { }
         }
 
-        private void BringToFront()
+        /// <summary>최상단 복귀 (설정 창이 떠 있으면 양보한다는 점이 베이스의 BringToFront와 다르다).</summary>
+        private void RefreshTopmost()
         {
             if (!IsVisible)
                 return;
@@ -194,7 +192,7 @@ namespace TWChatOverlay.Views
                     _isTopmostRefreshQueued = false;
                     if (IsVisible && _settings.EnableBuffTrackerAlert && _tracker.HasAnyActiveBuffs)
                     {
-                        BringToFront(); // 설정 창이 닫히면 다음 틱(1초 이내)에 최상단 복귀
+                        RefreshTopmost(); // 설정 창이 닫히면 다음 틱(1초 이내)에 최상단 복귀
                     }
                 }),
                 DispatcherPriority.Background);

@@ -1,4 +1,5 @@
-﻿<Window x:Class="TWChatOverlay.Views.ShoutToastWindow"
+﻿<ov:OverlayWindowBase x:Class="TWChatOverlay.Views.ShoutToastWindow"
+        xmlns:ov="clr-namespace:TWChatOverlay.Views"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         MinWidth="420"
@@ -58,4 +59,4 @@
                        Visibility="Collapsed"/>
         </Grid>
     </Border>
-</Window>
+</ov:OverlayWindowBase>

@@ -1,4 +1,5 @@
-<Window x:Class="TWChatOverlay.Views.BuffTrackerWindow"
+﻿<ov:OverlayWindowBase x:Class="TWChatOverlay.Views.BuffTrackerWindow"
+        xmlns:ov="clr-namespace:TWChatOverlay.Views"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         SizeToContent="WidthAndHeight"
@@ -11,7 +12,7 @@
         WindowStartupLocation="Manual"
         Background="Transparent"
         AllowsTransparency="True">
-    <Window.Resources>
+    <ov:OverlayWindowBase.Resources>
         <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
 
         <!-- 버프 타일: 아이콘 + 오른쪽에 남은 시간. 판 위에 올려 게임 화면과 상관없이 읽힌다. -->
@@ -37,7 +38,7 @@
                            Margin="7,0,0,0"/>
             </StackPanel>
         </DataTemplate>
-    </Window.Resources>
+    </ov:OverlayWindowBase.Resources>
 
     <Border Background="{DynamicResource OverlayWindowBackgroundBrush}"
             BorderBrush="{DynamicResource OverlayWindowBorderBrush}"
@@ -81,4 +82,4 @@
             </StackPanel>
         </StackPanel>
     </Border>
-</Window>
+</ov:OverlayWindowBase>

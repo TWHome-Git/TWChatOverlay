@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Controls;
@@ -19,7 +19,7 @@ namespace TWChatOverlay.Views
     /// (창이 하나뿐이면 입장 가능 카운트다운 도중 다른 보스 알림이 오면서 카운트다운이 사라진다).
     /// 잠금 해제 모드에서 위치를 조정할 수 있고, 위치는 설정에 저장된다.
     /// </summary>
-    public sealed class BossAlertToastWindow : Window
+    public sealed class BossAlertToastWindow : OverlayWindowBase
     {
         private static readonly Dictionary<string, BossAlertToastWindow> Instances = new(StringComparer.Ordinal);
         private string _bossKey = string.Empty;
@@ -36,7 +36,6 @@ namespace TWChatOverlay.Views
         private string? _lastCountdownText;
         private TimeSpan? _entryWindow;
         private ChatSettings? _settings;
-        private bool _isDragging;
 
         public BossAlertToastWindow()
         {
@@ -52,7 +51,6 @@ namespace TWChatOverlay.Views
             Height = 72;
             MinWidth = 160;
             MinHeight = 56;
-            WindowFontService.Apply(this);
 
             var title = new TextBlock
             {
@@ -107,10 +105,8 @@ namespace TWChatOverlay.Views
             root.SetResourceReference(Border.BorderBrushProperty, "OverlayAccentBorderBrush");
             Content = root;
 
-            // 잠금 해제 모드에서만 드래그로 이동 (위치는 설정에 저장)
+            // 잠금 해제 모드에서만 드래그로 이동 (크기는 설정에 저장, 위치는 알림 스택이 관리)
             root.MouseLeftButtonDown += RootBorder_MouseLeftButtonDown;
-            LocationChanged += (_, _) => SyncPositionToSettings(save: false);
-            SizeChanged += (_, _) => SyncPositionToSettings(save: true);
 
             _closeTimer = new DispatcherTimer();
             _closeTimer.Tick += (_, _) =>
@@ -196,23 +192,11 @@ namespace TWChatOverlay.Views
             return true;
         }
 
-        protected override void OnSourceInitialized(EventArgs e)
-        {
-            base.OnSourceInitialized(e);
-            try
-            {
-                IntPtr hwnd = new WindowInteropHelper(this).EnsureHandle();
-                int exStyle = NativeMethods.GetWindowLong(hwnd, NativeMethods.GWL_EXSTYLE);
-                NativeMethods.SetWindowLong(hwnd, NativeMethods.GWL_EXSTYLE, exStyle | NativeMethods.WS_EX_TOOLWINDOW);
-            }
-            catch { }
-        }
-
         protected override void OnClosed(EventArgs e)
         {
             try { _closeTimer.Stop(); } catch { }
             try { _countdownTimer.Stop(); } catch { }
-            SyncPositionToSettings(save: true);
+            PersistBoundsNow();
             if (Instances.TryGetValue(_bossKey, out var mine) && ReferenceEquals(mine, this))
             {
                 Instances.Remove(_bossKey);
@@ -220,33 +204,26 @@ namespace TWChatOverlay.Views
             base.OnClosed(e);
         }
 
+        // 알림 스택이 위치를 정하므로 설정 창 아래 배치 등록은 하지 않는다 (기존 동작 유지)
+        protected override bool KeepBelowSettingsHost => false;
+        protected override bool UseToolWindowStyle => true;
+        protected override ChatSettings? ResolveSettings() => _settings;
+
         private void RootBorder_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
-            if (!UiLockService.IsUnlocked) return;
-            UiLockService.Select(this);
-            if (e.ButtonState != MouseButtonState.Pressed || !IsVisible)
-                return;
-
-            _isDragging = true;
-            try { DragMove(); } catch { }
-            finally
-            {
-                _isDragging = false;
-                SyncPositionToSettings(save: true);
-            }
+            if (!IsVisible) return;
+            TryBeginDrag(e);
         }
 
-        private void SyncPositionToSettings(bool save)
+        protected override bool PersistBounds(ChatSettings settings)
         {
             // 위치는 통합 알림 스택(앵커)이 관리하므로 크기만 저장한다
-            if (_settings == null || !IsVisible)
-                return;
+            if (!IsVisible)
+                return false;
 
-            _settings.BossAlertToastWindowWidth = Width;
-            _settings.BossAlertToastWindowHeight = Height;
-
-            if (_isDragging || save)
-                ConfigService.SaveDeferred(_settings);
+            settings.BossAlertToastWindowWidth = Width;
+            settings.BossAlertToastWindowHeight = Height;
+            return true;
         }
 
         /// <summary>알림 문구 설정. 5초 전(등장 임박)은 붉은색으로 강조한다.</summary>

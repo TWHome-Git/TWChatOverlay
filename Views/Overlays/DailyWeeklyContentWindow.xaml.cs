@@ -24,7 +24,7 @@ namespace TWChatOverlay.Views
     /// <summary>
     /// 던전 숙제 체크리스트 오버레이 창입니다.
     /// </summary>
-    public partial class DailyWeeklyContentWindow : Window, INotifyPropertyChanged
+    public partial class DailyWeeklyContentWindow : OverlayWindowBase, INotifyPropertyChanged
     {
         private readonly ChatSettings _settings;
         private readonly ObservableCollection<DailyWeeklyContentLog> _dailyContentItems = new();
@@ -1522,12 +1522,14 @@ namespace TWChatOverlay.Views
                 item.Mark();
         }
 
-        // 일간/주간 컨텐츠 창은 잠금 모드와 무관하게 항상 이동 가능
+        // 일간/주간 컨텐츠 창은 잠금 모드와 무관하게 항상 이동 가능. 폰트·z-순서·위치 저장은 기존대로 창 자체가 처리한다.
+        protected override bool KeepBelowSettingsHost => false;
+        protected override bool ApplyAppFont => false;
+        protected override bool DragRequiresUnlock => false;
+        protected override bool PersistBoundsOnChange => false;
+
         private void TitleBar_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
-        {
-            if (e.ButtonState == MouseButtonState.Pressed)
-                DragMove();
-        }
+            => TryBeginDrag(e);
 
         [System.Runtime.InteropServices.DllImport("user32.dll")]
         private static extern IntPtr SendMessage(IntPtr hWnd, int msg, IntPtr wp, IntPtr lp);

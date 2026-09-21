@@ -1,4 +1,5 @@
-﻿<Window x:Class="TWChatOverlay.Views.ShoutReplayWindow"
+﻿<ov:OverlayWindowBase x:Class="TWChatOverlay.Views.ShoutReplayWindow"
+        xmlns:ov="clr-namespace:TWChatOverlay.Views"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="외치기 로그"
@@ -125,4 +126,4 @@
             </Grid>
         </Grid>
     </Border>
-</Window>
+</ov:OverlayWindowBase>
