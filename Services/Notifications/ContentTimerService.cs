@@ -967,8 +967,8 @@ namespace TWChatOverlay.Services
 
         /// <summary>과거 로그 전체에서 기록을 뽑는 1회성 작업이 도는 중인지.</summary>
         public bool IsArchiveScanRunning { get; private set; }
-        /// <summary>가운데 열을 최고 기록으로 보여주는 중인지 ("직전 판" 머리글을 누르면 바뀐다).</summary>
-        private bool _showBest;
+        /// <summary>가운데 열을 최고 기록으로 보여주는 중인지 ("직전 판" 머리글을 누르면 직전 판으로 바뀐다). 기본은 최고 기록 — 앱을 다시 켜면 최고 기록으로 돌아온다.</summary>
+        private bool _showBest = true;
         /// <summary>마지막으로 그린 표의 재료 — 머리글을 눌러 같은 내용을 다시 그릴 때 쓴다.</summary>
         private (DungeonDefinition Def, string Difficulty, string Status, int? Current, int? Max,
             DungeonRunRecord? InProgress, string? Highlight)? _lastViewArgs;

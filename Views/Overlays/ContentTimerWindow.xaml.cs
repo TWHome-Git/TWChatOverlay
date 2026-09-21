@@ -513,7 +513,7 @@ namespace TWChatOverlay.Views
                     // 누르면 직전 판 ↔ 최고 기록. 글자만으로는 눌러지는지 모르므로 손 모양 커서와 설명을 붙인다
                     header.Background = Brushes.Transparent; // 글자 사이 빈 곳도 눌리게
                     header.Cursor = Cursors.Hand;
-                    header.ToolTip = "눌러서 최고 기록(Best) ↔ 직전 판";
+                    header.ToolTip = "눌러서 최고 기록(Best) ↔ 직전 판 (기본: 최고 기록)";
                     header.MouseLeftButtonUp += PreviousHeader_MouseLeftButtonUp;
                     _previousHeader = header;
                 }
