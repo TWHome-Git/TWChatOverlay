@@ -75,6 +75,8 @@ namespace TWChatOverlay.Services
         // 줄 구분자(<br>/개행) 없이 파일에 남은 조각을 완결로 간주하기까지의 대기 시간.
         // 게임이 줄 끝을 아직 안 썼을 짧은 순간은 넘기고, 그 이상 조용하면 마지막 줄로 보고 내보낸다.
         private const int PendingFlushMilliseconds = 500;
+        // 자정 이후 이 시간 안에는 새 날짜 파일이 생길 때까지 옛 파일을 계속 읽는다 (게임의 파일 전환 지연 대비)
+        private static readonly TimeSpan RolloverGraceAfterMidnight = TimeSpan.FromMinutes(10);
         private static readonly string StateDirectoryPath = LogStoragePaths.StateDirectory;
         private static readonly string CheckpointPath = Path.Combine(StateDirectoryPath, "log_pipeline_checkpoint.json");
         private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.General);
@@ -178,6 +180,15 @@ namespace TWChatOverlay.Services
 
             if (_logPath != expectedPath)
             {
+                // 자정 직후 게임이 아직 새 날짜 파일을 만들지 않았으면 잠시 옛 파일을 계속 읽는다.
+                // 앱이 먼저 새 경로로 옮겨가면 그 사이 옛 파일에 더 써진 줄이 통째로 유실된다.
+                if (!File.Exists(expectedPath) &&
+                    !string.IsNullOrEmpty(_logPath) && File.Exists(_logPath) &&
+                    DateTime.Now.TimeOfDay < RolloverGraceAfterMidnight)
+                {
+                    return;
+                }
+
                 AppLogger.Info($"Detected log path rollover. Updating path from '{_logPath}' to '{expectedPath}'.");
 
                 // 전환 전에 옛 파일의 남은 내용과 대기 조각을 마저 처리해 자정 부근 줄 유실을 막는다
