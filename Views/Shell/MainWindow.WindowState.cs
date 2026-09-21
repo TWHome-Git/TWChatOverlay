@@ -5,8 +5,15 @@ using TWChatOverlay.Services;
 
 namespace TWChatOverlay.Views
 {
+    /// <summary>잠금 해제·위치 조정 모드: 미리보기 창 표시/복원, 인스펙터 조정 반영</summary>
     public partial class MainWindow
     {
+        // ── 이 부분 클래스가 주로 쓰는 상태 ──
+        private bool _isSettingsPositionMode;
+        private bool _isAddonPositionMode;
+        private int _addonPositionPreviewTabIndex = -1;
+        private bool _isWizardChatPositionMode;
+
         private void PersistSettings()
         {
             ConfigService.SaveDeferred(_settings);

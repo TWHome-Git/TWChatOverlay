@@ -25,8 +25,27 @@ using TWChatOverlay.ViewModels;
 
 namespace TWChatOverlay.Views
 {
+    /// <summary>부속 창(일일/주간·달력·어밴던 통계·서브 채팅창·경험치 추적)의 생성과 표시, 최소화 시 정리</summary>
     public partial class MainWindow
     {
+        // ── 이 부분 클래스가 주로 쓰는 상태 ──
+        private DailyWeeklyContentWindow? _dailyWeeklyContentOverlay;
+        private ItemCalendarWindow? _itemCalendarWindow;
+        private AbandonRoadSummaryWindow? _AbandonRoadSummaryWindow;
+        private bool _hasRestoredChatCloneWindows;
+        private bool _isOverlayVisible = true;
+        /// <summary>
+        /// Public read-only view of overlay visibility for other windows to subscribe to.
+        /// </summary>
+        public bool IsOverlayVisible => _isOverlayVisible;
+
+        /// <summary>
+        /// Raised when overlay visibility changes. The event argument is the new visibility value.
+        /// </summary>
+        public event EventHandler<bool>? OverlayVisibilityChanged;
+        public event EventHandler<bool>? DailyWeeklyVisibilityChanged;
+        public event EventHandler<bool>? ItemCalendarVisibilityChanged;
+
         #region Overlay Windows
 
         public void ToggleOverlayVisibility()

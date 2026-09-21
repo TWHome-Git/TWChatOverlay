@@ -25,8 +25,16 @@ using TWChatOverlay.ViewModels;
 
 namespace TWChatOverlay.Views
 {
+    /// <summary>채팅 표시 갱신·폰트·아이템 필터 스냅샷 등 화면 도우미</summary>
     public partial class MainWindow
     {
+        // ── 이 부분 클래스가 주로 쓰는 상태 ──
+        private readonly object _defaultDropItemFilterLock = new();
+        private DropItemResolver.DropItemFilterSnapshot? _defaultDropItemFilterSnapshot;
+        private static readonly Regex HtmlFontTagRegex = new(
+            @"<font\b",
+            RegexOptions.IgnoreCase | RegexOptions.Compiled);
+
         #region UI Methods
 
         private static readonly Regex NicknameBeforeColonRegex = new(

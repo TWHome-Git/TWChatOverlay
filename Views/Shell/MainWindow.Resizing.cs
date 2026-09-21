@@ -25,6 +25,7 @@ using TWChatOverlay.ViewModels;
 
 namespace TWChatOverlay.Views
 {
+    /// <summary>메인 창 크기 조절</summary>
     public partial class MainWindow
     {
         #region Resizing

@@ -25,6 +25,7 @@ using TWChatOverlay.ViewModels;
 
 namespace TWChatOverlay.Views
 {
+    /// <summary>메뉴/버튼 클릭과 설정 변경(PropertyChanged) 라우팅</summary>
     public partial class MainWindow
     {
         #region Event Handlers

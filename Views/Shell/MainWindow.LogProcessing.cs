@@ -25,8 +25,20 @@ using TWChatOverlay.ViewModels;
 
 namespace TWChatOverlay.Views
 {
+    /// <summary>분석된 로그 배치를 화면에 반영 (탭 버퍼, 숨김 필터, 어밴던 주간 합계)</summary>
     public partial class MainWindow
     {
+        // ── 이 부분 클래스가 주로 쓰는 상태 ──
+        private bool _canShowAuxiliaryWindows = true;
+        private bool _isRefreshLogDisplayScheduled;
+        private AbandonSummaryValue _AbandonWeeklySummary = new();
+        private string _AbandonWeeklySummaryWeekKey = string.Empty;
+        private const string SeedIconUri = "pack://application:,,,/Data/images/Item/시드.png";
+        private const string LowMagicStoneIconUri = "pack://application:,,,/Data/images/Item/하급마정석.png";
+        private const string MiddleMagicStoneIconUri = "pack://application:,,,/Data/images/Item/중급마정석.png";
+        private const string HighMagicStoneIconUri = "pack://application:,,,/Data/images/Item/상급마정석.png";
+        private const string TopMagicStoneIconUri = "pack://application:,,,/Data/images/Item/최상급마정석.png";
+
         private static readonly Regex ShoutToastSourceRegex = new(
             @"^\s*\[\s*(?:\d{1,2}:\d{2}(?::\d{2})?|\d{1,2}\s*시\s*\d{1,2}\s*분(?:\s*\d{1,2}\s*초)?)\s*\]\s*외치기\s*:",
             RegexOptions.IgnoreCase | RegexOptions.Compiled);

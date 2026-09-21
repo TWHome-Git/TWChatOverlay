@@ -6,8 +6,12 @@ using TWChatOverlay.Services;
 
 namespace TWChatOverlay.Views
 {
+    /// <summary>전역 단축키 등록과 처리</summary>
     public partial class MainWindow
     {
+        // ── 이 부분 클래스가 주로 쓰는 상태 ──
+        private HotKeyService? _hotKeyService;
+
         private void ApplyHotKeys()
         {
             if (_hotKeyService == null) return;
