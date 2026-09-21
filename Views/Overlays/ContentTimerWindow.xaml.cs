@@ -336,7 +336,7 @@ namespace TWChatOverlay.Views
             for (int r = 0; r < view.Rows.Count; r++)
             {
                 TimerRow row = view.Rows[r];
-                _rowLabels[r].Text = row.Name;
+                SetRowLabel(_rowLabels[r], row.Name, row.NameSub);
                 // 방금 끝난 구간은 행 이름과 최근 판 값을 초록색으로
                 ApplyHighlight(_rowLabels[r], row.Highlight);
                 ApplyHighlight(_cells[r, CurrentColumn], row.Highlight);
@@ -364,6 +364,20 @@ namespace TWChatOverlay.Views
                     SetCell(_totalRowIndex, c, total, delta, view.TotalsCapped[c]);
                 }
             }
+        }
+
+        /// <summary>행 이름. 묶음 표의 진행도("0/1")는 이름 옆이 아니라 아래에 작은 힌트 글씨로 둔다 — 값 칸의 시각 줄과 나란하다.</summary>
+        private void SetRowLabel(TextBlock label, string name, string? sub)
+        {
+            label.Inlines.Clear();
+            label.Inlines.Add(new Run(name));
+            if (string.IsNullOrEmpty(sub))
+                return;
+            const double subBaseFontSize = 11;
+            label.Inlines.Add(new LineBreak());
+            var subRun = new Run(sub) { FontSize = Scaled(subBaseFontSize), Tag = subBaseFontSize, FontWeight = FontWeights.Normal };
+            subRun.SetResourceReference(TextElement.ForegroundProperty, HintBrushKey);
+            label.Inlines.Add(subRun);
         }
 
         /// <summary>가운데 열 머리글: 평소 "직전 판", 최고 기록을 보는 중이면 "Best"로 또렷하게 적는다.</summary>
@@ -399,7 +413,7 @@ namespace TWChatOverlay.Views
             if (seconds.HasValue && !string.IsNullOrEmpty(time))
             {
                 // 묶음 모드: 행마다 판이 다르므로 값 아래에 그 판의 시각을 작게 붙인다
-                const double timeBaseFontSize = 10.5;
+                const double timeBaseFontSize = 11;
                 cell.Inlines.Add(new LineBreak());
                 var timeRun = new Run(time) { FontSize = Scaled(timeBaseFontSize), Tag = timeBaseFontSize, FontWeight = FontWeights.Normal };
                 timeRun.SetResourceReference(TextElement.ForegroundProperty, HintBrushKey);

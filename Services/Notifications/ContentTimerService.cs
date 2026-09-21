@@ -34,6 +34,8 @@ namespace TWChatOverlay.Services
     public sealed class TimerRow
     {
         public string Name { get; init; } = string.Empty;
+        /// <summary>행 이름 아래 작은 글씨 (묶음 표에서 그 던전의 진행도 "0/1"). 이름 옆에 붙이면 이름 열이 넓어져 창 전체가 커지므로 아래에 둔다. null이면 없음.</summary>
+        public string? NameSub { get; init; }
         /// <summary>열별 값(초). null이면 "-".</summary>
         public double?[] Seconds { get; } = new double?[ContentTimerService.ColumnCount];
         /// <summary>열별로 값이 상한("N초 이하")인지.</summary>
@@ -1229,15 +1231,16 @@ namespace TWChatOverlay.Services
                     lastWeekTotalRuns += cols.LastWeek.Count;
                     previousLatest = MaxDate(previousLatest, cols.Previous?.EndedAt);
                     latestLatest = MaxDate(latestLatest, cols.Latest?.EndedAt);
-                    // 던전마다 항목이 다르면 행 이름에 그 던전의 진행도를 붙인다 — "심층1 (8/7)"
-                    string rowName = member.Name;
+                    // 던전마다 항목이 다르면 그 던전의 진행도를 행 이름 아래 작은 글씨로 붙인다 — "8/7".
+                    // (묶음 표의 값 칸은 어차피 값 + 시각 두 줄이라 높이는 늘지 않고, 이름 열 너비도 그대로다)
+                    string? rowProgress = null;
                     if (!sharedProgressItem)
                     {
                         var (rowCur, rowMax) = ReadProgressOrNull(member);
                         if (rowCur.HasValue && rowMax.HasValue && rowMax.Value > 0)
-                            rowName = $"{member.Name} ({rowCur.Value}/{rowMax.Value})";
+                            rowProgress = $"{rowCur.Value}/{rowMax.Value}";
                     }
-                    var row = new TimerRow { Name = rowName };
+                    var row = new TimerRow { Name = member.Name, NameSub = rowProgress };
                     row.Seconds[0] = Average(cols.LastWeek.Select(r => r.TotalSeconds));
                     row.Seconds[1] = middle?.TotalSeconds;
                     row.Seconds[2] = cols.Latest?.TotalSeconds;
@@ -1994,9 +1997,8 @@ namespace TWChatOverlay.Services
                 }
                 else
                 {
-                    bool sharedProgressItem = members.All(m => m.ProgressItemName == members[0].ProgressItemName);
                     foreach (DungeonDefinition member in members)
-                        yield return sharedProgressItem ? member.Name : member.Name + " (0/0)";
+                        yield return member.Name; // 진행도는 이름 아래 줄에 적으므로 너비에 들지 않는다
                 }
             }
         }
