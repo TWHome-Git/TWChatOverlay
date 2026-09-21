@@ -27,7 +27,9 @@ namespace TWChatOverlay.Views
         private const int CurrentColumn = ContentTimerService.CurrentColumn;
         private const int PreviousColumn = CurrentColumn - 1;
         private const string TotalRowName = "합계";
-        private const double DimOpacity = 0.6;
+        // 글자 색은 농도(Opacity)가 아니라 글자 색 단계로 구분한다: 본문 · 흐림(지난 값) · 힌트(부제)
+        private const string TextBrushKey = "TextBrush", MutedBrushKey = "OverlayMutedTextBrush", HintBrushKey = "OverlayHintTextBrush";
+        private const string AccentTextBrushKey = "OverlayTitleAccentTextBrush";
         /// <summary>글자 크기 설정값이 이 값일 때 아래 기준 크기들이 그대로 쓰인다.</summary>
         private const double BaseFontSize = 16.0;
         // 값 열 너비(글자 크기 16 기준)와 행 이름 열의 여유. 열 너비를 고정해 어느 던전을 보든 창 너비가 같게 한다.
@@ -127,11 +129,8 @@ namespace TWChatOverlay.Views
                 var button = new Button
                 {
                     Content = name,
-                    Tag = key,
-                    HorizontalAlignment = HorizontalAlignment.Stretch,
-                    HorizontalContentAlignment = HorizontalAlignment.Left,
-                    Margin = new Thickness(0, 0, 0, 3),
-                    Style = (Style)FindResource("WindowSmallButtonStyle"),
+                    Margin = new Thickness(0, 0, 0, 2),
+                    Style = (Style)FindResource("OverlayNavChipButtonStyle"),
                     ToolTip = name + " 기록 보기",
                 };
                 button.Click += (_, _) =>
@@ -144,16 +143,12 @@ namespace TWChatOverlay.Views
             }
         }
 
-        /// <summary>목록에서 현재 보고 있는 던전을 강조한다 (민트 글자 + 굵게). 버튼 템플릿이 테두리를 고정하므로 글자로 표시한다.</summary>
+        /// <summary>목록에서 현재 보고 있는 던전을 강조한다. 칩 스타일이 Tag="Selected"를 보고 민트 알약(배경·테두리·굵은 글자)으로 그린다.</summary>
         private void HighlightGroup(string groupKey)
         {
             _selectedGroupKey = groupKey;
             foreach (var pair in _groupButtons)
-            {
-                bool selected = pair.Key == groupKey;
-                pair.Value.FontWeight = selected ? FontWeights.SemiBold : FontWeights.Normal;
-                pair.Value.SetResourceReference(Control.ForegroundProperty, selected ? "OverlayAccentBorderBrush" : "ButtonTextBrush");
-            }
+                pair.Value.Tag = pair.Key == groupKey ? "Selected" : null;
         }
 
         private void Settings_PropertyChanged(object? sender, PropertyChangedEventArgs e)
@@ -377,8 +372,7 @@ namespace TWChatOverlay.Views
             if (_previousHeader == null)
                 return;
             _previousHeader.Text = isBest ? "Best" : ColumnHeaders[PreviousColumn];
-            _previousHeader.Opacity = isBest ? 1.0 : DimOpacity;
-            _previousHeader.SetResourceReference(TextBlock.ForegroundProperty, isBest ? "OverlayTitleAccentTextBrush" : "TextBrush");
+            _previousHeader.SetResourceReference(TextBlock.ForegroundProperty, isBest ? AccentTextBrushKey : MutedBrushKey);
         }
 
         /// <summary>가운데 열 머리글 클릭: 직전 판 ↔ 최고 기록. 잠금 해제(위치 조정) 중에는 창을 끌어 옮기는 중이라 넘긴다.</summary>
@@ -408,7 +402,7 @@ namespace TWChatOverlay.Views
                 const double timeBaseFontSize = 10.5;
                 cell.Inlines.Add(new LineBreak());
                 var timeRun = new Run(time) { FontSize = Scaled(timeBaseFontSize), Tag = timeBaseFontSize, FontWeight = FontWeights.Normal };
-                timeRun.SetResourceReference(TextElement.ForegroundProperty, "OverlaySubtleTextBrush");
+                timeRun.SetResourceReference(TextElement.ForegroundProperty, HintBrushKey);
                 cell.Inlines.Add(timeRun);
             }
 
@@ -469,7 +463,7 @@ namespace TWChatOverlay.Views
             for (int r = 1; r < valueRows; r += 2)
                 TableGrid.Children.Add(MakeDecor(FirstValueRow + r, 0, 1, colCount, "TextBrush", 0.06,
                     new DecorStyle(-6, 0, -8, 0), radius: 4));
-            Border underline = MakeDecor(SubHeaderRow, 0, 1, colCount, "TextBrush", 0.25, new DecorStyle(-6, 0, -8, 0), radius: 0);
+            Border underline = MakeDecor(SubHeaderRow, 0, 1, colCount, "OverlayCardBorderBrush", 1.0, new DecorStyle(-6, 0, -8, 0), radius: 0);
             underline.Height = 1;
             underline.VerticalAlignment = VerticalAlignment.Bottom;
             TableGrid.Children.Add(underline);
@@ -479,13 +473,10 @@ namespace TWChatOverlay.Views
             for (int c = 0; c < ColumnHeaders.Length; c++)
             {
                 bool isCurrent = c == CurrentColumn;
-                var header = MakeText(ColumnHeaders[c], HeaderRow, c + 1, new TextStyle(15, 8, 1, 1), bold: true,
-                    opacity: isCurrent ? 1.0 : DimOpacity);
+                var header = MakeText(ColumnHeaders[c], HeaderRow, c + 1, new TextStyle(13, 8, 2, 1), bold: true,
+                    brushKey: isCurrent ? AccentTextBrushKey : MutedBrushKey);
                 if (isCurrent)
-                {
-                    header.SetResourceReference(TextBlock.ForegroundProperty, "OverlayAccentBorderBrush");
                     Grid.SetColumnSpan(header, 2); // 최근 판 머리글은 값 열 + 차이 칸에 걸친다
-                }
                 if (c == PreviousColumn)
                 {
                     // 누르면 직전 판 ↔ 최고 기록. 글자만으로는 눌러지는지 모르므로 손 모양 커서와 설명을 붙인다
@@ -497,7 +488,7 @@ namespace TWChatOverlay.Views
                 }
                 TableGrid.Children.Add(header);
 
-                var sub = MakeText("-", SubHeaderRow, c + 1, new TextStyle(11, 8, 0, 4), bold: false, opacity: 0.5);
+                var sub = MakeText("-", SubHeaderRow, c + 1, new TextStyle(11, 8, 0, 5), bold: false, brushKey: HintBrushKey);
                 if (isCurrent)
                     Grid.SetColumnSpan(sub, 2);
                 _columnSubHeaders[c] = sub;
@@ -511,11 +502,10 @@ namespace TWChatOverlay.Views
                 _totalSeparator = new Border
                 {
                     Height = 1,
-                    Opacity = 0.35,
                     VerticalAlignment = VerticalAlignment.Top,
                     Margin = new Thickness(0, 2, 0, 0),
                 };
-                _totalSeparator.SetResourceReference(Border.BackgroundProperty, "TextBrush");
+                _totalSeparator.SetResourceReference(Border.BackgroundProperty, "ControlBorderBrush");
                 Grid.SetRow(_totalSeparator, FirstValueRow + _totalRowIndex);
                 Grid.SetColumn(_totalSeparator, 0);
                 Grid.SetColumnSpan(_totalSeparator, colCount);
@@ -533,12 +523,12 @@ namespace TWChatOverlay.Views
 
                 // 차이 칸: 왼쪽 정렬이라 부호가 세로로 나란히 선다
                 var deltaBlock = MakeText(string.Empty, gridRow, deltaColumn, new TextStyle(DeltaBaseFontSize, 6, topMargin, 3),
-                    bold: false, opacity: 1.0, alignLeft: true);
+                    bold: false, brushKey: TextBrushKey, alignLeft: true);
                 _deltas[r] = deltaBlock;
                 TableGrid.Children.Add(deltaBlock);
 
                 var label = MakeText(isTotal ? TotalRowName : "-", gridRow, 0,
-                    new TextStyle(16, 0, topMargin, 3), bold: isTotal, opacity: 1.0, alignLeft: true);
+                    new TextStyle(16, 0, topMargin, 3), bold: isTotal, brushKey: TextBrushKey, alignLeft: true);
                 _rowLabels[r] = label;
                 TableGrid.Children.Add(label);
 
@@ -546,7 +536,7 @@ namespace TWChatOverlay.Views
                 {
                     bool isCurrent = c == CurrentColumn;
                     var cell = MakeText("-", gridRow, c + 1, new TextStyle(isCurrent ? 18 : 16, 8, topMargin, 3),
-                        bold: isTotal || isCurrent, opacity: isCurrent ? 1.0 : DimOpacity);
+                        bold: isTotal || isCurrent, brushKey: isCurrent ? TextBrushKey : MutedBrushKey);
                     _cells[r, c] = cell;
                     TableGrid.Children.Add(cell);
                 }
@@ -573,20 +563,19 @@ namespace TWChatOverlay.Views
         }
 
         /// <summary>표 글자 하나. 기준 크기·여백은 Tag에 남겨 두고 현재 글자 크기 배율로 적용한다.</summary>
-        private TextBlock MakeText(string text, int row, int col, TextStyle style, bool bold, double opacity, bool alignLeft = false)
+        private TextBlock MakeText(string text, int row, int col, TextStyle style, bool bold, string brushKey, bool alignLeft = false)
         {
             var block = new TextBlock
             {
                 Text = text,
                 Tag = style,
                 FontWeight = bold ? FontWeights.SemiBold : FontWeights.Normal,
-                Opacity = opacity,
                 HorizontalAlignment = alignLeft ? HorizontalAlignment.Left : HorizontalAlignment.Right,
                 TextAlignment = alignLeft ? TextAlignment.Left : TextAlignment.Right, // 두 줄 칸(값 + 시각)도 오른쪽 끝을 맞춘다
                 VerticalAlignment = VerticalAlignment.Center,
             };
             ApplyStyle(block, style);
-            block.SetResourceReference(TextBlock.ForegroundProperty, "TextBrush");
+            block.SetResourceReference(TextBlock.ForegroundProperty, brushKey);
             Grid.SetRow(block, row);
             Grid.SetColumn(block, col);
             return block;

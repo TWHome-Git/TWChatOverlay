@@ -142,6 +142,9 @@ namespace TWChatOverlay.Views
             SizeToContent = SizeToContent.WidthAndHeight;
             WindowStartupLocation = WindowStartupLocation.CenterScreen;
             Title = "던전 타이머 기록 추이";
+            // 화면 배율이 100%가 아니면 크기·위치가 소수 픽셀로 떨어져 1px 테두리와 작은 글자가 번진다 — 픽셀 격자에 맞춘다
+            UseLayoutRounding = true;
+            SnapsToDevicePixels = true;
 
             // ── 제목줄 ──
             _titleText = new TextBlock { FontSize = 16, FontWeight = FontWeights.SemiBold, VerticalAlignment = VerticalAlignment.Center };
@@ -305,12 +308,16 @@ namespace TWChatOverlay.Views
         private List<string> Difficulties()
             => _allRecords.Select(r => r.Difficulty ?? string.Empty).Distinct().OrderBy(d => d, StringComparer.CurrentCulture).ToList();
 
-        /// <summary>볼 수 있는 값: 판 전체, 그리고 구간이 여럿인 던전은 구간별. 합계가 의미 없는 던전(ShowTotal=false)은 전체를 빼고 구간만.</summary>
+        /// <summary>
+        /// 볼 수 있는 값: 판 전체, 그리고 구간이 여럿인 던전은 구간별.
+        /// 전체는 합계 행을 쓰는 던전(ShowTotal)과 판 전체 구간을 따로 재는 던전(WholeRun — 신조·최후의 결전 등)에 있다.
+        /// 둘 다 아닌 던전(구간 합이 의미 없는 곳)은 구간만.
+        /// </summary>
         private List<string> SegmentChoices()
         {
             var names = _def.Segments.Where(s => !s.WholeRun).Select(s => s.Name).ToList();
             var choices = new List<string>();
-            if (_def.ShowTotal || names.Count == 0)
+            if (_def.ShowTotal || names.Count == 0 || _def.Segments.Any(s => s.WholeRun))
                 choices.Add(WholeRunChoice);
             if (names.Count > 1 || !_def.ShowTotal)
                 choices.AddRange(names);
@@ -327,6 +334,7 @@ namespace TWChatOverlay.Views
         private void RebuildWeeks()
         {
             _runs = new List<(DateTime, double)>();
+            string? wholeName = _def.Segments.FirstOrDefault(s => s.WholeRun)?.Name;
             foreach (DungeonRunRecord record in _allRecords)
             {
                 if ((record.Difficulty ?? string.Empty) != _difficulty)
@@ -335,10 +343,21 @@ namespace TWChatOverlay.Views
                     continue; // "N초 이하"는 실제 시간을 모르므로 평균에 넣지 않는다
 
                 double seconds;
-                if (_segment == WholeRunChoice)
+                if (_segment != WholeRunChoice)
+                {
+                    if (!record.Segments.TryGetValue(_segment, out seconds))
+                        continue;
+                }
+                else if (wholeName != null)
+                {
+                    // 판 전체를 따로 재는 던전: 그 값이 없는 판(도중에 켠 판 등)은 구간 합으로 때우지 않고 뺀다
+                    if (!record.Segments.TryGetValue(wholeName, out seconds))
+                        continue;
+                }
+                else
+                {
                     seconds = record.TotalSeconds;
-                else if (!record.Segments.TryGetValue(_segment, out seconds))
-                    continue;
+                }
 
                 if (seconds > 0)
                     _runs.Add((record.EndedAt, seconds));
@@ -410,14 +429,15 @@ namespace TWChatOverlay.Views
         /// </summary>
         private Border MakeChip(string text, bool selected, Action onClick, Thickness margin)
         {
-            var label = new TextBlock { Text = text, FontSize = 11.5, FontWeight = selected ? FontWeights.SemiBold : FontWeights.Normal };
+            var label = new TextBlock { Text = text, FontSize = 12, FontWeight = selected ? FontWeights.SemiBold : FontWeights.Normal, VerticalAlignment = VerticalAlignment.Center };
             label.SetResourceReference(TextBlock.ForegroundProperty, selected ? "TextBrush" : "OverlayMutedTextBrush");
 
             var chip = new Border
             {
                 Child = label,
-                CornerRadius = new CornerRadius(11),
-                Padding = new Thickness(11, 3, 11, 4),
+                Height = 24,
+                CornerRadius = new CornerRadius(12),
+                Padding = new Thickness(11, 0, 11, 1),
                 Margin = margin,
                 BorderThickness = new Thickness(1),
                 Cursor = Cursors.Hand,
@@ -501,7 +521,7 @@ namespace TWChatOverlay.Views
             labelText.SetResourceReference(TextBlock.ForegroundProperty, "OverlayHintTextBrush");
             var valueText = new TextBlock { Text = value, FontSize = 21, FontWeight = FontWeights.SemiBold, Margin = new Thickness(0, 1, 0, 1) };
             valueText.SetResourceReference(TextBlock.ForegroundProperty, "TextBrush");
-            var subText = new TextBlock { Text = sub, FontSize = 10.5, TextTrimming = TextTrimming.CharacterEllipsis };
+            var subText = new TextBlock { Text = sub, FontSize = 11, TextTrimming = TextTrimming.CharacterEllipsis };
             subText.SetResourceReference(TextBlock.ForegroundProperty, "OverlayMutedTextBrush");
 
             var stack = new StackPanel();
@@ -588,7 +608,7 @@ namespace TWChatOverlay.Views
             {
                 double y = Y(v, plotH);
                 _chart.Children.Add(new Line { X1 = PlotLeft, X2 = PlotLeft + plotW, Y1 = y, Y2 = y, Stroke = gridBrush, StrokeThickness = 1, SnapsToDevicePixels = true, Opacity = 0.55 });
-                var label = new TextBlock { Text = FormatDuration(v), FontSize = 10.5, Foreground = hintBrush, Width = PlotLeft - 8, TextAlignment = TextAlignment.Right };
+                var label = new TextBlock { Text = FormatDuration(v), FontSize = 11, Foreground = hintBrush, Width = PlotLeft - 8, TextAlignment = TextAlignment.Right };
                 Canvas.SetLeft(label, 0);
                 Canvas.SetTop(label, y - 7);
                 _chart.Children.Add(label);
@@ -602,7 +622,7 @@ namespace TWChatOverlay.Views
             {
                 double x = X(t, plotW);
                 _chart.Children.Add(new Line { X1 = x, X2 = x, Y1 = baselineY, Y2 = baselineY + 4, Stroke = gridBrush, StrokeThickness = 1, SnapsToDevicePixels = true });
-                var label = new TextBlock { Text = t.ToString(dateFormat, CultureInfo.InvariantCulture), FontSize = 10.5, Foreground = hintBrush, Width = 60, TextAlignment = TextAlignment.Center };
+                var label = new TextBlock { Text = t.ToString(dateFormat, CultureInfo.InvariantCulture), FontSize = 11, Foreground = hintBrush, Width = 60, TextAlignment = TextAlignment.Center };
                 Canvas.SetLeft(label, Math.Min(Math.Max(x - 30, 0), ChartWidth - 60));
                 Canvas.SetTop(label, baselineY + 7);
                 _chart.Children.Add(label);
@@ -637,7 +657,7 @@ namespace TWChatOverlay.Views
                     Background = surfaceBrush,
                     Padding = new Thickness(4, 0, 4, 1),
                     CornerRadius = new CornerRadius(3),
-                    Child = new TextBlock { Text = $"{overallName} {FormatDuration(overall)}", FontSize = 10.5, Foreground = mutedBrush },
+                    Child = new TextBlock { Text = $"{overallName} {FormatDuration(overall)}", FontSize = 11, Foreground = mutedBrush },
                 };
                 tag.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
                 // 기본은 왼쪽 끝. 첫 점이 기준선 가까이에 있어 겹치면 오른쪽 끝으로 옮긴다 (마지막 점도 가까우면 그대로 왼쪽)
@@ -919,7 +939,7 @@ namespace TWChatOverlay.Views
             };
             averagePanel.Children.Add(track);
             averagePanel.Children.Add(fill);
-            var averageText = new TextBlock { Text = FormatDuration(week.Average), FontSize = 12.5, FontWeight = FontWeights.SemiBold, TextAlignment = TextAlignment.Right, VerticalAlignment = VerticalAlignment.Center };
+            var averageText = new TextBlock { Text = FormatDuration(week.Average), FontSize = 13, FontWeight = FontWeights.SemiBold, TextAlignment = TextAlignment.Right, VerticalAlignment = VerticalAlignment.Center };
             averageText.SetResourceReference(TextBlock.ForegroundProperty, "TextBrush");
             Grid.SetColumn(averageText, 1);
             averagePanel.Children.Add(averageText);

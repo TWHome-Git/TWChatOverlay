@@ -390,6 +390,62 @@
         </Setter>
     </Style>
 
+    <!-- 알약 칩 버튼 (던전 타이머 창 · 기록 추이 창 공통 모양). 평소엔 테두리만, Tag="Selected"이면 민트 물결 배경 + 민트 테두리.
+         글자는 어느 상태든 글자 색(흐림 → 본문)만 쓴다. -->
+    <Style x:Key="OverlayChipButtonStyle" TargetType="Button">
+        <Setter Property="Height" Value="24"/>
+        <Setter Property="MinWidth" Value="28"/>
+        <Setter Property="Padding" Value="11,0,11,1"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+        <Setter Property="HorizontalContentAlignment" Value="Center"/>
+        <Setter Property="Foreground" Value="{DynamicResource OverlayMutedTextBrush}"/>
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource ControlBorderBrush}"/>
+        <Setter Property="FontSize" Value="12"/>
+        <Setter Property="SnapsToDevicePixels" Value="True"/>
+        <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border x:Name="ChipBorder"
+                            Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="1"
+                            CornerRadius="12"
+                            Padding="{TemplateBinding Padding}">
+                        <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" VerticalAlignment="Center"/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="ChipBorder" Property="Background" Value="{DynamicResource OverlayTabHoverBrush}"/>
+                            <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter TargetName="ChipBorder" Property="Background" Value="{DynamicResource OverlayTabSelectedBrush}"/>
+                        </Trigger>
+                        <Trigger Property="Tag" Value="Selected">
+                            <Setter TargetName="ChipBorder" Property="Background" Value="{DynamicResource OverlayTabSelectedBrush}"/>
+                            <Setter TargetName="ChipBorder" Property="BorderBrush" Value="{DynamicResource OverlayTabSelectedBorderBrush}"/>
+                            <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+                            <Setter Property="FontWeight" Value="SemiBold"/>
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter TargetName="ChipBorder" Property="Opacity" Value="0.5"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- 세로 목록용 칩: 평소엔 테두리 없이 글자만(목록이 무거워지지 않게), 고른 항목만 알약으로 드러난다 -->
+    <Style x:Key="OverlayNavChipButtonStyle" TargetType="Button" BasedOn="{StaticResource OverlayChipButtonStyle}">
+        <Setter Property="BorderBrush" Value="Transparent"/>
+        <Setter Property="HorizontalContentAlignment" Value="Left"/>
+        <Setter Property="HorizontalAlignment" Value="Stretch"/>
+    </Style>
+
     <Style x:Key="WindowCloseButtonStyle" TargetType="Button">
         <Setter Property="Height" Value="22"/>
         <Setter Property="MinWidth" Value="40"/>

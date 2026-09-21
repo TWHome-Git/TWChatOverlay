@@ -11,14 +11,18 @@
         ShowInTaskbar="False"
         ShowActivated="False"
         Topmost="True"
+        UseLayoutRounding="True"
+        SnapsToDevicePixels="True"
         WindowStartupLocation="CenterScreen">
-    <!-- 크기는 글자 크기 설정에 맞춰 내용대로 잡힌다 (설정 - 던전 도우미 - 이클립스 - 타이머 글자 크기) -->
+    <!-- 크기는 글자 크기 설정에 맞춰 내용대로 잡힌다 (설정 - 던전 도우미 - 이클립스 - 타이머 글자 크기).
+         모양은 기록 추이(자세히) 창과 같은 말씨: 가는 창 테두리 · 민트 제목 · 알약 칩 · 카드에 담은 표.
+         배치를 픽셀 격자에 맞춰(UseLayoutRounding) 화면 배율 125%/150%에서도 1px 테두리가 번지지 않게 한다. -->
     <Border x:Name="RootBorder"
             Background="{DynamicResource OverlayWindowBackgroundBrush}"
-            BorderBrush="{DynamicResource OverlayAccentBorderBrush}"
-            BorderThickness="1.4"
+            BorderBrush="{DynamicResource OverlayWindowBorderBrush}"
+            BorderThickness="1"
             CornerRadius="12"
-            Padding="12,8,14,10">
+            Padding="14,10,14,12">
         <Grid>
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto"/>
@@ -28,7 +32,7 @@
             <!-- 왼쪽: 던전 목록. 클릭하면 그 던전 기록으로 바로 간다 -->
             <Border x:Name="GroupListPanel"
                     Grid.Column="0"
-                    BorderBrush="{DynamicResource ControlBorderBrush}"
+                    BorderBrush="{DynamicResource OverlayCardBorderBrush}"
                     BorderThickness="0,0,1,0"
                     Margin="0,0,12,0"
                     Padding="0,0,10,0">
@@ -45,9 +49,9 @@
                 <!-- 제목줄: 던전 이름 (진행도) · 난이도. 잠금 해제 모드에서 잡고 끌 수 있다 -->
                 <Grid x:Name="TitleBar"
                       Grid.Row="0"
-                      MinHeight="22"
+                      MinHeight="24"
                       Background="Transparent"
-                      Margin="0,0,0,6"
+                      Margin="0,0,0,8"
                       MouseLeftButtonDown="TitleBar_MouseLeftButtonDown">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"/>
@@ -60,7 +64,7 @@
 
                     <TextBlock x:Name="TitleText"
                                Grid.Column="0"
-                               Foreground="{DynamicResource TextBrush}"
+                               Foreground="{DynamicResource OverlayTitleAccentTextBrush}"
                                FontSize="15"
                                FontWeight="SemiBold"
                                VerticalAlignment="Center"
@@ -74,7 +78,8 @@
                             Click="PrevGroup_Click"
                             Content="&lt;"
                             ToolTip="이전 던전"
-                            Style="{StaticResource WindowSmallButtonStyle}"/>
+                            Padding="0,0,0,1"
+                            Style="{StaticResource OverlayChipButtonStyle}"/>
                     <Button x:Name="NextGroupButton"
                             Grid.Column="2"
                             VerticalAlignment="Center"
@@ -82,17 +87,18 @@
                             Click="NextGroup_Click"
                             Content="&gt;"
                             ToolTip="다음 던전"
-                            Style="{StaticResource WindowSmallButtonStyle}"/>
+                            Padding="0,0,0,1"
+                            Style="{StaticResource OverlayChipButtonStyle}"/>
 
                     <!-- 이 던전의 전체 기록 추이를 새 창(그래프)으로 연다 -->
                     <Button x:Name="DetailButton"
                             Grid.Column="3"
                             VerticalAlignment="Center"
-                            Margin="0,0,8,0"
+                            Margin="0,0,4,0"
                             Click="DetailButton_Click"
                             Content="자세히"
                             ToolTip="첫 기록부터 지금까지의 클리어 시간 추이를 그래프로 봅니다"
-                            Style="{StaticResource WindowSmallButtonStyle}"/>
+                            Style="{StaticResource OverlayChipButtonStyle}"/>
 
                     <!-- 작은 모드 ↔ 전체 모드. 내용은 코드에서 "작게"/"크게"로 바꾼다 -->
                     <Button x:Name="ModeButton"
@@ -102,7 +108,7 @@
                             Click="ModeButton_Click"
                             Content="작게"
                             ToolTip="작은 모드 / 전체 모드"
-                            Style="{StaticResource WindowSmallButtonStyle}"/>
+                            Style="{StaticResource OverlayChipButtonStyle}"/>
 
                     <Button x:Name="CloseButton"
                             Grid.Column="5"
@@ -113,8 +119,15 @@
                             Style="{StaticResource WindowCloseButtonStyle}"/>
                 </Grid>
 
-                <!-- 구간 × (지난주 평균 | 직전 판 | 최근 판) 표. 코드에서 채운다 -->
-                <Grid x:Name="TableGrid" Grid.Row="1"/>
+                <!-- 구간 × (지난주 평균 | 직전 판 | 최근 판) 표. 코드에서 채운다. 자세히 창의 그래프·표처럼 카드에 담는다 -->
+                <Border Grid.Row="1"
+                        Background="{DynamicResource OverlayCardBackgroundBrush}"
+                        BorderBrush="{DynamicResource OverlayCardBorderBrush}"
+                        BorderThickness="1"
+                        CornerRadius="10"
+                        Padding="14,8,16,10">
+                    <Grid x:Name="TableGrid"/>
+                </Border>
             </Grid>
         </Grid>
     </Border>
