@@ -1,6 +1,5 @@
-﻿using System;
+using System;
 using System.Windows;
-using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Threading;
@@ -8,14 +7,14 @@ using TWChatOverlay.Services;
 
 namespace TWChatOverlay.Views
 {
-    public partial class ItemDropToastWindow : Window
+    /// <summary>아이템 획득 토스트. 클릭을 통과시키고 잠시 뒤 스스로 닫힌다. 위치는 알림 스택이 정한다.</summary>
+    public partial class ItemDropToastWindow : OverlayWindowBase
     {
         private readonly DispatcherTimer _lifetimeTimer;
 
         public ItemDropToastWindow(string itemName, ItemDropGrade grade, FontFamily fontFamily)
         {
             InitializeComponent();
-            SettingsHostZOrder.Register(this); // 설정 창이 열려 있으면 그 아래로 표시
             FontFamily = fontFamily;
             ItemNameText.FontFamily = fontFamily;
             ItemNameText.Text = $"[{itemName}] 획득";
@@ -53,10 +52,14 @@ namespace TWChatOverlay.Views
             };
         }
 
+        protected override bool ApplyAppFont => false;          // 생성자 인자의 폰트를 쓴다
+        protected override bool UseToolWindowStyle => true;
+        protected override bool PersistBoundsOnChange => false; // 위치는 스택이 정한다
+
         protected override void OnSourceInitialized(EventArgs e)
         {
             base.OnSourceInitialized(e);
-            ApplyMousePassthroughStyle();
+            SetMousePassthrough(true);
         }
 
         public void ShowAnimated(double targetLeft, double targetTop)
@@ -65,7 +68,7 @@ namespace TWChatOverlay.Views
             Top = targetTop - 24;
             Opacity = 0;
             Show();
-            TopmostWindowHelper.BringToTopmost(this);
+            BringToFront();
 
             var topAnim = new DoubleAnimation
             {
@@ -110,17 +113,6 @@ namespace TWChatOverlay.Views
             };
             fade.Completed += (_, _) => Close();
             BeginAnimation(OpacityProperty, fade);
-        }
-
-        private void ApplyMousePassthroughStyle()
-        {
-            try
-            {
-                IntPtr hwnd = new WindowInteropHelper(this).EnsureHandle();
-                int exStyle = NativeMethods.GetWindowLong(hwnd, NativeMethods.GWL_EXSTYLE);
-                NativeMethods.SetWindowLong(hwnd, NativeMethods.GWL_EXSTYLE, exStyle | NativeMethods.WS_EX_TRANSPARENT | NativeMethods.WS_EX_TOOLWINDOW);
-            }
-            catch { }
         }
     }
 }

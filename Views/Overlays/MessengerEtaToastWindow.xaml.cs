@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Windows;
+using System.Windows.Input;
 using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Documents;
@@ -9,14 +10,15 @@ using TWChatOverlay.Services;
 
 namespace TWChatOverlay.Views
 {
-    public partial class MessengerEtaToastWindow : Window
+    /// <summary>메신저 에타 알림 토스트. 위치는 알림 스택이 정하므로, 사용자가 미리보기에서 끌었을 때만 저장한다.</summary>
+    public partial class MessengerEtaToastWindow : OverlayWindowBase
     {
         private readonly ChatSettings _settings;
         private bool _isPreviewMode;
+
         public MessengerEtaToastWindow(FontFamily fontFamily, ChatSettings settings)
         {
             InitializeComponent();
-            SettingsHostZOrder.Register(this); // 설정 창이 열려 있으면 그 아래로 표시
             _settings = settings;
             FontFamily = fontFamily;
             TitleText.FontFamily = fontFamily;
@@ -24,6 +26,10 @@ namespace TWChatOverlay.Views
             CloseButton.Click += (_, _) => Close();
             EntryRichText.FontSize = _settings.MessengerEtaFontSize;
         }
+
+        protected override bool ApplyAppFont => false;          // 생성자 인자의 폰트를 쓴다
+        protected override bool PersistBoundsOnChange => false; // 스택이 옮긴 위치를 설정에 되쓰지 않는다
+        protected override ChatSettings? ResolveSettings() => _settings;
 
         /// <summary>잠금 해제 인스펙터에서 폰트 크기 변경 시 즉시 반영.</summary>
         public void SetFontSize(double size)
@@ -51,14 +57,16 @@ namespace TWChatOverlay.Views
         public void SetPreviewMode(bool isPreview)
         {
             _isPreviewMode = isPreview;
-            RefreshMousePassthroughStyle(forceInteractive: isPreview);
+            ApplyInteractiveStyle();
         }
 
-        public void SaveCurrentPosition()
+        public void SaveCurrentPosition() => PersistBoundsNow();
+
+        protected override bool PersistBounds(ChatSettings settings)
         {
-            _settings.MessengerToastWindowLeft = Left;
-            _settings.MessengerToastWindowTop = Top;
-            ConfigService.SaveDeferred(_settings);
+            settings.MessengerToastWindowLeft = Left;
+            settings.MessengerToastWindowTop = Top;
+            return true;
         }
 
         public void ShowAt(double left, double top)
@@ -71,7 +79,7 @@ namespace TWChatOverlay.Views
             Opacity = 1.0;
             Activate();
             Topmost = true;
-            TopmostWindowHelper.BringToTopmost(this);
+            BringToFront();
             try
             {
                 IntPtr hwnd = new WindowInteropHelper(this).EnsureHandle();
@@ -93,55 +101,29 @@ namespace TWChatOverlay.Views
         protected override void OnSourceInitialized(EventArgs e)
         {
             base.OnSourceInitialized(e);
-            RefreshMousePassthroughStyle(forceInteractive: _isPreviewMode);
+            ApplyInteractiveStyle();
         }
 
-        private void RefreshMousePassthroughStyle(bool forceInteractive)
+        /// <summary>항상 클릭을 받는 툴윈도우 (닫기 버튼이 있어 마우스 통과를 쓰지 않는다).</summary>
+        private void ApplyInteractiveStyle()
+            => SetExStyleFlags(add: NativeMethods.WS_EX_TOOLWINDOW, remove: NativeMethods.WS_EX_TRANSPARENT);
+
+        private void RootBorder_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+            => DragInPreviewOnly(e);
+
+        private void TitleBar_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+            => DragInPreviewOnly(e);
+
+        /// <summary>실제 알림은 스택이 배치하므로 미리보기일 때만 끌 수 있다. 선택 하이라이트는 항상 허용.</summary>
+        private void DragInPreviewOnly(MouseButtonEventArgs e)
         {
-            try
+            if (!_isPreviewMode)
             {
-                IntPtr hwnd = new WindowInteropHelper(this).EnsureHandle();
-                int exStyle = NativeMethods.GetWindowLong(hwnd, NativeMethods.GWL_EXSTYLE);
-                int nextStyle = (exStyle & ~NativeMethods.WS_EX_TRANSPARENT) | NativeMethods.WS_EX_TOOLWINDOW;
-                NativeMethods.SetWindowLong(hwnd, NativeMethods.GWL_EXSTYLE, nextStyle);
-            }
-            catch { }
-        }
-
-        private void RootBorder_MouseLeftButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
-        {
-            if (!UiLockService.IsUnlocked) return;
-            UiLockService.Select(this);
-            if (!_isPreviewMode || e.ButtonState != System.Windows.Input.MouseButtonState.Pressed)
+                UiLockService.Select(this);
                 return;
+            }
 
-            try
-            {
-                DragMove();
-            }
-            catch { }
-            finally
-            {
-                SaveCurrentPosition();
-            }
-        }
-
-        private void TitleBar_MouseLeftButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
-        {
-            if (!UiLockService.IsUnlocked) return;
-            UiLockService.Select(this);
-            if (!_isPreviewMode || e.ButtonState != System.Windows.Input.MouseButtonState.Pressed)
-                return;
-
-            try
-            {
-                DragMove();
-            }
-            catch { }
-            finally
-            {
-                SaveCurrentPosition();
-            }
+            TryBeginDrag(e);
         }
     }
 }

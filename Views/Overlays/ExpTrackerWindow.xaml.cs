@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Threading;
@@ -8,7 +8,7 @@ using TWChatOverlay.ViewModels;
 
 namespace TWChatOverlay.Views
 {
-    public partial class ExpTrackerWindow : Window
+    public partial class ExpTrackerWindow : OverlayWindowBase
     {
         private bool _isReady;
         private bool _isAdjustingForRightAnchor;
@@ -21,8 +21,6 @@ namespace TWChatOverlay.Views
         public ExpTrackerWindow(object? dataContext)
         {
             InitializeComponent();
-            SettingsHostZOrder.Register(this); // 설정 창이 열려 있으면 그 아래로 표시
-            WindowFontService.Apply(this);
             DataContext = dataContext ?? throw new ArgumentNullException(nameof(dataContext));
             Loaded += ExpTrackerWindow_Loaded;
             SizeChanged += ExpTrackerWindow_SizeChanged;
@@ -158,25 +156,17 @@ namespace TWChatOverlay.Views
             MaxWidth = maxWidth;
         }
 
+        // 오른쪽 앵커 기준 위치 로직이 따로 있어 베이스의 자동 영속화는 끄고, 드래그 끝에서 직접 저장한다
+        protected override bool PersistBoundsOnChange => false;
+
         // 잠금 해제 모드에서는 창 어디를 잡아도 선택+드래그 가능 (창 전체 Preview에서 받는다)
         private void UnlockDrag_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+            => TryBeginDrag(e, markHandled: true);
+
+        protected override void OnDragCompleted()
         {
-            if (!UiLockService.IsUnlocked) return;
-            UiLockService.Select(this);
-            if (e.ButtonState != MouseButtonState.Pressed)
-                return;
-
-            try
-            {
-                DragMove();
-            }
-            catch
-            {
-            }
-
             UpdateRightAnchorFromCurrentBounds();
             PersistPosition();
-            e.Handled = true;
         }
 
         /// <summary>
@@ -202,24 +192,6 @@ namespace TWChatOverlay.Views
             }
         }
 
-        /// <summary>Owner가 아직 설정되지 않은 창(메인 창 로드 전 생성)에서도 설정 인스턴스를 찾는다.</summary>
-        private ChatSettings? ResolveSettings()
-        {
-            if (Owner is MainWindow ownerMain && ownerMain.DataContext is ChatSettings ownerSettings)
-                return ownerSettings;
-
-            try
-            {
-                foreach (Window window in Application.Current.Windows)
-                {
-                    if (window is MainWindow main && main.DataContext is ChatSettings settings)
-                        return settings;
-                }
-            }
-            catch { }
-
-            return null;
-        }
     }
 }
 

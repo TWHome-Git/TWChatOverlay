@@ -1,4 +1,5 @@
-<Window x:Class="TWChatOverlay.Views.MemoTextOnlyWindow"
+﻿<ov:OverlayWindowBase x:Class="TWChatOverlay.Views.MemoTextOnlyWindow"
+        xmlns:ov="clr-namespace:TWChatOverlay.Views"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         WindowStyle="None"
@@ -17,4 +18,4 @@
                    HorizontalAlignment="Left"
                    VerticalAlignment="Top"/>
     </Border>
-</Window>
+</ov:OverlayWindowBase>

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Controls;
@@ -17,7 +17,7 @@ namespace TWChatOverlay.Views
     /// 지정한 시간이 지나면 저절로 닫히고, X를 눌러도 닫힌다.
     /// 잠금 해제 모드에서는 끌어서 옮기고 가장자리를 잡아 크기를 바꿀 수 있다. 발판은 창 크기에 맞춰 함께 커진다.
     /// </summary>
-    public partial class RecaptureSupplyPadOrderWindow : Window
+    public partial class RecaptureSupplyPadOrderWindow : OverlayWindowBase
     {
         // 게임에서 잘라 온 발판 그림. 키는 서비스가 넘기는 한 글자 색 이름이다.
         private static readonly Dictionary<string, string> PadImageFiles = new()
@@ -73,8 +73,6 @@ namespace TWChatOverlay.Views
         {
             _settings = settings;
             InitializeComponent();
-            SettingsHostZOrder.Register(this); // 설정 창이 열려 있으면 그 아래로 표시
-            WindowFontService.Apply(this);
 
             _lifetimeTimer = new DispatcherTimer();
             _lifetimeTimer.Tick += (_, _) =>
@@ -93,10 +91,10 @@ namespace TWChatOverlay.Views
             };
 
             // 잠금 해제 모드에서는 창 어디를 잡아도 선택+드래그 가능
-            PreviewMouseLeftButtonDown += UnlockDrag_PreviewMouseLeftButtonDown;
-            LocationChanged += (_, _) => PersistBoundsDeferred();
-            SizeChanged += (_, _) => PersistBoundsDeferred();
+            PreviewMouseLeftButtonDown += (_, e) => TryBeginDrag(e, markHandled: true);
         }
+
+        protected override ChatSettings? ResolveSettings() => _settings;
 
         /// <summary>발판 색을 순서대로 채우고 N초 뒤 닫히게 한다. 이미 떠 있으면 내용만 바꾸고 시간을 다시 센다.</summary>
         public void ShowOrder(IReadOnlyList<string> colors, string phrase, int durationSeconds)
@@ -156,36 +154,8 @@ namespace TWChatOverlay.Views
             BeginAnimation(OpacityProperty, fade);
         }
 
-        private void UnlockDrag_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
-        {
-            if (!UiLockService.IsUnlocked) return;
-            UiLockService.Select(this);
-            if (e.ButtonState != MouseButtonState.Pressed)
-                return;
-
-            try
-            {
-                DragMove();
-            }
-            catch
-            {
-            }
-
-            PersistBoundsDeferred();
-            e.Handled = true;
-        }
-
         private void TitleBar_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
-        {
-            if (!UiLockService.IsUnlocked) return;
-            UiLockService.Select(this);
-            try
-            {
-                if (e.ButtonState == MouseButtonState.Pressed)
-                    DragMove();
-            }
-            catch { }
-        }
+            => TryBeginDrag(e);
 
         private void CloseButton_Click(object sender, RoutedEventArgs e)
         {
@@ -196,7 +166,9 @@ namespace TWChatOverlay.Views
         protected override void OnClosed(EventArgs e)
         {
             _lifetimeTimer.Stop();
-            PersistBounds(saveImmediately: true);
+            // 닫힐 때는 즉시 저장한다 (앱 종료 경로에서 지연 저장이 유실되지 않게)
+            if (_settings != null && PersistBounds(_settings))
+                ConfigService.Save(_settings);
             base.OnClosed(e);
         }
 
@@ -232,35 +204,18 @@ namespace TWChatOverlay.Views
             return IntPtr.Zero;
         }
 
-        private void PersistBoundsDeferred()
+        protected override bool PersistBounds(ChatSettings settings)
         {
-            if (!IsLoaded || !IsVisible)
-                return;
-            PersistBounds(saveImmediately: false);
-        }
+            if (!IsVisible)
+                return false;
 
-        private void PersistBounds(bool saveImmediately)
-        {
-            if (_settings == null)
-                return;
-
-            try
-            {
-                _settings.RecaptureSupplyPadOrderWindowLeft = Left;
-                _settings.RecaptureSupplyPadOrderWindowTop = Top;
-                if (ActualWidth > 0)
-                    _settings.RecaptureSupplyPadOrderWindowWidth = ActualWidth;
-                if (ActualHeight > 0)
-                    _settings.RecaptureSupplyPadOrderWindowHeight = ActualHeight;
-                if (saveImmediately)
-                    ConfigService.Save(_settings);
-                else
-                    ConfigService.SaveDeferred(_settings);
-            }
-            catch (Exception ex)
-            {
-                AppLogger.Warn("Failed to save recapture supply pad order window bounds.", ex);
-            }
+            settings.RecaptureSupplyPadOrderWindowLeft = Left;
+            settings.RecaptureSupplyPadOrderWindowTop = Top;
+            if (ActualWidth > 0)
+                settings.RecaptureSupplyPadOrderWindowWidth = ActualWidth;
+            if (ActualHeight > 0)
+                settings.RecaptureSupplyPadOrderWindowHeight = ActualHeight;
+            return true;
         }
     }
 }

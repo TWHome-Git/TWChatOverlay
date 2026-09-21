@@ -1,6 +1,5 @@
-﻿using System;
+using System;
 using System.Windows;
-using System.Windows.Interop;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
@@ -10,23 +9,21 @@ using TWChatOverlay.Services;
 
 namespace TWChatOverlay.Views
 {
-    public partial class DungeonCountDisplayWindow : Window
+    /// <summary>던전 카운트 알림창 (어밴던로드·갈망하는 즐거움 등). 일정 시간 뒤 스스로 닫힌다.</summary>
+    public partial class DungeonCountDisplayWindow : OverlayWindowBase
     {
         private readonly DispatcherTimer _closeTimer;
         private ChatSettings _settings;
         private bool _isClosing;
-        private bool _isDragging;
 
         public DungeonCountDisplayWindow(string message, FontFamily fontFamily, int durationSeconds, ChatSettings settings)
         {
             _settings = settings ?? throw new ArgumentNullException(nameof(settings));
             InitializeComponent();
-            SettingsHostZOrder.Register(this); // 설정 창이 열려 있으면 그 아래로 표시
             FontFamily = fontFamily;
             MessageTextBlock.FontFamily = fontFamily;
             MessageTextBlock.FontSize = settings.DungeonCountDisplayFontSize;
             MessageTextBlock.Text = message;
-            LocationChanged += (_, _) => SyncPositionToSettings(notify: false);
 
             _closeTimer = new DispatcherTimer
             {
@@ -41,11 +38,22 @@ namespace TWChatOverlay.Views
             };
         }
 
+        // 폰트는 생성자 인자로 받은 것을 쓴다 (앱 공통 폰트 자동 적용 안 함)
+        protected override bool ApplyAppFont => false;
+        protected override bool UseToolWindowStyle => true;
+        protected override ChatSettings? ResolveSettings() => _settings;
+
+        protected override void OnSourceInitialized(EventArgs e)
+        {
+            base.OnSourceInitialized(e);
+            SetMousePassthrough(false); // 알림창은 클릭을 받아야 잠금 해제 편집이 된다
+        }
+
         public void SetSettings(ChatSettings settings)
         {
             _settings = settings ?? throw new ArgumentNullException(nameof(settings));
             MessageTextBlock.FontSize = _settings.DungeonCountDisplayFontSize;
-            ApplyToolWindowStyle();
+            SetExStyleFlags(add: NativeMethods.WS_EX_TOOLWINDOW, remove: NativeMethods.WS_EX_TRANSPARENT);
         }
 
         /// <summary>잠금 해제 인스펙터에서 폰트 크기 변경 시 즉시 반영.</summary>
@@ -117,46 +125,26 @@ namespace TWChatOverlay.Views
             });
         }
 
-        protected override void OnSourceInitialized(EventArgs e)
-        {
-            base.OnSourceInitialized(e);
-
-            try
-            {
-                ApplyToolWindowStyle();
-            }
-            catch { }
-        }
-
         protected override void OnClosed(EventArgs e)
         {
-            SyncPositionToSettings(notify: true);
+            PersistBoundsNow();
             base.OnClosed(e);
-        }
-
-        private void ApplyToolWindowStyle()
-        {
-            IntPtr hwnd = new WindowInteropHelper(this).EnsureHandle();
-            int exStyle = NativeMethods.GetWindowLong(hwnd, NativeMethods.GWL_EXSTYLE);
-            exStyle |= NativeMethods.WS_EX_TOOLWINDOW;
-            exStyle &= ~NativeMethods.WS_EX_TRANSPARENT;
-            NativeMethods.SetWindowLong(hwnd, NativeMethods.GWL_EXSTYLE, exStyle);
         }
 
         private void RootBorder_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
-            if (!UiLockService.IsUnlocked) return;
-            UiLockService.Select(this);
-            if (e.ButtonState != MouseButtonState.Pressed || !IsVisible)
-                return;
+            if (!IsVisible) return;
+            TryBeginDrag(e);
+        }
 
-            _isDragging = true;
-            try { DragMove(); } catch { }
-            finally
-            {
-                _isDragging = false;
-                SyncPositionToSettings(notify: true);
-            }
+        protected override bool PersistBounds(ChatSettings settings)
+        {
+            if (!IsVisible)
+                return false;
+
+            settings.DungeonCountDisplayWindowLeft = Left;
+            settings.DungeonCountDisplayWindowTop = Top;
+            return true;
         }
 
         private void CloseAnimated()
@@ -168,23 +156,6 @@ namespace TWChatOverlay.Views
             var animation = new DoubleAnimation(Opacity, 0, TimeSpan.FromMilliseconds(180));
             animation.Completed += (_, _) => Close();
             BeginAnimation(OpacityProperty, animation);
-        }
-
-        private void BringToFront()
-        {
-            TopmostWindowHelper.BringToTopmost(this);
-        }
-
-        private void SyncPositionToSettings(bool notify)
-        {
-            if (!IsVisible)
-                return;
-
-            _settings.DungeonCountDisplayWindowLeft = Left;
-            _settings.DungeonCountDisplayWindowTop = Top;
-
-            if (_isDragging || notify)
-                ConfigService.SaveDeferred(_settings);
         }
     }
 }

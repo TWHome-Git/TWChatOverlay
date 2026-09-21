@@ -32,10 +32,11 @@ namespace TWChatOverlay.Views
         private void RootBorder_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
             => TryBeginDrag(e);
 
-        protected override void PersistBounds(ChatSettings settings)
+        protected override bool PersistBounds(ChatSettings settings)
         {
             settings.ItemDropWindowLeft = Left;
             settings.ItemDropWindowTop = Top;
+            return true;
         }
     }
 }

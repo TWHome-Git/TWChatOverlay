@@ -1,4 +1,5 @@
-<Window x:Class="TWChatOverlay.Views.ExperienceAlertWindow"
+﻿<ov:OverlayWindowBase x:Class="TWChatOverlay.Views.ExperienceAlertWindow"
+        xmlns:ov="clr-namespace:TWChatOverlay.Views"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Width="420"
@@ -78,4 +79,4 @@
                        Visibility="Collapsed"/>
         </Grid>
     </Border>
-</Window>
+</ov:OverlayWindowBase>

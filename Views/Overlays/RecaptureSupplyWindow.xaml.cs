@@ -35,10 +35,10 @@ namespace TWChatOverlay.Views
             LoadImage(imagePath);
         }
 
-        protected override void PersistBounds(ChatSettings settings)
+        protected override bool PersistBounds(ChatSettings settings)
         {
             if (!IsVisible)
-                return;
+                return false;
 
             settings.RecaptureSupplyWindowLeft = Left;
             settings.RecaptureSupplyWindowTop = Top;
@@ -46,6 +46,7 @@ namespace TWChatOverlay.Views
                 settings.RecaptureSupplyWindowWidth = ActualWidth;
             if (ActualHeight > 0)
                 settings.RecaptureSupplyWindowHeight = ActualHeight;
+            return true;
         }
 
         private void RecaptureSupplyWindow_SourceInitialized(object? sender, EventArgs e)

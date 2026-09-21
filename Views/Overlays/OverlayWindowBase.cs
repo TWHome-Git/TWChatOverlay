@@ -23,11 +23,13 @@ namespace TWChatOverlay.Views
     public abstract class OverlayWindowBase : Window
     {
         private bool _commonSetupDone;
+        private bool _hasLoadedOnce;
         private bool _isDragging;
         private int _suppressPersistDepth;
 
         protected OverlayWindowBase()
         {
+            Loaded += (_, _) => _hasLoadedOnce = true;
             LocationChanged += OnOverlayBoundsChanged;
             SizeChanged += OnOverlayBoundsChanged;
         }
@@ -134,9 +136,8 @@ namespace TWChatOverlay.Views
         /// 현재 Left/Top/크기를 자기 설정 필드에 쓴다. 저장(SaveDeferred)은 베이스가 한다.
         /// 위치를 저장하지 않는 창은 override하지 않으면 된다.
         /// </summary>
-        protected virtual void PersistBounds(ChatSettings settings)
-        {
-        }
+        /// <returns>설정에 썼으면 true (false면 저장을 걸지 않는다).</returns>
+        protected virtual bool PersistBounds(ChatSettings settings) => false;
 
         /// <summary>설정 인스턴스. 생성자에서 설정을 받는 창은 override해 그 인스턴스를 돌려주면 탐색 비용이 없다.</summary>
         protected virtual ChatSettings? ResolveSettings()
@@ -160,7 +161,8 @@ namespace TWChatOverlay.Views
         /// <summary>지금 위치/크기를 설정에 쓰고 디바운스 저장을 건다. 닫힐 때 안전망으로도 쓴다.</summary>
         protected void PersistBoundsNow()
         {
-            if (!IsLoaded || _suppressPersistDepth > 0 || WindowState == WindowState.Minimized)
+            // Loaded 전(초기 레이아웃)의 기본 크기는 쓰지 않는다. 닫히는 중(IsLoaded=false)에는 마지막 값을 쓴다.
+            if (!_hasLoadedOnce || _suppressPersistDepth > 0 || WindowState == WindowState.Minimized)
                 return;
 
             ChatSettings? settings = ResolveSettings();
@@ -169,8 +171,8 @@ namespace TWChatOverlay.Views
 
             try
             {
-                PersistBounds(settings);
-                ConfigService.SaveDeferred(settings);
+                if (PersistBounds(settings))
+                    ConfigService.SaveDeferred(settings);
             }
             catch (Exception ex)
             {
@@ -245,8 +247,8 @@ namespace TWChatOverlay.Views
                 add: passthrough ? NativeMethods.WS_EX_TRANSPARENT : 0,
                 remove: passthrough ? 0 : NativeMethods.WS_EX_TRANSPARENT);
 
-        /// <summary>최상위로 다시 올린다 (게임 창이 덮었을 때).</summary>
-        protected void BringToFront() => TopmostWindowHelper.BringToTopmost(this);
+        /// <summary>최상위로 다시 올린다 (게임 창이 덮었을 때). 알림 서비스가 밖에서도 부른다.</summary>
+        public void BringToFront() => TopmostWindowHelper.BringToTopmost(this);
 
         #endregion
     }

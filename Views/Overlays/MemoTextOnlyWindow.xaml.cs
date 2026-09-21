@@ -1,25 +1,27 @@
 using System;
 using System.Windows;
 using System.Windows.Input;
-using System.Windows.Interop;
 using System.Windows.Media;
-using TWChatOverlay.Services;
 
 namespace TWChatOverlay.Views
 {
-    public partial class MemoTextOnlyWindow : Window
+    /// <summary>메모 텍스트만 띄우는 창. 잠금 모드와 무관하게 항상 끌 수 있고, 더블클릭으로 닫는다.</summary>
+    public partial class MemoTextOnlyWindow : OverlayWindowBase
     {
         public MemoTextOnlyWindow()
         {
             InitializeComponent();
-            WindowFontService.Apply(this);
             Loaded += (_, _) =>
             {
                 UpdateTextBounds();
-                EnableMouseClickThrough();
+                SetMousePassthrough(true);
             };
             SizeChanged += (_, _) => UpdateTextBounds();
         }
+
+        protected override bool KeepBelowSettingsHost => false; // 메모는 설정 창과 무관하게 위에 둔다
+        protected override bool DragRequiresUnlock => false;
+        protected override bool PersistBoundsOnChange => false;
 
         public void SetText(string text)
         {
@@ -50,25 +52,9 @@ namespace TWChatOverlay.Views
         private void Border_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
             if (e.ClickCount == 2)
-            {
                 Close();
-            }
             else
-            {
-                // 메모 창은 잠금 모드와 무관하게 항상 이동 가능
-                DragMove();
-            }
-        }
-
-        private void EnableMouseClickThrough()
-        {
-            IntPtr hwnd = new WindowInteropHelper(this).EnsureHandle();
-            int exStyle = NativeMethods.GetWindowLong(hwnd, NativeMethods.GWL_EXSTYLE);
-            int applied = exStyle | NativeMethods.WS_EX_TRANSPARENT;
-            if (applied != exStyle)
-            {
-                NativeMethods.SetWindowLong(hwnd, NativeMethods.GWL_EXSTYLE, applied);
-            }
+                TryBeginDrag(e);
         }
 
         private void UpdateTextBounds()
