@@ -465,9 +465,11 @@ namespace TWChatOverlay.Views
                                 !_settings.ShowClubBoss &&
                                 IgnoredChatMessageService.IsIgnoredClubMessage(text);
 
+            // 무시 판정은 타임스탬프를 뗀 본문 + 파서가 뽑은 화자로 한다 (분석 서비스 쪽과 같은 입력)
             bool isHiddenNormal = (parseResult.Category == ChatCategory.Normal ||
                                    parseResult.Category == ChatCategory.NormalSelf) &&
-                                  IgnoredChatMessageService.IsIgnoredNormalMessage(text);
+                                  TrySplitTimestampAndBody(text, out _, out string normalBody) &&
+                                  IgnoredChatMessageService.IsIgnoredNormalMessage(normalBody, parseResult.SenderId);
 
             if (!isHiddenClub && !isHiddenNormal)
                 return false;

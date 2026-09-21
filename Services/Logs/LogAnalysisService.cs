@@ -108,7 +108,7 @@ namespace TWChatOverlay.Services
             }
 
             if ((parsed.Category == ChatCategory.Normal || parsed.Category == ChatCategory.NormalSelf) &&
-                IgnoredChatMessageService.IsIgnoredNormalMessage(GetMessageOnly(parsed.FormattedText)))
+                IgnoredChatMessageService.IsIgnoredNormalMessage(GetMessageOnly(parsed.FormattedText), parsed.SenderId))
             {
                 return true;
             }
