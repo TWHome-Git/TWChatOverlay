@@ -94,7 +94,7 @@ namespace TWChatOverlay.Services
             {
                 if ((DateTime.Now - _lastAlarmTime).TotalSeconds >= 3)
                 {
-                    NotificationService.PlayAlert("EXPBuffCheck.wav");
+                    AppServices.Get<NotificationService>().PlayAlert("EXPBuffCheck.wav");
                     _lastAlarmTime = DateTime.Now;
                 }
             }

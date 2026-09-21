@@ -680,7 +680,7 @@ namespace TWChatOverlay.Views
                 _itemDropPreviewTimer.Stop();
                 if (!string.IsNullOrWhiteSpace(_pendingPreviewSoundFile))
                 {
-                    Services.NotificationService.PlayAlert(_pendingPreviewSoundFile);
+                    Services.AppServices.Get<Services.NotificationService>().PlayAlert(_pendingPreviewSoundFile);
                 }
             };
         }

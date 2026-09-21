@@ -58,7 +58,7 @@ namespace TWChatOverlay.Services
                 }
 
                 if (isRealTime && settings.UseAlertSound && canPlayAlertSound)
-                    NotificationService.PlayAlert("Highlight.wav");
+                    AppServices.Get<NotificationService>().PlayAlert("Highlight.wav");
             }
 
             document.Blocks.Add(paragraph);

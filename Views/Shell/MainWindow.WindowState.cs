@@ -145,7 +145,7 @@ namespace TWChatOverlay.Views
 
             // 컨텐츠 타이머 창 위치/크기
             if (_settings.ShowContentTimer)
-                ContentTimerService.ShowPositionPreview(_settings);
+                AppServices.Get<ContentTimerService>().ShowPositionPreview(_settings);
         }
 
         /// <summary>인스펙터의 넛지/크기 입력으로 메인 창이 조정되면 즉시 저장한다.</summary>
@@ -174,7 +174,7 @@ namespace TWChatOverlay.Views
             AppServices.Get<RecaptureSupplyAlertService>().ClosePositionPreview();
             AppServices.Get<RecaptureSupplyPadOrderService>().ClosePositionPreview();
             TreasurySummaryWindow.ClosePositionPreview();
-            ContentTimerService.ClosePositionPreview();
+            AppServices.Get<ContentTimerService>().ClosePositionPreview();
             CloseAddonPositionPreviewWindows(savePositions: true, restoreNormalWindows: true);
             RefreshExpTrackerWindow();
         }
@@ -325,7 +325,7 @@ namespace TWChatOverlay.Views
                             break;
                         case 5: // 던전 타이머: 기록 창
                             if (_settings.ShowContentTimer)
-                                ContentTimerService.ShowPositionPreview(_settings);
+                                AppServices.Get<ContentTimerService>().ShowPositionPreview(_settings);
                             break;
                         case 3: // 어밴던로드: 알림 앵커 + 통계 창
                             if (_settings.EnableAbandonRoadCountAlert)
@@ -386,7 +386,7 @@ namespace TWChatOverlay.Views
             AppServices.Get<ToastStackService>().ClosePositionPreview();
             AppServices.Get<RecaptureSupplyAlertService>().ClosePositionPreview();
             AppServices.Get<RecaptureSupplyPadOrderService>().ClosePositionPreview();
-            ContentTimerService.ClosePositionPreview();
+            AppServices.Get<ContentTimerService>().ClosePositionPreview();
             SubAddonWindow.Instance?.Hide();
             ItemDropHelperWindow.Instance?.Close();
             BuffTrackerHelperWindow.Instance?.Close();
@@ -457,7 +457,7 @@ namespace TWChatOverlay.Views
                 TreasurySummaryWindow.ApplyStoredPosition(_settings);
                 AppServices.Get<RecaptureSupplyAlertService>().ApplyStoredBounds(_settings);
                 AppServices.Get<RecaptureSupplyPadOrderService>().ApplyStoredBounds(_settings);
-                ContentTimerService.ApplyStoredBounds(_settings);
+                AppServices.Get<ContentTimerService>().ApplyStoredBounds(_settings);
                 AppServices.Get<MessengerEtaToastService>().ReapplyPreviewPosition(_settings);
             }
             catch (Exception ex) { AppLogger.Warn("Failed to reapply preview window positions.", ex); }

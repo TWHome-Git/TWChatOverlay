@@ -247,7 +247,7 @@ namespace TWChatOverlay.Services
             }
 
             _lastBuffEndSoundAt = now;
-            NotificationService.PlayAlert("BuffCheck.wav");
+            AppServices.Get<NotificationService>().PlayAlert("BuffCheck.wav");
         }
 
         /// <summary>구성(항목·순서)이 같으면 남은 시간 텍스트만 제자리 갱신하고,

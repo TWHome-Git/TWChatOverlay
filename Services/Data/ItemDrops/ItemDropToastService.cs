@@ -15,15 +15,15 @@ namespace TWChatOverlay.Services
         Special
     }
 
-    public static class ItemDropToastService
+    public sealed class ItemDropToastService
     {
-        private static readonly List<ItemDropToastWindow> ActiveToasts = new();
+        private readonly List<ItemDropToastWindow> ActiveToasts = new();
         private const double ToastWidth = 420;
         private const double DefaultBaseTop = 42;
         private const double Gap = 6;
         private const double ToastHeight = 56;
 
-        public static void Show(string itemName, ItemDropGrade grade = ItemDropGrade.Normal, bool withSound = true)
+        public void Show(string itemName, ItemDropGrade grade = ItemDropGrade.Normal, bool withSound = true)
         {
             if (AppServices.Get<TrayAllWindowsService>().IsTrayed)
                 return; // 트레이 최소화 중에는 알림 창을 띄우지 않는다
@@ -43,7 +43,7 @@ namespace TWChatOverlay.Services
                     string soundFile = grade == ItemDropGrade.Normal
                         ? "drop_low.mp3"
                         : "drop.mp3";
-                    NotificationService.PlayAlert(soundFile);
+                    AppServices.Get<NotificationService>().PlayAlert(soundFile);
                 }
 
                 // 통합 알림 스택: 앵커 위치에서 다른 알림들 아래로 배치
@@ -52,6 +52,6 @@ namespace TWChatOverlay.Services
             }));
         }
 
-        private static FontFamily ResolveToastFont() => ToastPresentationHelper.ResolveToastFont();
+        private FontFamily ResolveToastFont() => ToastPresentationHelper.ResolveToastFont();
     }
 }

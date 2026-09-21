@@ -113,6 +113,11 @@ namespace TWChatOverlay
                 services.AddSingleton<MessengerLogWatcherService>();
                 services.AddSingleton<BuffTrackerService>();
                 services.AddSingleton<LogService>();
+                services.AddSingleton<ContentTimerService>();
+                services.AddSingleton<ForegroundTopmostGuard>();
+                services.AddSingleton<SecondaryWindowTopmostRefreshService>();
+                services.AddSingleton<ItemDropToastService>();
+                services.AddSingleton<NotificationService>();
                 services.AddSingleton<WeeklySeedRewardService>();
                 services.AddSingleton<DropItemResolver>();
                 services.AddSingleton<ToastStackService>();
@@ -131,8 +136,8 @@ namespace TWChatOverlay
             AppServices.Get<BlacklistService>().Initialize();
             AppServices.Get<IIdTagService>().Initialize();
             _ = AppServices.Get<RecaptureSupplyAlertService>().PreloadAsync();
-            SecondaryWindowTopmostRefreshService.Initialize();
-            ForegroundTopmostGuard.Initialize();
+            AppServices.Get<SecondaryWindowTopmostRefreshService>().Initialize();
+            AppServices.Get<ForegroundTopmostGuard>().Initialize();
             base.OnStartup(e);
             AppLogger.Info("Core services initialized.");
 
@@ -262,9 +267,9 @@ namespace TWChatOverlay
                 AppLogger.Warn("Failed to persist window positions during shutdown.", ex);
             }
 
-            ForegroundTopmostGuard.Shutdown();
+            AppServices.Get<ForegroundTopmostGuard>().Shutdown();
             EtaProfileResolver.DeleteCache();
-            NotificationService.DeleteCachedAudioFiles();
+            AppServices.Get<NotificationService>().DeleteCachedAudioFiles();
             _mutex?.ReleaseMutex();
             _mutex?.Dispose();     
             AppLogger.Info("Application shutdown completed.");

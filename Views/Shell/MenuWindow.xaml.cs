@@ -67,7 +67,7 @@ namespace TWChatOverlay.Views
             UiLockService.UnlockChanged += OnUnlockChanged;
             AppServices.Get<TrayAllWindowsService>().TrayStateChanged += OnTrayStateChanged;
             // 던전 타이머 기록 창이 열려 있으면 버튼을 켜진 상태로 표시
-            ContentTimerService.WindowVisibilityChanged += visible =>
+            AppServices.Get<ContentTimerService>().WindowVisibilityChanged += visible =>
             {
                 try { Dispatcher.Invoke(() => SetButtonActive(BtnTimer, visible)); } catch { }
             };
@@ -424,7 +424,7 @@ namespace TWChatOverlay.Views
                     OpenMemo();
                     break;
                 case "BtnTimer":
-                    ContentTimerService.ToggleManualWindow(GetSharedSettings());
+                    AppServices.Get<ContentTimerService>().ToggleManualWindow(GetSharedSettings());
                     break;
                 case "BtnSettings":
                     OpenSettings();

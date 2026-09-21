@@ -16,7 +16,7 @@ namespace TWChatOverlay.Services
     /// 단, 전경으로 온 창이 게임(설정의 대상 프로세스)일 때만 그렇게 한다. 캡처 도구 같은 다른 앱이
     /// 전경이 될 때도 올리면 그 앱의 전체 화면 오버레이 위로 우리 창이 튀어나온다.
     /// </summary>
-    public static class ForegroundTopmostGuard
+    public sealed class ForegroundTopmostGuard
     {
         private delegate void WinEventDelegate(IntPtr hWinEventHook, uint eventType, IntPtr hwnd, int idObject, int idChild, uint dwEventThread, uint dwmsEventTime);
 
@@ -33,13 +33,13 @@ namespace TWChatOverlay.Services
         [DllImport("user32.dll")]
         private static extern bool UnhookWinEvent(IntPtr hWinEventHook);
 
-        private static WinEventDelegate? _callback; // 훅이 살아 있는 동안 GC 수집 방지
-        private static IntPtr _hook = IntPtr.Zero;
-        private static DispatcherTimer? _reassertTimer;
-        private static IntPtr _pendingForeground = IntPtr.Zero; // 마지막으로 전경이 된 창
+        private WinEventDelegate? _callback; // 훅이 살아 있는 동안 GC 수집 방지
+        private IntPtr _hook = IntPtr.Zero;
+        private DispatcherTimer? _reassertTimer;
+        private IntPtr _pendingForeground = IntPtr.Zero; // 마지막으로 전경이 된 창
 
         /// <summary>App.OnStartup에서 호출. 다른 프로세스의 포그라운드 전환을 감시한다.</summary>
-        public static void Initialize()
+        public void Initialize()
         {
             if (_hook != IntPtr.Zero)
                 return;
@@ -65,7 +65,7 @@ namespace TWChatOverlay.Services
             }
         }
 
-        public static void Shutdown()
+        public void Shutdown()
         {
             try
             {
@@ -80,7 +80,7 @@ namespace TWChatOverlay.Services
             catch { }
         }
 
-        private static void OnForegroundChanged(IntPtr hWinEventHook, uint eventType, IntPtr hwnd, int idObject, int idChild, uint dwEventThread, uint dwmsEventTime)
+        private void OnForegroundChanged(IntPtr hWinEventHook, uint eventType, IntPtr hwnd, int idObject, int idChild, uint dwEventThread, uint dwmsEventTime)
         {
             try
             {
@@ -95,7 +95,7 @@ namespace TWChatOverlay.Services
             catch { }
         }
 
-        private static void ScheduleReassert()
+        private void ScheduleReassert()
         {
             if (_reassertTimer == null)
             {
@@ -111,7 +111,7 @@ namespace TWChatOverlay.Services
             _reassertTimer.Start();
         }
 
-        private static void ReassertTopmostWindows()
+        private void ReassertTopmostWindows()
         {
             try
             {
@@ -160,7 +160,7 @@ namespace TWChatOverlay.Services
         }
 
         /// <summary>전경 창이 설정의 대상 프로그램(기본: 게임 클라이언트)인지. 목록이 비어 있으면 예전처럼 모두 대상으로 본다.</summary>
-        private static bool IsGuardTarget(IntPtr hwnd, string? processNames)
+        private bool IsGuardTarget(IntPtr hwnd, string? processNames)
         {
             if (hwnd == IntPtr.Zero)
                 return false;

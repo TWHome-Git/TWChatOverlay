@@ -9,16 +9,16 @@ namespace TWChatOverlay.Services
     /// <summary>
     /// 앱 알림 사운드를 재생하는 유틸리티 서비스입니다.
     /// </summary>
-    public static class NotificationService
+    public sealed class NotificationService
     {
-        private static readonly List<MediaPlayer> _activeMp3Players = new();
-        private static readonly object _mp3Lock = new();
-        private static readonly ConcurrentDictionary<string, string> _mp3CachePaths = new(StringComparer.OrdinalIgnoreCase);
+        private readonly List<MediaPlayer> _activeMp3Players = new();
+        private readonly object _mp3Lock = new();
+        private readonly ConcurrentDictionary<string, string> _mp3CachePaths = new(StringComparer.OrdinalIgnoreCase);
 
         /// <summary>
         /// 리소스 사운드 파일을 재생합니다.
         /// </summary>
-        public static void PlayAlert(string fileName)
+        public void PlayAlert(string fileName)
         {
             try
             {
@@ -35,7 +35,7 @@ namespace TWChatOverlay.Services
             }
         }
 
-        private static void PlayAudioResource(string fileName)
+        private void PlayAudioResource(string fileName)
         {
             string tempFilePath = EnsureAudioTempFile(fileName);
             var player = new MediaPlayer();
@@ -68,7 +68,7 @@ namespace TWChatOverlay.Services
             player.Open(new Uri(tempFilePath, UriKind.Absolute));
         }
 
-        private static void ReleaseAudioPlayer(MediaPlayer player)
+        private void ReleaseAudioPlayer(MediaPlayer player)
         {
             try
             {
@@ -83,7 +83,7 @@ namespace TWChatOverlay.Services
             }
         }
 
-        private static double ResolveAudioVolume(string fileName)
+        private double ResolveAudioVolume(string fileName)
         {
             try
             {
@@ -134,7 +134,7 @@ namespace TWChatOverlay.Services
                 : 1.0;
         }
 
-        private static string EnsureAudioTempFile(string fileName)
+        private string EnsureAudioTempFile(string fileName)
         {
             if (_mp3CachePaths.TryGetValue(fileName, out string? existingPath) && File.Exists(existingPath))
             {
@@ -165,7 +165,7 @@ namespace TWChatOverlay.Services
             return tempFilePath;
         }
 
-        public static void DeleteCachedAudioFiles()
+        public void DeleteCachedAudioFiles()
         {
             try
             {

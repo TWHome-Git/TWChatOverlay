@@ -117,7 +117,7 @@ namespace TWChatOverlay.Services
     ///   끝(변형) : "이클립스 보스 토벌전 클리어 횟수: [N/21]" → 토벌전 기록 / "이클립스 보스전(로카고스) 클리어 횟수:" → 보스전 기록
     ///              티로로스는 보스전에만 있다.
     /// </summary>
-    public static class ContentTimerService
+    public sealed class ContentTimerService
     {
         public const int ColumnCount = 3;
         public const int CurrentColumn = 2;
@@ -514,17 +514,17 @@ namespace TWChatOverlay.Services
                 : new[] { d })
             .ToArray();
 
-        private static DungeonDefinition? RecordDefinitionByKey(string key)
+        private DungeonDefinition? RecordDefinitionByKey(string key)
             => RecordDefinitions.FirstOrDefault(d => d.Key == key);
 
         /// <summary>추적 정의가 낳을 수 있는 기록 정의들 (변형이 없으면 자기 자신).</summary>
-        private static IEnumerable<DungeonDefinition> RecordDefinitionsOf(DungeonDefinition tracking)
+        private IEnumerable<DungeonDefinition> RecordDefinitionsOf(DungeonDefinition tracking)
             => tracking.Variants is { Length: > 0 }
                 ? tracking.Variants.Select(v => RecordDefinitionByKey(v.Key)!)
                 : new[] { RecordDefinitionByKey(tracking.Key) ?? tracking };
 
         /// <summary>난이도를 어디선가 읽는 던전인지 (판 시작 문구의 diff 그룹 또는 어려움 상자).</summary>
-        private static bool HasDifficulty(DungeonDefinition def)
+        private bool HasDifficulty(DungeonDefinition def)
             => def.HardMarker != null || (def.RunStart != null && def.RunStart.GetGroupNames().Contains("diff"));
 
         /// <summary>진행 중인 판의 구간 상태.</summary>
@@ -924,24 +924,30 @@ namespace TWChatOverlay.Services
             Encoder = JavaScriptEncoder.Create(UnicodeRanges.All),
         };
 
-        private static readonly object SyncRoot = new();
-        private static readonly RunTracker LiveTracker = CreateLiveTracker();
-        // 키 = "기록키/난이도"
-        private static Dictionary<string, List<DungeonRunRecord>>? _history;
-        // 키 = "기록키/난이도" → 그 던전에서 가장 빨랐던 판
-        private static Dictionary<string, DungeonRunRecord>? _best;
-        private static bool _bestDirty;
-        /// <summary>가운데 열을 최고 기록으로 보여주는 중인지 ("직전 판" 머리글을 누르면 바뀐다).</summary>
-        private static bool _showBest;
-        /// <summary>마지막으로 그린 표의 재료 — 머리글을 눌러 같은 내용을 다시 그릴 때 쓴다.</summary>
-        private static (DungeonDefinition Def, string Difficulty, string Status, int? Current, int? Max,
-            DungeonRunRecord? InProgress, string? Highlight)? _lastViewArgs;
-        private static ContentTimerWindow? _window;
-        private static bool _backfillStarted;
-        // 대기·미리보기 때 보여줄 묶음 — 마지막으로 기록이 있었던 묶음
-        private static string _lastGroupKey = RecordDefinitions[0].GroupKey;
+        private readonly object SyncRoot = new();
+        private readonly RunTracker LiveTracker;
 
-        private static RunTracker CreateLiveTracker()
+        public ContentTimerService()
+        {
+            // 추적기 콜백이 이 인스턴스의 이력·창 상태를 쓰므로 생성자에서 만든다 (필드 초기화식에서는 this 사용 불가)
+            LiveTracker = CreateLiveTracker();
+        }
+        // 키 = "기록키/난이도"
+        private Dictionary<string, List<DungeonRunRecord>>? _history;
+        // 키 = "기록키/난이도" → 그 던전에서 가장 빨랐던 판
+        private Dictionary<string, DungeonRunRecord>? _best;
+        private bool _bestDirty;
+        /// <summary>가운데 열을 최고 기록으로 보여주는 중인지 ("직전 판" 머리글을 누르면 바뀐다).</summary>
+        private bool _showBest;
+        /// <summary>마지막으로 그린 표의 재료 — 머리글을 눌러 같은 내용을 다시 그릴 때 쓴다.</summary>
+        private (DungeonDefinition Def, string Difficulty, string Status, int? Current, int? Max,
+            DungeonRunRecord? InProgress, string? Highlight)? _lastViewArgs;
+        private ContentTimerWindow? _window;
+        private bool _backfillStarted;
+        // 대기·미리보기 때 보여줄 묶음 — 마지막으로 기록이 있었던 묶음
+        private string _lastGroupKey = RecordDefinitions[0].GroupKey;
+
+        private RunTracker CreateLiveTracker()
         {
             var tracker = new RunTracker(Definitions);
             tracker.RunStarted += run =>
@@ -1048,7 +1054,7 @@ namespace TWChatOverlay.Services
             return tracker;
         }
 
-        public static bool IsRunning
+        public bool IsRunning
         {
             get
             {
@@ -1058,7 +1064,7 @@ namespace TWChatOverlay.Services
         }
 
         /// <summary>사용자가 타이머 창을 닫았다 — 진행 중이던 판은 기록 없이 버린다.</summary>
-        public static void CancelCurrentRun()
+        public void CancelCurrentRun()
         {
             bool cancelled;
             lock (SyncRoot)
@@ -1069,7 +1075,7 @@ namespace TWChatOverlay.Services
 
         // ===== 실시간 로그 =====
 
-        public static void Observe(string formattedText)
+        public void Observe(string formattedText)
         {
             if (string.IsNullOrWhiteSpace(formattedText))
                 return;
@@ -1086,15 +1092,15 @@ namespace TWChatOverlay.Services
         }
 
         // 시작 때 오늘 로그를 실시간 추적기에 넣는 중인지 (그동안 화면 표시는 하지 않는다) / 어디까지 넣었는지
-        private static volatile bool _priming;
-        private static DateTime _primedUntil = DateTime.MinValue;
-        private static HashSet<string> _primedLastSecondTexts = new(StringComparer.Ordinal);
+        private volatile bool _priming;
+        private DateTime _primedUntil = DateTime.MinValue;
+        private HashSet<string> _primedLastSecondTexts = new(StringComparer.Ordinal);
 
         /// <summary>
         /// 오늘 로그 파일을 실시간 추적기에 순서대로 넣어, 앱을 켜기 전에 이미 진행 중이던 판의 구간 상태를 복원한다.
         /// 완료된 판은 기록에 들어가고(백필과 겹치면 같은 판으로 걸러진다), 30분 넘게 지난 판은 안전 한도에 걸려 무시된다.
         /// </summary>
-        private static void PrimeLiveTracker(string path, DateTime day)
+        private void PrimeLiveTracker(string path, DateTime day)
         {
             List<string> lines = ReadLogLines(path).ToList();
             DateTime now = DateTime.Now;
@@ -1134,7 +1140,7 @@ namespace TWChatOverlay.Services
         /// 창이 그릴 표를 만든다. 묶음에 기록 정의가 하나면 구간 모드(행 = 구간, 열 = 판), 여럿이면 묶음 모드(행 = 던전, 열 = 그 던전의 판).
         /// 이번 판 열은 가장 최근에 완료한 판이다. def는 기록 정의여야 한다.
         /// </summary>
-        private static TimerView BuildView(DungeonDefinition def, string difficulty, string status, int? progressCurrent, int? progressMax,
+        private TimerView BuildView(DungeonDefinition def, string difficulty, string status, int? progressCurrent, int? progressMax,
             DungeonRunRecord? inProgress = null, string? highlightSegment = null)
         {
             DungeonDefinition[] group = RecordDefinitions.Where(d => d.GroupKey == def.GroupKey).ToArray();
@@ -1228,9 +1234,9 @@ namespace TWChatOverlay.Services
         }
 
         /// <summary>머리글 아래 시각 — 어느 날인지 헷갈리지 않게 날짜를 붙인다 ("09.14 21:47"). 구분자는 로캘과 무관하게 고정한다.</summary>
-        private static string? FormatWhen(DateTime? at) => at?.ToString("MM'.'dd HH':'mm", System.Globalization.CultureInfo.InvariantCulture);
+        private string? FormatWhen(DateTime? at) => at?.ToString("MM'.'dd HH':'mm", System.Globalization.CultureInfo.InvariantCulture);
 
-        private static DateTime? MaxDate(DateTime? a, DateTime? b)
+        private DateTime? MaxDate(DateTime? a, DateTime? b)
             => !a.HasValue ? b : !b.HasValue ? a : (a.Value >= b.Value ? a : b);
 
         /// <summary>열에 놓을 기록: 지난주 판 전부(평균용), 지난 판, 이번 판(가장 최근).</summary>
@@ -1240,7 +1246,7 @@ namespace TWChatOverlay.Services
         /// 완료 기록(오래된 것 → 최근 순)을 열에 배치한다. 이번 판 = 가장 최근, 지난 판 = 그 직전(주와 무관),
         /// 지난주 평균 = 지난주 월요일 0시 ~ 이번 주 월요일 0시 사이에 끝난 판들.
         /// </summary>
-        private static Columns PickColumns(IReadOnlyList<DungeonRunRecord> history)
+        private Columns PickColumns(IReadOnlyList<DungeonRunRecord> history)
         {
             DateTime now = DateTime.Now;
             DateTime thisWeek = ThisWeekStart(now);
@@ -1251,17 +1257,17 @@ namespace TWChatOverlay.Services
             return new Columns(lastWeekRuns, previous, latest);
         }
 
-        private static double? Average(IEnumerable<double> values)
+        private double? Average(IEnumerable<double> values)
         {
             var list = values.ToList();
             return list.Count > 0 ? list.Average() : null;
         }
 
-        private static double? SegmentSeconds(DungeonRunRecord? record, string segmentName)
+        private double? SegmentSeconds(DungeonRunRecord? record, string segmentName)
             => record != null && record.Segments.TryGetValue(segmentName, out double s) ? s : null;
 
         /// <summary>"아페티리아 (3/7)" · "어비스 - 심층(지옥)" · "이클립스 토벌전 (5/21)" 꼴.</summary>
-        private static string BuildTitle(string groupName, string difficulty, int? progressCurrent, int? progressMax, bool segmentMode)
+        private string BuildTitle(string groupName, string difficulty, int? progressCurrent, int? progressMax, bool segmentMode)
         {
             string title = groupName;
             if (!string.IsNullOrEmpty(difficulty))
@@ -1272,7 +1278,7 @@ namespace TWChatOverlay.Services
         }
 
         /// <summary>일일/주간 컨텐츠 창의 항목에서 현재 횟수/최대 횟수를 읽는다. UI 스레드에서 부른다.</summary>
-        private static bool TryReadProgress(DungeonDefinition def, out int current, out int max)
+        private bool TryReadProgress(DungeonDefinition def, out int current, out int max)
         {
             current = 0;
             max = 0;
@@ -1294,11 +1300,11 @@ namespace TWChatOverlay.Services
             return false;
         }
 
-        private static (int? Current, int? Max) ReadProgressOrNull(DungeonDefinition def)
+        private (int? Current, int? Max) ReadProgressOrNull(DungeonDefinition def)
             => TryReadProgress(def, out int cur, out int max) ? (cur, max) : (null, null);
 
         /// <summary>진행도 항목이 일일/주간 창에서 켜져 있는지. 항목이 없거나 읽지 못하면 켜진 것으로 본다. UI 스레드에서 부른다.</summary>
-        private static bool IsProgressItemEnabled(DungeonDefinition def)
+        private bool IsProgressItemEnabled(DungeonDefinition def)
         {
             if (string.IsNullOrEmpty(def.ProgressItemName))
                 return true;
@@ -1318,7 +1324,7 @@ namespace TWChatOverlay.Services
         }
 
         /// <summary>"[ 6시 39분 58초] …" 앞의 시각을 날짜와 합친다. 못 읽으면 fallback.</summary>
-        private static DateTime ResolveLogTime(string text, DateTime date, DateTime fallback)
+        private DateTime ResolveLogTime(string text, DateTime date, DateTime fallback)
         {
             Match m = LogTimeRegex.Match(text);
             if (!m.Success)
@@ -1348,7 +1354,7 @@ namespace TWChatOverlay.Services
         /// 지난주 월요일부터 오늘까지의 채팅 로그 파일(TWChatLog_yyyy_MM_dd.html)을 읽어 완료된 판을 기록에 합친다.
         /// 이미 있는 판(시작 시각이 5초 안에 같은 것)은 건너뛴다. 앱 실행 중 한 번만 돈다.
         /// </summary>
-        public static Task BackfillFromLogsAsync(string? chatLogFolder)
+        public Task BackfillFromLogsAsync(string? chatLogFolder)
         {
             lock (SyncRoot)
             {
@@ -1406,7 +1412,7 @@ namespace TWChatOverlay.Services
         }
 
         /// <summary>"TWChatLog_2026_09_16.html" 파일 이름에서 날짜를 읽는다. 형식이 다르면 null.</summary>
-        private static DateTime? ParseLogFileDate(string path)
+        private DateTime? ParseLogFileDate(string path)
         {
             string name = Path.GetFileNameWithoutExtension(path);
             const string prefix = "TWChatLog_";
@@ -1419,7 +1425,7 @@ namespace TWChatOverlay.Services
         }
 
         /// <summary>게임 채팅 로그(CP949 HTML)를 태그 없는 줄로 읽는다. "[ 6시 39분 58초] 내용" 꼴.</summary>
-        private static IEnumerable<string> ReadLogLines(string path)
+        private IEnumerable<string> ReadLogLines(string path)
         {
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
             Encoding encoding = Encoding.GetEncoding(949);
@@ -1441,10 +1447,10 @@ namespace TWChatOverlay.Services
 
         // ===== 기록 파일 =====
 
-        private static string HistoryKey(string dungeonKey, string difficulty) => $"{dungeonKey}/{difficulty}";
+        private string HistoryKey(string dungeonKey, string difficulty) => $"{dungeonKey}/{difficulty}";
 
         /// <summary>기록 정의·난이도의 완료된 판 기록(오래된 것 → 최근 순, 최대 3개).</summary>
-        public static IReadOnlyList<DungeonRunRecord> GetHistory(DungeonDefinition def, string difficulty)
+        public IReadOnlyList<DungeonRunRecord> GetHistory(DungeonDefinition def, string difficulty)
         {
             lock (SyncRoot)
             {
@@ -1454,7 +1460,7 @@ namespace TWChatOverlay.Services
         }
 
         /// <summary>이 기록 정의에서 가장 최근에 완료한 판. 없으면 null.</summary>
-        private static DungeonRunRecord? LatestRecordUnlocked(string recordKey)
+        private DungeonRunRecord? LatestRecordUnlocked(string recordKey)
         {
             DungeonRunRecord? latest = null;
             foreach (var pair in _history!)
@@ -1471,7 +1477,7 @@ namespace TWChatOverlay.Services
         }
 
         /// <summary>이 던전에서 가장 최근에 완료한 판의 난이도. 난이도를 구분하지 않는 던전은 빈 문자열, 기록이 없으면 HardLabel.</summary>
-        public static string GetLastDifficulty(DungeonDefinition def)
+        public string GetLastDifficulty(DungeonDefinition def)
         {
             if (!HasDifficulty(def))
                 return string.Empty; // 난이도를 어디서도 읽지 않는 던전
@@ -1483,7 +1489,7 @@ namespace TWChatOverlay.Services
             }
         }
 
-        private static void AppendHistory(DungeonRunRecord record)
+        private void AppendHistory(DungeonRunRecord record)
         {
             lock (SyncRoot)
             {
@@ -1495,7 +1501,7 @@ namespace TWChatOverlay.Services
         }
 
         /// <summary>과거 로그에서 찾은 판들을 합친다. 새로 들어간 개수를 돌려준다.</summary>
-        private static int MergeHistory(IEnumerable<DungeonRunRecord> records)
+        private int MergeHistory(IEnumerable<DungeonRunRecord> records)
         {
             lock (SyncRoot)
             {
@@ -1517,7 +1523,7 @@ namespace TWChatOverlay.Services
         /// 같은 판(시작 시각 5초 이내)이 이미 있으면 넣지 않는다. 시각순 정렬 후 지난주 월요일 이전 기록을 버리고,
         /// 한 주에 7개가 넘으면 그 주의 오래된 것부터 지운다.
         /// </summary>
-        private static bool AddRecordUnlocked(DungeonRunRecord record)
+        private bool AddRecordUnlocked(DungeonRunRecord record)
         {
             // 합계는 언제나 구간 합 — 옛 파일(판 전체 경과 시간으로 저장)도 여기서 맞춘다
             if (record.Segments.Count > 0)
@@ -1542,7 +1548,7 @@ namespace TWChatOverlay.Services
         // ===== 최고 기록 =====
 
         /// <summary>이 기록 정의·난이도에서 가장 빨랐던 판. 없으면 null.</summary>
-        public static DungeonRunRecord? GetBest(DungeonDefinition def, string difficulty)
+        public DungeonRunRecord? GetBest(DungeonDefinition def, string difficulty)
         {
             lock (SyncRoot)
             {
@@ -1554,7 +1560,7 @@ namespace TWChatOverlay.Services
         /// <summary>
         /// 더 빠른 판이면 최고 기록을 바꾼다. 상한 기록("30초 이하")은 실제 시간을 모르므로 최고 기록으로 삼지 않는다.
         /// </summary>
-        private static void UpdateBestUnlocked(string key, DungeonRunRecord record)
+        private void UpdateBestUnlocked(string key, DungeonRunRecord record)
         {
             EnsureBestLoaded();
             if (record.Capped || record.TotalSeconds <= 0)
@@ -1565,7 +1571,7 @@ namespace TWChatOverlay.Services
             _bestDirty = true;
         }
 
-        private static void EnsureBestLoaded()
+        private void EnsureBestLoaded()
         {
             if (_best != null)
                 return;
@@ -1592,7 +1598,7 @@ namespace TWChatOverlay.Services
             }
         }
 
-        private static void SaveBestIfDirty()
+        private void SaveBestIfDirty()
         {
             if (!_bestDirty)
                 return;
@@ -1609,7 +1615,7 @@ namespace TWChatOverlay.Services
         }
 
         /// <summary>시각순으로 정렬하고 지난주 월요일 이전은 버리며, 주마다 최근 7개만 남긴다.</summary>
-        private static void TrimUnlocked(List<DungeonRunRecord> list)
+        private void TrimUnlocked(List<DungeonRunRecord> list)
         {
             DateTime now = DateTime.Now;
             DateTime oldest = LastWeekStart(now);
@@ -1624,7 +1630,7 @@ namespace TWChatOverlay.Services
             }
         }
 
-        private static void EnsureHistoryLoaded()
+        private void EnsureHistoryLoaded()
         {
             if (_history != null)
                 return;
@@ -1676,7 +1682,7 @@ namespace TWChatOverlay.Services
             }
         }
 
-        private static void SaveHistory()
+        private void SaveHistory()
         {
             try
             {
@@ -1691,14 +1697,14 @@ namespace TWChatOverlay.Services
 
         // ===== 창 =====
 
-        private static DungeonDefinition IdleDefinition()
+        private DungeonDefinition IdleDefinition()
         {
             lock (SyncRoot)
                 return RecordDefinitions.FirstOrDefault(d => d.GroupKey == _lastGroupKey) ?? RecordDefinitions[0];
         }
 
         /// <summary>잠금 해제 모드에서 위치를 잡을 수 있게 띄운다. 제목의 진행도는 일일/주간 창의 현재 횟수다.</summary>
-        public static void ShowPositionPreview(ChatSettings settings)
+        public void ShowPositionPreview(ChatSettings settings)
         {
             Application.Current.Dispatcher.BeginInvoke(new Action(() =>
             {
@@ -1710,13 +1716,13 @@ namespace TWChatOverlay.Services
         }
 
         /// <summary>미리보기를 닫는다. 디버그 상시 표시면 대기 상태로 되돌린다.</summary>
-        public static void ClosePositionPreview()
+        public void ClosePositionPreview()
         {
             Application.Current.Dispatcher.BeginInvoke(new Action(HideOrIdle));
         }
 
         /// <summary>디버그 빌드용: 창을 항상 띄워 둔다. 대기 상태로 기록만 보여주고, 결과가 끝나도 닫지 않는다.</summary>
-        public static void EnsureVisibleForDebug(ChatSettings settings)
+        public void EnsureVisibleForDebug(ChatSettings settings)
         {
             Application.Current.Dispatcher.BeginInvoke(new Action(() =>
             {
@@ -1726,7 +1732,7 @@ namespace TWChatOverlay.Services
         }
 
         /// <summary>창이 떠 있으면 대기 상태(기록만 표시)로 바꾼다.</summary>
-        public static void ShowIdle()
+        public void ShowIdle()
         {
             Application.Current.Dispatcher.BeginInvoke(new Action(() =>
             {
@@ -1738,10 +1744,10 @@ namespace TWChatOverlay.Services
         }
 
         /// <summary>타이머 기록 창이 열리거나 닫힐 때 (메뉴 바 버튼 표시용).</summary>
-        public static event Action<bool>? WindowVisibilityChanged;
+        public event Action<bool>? WindowVisibilityChanged;
 
         /// <summary>메뉴 바 버튼: 기록 창이 떠 있으면 닫고, 없으면 마지막 묶음의 기록을 띄운다. 저절로 닫히지 않는다.</summary>
-        public static void ToggleManualWindow(ChatSettings settings)
+        public void ToggleManualWindow(ChatSettings settings)
         {
             Application.Current.Dispatcher.BeginInvoke(new Action(() =>
             {
@@ -1765,7 +1771,7 @@ namespace TWChatOverlay.Services
             "apetiria", "apetiria_ex", "final_battle", "joy_sorrow", "afterimage_joy", "relic",
         };
 
-        public static readonly IReadOnlyList<(string Key, string Name)> Groups = RecordDefinitions
+        public readonly IReadOnlyList<(string Key, string Name)> Groups = RecordDefinitions
             .GroupBy(d => d.GroupKey)
             .Select(g => (Key: g.Key, Name: g.First().GroupName))
             .OrderBy(g => { int i = Array.IndexOf(GroupOrder, g.Key); return i < 0 ? int.MaxValue : i; })
@@ -1775,7 +1781,7 @@ namespace TWChatOverlay.Services
         /// 어느 던전을 보든 표에 놓일 수 있는 행 이름 전부. 창이 행 이름 열의 너비를 가장 긴 이름에 맞춰 고정하는 데 쓴다
         /// (묶음 모드 행에는 진행도가 붙을 수 있으므로 자리를 미리 잡아 둔다).
         /// </summary>
-        public static IEnumerable<string> AllRowNames()
+        public IEnumerable<string> AllRowNames()
         {
             foreach (var group in RecordDefinitions.GroupBy(d => d.GroupKey))
             {
@@ -1795,7 +1801,7 @@ namespace TWChatOverlay.Services
         }
 
         /// <summary>창의 &lt; &gt; 버튼: 묶음을 앞뒤로 넘긴다. 자동 닫힘은 멈춘다.</summary>
-        public static void ShowNextGroup(int direction)
+        public void ShowNextGroup(int direction)
         {
             Application.Current.Dispatcher.BeginInvoke(new Action(() =>
             {
@@ -1812,7 +1818,7 @@ namespace TWChatOverlay.Services
         /// "직전 판" 머리글 클릭: 가운데 열을 최고 기록(Best)과 번갈아 보여준다.
         /// 지금 보고 있는 표를 그대로(작게/크게 모드, 진행 중인 판까지) 다시 그린다.
         /// </summary>
-        public static void TogglePreviousColumn()
+        public void TogglePreviousColumn()
         {
             Application.Current.Dispatcher.BeginInvoke(new Action(() =>
             {
@@ -1826,7 +1832,7 @@ namespace TWChatOverlay.Services
         }
 
         /// <summary>창 왼쪽 목록 클릭: 그 묶음으로 바로 간다. 자동 닫힘은 멈춘다.</summary>
-        public static void ShowGroup(string groupKey)
+        public void ShowGroup(string groupKey)
         {
             Application.Current.Dispatcher.BeginInvoke(new Action(() =>
             {
@@ -1838,7 +1844,7 @@ namespace TWChatOverlay.Services
         }
 
         /// <summary>묶음의 기록을 창에 그린다. UI 스레드에서 부른다.</summary>
-        private static void ShowGroupOn(ContentTimerWindow window, string groupKey, string status, bool compact = false)
+        private void ShowGroupOn(ContentTimerWindow window, string groupKey, string status, bool compact = false)
         {
             DungeonDefinition def = RecordDefinitions.FirstOrDefault(d => d.GroupKey == groupKey) ?? RecordDefinitions[0];
             lock (SyncRoot)
@@ -1849,7 +1855,7 @@ namespace TWChatOverlay.Services
         }
 
         /// <summary>디버그 상시 표시면 대기 상태로, 아니면 닫는다. UI 스레드에서 부른다.</summary>
-        private static void HideOrIdle()
+        private void HideOrIdle()
         {
             var window = _window;
             if (window == null || !window.IsLoaded)
@@ -1862,7 +1868,7 @@ namespace TWChatOverlay.Services
             try { window.Close(); } catch { }
         }
 
-        public static void Close()
+        public void Close()
         {
             Application.Current.Dispatcher.BeginInvoke(new Action(() =>
             {
@@ -1871,7 +1877,7 @@ namespace TWChatOverlay.Services
             }));
         }
 
-        private static ContentTimerWindow EnsureWindow(ChatSettings? settings)
+        private ContentTimerWindow EnsureWindow(ChatSettings? settings)
         {
             if (_window != null && _window.IsLoaded)
                 return _window;
@@ -1893,7 +1899,7 @@ namespace TWChatOverlay.Services
         }
 
         /// <summary>타이머 창이 떠 있으면 설정에 저장된 위치로 옮긴다. 설정 전체 교체(프로필 불러오기) 뒤에 쓴다.</summary>
-        public static void ApplyStoredBounds(ChatSettings settings)
+        public void ApplyStoredBounds(ChatSettings settings)
         {
             if (settings == null)
                 return;
@@ -1908,14 +1914,14 @@ namespace TWChatOverlay.Services
         }
 
         // 창 크기는 글자 크기 설정에 맞춰 내용대로 잡히므로(SizeToContent) 위치만 적용한다
-        private static void ApplyStoredPosition(ContentTimerWindow window, ChatSettings settings)
+        private void ApplyStoredPosition(ContentTimerWindow window, ChatSettings settings)
         {
             if (settings.ContentTimerWindowLeft.HasValue && settings.ContentTimerWindowTop.HasValue)
                 window.WindowStartupLocation = WindowStartupLocation.Manual;
             WindowPlacement.ApplyStored(window, settings.ContentTimerWindowLeft, settings.ContentTimerWindowTop);
         }
 
-        private static ChatSettings? GetSharedSettings()
+        private ChatSettings? GetSharedSettings()
         {
             try
             {

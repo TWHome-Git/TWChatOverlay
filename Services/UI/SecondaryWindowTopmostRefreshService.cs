@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Controls;
@@ -8,13 +8,13 @@ namespace TWChatOverlay.Services
     /// <summary>
     /// Reasserts the main window topmost state after a secondary window hides or closes.
     /// </summary>
-    public static class SecondaryWindowTopmostRefreshService
+    public sealed class SecondaryWindowTopmostRefreshService
     {
-        private static readonly object SyncRoot = new();
-        private static readonly HashSet<Window> ObservedWindows = new();
-        private static bool _isInitialized;
+        private readonly object SyncRoot = new();
+        private readonly HashSet<Window> ObservedWindows = new();
+        private bool _isInitialized;
 
-        public static void Initialize()
+        public void Initialize()
         {
             lock (SyncRoot)
             {
@@ -31,7 +31,7 @@ namespace TWChatOverlay.Services
                 handledEventsToo: true);
         }
 
-        private static void Window_Loaded(object sender, RoutedEventArgs e)
+        private void Window_Loaded(object sender, RoutedEventArgs e)
         {
             if (sender is not Window window)
                 return;
@@ -42,7 +42,7 @@ namespace TWChatOverlay.Services
             Attach(window);
         }
 
-        private static void Attach(Window window)
+        private void Attach(Window window)
         {
             lock (SyncRoot)
             {
@@ -54,7 +54,7 @@ namespace TWChatOverlay.Services
             window.Closed += Window_Closed;
         }
 
-        private static void Window_IsVisibleChanged(object sender, DependencyPropertyChangedEventArgs e)
+        private void Window_IsVisibleChanged(object sender, DependencyPropertyChangedEventArgs e)
         {
             if (sender is not Window window)
                 return;
@@ -65,7 +65,7 @@ namespace TWChatOverlay.Services
             }
         }
 
-        private static void Window_Closed(object? sender, EventArgs e)
+        private void Window_Closed(object? sender, EventArgs e)
         {
             if (sender is not Window window)
                 return;
@@ -74,7 +74,7 @@ namespace TWChatOverlay.Services
             RequestMainWindowTopmostRefresh();
         }
 
-        private static void Detach(Window window)
+        private void Detach(Window window)
         {
             lock (SyncRoot)
             {
@@ -85,7 +85,7 @@ namespace TWChatOverlay.Services
             window.Closed -= Window_Closed;
         }
 
-        private static void RequestMainWindowTopmostRefresh()
+        private void RequestMainWindowTopmostRefresh()
         {
             try
             {

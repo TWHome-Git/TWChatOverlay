@@ -122,7 +122,7 @@ namespace TWChatOverlay.Views
         {
             GroupList.Children.Clear();
             _groupButtons.Clear();
-            foreach (var (key, name) in ContentTimerService.Groups)
+            foreach (var (key, name) in AppServices.Get<ContentTimerService>().Groups)
             {
                 var button = new Button
                 {
@@ -134,7 +134,7 @@ namespace TWChatOverlay.Views
                     Style = (Style)FindResource("WindowSmallButtonStyle"),
                     ToolTip = name + " 기록 보기",
                 };
-                button.Click += (_, _) => ContentTimerService.ShowGroup(key);
+                button.Click += (_, _) => AppServices.Get<ContentTimerService>().ShowGroup(key);
                 _groupButtons[key] = button;
                 GroupList.Children.Add(button);
             }
@@ -257,7 +257,7 @@ namespace TWChatOverlay.Views
 
         /// <summary>모든 던전의 행 이름 중 가장 넓은 것의 너비(글자 크기 16 기준).</summary>
         private double MeasureLongestRowName()
-            => MeasureWidest(ContentTimerService.AllRowNames().Append(TotalRowName));
+            => MeasureWidest(AppServices.Get<ContentTimerService>().AllRowNames().Append(TotalRowName));
 
         /// <summary>주어진 행 이름들 중 가장 넓은 것의 너비(글자 크기 16 기준).</summary>
         private double MeasureWidest(System.Collections.Generic.IEnumerable<string> names)
@@ -381,7 +381,7 @@ namespace TWChatOverlay.Views
         {
             if (UiLockService.IsUnlocked || _isPreviewMode)
                 return;
-            ContentTimerService.TogglePreviousColumn();
+            AppServices.Get<ContentTimerService>().TogglePreviousColumn();
             e.Handled = true;
         }
 
@@ -603,7 +603,7 @@ namespace TWChatOverlay.Views
 
             if (KeepOpen)
             {
-                ContentTimerService.ShowIdle(); // 디버그: 닫는 대신 대기 상태로
+                AppServices.Get<ContentTimerService>().ShowIdle(); // 디버그: 닫는 대신 대기 상태로
                 return;
             }
 
@@ -640,8 +640,8 @@ namespace TWChatOverlay.Views
         }
 
         /// <summary>&lt; &gt; 버튼: 던전 묶음을 앞뒤로 넘긴다. 결과 자동 닫힘은 멈춘다.</summary>
-        private void PrevGroup_Click(object sender, RoutedEventArgs e) => ContentTimerService.ShowNextGroup(-1);
-        private void NextGroup_Click(object sender, RoutedEventArgs e) => ContentTimerService.ShowNextGroup(+1);
+        private void PrevGroup_Click(object sender, RoutedEventArgs e) => AppServices.Get<ContentTimerService>().ShowNextGroup(-1);
+        private void NextGroup_Click(object sender, RoutedEventArgs e) => AppServices.Get<ContentTimerService>().ShowNextGroup(+1);
 
         private void CloseButton_Click(object sender, RoutedEventArgs e)
         {

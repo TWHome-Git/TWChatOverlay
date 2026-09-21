@@ -275,7 +275,7 @@ namespace TWChatOverlay.Views
                 {
                     GuardSideEffect("reflection-alert", () =>
                     {
-                        NotificationService.PlayAlert("Reflection.wav");
+                        AppServices.Get<NotificationService>().PlayAlert("Reflection.wav");
                         if (parseResult.IsReflectionPatternEndAlert)
                             ScheduleReflectionEndAlert();
                     });
@@ -283,7 +283,7 @@ namespace TWChatOverlay.Views
 
                 if (pipelineAnalysis.Toast is { HasTrackedItemDrop: true, ShouldShowItemDropToast: true } toastAnalysis)
                 {
-                    GuardSideEffect("item-toast", () => ItemDropToastService.Show(
+                    GuardSideEffect("item-toast", () => AppServices.Get<ItemDropToastService>().Show(
                         toastAnalysis.Parsed.TrackedItemName ?? "아이템",
                         toastAnalysis.Parsed.TrackedItemGrade,
                         withSound: true));
@@ -344,7 +344,7 @@ namespace TWChatOverlay.Views
             // 던전 타이머: 보스 대사(일반 흰 글)와 시스템 줄을 모두 보므로 종류를 가리지 않는다.
             // 실시간 줄만 본다 — 시작 시 과거 로그를 다시 읽으며 타이머가 도는 것을 막는다.
             if (shouldRunLiveUiEffects)
-                GuardSideEffect("dungeon-timer", () => ContentTimerService.Observe(parseResult.FormattedText));
+                GuardSideEffect("dungeon-timer", () => AppServices.Get<ContentTimerService>().Observe(parseResult.FormattedText));
 
             if (analysis.ShouldRunDailyWeeklyContent || analysis.IsSystemLog)
             GuardSideEffect("abandon-summary", () =>
@@ -597,7 +597,7 @@ namespace TWChatOverlay.Views
 
                 if (!Dispatcher.HasShutdownStarted && !Dispatcher.HasShutdownFinished)
                 {
-                    NotificationService.PlayAlert("ReflectionEnd.wav");
+                    AppServices.Get<NotificationService>().PlayAlert("ReflectionEnd.wav");
                 }
             };
 
@@ -796,9 +796,9 @@ namespace TWChatOverlay.Views
                 if (isRealTime && _expService.IsReady)
                 {
                     if (log.IsMagicCircleAlert && _settings.UseMagicCircleAlert)
-                        NotificationService.PlayAlert("Wave.wav");
+                        AppServices.Get<NotificationService>().PlayAlert("Wave.wav");
                     else if (_settings.UseAlertSound)
-                        NotificationService.PlayAlert("Highlight.wav");
+                        AppServices.Get<NotificationService>().PlayAlert("Highlight.wav");
                 }
             }
 
