@@ -1303,6 +1303,10 @@ namespace TWChatOverlay.Models
         [JsonIgnore]
         public bool WindowSnapEnabled { get => Ui.WindowSnapEnabled; set { Ui.WindowSnapEnabled = value; OnPropertyChanged(); } }
 
+        /// <summary>잠금 해제 모드에서 숨길 창 이름 목록. 배너의 창 목록에서 체크를 푼 창이 들어간다.</summary>
+        [JsonIgnore]
+        public List<string> UnlockHiddenWindows { get => Ui.UnlockHiddenWindows ??= new List<string>(); set { Ui.UnlockHiddenWindows = value ?? new List<string>(); OnPropertyChanged(); } }
+
         /// <summary>메뉴 바 고정: true면 자동 접힘 없이 메뉴가 상시 표시된다 (아이콘 클릭으로 전환).</summary>
         [JsonIgnore]
         public bool MenuWindowPinned { get => Ui.MenuBar.Pinned; set { Ui.MenuBar.Pinned = value; OnPropertyChanged(); } }
