@@ -682,18 +682,28 @@ namespace TWChatOverlay.Views
             }
         }
 
-        private void EnsureDailyWeeklyWindowForRealtimeProcessing()
+        /// <summary>
+        /// 일일/주간 컨텐츠 창을 (없으면) 만든다. 표시 경로와 실시간 처리 경로가 같은 생성 코드를 쓴다 —
+        /// 예전엔 실시간 경로가 IsVisibleChanged 구독을 빠뜨려, 그 경로로 먼저 만들어지면 가시성 이벤트가 오지 않았다.
+        /// </summary>
+        /// <returns>이번 호출에서 새로 만들었으면 true.</returns>
+        private bool EnsureDailyWeeklyContentWindow()
         {
             if (_dailyWeeklyContentOverlay != null && _dailyWeeklyContentOverlay.IsLoaded)
-                return;
+                return false;
 
             _dailyWeeklyContentOverlay = new DailyWeeklyContentWindow(_settings);
+            _dailyWeeklyContentOverlay.IsVisibleChanged += DailyWeeklyContentOverlay_IsVisibleChanged;
             _dailyWeeklyContentOverlay.Closed += (_, _) =>
             {
                 _dailyWeeklyContentOverlay = null;
                 try { DailyWeeklyVisibilityChanged?.Invoke(this, false); } catch { }
             };
+            return true;
         }
+
+        private void EnsureDailyWeeklyWindowForRealtimeProcessing()
+            => EnsureDailyWeeklyContentWindow();
 
         private static bool IsMercurialSeedCompletionLog(string text)
         {

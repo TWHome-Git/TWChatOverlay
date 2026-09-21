@@ -102,21 +102,9 @@ namespace TWChatOverlay.Views
 
         private void ShowDailyWeeklyWindow()
         {
-            bool shouldScanHistoricalLogs = false;
+            bool shouldScanHistoricalLogs = EnsureDailyWeeklyContentWindow();
 
-            if (_dailyWeeklyContentOverlay == null || !_dailyWeeklyContentOverlay.IsLoaded)
-            {
-                _dailyWeeklyContentOverlay = new DailyWeeklyContentWindow(_settings);
-                shouldScanHistoricalLogs = true;
-                _dailyWeeklyContentOverlay.IsVisibleChanged += DailyWeeklyContentOverlay_IsVisibleChanged;
-                _dailyWeeklyContentOverlay.Closed += (_, _) =>
-                {
-                    _dailyWeeklyContentOverlay = null;
-                    try { DailyWeeklyVisibilityChanged?.Invoke(this, false); } catch { }
-                };
-            }
-
-            if (!_dailyWeeklyContentOverlay.IsVisible)
+            if (!_dailyWeeklyContentOverlay!.IsVisible)
             {
                 _dailyWeeklyContentOverlay.Owner = this;
                 WindowPlacement.ApplyStored(_dailyWeeklyContentOverlay, _settings.DailyWeeklyContentOverlayLeft, _settings.DailyWeeklyContentOverlayTop);
