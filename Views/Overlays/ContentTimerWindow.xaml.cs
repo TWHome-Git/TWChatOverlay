@@ -134,7 +134,11 @@ namespace TWChatOverlay.Views
                     Style = (Style)FindResource("WindowSmallButtonStyle"),
                     ToolTip = name + " 기록 보기",
                 };
-                button.Click += (_, _) => AppServices.Get<ContentTimerService>().ShowGroup(key);
+                button.Click += (_, _) =>
+                {
+                    AppServices.Get<ContentTimerService>().ShowGroup(key);
+                    DungeonTimerDetailWindow.SyncGroupIfOpen(key); // 자세히 창이 열려 있으면 같은 던전으로
+                };
                 _groupButtons[key] = button;
                 GroupList.Children.Add(button);
             }
@@ -650,8 +654,15 @@ namespace TWChatOverlay.Views
             DungeonTimerDetailWindow.ShowFor(groupKey);
         }
 
-        private void PrevGroup_Click(object sender, RoutedEventArgs e) => AppServices.Get<ContentTimerService>().ShowNextGroup(-1);
-        private void NextGroup_Click(object sender, RoutedEventArgs e) => AppServices.Get<ContentTimerService>().ShowNextGroup(+1);
+        private void PrevGroup_Click(object sender, RoutedEventArgs e) => StepGroup(-1);
+        private void NextGroup_Click(object sender, RoutedEventArgs e) => StepGroup(+1);
+
+        /// <summary>앞뒤 던전으로 넘기고, 자세히 창이 열려 있으면 같은 던전으로 맞춘다.</summary>
+        private void StepGroup(int direction)
+        {
+            AppServices.Get<ContentTimerService>().ShowNextGroup(direction);
+            DungeonTimerDetailWindow.SyncGroupIfOpen(_selectedGroupKey); // ShowNextGroup이 다시 그리며 _selectedGroupKey를 바꿔 둔다
+        }
 
         private void CloseButton_Click(object sender, RoutedEventArgs e)
         {
