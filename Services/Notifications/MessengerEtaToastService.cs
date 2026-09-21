@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
@@ -8,15 +8,15 @@ using TWChatOverlay.Views;
 
 namespace TWChatOverlay.Services
 {
-    public static class MessengerEtaToastService
+    public sealed class MessengerEtaToastService
     {
-        private static readonly Dictionary<string, MessengerEtaToastWindow> FileWindows = new(StringComparer.OrdinalIgnoreCase);
-        private static MessengerEtaToastWindow? _previewToast;
+        private readonly Dictionary<string, MessengerEtaToastWindow> FileWindows = new(StringComparer.OrdinalIgnoreCase);
+        private MessengerEtaToastWindow? _previewToast;
         private const double ToastWidth = 420;
         private const double DefaultBaseTop = 42;
         private const double Gap = 8;
 
-        public static void ShowForFile(string filePath, IReadOnlyList<string> entries, ChatSettings settings)
+        public void ShowForFile(string filePath, IReadOnlyList<string> entries, ChatSettings settings)
         {
             if (TrayAllWindowsService.IsTrayed)
                 return; // 트레이 최소화 중에는 알림 창을 띄우지 않는다
@@ -59,7 +59,7 @@ namespace TWChatOverlay.Services
             });
         }
 
-        public static void ShowPositionPreview(ChatSettings settings, bool force = false)
+        public void ShowPositionPreview(ChatSettings settings, bool force = false)
         {
             if (settings == null || (!force && settings.MessengerToastWindowLeft == null && settings.MessengerToastWindowTop == null))
                 return;
@@ -81,7 +81,7 @@ namespace TWChatOverlay.Services
         }
 
         /// <summary>위치 미리보기가 떠 있으면 설정에 저장된 위치로 다시 옮긴다. 설정 전체 교체(프로필 불러오기) 뒤에 쓴다.</summary>
-        public static void ReapplyPreviewPosition(ChatSettings settings)
+        public void ReapplyPreviewPosition(ChatSettings settings)
         {
             if (settings == null || _previewToast?.IsVisible != true)
                 return;
@@ -89,7 +89,7 @@ namespace TWChatOverlay.Services
             ShowPositionPreview(settings, force: true);
         }
 
-        public static void ClosePositionPreview(ChatSettings settings)
+        public void ClosePositionPreview(ChatSettings settings)
         {
             Application.Current.Dispatcher.BeginInvoke(new Action(() =>
             {
@@ -103,7 +103,7 @@ namespace TWChatOverlay.Services
             }));
         }
 
-        public static void SaveCurrentPosition(ChatSettings settings)
+        public void SaveCurrentPosition(ChatSettings settings)
         {
             if (_previewToast?.IsVisible == true)
                 _previewToast.SaveCurrentPosition();
@@ -111,7 +111,7 @@ namespace TWChatOverlay.Services
         }
 
 
-        private static void RearrangeWindows(ChatSettings settings)
+        private void RearrangeWindows(ChatSettings settings)
         {
             var alive = FileWindows.Values.ToList();
             var (left, baseTop) = ResolveBasePositionFromSettings(settings);
@@ -133,10 +133,10 @@ namespace TWChatOverlay.Services
             }
         }
 
-        private static (double Left, double Top) ResolveBasePositionFromSettings(ChatSettings settings)
+        private (double Left, double Top) ResolveBasePositionFromSettings(ChatSettings settings)
             => ToastPresentationHelper.ResolveBasePosition(
                 settings.MessengerToastWindowLeft, settings.MessengerToastWindowTop, ToastWidth, DefaultBaseTop);
 
-        private static FontFamily ResolveToastFont() => ToastPresentationHelper.ResolveToastFont();
+        private FontFamily ResolveToastFont() => ToastPresentationHelper.ResolveToastFont();
     }
 }

@@ -251,9 +251,9 @@ namespace TWChatOverlay.Views
         private void OnDungeonCountDisplayWindowSettingChanged()
         {
             if (_settings.ShowDungeonCountDisplayWindow)
-                DungeonCountDisplayWindowService.ShowPositionPreview(_settings);
+                AppServices.Get<DungeonCountDisplayWindowService>().ShowPositionPreview(_settings);
             else
-                DungeonCountDisplayWindowService.ClosePositionPreview(_settings);
+                AppServices.Get<DungeonCountDisplayWindowService>().ClosePositionPreview(_settings);
         }
 
         private void OnAbandonRoadSummaryWindowSettingChanged()

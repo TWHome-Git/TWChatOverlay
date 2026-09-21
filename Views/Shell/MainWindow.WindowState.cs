@@ -132,7 +132,7 @@ namespace TWChatOverlay.Views
             }
 
             // 1:1 대화 에타 표시 위치
-            MessengerEtaToastService.ShowPositionPreview(_settings, force: true);
+            AppServices.Get<MessengerEtaToastService>().ShowPositionPreview(_settings, force: true);
 
             // 보급품 탈환 미니 지도 위치/크기
             RecaptureSupplyAlertService.ShowPositionPreview(_settings, force: true);
@@ -170,7 +170,7 @@ namespace TWChatOverlay.Views
         {
             // 위치 저장 후 미리보기 종료, 각 창의 원래 표시 상태로 복원
             ToastStackService.ClosePositionPreview();
-            MessengerEtaToastService.ClosePositionPreview(_settings);
+            AppServices.Get<MessengerEtaToastService>().ClosePositionPreview(_settings);
             RecaptureSupplyAlertService.ClosePositionPreview();
             RecaptureSupplyPadOrderService.ClosePositionPreview();
             TreasurySummaryWindow.ClosePositionPreview();
@@ -241,9 +241,9 @@ namespace TWChatOverlay.Views
                 try
                 {
                     ExperienceAlertWindowService.Close();
-                    DungeonCountDisplayWindowService.ClosePositionPreview(_settings);
-                    ShoutToastService.ClosePositionPreview(_settings);
-                    MessengerEtaToastService.ClosePositionPreview(_settings);
+                    AppServices.Get<DungeonCountDisplayWindowService>().ClosePositionPreview(_settings);
+                    AppServices.Get<ShoutToastService>().ClosePositionPreview(_settings);
+                    AppServices.Get<MessengerEtaToastService>().ClosePositionPreview(_settings);
                     SubAddonWindow.Instance?.Hide();
                     ItemDropHelperWindow.Instance?.Close();
                     BuffTrackerHelperWindow.Instance?.Close();
@@ -255,8 +255,8 @@ namespace TWChatOverlay.Views
 
             if (_isSettingsPositionMode)
             {
-                ShoutToastService.ShowPositionPreview(_settings, force: true);
-                MessengerEtaToastService.ShowPositionPreview(_settings, force: true);
+                AppServices.Get<ShoutToastService>().ShowPositionPreview(_settings, force: true);
+                AppServices.Get<MessengerEtaToastService>().ShowPositionPreview(_settings, force: true);
             }
             else
             {
@@ -285,12 +285,12 @@ namespace TWChatOverlay.Views
         {
             if (savePositions)
             {
-                ShoutToastService.SaveCurrentPosition(_settings);
-                MessengerEtaToastService.SaveCurrentPosition(_settings);
+                AppServices.Get<ShoutToastService>().SaveCurrentPosition(_settings);
+                AppServices.Get<MessengerEtaToastService>().SaveCurrentPosition(_settings);
             }
 
-            ShoutToastService.ClosePositionPreview(_settings);
-            MessengerEtaToastService.ClosePositionPreview(_settings);
+            AppServices.Get<ShoutToastService>().ClosePositionPreview(_settings);
+            AppServices.Get<MessengerEtaToastService>().ClosePositionPreview(_settings);
         }
 
         private void ShowAddonPositionPreviewForSelectedTab()
@@ -458,7 +458,7 @@ namespace TWChatOverlay.Views
                 RecaptureSupplyAlertService.ApplyStoredBounds(_settings);
                 RecaptureSupplyPadOrderService.ApplyStoredBounds(_settings);
                 ContentTimerService.ApplyStoredBounds(_settings);
-                MessengerEtaToastService.ReapplyPreviewPosition(_settings);
+                AppServices.Get<MessengerEtaToastService>().ReapplyPreviewPosition(_settings);
             }
             catch (Exception ex) { AppLogger.Warn("Failed to reapply preview window positions.", ex); }
 

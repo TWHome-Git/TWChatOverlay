@@ -228,7 +228,7 @@ namespace TWChatOverlay.Views
                 else
                     ConfigService.SaveDeferred(_settings);
 
-                ShoutToastService.NotifyPreviewPositionChanged();
+                AppServices.Get<ShoutToastService>().NotifyPreviewPositionChanged();
             }
             catch { }
         }

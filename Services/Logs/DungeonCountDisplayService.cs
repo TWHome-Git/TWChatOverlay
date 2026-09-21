@@ -141,7 +141,7 @@ namespace TWChatOverlay.Services
                 return false;
 
             count = Math.Clamp(count, 1, AbandonMaxCount);
-            DungeonCountDisplayWindowService.Show(
+            AppServices.Get<DungeonCountDisplayWindowService>().Show(
                 $"어밴던로드 - {region}",
                 count,
                 AbandonMaxCount,
@@ -161,7 +161,7 @@ namespace TWChatOverlay.Services
                 return false;
 
             int count = Math.Clamp(CravingPleasureDailyEnergy - remain, 1, CravingPleasureMaxCount);
-            DungeonCountDisplayWindowService.Show(
+            AppServices.Get<DungeonCountDisplayWindowService>().Show(
                 "갈망하는 즐거움",
                 count,
                 CravingPleasureMaxCount,

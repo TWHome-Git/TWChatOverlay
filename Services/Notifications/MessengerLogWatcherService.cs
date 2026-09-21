@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.IO;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -100,7 +100,7 @@ namespace TWChatOverlay.Services
                     }
 
                     AppLogger.Info($"Messenger toast dispatch start. File={fullPath}, Targets={entries.Count}");
-                    MessengerEtaToastService.ShowForFile(fullPath, entries, _settings);
+                    AppServices.Get<MessengerEtaToastService>().ShowForFile(fullPath, entries, _settings);
                     AppLogger.Info($"Messenger toast dispatch end. File={fullPath}, Targets={entries.Count}");
                 }
                 catch (Exception ex)

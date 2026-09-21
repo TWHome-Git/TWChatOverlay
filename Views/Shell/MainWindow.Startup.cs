@@ -666,7 +666,7 @@ namespace TWChatOverlay.Views
         {
             try
             {
-                ShoutToastService.GetOrCreatePreviewWindow(_settings);
+                AppServices.Get<ShoutToastService>().GetOrCreatePreviewWindow(_settings);
             }
             catch (Exception ex)
             {

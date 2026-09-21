@@ -204,7 +204,7 @@ namespace TWChatOverlay.Views
             catch { }
             try { ChatWindowHub.BeginShutdown(); } catch { }
             try { ExperienceAlertWindowService.SaveCurrentPosition(_settings); } catch { }
-            try { DungeonCountDisplayWindowService.SaveCurrentPosition(_settings); } catch { }
+            try { AppServices.Get<DungeonCountDisplayWindowService>().SaveCurrentPosition(_settings); } catch { }
             try { _buffTrackerService.PropertyChanged -= BuffTrackerService_PropertyChanged; } catch { }
             try { BuffTrackerWindow.Instance?.Close(); } catch { }
             try { BuffTrackerHelperWindow.Instance?.Close(); } catch { }

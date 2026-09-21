@@ -113,6 +113,9 @@ namespace TWChatOverlay
                 services.AddSingleton<MessengerLogWatcherService>();
                 services.AddSingleton<BuffTrackerService>();
                 services.AddSingleton<LogService>();
+                services.AddSingleton<ShoutToastService>();
+                services.AddSingleton<DungeonCountDisplayWindowService>();
+                services.AddSingleton<MessengerEtaToastService>();
             });
 
             EtaProfileResolver.InitializeAsync();

@@ -7,13 +7,13 @@ using TWChatOverlay.Views;
 
 namespace TWChatOverlay.Services
 {
-    public static class DungeonCountDisplayWindowService
+    public sealed class DungeonCountDisplayWindowService
     {
-        private static readonly List<DungeonCountDisplayWindow> ActiveWindows = new();
-        private static readonly Dictionary<string, DungeonCountDisplayWindow> ActiveWindowsByKey = new(StringComparer.Ordinal);
+        private readonly List<DungeonCountDisplayWindow> ActiveWindows = new();
+        private readonly Dictionary<string, DungeonCountDisplayWindow> ActiveWindowsByKey = new(StringComparer.Ordinal);
 
         /// <summary>설정 슬라이더 변경을 열려 있는 알림 창(미리보기 포함)에 즉시 반영한다.</summary>
-        public static void ApplyFontSize(double size)
+        public void ApplyFontSize(double size)
         {
             Application.Current.Dispatcher.BeginInvoke(new Action(() =>
             {
@@ -24,11 +24,11 @@ namespace TWChatOverlay.Services
             }));
         }
 
-        public static void Show(string dungeonName, int currentCount, int maxCount, int durationSeconds, ChatSettings settings, double? fontSize = null)
+        public void Show(string dungeonName, int currentCount, int maxCount, int durationSeconds, ChatSettings settings, double? fontSize = null)
             => ShowMessage(dungeonName, $"{dungeonName} {currentCount}/{maxCount}", durationSeconds, settings, fontSize);
 
         /// <summary>N/최대 형식이 아닌 자유 문구용 (예: 심연의 보물창고 금화 주머니 카운트). iconUri는 메시지 왼쪽 아이콘.</summary>
-        public static void ShowMessage(string dungeonName, string message, int durationSeconds, ChatSettings settings, double? fontSize = null, string? iconUri = null)
+        public void ShowMessage(string dungeonName, string message, int durationSeconds, ChatSettings settings, double? fontSize = null, string? iconUri = null)
         {
             if (TrayAllWindowsService.IsTrayed)
                 return; // 트레이 최소화 중에는 알림 창을 띄우지 않는다
@@ -72,7 +72,7 @@ namespace TWChatOverlay.Services
         }
 
         /// <summary>통합 알림 스택 앵커 미리보기로 위임.</summary>
-        public static void ShowPositionPreview(ChatSettings settings, bool force = false)
+        public void ShowPositionPreview(ChatSettings settings, bool force = false)
         {
             if (settings == null || (!force && !settings.ShowDungeonCountDisplayWindow))
                 return;
@@ -80,12 +80,12 @@ namespace TWChatOverlay.Services
             ToastStackService.ShowPositionPreview(settings);
         }
 
-        public static void ClosePositionPreview(ChatSettings settings)
+        public void ClosePositionPreview(ChatSettings settings)
             => ToastStackService.ClosePositionPreview();
 
-        public static void SaveCurrentPosition(ChatSettings settings)
+        public void SaveCurrentPosition(ChatSettings settings)
             => ToastStackService.SaveCurrentPosition(settings);
 
-        private static FontFamily ResolveFont() => ToastPresentationHelper.ResolveToastFont();
+        private FontFamily ResolveFont() => ToastPresentationHelper.ResolveToastFont();
     }
 }

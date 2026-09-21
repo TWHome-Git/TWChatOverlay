@@ -328,7 +328,7 @@ namespace TWChatOverlay.ViewModels
                     _settings.ShoutToastFontSize = value;
                     OnPropertyChanged();
                     SaveSettings();
-                    ShoutToastService.ApplyFontSize(value);
+                    AppServices.Get<ShoutToastService>().ApplyFontSize(value);
                 }
             }
         }

@@ -121,9 +121,9 @@ namespace TWChatOverlay.Views
                 try
                 {
                     if (_shoutPreviewEnabled)
-                        ShoutToastService.ShowPositionPreview(_settings, force: true);
+                        AppServices.Get<ShoutToastService>().ShowPositionPreview(_settings, force: true);
                     else
-                        ShoutToastService.ClosePositionPreview(_settings);
+                        AppServices.Get<ShoutToastService>().ClosePositionPreview(_settings);
                 }
                 catch (Exception ex)
                 {
@@ -529,7 +529,7 @@ namespace TWChatOverlay.Views
 
         private void SkipButton_Click(object sender, RoutedEventArgs e)
         {
-            try { ShoutToastService.ClosePositionPreview(_settings); } catch { }
+            try { AppServices.Get<ShoutToastService>().ClosePositionPreview(_settings); } catch { }
             try { _embeddedSettings?.EndWizardPanelMode(); } catch { }
             SetPositionPreview(false);
             ConfigService.Save(_settings);
@@ -541,7 +541,7 @@ namespace TWChatOverlay.Views
         {
             try
             {
-                ShoutToastService.ClosePositionPreview(_settings);
+                AppServices.Get<ShoutToastService>().ClosePositionPreview(_settings);
                 _embeddedSettings?.EndWizardPanelMode();
                 SetPositionPreview(false);
                 SaveMainWindowPositionToPreset1();
@@ -573,7 +573,7 @@ namespace TWChatOverlay.Views
 
         protected override void OnClosed(EventArgs e)
         {
-            try { ShoutToastService.ClosePositionPreview(_settings); } catch { }
+            try { AppServices.Get<ShoutToastService>().ClosePositionPreview(_settings); } catch { }
             try { _embeddedSettings?.EndWizardPanelMode(); } catch { }
             try { SetPositionPreview(false); } catch { }
             base.OnClosed(e);

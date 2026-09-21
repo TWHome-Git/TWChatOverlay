@@ -103,7 +103,7 @@ namespace TWChatOverlay.ViewModels
             set
             {
                 if (SetSetting(ref _dungeonCountDisplayFontSize, value, (settings, newValue) => settings.DungeonCountDisplayFontSize = newValue))
-                    DungeonCountDisplayWindowService.ApplyFontSize(value);
+                    AppServices.Get<DungeonCountDisplayWindowService>().ApplyFontSize(value);
             }
         }
 
@@ -115,7 +115,7 @@ namespace TWChatOverlay.ViewModels
             set
             {
                 if (SetSetting(ref _cravingPleasureCountFontSize, value, (settings, newValue) => settings.CravingPleasureCountFontSize = newValue))
-                    DungeonCountDisplayWindowService.ApplyFontSize(value);
+                    AppServices.Get<DungeonCountDisplayWindowService>().ApplyFontSize(value);
             }
         }
 

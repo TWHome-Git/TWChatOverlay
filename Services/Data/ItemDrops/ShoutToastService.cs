@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -9,12 +9,12 @@ using TWChatOverlay.Views;
 
 namespace TWChatOverlay.Services
 {
-    public static class ShoutToastService
+    public sealed class ShoutToastService
     {
-        private static readonly List<ShoutToastWindow> ActiveToasts = new();
-        private static ShoutToastWindow? _previewToast; // 프리웜 전용 (표시는 통합 스택 미리보기 사용)
+        private readonly List<ShoutToastWindow> ActiveToasts = new();
+        private ShoutToastWindow? _previewToast; // 프리웜 전용 (표시는 통합 스택 미리보기 사용)
 
-        public static void Show(string formattedText, ChatSettings settings)
+        public void Show(string formattedText, ChatSettings settings)
         {
             if (TrayAllWindowsService.IsTrayed)
                 return; // 트레이 최소화 중에는 알림 창을 띄우지 않는다
@@ -35,7 +35,7 @@ namespace TWChatOverlay.Services
             }));
         }
 
-        public static void Show(LogParser.ParseResult parseResult, ChatSettings settings)
+        public void Show(LogParser.ParseResult parseResult, ChatSettings settings)
         {
             if (parseResult == null || settings == null || !settings.ShowShoutToastPopup)
                 return;
@@ -44,11 +44,11 @@ namespace TWChatOverlay.Services
         }
 
         /// <summary>통합 알림 스택 앵커 미리보기로 위임.</summary>
-        public static void ShowPositionPreview(ChatSettings settings, bool force = false)
+        public void ShowPositionPreview(ChatSettings settings, bool force = false)
             => ToastStackService.ShowPositionPreview(settings);
 
         /// <summary>설정 슬라이더 변경을 열려 있는 토스트(미리보기 포함)에 즉시 반영한다.</summary>
-        public static void ApplyFontSize(double size)
+        public void ApplyFontSize(double size)
         {
             System.Windows.Application.Current.Dispatcher.BeginInvoke(new System.Action(() =>
             {
@@ -60,16 +60,16 @@ namespace TWChatOverlay.Services
             }));
         }
 
-        public static void ClosePositionPreview(ChatSettings settings)
+        public void ClosePositionPreview(ChatSettings settings)
             => ToastStackService.ClosePositionPreview();
 
-        public static void SaveCurrentPosition(ChatSettings settings)
+        public void SaveCurrentPosition(ChatSettings settings)
             => ToastStackService.SaveCurrentPosition(settings);
 
-        public static void NotifyPreviewPositionChanged()
+        public void NotifyPreviewPositionChanged()
             => Application.Current.Dispatcher.BeginInvoke(new Action(ToastStackService.Reflow));
 
-        public static ShoutToastWindow? GetOrCreatePreviewWindow(ChatSettings settings)
+        public ShoutToastWindow? GetOrCreatePreviewWindow(ChatSettings settings)
         {
             if (settings == null)
                 return null;
@@ -87,9 +87,9 @@ namespace TWChatOverlay.Services
             return _previewToast;
         }
 
-        private static FontFamily ResolveToastFont() => ToastPresentationHelper.ResolveToastFont();
+        private FontFamily ResolveToastFont() => ToastPresentationHelper.ResolveToastFont();
 
-        private static string BuildMessageWithEta(LogParser.ParseResult parseResult)
+        private string BuildMessageWithEta(LogParser.ParseResult parseResult)
         {
             string message = parseResult.FormattedText ?? string.Empty;
             string lookupSenderId = parseResult.RawSenderId ?? parseResult.SenderId ?? string.Empty;
