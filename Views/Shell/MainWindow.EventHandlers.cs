@@ -97,153 +97,179 @@ namespace TWChatOverlay.Views
 
             // 추가 기능 위치 미리보기 중 토글이 바뀌면 해당 탭의 창 표시를 다시 계산한다
             // (활성화하면 즉시 나타나고, 끄면 사라진다)
-            if (_isAddonPositionMode && e.PropertyName is
-                nameof(_settings.EnableExperienceLimitAlert) or
-                nameof(_settings.EnableAbandonRoadCountAlert) or
-                nameof(_settings.EnableCravingPleasureCountAlert) or
-                nameof(_settings.ShowAbandonRoadSummaryWindow) or
-                nameof(_settings.ShowEtosDirectionAlert) or
-                nameof(_settings.ShowRecaptureSupplyMap) or
-                nameof(_settings.ShowItemDropAlert) or
-                nameof(_settings.EnableBuffTrackerAlert))
+            if (_isAddonPositionMode && e.PropertyName != null && AddonPreviewToggleNames.Contains(e.PropertyName))
             {
                 try { ShowSettingsPositionWindows(); } catch (Exception ex) { AppLogger.Warn("Addon preview refresh failed.", ex); }
             }
 
             Dispatcher.Invoke(() =>
             {
-                if (e.PropertyName == nameof(_settings.FontFamily) || e.PropertyName == nameof(_settings.FontSize))
-                {
-                    ApplyInitialSettings();
-                    RequestRefreshLogDisplay();
-                }
-                else if (e.PropertyName == nameof(_settings.LineMargin) || e.PropertyName == nameof(_settings.LineMarginLeft))
-                {
-                    _stickyService?.UpdatePositionImmediately();
-                }
-                else if (e.PropertyName == nameof(_settings.ShowDailyWeeklyContentOverlay))
-                {
-                    ApplyDailyWeeklyWindowVisibility();
-                }
-                else if (e.PropertyName == nameof(_settings.ShowEtosDirectionAlert) && !_settings.ShowEtosDirectionAlert)
-                {
-                    if (_isInitialSetupWizardRunning)
-                        SubAddonWindow.Instance?.ApplyPositionPreviewVisibility(true);
-                    else
-                        SubAddonWindow.Instance?.HideAlert();
-                }
-                else if (e.PropertyName == nameof(_settings.ShowEtosHelperWindow) && !_settings.ShowEtosHelperWindow)
-                {
-                    var helper = SubAddonWindow.Instance;
-                    if (helper != null)
-                    {
-                        _settings.SubAddonWindowLeft = helper.Left;
-                        _settings.SubAddonWindowTop = helper.Top;
-                    }
-
-                    ApplySubAddonWindowSettings();
-                    PersistSettings();
-                }
-                else if (e.PropertyName == nameof(_settings.ShowEtosDirectionAlert) ||
-                         e.PropertyName == nameof(_settings.ShowEtosHelperWindow))
-                {
-                    if (_isInitialSetupWizardRunning)
-                    {
-                        ApplySubAddonWindowSettings();
-                        SubAddonWindow.Instance?.ApplyPositionPreviewVisibility(true);
-                    }
-                    else if (!_isAddonPositionMode)
-                    {
-                        // 추가 기능 미리보기 중에는 위의 미리보기 갱신이 표시를 관리한다
-                        // (여기서 ApplySubAddonWindowSettings를 부르면 방금 띄운 미리보기가 숨겨진다)
-                        ApplySubAddonWindowSettings();
-                    }
-                }
-                else if (e.PropertyName == nameof(_settings.ShowItemDropHelperWindow))
-                {
-                    ApplyItemDropHelperWindowSettings();
-                }
-                else if (e.PropertyName == nameof(_settings.ShowExpTracker))
-                {
-                    RefreshExpTrackerWindow();
-                }
-                else if (e.PropertyName == nameof(_settings.UnifiedToastStack))
-                {
-                    // 통합/분리 전환: 미리보기가 떠 있으면 새 모드로 다시 그리고, 열린 알림도 재배치
-                    ToastStackService.RefreshPreviews(_settings);
-                }
-                else if (e.PropertyName == nameof(_settings.EnableBuffTrackerAlert))
-                {
-                    ApplyBuffTrackerWindowSettings();
-                }
-                else if (e.PropertyName == nameof(_settings.EnableExperienceLimitAlert))
-                {
-                    if (_settings.EnableExperienceLimitAlert && _settings.ShowExperienceLimitAlertWindow)
-                        ExperienceAlertWindowService.ShowPositionPreview(_settings);
-                    else if (!_settings.EnableExperienceLimitAlert && !_settings.ShowExperienceLimitAlertWindow)
-                        ExperienceAlertWindowService.Close();
-
-                    ExperienceAlertWindowService.RefreshState(_settings);
-                }
-                else if (e.PropertyName == nameof(_settings.ShowExperienceLimitAlertWindow))
-                {
-                    if (_settings.ShowExperienceLimitAlertWindow)
-                        ExperienceAlertWindowService.ShowPositionPreview(_settings);
-                    else
-                        ExperienceAlertWindowService.Close();
-                }
-                else if (e.PropertyName == nameof(_settings.ExperienceLimitTotalExp))
-                {
-                    ExperienceAlertWindowService.RefreshState(_settings);
-                }
-                else if (e.PropertyName == nameof(_settings.ShowDungeonCountDisplayWindow))
-                {
-                    if (_settings.ShowDungeonCountDisplayWindow)
-                        DungeonCountDisplayWindowService.ShowPositionPreview(_settings);
-                    else
-                        DungeonCountDisplayWindowService.ClosePositionPreview(_settings);
-                }
-                else if (e.PropertyName == nameof(_settings.ShowAbandonRoadSummaryWindow))
-                {
-                    if (_isInitialSetupWizardRunning)
-                    {
-                        ShowAbandonRoadSummaryWindow(previewMode: true, restartLifetime: false, activateWindow: false, forcePreview: true);
-                    }
-                    else if (_settings.ShowAbandonRoadSummaryWindow && _isAddonPositionMode)
-                        ShowAbandonRoadSummaryWindow(previewMode: _isAddonPositionMode);
-                    else if (_AbandonRoadSummaryWindow != null)
-                    {
-                        try { _AbandonRoadSummaryWindow.Close(); } catch { }
-                    }
-                }
-                else if (e.PropertyName == nameof(_settings.BuffTrackerWindowLeft) ||
-                         e.PropertyName == nameof(_settings.BuffTrackerWindowTop))
-                {
-                    ApplyBuffTrackerWindowSettings();
-                    ApplyBuffTrackerHelperWindowSettings();
-                }
-                else if (e.PropertyName == nameof(_settings.ExitHotKey) ||
-                         e.PropertyName == nameof(_settings.ToggleOverlayHotKey) ||
-                         e.PropertyName == nameof(_settings.ToggleDailyWeeklyContentHotKey) ||
-                         e.PropertyName == nameof(_settings.ToggleSettingsHotKey) ||
-                         e.PropertyName == nameof(_settings.ToggleTrayAllHotKey) ||
-                         e.PropertyName == nameof(_settings.ToggleUnlockHotKey))
-                {
-                    ApplyHotKeys();
-                }
-                else if (e.PropertyName == nameof(_settings.MainWindowChatTabTag))
-                {
-                    string normalizedTabTag = NormalizeMainTabTag(_settings.MainWindowChatTabTag);
-                    if (!string.Equals(_currentTabTag, normalizedTabTag, StringComparison.Ordinal))
-                        ApplyMainTabState(normalizedTabTag, persistSettings: false, refreshLogDisplay: false);
-                }
+                if (e.PropertyName != null && SettingsChangeRoutes.TryGetValue(e.PropertyName, out Action? handler))
+                    handler();
                 else if (e.PropertyName != null && e.PropertyName.StartsWith("Show"))
-                {
-                    RequestRefreshLogDisplay();
-                }
+                    RequestRefreshLogDisplay(); // 그 밖의 Show* (채팅 표시 필터류)는 채팅 표시만 다시 그린다
 
                 PersistSettings();
             });
+        }
+
+        /// <summary>추가 기능 위치 미리보기 중 바뀌면 미리보기 창 표시를 다시 계산해야 하는 토글들.</summary>
+        private static readonly HashSet<string> AddonPreviewToggleNames = new(StringComparer.Ordinal)
+        {
+            nameof(ChatSettings.EnableExperienceLimitAlert),
+            nameof(ChatSettings.EnableAbandonRoadCountAlert),
+            nameof(ChatSettings.EnableCravingPleasureCountAlert),
+            nameof(ChatSettings.ShowAbandonRoadSummaryWindow),
+            nameof(ChatSettings.ShowEtosDirectionAlert),
+            nameof(ChatSettings.ShowRecaptureSupplyMap),
+            nameof(ChatSettings.ShowItemDropAlert),
+            nameof(ChatSettings.EnableBuffTrackerAlert),
+        };
+
+        private Dictionary<string, Action>? _settingsChangeRoutes;
+
+        /// <summary>설정 프로퍼티 이름 → 반응. 한 프로퍼티는 한 핸들러만 갖는다 (표에 없는 Show*는 채팅 표시 갱신).</summary>
+        private Dictionary<string, Action> SettingsChangeRoutes => _settingsChangeRoutes ??= BuildSettingsChangeRoutes();
+
+        private Dictionary<string, Action> BuildSettingsChangeRoutes()
+        {
+            var routes = new Dictionary<string, Action>(StringComparer.Ordinal);
+            void Map(Action action, params string[] names)
+            {
+                foreach (string name in names)
+                    routes[name] = action;
+            }
+
+            // 채팅 표시
+            Map(() => { ApplyInitialSettings(); RequestRefreshLogDisplay(); },
+                nameof(ChatSettings.FontFamily), nameof(ChatSettings.FontSize));
+            Map(() => _stickyService?.UpdatePositionImmediately(),
+                nameof(ChatSettings.LineMargin), nameof(ChatSettings.LineMarginLeft));
+            Map(OnMainWindowChatTabTagChanged, nameof(ChatSettings.MainWindowChatTabTag));
+
+            // 부속 창 표시
+            Map(ApplyDailyWeeklyWindowVisibility, nameof(ChatSettings.ShowDailyWeeklyContentOverlay));
+            Map(OnEtosDirectionAlertSettingChanged, nameof(ChatSettings.ShowEtosDirectionAlert));
+            Map(OnEtosHelperWindowSettingChanged, nameof(ChatSettings.ShowEtosHelperWindow));
+            Map(ApplyItemDropHelperWindowSettings, nameof(ChatSettings.ShowItemDropHelperWindow));
+            Map(RefreshExpTrackerWindow, nameof(ChatSettings.ShowExpTracker));
+            Map(OnAbandonRoadSummaryWindowSettingChanged, nameof(ChatSettings.ShowAbandonRoadSummaryWindow));
+            Map(OnDungeonCountDisplayWindowSettingChanged, nameof(ChatSettings.ShowDungeonCountDisplayWindow));
+
+            // 알림
+            Map(() => ToastStackService.RefreshPreviews(_settings), nameof(ChatSettings.UnifiedToastStack)); // 통합/분리 전환: 미리보기와 열린 알림 재배치
+            Map(OnExperienceLimitAlertSettingChanged, nameof(ChatSettings.EnableExperienceLimitAlert));
+            Map(OnExperienceLimitAlertWindowSettingChanged, nameof(ChatSettings.ShowExperienceLimitAlertWindow));
+            Map(() => ExperienceAlertWindowService.RefreshState(_settings), nameof(ChatSettings.ExperienceLimitTotalExp));
+
+            // 버프 추적
+            Map(ApplyBuffTrackerWindowSettings, nameof(ChatSettings.EnableBuffTrackerAlert));
+            Map(() => { ApplyBuffTrackerWindowSettings(); ApplyBuffTrackerHelperWindowSettings(); },
+                nameof(ChatSettings.BuffTrackerWindowLeft), nameof(ChatSettings.BuffTrackerWindowTop));
+
+            // 단축키
+            Map(ApplyHotKeys,
+                nameof(ChatSettings.ExitHotKey), nameof(ChatSettings.ToggleOverlayHotKey), nameof(ChatSettings.ToggleDailyWeeklyContentHotKey),
+                nameof(ChatSettings.ToggleSettingsHotKey), nameof(ChatSettings.ToggleTrayAllHotKey), nameof(ChatSettings.ToggleUnlockHotKey));
+
+            return routes;
+        }
+
+        private void OnMainWindowChatTabTagChanged()
+        {
+            string normalizedTabTag = NormalizeMainTabTag(_settings.MainWindowChatTabTag);
+            if (!string.Equals(_currentTabTag, normalizedTabTag, StringComparison.Ordinal))
+                ApplyMainTabState(normalizedTabTag, persistSettings: false, refreshLogDisplay: false);
+        }
+
+        private void OnEtosDirectionAlertSettingChanged()
+        {
+            if (!_settings.ShowEtosDirectionAlert)
+            {
+                if (_isInitialSetupWizardRunning)
+                    SubAddonWindow.Instance?.ApplyPositionPreviewVisibility(true);
+                else
+                    SubAddonWindow.Instance?.HideAlert();
+                return;
+            }
+
+            ApplyEtosHelperAfterToggleOn();
+        }
+
+        private void OnEtosHelperWindowSettingChanged()
+        {
+            if (!_settings.ShowEtosHelperWindow)
+            {
+                var helper = SubAddonWindow.Instance;
+                if (helper != null)
+                {
+                    _settings.SubAddonWindowLeft = helper.Left;
+                    _settings.SubAddonWindowTop = helper.Top;
+                }
+
+                ApplySubAddonWindowSettings();
+                PersistSettings();
+                return;
+            }
+
+            ApplyEtosHelperAfterToggleOn();
+        }
+
+        private void ApplyEtosHelperAfterToggleOn()
+        {
+            if (_isInitialSetupWizardRunning)
+            {
+                ApplySubAddonWindowSettings();
+                SubAddonWindow.Instance?.ApplyPositionPreviewVisibility(true);
+            }
+            else if (!_isAddonPositionMode)
+            {
+                // 추가 기능 미리보기 중에는 미리보기 갱신이 표시를 관리한다
+                // (여기서 ApplySubAddonWindowSettings를 부르면 방금 띄운 미리보기가 숨겨진다)
+                ApplySubAddonWindowSettings();
+            }
+        }
+
+        private void OnExperienceLimitAlertSettingChanged()
+        {
+            if (_settings.EnableExperienceLimitAlert && _settings.ShowExperienceLimitAlertWindow)
+                ExperienceAlertWindowService.ShowPositionPreview(_settings);
+            else if (!_settings.EnableExperienceLimitAlert && !_settings.ShowExperienceLimitAlertWindow)
+                ExperienceAlertWindowService.Close();
+
+            ExperienceAlertWindowService.RefreshState(_settings);
+        }
+
+        private void OnExperienceLimitAlertWindowSettingChanged()
+        {
+            if (_settings.ShowExperienceLimitAlertWindow)
+                ExperienceAlertWindowService.ShowPositionPreview(_settings);
+            else
+                ExperienceAlertWindowService.Close();
+        }
+
+        private void OnDungeonCountDisplayWindowSettingChanged()
+        {
+            if (_settings.ShowDungeonCountDisplayWindow)
+                DungeonCountDisplayWindowService.ShowPositionPreview(_settings);
+            else
+                DungeonCountDisplayWindowService.ClosePositionPreview(_settings);
+        }
+
+        private void OnAbandonRoadSummaryWindowSettingChanged()
+        {
+            if (_isInitialSetupWizardRunning)
+            {
+                ShowAbandonRoadSummaryWindow(previewMode: true, restartLifetime: false, activateWindow: false, forcePreview: true);
+            }
+            else if (_settings.ShowAbandonRoadSummaryWindow && _isAddonPositionMode)
+            {
+                ShowAbandonRoadSummaryWindow(previewMode: _isAddonPositionMode);
+            }
+            else if (_AbandonRoadSummaryWindow != null)
+            {
+                try { _AbandonRoadSummaryWindow.Close(); } catch { }
+            }
         }
 
         private void ApplyMainTabState(string tabTag, bool persistSettings = true, bool refreshLogDisplay = true)
