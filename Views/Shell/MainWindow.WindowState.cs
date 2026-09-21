@@ -135,10 +135,10 @@ namespace TWChatOverlay.Views
             AppServices.Get<MessengerEtaToastService>().ShowPositionPreview(_settings, force: true);
 
             // 보급품 탈환 미니 지도 위치/크기
-            RecaptureSupplyAlertService.ShowPositionPreview(_settings, force: true);
+            AppServices.Get<RecaptureSupplyAlertService>().ShowPositionPreview(_settings, force: true);
 
             // 보급품 탈환 발판 순서 창 위치
-            RecaptureSupplyPadOrderService.ShowPositionPreview(_settings);
+            AppServices.Get<RecaptureSupplyPadOrderService>().ShowPositionPreview(_settings);
 
             // 심연의 보물창고 주간 통계 (기능 켜짐 시)
             TreasurySummaryWindow.ShowPositionPreview(_settings);
@@ -171,8 +171,8 @@ namespace TWChatOverlay.Views
             // 위치 저장 후 미리보기 종료, 각 창의 원래 표시 상태로 복원
             ToastStackService.ClosePositionPreview();
             AppServices.Get<MessengerEtaToastService>().ClosePositionPreview(_settings);
-            RecaptureSupplyAlertService.ClosePositionPreview();
-            RecaptureSupplyPadOrderService.ClosePositionPreview();
+            AppServices.Get<RecaptureSupplyAlertService>().ClosePositionPreview();
+            AppServices.Get<RecaptureSupplyPadOrderService>().ClosePositionPreview();
             TreasurySummaryWindow.ClosePositionPreview();
             ContentTimerService.ClosePositionPreview();
             CloseAddonPositionPreviewWindows(savePositions: true, restoreNormalWindows: true);
@@ -240,7 +240,7 @@ namespace TWChatOverlay.Views
             {
                 try
                 {
-                    ExperienceAlertWindowService.Close();
+                    AppServices.Get<ExperienceAlertWindowService>().Close();
                     AppServices.Get<DungeonCountDisplayWindowService>().ClosePositionPreview(_settings);
                     AppServices.Get<ShoutToastService>().ClosePositionPreview(_settings);
                     AppServices.Get<MessengerEtaToastService>().ClosePositionPreview(_settings);
@@ -319,9 +319,9 @@ namespace TWChatOverlay.Views
                                 etosHelper?.ApplyPositionPreviewVisibility(true);
                             }
                             if (_settings.ShowRecaptureSupplyMap)
-                                RecaptureSupplyAlertService.ShowPositionPreview(_settings, force: true);
+                                AppServices.Get<RecaptureSupplyAlertService>().ShowPositionPreview(_settings, force: true);
                             if (_settings.ShowRecaptureSupplyPadOrder)
-                                RecaptureSupplyPadOrderService.ShowPositionPreview(_settings);
+                                AppServices.Get<RecaptureSupplyPadOrderService>().ShowPositionPreview(_settings);
                             break;
                         case 5: // 던전 타이머: 기록 창
                             if (_settings.ShowContentTimer)
@@ -384,8 +384,8 @@ namespace TWChatOverlay.Views
             }
 
             ToastStackService.ClosePositionPreview();
-            RecaptureSupplyAlertService.ClosePositionPreview();
-            RecaptureSupplyPadOrderService.ClosePositionPreview();
+            AppServices.Get<RecaptureSupplyAlertService>().ClosePositionPreview();
+            AppServices.Get<RecaptureSupplyPadOrderService>().ClosePositionPreview();
             ContentTimerService.ClosePositionPreview();
             SubAddonWindow.Instance?.Hide();
             ItemDropHelperWindow.Instance?.Close();
@@ -455,8 +455,8 @@ namespace TWChatOverlay.Views
             try
             {
                 TreasurySummaryWindow.ApplyStoredPosition(_settings);
-                RecaptureSupplyAlertService.ApplyStoredBounds(_settings);
-                RecaptureSupplyPadOrderService.ApplyStoredBounds(_settings);
+                AppServices.Get<RecaptureSupplyAlertService>().ApplyStoredBounds(_settings);
+                AppServices.Get<RecaptureSupplyPadOrderService>().ApplyStoredBounds(_settings);
                 ContentTimerService.ApplyStoredBounds(_settings);
                 AppServices.Get<MessengerEtaToastService>().ReapplyPreviewPosition(_settings);
             }
@@ -602,7 +602,7 @@ namespace TWChatOverlay.Views
                     return;
 
                 // 트레이로 숨은 동안 만들면 표시되지 않은 채 남아 복원 후에도 안 보인다 — 복원 시 다시 판단한다
-                if (BuffTrackerWindow.Instance == null && TrayAllWindowsService.IsTrayed)
+                if (BuffTrackerWindow.Instance == null && AppServices.Get<TrayAllWindowsService>().IsTrayed)
                     return;
 
                 var window = BuffTrackerWindow.Instance ?? CreateBuffTrackerWindow();

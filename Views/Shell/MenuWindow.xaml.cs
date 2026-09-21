@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -65,13 +65,13 @@ namespace TWChatOverlay.Views
             catch (Exception ex) { AppLogger.Warn("Failed to subscribe menu window to main window state.", ex); }
 
             UiLockService.UnlockChanged += OnUnlockChanged;
-            TrayAllWindowsService.TrayStateChanged += OnTrayStateChanged;
+            AppServices.Get<TrayAllWindowsService>().TrayStateChanged += OnTrayStateChanged;
             // 던전 타이머 기록 창이 열려 있으면 버튼을 켜진 상태로 표시
             ContentTimerService.WindowVisibilityChanged += visible =>
             {
                 try { Dispatcher.Invoke(() => SetButtonActive(BtnTimer, visible)); } catch { }
             };
-            ApplyMinimizeHighlight(TrayAllWindowsService.IsTrayed);
+            ApplyMinimizeHighlight(AppServices.Get<TrayAllWindowsService>().IsTrayed);
             AppLogger.Info("Menu window initialized.");
         }
 
@@ -283,7 +283,7 @@ namespace TWChatOverlay.Views
         {
             try { _menuAutoHideTimer.Stop(); } catch { }
             try { GetSharedSettings().PropertyChanged -= SharedSettings_PropertyChanged; } catch { }
-            try { TrayAllWindowsService.TrayStateChanged -= OnTrayStateChanged; } catch { }
+            try { AppServices.Get<TrayAllWindowsService>().TrayStateChanged -= OnTrayStateChanged; } catch { }
             try
             {
                 _notifyIcon.Dispose();
@@ -787,7 +787,7 @@ namespace TWChatOverlay.Views
             var tray = new TrayIconService("TWChatOverlay", new[]
             {
                 new TrayIconService.MenuItem("열기", RestoreFromTray),
-                new TrayIconService.MenuItem("모든 창 숨기기", TrayAllWindowsService.HideAll),
+                new TrayIconService.MenuItem("모든 창 숨기기", AppServices.Get<TrayAllWindowsService>().HideAll),
                 new TrayIconService.MenuItem("종료", () =>
                 {
                     ChatWindowHub.BeginShutdown();
@@ -801,7 +801,7 @@ namespace TWChatOverlay.Views
         private void Minimize_Click(object sender, RoutedEventArgs e)
         {
             // 이미 최소화 상태면 한 번 더 눌러 이전 상태로 복원
-            if (TrayAllWindowsService.IsTrayed)
+            if (AppServices.Get<TrayAllWindowsService>().IsTrayed)
                 RestoreFromTray();
             else
                 MinimizeToTray();
@@ -835,7 +835,7 @@ namespace TWChatOverlay.Views
         private void MinimizeToTray()
         {
             PersistMenuWindowPosition();
-            TrayAllWindowsService.HideAll();
+            AppServices.Get<TrayAllWindowsService>().HideAll();
         }
 
         /// <summary>트레이에서 모든 창을 복원합니다. (트레이 아이콘 더블클릭 / '열기' 메뉴)</summary>
@@ -843,9 +843,9 @@ namespace TWChatOverlay.Views
         {
             Dispatcher.Invoke(() =>
             {
-                if (TrayAllWindowsService.IsTrayed)
+                if (AppServices.Get<TrayAllWindowsService>().IsTrayed)
                 {
-                    TrayAllWindowsService.RestoreAll();
+                    AppServices.Get<TrayAllWindowsService>().RestoreAll();
                 }
 
                 if (!IsVisible)

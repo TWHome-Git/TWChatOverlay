@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -115,7 +115,7 @@ namespace TWChatOverlay.Services
         {
             try
             {
-                if (TrayAllWindowsService.IsTrayed)
+                if (AppServices.Get<TrayAllWindowsService>().IsTrayed)
                     return;
 
                 // 잠금 해제 모드는 배경/배너/인스펙터가 자체적으로 z-순서를 관리한다

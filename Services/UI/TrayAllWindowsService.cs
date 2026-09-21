@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
@@ -9,23 +9,23 @@ namespace TWChatOverlay.Services
     /// 앱의 모든 창을 한 번에 트레이로 숨기고 다시 복원합니다.
     /// 숨길 당시 보이던 창만 기억해 두었다가 복원하므로, 원래 닫혀 있던 창은 다시 뜨지 않습니다.
     /// </summary>
-    public static class TrayAllWindowsService
+    public sealed class TrayAllWindowsService
     {
-        private static readonly List<WeakReference<Window>> _hiddenWindows = new();
-        private static readonly object _lock = new();
-        private static TWChatOverlay.Views.TrayRestoreProxyWindow? _taskbarProxy;
+        private readonly List<WeakReference<Window>> _hiddenWindows = new();
+        private readonly object _lock = new();
+        private TWChatOverlay.Views.TrayRestoreProxyWindow? _taskbarProxy;
 
-        public static bool IsTrayed { get; private set; }
+        public bool IsTrayed { get; private set; }
 
-        public static event Action<bool>? TrayStateChanged;
+        public event Action<bool>? TrayStateChanged;
 
-        public static void Toggle()
+        public void Toggle()
         {
             if (IsTrayed) RestoreAll();
             else HideAll();
         }
 
-        public static void HideAll()
+        public void HideAll()
         {
             var app = Application.Current;
             if (app == null) return;
@@ -64,7 +64,7 @@ namespace TWChatOverlay.Services
             });
         }
 
-        private static void ShowTaskbarProxy()
+        private void ShowTaskbarProxy()
         {
             try
             {
@@ -87,7 +87,7 @@ namespace TWChatOverlay.Services
             }
         }
 
-        private static void CloseTaskbarProxy()
+        private void CloseTaskbarProxy()
         {
             try
             {
@@ -98,7 +98,7 @@ namespace TWChatOverlay.Services
             catch { }
         }
 
-        public static void RestoreAll()
+        public void RestoreAll()
         {
             var app = Application.Current;
             if (app == null) return;

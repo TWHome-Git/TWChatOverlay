@@ -31,7 +31,7 @@ namespace TWChatOverlay.Views
                 return;
 
             // 작업 표시줄 버튼 클릭으로 복원됨 → 모든 창 복원 (이 창은 RestoreAll이 닫는다)
-            try { Services.TrayAllWindowsService.RestoreAll(); } catch { }
+            try { Services.AppServices.Get<Services.TrayAllWindowsService>().RestoreAll(); } catch { }
         }
     }
 }

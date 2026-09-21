@@ -8,13 +8,13 @@ namespace TWChatOverlay.Services
     /// <summary>
     /// 경험치 누적 알림 전용 창을 표시합니다.
     /// </summary>
-    public static class ExperienceAlertWindowService
+    public sealed class ExperienceAlertWindowService
     {
-        private static ExperienceAlertWindow? _window;
-        private static Func<ExperienceAlertStateSnapshot>? _stateSnapshotProvider;
-        private static Action<ExperienceAlertStateSnapshot>? _stateSnapshotApplyAction;
+        private ExperienceAlertWindow? _window;
+        private Func<ExperienceAlertStateSnapshot>? _stateSnapshotProvider;
+        private Action<ExperienceAlertStateSnapshot>? _stateSnapshotApplyAction;
 
-        public static void ConfigureStateBridge(
+        public void ConfigureStateBridge(
             Func<ExperienceAlertStateSnapshot>? stateSnapshotProvider,
             Action<ExperienceAlertStateSnapshot>? stateSnapshotApplyAction)
         {
@@ -22,7 +22,7 @@ namespace TWChatOverlay.Services
             _stateSnapshotApplyAction = stateSnapshotApplyAction;
         }
 
-        public static bool TryGetStateSnapshot(ChatSettings settings, out ExperienceAlertStateSnapshot snapshot)
+        public bool TryGetStateSnapshot(ChatSettings settings, out ExperienceAlertStateSnapshot snapshot)
         {
             if (settings == null)
             {
@@ -34,7 +34,7 @@ namespace TWChatOverlay.Services
             return true;
         }
 
-        public static bool ApplyStateSnapshot(ExperienceAlertStateSnapshot snapshot)
+        public bool ApplyStateSnapshot(ExperienceAlertStateSnapshot snapshot)
         {
             if (snapshot == null || _stateSnapshotApplyAction == null)
                 return false;
@@ -43,16 +43,16 @@ namespace TWChatOverlay.Services
             return true;
         }
 
-        public static void Show(string message, ChatSettings settings)
+        public void Show(string message, ChatSettings settings)
         {
-            if (TrayAllWindowsService.IsTrayed)
+            if (AppServices.Get<TrayAllWindowsService>().IsTrayed)
                 return; // 트레이 최소화 중에는 알림 창을 띄우지 않는다
 
             ShowWindow(message, settings, requireAlertEnabled: true);
         }
 
         /// <summary>통합 알림 스택 앵커 미리보기로 위임.</summary>
-        public static void ShowPositionPreview(ChatSettings settings, bool force = false)
+        public void ShowPositionPreview(ChatSettings settings, bool force = false)
         {
             if (settings == null || (!force && !settings.ShowExperienceLimitAlertWindow))
                 return;
@@ -60,7 +60,7 @@ namespace TWChatOverlay.Services
             ToastStackService.ShowPositionPreview(settings);
         }
 
-        private static void ShowWindow(string message, ChatSettings settings, bool requireAlertEnabled, bool isPreview = false)
+        private void ShowWindow(string message, ChatSettings settings, bool requireAlertEnabled, bool isPreview = false)
         {
             if (string.IsNullOrWhiteSpace(message))
                 return;
@@ -98,7 +98,7 @@ namespace TWChatOverlay.Services
         }
 
         /// <summary>설정 슬라이더 변경을 열려 있는 알림 창에 즉시 반영한다.</summary>
-        public static void ApplyFontSize(double size)
+        public void ApplyFontSize(double size)
         {
             Application.Current.Dispatcher.BeginInvoke(new Action(() =>
             {
@@ -107,7 +107,7 @@ namespace TWChatOverlay.Services
             }));
         }
 
-        public static void Close()
+        public void Close()
         {
             Application.Current.Dispatcher.BeginInvoke(new Action(() =>
             {
@@ -123,7 +123,7 @@ namespace TWChatOverlay.Services
             }));
         }
 
-        public static void RefreshState(ChatSettings settings)
+        public void RefreshState(ChatSettings settings)
         {
             if (settings == null)
                 return;
@@ -137,10 +137,10 @@ namespace TWChatOverlay.Services
             }));
         }
 
-        public static void SaveCurrentPosition(ChatSettings settings)
+        public void SaveCurrentPosition(ChatSettings settings)
             => ToastStackService.SaveCurrentPosition(settings);
 
-        private static ExperienceAlertStateSnapshot GetCurrentSnapshot(ChatSettings settings)
+        private ExperienceAlertStateSnapshot GetCurrentSnapshot(ChatSettings settings)
         {
             var snapshot = _stateSnapshotProvider?.Invoke();
             if (snapshot != null)

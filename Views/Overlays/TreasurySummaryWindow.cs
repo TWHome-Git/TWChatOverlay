@@ -250,7 +250,7 @@ namespace TWChatOverlay.Views
 
         public static void ShowOrUpdate(ChatSettings settings, IReadOnlyList<int> runCounts, int currentRun)
         {
-            if (TrayAllWindowsService.IsTrayed)
+            if (AppServices.Get<TrayAllWindowsService>().IsTrayed)
                 return;
 
             Application.Current?.Dispatcher.BeginInvoke(new Action(() =>

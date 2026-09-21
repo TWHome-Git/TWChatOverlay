@@ -30,7 +30,7 @@ namespace TWChatOverlay.Services
         /// <summary>N/최대 형식이 아닌 자유 문구용 (예: 심연의 보물창고 금화 주머니 카운트). iconUri는 메시지 왼쪽 아이콘.</summary>
         public void ShowMessage(string dungeonName, string message, int durationSeconds, ChatSettings settings, double? fontSize = null, string? iconUri = null)
         {
-            if (TrayAllWindowsService.IsTrayed)
+            if (AppServices.Get<TrayAllWindowsService>().IsTrayed)
                 return; // 트레이 최소화 중에는 알림 창을 띄우지 않는다
 
             if (string.IsNullOrWhiteSpace(dungeonName))

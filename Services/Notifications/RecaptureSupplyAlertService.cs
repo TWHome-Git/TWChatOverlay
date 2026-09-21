@@ -11,7 +11,7 @@ using TWChatOverlay.Views;
 
 namespace TWChatOverlay.Services
 {
-    public static class RecaptureSupplyAlertService
+    public sealed class RecaptureSupplyAlertService
     {
         private static readonly Regex TriggerRegex = new(
             @"경보\s*장치\s*4개를\s*모두\s*해제하고\s*보급품이\s*보관\s*되어\s*있는\s*막사를\s*찾으시오\.",
@@ -23,13 +23,13 @@ namespace TWChatOverlay.Services
         // 진입 문구에서 켜고 성공/실패 문구에서 끈다. 발판 순서 알림은 이 사이에서만 본다.
         // 종료 줄을 놓쳐도 영원히 켜져 있지 않게 30분이 지나면 꺼진 것으로 친다.
         private static readonly TimeSpan RunSafetyLimit = TimeSpan.FromMinutes(30);
-        private static DateTime _runStartedUtc = DateTime.MinValue;
+        private DateTime _runStartedUtc = DateTime.MinValue;
 
         /// <summary>보급품 탈환에 들어가 있는 동안 true.</summary>
-        public static bool IsInRun =>
+        public bool IsInRun =>
             _runStartedUtc != DateTime.MinValue && DateTime.UtcNow - _runStartedUtc < RunSafetyLimit;
 
-        private static readonly HttpClient HttpClient = new()
+        private readonly HttpClient HttpClient = new()
         {
             Timeout = TimeSpan.FromSeconds(10)
         };
@@ -37,12 +37,12 @@ namespace TWChatOverlay.Services
         private static readonly string CacheDirectoryPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "ImageCache");
         private static readonly string CacheFilePath = Path.Combine(CacheDirectoryPath, "RecaptureSupplies.png");
         private static readonly string RemoteImageUrl = RemoteEndpoints.RecaptureSupplyImage;
-        private static readonly object SyncRoot = new();
+        private readonly object SyncRoot = new();
 
-        private static Task<bool>? _preloadTask;
-        private static RecaptureSupplyWindow? _window;
+        private Task<bool>? _preloadTask;
+        private RecaptureSupplyWindow? _window;
 
-        public static Task<bool> PreloadAsync()
+        public Task<bool> PreloadAsync()
         {
             lock (SyncRoot)
             {
@@ -65,7 +65,7 @@ namespace TWChatOverlay.Services
             }
         }
 
-        public static void Observe(string formattedText)
+        public void Observe(string formattedText)
         {
             if (string.IsNullOrWhiteSpace(formattedText))
                 return;
@@ -74,7 +74,7 @@ namespace TWChatOverlay.Services
             {
                 // 트레이 최소화 중에도 진행 중 표시는 켠다. 창만 띄우지 않는다.
                 _runStartedUtc = DateTime.UtcNow;
-                if (!TrayAllWindowsService.IsTrayed)
+                if (!AppServices.Get<TrayAllWindowsService>().IsTrayed)
                     _ = ShowAsync();
                 return;
             }
@@ -83,23 +83,23 @@ namespace TWChatOverlay.Services
             {
                 _runStartedUtc = DateTime.MinValue;
                 Close();
-                RecaptureSupplyPadOrderService.Close();
+                AppServices.Get<RecaptureSupplyPadOrderService>().Close();
             }
         }
 
         /// <summary>잠금 해제 모드에서 위치/크기를 조정할 수 있게 지도 창을 미리보기로 띄운다.</summary>
-        public static void ShowPositionPreview(ChatSettings settings, bool force = false)
+        public void ShowPositionPreview(ChatSettings settings, bool force = false)
         {
             _ = ShowAsync(isPreview: true);
         }
 
         /// <summary>미리보기를 닫는다. (창의 Closed 처리에서 위치/크기가 저장된다)</summary>
-        public static void ClosePositionPreview()
+        public void ClosePositionPreview()
         {
             Close();
         }
 
-        public static void Close()
+        public void Close()
         {
             Application.Current.Dispatcher.BeginInvoke(new Action(() =>
             {
@@ -115,7 +115,7 @@ namespace TWChatOverlay.Services
             }));
         }
 
-        private static async Task ShowAsync(bool isPreview = false)
+        private async Task ShowAsync(bool isPreview = false)
         {
             if (!await EnsureImageReadyAsync().ConfigureAwait(false))
                 return;
@@ -170,7 +170,7 @@ namespace TWChatOverlay.Services
         }
 
         /// <summary>지도 창이 떠 있으면 설정에 저장된 위치/크기로 옮긴다. 설정 전체 교체(프로필 불러오기) 뒤에 쓴다.</summary>
-        public static void ApplyStoredBounds(ChatSettings settings)
+        public void ApplyStoredBounds(ChatSettings settings)
         {
             if (settings == null)
                 return;
@@ -184,7 +184,7 @@ namespace TWChatOverlay.Services
             }));
         }
 
-        private static void ApplyStoredBounds(RecaptureSupplyWindow window, ChatSettings settings)
+        private void ApplyStoredBounds(RecaptureSupplyWindow window, ChatSettings settings)
         {
             bool hasStoredPosition = settings.RecaptureSupplyWindowLeft.HasValue && settings.RecaptureSupplyWindowTop.HasValue;
             WindowPlacement.ApplyStoredBounds(window,
@@ -195,7 +195,7 @@ namespace TWChatOverlay.Services
                 : WindowStartupLocation.CenterScreen;
         }
 
-        private static ChatSettings? GetSharedSettings()
+        private ChatSettings? GetSharedSettings()
         {
             try
             {
@@ -215,7 +215,7 @@ namespace TWChatOverlay.Services
             return null;
         }
 
-        private static async Task<bool> EnsureImageReadyAsync()
+        private async Task<bool> EnsureImageReadyAsync()
         {
             if (IsCacheValid())
             {
@@ -227,7 +227,7 @@ namespace TWChatOverlay.Services
             return ready;
         }
 
-        private static bool IsCacheValid()
+        private bool IsCacheValid()
         {
             try
             {
@@ -239,7 +239,7 @@ namespace TWChatOverlay.Services
             }
         }
 
-        private static async Task<bool> LoadOrDownloadImageAsync()
+        private async Task<bool> LoadOrDownloadImageAsync()
         {
             try
             {

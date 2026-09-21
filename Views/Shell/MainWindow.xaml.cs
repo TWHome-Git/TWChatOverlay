@@ -141,7 +141,7 @@ namespace TWChatOverlay.Views
             _expService.TrackerActiveChanged += () => Dispatcher.BeginInvoke(new Action(RefreshExpTrackerWindow), DispatcherPriority.Background);
             _expTrackerViewModel.UpdateDisplay();
             _experienceEssenceAlertService = AppServices.Get<ExperienceEssenceAlertService>();
-            ExperienceAlertWindowService.ConfigureStateBridge(
+            AppServices.Get<ExperienceAlertWindowService>().ConfigureStateBridge(
                 () => _experienceEssenceAlertService.GetStateSnapshot(),
                 snapshot => _experienceEssenceAlertService.ApplyStateSnapshot(snapshot));
             _dungeonCountDisplayService = AppServices.Get<DungeonCountDisplayService>();
@@ -161,7 +161,7 @@ namespace TWChatOverlay.Views
                 // LogService가 실시간 읽기 시작 위치를 정한 뒤에 돌아야 그 사이 줄이 빠지지 않는다.
                 _ = WeeklySeedRewardService.CatchUpAsync(_settings.ChatLogFolderPath);
             };
-            BlacklistService.BlacklistChanged += () =>
+            AppServices.Get<BlacklistService>().BlacklistChanged += () =>
             {
                 Dispatcher.BeginInvoke(new Action(() => RequestRefreshLogDisplay()), DispatcherPriority.Background);
             };
@@ -203,7 +203,7 @@ namespace TWChatOverlay.Views
             }
             catch { }
             try { ChatWindowHub.BeginShutdown(); } catch { }
-            try { ExperienceAlertWindowService.SaveCurrentPosition(_settings); } catch { }
+            try { AppServices.Get<ExperienceAlertWindowService>().SaveCurrentPosition(_settings); } catch { }
             try { AppServices.Get<DungeonCountDisplayWindowService>().SaveCurrentPosition(_settings); } catch { }
             try { _buffTrackerService.PropertyChanged -= BuffTrackerService_PropertyChanged; } catch { }
             try { BuffTrackerWindow.Instance?.Close(); } catch { }
@@ -260,7 +260,7 @@ namespace TWChatOverlay.Views
         private void RefreshExpTrackerWindow()
         {
             // 트레이로 최소화된 동안에는 경험치 갱신이 창을 다시 띄우지 않게 한다
-            if (TrayAllWindowsService.IsTrayed)
+            if (AppServices.Get<TrayAllWindowsService>().IsTrayed)
                 return;
 
             // 잠금 해제, 또는 추가 기능 > 경험치 추적 > 일반 탭에서만 미리보기로 표시한다
@@ -389,7 +389,7 @@ namespace TWChatOverlay.Views
                             TriggerMenuButton("BtnDailyWeekly");
                             break;
                         case HotKeyService.TOGGLE_TRAY_ALL_ID:
-                            TrayAllWindowsService.Toggle();
+                            AppServices.Get<TrayAllWindowsService>().Toggle();
                             break;
                         case HotKeyService.TOGGLE_UNLOCK_ID:
                             UiLockService.Toggle();
@@ -399,7 +399,7 @@ namespace TWChatOverlay.Views
 
                 _stickyService = new WindowStickyService(this, _settings);
                 _stickyService.AuxiliaryWindowVisibilityChanged += StickyService_AuxiliaryWindowVisibilityChanged;
-                TrayAllWindowsService.TrayStateChanged += trayed =>
+                AppServices.Get<TrayAllWindowsService>().TrayStateChanged += trayed =>
                 {
                     _stickyService?.UpdatePositionImmediately();
 

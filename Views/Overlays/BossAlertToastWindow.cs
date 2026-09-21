@@ -257,7 +257,7 @@ namespace TWChatOverlay.Views
         /// </summary>
         public static void ShowAlert(string bossName, string label, DateTime occurrence, ChatSettings? settings, TimeSpan? entryWindow = null)
         {
-            if (TrayAllWindowsService.IsTrayed)
+            if (AppServices.Get<TrayAllWindowsService>().IsTrayed)
                 return; // 트레이 최소화 중에는 알림 창을 띄우지 않는다
 
             try

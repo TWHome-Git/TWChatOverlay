@@ -6,37 +6,37 @@ using System.Windows.Media;
 
 namespace TWChatOverlay.Services
 {
-    public static class BlacklistService
+    public sealed class BlacklistService
     {
-        private static readonly object SyncRoot = new();
-        private static readonly Dictionary<string, string> Rules = new(StringComparer.OrdinalIgnoreCase);
+        private readonly object SyncRoot = new();
+        private readonly Dictionary<string, string> Rules = new(StringComparer.OrdinalIgnoreCase);
 
-        public static event Action? BlacklistChanged;
+        public event Action? BlacklistChanged;
 
-        public static string FilePath => Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "blacklist.txt");
+        public string FilePath => Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "blacklist.txt");
         public static SolidColorBrush HighlightBrush { get; } = CreateFrozenBrush(0xFF, 0x8A, 0x8A);
         public static SolidColorBrush HighlightBackgroundBrush { get; } = CreateFrozenBrush(0x45, 0x21, 0x21);
 
-        public static void Initialize()
+        public void Initialize()
         {
             EnsureFileExists();
             Reload();
         }
 
-        public static string GetRawText()
+        public string GetRawText()
         {
             EnsureFileExists();
             return File.ReadAllText(FilePath, Encoding.UTF8);
         }
 
-        public static void SaveRawText(string text)
+        public void SaveRawText(string text)
         {
             EnsureFileExists();
             File.WriteAllText(FilePath, text ?? string.Empty, new UTF8Encoding(false));
             Reload();
         }
 
-        public static void Reload()
+        public void Reload()
         {
             EnsureFileExists();
 
@@ -68,7 +68,7 @@ namespace TWChatOverlay.Services
             BlacklistChanged?.Invoke();
         }
 
-        public static bool TryGetReason(string? userId, out string reason)
+        public bool TryGetReason(string? userId, out string reason)
         {
             reason = string.Empty;
             if (string.IsNullOrWhiteSpace(userId))
@@ -123,7 +123,7 @@ namespace TWChatOverlay.Services
             return trimmed.Length == 0 || trimmed.StartsWith("#", StringComparison.Ordinal);
         }
 
-        private static void EnsureFileExists()
+        private void EnsureFileExists()
         {
             string path = FilePath;
             string? directoryPath = Path.GetDirectoryName(path);

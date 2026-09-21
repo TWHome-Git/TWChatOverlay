@@ -71,7 +71,7 @@ namespace TWChatOverlay.Services
         private void UpdatePosition()
         {
             // 모든 창 트레이 중에는 어떤 모드(설정 모드 포함)에서도 자동으로 다시 띄우지 않는다
-            if (TrayAllWindowsService.IsTrayed)
+            if (AppServices.Get<TrayAllWindowsService>().IsTrayed)
             {
                 return;
             }

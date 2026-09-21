@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Windows;
 using System.Windows.Documents;
 using System.Windows.Media;
@@ -28,7 +28,7 @@ namespace TWChatOverlay.Services
             if (document == null) throw new ArgumentNullException(nameof(document));
             if (settings == null) throw new ArgumentNullException(nameof(settings));
 
-            bool isBlacklisted = BlacklistService.TryGetReason(log.SenderId, out string blacklistReason);
+            bool isBlacklisted = AppServices.Get<BlacklistService>().TryGetReason(log.SenderId, out string blacklistReason);
             Brush foreground = isBlacklisted ? BlacklistService.HighlightBrush : log.Brush;
             string displayText = isBlacklisted ? $"{log.FormattedText} [ {blacklistReason} ]" : log.FormattedText;
 

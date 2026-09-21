@@ -95,10 +95,10 @@ namespace TWChatOverlay.Services
             else
             {
                 _showDelayTimer.Stop();
-                ExperienceAlertWindowService.Close();
+                AppServices.Get<ExperienceAlertWindowService>().Close();
             }
 
-            ExperienceAlertWindowService.RefreshState(_settings);
+            AppServices.Get<ExperienceAlertWindowService>().RefreshState(_settings);
         }
 
         public void Reset()
@@ -127,7 +127,7 @@ namespace TWChatOverlay.Services
 
             _isTracking = true;
             SaveStateToSettings();
-            ExperienceAlertWindowService.RefreshState(_settings);
+            AppServices.Get<ExperienceAlertWindowService>().RefreshState(_settings);
             AppLogger.Info($"Experience essence tracker state overridden manually. Total={_trackedExp:N0}");
         }
 
@@ -228,7 +228,7 @@ namespace TWChatOverlay.Services
 
         private void ShowAlertWindow()
         {
-            ExperienceAlertWindowService.Show(
+            AppServices.Get<ExperienceAlertWindowService>().Show(
                 $"\uACBD\uD5D8\uCE58 {FormatExpEok(_trackedExp)} \uB204\uC801 \uB2EC\uC131",
                 _settings);
         }

@@ -63,7 +63,7 @@ namespace TWChatOverlay.Views
             try
             {
                 decimal currentEok = 0m;
-                if (ExperienceAlertWindowService.TryGetStateSnapshot(_settings, out var snapshot))
+                if (AppServices.Get<ExperienceAlertWindowService>().TryGetStateSnapshot(_settings, out var snapshot))
                     currentEok = snapshot.TotalExp / 100_000_000m;
 
                 var dialog = new ExpEditDialog(currentEok, _settings.EnableExperienceLimitAlert)
@@ -83,7 +83,7 @@ namespace TWChatOverlay.Views
                 _settings.ExperienceLimitTotalExp = totalExp;
                 _settings.ExperienceLimitStateInitialized = true;
                 ConfigService.Save(_settings);
-                ExperienceAlertWindowService.ApplyStateSnapshot(new ExperienceAlertStateSnapshot { TotalExp = totalExp });
+                AppServices.Get<ExperienceAlertWindowService>().ApplyStateSnapshot(new ExperienceAlertStateSnapshot { TotalExp = totalExp });
                 ExperienceWeeklyRefreshService.MarkCurrentWeekRefreshed(_settings, DateTime.Now);
                 AppLogger.Info($"Applied manual total exp from alert-window edit. Eok={dialog.ResultEokValue:0.##}, TotalExp={totalExp:N0}");
 

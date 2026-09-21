@@ -125,7 +125,7 @@ namespace TWChatOverlay.ViewModels
             set
             {
                 if (SetSetting(ref _experienceAlertFontSize, value, (settings, newValue) => settings.ExperienceAlertFontSize = newValue))
-                    ExperienceAlertWindowService.ApplyFontSize(value);
+                    AppServices.Get<ExperienceAlertWindowService>().ApplyFontSize(value);
             }
         }
 
@@ -258,7 +258,7 @@ namespace TWChatOverlay.ViewModels
 
         private void RefreshExperienceLimitState()
         {
-            if (!ExperienceAlertWindowService.TryGetStateSnapshot(_settings, out var snapshot))
+            if (!AppServices.Get<ExperienceAlertWindowService>().TryGetStateSnapshot(_settings, out var snapshot))
                 return;
 
             ExperienceLimitTotalExp = FormatExpEokValue(snapshot.TotalExp);
@@ -284,7 +284,7 @@ namespace TWChatOverlay.ViewModels
             _settings.ExperienceLimitStateInitialized = true;
             AppLogger.Info($"Applied manual total exp from eok input. InputEok='{inputEokText}', TotalExp={totalExp:N0}");
             SaveSettings();
-            _ = ExperienceAlertWindowService.ApplyStateSnapshot(new ExperienceAlertStateSnapshot
+            _ = AppServices.Get<ExperienceAlertWindowService>().ApplyStateSnapshot(new ExperienceAlertStateSnapshot
             {
                 TotalExp = totalExp
             });

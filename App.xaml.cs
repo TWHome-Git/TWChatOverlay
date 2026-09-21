@@ -113,15 +113,20 @@ namespace TWChatOverlay
                 services.AddSingleton<MessengerLogWatcherService>();
                 services.AddSingleton<BuffTrackerService>();
                 services.AddSingleton<LogService>();
+                services.AddSingleton<RecaptureSupplyPadOrderService>();
+                services.AddSingleton<RecaptureSupplyAlertService>();
+                services.AddSingleton<ExperienceAlertWindowService>();
+                services.AddSingleton<TrayAllWindowsService>();
+                services.AddSingleton<BlacklistService>();
                 services.AddSingleton<ShoutToastService>();
                 services.AddSingleton<DungeonCountDisplayWindowService>();
                 services.AddSingleton<MessengerEtaToastService>();
             });
 
             EtaProfileResolver.InitializeAsync();
-            BlacklistService.Initialize();
+            AppServices.Get<BlacklistService>().Initialize();
             AppServices.Get<IIdTagService>().Initialize();
-            _ = RecaptureSupplyAlertService.PreloadAsync();
+            _ = AppServices.Get<RecaptureSupplyAlertService>().PreloadAsync();
             SecondaryWindowTopmostRefreshService.Initialize();
             ForegroundTopmostGuard.Initialize();
             base.OnStartup(e);

@@ -160,7 +160,7 @@ namespace TWChatOverlay.Views
             Map(() => ToastStackService.RefreshPreviews(_settings), nameof(ChatSettings.UnifiedToastStack)); // 통합/분리 전환: 미리보기와 열린 알림 재배치
             Map(OnExperienceLimitAlertSettingChanged, nameof(ChatSettings.EnableExperienceLimitAlert));
             Map(OnExperienceLimitAlertWindowSettingChanged, nameof(ChatSettings.ShowExperienceLimitAlertWindow));
-            Map(() => ExperienceAlertWindowService.RefreshState(_settings), nameof(ChatSettings.ExperienceLimitTotalExp));
+            Map(() => AppServices.Get<ExperienceAlertWindowService>().RefreshState(_settings), nameof(ChatSettings.ExperienceLimitTotalExp));
 
             // 버프 추적
             Map(ApplyBuffTrackerWindowSettings, nameof(ChatSettings.EnableBuffTrackerAlert));
@@ -233,19 +233,19 @@ namespace TWChatOverlay.Views
         private void OnExperienceLimitAlertSettingChanged()
         {
             if (_settings.EnableExperienceLimitAlert && _settings.ShowExperienceLimitAlertWindow)
-                ExperienceAlertWindowService.ShowPositionPreview(_settings);
+                AppServices.Get<ExperienceAlertWindowService>().ShowPositionPreview(_settings);
             else if (!_settings.EnableExperienceLimitAlert && !_settings.ShowExperienceLimitAlertWindow)
-                ExperienceAlertWindowService.Close();
+                AppServices.Get<ExperienceAlertWindowService>().Close();
 
-            ExperienceAlertWindowService.RefreshState(_settings);
+            AppServices.Get<ExperienceAlertWindowService>().RefreshState(_settings);
         }
 
         private void OnExperienceLimitAlertWindowSettingChanged()
         {
             if (_settings.ShowExperienceLimitAlertWindow)
-                ExperienceAlertWindowService.ShowPositionPreview(_settings);
+                AppServices.Get<ExperienceAlertWindowService>().ShowPositionPreview(_settings);
             else
-                ExperienceAlertWindowService.Close();
+                AppServices.Get<ExperienceAlertWindowService>().Close();
         }
 
         private void OnDungeonCountDisplayWindowSettingChanged()

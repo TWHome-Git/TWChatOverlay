@@ -68,7 +68,7 @@ namespace TWChatOverlay.Views
         public void ApplyVisibility()
         {
             // 트레이로 최소화된 동안에는 버프 변화가 창을 다시 띄우지 않게 한다
-            if (TrayAllWindowsService.IsTrayed)
+            if (AppServices.Get<TrayAllWindowsService>().IsTrayed)
                 return;
 
             // 잠금 해제 중에는 최대 크기 미리보기(도우미 창)가 대신 표시된다

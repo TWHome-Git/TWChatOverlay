@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -970,7 +970,7 @@ namespace TWChatOverlay.Services
                 DungeonDefinition def = run.Definition;
                 if (_priming || def.Segments.Length <= 1 || def.Segments[index].WholeRun)
                     return;
-                if (TrayAllWindowsService.IsTrayed)
+                if (AppServices.Get<TrayAllWindowsService>().IsTrayed)
                     return;
 
                 var partial = new DungeonRunRecord
@@ -1018,7 +1018,7 @@ namespace TWChatOverlay.Services
                 AppLogger.Info($"Dungeon timer finished. Dungeon='{recordDef.GroupName}/{recordDef.Name}' Difficulty='{record.Difficulty}' Total={record.TotalSeconds:0}s");
                 if (_priming)
                     return; // 시작 때 오늘 로그를 넣는 중 — 기록만 남기고 화면에는 띄우지 않는다
-                if (TrayAllWindowsService.IsTrayed)
+                if (AppServices.Get<TrayAllWindowsService>().IsTrayed)
                     return; // 트레이 최소화 중에는 창을 띄우지 않는다 (기록은 남는다)
 
                 int? progressCurrent = null, progressMax = null;
