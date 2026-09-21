@@ -97,9 +97,21 @@
                             VerticalAlignment="Center"
                             Margin="0,0,4,0"
                             Click="DetailButton_Click"
-                            Content="자세히"
-                            ToolTip="첫 기록부터 지금까지의 클리어 시간 추이를 그래프로 봅니다"
-                            Style="{StaticResource OverlayChipButtonStyle}"/>
+                            ToolTip="자세히 — 첫 기록부터 지금까지의 클리어 시간 추이를 그래프로 봅니다"
+                            Style="{StaticResource OverlayChipButtonStyle}">
+                        <!-- 전체 모드는 글자, 작은 모드는 제목 줄이 좁아 꺾은선 아이콘만 (코드에서 바꾼다). 아이콘 색은 칩 글자 색을 따른다 -->
+                        <Grid>
+                            <TextBlock x:Name="DetailButtonText" Text="자세히"/>
+                            <Path x:Name="DetailButtonIcon"
+                                  Width="14" Height="12"
+                                  Data="M1,10.5 L5,6 L8.5,8.5 L13,2"
+                                  Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
+                                  StrokeThickness="1.6"
+                                  StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"
+                                  SnapsToDevicePixels="False"
+                                  Visibility="Collapsed"/>
+                        </Grid>
+                    </Button>
 
                     <!-- 작은 모드 ↔ 전체 모드. 내용은 코드에서 "작게"/"크게"로 바꾼다 -->
                     <Button x:Name="ModeButton"

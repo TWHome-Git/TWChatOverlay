@@ -101,8 +101,17 @@ namespace TWChatOverlay.Views
                 StartCloseAnimation();
             };
 
-            // 잠금 해제 모드에서는 창 어디를 잡아도 선택+드래그 가능
-            PreviewMouseLeftButtonDown += (_, e) => TryBeginDrag(e, markHandled: true);
+            // 잠금 해제 모드에서는 창 어디를 잡아도 선택+드래그 가능.
+            // 단 작게/크게 버튼은 눌리게 둔다 — 자리를 잡는 중에 실제로 쓸 모드의 크기로 바꿔 볼 수 있어야 한다.
+            PreviewMouseLeftButtonDown += (_, e) =>
+            {
+                if (e.OriginalSource is DependencyObject source && IsInside(source, ModeButton))
+                {
+                    AppServices.Get<UiLockService>().Select(this); // 잠금 상태면 내부에서 무시된다
+                    return;
+                }
+                TryBeginDrag(e, markHandled: true);
+            };
             LocationChanged += (_, _) => PersistPositionDeferred();
 
             BuildGroupList();
@@ -112,6 +121,20 @@ namespace TWChatOverlay.Views
                 ApplyFontSize(_settings.ContentTimerFontSize);
                 _settings.PropertyChanged += Settings_PropertyChanged;
             }
+        }
+
+        /// <summary>눌린 요소가 target 안쪽(자기 자신 포함)인지. Run 같은 글자 요소는 논리 트리로 거슬러 올라간다.</summary>
+        private static bool IsInside(DependencyObject source, DependencyObject target)
+        {
+            for (DependencyObject? current = source; current != null;
+                 current = current is Visual || current is System.Windows.Media.Media3D.Visual3D
+                     ? VisualTreeHelper.GetParent(current)
+                     : LogicalTreeHelper.GetParent(current))
+            {
+                if (ReferenceEquals(current, target))
+                    return true;
+            }
+            return false;
         }
 
         // ===== 왼쪽 던전 목록 =====
@@ -244,7 +267,10 @@ namespace TWChatOverlay.Views
             GroupListPanel.Visibility = full;
             PrevGroupButton.Visibility = full;
             NextGroupButton.Visibility = full;
-            DetailButton.Visibility = full; // 클리어 순간의 작은 창에는 두지 않는다
+            // 자세히: 전체 모드는 글자 칩, 작은 모드는 제목 줄이 좁으므로 꺾은선 아이콘 칩
+            DetailButtonText.Visibility = full;
+            DetailButtonIcon.Visibility = _compact ? Visibility.Visible : Visibility.Collapsed;
+            DetailButton.Padding = _compact ? new Thickness(7, 0, 7, 0) : new Thickness(11, 0, 11, 1);
             ModeButton.Content = _compact ? "크게" : "작게";
 
             int hiddenGridColumn = HiddenColumnInCompact + 1;
