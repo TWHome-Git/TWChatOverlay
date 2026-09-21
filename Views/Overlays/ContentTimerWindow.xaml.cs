@@ -177,6 +177,8 @@ namespace TWChatOverlay.Views
 
             _fontScale = scale;
             TitleText.FontSize = Scaled(15);
+            if (_titleSubRun != null)
+                _titleSubRun.FontSize = Scaled(ProgressBaseFontSize);
             foreach (Button item in _groupButtons.Values)
             {
                 item.FontSize = Scaled(12);
@@ -322,7 +324,7 @@ namespace TWChatOverlay.Views
             EnsureTable(view);
             ApplyLayoutMode();
 
-            TitleText.Text = view.Title;
+            SetTitle(view.Title, view.TitleSub);
             HighlightGroup(view.GroupKey);
             ApplyPreviousHeader(view.PreviousIsBest);
 
@@ -366,6 +368,22 @@ namespace TWChatOverlay.Views
             }
         }
 
+        private const double ProgressBaseFontSize = 11;
+        private Run? _titleSubRun;
+
+        /// <summary>제목 + 진행도. 진행도는 행 이름 아래의 것과 같은 모양(괄호 없는 작은 힌트 글씨)으로 제목 옆에 둔다.</summary>
+        private void SetTitle(string title, string? sub)
+        {
+            TitleText.Inlines.Clear();
+            TitleText.Inlines.Add(new Run(title));
+            _titleSubRun = null;
+            if (string.IsNullOrEmpty(sub))
+                return;
+            _titleSubRun = new Run("  " + sub) { FontSize = Scaled(ProgressBaseFontSize), FontWeight = FontWeights.Normal };
+            _titleSubRun.SetResourceReference(TextElement.ForegroundProperty, HintBrushKey);
+            TitleText.Inlines.Add(_titleSubRun);
+        }
+
         /// <summary>행 이름. 묶음 표의 진행도("0/1")는 이름 옆이 아니라 아래에 작은 힌트 글씨로 둔다 — 값 칸의 시각 줄과 나란하다.</summary>
         private void SetRowLabel(TextBlock label, string name, string? sub)
         {
@@ -373,9 +391,8 @@ namespace TWChatOverlay.Views
             label.Inlines.Add(new Run(name));
             if (string.IsNullOrEmpty(sub))
                 return;
-            const double subBaseFontSize = 11;
             label.Inlines.Add(new LineBreak());
-            var subRun = new Run(sub) { FontSize = Scaled(subBaseFontSize), Tag = subBaseFontSize, FontWeight = FontWeights.Normal };
+            var subRun = new Run(sub) { FontSize = Scaled(ProgressBaseFontSize), Tag = ProgressBaseFontSize, FontWeight = FontWeights.Normal };
             subRun.SetResourceReference(TextElement.ForegroundProperty, HintBrushKey);
             label.Inlines.Add(subRun);
         }

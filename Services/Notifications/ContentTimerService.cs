@@ -52,6 +52,11 @@ namespace TWChatOverlay.Services
         /// <summary>이 표가 보여주는 묶음 키 (창 왼쪽 목록에서 강조할 항목).</summary>
         public string GroupKey { get; init; } = string.Empty;
         public string Title { get; init; } = string.Empty;
+        /// <summary>
+        /// 제목 옆 작은 글씨로 적는 진행도 ("3/7"). 진행도는 어디서든 같은 모양(괄호 없는 작은 힌트 글씨)으로 적는다 —
+        /// 던전 하나·같은 항목을 쓰는 묶음은 제목 옆에, 던전마다 항목이 다른 묶음은 행 이름 아래(<see cref="TimerRow.NameSub"/>)에. null이면 없음.
+        /// </summary>
+        public string? TitleSub { get; init; }
         public string Status { get; init; } = string.Empty;
         public List<TimerRow> Rows { get; } = new();
         /// <summary>합계 행 표시 여부 (한 판을 구간으로 나눈 던전만).</summary>
@@ -1170,10 +1175,12 @@ namespace TWChatOverlay.Services
         {
             DungeonDefinition[] group = RecordDefinitions.Where(d => d.GroupKey == def.GroupKey).ToArray();
             bool segmentMode = group.Length == 1;
-            // 묶음의 던전들이 같은 일일/주간 항목을 쓰면(토벌전 N/21) 진행도는 제목에, 각자 다르면(어비스 심층별 N/7) 행 이름에 붙인다
+            // 묶음의 던전들이 같은 일일/주간 항목을 쓰면(토벌전 N/21) 진행도는 제목 옆에, 각자 다르면(어비스 심층별 N/7) 행 이름 아래에 적는다
             bool sharedProgressItem = group.All(m => m.ProgressItemName == group[0].ProgressItemName);
-            string title = BuildTitle(def.GroupName, difficulty,
-                sharedProgressItem ? progressCurrent : null, sharedProgressItem ? progressMax : null, segmentMode);
+            string title = BuildTitle(def.GroupName, difficulty, segmentMode);
+            string? titleSub = sharedProgressItem && progressCurrent.HasValue && progressMax.HasValue && progressMax.Value > 0
+                ? $"{progressCurrent.Value}/{progressMax.Value}"
+                : null;
 
             // 머리글을 눌러 다시 그릴 수 있게 이번에 그린 내용을 기억해 둔다
             _lastViewArgs = (def, difficulty, status, progressCurrent, progressMax, inProgress, highlightSegment);
@@ -1182,6 +1189,7 @@ namespace TWChatOverlay.Services
             {
                 GroupKey = def.GroupKey,
                 Title = title,
+                TitleSub = titleSub,
                 Status = status,
                 ShowTotal = segmentMode && def.ShowTotal,
                 ShowColumnTimes = true,
@@ -1292,14 +1300,12 @@ namespace TWChatOverlay.Services
         private double? SegmentSeconds(DungeonRunRecord? record, string segmentName)
             => record != null && record.Segments.TryGetValue(segmentName, out double s) ? s : null;
 
-        /// <summary>"아페티리아 (3/7)" · "어비스 - 심층(지옥)" · "이클립스 토벌전 (5/21)" 꼴.</summary>
-        private string BuildTitle(string groupName, string difficulty, int? progressCurrent, int? progressMax, bool segmentMode)
+        /// <summary>"아페티리아" · "아페티리아 · 어려움" · "어비스 - 심층(지옥)" 꼴. 진행도는 제목에 넣지 않고 TitleSub로 따로 준다.</summary>
+        private string BuildTitle(string groupName, string difficulty, bool segmentMode)
         {
             string title = groupName;
             if (!string.IsNullOrEmpty(difficulty))
                 title += segmentMode ? $" · {difficulty}" : $"({difficulty})";
-            if (progressCurrent.HasValue && progressMax.HasValue && progressMax.Value > 0)
-                title += $" ({progressCurrent.Value}/{progressMax.Value})";
             return title;
         }
 
