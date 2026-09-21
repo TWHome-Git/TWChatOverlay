@@ -16,7 +16,7 @@ namespace TWChatOverlay.ViewModels
             Name = boss.Name;
             ScheduleText = BossTimerService.BuildScheduleText(boss);
             EntryMinutes = BossTimerService.GetEntryMinutes(boss);
-            _config = _settings.GetOrCreateBossAlertConfig(BossId);
+            _config = _settings.GetOrCreateBossAlertConfig(BossId, boss.EnabledByDefault);
         }
 
         public string BossId { get; }
@@ -67,10 +67,7 @@ namespace TWChatOverlay.ViewModels
             }
         }
 
-        private bool IsConfusedLand => string.Equals(BossId, "Confused Land", StringComparison.OrdinalIgnoreCase);
-        private bool IsOriginOfDoom => string.Equals(BossId, "Origin of Doom", StringComparison.OrdinalIgnoreCase);
-
-        /// <summary>입장 시간 카운트 토글을 노출할 보스인지 (혼란한 대지·파멸의 기원, JSON에 entryMinutes가 있는 보스).</summary>
+        /// <summary>입장 시간 카운트 토글을 노출할 보스인지 (JSON에 entryMinutes가 있는 보스).</summary>
         public bool HasEntryCountdown => EntryMinutes.HasValue;
 
         /// <summary>등장 후 입장 가능 시간(분).</summary>
@@ -83,20 +80,13 @@ namespace TWChatOverlay.ViewModels
         /// <summary>등장 후 입장 가능 시간을 팝업으로 카운트다운.</summary>
         public bool EntryCountdown
         {
-            get => IsOriginOfDoom ? _settings.BossAlertOriginOfDoomEntryCountdown
-                : IsConfusedLand ? _settings.BossAlertConfusedLandEntryCountdown
-                : _config.EntryCountdown ?? true;
+            get => _config.EntryCountdown ?? true;
             set
             {
                 if (EntryCountdown == value)
                     return;
 
-                if (IsOriginOfDoom)
-                    _settings.BossAlertOriginOfDoomEntryCountdown = value;
-                else if (IsConfusedLand)
-                    _settings.BossAlertConfusedLandEntryCountdown = value;
-                else
-                    _config.EntryCountdown = value;
+                _config.EntryCountdown = value;
                 OnPropertyChanged();
                 SaveSettings();
             }

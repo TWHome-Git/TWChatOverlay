@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 
 namespace TWChatOverlay.Models
@@ -41,6 +41,27 @@ namespace TWChatOverlay.Models
             SystemConfig = source.SystemConfig ?? new SystemSection();
             _enableDebugLogging = source.EnableDebugLogging;
             NotifySettingsReplaced();
+        }
+
+        /// <summary>
+        /// 옛 설정의 보스별 입장 카운트 토글(혼란한 대지·파멸의 기원 전용 값)을
+        /// 보스별 설정(Configs[id].EntryCountdown)으로 한 번만 옮긴다.
+        /// 보스 목록이 BossTimer.json에서 오므로 특정 보스 전용 설정은 더 두지 않는다.
+        /// </summary>
+        private void MigrateBossEntryCountdown()
+        {
+            // 옛 값이 꺼짐일 때만 옮긴다 (기본값 켜짐은 옮길 것이 없다)
+            if (!Alerts.Boss.ConfusedLandEntryCountdown)
+            {
+                GetOrCreateBossAlertConfig("Confused Land").EntryCountdown ??= false;
+                Alerts.Boss.ConfusedLandEntryCountdown = true;
+            }
+
+            if (!Alerts.Boss.OriginOfDoomEntryCountdown)
+            {
+                GetOrCreateBossAlertConfig("Origin of Doom").EntryCountdown ??= false;
+                Alerts.Boss.OriginOfDoomEntryCountdown = true;
+            }
         }
 
         /// <summary>
@@ -138,16 +159,13 @@ namespace TWChatOverlay.Models
             };
         }
 
+        /// <summary>
+        /// 보스 목록은 BossTimer.json에서 오므로 여기서는 미리 만들지 않는다.
+        /// 실제 설정은 보스를 처음 만날 때 GetOrCreateBossAlertConfig가 만든다.
+        /// </summary>
         private static Dictionary<string, BossAlertConfig> CreateDefaultBossAlertConfigs()
         {
-            return new Dictionary<string, BossAlertConfig>(StringComparer.OrdinalIgnoreCase)
-            {
-                ["Arkan"] = new(),
-                ["Scherzendo"] = new(),
-                ["Origin of Doom"] = new(),
-                ["Confused Land"] = new(),
-                ["event"] = new()
-            };
+            return new Dictionary<string, BossAlertConfig>(StringComparer.OrdinalIgnoreCase);
         }
 
         private static double ClampVolume(double value)

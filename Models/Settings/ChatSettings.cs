@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
@@ -59,8 +59,8 @@ namespace TWChatOverlay.Models
 
             if (Alerts.Dungeon.ItemConfigs == null || Alerts.Dungeon.ItemConfigs.Count == 0)
                 Alerts.Dungeon.ItemConfigs = CreateDefaultDungeonItemConfigs();
-            if (Alerts.Boss.Configs == null || Alerts.Boss.Configs.Count == 0)
-                Alerts.Boss.Configs = CreateDefaultBossAlertConfigs();
+            Alerts.Boss.Configs ??= CreateDefaultBossAlertConfigs();
+            MigrateBossEntryCountdown();
             Windows.OpacityPercents ??= new Dictionary<string, double>();
             Ui.OverlayOpacityByGroup ??= new Dictionary<string, double>(StringComparer.OrdinalIgnoreCase);
         }

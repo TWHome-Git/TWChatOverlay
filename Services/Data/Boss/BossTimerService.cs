@@ -25,16 +25,8 @@ namespace TWChatOverlay.Services
             refreshAnchorHourLocal: 11,
             forceRemoteCheckOnFirstCall: true);
         private static readonly SemaphoreSlim LoadLock = new(1, 1);
-        private static readonly string[] OrderedBossIds =
-        {
-            "Arkan",
-            "Scherzendo",
-            "Origin of Doom",
-            "Confused Land",
-            "event"
-        };
 
-        private static IReadOnlyList<BossTimerDefinition> _bosses = CreateFallbackBosses();
+        private static IReadOnlyList<BossTimerDefinition> _bosses = LoadBundledBosses();
         // 공휴일 날짜 (JSON의 holidays). 규칙의 days에 "holiday"가 있으면 이 날짜에 적용된다.
         private static HashSet<DateTime> _holidays = new();
 
@@ -42,6 +34,9 @@ namespace TWChatOverlay.Services
 
         public static IReadOnlyList<BossTimerDefinition> GetBosses()
             => _bosses;
+
+        public static BossTimerDefinition? FindBoss(string bossId)
+            => _bosses.FirstOrDefault(b => string.Equals(b.Id, bossId, StringComparison.OrdinalIgnoreCase));
 
         public static async Task EnsureLoadedAsync(bool forceRefresh = false)
         {
@@ -53,30 +48,8 @@ namespace TWChatOverlay.Services
                 if (string.IsNullOrWhiteSpace(json))
                     return;
 
-                var payload = JsonSerializer.Deserialize<BossTimerPayload>(json);
-                if (payload?.Bosses == null || payload.Bosses.Count == 0)
+                if (!TryParsePayload(json, out var ordered, out var holidays))
                     return;
-
-                var ordered = payload.Bosses
-                    .Where(static boss => !string.IsNullOrWhiteSpace(boss.Id))
-                    .OrderBy(static boss =>
-                    {
-                        int index = Array.IndexOf(OrderedBossIds, boss.Id);
-                        return index < 0 ? int.MaxValue : index;
-                    })
-                    .ThenBy(static boss => boss.Name, StringComparer.OrdinalIgnoreCase)
-                    .ToList();
-
-                if (ordered.Count == 0)
-                    return;
-
-                var holidays = new HashSet<DateTime>();
-                foreach (string value in payload.Holidays ?? new List<string>())
-                {
-                    if (DateTime.TryParse(value, System.Globalization.CultureInfo.InvariantCulture,
-                            System.Globalization.DateTimeStyles.None, out DateTime day))
-                        holidays.Add(day.Date);
-                }
 
                 _holidays = holidays;
                 _bosses = ordered;
@@ -217,10 +190,6 @@ namespace TWChatOverlay.Services
         {
             if (boss.Schedule?.EntryMinutes is int minutes && minutes > 0)
                 return minutes;
-            if (string.Equals(boss.Id, "Confused Land", StringComparison.OrdinalIgnoreCase))
-                return 4;
-            if (string.Equals(boss.Id, "Origin of Doom", StringComparison.OrdinalIgnoreCase))
-                return 6;
             return null;
         }
 
@@ -263,46 +232,97 @@ namespace TWChatOverlay.Services
             return false;
         }
 
-        private static IReadOnlyList<BossTimerDefinition> CreateFallbackBosses()
+        /// <summary>
+        /// JSON 본문을 보스 목록과 공휴일로 해석한다. 표시 순서는 JSON에 적은 순서이고,
+        /// order 값을 적은 보스가 있으면 그 값이 작은 쪽이 먼저 온다.
+        /// </summary>
+        private static bool TryParsePayload(string json, out List<BossTimerDefinition> bosses, out HashSet<DateTime> holidays)
         {
-            return new List<BossTimerDefinition>
+            bosses = new List<BossTimerDefinition>();
+            holidays = new HashSet<DateTime>();
+
+            var payload = JsonSerializer.Deserialize<BossTimerPayload>(json);
+            if (payload?.Bosses == null || payload.Bosses.Count == 0)
+                return false;
+
+            bosses = payload.Bosses
+                .Where(static boss => !string.IsNullOrWhiteSpace(boss.Id))
+                .Select(static (boss, index) => (boss, index))
+                .OrderBy(static item => item.boss.Order ?? int.MaxValue)
+                .ThenBy(static item => item.index)
+                .Select(static item => item.boss)
+                .ToList();
+
+            if (bosses.Count == 0)
+                return false;
+
+            foreach (string value in payload.Holidays ?? new List<string>())
             {
-                new()
+                if (DateTime.TryParse(value, System.Globalization.CultureInfo.InvariantCulture,
+                        System.Globalization.DateTimeStyles.None, out DateTime day))
+                    holidays.Add(day.Date);
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// 원격 데이터를 받기 전에 쓰는 기본값. 앱과 함께 배포되는 Defaults 폴더의 BossTimer.json을 그대로 읽는다.
+        /// (보스 목록·등장 시간·사운드·입장 시간은 코드가 아니라 이 파일에서 온다.)
+        /// </summary>
+        private static IReadOnlyList<BossTimerDefinition> LoadBundledBosses()
+        {
+            try
+            {
+                string path = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Defaults", "BossTimer.json");
+                if (System.IO.File.Exists(path) &&
+                    TryParsePayload(System.IO.File.ReadAllText(path), out var bosses, out var holidays))
                 {
-                    Id = "Arkan",
-                    Name = "아칸",
-                    Category = "field",
-                    Schedule = new BossTimerSchedule { Type = "fixed", Times = new List<string> { "14:30", "21:30" } }
-                },
-                new()
-                {
-                    Id = "Scherzendo",
-                    Name = "스페르첸드",
-                    Category = "field",
-                    Schedule = new BossTimerSchedule { Type = "fixed", Times = new List<string> { "01:00", "04:00", "08:00", "16:00", "19:00", "23:00" } }
-                },
-                new()
-                {
-                    Id = "Origin of Doom",
-                    Name = "파멸의 기원",
-                    Category = "field",
-                    Schedule = new BossTimerSchedule { Type = "fixed", Times = new List<string> { "00:30", "11:00", "20:00" } }
-                },
-                new()
-                {
-                    Id = "Confused Land",
-                    Name = "혼란한 대지",
-                    Category = "field",
-                    Schedule = new BossTimerSchedule { Type = "fixed", Times = new List<string> { "00:00", "07:00", "13:00", "18:00", "21:00" } }
-                },
-                new()
-                {
-                    Id = "event",
-                    Name = "이벤트",
-                    Category = "event",
-                    Schedule = new BossTimerSchedule { Type = "hourly", Minute = 0 }
+                    _holidays = holidays;
+                    return bosses;
                 }
+
+                AppLogger.Warn($"Bundled boss timer data missing or invalid: {path}");
+            }
+            catch (Exception ex)
+            {
+                AppLogger.Warn("Failed to load bundled boss timer data.", ex);
+            }
+
+            return Array.Empty<BossTimerDefinition>();
+        }
+
+        /// <summary>
+        /// 알림 사운드 파일 이름. JSON의 sounds(알림별 파일)나 sound(기준 이름)에서 정하고,
+        /// 아무것도 없으면 보스 id에서 공백을 뺀 이름을 쓴다. 보스를 못 찾으면 공용 Highlight.wav.
+        /// </summary>
+        public static string ResolveSoundFile(BossTimerDefinition? boss, TimeSpan offsetBefore)
+        {
+            string key = offsetBefore.TotalSeconds switch
+            {
+                180 => "before3",
+                60 => "before1",
+                _ => "spawn"
             };
+
+            if (boss?.Sounds != null && boss.Sounds.TryGetValue(key, out string? file) && !string.IsNullOrWhiteSpace(file))
+                return file!;
+
+            string baseName = !string.IsNullOrWhiteSpace(boss?.Sound)
+                ? boss!.Sound!
+                : (boss?.Id ?? string.Empty).Replace(" ", string.Empty);
+
+            if (string.IsNullOrWhiteSpace(baseName))
+                return "Highlight.wav";
+
+            string suffix = key switch
+            {
+                "before3" => "_before3",
+                "before1" => "_before1",
+                _ => string.Empty
+            };
+
+            return $"{baseName}{suffix}.wav";
         }
 
         public sealed class BossTimerDefinition
@@ -318,6 +338,18 @@ namespace TWChatOverlay.Services
 
             [JsonPropertyName("enabledByDefault")]
             public bool EnabledByDefault { get; set; }
+
+            /// <summary>설정 화면 카드 순서. 적지 않으면 JSON에 나온 순서를 쓴다.</summary>
+            [JsonPropertyName("order")]
+            public int? Order { get; set; }
+
+            /// <summary>알림 사운드 기준 이름 (예: ConfusedLand → ConfusedLand.wav, _before1, _before3). 없으면 id를 쓴다.</summary>
+            [JsonPropertyName("sound")]
+            public string? Sound { get; set; }
+
+            /// <summary>알림별 사운드 파일을 따로 지정할 때 (before3, before1, spawn 키).</summary>
+            [JsonPropertyName("sounds")]
+            public Dictionary<string, string>? Sounds { get; set; }
 
             [JsonPropertyName("schedule")]
             public BossTimerSchedule? Schedule { get; set; }

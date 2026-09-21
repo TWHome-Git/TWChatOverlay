@@ -27,7 +27,11 @@
             }
         }
 
-        public BossAlertConfig GetOrCreateBossAlertConfig(string bossId)
+        /// <summary>
+        /// 보스별 알림 설정을 가져오고, 없으면 만든다.
+        /// enabledByDefault는 BossTimer.json이 정하는 값으로, 이 보스를 처음 만났을 때 3분 전 알림 기본값이 된다.
+        /// </summary>
+        public BossAlertConfig GetOrCreateBossAlertConfig(string bossId, bool enabledByDefault = false)
         {
             if (string.IsNullOrWhiteSpace(bossId))
             {
@@ -36,7 +40,7 @@
 
             if (!BossAlertConfigs.TryGetValue(bossId, out BossAlertConfig? config))
             {
-                config = new BossAlertConfig();
+                config = new BossAlertConfig { Alert3MinutesBefore = enabledByDefault };
                 BossAlertConfigs[bossId] = config;
             }
 

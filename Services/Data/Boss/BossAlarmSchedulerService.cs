@@ -54,7 +54,7 @@ namespace TWChatOverlay.Services
 
                 foreach (var boss in BossTimerService.GetBosses())
                 {
-                    BossAlertConfig config = _settings.GetOrCreateBossAlertConfig(boss.Id);
+                    BossAlertConfig config = _settings.GetOrCreateBossAlertConfig(boss.Id, boss.EnabledByDefault);
                     if (CheckAlarm(boss, now, config.Alert3MinutesBefore, TimeSpan.FromMinutes(3), "3분 전") ||
                         CheckAlarm(boss, now, config.Alert1MinuteBefore, TimeSpan.FromMinutes(1), "1분 전") ||
                         CheckAlarm(boss, now, config.AlertAtSpawn, TimeSpan.FromSeconds(5), "5초 전") ||
@@ -97,7 +97,7 @@ namespace TWChatOverlay.Services
                     continue;
 
                 AppLogger.Info($"Boss alarm triggered. Boss='{boss.Name}', Trigger='{label}', Occurrence='{occurrence:yyyy-MM-dd HH:mm:ss}'");
-                NotificationService.PlayAlert(ResolveSoundFile(boss.Id, offsetBefore));
+                NotificationService.PlayAlert(BossTimerService.ResolveSoundFile(boss, offsetBefore));
                 // 팝업 알림: 보스 출현 5초 후(입장 카운트다운은 종료 후) 자동으로 닫힌다
                 Views.BossAlertToastWindow.ShowAlert(boss.Name, label, occurrence, _settings, GetEntryWindow(boss.Id, _settings));
                 return true;
@@ -139,19 +139,13 @@ namespace TWChatOverlay.Services
         /// <summary>입장 시간 카운트가 켜진 보스의 입장 가능 시간 — 혼란한 대지 4분, 파멸의 기원 6분.</summary>
         internal static TimeSpan? GetEntryWindow(string bossId, ChatSettings? settings)
         {
-            var boss = BossTimerService.GetBosses()
-                .FirstOrDefault(b => string.Equals(b.Id, bossId, StringComparison.OrdinalIgnoreCase));
+            var boss = BossTimerService.FindBoss(bossId);
             int? minutes = boss != null ? BossTimerService.GetEntryMinutes(boss) : null;
             if (minutes == null || settings == null)
                 return null;
 
-            // 혼란한 대지·파멸의 기원은 기존 설정값을 그대로 쓰고, 나머지(이벤트 등)는 보스별 설정 (기본 켜짐)
-            bool enabled = string.Equals(bossId, "Confused Land", StringComparison.OrdinalIgnoreCase)
-                ? settings.BossAlertConfusedLandEntryCountdown
-                : string.Equals(bossId, "Origin of Doom", StringComparison.OrdinalIgnoreCase)
-                    ? settings.BossAlertOriginOfDoomEntryCountdown
-                    : settings.GetOrCreateBossAlertConfig(bossId).EntryCountdown ?? true;
-
+            // 입장 카운트는 보스별 설정으로 통일한다 (기본 켜짐). 입장 시간 자체는 JSON의 entryMinutes에서 온다.
+            bool enabled = settings.GetOrCreateBossAlertConfig(bossId).EntryCountdown ?? true;
             return enabled ? TimeSpan.FromMinutes(minutes.Value) : null;
         }
 
@@ -191,33 +185,8 @@ namespace TWChatOverlay.Services
             };
 
             AppLogger.Info($"Boss alarm TEST fired. Boss='{bossName}', Trigger='{label}'");
-            NotificationService.PlayAlert(ResolveSoundFile(bossId, offset));
+            NotificationService.PlayAlert(BossTimerService.ResolveSoundFile(BossTimerService.FindBoss(bossId), offset));
             Views.BossAlertToastWindow.ShowAlert(bossName, label, DateTime.Now.Add(offset), settings, GetEntryWindow(bossId, settings));
-        }
-
-        private static string ResolveSoundFile(string bossId, TimeSpan offsetBefore)
-        {
-            string baseName = bossId switch
-            {
-                "Arkan" => "Arkan",
-                "Scherzendo" => "Scherzendo",
-                "Origin of Doom" => "OriginofDoom",
-                "Confused Land" => "ConfusedLand",
-                "event" => "event",
-                _ => "Highlight"
-            };
-
-            if (string.Equals(baseName, "Highlight", StringComparison.Ordinal))
-            {
-                return "Highlight.wav";
-            }
-
-            return offsetBefore.TotalSeconds switch
-            {
-                180 => $"{baseName}_before3.wav",
-                60 => $"{baseName}_before1.wav",
-                _ => $"{baseName}.wav"
-            };
         }
 
         private void CleanupFiredKeys(DateTime threshold)
