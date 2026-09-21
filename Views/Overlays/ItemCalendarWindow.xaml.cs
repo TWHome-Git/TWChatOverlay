@@ -190,7 +190,7 @@ namespace TWChatOverlay.Views
                 long rubicona = 0;
                 for (DateTime monday = firstMonday; monday <= monthEnd; monday = monday.AddDays(7))
                 {
-                    var (g, r) = await WeeklySeedRewardService.SumWeeklyClearSeedAsync(
+                    var (g, r) = await AppServices.Get<WeeklySeedRewardService>().SumWeeklyClearSeedAsync(
                         _settings.ChatLogFolderPath, monday, monday.AddDays(6));
                     general += g;
                     rubicona += r;
@@ -199,8 +199,8 @@ namespace TWChatOverlay.Views
                 if (_currentMonthStart != monthStart)
                     return;
 
-                MonthlySeedTotalText = $"클리어 보상 시드 합계: {WeeklySeedRewardService.FormatSeed(general + rubicona)}";
-                MonthlySeedDetailText = $"일반지역 {WeeklySeedRewardService.FormatSeed(general)} · 루비코나 {WeeklySeedRewardService.FormatSeed(rubicona)}";
+                MonthlySeedTotalText = $"클리어 보상 시드 합계: {AppServices.Get<WeeklySeedRewardService>().FormatSeed(general + rubicona)}";
+                MonthlySeedDetailText = $"일반지역 {AppServices.Get<WeeklySeedRewardService>().FormatSeed(general)} · 루비코나 {AppServices.Get<WeeklySeedRewardService>().FormatSeed(rubicona)}";
             }
             catch (Exception ex)
             {
@@ -556,7 +556,7 @@ namespace TWChatOverlay.Views
                 return null;
 
             string displayName = ItemCalendarEntryViewModel.ApplyDisplayNameAlias(
-                DropItemResolver.GetTrackedItemDisplayName(entry.ItemName));
+                AppServices.Get<DropItemResolver>().GetTrackedItemDisplayName(entry.ItemName));
             if (string.IsNullOrWhiteSpace(displayName))
                 displayName = entry.ItemName;
 
@@ -803,7 +803,7 @@ namespace TWChatOverlay.Views
                 DisplayName = string.IsNullOrWhiteSpace(itemLog.TrackedItemName)
                     ? "아이템"
                     : ItemCalendarEntryViewModel.ApplyDisplayNameAlias(
-                        DropItemResolver.GetTrackedItemDisplayName(itemLog.TrackedItemName)),
+                        AppServices.Get<DropItemResolver>().GetTrackedItemDisplayName(itemLog.TrackedItemName)),
                 Grade = itemLog.TrackedItemGrade,
                 Count = Math.Max(1, itemLog.TrackedItemCount),
                 FormattedText = itemLog.FormattedText

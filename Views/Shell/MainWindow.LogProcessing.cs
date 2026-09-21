@@ -747,7 +747,7 @@ namespace TWChatOverlay.Views
         private void AddToBuffer(string tabName, LogParser.ParseResult log)
         {
             _logTabBufferStore.Add(tabName, log);
-            ChatWindowHub.NotifyBuffersChanged();
+            AppServices.Get<ChatWindowHub>().NotifyBuffersChanged();
         }
 
         private void AddToUI(LogParser.ParseResult log, bool isRealTime = false, bool deferScroll = false)

@@ -112,7 +112,7 @@ namespace TWChatOverlay.Views
             ShowAbandonRoadSummaryWindow(previewMode: true, restartLifetime: false, activateWindow: false, forcePreview: true);
 
             // 통합 알림 스택 앵커 (외치기·던전 카운터·누적 경험치·아이템·필드 보스)
-            ToastStackService.ShowPositionPreview(_settings);
+            AppServices.Get<ToastStackService>().ShowPositionPreview(_settings);
 
             // 경험치 추적창
             ShowExpTrackerWindow();
@@ -169,7 +169,7 @@ namespace TWChatOverlay.Views
         private void CloseUnlockPositionWindows()
         {
             // 위치 저장 후 미리보기 종료, 각 창의 원래 표시 상태로 복원
-            ToastStackService.ClosePositionPreview();
+            AppServices.Get<ToastStackService>().ClosePositionPreview();
             AppServices.Get<MessengerEtaToastService>().ClosePositionPreview(_settings);
             AppServices.Get<RecaptureSupplyAlertService>().ClosePositionPreview();
             AppServices.Get<RecaptureSupplyPadOrderService>().ClosePositionPreview();
@@ -307,7 +307,7 @@ namespace TWChatOverlay.Views
             {
                 case 1: // 경험치 추적: 일반 탭 + 누적 알림 켜짐
                     if (sub == 0 && _settings.EnableExperienceLimitAlert)
-                        ToastStackService.ShowPositionPreview(_settings);
+                        AppServices.Get<ToastStackService>().ShowPositionPreview(_settings);
                     break;
                 case 2: // 던전 도우미
                     switch (sub)
@@ -329,7 +329,7 @@ namespace TWChatOverlay.Views
                             break;
                         case 3: // 어밴던로드: 알림 앵커 + 통계 창
                             if (_settings.EnableAbandonRoadCountAlert)
-                                ToastStackService.ShowPositionPreview(_settings);
+                                AppServices.Get<ToastStackService>().ShowPositionPreview(_settings);
                             if (_settings.ShowAbandonRoadSummaryWindow)
                             {
                                 ShowAbandonRoadSummaryWindow(previewMode: true, restartLifetime: false, activateWindow: false, forcePreview: true);
@@ -339,14 +339,14 @@ namespace TWChatOverlay.Views
                             break;
                         case 4: // 갈망하는 즐거움: 알림 앵커
                             if (_settings.EnableCravingPleasureCountAlert)
-                                ToastStackService.ShowPositionPreview(_settings);
+                                AppServices.Get<ToastStackService>().ShowPositionPreview(_settings);
                             break;
                             // 0(룬·테시스)·1(어비스)는 소리 알림뿐이라 창 없음
                     }
                     break;
                 case 3: // 아이템 알림: 획득 알림 탭 + 획득 알림 켜짐
                     if (sub == 0 && _settings.ShowItemDropAlert)
-                        ToastStackService.ShowPositionPreview(_settings);
+                        AppServices.Get<ToastStackService>().ShowPositionPreview(_settings);
                     break;
                 case 4: // 버프 추적 켜짐
                     if (_settings.EnableBuffTrackerAlert)
@@ -361,7 +361,7 @@ namespace TWChatOverlay.Views
                     }
                     break;
                 case 5: // 필드 보스: 알림 앵커
-                    ToastStackService.ShowPositionPreview(_settings);
+                    AppServices.Get<ToastStackService>().ShowPositionPreview(_settings);
                     break;
             }
         }
@@ -370,7 +370,7 @@ namespace TWChatOverlay.Views
         {
             if (savePositions)
             {
-                ToastStackService.SaveCurrentPosition(_settings);
+                AppServices.Get<ToastStackService>().SaveCurrentPosition(_settings);
 
                 if (_AbandonRoadSummaryWindow != null)
                 {
@@ -383,7 +383,7 @@ namespace TWChatOverlay.Views
                 }
             }
 
-            ToastStackService.ClosePositionPreview();
+            AppServices.Get<ToastStackService>().ClosePositionPreview();
             AppServices.Get<RecaptureSupplyAlertService>().ClosePositionPreview();
             AppServices.Get<RecaptureSupplyPadOrderService>().ClosePositionPreview();
             ContentTimerService.ClosePositionPreview();
@@ -463,7 +463,7 @@ namespace TWChatOverlay.Views
             catch (Exception ex) { AppLogger.Warn("Failed to reapply preview window positions.", ex); }
 
             // 알림 스택(외치기·던전·경험치·아이템·필드 보스)은 앵커를 설정에서 읽으므로 재정렬만 하면 된다
-            try { ToastStackService.Reflow(); } catch { }
+            try { AppServices.Get<ToastStackService>().Reflow(); } catch { }
         }
 
         private void SyncMarginsFromWindowPosition(double windowLeft, double windowTop)

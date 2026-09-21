@@ -271,7 +271,7 @@ namespace TWChatOverlay.Services
 
                 await InvokeOnUIAsync(() =>
                 {
-                    ChatWindowHub.BeginShutdown();
+                    AppServices.Get<ChatWindowHub>().BeginShutdown();
                     Application.Current.Shutdown();
                     return true;
                 }).ConfigureAwait(false);

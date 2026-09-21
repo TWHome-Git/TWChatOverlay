@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -135,7 +135,7 @@ namespace TWChatOverlay.Services
             if (SnapEnabled && !_isAdjustingSelected && !_isSnappingSelected)
             {
                 _isSnappingSelected = true;
-                try { ChatWindowHub.TryApplyMagneticSnap(_selected); }
+                try { AppServices.Get<ChatWindowHub>().TryApplyMagneticSnap(_selected); }
                 catch { }
                 finally { _isSnappingSelected = false; }
             }

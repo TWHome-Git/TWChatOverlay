@@ -57,7 +57,7 @@ namespace TWChatOverlay.Services
             if (settings == null || (!force && !settings.ShowExperienceLimitAlertWindow))
                 return;
 
-            ToastStackService.ShowPositionPreview(settings);
+            AppServices.Get<ToastStackService>().ShowPositionPreview(settings);
         }
 
         private void ShowWindow(string message, ChatSettings settings, bool requireAlertEnabled, bool isPreview = false)
@@ -84,7 +84,7 @@ namespace TWChatOverlay.Services
 
                 // 통합 알림 스택: 자리를 먼저 받고 그 자리에서 보인다.
                 // Show 뒤에 붙이면 옛 위치에서 잠깐 보이는 사이 다른 알림이 같은 칸을 잡아 겹쳤다.
-                var (left, top) = ToastStackService.Attach(_window);
+                var (left, top) = AppServices.Get<ToastStackService>().Attach(_window);
                 _window.Left = left;
                 _window.Top = top;
 
@@ -138,7 +138,7 @@ namespace TWChatOverlay.Services
         }
 
         public void SaveCurrentPosition(ChatSettings settings)
-            => ToastStackService.SaveCurrentPosition(settings);
+            => AppServices.Get<ToastStackService>().SaveCurrentPosition(settings);
 
         private ExperienceAlertStateSnapshot GetCurrentSnapshot(ChatSettings settings)
         {

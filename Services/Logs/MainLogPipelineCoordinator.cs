@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.ComponentModel;
 using System.Threading.Tasks;
 using TWChatOverlay.Models;
@@ -81,7 +81,7 @@ namespace TWChatOverlay.Services
 
         private void StartDefaultFilterSnapshotLoad()
         {
-            var loadTask = DropItemResolver.LoadDefaultFilterSnapshotAsync();
+            var loadTask = AppServices.Get<DropItemResolver>().LoadDefaultFilterSnapshotAsync();
             _defaultDropItemFilterSnapshotTask = loadTask;
 
             _ = loadTask.ContinueWith(task =>
@@ -136,7 +136,7 @@ namespace TWChatOverlay.Services
             DropItemResolver.DropItemFilterSnapshot? nextSnapshot = null;
             if (_settings.UseCustomDropItemFilter &&
                 !string.IsNullOrWhiteSpace(_settings.CustomDropItemJson) &&
-                DropItemResolver.TryCreateFilterSnapshot(_settings.CustomDropItemJson, out var snapshot))
+                AppServices.Get<DropItemResolver>().TryCreateFilterSnapshot(_settings.CustomDropItemJson, out var snapshot))
             {
                 nextSnapshot = snapshot;
             }

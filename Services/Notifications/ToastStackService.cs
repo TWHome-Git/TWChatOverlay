@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
@@ -17,7 +17,7 @@ namespace TWChatOverlay.Services
     /// - 분리 모드: 알림 종류마다 각자의 저장 위치에 표시된다 (같은 종류끼리는 그 위치에서 쌓임).
     /// 앵커는 잠금 해제/설정 미리보기 창을 끌어서 옮기고 설정에 저장한다.
     /// </summary>
-    public static class ToastStackService
+    public sealed class ToastStackService
     {
         private const double Gap = 6;
         private const double DefaultWidth = 420;
@@ -25,11 +25,11 @@ namespace TWChatOverlay.Services
         private const string UnifiedKey = "unified";
 
         // 그룹(통합 = 1그룹, 분리 = 종류별)별 알림 창 스택과 위치 미리보기 창
-        private static readonly Dictionary<string, List<Window>> Stacks = new(StringComparer.Ordinal);
-        private static readonly Dictionary<string, ToastStackPreviewWindow> Previews = new(StringComparer.Ordinal);
-        private static readonly HashSet<Window> Subscribed = new();
+        private readonly Dictionary<string, List<Window>> Stacks = new(StringComparer.Ordinal);
+        private readonly Dictionary<string, ToastStackPreviewWindow> Previews = new(StringComparer.Ordinal);
+        private readonly HashSet<Window> Subscribed = new();
 
-        private static readonly (string Key, string Title)[] SeparateGroups =
+        private readonly (string Key, string Title)[] SeparateGroups =
         {
             ("shout", "외치기 알림 위치"),
             ("dungeon", "던전 알림 위치"),
@@ -38,10 +38,10 @@ namespace TWChatOverlay.Services
             ("boss", "필드 보스 알림 위치"),
         };
 
-        private static bool IsUnified()
+        private bool IsUnified()
             => ToastPresentationHelper.FindSharedSettings()?.UnifiedToastStack != false;
 
-        private static string GroupKeyFor(Window toast)
+        private string GroupKeyFor(Window toast)
         {
             if (IsUnified())
                 return UnifiedKey;
@@ -58,7 +58,7 @@ namespace TWChatOverlay.Services
         }
 
         /// <summary>그룹의 저장된 앵커 위치(없으면 화면 상단 중앙).</summary>
-        private static (double Left, double Top) GetAnchorFor(string key)
+        private (double Left, double Top) GetAnchorFor(string key)
         {
             ChatSettings? s = ToastPresentationHelper.FindSharedSettings();
             (double? left, double? top) = key switch
@@ -73,7 +73,7 @@ namespace TWChatOverlay.Services
             return ToastPresentationHelper.ResolveBasePosition(left, top, DefaultWidth, DefaultTop);
         }
 
-        private static void SetAnchorFor(string key, ChatSettings s, double left, double top)
+        private void SetAnchorFor(string key, ChatSettings s, double left, double top)
         {
             switch (key)
             {
@@ -87,13 +87,13 @@ namespace TWChatOverlay.Services
         }
 
         /// <summary>통합 모드용 앵커 (호환 유지).</summary>
-        public static (double Left, double Top) GetAnchor() => GetAnchorFor(UnifiedKey);
+        public (double Left, double Top) GetAnchor() => GetAnchorFor(UnifiedKey);
 
         /// <summary>
         /// 알림 창을 스택에 등록하고 배치될 (Left, Top)을 돌려준다.
         /// 통합 모드는 하나의 스택, 분리 모드는 종류별 스택에 쌓인다. 닫히면 자동으로 재정렬.
         /// </summary>
-        public static (double Left, double Top) Attach(Window toast)
+        public (double Left, double Top) Attach(Window toast)
         {
             string key = GroupKeyFor(toast);
 
@@ -156,7 +156,7 @@ namespace TWChatOverlay.Services
             return (left, y);
         }
 
-        private static bool IsAttached(Window toast)
+        private bool IsAttached(Window toast)
         {
             foreach (var list in Stacks.Values)
             {
@@ -167,7 +167,7 @@ namespace TWChatOverlay.Services
         }
 
         /// <summary>스택에서 빼고 나머지를 다시 배치한다. Closed·Hide 양쪽에서 부른다.</summary>
-        private static void Detach(Window toast)
+        private void Detach(Window toast)
         {
             bool removed = false;
             foreach (var list in Stacks.Values)
@@ -177,7 +177,7 @@ namespace TWChatOverlay.Services
         }
 
         /// <summary>모든 그룹을 앵커 기준으로 다시 배치한다.</summary>
-        public static void Reflow()
+        public void Reflow()
         {
             foreach (string key in Stacks.Keys.Concat(Previews.Keys).Distinct().ToList())
             {
@@ -193,7 +193,7 @@ namespace TWChatOverlay.Services
         }
 
         /// <param name="skip">자리는 세되 옮기지는 않을 창. Attach 직후 호출한 쪽이 직접 띄우는 창에 쓴다.</param>
-        private static void ReflowGroup(string key, Window? skip = null)
+        private void ReflowGroup(string key, Window? skip = null)
         {
             var (left, top) = GetAnchorFor(key);
             double y = top;
@@ -230,13 +230,13 @@ namespace TWChatOverlay.Services
             }
         }
 
-        private static double PreviewSlotHeight(string key)
+        private double PreviewSlotHeight(string key)
             => Previews.TryGetValue(key, out var preview) && preview.IsVisible
                 ? EffectiveHeight(preview) + Gap
                 : 0;
 
         // 아직 레이아웃 전이면 지정 높이를, 그것도 없으면(SizeToContent) 기본 높이를 쓴다. NaN이 섞이면 아래 창이 전부 제자리를 잃는다.
-        private static double EffectiveHeight(Window window)
+        private double EffectiveHeight(Window window)
         {
             if (window.ActualHeight > 0) return window.ActualHeight;
             if (!double.IsNaN(window.Height) && window.Height > 0) return window.Height;
@@ -244,7 +244,7 @@ namespace TWChatOverlay.Services
             return 72;
         }
 
-        private static void MoveWindowTop(Window window, double top)
+        private void MoveWindowTop(Window window, double top)
         {
             // 이동 애니메이션이 있는 창은 그 경로로 (외치기/아이템)
             switch (window)
@@ -261,7 +261,7 @@ namespace TWChatOverlay.Services
         /// 알림 표시 위치 미리보기를 띄운다. 통합 모드는 앵커 1개, 분리 모드는 종류별 5개.
         /// 끌어서 옮기면 즉시 저장·재정렬된다.
         /// </summary>
-        public static void ShowPositionPreview(ChatSettings settings)
+        public void ShowPositionPreview(ChatSettings settings)
         {
             if (settings == null)
                 return;
@@ -295,7 +295,7 @@ namespace TWChatOverlay.Services
             }));
         }
 
-        private static void EnsurePreview(ChatSettings settings, string key, string title, string subtitle)
+        private void EnsurePreview(ChatSettings settings, string key, string title, string subtitle)
         {
             if (!Previews.TryGetValue(key, out var preview) || !preview.IsLoaded)
             {
@@ -317,7 +317,7 @@ namespace TWChatOverlay.Services
         }
 
         /// <summary>미리보기를 모두 닫는다 (위치는 드래그 시점에 이미 저장됨).</summary>
-        public static void ClosePositionPreview()
+        public void ClosePositionPreview()
         {
             Application.Current.Dispatcher.BeginInvoke(new Action(() =>
             {
@@ -335,7 +335,7 @@ namespace TWChatOverlay.Services
         }
 
         /// <summary>미리보기가 떠 있으면 현재 위치를 앵커로 저장한다.</summary>
-        public static void SaveCurrentPosition(ChatSettings settings)
+        public void SaveCurrentPosition(ChatSettings settings)
         {
             Application.Current?.Dispatcher.Invoke(() =>
             {
@@ -347,7 +347,7 @@ namespace TWChatOverlay.Services
         }
 
         /// <summary>통합/분리 모드 전환 시: 미리보기가 떠 있으면 새 모드로 다시 그린다.</summary>
-        public static void RefreshPreviews(ChatSettings settings)
+        public void RefreshPreviews(ChatSettings settings)
         {
             Application.Current?.Dispatcher.BeginInvoke(new Action(() =>
             {
@@ -428,9 +428,9 @@ namespace TWChatOverlay.Services
                 {
                     if (!IsVisible)
                         return;
-                    SetAnchorFor(_groupKey, _settings, Left, Top);
+                    AppServices.Get<ToastStackService>().SetAnchorFor(_groupKey, _settings, Left, Top);
                     ConfigService.SaveDeferred(_settings); // 인스펙터(X/Y 입력·넛지) 이동도 저장되도록
-                    ReflowGroup(_groupKey);
+                    AppServices.Get<ToastStackService>().ReflowGroup(_groupKey);
                 };
             }
 
@@ -438,7 +438,7 @@ namespace TWChatOverlay.Services
             {
                 if (!IsVisible)
                     return;
-                SetAnchorFor(_groupKey, _settings, Left, Top);
+                AppServices.Get<ToastStackService>().SetAnchorFor(_groupKey, _settings, Left, Top);
                 ConfigService.SaveDeferred(_settings);
             }
 

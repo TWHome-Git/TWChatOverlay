@@ -53,8 +53,8 @@ namespace TWChatOverlay.Views
             _weekEnd = weekEnd;
 
             // 시드 줄이 실시간으로 기록되거나 보충 스캔이 끝나면 열려 있는 창의 시드 행을 다시 채운다
-            WeeklySeedRewardService.Changed += OnSeedArchiveChanged;
-            Closed += (_, _) => WeeklySeedRewardService.Changed -= OnSeedArchiveChanged;
+            AppServices.Get<WeeklySeedRewardService>().Changed += OnSeedArchiveChanged;
+            Closed += (_, _) => AppServices.Get<WeeklySeedRewardService>().Changed -= OnSeedArchiveChanged;
 
             var title = new TextBlock
             {
@@ -273,25 +273,25 @@ namespace TWChatOverlay.Views
 
             bool isCurrentWeek = _weekStart == GetCurrentWeekStart();
             // 아페티리아 난이도(일반 7.35억/어려움 8.4억)는 로그로 판별하므로 주간 스캔 뒤에 예상치를 계산한다
-            var (generalCap, rubiconaCap) = WeeklySeedRewardService.ComputeWeeklySeedCaps(_settings);
-            string generalCapText = WeeklySeedRewardService.FormatSeed(generalCap);
-            string rubiconaCapText = WeeklySeedRewardService.FormatSeed(rubiconaCap);
+            var (generalCap, rubiconaCap) = AppServices.Get<WeeklySeedRewardService>().ComputeWeeklySeedCaps(_settings);
+            string generalCapText = AppServices.Get<WeeklySeedRewardService>().FormatSeed(generalCap);
+            string rubiconaCapText = AppServices.Get<WeeklySeedRewardService>().FormatSeed(rubiconaCap);
             try
             {
-                var (general, rubicona) = await WeeklySeedRewardService.SumWeeklyClearSeedAsync(
+                var (general, rubicona) = await AppServices.Get<WeeklySeedRewardService>().SumWeeklyClearSeedAsync(
                     _settings.ChatLogFolderPath, _weekStart, _weekEnd);
                 if (!IsLoaded || version != _loadVersion) return;
-                bool apetiriaHard = WeeklySeedRewardService.GetApetiriaHard(_weekStart, _weekEnd);
-                (generalCap, rubiconaCap) = WeeklySeedRewardService.ComputeWeeklySeedCaps(_settings, apetiriaHard);
-                generalCapText = WeeklySeedRewardService.FormatSeed(generalCap);
-                rubiconaCapText = WeeklySeedRewardService.FormatSeed(rubiconaCap);
-                (general, long other) = WeeklySeedRewardService.SplitWeeklyOverflow(_weekStart, general);
-                string generalText = WeeklySeedRewardService.FormatSeed(general);
-                string rubiconaText = WeeklySeedRewardService.FormatSeed(rubicona);
+                bool apetiriaHard = AppServices.Get<WeeklySeedRewardService>().GetApetiriaHard(_weekStart, _weekEnd);
+                (generalCap, rubiconaCap) = AppServices.Get<WeeklySeedRewardService>().ComputeWeeklySeedCaps(_settings, apetiriaHard);
+                generalCapText = AppServices.Get<WeeklySeedRewardService>().FormatSeed(generalCap);
+                rubiconaCapText = AppServices.Get<WeeklySeedRewardService>().FormatSeed(rubiconaCap);
+                (general, long other) = AppServices.Get<WeeklySeedRewardService>().SplitWeeklyOverflow(_weekStart, general);
+                string generalText = AppServices.Get<WeeklySeedRewardService>().FormatSeed(general);
+                string rubiconaText = AppServices.Get<WeeklySeedRewardService>().FormatSeed(rubicona);
                 _seedGeneralText.Text = isCurrentWeek ? $"{generalText} / {generalCapText}" : generalText;
                 _seedRubiconaText.Text = isCurrentWeek ? $"{rubiconaText} / {rubiconaCapText}" : rubiconaText;
                 _seedOtherRow.Visibility = other > 0 ? Visibility.Visible : Visibility.Collapsed;
-                _seedOtherText.Text = WeeklySeedRewardService.FormatSeed(other);
+                _seedOtherText.Text = AppServices.Get<WeeklySeedRewardService>().FormatSeed(other);
             }
             catch (Exception ex)
             {

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -20,7 +20,7 @@ namespace TWChatOverlay.Services
     /// 예상: 일일/주간 컨텐츠 체크리스트에서 켜져 있는 항목의 주간 최대 보상을
     ///       그룹 한도 → 주간 66억(루비코나 제외) / 루비코나 28억 한도 순으로 적용해 계산.
     /// </summary>
-    public static class WeeklySeedRewardService
+    public sealed class WeeklySeedRewardService
     {
         private const long Eok = 100_000_000L;
         private const long Man = 10_000L;
@@ -32,7 +32,7 @@ namespace TWChatOverlay.Services
         private sealed record Group(long Cap, Entry[] Entries);
 
         // 항목명은 일일/주간 컨텐츠 체크리스트(DungeonItemConfigs 키)와 일치해야 한다.
-        private static readonly Group[] WeeklyGroups =
+        private readonly Group[] WeeklyGroups =
         {
             // 이클립스 지역 — 아페티리아(택1)는 별도 처리 후 이 그룹 한도에 합산
             new(5325L * Man * 100, new Entry[]
@@ -108,7 +108,7 @@ namespace TWChatOverlay.Services
         private const long ApetiriaHardWeeklySeed = 840L * Man * 100;
 
         // 루비코나(환희·슬픔) — 각 보스·난이도 하루 2억 × 7일
-        private static readonly Entry[] RubiconaEntries =
+        private readonly Entry[] RubiconaEntries =
         {
             new("추종하는 환희(일반)", 14L * Eok),
             new("응시하는 슬픔(일반)", 14L * Eok),
@@ -120,7 +120,7 @@ namespace TWChatOverlay.Services
         /// 체크리스트에서 켜진 항목 기준 주간 시드 한도 — 일반(루비코나 제외)과 루비코나 분리.
         /// <paramref name="apetiriaHard"/>는 이번 주 아페티리아 난이도(GetApetiriaHard, 기본 어려움).
         /// </summary>
-        public static (long General, long Rubicona) ComputeWeeklySeedCaps(ChatSettings settings, bool apetiriaHard = true)
+        public (long General, long Rubicona) ComputeWeeklySeedCaps(ChatSettings settings, bool apetiriaHard = true)
         {
             long weekly = 0;
             bool eclipseFirst = true;
@@ -156,7 +156,7 @@ namespace TWChatOverlay.Services
             return (weekly, rubicona);
         }
 
-        private static bool IsItemEnabled(ChatSettings settings, string itemName)
+        private bool IsItemEnabled(ChatSettings settings, string itemName)
         {
             // 체크리스트를 한 번도 만지지 않은 항목은 기본 활성으로 취급
             return !settings.DungeonItemConfigs.TryGetValue(itemName, out var config) || config.IsEnabled;
@@ -318,7 +318,7 @@ namespace TWChatOverlay.Services
         }
 
         /// <summary>하루치 게임 로그를 처음부터 읽어 시드 항목과 읽은 시점의 파일 길이를 돌려준다.</summary>
-        private static (List<SeedEntry> Entries, long Length) ScanDayFile(string path)
+        private (List<SeedEntry> Entries, long Length) ScanDayFile(string path)
         {
             var entries = new List<SeedEntry>();
             long length = 0;
@@ -368,13 +368,13 @@ namespace TWChatOverlay.Services
         // 시작·날짜 전환 때 보충 스캔하는 범위. 그보다 오래된 날짜는 통계 창에서 조회할 때 미보관분만 읽는다.
         private const int CatchUpDays = 14;
 
-        private static readonly object ArchiveLock = new();
-        private static SortedDictionary<string, DayRecord>? _archive;
+        private readonly object ArchiveLock = new();
+        private SortedDictionary<string, DayRecord>? _archive;
 
         /// <summary>보관본이 바뀌었을 때(실시간 기록·보충 스캔). 백그라운드 스레드에서 올라온다.</summary>
-        public static event Action? Changed;
+        public event Action? Changed;
 
-        private static string ArchivePath => Path.Combine(LogStoragePaths.SeedDirectory, "SeedHistory.html");
+        private string ArchivePath => Path.Combine(LogStoragePaths.SeedDirectory, "SeedHistory.html");
 
         private static readonly Regex ArchiveEntryRegex = new(
             "<div class=\"seed (?<kind>weekly|daily|partial|marker)\" data-date=\"(?<date>\\d{4}-\\d{2}-\\d{2})\" data-amount=\"(?<amount>\\d+)\">(?<text>.*?)</div>",
@@ -388,18 +388,18 @@ namespace TWChatOverlay.Services
             @"TWChatLog_(?<y>\d{4})_(?<m>\d{2})_(?<d>\d{2})\.html$",
             RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
-        private static DateTime ParseDateKey(string key)
+        private DateTime ParseDateKey(string key)
             => DateTime.ParseExact(key, "yyyy-MM-dd", CultureInfo.InvariantCulture);
 
-        private static string ToDateKey(DateTime date) => date.ToString("yyyy-MM-dd");
+        private string ToDateKey(DateTime date) => date.ToString("yyyy-MM-dd");
 
-        private static DateTime GetWeekStartOf(DateTime date)
+        private DateTime GetWeekStartOf(DateTime date)
             => date.AddDays(-(((int)date.DayOfWeek + 6) % 7));
 
-        private static string GetLogPath(string logDir, DateTime day)
+        private string GetLogPath(string logDir, DateTime day)
             => Path.Combine(logDir, $"TWChatLog_{day:yyyy_MM_dd}.html");
 
-        private static bool TryGetLogFileDate(string path, out DateTime date)
+        private bool TryGetLogFileDate(string path, out DateTime date)
         {
             date = default;
             var m = LogFileDateRegex.Match(Path.GetFileName(path));
@@ -410,7 +410,7 @@ namespace TWChatOverlay.Services
                 "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out date);
         }
 
-        private static DayRecord GetOrCreateRecord(SortedDictionary<string, DayRecord> archive, string key)
+        private DayRecord GetOrCreateRecord(SortedDictionary<string, DayRecord> archive, string key)
         {
             if (!archive.TryGetValue(key, out var record))
             {
@@ -424,7 +424,7 @@ namespace TWChatOverlay.Services
         /// 하루치 파일을 처음부터 다시 읽어 그날 기록을 교체한다. 그 사이 실시간으로 들어온 항목 중
         /// 스캔 결과에 없는 것(스캔 시점 이후 줄)은 남긴다. 호출자가 ArchiveLock을 잡고 있어야 한다.
         /// </summary>
-        private static void RescanDay(SortedDictionary<string, DayRecord> archive, string key, string path)
+        private void RescanDay(SortedDictionary<string, DayRecord> archive, string key, string path)
         {
             var (entries, length) = ScanDayFile(path);
             var record = GetOrCreateRecord(archive, key);
@@ -448,7 +448,7 @@ namespace TWChatOverlay.Services
         }
 
         /// <summary>파일이 자랐거나(앱이 못 본 줄) 구버전 규칙으로 읽은 날짜면 다시 읽는다. 읽었으면 true.</summary>
-        private static bool RescanDayIfStale(SortedDictionary<string, DayRecord> archive, string key, string path)
+        private bool RescanDayIfStale(SortedDictionary<string, DayRecord> archive, string key, string path)
         {
             long length;
             try { length = new FileInfo(path).Length; }
@@ -465,16 +465,16 @@ namespace TWChatOverlay.Services
 
         // ───────────────────────── 실시간 기록 ─────────────────────────
 
-        private static string? _liveDayKey;
-        private static DayCollector? _liveCollector;
-        private static bool _liveChanged;
+        private string? _liveDayKey;
+        private DayCollector? _liveCollector;
+        private bool _liveChanged;
 
         /// <summary>
         /// 실시간 파이프라인에서 줄마다 호출한다. 시드 줄이면 그 파일 날짜의 기록에 바로 추가한다.
         /// <paramref name="sourcePath"/>는 줄을 읽은 게임 로그 파일(날짜 판별용), <paramref name="filePosition"/>은
         /// 읽은 뒤의 파일 위치 — 다음 시작 때 "어디까지 봤는지"를 파일 길이와 비교하는 데 쓴다.
         /// </summary>
-        public static void ObserveLiveLine(string? sourcePath, string html, long filePosition)
+        public void ObserveLiveLine(string? sourcePath, string html, long filePosition)
         {
             if (string.IsNullOrEmpty(html))
                 return;
@@ -514,7 +514,7 @@ namespace TWChatOverlay.Services
         }
 
         // ArchiveLock 안에서만 호출된다 (DayCollector.Feed/Complete → sink)
-        private static void AppendLive(string key, SeedEntry entry)
+        private void AppendLive(string key, SeedEntry entry)
         {
             var record = GetOrCreateRecord(_archive!, key);
 
@@ -531,16 +531,16 @@ namespace TWChatOverlay.Services
             _liveChanged = true;
         }
 
-        private static void RaiseChanged()
+        private void RaiseChanged()
         {
             try { Changed?.Invoke(); }
             catch (Exception ex) { AppLogger.Warn("Seed archive change handler failed.", ex); }
         }
 
         // 실시간 기록은 몇 초 안에 몰려 들어오므로 저장을 잠깐 모아서 한 번에 쓴다
-        private static int _savePending;
+        private int _savePending;
 
-        private static void ScheduleSave()
+        private void ScheduleSave()
         {
             if (Interlocked.Exchange(ref _savePending, 1) == 1)
                 return;
@@ -562,7 +562,7 @@ namespace TWChatOverlay.Services
         /// 앱이 꺼져 있던 동안(그리고 오늘 앱을 켜기 전 구간) 쌓인 줄을 보충한다. 최근 CatchUpDays일의
         /// 게임 로그 중 기록보다 길어진 파일만 다시 읽는다. 시작·날짜 전환 때 호출한다.
         /// </summary>
-        public static Task CatchUpAsync(string? logDir)
+        public Task CatchUpAsync(string? logDir)
         {
             return Task.Run(() =>
             {
@@ -614,7 +614,7 @@ namespace TWChatOverlay.Services
         /// 보관본에 없는 날짜(오래된 주 조회)와 구버전 규칙으로 읽은 날짜만 게임 로그를 한 번 읽는다.
         /// 오늘을 포함한 최근 날짜는 실시간 기록과 시작 시 보충 스캔이 채우므로 여기서는 읽지 않는다.
         /// </summary>
-        public static async Task<(long General, long Rubicona)> SumWeeklyClearSeedAsync(
+        public async Task<(long General, long Rubicona)> SumWeeklyClearSeedAsync(
             string logDir, DateTime weekStart, DateTime weekEnd)
         {
             return await Task.Run(() =>
@@ -675,7 +675,7 @@ namespace TWChatOverlay.Services
         /// 이번 주에 아직 안 돌았으면 어려움으로 둔다.
         /// SumWeeklyClearSeedAsync로 주간 범위를 채운 뒤에 호출해야 이번 주 기록이 반영된다.
         /// </summary>
-        public static bool GetApetiriaHard(DateTime weekStart, DateTime weekEnd)
+        public bool GetApetiriaHard(DateTime weekStart, DateTime weekEnd)
         {
             lock (ArchiveLock)
             {
@@ -706,7 +706,7 @@ namespace TWChatOverlay.Services
 
         // ───────────────────────── 보관본 파일 ─────────────────────────
 
-        private static SortedDictionary<string, DayRecord> LoadArchive()
+        private SortedDictionary<string, DayRecord> LoadArchive()
         {
             if (_archive is not null)
                 return _archive;
@@ -753,7 +753,7 @@ namespace TWChatOverlay.Services
             return _archive = result;
         }
 
-        private static (long Weekly, long Daily) SumOf(IEnumerable<SeedEntry> entries)
+        private (long Weekly, long Daily) SumOf(IEnumerable<SeedEntry> entries)
         {
             long weekly = 0, daily = 0;
             foreach (var entry in entries)
@@ -765,7 +765,7 @@ namespace TWChatOverlay.Services
         }
 
         /// <summary>아카이브를 주별 섹션·합계가 붙은 열람용 HTML로 통째로 다시 쓴다.</summary>
-        private static void SaveArchive(SortedDictionary<string, DayRecord> archive)
+        private void SaveArchive(SortedDictionary<string, DayRecord> archive)
         {
             try
             {
@@ -833,14 +833,14 @@ namespace TWChatOverlay.Services
         // ───────────────────────── 한도 ─────────────────────────
 
         // 게임의 주간 버킷 한도 이력: 2026-07-20 주부터 66억, 그 이전은 60억 (로그 실측으로 확인)
-        private static readonly DateTime WeeklyCap66Since = new(2026, 7, 20);
+        private readonly DateTime WeeklyCap66Since = new(2026, 7, 20);
 
         /// <summary>
         /// 주간 표시용 보정: 과거 로그에는 당시 일일 컨텐츠(군영 퀘스트류) 시드에 식별 문구가 없어
         /// 일반지역 몫으로 합산된다. 당시 주간 한도를 넘는 초과분을 "기타"로 분리해 돌려준다
         /// (루비코나가 아니므로 루비코나 행에 합치지 않는다).
         /// </summary>
-        public static (long Weekly, long Other) SplitWeeklyOverflow(DateTime weekStart, long general)
+        public (long Weekly, long Other) SplitWeeklyOverflow(DateTime weekStart, long general)
         {
             long cap = GetBucketCaps(weekStart).General;
             long overflow = Math.Max(0, general - cap);
@@ -852,14 +852,14 @@ namespace TWChatOverlay.Services
         /// 화면의 "실측 / 한도"에서 뒤 숫자로 쓴다. 체크리스트에서 무엇을 켰는지와는 무관하다.
         /// (켜 둔 항목 기준 합은 ComputeWeeklySeedCaps — 안 도는 컨텐츠가 있으면 한도보다 작게 나와 헷갈린다)
         /// </summary>
-        public static (long General, long Rubicona) GetBucketCaps(DateTime weekStart)
+        public (long General, long Rubicona) GetBucketCaps(DateTime weekStart)
         {
             long general = weekStart >= WeeklyCap66Since ? WeeklyBucketCap : 60L * Eok;
             return (general, RubiconaBucketCap);
         }
 
         /// <summary>시드 금액을 "93.15억" / "8500만" 형태로 표기.</summary>
-        public static string FormatSeed(long seed)
+        public string FormatSeed(long seed)
         {
             if (seed >= Eok)
             {

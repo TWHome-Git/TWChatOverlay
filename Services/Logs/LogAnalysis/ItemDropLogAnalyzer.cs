@@ -4,7 +4,7 @@
     {
         public void Analyze(LogLineContext context, DropItemResolver.DropItemFilterSnapshot? filterSnapshot = null)
         {
-            if (DropItemResolver.TryExtractTrackedItem(
+            if (AppServices.Get<DropItemResolver>().TryExtractTrackedItem(
                     context.ChatContent,
                     filterSnapshot,
                     out string itemName,

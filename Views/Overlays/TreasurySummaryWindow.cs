@@ -206,7 +206,7 @@ namespace TWChatOverlay.Views
         private const long GoldPouchSeedValue = 500_000;
 
         private static string FormatGoldValue(long count)
-            => WeeklySeedRewardService.FormatSeed(count * GoldPouchSeedValue);
+            => AppServices.Get<WeeklySeedRewardService>().FormatSeed(count * GoldPouchSeedValue);
 
         private void UpdateState(IReadOnlyList<int> runCounts, int currentRun)
         {
@@ -227,7 +227,7 @@ namespace TWChatOverlay.Views
             {
                 double average = (double)total / runCounts.Count;
                 long averageSeed = (long)Math.Round(average * GoldPouchSeedValue);
-                _averageText.Text = $"{average:F1}개 · {WeeklySeedRewardService.FormatSeed(averageSeed)}";
+                _averageText.Text = $"{average:F1}개 · {AppServices.Get<WeeklySeedRewardService>().FormatSeed(averageSeed)}";
             }
             else
             {

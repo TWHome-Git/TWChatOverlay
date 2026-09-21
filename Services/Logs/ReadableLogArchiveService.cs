@@ -388,7 +388,7 @@ namespace TWChatOverlay.Services
             HashSet<DateTime> missingAbandonSummaryDays,
             bool updateCheckpoint = true)
         {
-            DropItemResolver.DropItemFilterSnapshot filterSnapshot = await DropItemResolver.LoadDefaultFilterSnapshotAsync().ConfigureAwait(false);
+            DropItemResolver.DropItemFilterSnapshot filterSnapshot = await AppServices.Get<DropItemResolver>().LoadDefaultFilterSnapshotAsync().ConfigureAwait(false);
             _abandonDayBuffer.Clear();
             using var pendingArchiveWrites = new ArchiveWriteBatch();
             var timedOutFiles = new List<string>();

@@ -7,30 +7,30 @@ using TWChatOverlay.Views;
 
 namespace TWChatOverlay.Services
 {
-    public static class ChatWindowHub
+    public sealed class ChatWindowHub
     {
         private const double SnapInsetX = 5.0;
         private const double SnapInsetTop = 5.0;
         private const double SnapInsetBottom = 5.0;
-        public static LogTabBufferStore SharedLogBuffers { get; } = new(200);
+        public LogTabBufferStore SharedLogBuffers { get; } = new(200);
 
-        public static event EventHandler? BuffersChanged;
+        public event EventHandler? BuffersChanged;
 
-        private static readonly HashSet<int> OpenSlots = new();
-        private static readonly object NotificationLock = new();
-        private static DispatcherTimer? _bufferNotificationTimer;
-        private static bool _isBufferNotificationPending;
+        private readonly HashSet<int> OpenSlots = new();
+        private readonly object NotificationLock = new();
+        private DispatcherTimer? _bufferNotificationTimer;
+        private bool _isBufferNotificationPending;
 
-        public static bool IsShuttingDown { get; private set; }
-        public static bool CanOpenClone => OpenSlots.Count < 2;
-        public static IReadOnlyCollection<int> OpenCloneSlots => OpenSlots.ToList().AsReadOnly();
+        public bool IsShuttingDown { get; private set; }
+        public bool CanOpenClone => OpenSlots.Count < 2;
+        public IReadOnlyCollection<int> OpenCloneSlots => OpenSlots.ToList().AsReadOnly();
 
-        public static void BeginShutdown()
+        public void BeginShutdown()
         {
             IsShuttingDown = true;
         }
 
-        public static int? RegisterClone(int? preferredSlot = null)
+        public int? RegisterClone(int? preferredSlot = null)
         {
             if (preferredSlot.HasValue)
             {
@@ -50,12 +50,12 @@ namespace TWChatOverlay.Services
             return null;
         }
 
-        public static void UnregisterClone(int slot)
+        public void UnregisterClone(int slot)
         {
             OpenSlots.Remove(slot);
         }
 
-        public static void NotifyBuffersChanged()
+        public void NotifyBuffersChanged()
         {
             var dispatcher = Application.Current?.Dispatcher;
             if (dispatcher == null || dispatcher.HasShutdownStarted || dispatcher.HasShutdownFinished)
@@ -79,7 +79,7 @@ namespace TWChatOverlay.Services
             }
         }
 
-        private static DispatcherTimer CreateBufferNotificationTimer(Dispatcher dispatcher)
+        private DispatcherTimer CreateBufferNotificationTimer(Dispatcher dispatcher)
         {
             var timer = new DispatcherTimer(DispatcherPriority.Background, dispatcher)
             {
@@ -103,7 +103,7 @@ namespace TWChatOverlay.Services
             return timer;
         }
 
-        public static void FlushBufferNotifications()
+        public void FlushBufferNotifications()
         {
             lock (NotificationLock)
             {
@@ -118,7 +118,7 @@ namespace TWChatOverlay.Services
         }
 
         /// <summary>잠금 해제 모드의 자석 스냅. 설정(WindowSnapEnabled)이 꺼져 있으면 아무것도 하지 않는다.</summary>
-        public static bool TryApplyMagneticSnap(Window movingWindow, double threshold = 14.0)
+        public bool TryApplyMagneticSnap(Window movingWindow, double threshold = 14.0)
         {
             if (!UiLockService.SnapEnabled)
                 return false;
@@ -188,7 +188,7 @@ namespace TWChatOverlay.Services
             return changed;
         }
 
-        private static IEnumerable<Window> GetSnapCandidates(Window movingWindow)
+        private IEnumerable<Window> GetSnapCandidates(Window movingWindow)
         {
             foreach (Window window in Application.Current.Windows)
             {
@@ -206,12 +206,12 @@ namespace TWChatOverlay.Services
         }
 
         /// <summary>채팅창은 테두리 5px 여백을 실제 가장자리로 취급하고, 그 외 창은 창 크기 그대로.</summary>
-        private static (double X, double Top, double Bottom) GetSnapInsets(Window window)
+        private (double X, double Top, double Bottom) GetSnapInsets(Window window)
             => window is TWChatOverlay.Views.MainWindow or TWChatOverlay.Views.ChatCloneWindow
                 ? (SnapInsetX, SnapInsetTop, SnapInsetBottom)
                 : (0.0, 0.0, 0.0);
 
-        private static Rect GetVisibleFrame(Window window)
+        private Rect GetVisibleFrame(Window window)
         {
             double width = window.ActualWidth > 0 ? window.ActualWidth : window.Width;
             double height = window.ActualHeight > 0 ? window.ActualHeight : window.Height;
@@ -224,7 +224,7 @@ namespace TWChatOverlay.Services
             return new Rect(visibleLeft, visibleTop, visibleWidth, visibleHeight);
         }
 
-        private static void UpdateHorizontalSnap(
+        private void UpdateHorizontalSnap(
             Rect movingRect,
             double candidateLeft,
             double candidateRight,
@@ -254,7 +254,7 @@ namespace TWChatOverlay.Services
             }
         }
 
-        private static void UpdateVerticalSnap(
+        private void UpdateVerticalSnap(
             Rect movingRect,
             double candidateTop,
             double candidateBottom,

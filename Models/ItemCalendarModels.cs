@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
@@ -415,7 +415,7 @@ namespace TWChatOverlay.Models
 
             try
             {
-                string display = DropItemResolver.GetTrackedItemDisplayName(name);
+                string display = AppServices.Get<DropItemResolver>().GetTrackedItemDisplayName(name);
                 if (!string.Equals(display, name, StringComparison.Ordinal))
                     return ResolveIconUri(display);
             }

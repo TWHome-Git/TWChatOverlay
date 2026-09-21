@@ -95,7 +95,7 @@ namespace TWChatOverlay.Views
 
         public static bool TryOpen(ChatSettings settings)
         {
-            if (!ChatWindowHub.CanOpenClone)
+            if (!AppServices.Get<ChatWindowHub>().CanOpenClone)
                 return false;
 
             return TryCreateAndShow(settings, null);
@@ -134,7 +134,7 @@ namespace TWChatOverlay.Views
             InitializeComponent();
             _settings = settings ?? throw new ArgumentNullException(nameof(settings));
 
-            int? slot = ChatWindowHub.RegisterClone(preferredSlot);
+            int? slot = AppServices.Get<ChatWindowHub>().RegisterClone(preferredSlot);
             if (slot == null)
             {
                 if (preferredSlot.HasValue)
@@ -149,7 +149,7 @@ namespace TWChatOverlay.Views
             Closed += ChatCloneWindow_Closed;
             LocationChanged += (_, _) => HandleLocationChanged();
             _settings.PropertyChanged += Settings_PropertyChanged;
-            ChatWindowHub.BuffersChanged += ChatWindowHub_BuffersChanged;
+            AppServices.Get<ChatWindowHub>().BuffersChanged += ChatWindowHub_BuffersChanged;
             AppServices.Get<IIdTagService>().IdTagsChanged += IdTagService_Changed;
             AppServices.Get<BlacklistService>().BlacklistChanged += IdTagService_Changed;
             AttachToMainWindow();
@@ -174,7 +174,7 @@ namespace TWChatOverlay.Views
         {
             try
             {
-                if (!ChatWindowHub.IsShuttingDown)
+                if (!AppServices.Get<ChatWindowHub>().IsShuttingDown)
                     SaveOpenStateToSettings(false);
             }
             catch
@@ -206,12 +206,12 @@ namespace TWChatOverlay.Views
             {
             }
 
-            ChatWindowHub.BuffersChanged -= ChatWindowHub_BuffersChanged;
+            AppServices.Get<ChatWindowHub>().BuffersChanged -= ChatWindowHub_BuffersChanged;
             AppServices.Get<IIdTagService>().IdTagsChanged -= IdTagService_Changed;
             AppServices.Get<BlacklistService>().BlacklistChanged -= IdTagService_Changed;
             _settings.PropertyChanged -= Settings_PropertyChanged;
             DetachFromMainWindow();
-            ChatWindowHub.UnregisterClone(_slot);
+            AppServices.Get<ChatWindowHub>().UnregisterClone(_slot);
         }
 
         private void AttachToMainWindow()
@@ -432,7 +432,7 @@ namespace TWChatOverlay.Views
             if (logDisplay == null)
                 return;
 
-            var store = ChatWindowHub.SharedLogBuffers;
+            var store = AppServices.Get<ChatWindowHub>().SharedLogBuffers;
             bool canAppend = !forceRebuild
                 && string.Equals(_renderedTabTag, _currentTabTag, StringComparison.Ordinal)
                 && _renderedGeneration >= 0;
@@ -612,7 +612,7 @@ namespace TWChatOverlay.Views
 
         protected override void OnDragCompleted()
         {
-            ChatWindowHub.TryApplyMagneticSnap(this);
+            AppServices.Get<ChatWindowHub>().TryApplyMagneticSnap(this);
             SyncPositionToSettings();
         }
 
@@ -662,7 +662,7 @@ namespace TWChatOverlay.Views
         private void ResizeThumb_DragCompleted(object sender, System.Windows.Controls.Primitives.DragCompletedEventArgs e)
         {
             _isResizingWindow = false;
-            ChatWindowHub.TryApplyMagneticSnap(this);
+            AppServices.Get<ChatWindowHub>().TryApplyMagneticSnap(this);
             SyncPositionToSettings();
         }
 
@@ -698,7 +698,7 @@ namespace TWChatOverlay.Views
             double left = Math.Max(workArea.Left, Math.Min(ownerWindow.Left, workArea.Right - Width));
             double top = ownerWindow.Top - cloneHeight - gap;
 
-            if (_slot == 2 && ChatWindowHub.OpenCloneSlots.Any(slot => slot == 1))
+            if (_slot == 2 && AppServices.Get<ChatWindowHub>().OpenCloneSlots.Any(slot => slot == 1))
             {
                 top -= cloneHeight + gap;
             }

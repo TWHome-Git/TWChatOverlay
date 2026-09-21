@@ -299,7 +299,7 @@ namespace TWChatOverlay.Views
 
         /// <summary>통합 알림 스택 앵커 미리보기로 위임.</summary>
         public static void ShowPositionPreview(ChatSettings settings)
-            => ToastStackService.ShowPositionPreview(settings);
+            => AppServices.Get<ToastStackService>().ShowPositionPreview(settings);
 
         /// <summary>설정 슬라이더 변경을 열려 있는 알림 창에 즉시 반영한다.</summary>
         public static void ApplyFontSize(double size)
@@ -314,7 +314,7 @@ namespace TWChatOverlay.Views
 
         /// <summary>통합 알림 스택 앵커 미리보기로 위임.</summary>
         public static void ClosePositionPreview()
-            => ToastStackService.ClosePositionPreview();
+            => AppServices.Get<ToastStackService>().ClosePositionPreview();
 
         /// <summary>보스마다 창 하나. 같은 보스의 다음 단계 알림은 그 창을 다시 쓰고, 다른 보스는 새 창을 얻는다.</summary>
         private static BossAlertToastWindow EnsureInstance(string bossName, ChatSettings? settings)
@@ -347,7 +347,7 @@ namespace TWChatOverlay.Views
             }
 
             // 통합 알림 스택: 자리를 먼저 받고 그 자리에서 보인다 (Show 뒤에 붙이면 겹칠 수 있다)
-            var (left, top) = ToastStackService.Attach(window);
+            var (left, top) = AppServices.Get<ToastStackService>().Attach(window);
             window.Left = left;
             window.Top = top;
 

@@ -317,7 +317,7 @@ namespace TWChatOverlay.Views
                 if (app != null && !app.Dispatcher.HasShutdownStarted)
                 {
                     AppLogger.Info("Menu window was closed externally. Shutting down application.");
-                    ChatWindowHub.BeginShutdown();
+                    AppServices.Get<ChatWindowHub>().BeginShutdown();
                     app.Shutdown();
                 }
             }
@@ -431,7 +431,7 @@ namespace TWChatOverlay.Views
                     break;
                 case "BtnExit":
                     AppLogger.Warn("Exit requested from menu window.");
-                    ChatWindowHub.BeginShutdown();
+                    AppServices.Get<ChatWindowHub>().BeginShutdown();
                     Application.Current.Shutdown();
                     break;
                 default:
@@ -790,7 +790,7 @@ namespace TWChatOverlay.Views
                 new TrayIconService.MenuItem("모든 창 숨기기", AppServices.Get<TrayAllWindowsService>().HideAll),
                 new TrayIconService.MenuItem("종료", () =>
                 {
-                    ChatWindowHub.BeginShutdown();
+                    AppServices.Get<ChatWindowHub>().BeginShutdown();
                     Application.Current.Shutdown();
                 }),
             });

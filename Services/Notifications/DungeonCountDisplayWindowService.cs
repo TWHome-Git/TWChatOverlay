@@ -66,7 +66,7 @@ namespace TWChatOverlay.Services
                     window.SetFontSize(fontSize.Value);
 
                 // 통합 알림 스택: 앵커 위치에서 다른 알림들 아래로 배치
-                var (left, top) = ToastStackService.Attach(window);
+                var (left, top) = AppServices.Get<ToastStackService>().Attach(window);
                 window.ShowDisplay(left, top);
             }));
         }
@@ -77,14 +77,14 @@ namespace TWChatOverlay.Services
             if (settings == null || (!force && !settings.ShowDungeonCountDisplayWindow))
                 return;
 
-            ToastStackService.ShowPositionPreview(settings);
+            AppServices.Get<ToastStackService>().ShowPositionPreview(settings);
         }
 
         public void ClosePositionPreview(ChatSettings settings)
-            => ToastStackService.ClosePositionPreview();
+            => AppServices.Get<ToastStackService>().ClosePositionPreview();
 
         public void SaveCurrentPosition(ChatSettings settings)
-            => ToastStackService.SaveCurrentPosition(settings);
+            => AppServices.Get<ToastStackService>().SaveCurrentPosition(settings);
 
         private FontFamily ResolveFont() => ToastPresentationHelper.ResolveToastFont();
     }

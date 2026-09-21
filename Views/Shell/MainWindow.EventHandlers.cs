@@ -62,7 +62,7 @@ namespace TWChatOverlay.Views
             try
             {
                 DragMove();
-                ChatWindowHub.TryApplyMagneticSnap(this);
+                AppServices.Get<ChatWindowHub>().TryApplyMagneticSnap(this);
                 PersistCurrentMainWindowPosition();
             }
             catch { }
@@ -79,7 +79,7 @@ namespace TWChatOverlay.Views
             if (e.ButtonState == MouseButtonState.Pressed)
             {
                 DragMove();
-                ChatWindowHub.TryApplyMagneticSnap(this);
+                AppServices.Get<ChatWindowHub>().TryApplyMagneticSnap(this);
                 PersistCurrentMainWindowPosition();
             }
         }
@@ -157,7 +157,7 @@ namespace TWChatOverlay.Views
             Map(OnDungeonCountDisplayWindowSettingChanged, nameof(ChatSettings.ShowDungeonCountDisplayWindow));
 
             // 알림
-            Map(() => ToastStackService.RefreshPreviews(_settings), nameof(ChatSettings.UnifiedToastStack)); // 통합/분리 전환: 미리보기와 열린 알림 재배치
+            Map(() => AppServices.Get<ToastStackService>().RefreshPreviews(_settings), nameof(ChatSettings.UnifiedToastStack)); // 통합/분리 전환: 미리보기와 열린 알림 재배치
             Map(OnExperienceLimitAlertSettingChanged, nameof(ChatSettings.EnableExperienceLimitAlert));
             Map(OnExperienceLimitAlertWindowSettingChanged, nameof(ChatSettings.ShowExperienceLimitAlertWindow));
             Map(() => AppServices.Get<ExperienceAlertWindowService>().RefreshState(_settings), nameof(ChatSettings.ExperienceLimitTotalExp));

@@ -21,7 +21,7 @@ namespace TWChatOverlay.Services
     ///   ]
     /// }
     /// </summary>
-    public static class DropItemResolver
+    public sealed class DropItemResolver
     {
         private const string DropItemUrl = RemoteEndpoints.DropItem;
         private static readonly TimeSpan CacheTtl = TimeSpan.FromHours(6);
@@ -31,7 +31,7 @@ namespace TWChatOverlay.Services
             Timeout = TimeSpan.FromSeconds(5)
         };
 
-        private static readonly RemoteJsonCacheClient CacheClient = new(
+        private readonly RemoteJsonCacheClient CacheClient = new(
             "DropItemResolver",
             DropItemUrl,
             CacheTtl,
@@ -43,7 +43,7 @@ namespace TWChatOverlay.Services
         // [아이템명] 아이템을 획득 하였습니다.
         // [아이템명]을(를) [1]개 획득하였습니다.
         // [아이템명] 10개를 획득하였습니다.
-        private static Regex _acquireRegex = new(
+        private Regex _acquireRegex = new(
             @"^\[(?<item>.+?)\](?:\s*\uC544\uC774\uD15C\uC744\s*\uD68D\uB4DD\s*\uD558\uC600\uC2B5\uB2C8\uB2E4\.?|\s*(?:\uC744\(\uB97C\)\s*)?(?:\[(?<countBracket>[\d,]+)\]|(?<countPlain>[\d,]+))\uAC1C(?:\uB97C)?\s*\uD68D\uB4DD\uD558\uC600\uC2B5\uB2C8\uB2E4\.?)$",
             RegexOptions.Compiled);
 
@@ -52,13 +52,13 @@ namespace TWChatOverlay.Services
             @"\uB354\uBE14\s*\uB9AC\uC6CC\uB4DC\s*\uCD94\uAC00\s*\uBCF4\uC0C1\uC73C\uB85C\s*\[(?<item>.+?)\]\s*\uC544\uC774\uD15C\uC744\s*\[(?<countBracket>[\d,]+)\]\s*\uAC1C\s*\uCD94\uAC00\s*\uD68D\uB4DD\uD558\uC600\uC2B5\uB2C8\uB2E4\.?",
             RegexOptions.Compiled);
 
-        private static readonly SemaphoreSlim LoadLock = new(1, 1);
-        private static int _isInitialized;
-        private static ChatSettings? _settings;
+        private readonly SemaphoreSlim LoadLock = new(1, 1);
+        private int _isInitialized;
+        private ChatSettings? _settings;
 
-        private static Dictionary<string, ItemDropGrade> _trackedItems = new(StringComparer.OrdinalIgnoreCase);
-        private static Dictionary<string, string> _trackedItemDisplayNames = new(StringComparer.OrdinalIgnoreCase);
-        private static List<(string Name, ItemDropGrade Grade, string? Abbreviation)> _trackedItemList = new();
+        private Dictionary<string, ItemDropGrade> _trackedItems = new(StringComparer.OrdinalIgnoreCase);
+        private Dictionary<string, string> _trackedItemDisplayNames = new(StringComparer.OrdinalIgnoreCase);
+        private List<(string Name, ItemDropGrade Grade, string? Abbreviation)> _trackedItemList = new();
 
         public sealed class DropItemFilterSnapshot
         {
@@ -93,7 +93,7 @@ namespace TWChatOverlay.Services
             }
         }
 
-        public static void InitializeAsync(ChatSettings? settings = null)
+        public void InitializeAsync(ChatSettings? settings = null)
         {
             if (settings != null)
                 _settings = settings;
@@ -105,7 +105,7 @@ namespace TWChatOverlay.Services
             _ = EnsureLoadedAsync();
         }
 
-        public static async Task ReloadAsync(ChatSettings? settings = null)
+        public async Task ReloadAsync(ChatSettings? settings = null)
         {
             if (settings != null)
                 _settings = settings;
@@ -125,7 +125,7 @@ namespace TWChatOverlay.Services
             await EnsureLoadedAsync().ConfigureAwait(false);
         }
 
-        public static bool TryApplyJsonForSession(string json)
+        public bool TryApplyJsonForSession(string json)
         {
             if (string.IsNullOrWhiteSpace(json))
                 return false;
@@ -133,7 +133,7 @@ namespace TWChatOverlay.Services
             return TryApplyJson(json);
         }
 
-        public static bool TryCreateFilterSnapshot(string json, out DropItemFilterSnapshot snapshot)
+        public bool TryCreateFilterSnapshot(string json, out DropItemFilterSnapshot snapshot)
         {
             snapshot = DropItemFilterSnapshot.Empty;
 
@@ -147,31 +147,31 @@ namespace TWChatOverlay.Services
             return true;
         }
 
-        public static bool TryExtractTrackedItem(string message, out string itemName)
+        public bool TryExtractTrackedItem(string message, out string itemName)
         {
             int ignoredCount;
             return TryExtractTrackedItem(message, out itemName, out _, out ignoredCount);
         }
 
-        public static bool TryExtractTrackedItem(string message, out string itemName, out int count)
+        public bool TryExtractTrackedItem(string message, out string itemName, out int count)
             => TryExtractTrackedItem(message, out itemName, out _, out count);
 
-        public static IReadOnlyList<(string Name, ItemDropGrade Grade, string? Abbreviation)> GetTrackedItemsSnapshot()
+        public IReadOnlyList<(string Name, ItemDropGrade Grade, string? Abbreviation)> GetTrackedItemsSnapshot()
             => _trackedItemList;
 
-        public static DropItemFilterSnapshot GetSessionFilterSnapshot()
+        public DropItemFilterSnapshot GetSessionFilterSnapshot()
             => new(_trackedItems, _trackedItemDisplayNames);
 
-        public static async Task<DropItemFilterSnapshot> LoadDefaultFilterSnapshotAsync()
+        public async Task<DropItemFilterSnapshot> LoadDefaultFilterSnapshotAsync()
         {
             var items = await LoadDefaultItemsAsync().ConfigureAwait(false);
             return BuildSnapshot(items);
         }
 
-        public static string GetTrackedItemDisplayName(string itemName)
+        public string GetTrackedItemDisplayName(string itemName)
             => GetTrackedItemDisplayName(itemName, null);
 
-        public static string GetTrackedItemDisplayName(string itemName, DropItemFilterSnapshot? filterSnapshot)
+        public string GetTrackedItemDisplayName(string itemName, DropItemFilterSnapshot? filterSnapshot)
         {
             if (string.IsNullOrWhiteSpace(itemName))
                 return string.Empty;
@@ -185,13 +185,13 @@ namespace TWChatOverlay.Services
                 : itemName;
         }
 
-        public static bool TryExtractTrackedItem(string message, out string itemName, out ItemDropGrade grade)
+        public bool TryExtractTrackedItem(string message, out string itemName, out ItemDropGrade grade)
             => TryExtractTrackedItem(message, out itemName, out grade, out _);
 
-        public static bool TryExtractTrackedItem(string message, out string itemName, out ItemDropGrade grade, out int count)
+        public bool TryExtractTrackedItem(string message, out string itemName, out ItemDropGrade grade, out int count)
             => TryExtractTrackedItem(message, null, out itemName, out grade, out count);
 
-        public static bool TryExtractTrackedItem(
+        public bool TryExtractTrackedItem(
             string message,
             DropItemFilterSnapshot? filterSnapshot,
             out string itemName,
@@ -253,7 +253,7 @@ namespace TWChatOverlay.Services
             return false;
         }
 
-        private static async Task EnsureLoadedAsync()
+        private async Task EnsureLoadedAsync()
         {
             await LoadLock.WaitAsync().ConfigureAwait(false);
             try
@@ -292,7 +292,7 @@ namespace TWChatOverlay.Services
         }
 
         /// <summary>기본 테이블이 갱신되면 사용자 정의 목록의 옛 이름(오타 등)을 새 이름으로 맞추고 저장한다.</summary>
-        private static void ReconcileCustomFilterWithDefaults()
+        private void ReconcileCustomFilterWithDefaults()
         {
             var settings = _settings;
             if (settings == null || string.IsNullOrWhiteSpace(settings.CustomDropItemJson))
@@ -317,7 +317,7 @@ namespace TWChatOverlay.Services
             }
         }
 
-        private static bool TryApplyJson(string json)
+        private bool TryApplyJson(string json)
         {
             try
             {
@@ -339,7 +339,7 @@ namespace TWChatOverlay.Services
             }
         }
 
-        public static async Task<IReadOnlyList<(string Name, ItemDropGrade Grade, string? Abbreviation)>> LoadDefaultItemsAsync()
+        public async Task<IReadOnlyList<(string Name, ItemDropGrade Grade, string? Abbreviation)>> LoadDefaultItemsAsync()
         {
             bool manifestChanged = await RemoteResourceManifestService.ShouldForceRefreshAsync("DropItem.Json").ConfigureAwait(false);
             string? json = await CacheClient.GetJsonAsync(forceRefresh: manifestChanged).ConfigureAwait(false);
@@ -353,7 +353,7 @@ namespace TWChatOverlay.Services
             return Array.Empty<(string Name, ItemDropGrade Grade, string? Abbreviation)>();
         }
 
-        private static DropItemFilterSnapshot BuildSnapshot(IEnumerable<(string Name, ItemDropGrade Grade, string? Abbreviation)> items)
+        private DropItemFilterSnapshot BuildSnapshot(IEnumerable<(string Name, ItemDropGrade Grade, string? Abbreviation)> items)
         {
             var trackedItems = new Dictionary<string, ItemDropGrade>(StringComparer.OrdinalIgnoreCase);
             var displayNames = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
@@ -368,7 +368,7 @@ namespace TWChatOverlay.Services
             return new DropItemFilterSnapshot(trackedItems, displayNames);
         }
 
-        public static bool TryValidateJson(string json, out string message)
+        public bool TryValidateJson(string json, out string message)
         {
             if (string.IsNullOrWhiteSpace(json))
             {
@@ -400,7 +400,7 @@ namespace TWChatOverlay.Services
             }
         }
 
-        private static bool TryParseJson(string json, out List<DropItemDefinition> rows, out string message)
+        private bool TryParseJson(string json, out List<DropItemDefinition> rows, out string message)
         {
             rows = new List<DropItemDefinition>();
             message = string.Empty;
@@ -423,7 +423,7 @@ namespace TWChatOverlay.Services
             return true;
         }
 
-        private static string? NormalizeAbbreviation(string? abbreviation)
+        private string? NormalizeAbbreviation(string? abbreviation)
         {
             if (string.IsNullOrWhiteSpace(abbreviation))
                 return null;
@@ -431,7 +431,7 @@ namespace TWChatOverlay.Services
             return abbreviation.Trim();
         }
 
-        private static ItemDropGrade ParseGrade(string? grade)
+        private ItemDropGrade ParseGrade(string? grade)
         {
             if (string.IsNullOrWhiteSpace(grade))
                 return ItemDropGrade.Normal;
@@ -449,7 +449,7 @@ namespace TWChatOverlay.Services
         /// 사용자 정의 목록에 옛 이름이 남아 있으면 영영 감지되지 않기 때문이다.
         /// 바뀐 게 없으면 null을 돌려준다.
         /// </summary>
-        public static string? ReconcileCustomJsonWithDefaults(
+        public string? ReconcileCustomJsonWithDefaults(
             string customJson,
             IReadOnlyList<(string Name, ItemDropGrade Grade, string? Abbreviation)> defaults,
             out IReadOnlyList<(string OldName, string NewName)> renamed)

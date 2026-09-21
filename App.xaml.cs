@@ -113,6 +113,10 @@ namespace TWChatOverlay
                 services.AddSingleton<MessengerLogWatcherService>();
                 services.AddSingleton<BuffTrackerService>();
                 services.AddSingleton<LogService>();
+                services.AddSingleton<WeeklySeedRewardService>();
+                services.AddSingleton<DropItemResolver>();
+                services.AddSingleton<ToastStackService>();
+                services.AddSingleton<ChatWindowHub>();
                 services.AddSingleton<RecaptureSupplyPadOrderService>();
                 services.AddSingleton<RecaptureSupplyAlertService>();
                 services.AddSingleton<ExperienceAlertWindowService>();

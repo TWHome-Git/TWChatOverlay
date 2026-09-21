@@ -30,7 +30,7 @@ namespace TWChatOverlay.Services
                 ActiveToasts.Add(toast);
 
                 // 통합 알림 스택: 앵커 위치에서 다른 알림들 아래로 배치
-                var (left, top) = ToastStackService.Attach(toast);
+                var (left, top) = AppServices.Get<ToastStackService>().Attach(toast);
                 toast.ShowAnimated(left, top, settings.ShoutToastDurationSeconds);
             }));
         }
@@ -45,7 +45,7 @@ namespace TWChatOverlay.Services
 
         /// <summary>통합 알림 스택 앵커 미리보기로 위임.</summary>
         public void ShowPositionPreview(ChatSettings settings, bool force = false)
-            => ToastStackService.ShowPositionPreview(settings);
+            => AppServices.Get<ToastStackService>().ShowPositionPreview(settings);
 
         /// <summary>설정 슬라이더 변경을 열려 있는 토스트(미리보기 포함)에 즉시 반영한다.</summary>
         public void ApplyFontSize(double size)
@@ -61,13 +61,13 @@ namespace TWChatOverlay.Services
         }
 
         public void ClosePositionPreview(ChatSettings settings)
-            => ToastStackService.ClosePositionPreview();
+            => AppServices.Get<ToastStackService>().ClosePositionPreview();
 
         public void SaveCurrentPosition(ChatSettings settings)
-            => ToastStackService.SaveCurrentPosition(settings);
+            => AppServices.Get<ToastStackService>().SaveCurrentPosition(settings);
 
         public void NotifyPreviewPositionChanged()
-            => Application.Current.Dispatcher.BeginInvoke(new Action(ToastStackService.Reflow));
+            => Application.Current.Dispatcher.BeginInvoke(new Action(AppServices.Get<ToastStackService>().Reflow));
 
         public ShoutToastWindow? GetOrCreatePreviewWindow(ChatSettings settings)
         {

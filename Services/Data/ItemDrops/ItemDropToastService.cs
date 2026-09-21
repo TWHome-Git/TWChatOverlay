@@ -47,7 +47,7 @@ namespace TWChatOverlay.Services
                 }
 
                 // 통합 알림 스택: 앵커 위치에서 다른 알림들 아래로 배치
-                var (left, top) = ToastStackService.Attach(toast);
+                var (left, top) = AppServices.Get<ToastStackService>().Attach(toast);
                 toast.ShowAnimated(left, top);
             }));
         }

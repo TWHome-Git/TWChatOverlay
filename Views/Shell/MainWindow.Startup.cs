@@ -588,7 +588,7 @@ namespace TWChatOverlay.Views
                 });
 
                 AppLogger.Info("Restarting application after initial setup wizard completion.");
-                ChatWindowHub.BeginShutdown();
+                AppServices.Get<ChatWindowHub>().BeginShutdown();
                 Application.Current.Shutdown();
             }
             catch (Exception ex)

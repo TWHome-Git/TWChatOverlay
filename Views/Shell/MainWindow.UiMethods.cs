@@ -207,7 +207,7 @@ namespace TWChatOverlay.Views
             if (_defaultDropItemFilterSnapshot != null)
                 return _defaultDropItemFilterSnapshot;
 
-            var snapshot = DropItemResolver.LoadDefaultFilterSnapshotAsync().GetAwaiter().GetResult();
+            var snapshot = AppServices.Get<DropItemResolver>().LoadDefaultFilterSnapshotAsync().GetAwaiter().GetResult();
             lock (_defaultDropItemFilterLock)
             {
                 _defaultDropItemFilterSnapshot ??= snapshot;
@@ -229,7 +229,7 @@ namespace TWChatOverlay.Views
                         continue;
 
                     string json = File.ReadAllText(path, Encoding.UTF8);
-                    if (DropItemResolver.TryCreateFilterSnapshot(json, out _))
+                    if (AppServices.Get<DropItemResolver>().TryCreateFilterSnapshot(json, out _))
                     {
                         _settings.UseCustomDropItemFilter = true;
                         _settings.CustomDropItemJson = json;
@@ -258,7 +258,7 @@ namespace TWChatOverlay.Views
 
         private void ConfirmExit()
         {
-            ChatWindowHub.BeginShutdown();
+            AppServices.Get<ChatWindowHub>().BeginShutdown();
             Application.Current.Shutdown();
         }
 

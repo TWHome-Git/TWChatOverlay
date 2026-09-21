@@ -355,7 +355,7 @@ namespace TWChatOverlay.ViewModels
         private async Task ApplyCustomDropItemFilterAsync()
         {
             string json = SerializeDropItems(CustomDropItems);
-            if (!DropItemResolver.TryValidateJson(json, out string message))
+            if (!AppServices.Get<DropItemResolver>().TryValidateJson(json, out string message))
             {
                 CustomDropItemStatus = message;
                 return;
@@ -366,7 +366,7 @@ namespace TWChatOverlay.ViewModels
             UseCustomDropItemFilter = true;
             CustomDropItemJson = json;
             SaveSettings();
-            await DropItemResolver.ReloadAsync(_settings);
+            await AppServices.Get<DropItemResolver>().ReloadAsync(_settings);
             CustomDropItemStatus = $"사용자 정의 필터 적용 완료: {message}";
         }
 
@@ -375,7 +375,7 @@ namespace TWChatOverlay.ViewModels
             _settings.UseCustomDropItemFilter = false;
             UseCustomDropItemFilter = false;
             SaveSettings();
-            await DropItemResolver.ReloadAsync(_settings);
+            await AppServices.Get<DropItemResolver>().ReloadAsync(_settings);
             CustomDropItemStatus = "기본 GitHub 드롭 테이블을 사용 중입니다.";
         }
 
@@ -399,7 +399,7 @@ namespace TWChatOverlay.ViewModels
 
         private async Task InitializeDropItemFilterListsAsync()
         {
-            var defaultItems = await DropItemResolver.LoadDefaultItemsAsync();
+            var defaultItems = await AppServices.Get<DropItemResolver>().LoadDefaultItemsAsync();
             var customItems = ParseDropItems(_settings.CustomDropItemJson);
 
             Application.Current?.Dispatcher.BeginInvoke(new Action(() =>
