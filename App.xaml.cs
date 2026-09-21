@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Extensions.DependencyInjection;
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
@@ -93,10 +94,30 @@ namespace TWChatOverlay
             }
 
             System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
-            AppServices.Initialize();
+
+            // 컴포지션 루트: 설정을 한 번 읽고, 창들이 쓰는 핵심 서비스를 여기서 만든다 (MainWindow는 Get으로 꺼낸다)
+            bool settingsFileMissing = !ConfigService.SettingsFileExists();
+            Models.ChatSettings settings = ConfigService.Load();
+            AppServices.Initialize(services =>
+            {
+                services.AddSingleton(new StartupState(settingsFileMissing));
+                services.AddSingleton(settings);
+                services.AddSingleton<IIdTagService, IdTagService>();
+                services.AddSingleton<IOverlayOpacityService, OverlayOpacityService>();
+                services.AddSingleton<ExperienceService>();
+                services.AddSingleton<LogAnalysisService>();
+                services.AddSingleton<MainLogPipelineCoordinator>();
+                services.AddSingleton<ExperienceEssenceAlertService>();
+                services.AddSingleton<DungeonCountDisplayService>();
+                services.AddSingleton<ReadableLogArchiveService>();
+                services.AddSingleton<MessengerLogWatcherService>();
+                services.AddSingleton<BuffTrackerService>();
+                services.AddSingleton<LogService>();
+            });
+
             EtaProfileResolver.InitializeAsync();
             BlacklistService.Initialize();
-            IdTagService.Initialize();
+            AppServices.Get<IIdTagService>().Initialize();
             _ = RecaptureSupplyAlertService.PreloadAsync();
             SecondaryWindowTopmostRefreshService.Initialize();
             ForegroundTopmostGuard.Initialize();
@@ -174,7 +195,7 @@ namespace TWChatOverlay
                 {
                     try
                     {
-                        cfg = TWChatOverlay.Services.ConfigService.Load();
+                        cfg = AppServices.TryGet<Models.ChatSettings>() ?? TWChatOverlay.Services.ConfigService.Load();
                     }
                     catch (Exception ex)
                     {

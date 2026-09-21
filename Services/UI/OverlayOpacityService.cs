@@ -7,6 +7,23 @@ using TWChatOverlay.Models;
 
 namespace TWChatOverlay.Services
 {
+    /// <summary>오버레이 배경 불투명도. 구현은 <see cref="OverlayOpacityService"/>, 등록은 AppServices.</summary>
+    public interface IOverlayOpacityService
+    {
+        /// <summary>그룹 값이 바뀌면 발생한다. 인자는 그룹 키, null이면 전체 변경(설정 초기화 등).</summary>
+        event Action<string?>? GroupOpacityChanged;
+
+        /// <summary>앱 전역 값을 적용하고, 이후 열리는 창에 그룹별 값이 자동 적용되도록 등록한다.</summary>
+        void Initialize();
+
+        void NotifyAllGroupsChanged();
+        double GetGroupOpacity(string groupKey);
+        void SetGroupOpacity(string groupKey, double opacityPercent);
+        void ApplyToOpenWindows(string? groupKey = null);
+        void Apply(double opacityPercent);
+        void ApplyToWindow(Window window, double opacityPercent);
+    }
+
     /// <summary>
     /// 오버레이 창 배경 불투명도를 리소스 브러시의 알파값으로 적용합니다.
     ///
@@ -16,8 +33,9 @@ namespace TWChatOverlay.Services
     ///   앱 전역 리소스에 적용합니다.
     ///
     /// 텍스트/아이콘/테두리는 영향을 받지 않아 가독성이 유지됩니다.
+    /// 그룹 정의·표시명 같은 상수 데이터는 정적으로 두고, 설정 연결·원색 캐시·이벤트는 인스턴스 상태다.
     /// </summary>
-    public static class OverlayOpacityService
+    public sealed class OverlayOpacityService : IOverlayOpacityService
     {
         /// <summary>메인·서브 채팅창과 자동으로 뜨는 창을 함께 관리하는 통합 값.</summary>
         public const string GroupShared = "Shared";
@@ -69,25 +87,25 @@ namespace TWChatOverlay.Services
             "OverlayDragBarBackgroundBrush",
         };
 
+        private readonly ChatSettings _settings;
         // 원본 RGB를 최초 1회 캡처 (알파만 바꾸고 색상은 보존)
-        private static readonly Dictionary<string, Color> _baseColors = new();
+        private readonly Dictionary<string, Color> _baseColors = new();
+        private bool _classHandlerRegistered;
 
-        private static ChatSettings? _settings;
-        private static bool _classHandlerRegistered;
+        public OverlayOpacityService(ChatSettings settings)
+        {
+            _settings = settings ?? throw new ArgumentNullException(nameof(settings));
+        }
 
-        /// <summary>그룹 값이 바뀌면 발생한다. 인자는 그룹 키, null이면 전체 변경(설정 초기화 등).</summary>
-        public static event Action<string?>? GroupOpacityChanged;
+        public event Action<string?>? GroupOpacityChanged;
 
         /// <summary>설정 초기화처럼 여러 그룹이 한꺼번에 바뀐 뒤 창의 슬라이더를 갱신시킨다.</summary>
-        public static void NotifyAllGroupsChanged() => GroupOpacityChanged?.Invoke(null);
+        public void NotifyAllGroupsChanged() => GroupOpacityChanged?.Invoke(null);
 
-        /// <summary>설정을 연결하고, 이후 열리는 모든 창에 그룹별 불투명도가 자동 적용되도록 등록한다.</summary>
-        public static void Initialize(ChatSettings settings)
+        public void Initialize()
         {
-            _settings = settings;
-
             // 앱 전역 리소스는 통합 값을 따른다. (메인·서브 채팅창 + 자동으로 뜨는 창)
-            Apply(settings.OverlayOpacityPercent);
+            Apply(_settings.OverlayOpacityPercent);
 
             if (!_classHandlerRegistered)
             {
@@ -106,18 +124,17 @@ namespace TWChatOverlay.Services
             => Groups.FirstOrDefault(g => g.Key == groupKey)?.DisplayName ?? groupKey;
 
         /// <summary>그룹에 저장된 불투명도(%). 저장값이 없으면 통합 값을 따른다.</summary>
-        public static double GetGroupOpacity(string groupKey)
+        public double GetGroupOpacity(string groupKey)
         {
-            if (_settings == null) return 100.0;
             if (string.IsNullOrEmpty(groupKey) || groupKey == GroupShared)
                 return _settings.OverlayOpacityPercent;
             return _settings.GetOverlayOpacity(groupKey);
         }
 
         /// <summary>그룹 불투명도를 저장하고 해당 그룹의 열린 창에 즉시 반영한다.</summary>
-        public static void SetGroupOpacity(string groupKey, double opacityPercent)
+        public void SetGroupOpacity(string groupKey, double opacityPercent)
         {
-            if (_settings == null || string.IsNullOrEmpty(groupKey)) return;
+            if (string.IsNullOrEmpty(groupKey)) return;
 
             if (groupKey == GroupShared)
             {
@@ -136,7 +153,7 @@ namespace TWChatOverlay.Services
         }
 
         /// <summary>열린 창 전체(또는 지정 그룹)에 저장된 불투명도를 다시 적용한다.</summary>
-        public static void ApplyToOpenWindows(string? groupKey = null)
+        public void ApplyToOpenWindows(string? groupKey = null)
         {
             var app = Application.Current;
             if (app == null) return;
@@ -152,7 +169,7 @@ namespace TWChatOverlay.Services
         }
 
         /// <summary>앱 전역 리소스에 적용한다. (통합 값을 따르는 모든 창)</summary>
-        public static void Apply(double opacityPercent)
+        public void Apply(double opacityPercent)
         {
             try
             {
@@ -177,7 +194,7 @@ namespace TWChatOverlay.Services
         }
 
         /// <summary>지정한 창에만 적용한다. Window.Resources가 앱 전역 리소스를 가린다.</summary>
-        public static void ApplyToWindow(Window window, double opacityPercent)
+        public void ApplyToWindow(Window window, double opacityPercent)
         {
             if (window == null) return;
 
@@ -210,7 +227,7 @@ namespace TWChatOverlay.Services
             return Groups.FirstOrDefault(g => Array.IndexOf(g.WindowTypes, typeName) >= 0);
         }
 
-        private static void OnWindowLoaded(object sender, RoutedEventArgs e)
+        private void OnWindowLoaded(object sender, RoutedEventArgs e)
         {
             if (sender is not Window window) return;
 
@@ -233,7 +250,7 @@ namespace TWChatOverlay.Services
             return brush;
         }
 
-        private static bool TryGetBaseColor(Application app, string key, out Color baseColor)
+        private bool TryGetBaseColor(Application app, string key, out Color baseColor)
         {
             if (_baseColors.TryGetValue(key, out baseColor)) return true;
 

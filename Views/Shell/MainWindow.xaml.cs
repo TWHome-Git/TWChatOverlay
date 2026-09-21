@@ -85,16 +85,16 @@ namespace TWChatOverlay.Views
             Opacity = 0;
             IsHitTestVisible = false;
             Topmost = true;
-            _settingsFileMissingOnStartup = !ConfigService.SettingsFileExists();
+            _settingsFileMissingOnStartup = AppServices.Get<StartupState>().SettingsFileMissing;
             _pendingInitialSetupWizard = _settingsFileMissingOnStartup;
             _logTabBufferStore = ChatWindowHub.SharedLogBuffers;
             _tabDisplayStateResolver = new TabDisplayStateResolver();
             _mainTabAutoHideTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(3) };
             _mainTabAutoHideTimer.Tick += (_, _) => HideMainTabs();
 
-            _settings = ConfigService.Load();
+            _settings = AppServices.Get<ChatSettings>();
             UiLockService.SnapEnabled = _settings.WindowSnapEnabled;
-            OverlayOpacityService.Initialize(_settings);
+            AppServices.Get<IOverlayOpacityService>().Initialize();
             if (!_settings.InitialSetupWizardCompleted)
             {
                 _pendingInitialSetupWizard = true;
@@ -108,8 +108,8 @@ namespace TWChatOverlay.Views
                 if (ReferenceEquals(MainWindowHost.Current, this))
                     MainWindowHost.Current = null;
             };
-            _logAnalysisService = new LogAnalysisService(_settings);
-            _logPipelineCoordinator = new MainLogPipelineCoordinator(_settings, _logAnalysisService);
+            _logAnalysisService = AppServices.Get<LogAnalysisService>();
+            _logPipelineCoordinator = AppServices.Get<MainLogPipelineCoordinator>();
             // 파싱·분석을 백그라운드로 — UI 스레드는 분석 결과를 소비만 한다.
             // 아카이브 기록(파일 IO)은 UI가 필요 없으므로 분석 스레드에서 바로 처리한다.
             _logAnalysisPipeline = new LogAnalysisPipeline(
@@ -135,22 +135,22 @@ namespace TWChatOverlay.Views
                 });
             _settingsViewModel = new SettingsViewModel(_settings, OnColorsUpdatedFromSettings, ConfirmExit, OnSettingsResetFromSettings, ApplyHotKeys, ExecuteManualLogReloadFromSettingsAsync, OnSettingsReplacedFromSettings);
 
-            _expService = new ExperienceService(_settings);
+            _expService = AppServices.Get<ExperienceService>();
             _expTrackerViewModel = new ExpTrackerViewModel(_expService, _settings);
             _expService.SessionState.PropertyChanged += ExpSessionState_PropertyChanged;
             _expService.TrackerActiveChanged += () => Dispatcher.BeginInvoke(new Action(RefreshExpTrackerWindow), DispatcherPriority.Background);
             _expTrackerViewModel.UpdateDisplay();
-            _experienceEssenceAlertService = new ExperienceEssenceAlertService(_settings);
+            _experienceEssenceAlertService = AppServices.Get<ExperienceEssenceAlertService>();
             ExperienceAlertWindowService.ConfigureStateBridge(
                 () => _experienceEssenceAlertService.GetStateSnapshot(),
                 snapshot => _experienceEssenceAlertService.ApplyStateSnapshot(snapshot));
-            _dungeonCountDisplayService = new DungeonCountDisplayService(_settings);
-            _readableLogArchiveService = new ReadableLogArchiveService();
-            _messengerLogWatcherService = new MessengerLogWatcherService(_settings);
+            _dungeonCountDisplayService = AppServices.Get<DungeonCountDisplayService>();
+            _readableLogArchiveService = AppServices.Get<ReadableLogArchiveService>();
+            _messengerLogWatcherService = AppServices.Get<MessengerLogWatcherService>();
             _messengerLogWatcherService.Start();
-            _buffTrackerService = new BuffTrackerService(_settings);
+            _buffTrackerService = AppServices.Get<BuffTrackerService>();
             _buffTrackerService.PropertyChanged += BuffTrackerService_PropertyChanged;
-            _logService = new LogService(_expService, _settings);
+            _logService = AppServices.Get<LogService>();
             TryLoadTestDropItemJsonForSession();
             DropItemResolver.InitializeAsync(_settings);
             _logService.OnNewLogRead += (logItem) => _logAnalysisPipeline?.Enqueue(logItem);
@@ -165,7 +165,7 @@ namespace TWChatOverlay.Views
             {
                 Dispatcher.BeginInvoke(new Action(() => RequestRefreshLogDisplay()), DispatcherPriority.Background);
             };
-            IdTagService.IdTagsChanged += () =>
+            AppServices.Get<IIdTagService>().IdTagsChanged += () =>
             {
                 Dispatcher.BeginInvoke(new Action(() => RequestRefreshLogDisplay()), DispatcherPriority.Background);
             };

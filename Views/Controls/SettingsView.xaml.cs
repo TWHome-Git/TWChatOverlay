@@ -819,9 +819,10 @@ namespace TWChatOverlay.Views
         {
             try
             {
-                string path = Services.IdTagService.FilePath;
+                var idTags = Services.AppServices.Get<Services.IIdTagService>();
+                string path = idTags.FilePath;
                 if (!System.IO.File.Exists(path))
-                    Services.IdTagService.Initialize();
+                    idTags.Initialize();
 
                 System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
                 {
@@ -832,7 +833,7 @@ namespace TWChatOverlay.Views
             catch (System.Exception ex)
             {
                 Services.AppLogger.Warn("Failed to open idtag.txt.", ex);
-                try { MessageBox.Show($"idtag.txt를 열 수 없습니다:\n{Services.IdTagService.FilePath}", "오류", MessageBoxButton.OK, MessageBoxImage.Error); } catch { }
+                try { MessageBox.Show($"idtag.txt를 열 수 없습니다:\n{Services.AppServices.Get<Services.IIdTagService>().FilePath}", "오류", MessageBoxButton.OK, MessageBoxImage.Error); } catch { }
             }
         }
 

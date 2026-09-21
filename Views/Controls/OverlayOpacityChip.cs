@@ -107,15 +107,26 @@ namespace TWChatOverlay.Views
             Unloaded += OnUnloaded;
         }
 
+        // 디자이너·컨테이너 없는 경로에서는 null — 그때는 슬라이더만 보이고 동작하지 않는다
+        private static IOverlayOpacityService? OpacityService => AppServices.TryGet<IOverlayOpacityService>();
+
         private void OnLoaded(object sender, RoutedEventArgs e)
         {
-            OverlayOpacityService.GroupOpacityChanged -= OnGroupOpacityChanged;
-            OverlayOpacityService.GroupOpacityChanged += OnGroupOpacityChanged;
+            var opacity = OpacityService;
+            if (opacity != null)
+            {
+                opacity.GroupOpacityChanged -= OnGroupOpacityChanged;
+                opacity.GroupOpacityChanged += OnGroupOpacityChanged;
+            }
             ReloadValue();
         }
 
         private void OnUnloaded(object sender, RoutedEventArgs e)
-            => OverlayOpacityService.GroupOpacityChanged -= OnGroupOpacityChanged;
+        {
+            var opacity = OpacityService;
+            if (opacity != null)
+                opacity.GroupOpacityChanged -= OnGroupOpacityChanged;
+        }
 
         /// <summary>다른 경로(설정 초기화 등)로 값이 바뀌면 슬라이더 위치를 맞춘다.</summary>
         private void OnGroupOpacityChanged(string? groupKey)
@@ -152,7 +163,7 @@ namespace TWChatOverlay.Views
             _suppressCallback = true;
             try
             {
-                _slider.Value = OverlayOpacityService.GetGroupOpacity(GroupKey);
+                _slider.Value = OpacityService?.GetGroupOpacity(GroupKey) ?? 100.0;
                 UpdateValueText();
             }
             finally
@@ -167,7 +178,7 @@ namespace TWChatOverlay.Views
 
             if (_suppressCallback || string.IsNullOrEmpty(GroupKey)) return;
 
-            OverlayOpacityService.SetGroupOpacity(GroupKey, e.NewValue);
+            OpacityService?.SetGroupOpacity(GroupKey, e.NewValue);
         }
 
         private void UpdateValueText()

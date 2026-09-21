@@ -5,43 +5,60 @@ using System.Text;
 
 namespace TWChatOverlay.Services
 {
+    /// <summary>아이디 태그 저장소. 구현은 <see cref="IdTagService"/>, 등록은 AppServices.</summary>
+    public interface IIdTagService
+    {
+        /// <summary>파일이 다시 읽혀 태그 목록이 바뀌면 발생.</summary>
+        event Action? IdTagsChanged;
+
+        string FilePath { get; }
+        int Count { get; }
+
+        void Initialize();
+        string GetRawText();
+        void SaveRawText(string text);
+        void Reload();
+        bool TryGetTag(string? userId, out string tag);
+    }
+
     /// <summary>
     /// 아이디 태그: 특정 아이디에 짧은 메모(태그)를 붙여 채팅 표시 시
     /// "아이디[에타레벨][캐릭터][태그]" 형태로 함께 보여줍니다.
     /// 실행 폴더의 idtag.txt를 읽으며, 형식은 blacklist.txt와 동일한 "아이디 - 태그" 입니다.
+    /// 앱 전체에 하나만 두며(AppServices 싱글턴), 파일 감시와 태그 캐시가 인스턴스 상태다.
     /// </summary>
-    public static class IdTagService
+    public sealed class IdTagService : IIdTagService, IDisposable
     {
-        private static readonly object SyncRoot = new();
-        private static readonly Dictionary<string, string> Tags = new(StringComparer.OrdinalIgnoreCase);
-        private static FileSystemWatcher? _watcher;
-        private static DateTime _lastReloadUtc = DateTime.MinValue;
+        private readonly object _syncRoot = new();
+        private readonly Dictionary<string, string> _tags = new(StringComparer.OrdinalIgnoreCase);
+        private FileSystemWatcher? _watcher;
+        private DateTime _lastReloadUtc = DateTime.MinValue;
 
-        public static event Action? IdTagsChanged;
+        public event Action? IdTagsChanged;
 
-        public static string FilePath => Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "idtag.txt");
+        public string FilePath => Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "idtag.txt");
 
-        public static void Initialize()
+        public void Initialize()
         {
             EnsureFileExists();
             Reload();
             StartWatcher();
         }
 
-        public static string GetRawText()
+        public string GetRawText()
         {
             EnsureFileExists();
             return File.ReadAllText(FilePath, Encoding.UTF8);
         }
 
-        public static void SaveRawText(string text)
+        public void SaveRawText(string text)
         {
             EnsureFileExists();
             File.WriteAllText(FilePath, text ?? string.Empty, new UTF8Encoding(false));
             Reload();
         }
 
-        public static void Reload()
+        public void Reload()
         {
             EnsureFileExists();
 
@@ -63,11 +80,11 @@ namespace TWChatOverlay.Services
                     next[userId] = tag;
             }
 
-            lock (SyncRoot)
+            lock (_syncRoot)
             {
-                Tags.Clear();
+                _tags.Clear();
                 foreach (var pair in next)
-                    Tags[pair.Key] = pair.Value;
+                    _tags[pair.Key] = pair.Value;
             }
 
             _lastReloadUtc = DateTime.UtcNow;
@@ -75,23 +92,24 @@ namespace TWChatOverlay.Services
             IdTagsChanged?.Invoke();
         }
 
-        public static bool TryGetTag(string? userId, out string tag)
+        public bool TryGetTag(string? userId, out string tag)
         {
             tag = string.Empty;
             if (string.IsNullOrWhiteSpace(userId))
                 return false;
 
-            lock (SyncRoot)
+            lock (_syncRoot)
             {
-                return Tags.TryGetValue(userId.Trim(), out tag!);
+                return _tags.TryGetValue(userId.Trim(), out tag!);
             }
         }
 
-        public static int Count
+        public int Count
         {
-            get { lock (SyncRoot) { return Tags.Count; } }
+            get { lock (_syncRoot) { return _tags.Count; } }
         }
 
+        /// <summary>"아이디 - 태그" 한 줄을 해석한다. 상태가 없는 순수 함수라 정적으로 둔다.</summary>
         public static bool TryParseEntry(string? line, out string userId, out string tag)
         {
             userId = string.Empty;
@@ -127,7 +145,7 @@ namespace TWChatOverlay.Services
             return trimmed.Length == 0 || trimmed.StartsWith("#", StringComparison.Ordinal);
         }
 
-        private static void EnsureFileExists()
+        private void EnsureFileExists()
         {
             string path = FilePath;
             string? directoryPath = Path.GetDirectoryName(path);
@@ -147,13 +165,14 @@ namespace TWChatOverlay.Services
         }
 
         /// <summary>메모장 등 외부 편집기로 저장해도 즉시 반영되도록 파일 변경을 감시합니다.</summary>
-        private static void StartWatcher()
+        private void StartWatcher()
         {
             try
             {
                 string? dir = Path.GetDirectoryName(FilePath);
                 if (string.IsNullOrWhiteSpace(dir)) return;
 
+                _watcher?.Dispose();
                 _watcher = new FileSystemWatcher(dir, Path.GetFileName(FilePath))
                 {
                     NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.Size | NotifyFilters.FileName,
@@ -170,7 +189,7 @@ namespace TWChatOverlay.Services
             }
         }
 
-        private static void DebouncedReload()
+        private void DebouncedReload()
         {
             // 편집기가 저장 시 여러 이벤트를 연달아 보내므로 300ms 이내 중복은 무시
             if ((DateTime.UtcNow - _lastReloadUtc).TotalMilliseconds < 300)
@@ -181,6 +200,12 @@ namespace TWChatOverlay.Services
                 try { Reload(); }
                 catch (Exception ex) { AppLogger.Warn("ID tag reload after file change failed.", ex); }
             });
+        }
+
+        public void Dispose()
+        {
+            try { _watcher?.Dispose(); } catch { }
+            _watcher = null;
         }
     }
 }

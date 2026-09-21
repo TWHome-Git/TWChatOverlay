@@ -692,7 +692,7 @@ namespace TWChatOverlay.ViewModels
             set
             {
                 if (Math.Abs(_settings.OverlayOpacityPercent - value) < 0.001) return;
-                OverlayOpacityService.SetGroupOpacity(OverlayOpacityService.GroupShared, value);
+                AppServices.Get<IOverlayOpacityService>().SetGroupOpacity(OverlayOpacityService.GroupShared, value);
                 OnPropertyChanged();
             }
         }
@@ -969,9 +969,10 @@ namespace TWChatOverlay.ViewModels
             OnPropertyChanged(nameof(ToggleSettingsHotKey));
             OnPropertyChanged(nameof(ToggleTrayAllHotKey));
             OnPropertyChanged(nameof(ToggleUnlockHotKey));
-            OverlayOpacityService.Apply(_settings.OverlayOpacityPercent);
-            OverlayOpacityService.ApplyToOpenWindows();
-            OverlayOpacityService.NotifyAllGroupsChanged();
+            var opacity = AppServices.Get<IOverlayOpacityService>();
+            opacity.Apply(_settings.OverlayOpacityPercent);
+            opacity.ApplyToOpenWindows();
+            opacity.NotifyAllGroupsChanged();
             OnPropertyChanged(nameof(OverlayOpacityPercent));
         }
 

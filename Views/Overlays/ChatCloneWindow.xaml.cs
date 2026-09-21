@@ -150,7 +150,7 @@ namespace TWChatOverlay.Views
             LocationChanged += (_, _) => HandleLocationChanged();
             _settings.PropertyChanged += Settings_PropertyChanged;
             ChatWindowHub.BuffersChanged += ChatWindowHub_BuffersChanged;
-            IdTagService.IdTagsChanged += IdTagService_Changed;
+            AppServices.Get<IIdTagService>().IdTagsChanged += IdTagService_Changed;
             BlacklistService.BlacklistChanged += IdTagService_Changed;
             AttachToMainWindow();
             Activated += (_, _) => Dispatcher.BeginInvoke(new Action(EnsureCloneTopmost), DispatcherPriority.Background);
@@ -207,7 +207,7 @@ namespace TWChatOverlay.Views
             }
 
             ChatWindowHub.BuffersChanged -= ChatWindowHub_BuffersChanged;
-            IdTagService.IdTagsChanged -= IdTagService_Changed;
+            AppServices.Get<IIdTagService>().IdTagsChanged -= IdTagService_Changed;
             BlacklistService.BlacklistChanged -= IdTagService_Changed;
             _settings.PropertyChanged -= Settings_PropertyChanged;
             DetachFromMainWindow();

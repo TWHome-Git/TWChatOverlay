@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using System.Windows.Documents;
@@ -187,9 +187,12 @@ namespace TWChatOverlay.Services
                 }
             }
 
-            if (settings.ShowIdTag
-                && (IdTagService.TryGetTag(lookupSenderId, out string idTag)
-                    || IdTagService.TryGetTag(displaySenderId, out idTag)))
+            // 컨테이너 없이 도는 경로(도움말 이미지 생성)에서는 태그 없이 그린다
+            IIdTagService? idTags = AppServices.TryGet<IIdTagService>();
+            string idTag = string.Empty;
+            if (settings.ShowIdTag && idTags != null
+                && (idTags.TryGetTag(lookupSenderId, out idTag)
+                    || idTags.TryGetTag(displaySenderId, out idTag)))
             {
                 result.Add(new ChatSegment($"[{idTag}]", ChatSegmentKind.IdTag));
             }
