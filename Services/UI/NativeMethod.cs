@@ -33,8 +33,6 @@ namespace TWChatOverlay
             public int Right;
             public int Bottom;
         }
-        [DllImport("user32.dll")]
-        public static extern void mouse_event(uint dwFlags, uint dx, uint dy, uint dwData, int dwExtraInfo);
 
         [DllImport("user32.dll")]
         public static extern int GetWindowLong(IntPtr hWnd, int nIndex);
@@ -42,11 +40,7 @@ namespace TWChatOverlay
         [DllImport("user32.dll")]
         public static extern int SetWindowLong(IntPtr hWnd, int nIndex, int dwNewLong);
 
-        [DllImport("user32.dll")]
-        public static extern bool IsWindow(IntPtr hWnd);
 
-        [DllImport("user32.dll")]
-        public static extern bool IsIconic(IntPtr hWnd);
 
         [DllImport("user32.dll")]
         public static extern bool GetWindowRect(IntPtr hWnd, out RECT lpRect);
@@ -63,8 +57,6 @@ namespace TWChatOverlay
         [DllImport("user32.dll")]
         public static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint lpdwProcessId);
 
-        [DllImport("user32.dll")]
-        public static extern uint GetDpiForWindow(IntPtr hwnd);
 
         [DllImport("user32.dll", SetLastError = true)]
         public static extern bool SetWindowPos(
