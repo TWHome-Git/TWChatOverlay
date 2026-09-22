@@ -16,7 +16,7 @@ namespace TWChatOverlay.Services
         private const double DefaultBaseTop = 42;
         private const double Gap = 8;
 
-        public void ShowForFile(string filePath, IReadOnlyList<string> entries, ChatSettings settings)
+        public void ShowForFile(string filePath, IReadOnlyList<MessengerEtaEntry> entries, ChatSettings settings)
         {
             if (AppServices.Get<TrayAllWindowsService>().IsTrayed)
                 return; // 트레이 최소화 중에는 알림 창을 띄우지 않는다
@@ -72,7 +72,7 @@ namespace TWChatOverlay.Services
                     _previewToast.Closed += (_, _) => _previewToast = null;
                 }
 
-                _previewToast.SetEntries(new[] { "아이디1[41]", "아이디2[10]" });
+                _previewToast.SetEntries(new[] { new MessengerEtaEntry("아이디1", 41, "캐릭터1"), new MessengerEtaEntry("아이디2", 10, "캐릭터2") });
                 _previewToast.SetPreviewMode(true);
                 var (left, topBase) = ResolveBasePositionFromSettings(settings);
                 _previewToast.ShowAt(left, topBase);

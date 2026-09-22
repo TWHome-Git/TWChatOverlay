@@ -9,6 +9,9 @@ using System.Collections.Concurrent;
 
 namespace TWChatOverlay.Services
 {
+    /// <summary>1:1 대화 상대 하나. 에타 랭킹에 없으면 Level이 null.</summary>
+    public readonly record struct MessengerEtaEntry(string UserId, int? Level, string? CharacterName);
+
     public sealed class MessengerLogWatcherService : IDisposable
     {
         private static readonly Encoding KoreanEncoding = Encoding.GetEncoding(949);
@@ -90,13 +93,12 @@ namespace TWChatOverlay.Services
                         return;
                     }
 
-                    var entries = new List<string>(targetIds.Count);
+                    var entries = new List<MessengerEtaEntry>(targetIds.Count);
                     foreach (string targetId in targetIds)
                     {
-                        string levelText = "정보 없음";
-                        if (EtaProfileResolver.TryGetProfile(targetId, out var profile))
-                            levelText = profile.Level.ToString();
-                        entries.Add($"{targetId}[{levelText}]");
+                        entries.Add(EtaProfileResolver.TryGetProfile(targetId, out var profile)
+                            ? new MessengerEtaEntry(targetId, profile.Level, profile.CharacterName)
+                            : new MessengerEtaEntry(targetId, null, null));
                     }
 
                     AppLogger.Info($"Messenger toast dispatch start. File={fullPath}, Targets={entries.Count}");

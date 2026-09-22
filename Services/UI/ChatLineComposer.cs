@@ -153,16 +153,18 @@ namespace TWChatOverlay.Services
                     break;
             }
 
-            string hex = level switch
-            {
-                <= 20 => settings.EtaLevelRange1Color,
-                <= 40 => settings.EtaLevelRange2Color,
-                <= 60 => settings.EtaLevelRange3Color,
-                <= 80 => settings.EtaLevelRange4Color,
-                _ => settings.EtaLevelRange5Color,
-            };
-            return ChatBrushResolver.ToBrush(hex);
+            return ChatBrushResolver.ToBrush(EtaLevelRangeHex(level, settings));
         }
+
+        /// <summary>에타 레벨 구간(1~20/21~40/41~60/61~80/81~)의 설정 색. 채팅창과 1:1 대화 에타 팝업이 같은 색을 쓴다.</summary>
+        public static string EtaLevelRangeHex(int level, ChatSettings settings) => level switch
+        {
+            <= 20 => settings.EtaLevelRange1Color,
+            <= 40 => settings.EtaLevelRange2Color,
+            <= 60 => settings.EtaLevelRange3Color,
+            <= 80 => settings.EtaLevelRange4Color,
+            _ => settings.EtaLevelRange5Color,
+        };
 
         private static List<ChatSegment> BuildDecorations(LogParser.ParseResult log, ChatSettings settings)
         {

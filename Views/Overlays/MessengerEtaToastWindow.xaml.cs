@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Interop;
+using System.Windows.Controls;
 using System.Windows.Media;
-using System.Windows.Documents;
 using TWChatOverlay.Models;
 using TWChatOverlay.Services;
 
@@ -24,34 +24,98 @@ namespace TWChatOverlay.Views
             TitleText.FontFamily = fontFamily;
             CloseButton.FontFamily = fontFamily;
             CloseButton.Click += (_, _) => Close();
-            EntryRichText.FontSize = _settings.MessengerEtaFontSize;
+            _fontSize = _settings.MessengerEtaFontSize;
         }
+
+        private double _fontSize;
+        private IReadOnlyList<MessengerEtaEntry> _entries = Array.Empty<MessengerEtaEntry>();
 
         protected override bool ApplyAppFont => false;          // 생성자 인자의 폰트를 쓴다
         protected override bool PersistBoundsOnChange => false; // 스택이 옮긴 위치를 설정에 되쓰지 않는다
         protected override ChatSettings? ResolveSettings() => _settings;
 
-        /// <summary>잠금 해제 인스펙터에서 폰트 크기 변경 시 즉시 반영.</summary>
+        /// <summary>잠금 해제 인스펙터에서 폰트 크기 변경 시 즉시 반영. 아이디 글자가 기준이고 알약·캐릭터 이름은 그에 비례한다.</summary>
         public void SetFontSize(double size)
         {
-            EntryRichText.FontSize = size;
+            _fontSize = size;
+            RebuildRows();
         }
 
-        public void SetEntries(IReadOnlyList<string> entries)
+        public void SetEntries(IReadOnlyList<MessengerEtaEntry> entries)
         {
-            var doc = new FlowDocument();
-            if (entries != null)
+            _entries = entries ?? Array.Empty<MessengerEtaEntry>();
+            RebuildRows();
+        }
+
+        /// <summary>
+        /// 상대마다 한 줄: 왼쪽에 아이디(아래에 캐릭터 이름을 작게), 오른쪽에 레벨 알약.
+        /// 알약은 채팅창의 레벨 구간 색을 글자·테두리에, 같은 색의 옅은 물결을 배경에 쓴다. 랭킹에 없으면 흐린 "정보 없음".
+        /// </summary>
+        private void RebuildRows()
+        {
+            EntryList.Children.Clear();
+            double scale = _fontSize / 20.0; // 기본 글자 크기 20 기준 비율
+            for (int i = 0; i < _entries.Count; i++)
             {
-                foreach (string line in entries)
+                MessengerEtaEntry entry = _entries[i];
+
+                var idText = new TextBlock { Text = entry.UserId, FontSize = _fontSize, FontWeight = FontWeights.SemiBold, TextTrimming = TextTrimming.CharacterEllipsis };
+                idText.SetResourceReference(TextBlock.ForegroundProperty, "TextBrush");
+                var left = new StackPanel { VerticalAlignment = VerticalAlignment.Center };
+                left.Children.Add(idText);
+                if (!string.IsNullOrEmpty(entry.CharacterName))
                 {
-                    doc.Blocks.Add(new Paragraph(new Run(line))
-                    {
-                        Margin = new Thickness(0, 2, 0, 2)
-                    });
+                    var nameText = new TextBlock { Text = entry.CharacterName, FontSize = Math.Max(10, Math.Round(_fontSize * 0.6)), Margin = new Thickness(0, 1, 0, 0), TextTrimming = TextTrimming.CharacterEllipsis };
+                    nameText.SetResourceReference(TextBlock.ForegroundProperty, "OverlayHintTextBrush");
+                    left.Children.Add(nameText);
+                }
+
+                var pillText = new TextBlock
+                {
+                    Text = entry.Level.HasValue ? $"Lv {entry.Level.Value}" : "정보 없음",
+                    FontSize = Math.Max(10, Math.Round(_fontSize * 0.7)),
+                    FontWeight = FontWeights.SemiBold,
+                    VerticalAlignment = VerticalAlignment.Center,
+                };
+                var pill = new Border
+                {
+                    Child = pillText,
+                    CornerRadius = new CornerRadius(20),
+                    Padding = new Thickness(Math.Round(10 * scale) + 2, 1, Math.Round(10 * scale) + 2, 2),
+                    BorderThickness = new Thickness(1),
+                    VerticalAlignment = VerticalAlignment.Center,
+                    Margin = new Thickness(10, 0, 0, 0),
+                };
+                if (entry.Level.HasValue)
+                {
+                    Color color = ChatBrushResolver.ToBrush(ChatLineComposer.EtaLevelRangeHex(entry.Level.Value, _settings)).Color;
+                    pillText.Foreground = new SolidColorBrush(color);
+                    pill.BorderBrush = new SolidColorBrush(Color.FromArgb(0x80, color.R, color.G, color.B));
+                    pill.Background = new SolidColorBrush(Color.FromArgb(0x22, color.R, color.G, color.B));
+                }
+                else
+                {
+                    pillText.SetResourceReference(TextBlock.ForegroundProperty, "OverlayMutedTextBrush");
+                    pill.SetResourceReference(Border.BorderBrushProperty, "ControlBorderBrush");
+                    pill.Background = Brushes.Transparent;
+                }
+
+                var row = new Grid { Margin = new Thickness(6, 4, 6, 4) };
+                row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+                row.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+                Grid.SetColumn(pill, 1);
+                row.Children.Add(left);
+                row.Children.Add(pill);
+                EntryList.Children.Add(row);
+
+                // 줄 사이 가는 구분선
+                if (i < _entries.Count - 1)
+                {
+                    var rule = new Border { Height = 1, Margin = new Thickness(4, 0, 4, 0), Opacity = 0.7 };
+                    rule.SetResourceReference(Border.BackgroundProperty, "OverlayCardBorderBrush");
+                    EntryList.Children.Add(rule);
                 }
             }
-
-            EntryRichText.Document = doc;
         }
 
         public void SetPreviewMode(bool isPreview)
