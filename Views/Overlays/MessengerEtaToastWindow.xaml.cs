@@ -47,8 +47,14 @@ namespace TWChatOverlay.Views
             RebuildRows();
         }
 
+        private static readonly SolidColorBrush CautionBrush = new(Color.FromRgb(255, 123, 123));
+
+        /// <summary>영문·숫자가 아닌 글자 — 비슷하게 보이는 아이디를 가려내기 위해 주의 표시를 붙이는 기준.</summary>
+        private static bool IsSpecial(char c) => !(c is >= 'a' and <= 'z' or >= 'A' and <= 'Z' or >= '0' and <= '9');
+
         /// <summary>
-        /// 상대마다 한 줄: 왼쪽에 아이디(아래에 캐릭터 이름을 작게), 오른쪽에 레벨 알약.
+        /// 상대마다 한 줄: 왼쪽에 아이디, 오른쪽에 레벨 알약.
+        /// 아이디에 영문·숫자 아닌 글자가 있으면 그 글자를 빨갛게 칠하고 아래에 "* 주의" 줄을 붙인다 (닮은 아이디 사칭 대비).
         /// 알약은 채팅창의 레벨 구간 색을 글자·테두리에, 같은 색의 옅은 물결을 배경에 쓴다. 랭킹에 없으면 흐린 "정보 없음".
         /// </summary>
         private void RebuildRows()
@@ -59,15 +65,31 @@ namespace TWChatOverlay.Views
             {
                 MessengerEtaEntry entry = _entries[i];
 
-                var idText = new TextBlock { Text = entry.UserId, FontSize = _fontSize, FontWeight = FontWeights.SemiBold, TextTrimming = TextTrimming.CharacterEllipsis };
+                var idText = new TextBlock { FontSize = _fontSize, FontWeight = FontWeights.SemiBold, TextTrimming = TextTrimming.CharacterEllipsis };
                 idText.SetResourceReference(TextBlock.ForegroundProperty, "TextBrush");
+                bool hasSpecial = false;
+                foreach (char c in entry.UserId)
+                {
+                    var run = new System.Windows.Documents.Run(c.ToString());
+                    if (IsSpecial(c))
+                    {
+                        hasSpecial = true;
+                        run.Foreground = CautionBrush; // 어느 글자가 특수문자인지 바로 보이게
+                    }
+                    idText.Inlines.Add(run);
+                }
                 var left = new StackPanel { VerticalAlignment = VerticalAlignment.Center };
                 left.Children.Add(idText);
-                if (!string.IsNullOrEmpty(entry.CharacterName))
+                if (hasSpecial)
                 {
-                    var nameText = new TextBlock { Text = entry.CharacterName, FontSize = Math.Max(10, Math.Round(_fontSize * 0.6)), Margin = new Thickness(0, 1, 0, 0), TextTrimming = TextTrimming.CharacterEllipsis };
-                    nameText.SetResourceReference(TextBlock.ForegroundProperty, "OverlayHintTextBrush");
-                    left.Children.Add(nameText);
+                    var caution = new TextBlock
+                    {
+                        Text = "* 주의 · 특수문자 포함",
+                        FontSize = Math.Max(10, Math.Round(_fontSize * 0.6)),
+                        Foreground = CautionBrush,
+                        Margin = new Thickness(0, 1, 0, 0),
+                    };
+                    left.Children.Add(caution);
                 }
 
                 var pillText = new TextBlock
