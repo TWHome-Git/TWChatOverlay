@@ -49,12 +49,14 @@ namespace TWChatOverlay.Views
 
         private static readonly SolidColorBrush CautionBrush = new(Color.FromRgb(255, 123, 123));
 
-        /// <summary>영문·숫자가 아닌 글자 — 비슷하게 보이는 아이디를 가려내기 위해 주의 표시를 붙이는 기준.</summary>
-        private static bool IsSpecial(char c) => !(c is >= 'a' and <= 'z' or >= 'A' and <= 'Z' or >= '0' and <= '9');
+        /// <summary>한글·영문·숫자가 아닌 글자 — 비슷하게 보이는 아이디를 가려내기 위해 빨갛게 칠하는 기준.</summary>
+        private static bool IsSpecial(char c)
+            => !(c is >= 'a' and <= 'z' or >= 'A' and <= 'Z' or >= '0' and <= '9'
+                 || c is >= '가' and <= '힣' || c is >= 'ㄱ' and <= 'ㅣ');
 
         /// <summary>
         /// 상대마다 한 줄: 왼쪽에 아이디, 오른쪽에 레벨 알약.
-        /// 아이디에 영문·숫자 아닌 글자가 있으면 그 글자를 빨갛게 칠하고 아래에 "* 주의" 줄을 붙인다 (닮은 아이디 사칭 대비).
+        /// 아이디에 한글·영문·숫자 아닌 글자가 있으면 그 글자를 빨갛게 칠하고 아래에 "주의" 줄을 붙인다 (닮은 아이디 사칭 대비).
         /// 알약은 채팅창의 레벨 구간 색을 글자·테두리에, 같은 색의 옅은 물결을 배경에 쓴다. 랭킹에 없으면 흐린 "정보 없음".
         /// </summary>
         private void RebuildRows()
@@ -84,7 +86,7 @@ namespace TWChatOverlay.Views
                 {
                     var caution = new TextBlock
                     {
-                        Text = "* 주의 · 특수문자 포함",
+                        Text = "주의 - 특수 문자 포함",
                         FontSize = Math.Max(10, Math.Round(_fontSize * 0.6)),
                         Foreground = CautionBrush,
                         Margin = new Thickness(0, 1, 0, 0),
