@@ -116,9 +116,17 @@ namespace TWChatOverlay.Services
             var alive = FileWindows.Values.ToList();
             var (left, baseTop) = ResolveBasePositionFromSettings(settings);
 
-            // 위치 미리보기가 떠 있으면 실제 창은 그 아래부터 쌓아 겹치지 않게 한다
+            // 위치 미리보기(잠금 해제)가 떠 있는 동안은 실제 알림 창을 숨긴다 — 미리보기와 나란히 두 개가 보이면 같은 창이 둘 뜬 것처럼 헷갈린다.
+            // 미리보기를 닫으면 다시 이 메서드가 불려 제자리에 나타난다.
             if (_previewToast?.IsVisible == true)
-                baseTop += _previewToast.Height + Gap;
+            {
+                foreach (MessengerEtaToastWindow window in alive)
+                {
+                    if (window.IsVisible)
+                        window.Hide();
+                }
+                return;
+            }
 
             var area = SystemParameters.WorkArea;
             for (int i = 0; i < alive.Count; i++)
