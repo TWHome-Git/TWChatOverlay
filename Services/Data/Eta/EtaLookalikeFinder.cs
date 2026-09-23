@@ -57,15 +57,34 @@ namespace TWChatOverlay.Services
         }
 
         /// <summary>
-        /// 모양이 헷갈리는 글자를 하나로 합친다: 대소문자 무시, l/I/1/| → l, O/0 → o,
-        /// 한글은 자모로 풀고 된소리(ㄸ→ㄷ 등)·ㅐ/ㅔ·ㅒ/ㅖ를 합친다.
+        /// 한자 키(ㅎ·ㅆ 등)로 넣는 그리스·키릴 문자 중 라틴 글자와 똑같이 보이는 것 → 라틴 소문자.
+        /// 전각(Ａ)·원문자(ⓐ)·로마숫자(Ⅰ)·위첨자(²)는 유니코드 호환 정규화(NFKC)가 풀어 주므로 여기 없다.
+        /// </summary>
+        private static readonly Dictionary<char, char> ScriptLookalikes = new()
+        {
+            // 그리스
+            ['Α'] = 'a', ['α'] = 'a', ['Β'] = 'b', ['Ε'] = 'e', ['Ζ'] = 'z', ['Η'] = 'h', ['Ι'] = 'l', ['ι'] = 'l',
+            ['Κ'] = 'k', ['κ'] = 'k', ['Μ'] = 'm', ['Ν'] = 'n', ['ν'] = 'v', ['Ο'] = 'o', ['ο'] = 'o', ['Ρ'] = 'p', ['ρ'] = 'p',
+            ['Τ'] = 't', ['τ'] = 't', ['Υ'] = 'y', ['υ'] = 'u', ['Χ'] = 'x', ['χ'] = 'x',
+            // 키릴
+            ['А'] = 'a', ['а'] = 'a', ['В'] = 'b', ['Е'] = 'e', ['е'] = 'e', ['К'] = 'k', ['к'] = 'k', ['М'] = 'm', ['м'] = 'm',
+            ['Н'] = 'h', ['О'] = 'o', ['о'] = 'o', ['Р'] = 'p', ['р'] = 'p', ['С'] = 'c', ['с'] = 'c', ['Т'] = 't', ['т'] = 't',
+            ['У'] = 'y', ['у'] = 'y', ['Х'] = 'x', ['х'] = 'x', ['І'] = 'l', ['і'] = 'l', ['Ѕ'] = 's', ['ѕ'] = 's', ['Ј'] = 'j', ['ј'] = 'j',
+        };
+
+        /// <summary>
+        /// 모양이 헷갈리는 글자를 하나로 합친다: 전각·원문자·로마숫자 등을 보통 글자로(NFKC), 그리스·키릴 닮은꼴을 라틴으로,
+        /// 대소문자 무시, l/I/1/| → l, O/0 → o, 한글은 자모로 풀고 된소리(ㄸ→ㄷ 등)·ㅐ/ㅔ·ㅒ/ㅖ를 합친다.
         /// </summary>
         public static string Normalize(string id)
         {
-            var sb = new StringBuilder(id.Length * 3);
-            foreach (char raw in id)
+            string compat;
+            try { compat = id.Normalize(NormalizationForm.FormKC); }
+            catch (ArgumentException) { compat = id; } // 깨진 서로게이트 쌍
+            var sb = new StringBuilder(compat.Length * 3);
+            foreach (char raw in compat)
             {
-                char c = char.ToLowerInvariant(raw);
+                char c = ScriptLookalikes.TryGetValue(raw, out char latin) ? latin : char.ToLowerInvariant(raw);
                 if (c >= '가' && c <= '힣')
                 {
                     int code = c - '가';
