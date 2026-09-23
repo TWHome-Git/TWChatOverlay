@@ -50,6 +50,27 @@ namespace TWChatOverlay.Views
 
         private static readonly SolidColorBrush CautionBrush = new(Color.FromRgb(255, 123, 123));
 
+        /// <summary>아이디에 들어 있으면 주의를 붙이는 문구 — 길드·클랜 관계자나 운영자를 흉내 내는 아이디에 흔히 쓰인다. 영문은 대소문자를 가리지 않는다.</summary>
+        private static readonly string[] SuspiciousPhrases = { "길드", "클랜", "일반", "유저", "1-", "2-", "3-", "M-", "S-" };
+
+        /// <summary>아이디에서 의심 문구가 차지하는 글자 자리와, 들어 있는 문구 목록.</summary>
+        private static (bool[] Marked, List<string> Phrases) FindSuspiciousPhrases(string id)
+        {
+            var marked = new bool[id.Length];
+            var phrases = new List<string>();
+            foreach (string phrase in SuspiciousPhrases)
+            {
+                int at = id.IndexOf(phrase, StringComparison.OrdinalIgnoreCase);
+                if (at < 0)
+                    continue;
+                phrases.Add(phrase);
+                for (; at >= 0; at = id.IndexOf(phrase, at + 1, StringComparison.OrdinalIgnoreCase))
+                    for (int k = at; k < at + phrase.Length; k++)
+                        marked[k] = true;
+            }
+            return (marked, phrases);
+        }
+
         /// <summary>한글·영문·숫자가 아닌 글자 — 비슷하게 보이는 아이디를 가려내기 위해 빨갛게 칠하는 기준.</summary>
         private static bool IsSpecial(char c)
             => !(c is >= 'a' and <= 'z' or >= 'A' and <= 'Z' or >= '0' and <= '9'
@@ -58,6 +79,7 @@ namespace TWChatOverlay.Views
         /// <summary>
         /// 상대마다 한 줄: 왼쪽에 아이디, 오른쪽에 레벨 알약.
         /// 아이디에 한글·영문·숫자 아닌 글자가 있으면 그 글자를 빨갛게 칠하고 아래에 "주의" 줄을 붙인다 (닮은 아이디 사칭 대비).
+        /// "길드"·"클랜"·"M-" 같은 의심 문구가 들어 있어도 그 부분을 빨갛게 칠하고 주의 줄을 붙인다.
         /// 랭킹에 닮은 아이디가 있으면(YulLin ↔ YuILin, 드드해 ↔ 뜨뜨해·드드해1) 그 아이디와 레벨을 아래에 빨갛게 적고,
         /// 길이가 같은 닮은꼴이면 어느 글자가 다른지 아이디 안에서 빨갛게 칠한다.
         /// 알약은 채팅창의 레벨 구간 색을 글자·테두리에, 같은 색의 옅은 물결을 배경에 쓴다. 랭킹에 없으면 흐린 "정보 없음".
@@ -75,13 +97,14 @@ namespace TWChatOverlay.Views
                 bool hasSpecial = false;
                 // 길이가 같은 닮은꼴 중 헷갈리는 글자만 다른 것 — 그 아이디와 다른 자리를 칠한다
                 string? twin = entry.Lookalikes.FirstOrDefault(l => l.Kind == EtaLookalikeKind.Confusable && l.UserId.Length == entry.UserId.Length).UserId;
+                var (phraseMarked, phrases) = FindSuspiciousPhrases(entry.UserId);
                 for (int k = 0; k < entry.UserId.Length; k++)
                 {
                     char c = entry.UserId[k];
                     var run = new System.Windows.Documents.Run(c.ToString());
                     bool special = IsSpecial(c);
                     hasSpecial |= special;
-                    if (special || (twin != null && twin[k] != c))
+                    if (special || phraseMarked[k] || (twin != null && twin[k] != c))
                         run.Foreground = CautionBrush; // 어느 글자가 문제인지 바로 보이게
                     idText.Inlines.Add(run);
                 }
@@ -90,6 +113,8 @@ namespace TWChatOverlay.Views
                 double cautionSize = Math.Max(10, Math.Round(_fontSize * 0.6));
                 if (hasSpecial)
                     left.Children.Add(new TextBlock { Text = "주의 - 특수 문자 포함", FontSize = cautionSize, Foreground = CautionBrush, Margin = new Thickness(0, 1, 0, 0) });
+                if (phrases.Count > 0)
+                    left.Children.Add(new TextBlock { Text = $"주의 - 의심 문구 포함 ({string.Join(", ", phrases)})", FontSize = cautionSize, Foreground = CautionBrush, Margin = new Thickness(0, 1, 0, 0), TextTrimming = TextTrimming.CharacterEllipsis });
                 // 닮은 아이디는 하나에 한 줄 — 줄바꿈으로 아이디가 끊겨 읽히지 않게. 헷갈리는 글자만 다른 것은 "닮은꼴", 한 글자 차이는 "비슷한"
                 foreach (EtaLookalike lookalike in entry.Lookalikes)
                 {
