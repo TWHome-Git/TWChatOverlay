@@ -9,8 +9,12 @@ using System.Collections.Concurrent;
 
 namespace TWChatOverlay.Services
 {
-    /// <summary>1:1 대화 상대 하나. 에타 랭킹에 없으면 Level이 null.</summary>
-    public readonly record struct MessengerEtaEntry(string UserId, int? Level, string? CharacterName);
+    /// <summary>1:1 대화 상대 하나. 에타 랭킹에 없으면 Level이 null. Lookalikes는 랭킹에 있는 닮은 아이디(없으면 빈 목록).</summary>
+    public readonly record struct MessengerEtaEntry(string UserId, int? Level, string? CharacterName, IReadOnlyList<EtaLookalike> Lookalikes)
+    {
+        public MessengerEtaEntry(string userId, int? level, string? characterName)
+            : this(userId, level, characterName, Array.Empty<EtaLookalike>()) { }
+    }
 
     public sealed class MessengerLogWatcherService : IDisposable
     {
@@ -96,9 +100,10 @@ namespace TWChatOverlay.Services
                     var entries = new List<MessengerEtaEntry>(targetIds.Count);
                     foreach (string targetId in targetIds)
                     {
+                        IReadOnlyList<EtaLookalike> lookalikes = EtaLookalikeFinder.Find(targetId);
                         entries.Add(EtaProfileResolver.TryGetProfile(targetId, out var profile)
-                            ? new MessengerEtaEntry(targetId, profile.Level, profile.CharacterName)
-                            : new MessengerEtaEntry(targetId, null, null));
+                            ? new MessengerEtaEntry(targetId, profile.Level, profile.CharacterName, lookalikes)
+                            : new MessengerEtaEntry(targetId, null, null, lookalikes));
                     }
 
                     AppLogger.Info($"Messenger toast dispatch start. File={fullPath}, Targets={entries.Count}");

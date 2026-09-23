@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Interop;
@@ -57,6 +58,8 @@ namespace TWChatOverlay.Views
         /// <summary>
         /// 상대마다 한 줄: 왼쪽에 아이디, 오른쪽에 레벨 알약.
         /// 아이디에 한글·영문·숫자 아닌 글자가 있으면 그 글자를 빨갛게 칠하고 아래에 "주의" 줄을 붙인다 (닮은 아이디 사칭 대비).
+        /// 랭킹에 닮은 아이디가 있으면(YulLin ↔ YuILin, 드드해 ↔ 뜨뜨해·드드해1) 그 아이디와 레벨을 아래에 빨갛게 적고,
+        /// 길이가 같은 닮은꼴이면 어느 글자가 다른지 아이디 안에서 빨갛게 칠한다.
         /// 알약은 채팅창의 레벨 구간 색을 글자·테두리에, 같은 색의 옅은 물결을 배경에 쓴다. 랭킹에 없으면 흐린 "정보 없음".
         /// </summary>
         private void RebuildRows()
@@ -70,28 +73,35 @@ namespace TWChatOverlay.Views
                 var idText = new TextBlock { FontSize = _fontSize, FontWeight = FontWeights.SemiBold, TextTrimming = TextTrimming.CharacterEllipsis };
                 idText.SetResourceReference(TextBlock.ForegroundProperty, "TextBrush");
                 bool hasSpecial = false;
-                foreach (char c in entry.UserId)
+                // 길이가 같은 닮은꼴 중 헷갈리는 글자만 다른 것 — 그 아이디와 다른 자리를 칠한다
+                string? twin = entry.Lookalikes.FirstOrDefault(l => l.Kind == EtaLookalikeKind.Confusable && l.UserId.Length == entry.UserId.Length).UserId;
+                for (int k = 0; k < entry.UserId.Length; k++)
                 {
+                    char c = entry.UserId[k];
                     var run = new System.Windows.Documents.Run(c.ToString());
-                    if (IsSpecial(c))
-                    {
-                        hasSpecial = true;
-                        run.Foreground = CautionBrush; // 어느 글자가 특수문자인지 바로 보이게
-                    }
+                    bool special = IsSpecial(c);
+                    hasSpecial |= special;
+                    if (special || (twin != null && twin[k] != c))
+                        run.Foreground = CautionBrush; // 어느 글자가 문제인지 바로 보이게
                     idText.Inlines.Add(run);
                 }
-                var left = new StackPanel { VerticalAlignment = VerticalAlignment.Center };
-                left.Children.Add(idText);
+                // 주의 줄들은 아이디·알약 아래에 두 열을 가로질러 놓아 알약에 밀려 잘리지 않게 한다
+                var left = new StackPanel();
+                double cautionSize = Math.Max(10, Math.Round(_fontSize * 0.6));
                 if (hasSpecial)
+                    left.Children.Add(new TextBlock { Text = "주의 - 특수 문자 포함", FontSize = cautionSize, Foreground = CautionBrush, Margin = new Thickness(0, 1, 0, 0) });
+                // 닮은 아이디는 하나에 한 줄 — 줄바꿈으로 아이디가 끊겨 읽히지 않게. 헷갈리는 글자만 다른 것은 "닮은꼴", 한 글자 차이는 "비슷한"
+                foreach (EtaLookalike lookalike in entry.Lookalikes)
                 {
-                    var caution = new TextBlock
+                    string kind = lookalike.Kind == EtaLookalikeKind.Confusable ? "닮은꼴" : "비슷한";
+                    left.Children.Add(new TextBlock
                     {
-                        Text = "주의 - 특수 문자 포함",
-                        FontSize = Math.Max(10, Math.Round(_fontSize * 0.6)),
+                        Text = $"주의 - {kind} 아이디 {lookalike.UserId} (Lv {lookalike.Level})",
+                        FontSize = cautionSize,
                         Foreground = CautionBrush,
                         Margin = new Thickness(0, 1, 0, 0),
-                    };
-                    left.Children.Add(caution);
+                        TextTrimming = TextTrimming.CharacterEllipsis,
+                    });
                 }
 
                 var pillText = new TextBlock
@@ -127,9 +137,15 @@ namespace TWChatOverlay.Views
                 var row = new Grid { Margin = new Thickness(6, 4, 6, 4) };
                 row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
                 row.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+                row.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+                row.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+                idText.VerticalAlignment = VerticalAlignment.Center;
                 Grid.SetColumn(pill, 1);
-                row.Children.Add(left);
+                Grid.SetRow(left, 1);
+                Grid.SetColumnSpan(left, 2);
+                row.Children.Add(idText);
                 row.Children.Add(pill);
+                row.Children.Add(left);
                 EntryList.Children.Add(row);
 
                 // 줄 사이 가는 구분선
