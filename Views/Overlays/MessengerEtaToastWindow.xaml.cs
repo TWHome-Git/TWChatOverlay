@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
@@ -82,6 +82,7 @@ namespace TWChatOverlay.Views
         /// "길드"·"클랜"·"M-" 같은 의심 문구가 들어 있어도 그 부분을 빨갛게 칠하고 주의 줄을 붙인다.
         /// 랭킹에 닮은 아이디가 있으면(YulLin ↔ YuILin, 드드해 ↔ 뜨뜨해·드드해1) 그 아이디와 레벨을 아래에 빨갛게 적고,
         /// 길이가 같은 닮은꼴이면 어느 글자가 다른지 아이디 안에서 빨갛게 칠한다.
+        /// 주의 표시는 랭킹에 없는 아이디에만 붙인다 — 랭킹에 있으면 실제 캐릭터가 확인된 것이다.
         /// 알약은 채팅창의 레벨 구간 색을 글자·테두리에, 같은 색의 옅은 물결을 배경에 쓴다. 랭킹에 없으면 흐린 "정보 없음".
         /// </summary>
         private void RebuildRows()
@@ -95,6 +96,8 @@ namespace TWChatOverlay.Views
                 var idText = new TextBlock { FontSize = _fontSize, FontWeight = FontWeights.SemiBold, TextTrimming = TextTrimming.CharacterEllipsis };
                 idText.SetResourceReference(TextBlock.ForegroundProperty, "TextBrush");
                 bool hasSpecial = false;
+                // 랭킹에 있는 아이디는 실제 캐릭터가 확인된 것이므로 주의 표시(빨간 글자·주의 줄)를 붙이지 않는다
+                bool caution = !entry.Level.HasValue;
                 // 길이가 같은 닮은꼴 중 헷갈리는 글자만 다른 것 — 그 아이디와 다른 자리를 칠한다
                 string? twin = entry.Lookalikes.FirstOrDefault(l => l.Kind == EtaLookalikeKind.Confusable && l.UserId.Length == entry.UserId.Length).UserId;
                 var (phraseMarked, phrases) = FindSuspiciousPhrases(entry.UserId);
@@ -104,19 +107,19 @@ namespace TWChatOverlay.Views
                     var run = new System.Windows.Documents.Run(c.ToString());
                     bool special = IsSpecial(c);
                     hasSpecial |= special;
-                    if (special || phraseMarked[k] || (twin != null && twin[k] != c))
+                    if (caution && (special || phraseMarked[k] || (twin != null && twin[k] != c)))
                         run.Foreground = CautionBrush; // 어느 글자가 문제인지 바로 보이게
                     idText.Inlines.Add(run);
                 }
                 // 주의 줄들은 아이디·알약 아래에 두 열을 가로질러 놓아 알약에 밀려 잘리지 않게 한다
                 var left = new StackPanel();
                 double cautionSize = Math.Max(10, Math.Round(_fontSize * 0.6));
-                if (hasSpecial)
+                if (caution && hasSpecial)
                     left.Children.Add(new TextBlock { Text = "주의 - 특수 문자 포함", FontSize = cautionSize, Foreground = CautionBrush, Margin = new Thickness(0, 1, 0, 0) });
-                if (phrases.Count > 0)
+                if (caution && phrases.Count > 0)
                     left.Children.Add(new TextBlock { Text = $"주의 - 의심 문구 포함 ({string.Join(", ", phrases)})", FontSize = cautionSize, Foreground = CautionBrush, Margin = new Thickness(0, 1, 0, 0), TextTrimming = TextTrimming.CharacterEllipsis });
                 // 닮은 아이디는 하나에 한 줄 — 줄바꿈으로 아이디가 끊겨 읽히지 않게. 헷갈리는 글자만 다른 것은 "닮은꼴", 한 글자 차이는 "비슷한"
-                foreach (EtaLookalike lookalike in entry.Lookalikes)
+                foreach (EtaLookalike lookalike in caution ? entry.Lookalikes : Array.Empty<EtaLookalike>())
                 {
                     string kind = lookalike.Kind == EtaLookalikeKind.Confusable ? "닮은꼴" : "비슷한";
                     left.Children.Add(new TextBlock
@@ -206,7 +209,7 @@ namespace TWChatOverlay.Views
                 Show();
             Visibility = Visibility.Visible;
             Opacity = 1.0;
-            Activate();
+            // Activate()는 부르지 않는다 — 게임이 키보드 포커스를 잃는다
             Topmost = true;
             BringToFront();
             try
@@ -233,9 +236,24 @@ namespace TWChatOverlay.Views
             ApplyInteractiveStyle();
         }
 
-        /// <summary>항상 클릭을 받는 툴윈도우 (닫기 버튼이 있어 마우스 통과를 쓰지 않는다).</summary>
+        /// <summary>
+        /// 항상 클릭을 받는 툴윈도우 (닫기 버튼이 있어 마우스 통과를 쓰지 않는다).
+        /// 대신 절대 활성화되지 않게 해서, 뜨거나 눌리거나 끌려도 게임이 키보드 포커스를 잃지 않는다.
+        /// </summary>
         private void ApplyInteractiveStyle()
-            => SetExStyleFlags(add: NativeMethods.WS_EX_TOOLWINDOW, remove: NativeMethods.WS_EX_TRANSPARENT);
+        {
+            SetExStyleFlags(add: NativeMethods.WS_EX_TOOLWINDOW | NativeMethods.WS_EX_NOACTIVATE, remove: NativeMethods.WS_EX_TRANSPARENT);
+            HwndSource.FromHwnd(new WindowInteropHelper(this).Handle)?.AddHook(PreventActivationHook);
+        }
+
+        /// <summary>클릭해도 활성화하지 않는다 (WS_EX_NOACTIVATE를 무시하는 경우 대비).</summary>
+        private static IntPtr PreventActivationHook(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
+        {
+            if (msg != NativeMethods.WM_MOUSEACTIVATE)
+                return IntPtr.Zero;
+            handled = true;
+            return (IntPtr)NativeMethods.MA_NOACTIVATE;
+        }
 
         private void RootBorder_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
             => DragInPreviewOnly(e);
