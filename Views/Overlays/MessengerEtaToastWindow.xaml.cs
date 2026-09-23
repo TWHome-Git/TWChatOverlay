@@ -51,7 +51,7 @@ namespace TWChatOverlay.Views
         private static readonly SolidColorBrush CautionBrush = new(Color.FromRgb(255, 123, 123));
 
         /// <summary>아이디에 들어 있으면 주의를 붙이는 문구 — 길드·클랜 관계자나 운영자를 흉내 내는 아이디에 흔히 쓰인다. 영문은 대소문자를 가리지 않는다.</summary>
-        private static readonly string[] SuspiciousPhrases = { "길드", "클랜", "일반", "유저", "1-", "2-", "3-", "M-", "S-" };
+        private static readonly string[] SuspiciousPhrases = { "길드", "클랜", "유저", "운영자", "1-", "2-", "3-", "M-", "S-" };
 
         /// <summary>아이디에서 의심 문구가 차지하는 글자 자리와, 들어 있는 문구 목록.</summary>
         private static (bool[] Marked, List<string> Phrases) FindSuspiciousPhrases(string id)
