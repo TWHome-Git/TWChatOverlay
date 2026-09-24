@@ -18,6 +18,7 @@ namespace TWChatOverlay.ViewModels
         private string _gainCountDisplay = string.Empty;
         private bool _hasLastExp;
         private bool _isMeasurementStopped;
+        private string _elapsedDisplay = string.Empty;
 
         public ICommand ResetExpCommand { get; }
 
@@ -67,8 +68,24 @@ namespace TWChatOverlay.ViewModels
         public bool IsMeasurementStopped
         {
             get => _isMeasurementStopped;
-            set => SetProperty(ref _isMeasurementStopped, value);
+            set
+            {
+                if (!SetProperty(ref _isMeasurementStopped, value))
+                    return;
+
+                OnPropertyChanged(nameof(ShowElapsedDisplay));
+            }
         }
+
+        /// <summary>측정이 시작된 뒤 지난 시간 ("12분")</summary>
+        public string ElapsedDisplay
+        {
+            get => _elapsedDisplay;
+            set => SetProperty(ref _elapsedDisplay, value);
+        }
+
+        /// <summary>측정 중일 때만 시간을 보여준다. 멈추면 그 자리에 "중지"가 들어간다.</summary>
+        public bool ShowElapsedDisplay => !_isMeasurementStopped;
 
         public ExpTrackerViewModel(ExperienceService expService, ChatSettings settings)
         {
@@ -102,6 +119,8 @@ namespace TWChatOverlay.ViewModels
             GainCountDisplay = state.GainCountDisplay;
             HasLastExp = state.HasLastExp;
             IsMeasurementStopped = state.IsMeasurementStopped;
+            // 분 단위 표시라 경험치 값과 같은 주기(서비스의 3초 갱신)로 충분하다
+            ElapsedDisplay = state.ElapsedDisplay;
         }
     }
 }

@@ -14,6 +14,7 @@ namespace TWChatOverlay.Models
         private int _gainCount;
         private DateTime _startTime = DateTime.Now;
         private bool _isFrozen;
+        private DateTime _frozenAt;
         private string _frozenTotalValueDisplay = string.Empty;
         private string _frozenExpPerHourDisplay = string.Empty;
 
@@ -107,6 +108,20 @@ namespace TWChatOverlay.Models
         /// <summary>비활동으로 측정이 멈춘 상태인지 여부.</summary>
         public bool IsMeasurementStopped => _isFrozen;
 
+        /// <summary>측정을 시작한 뒤 지난 시간. 멈춘 뒤에는 멈춘 시각에서 더 가지 않는다 (1시간 예상과 같은 기준 시각).</summary>
+        public TimeSpan Elapsed => (_isFrozen ? _frozenAt : DateTime.Now) - _startTime;
+
+        /// <summary>측정 시간 표시 — 분 단위로 "12분", 한 시간이 넘으면 "1시간 2분".</summary>
+        public string ElapsedDisplay
+        {
+            get
+            {
+                TimeSpan elapsed = Elapsed;
+                int minutes = elapsed > TimeSpan.Zero ? (int)elapsed.TotalMinutes : 0;
+                return minutes >= 60 ? $"{minutes / 60}시간 {minutes % 60}분" : $"{minutes}분";
+            }
+        }
+
         public string TotalExpDisplay => $"{TotalExpValueDisplay} | {ExpPerHourDisplay}/h";
 
         public void ResetStartTime() => _startTime = DateTime.Now;
@@ -118,6 +133,7 @@ namespace TWChatOverlay.Models
 
             _frozenTotalValueDisplay = TotalExpValueDisplay;
             _frozenExpPerHourDisplay = ExpPerHourDisplay;
+            _frozenAt = DateTime.Now;
             _isFrozen = true;
             RaiseTotalDisplayChanged();
         }
@@ -150,6 +166,7 @@ namespace TWChatOverlay.Models
             OnPropertyChanged(nameof(TotalExpValueDisplay));
             OnPropertyChanged(nameof(ExpPerHourDisplay));
             OnPropertyChanged(nameof(IsMeasurementStopped));
+            OnPropertyChanged(nameof(ElapsedDisplay));
             OnPropertyChanged(nameof(TotalExpDisplay));
         }
 
