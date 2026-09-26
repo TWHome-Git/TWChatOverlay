@@ -276,9 +276,9 @@ namespace TWChatOverlay.Views
 
                 var para = new Paragraph { Margin = new Thickness(0, 0, 0, 4) };
                 if (hasFilter)
-                    AppendHighlighted(para, line, term);
+                    AppendHighlighted(para, line, term, ResolveShoutBodyBrush(line));
                 else
-                    para.Inlines.Add(new Run(line));
+                    AppendChatColored(para, line);
 
                 document.Blocks.Add(para);
                 shown++;
@@ -294,8 +294,76 @@ namespace TWChatOverlay.Views
             }
         }
 
+        // 줄 앞의 "[ 6시 15분 49초]" 시각과, 끝의 "[아이디[레벨][캐릭터]]" 조각을 따로 칠하려고 나눈다
+        private static readonly Regex LeadingTimeRegex = new(@"^\s*\[[^\]]*\]", RegexOptions.Compiled);
+        private static readonly Regex TrailingIdBlockRegex = new(@"\[(?<id>[^\[\]]+)(?<deco>(?:\[[^\[\]]*\])*)\]\s*$", RegexOptions.Compiled);
+        private static readonly Regex EtaLevelTokenRegex = new(@"^\[(?<level>\d+)\]$", RegexOptions.Compiled);
+        private static readonly Regex DecoTokenRegex = new(@"\[[^\[\]]*\]", RegexOptions.Compiled);
+        // 무료는 "From [보낸이]", 유료는 "Click [보낸이]"로 끝난다. 에타 표시를 붙이면 대괄호가 겹치므로 안쪽은 느슨하게 본다
+        private static readonly Regex FreeShoutTailRegex = new(@"\bFrom\s*\[.*\]\s*$", RegexOptions.Compiled);
+        private static readonly Regex PaidShoutTailRegex = new(@"\bClick\s*\[.*\]\s*$", RegexOptions.Compiled);
+
+        /// <summary>채팅창과 같은 규칙으로 칠한다: 시각·아이디·에타 레벨은 설정 색, 본문은 외치기 색.</summary>
+        private void AppendChatColored(Paragraph para, string line)
+        {
+            Brush? timestamp = ChatBrushResolver.ToBrush(_settings.TimestampColor);
+            Brush? senderId = ChatBrushResolver.ToBrush(_settings.SenderIdColor);
+            Brush? body = ResolveShoutBodyBrush(line);
+
+            string rest = line;
+            Match time = LeadingTimeRegex.Match(rest);
+            if (time.Success)
+            {
+                para.Inlines.Add(new Run(time.Value) { Foreground = timestamp });
+                rest = rest.Substring(time.Length);
+            }
+
+            Match tail = TrailingIdBlockRegex.Match(rest);
+            if (!tail.Success)
+            {
+                para.Inlines.Add(new Run(rest) { Foreground = body });
+                return;
+            }
+
+            para.Inlines.Add(new Run(rest.Substring(0, tail.Index)) { Foreground = body });
+            para.Inlines.Add(new Run("[") { Foreground = senderId });
+            para.Inlines.Add(new Run(tail.Groups["id"].Value) { Foreground = senderId });
+
+            foreach (Match deco in DecoTokenRegex.Matches(tail.Groups["deco"].Value))
+            {
+                Match level = EtaLevelTokenRegex.Match(deco.Value);
+                if (level.Success && int.TryParse(level.Groups["level"].Value, out int value))
+                {
+                    // 채팅창 레벨 알약과 같은 구간 색
+                    para.Inlines.Add(new Run(deco.Value)
+                    {
+                        Foreground = ChatBrushResolver.ToBrush(ChatLineComposer.EtaLevelRangeHex(value, _settings)),
+                        FontWeight = FontWeights.SemiBold,
+                    });
+                    continue;
+                }
+
+                para.Inlines.Add(new Run(deco.Value) { Foreground = ChatBrushResolver.ToBrush(_settings.EtaCharacterColor) });
+            }
+
+            para.Inlines.Add(new Run("]") { Foreground = senderId });
+        }
+
+        /// <summary>본문 색 — 채팅창 설정 그대로 무료 / 유료 / 공지를 구분한다.</summary>
+        private static Brush? ResolveShoutBodyBrush(string line)
+        {
+            ChatSettings? settings = AppServices.Get<ChatSettings>();
+            if (settings == null)
+                return null;
+
+            string hex = FreeShoutTailRegex.IsMatch(line) ? settings.FreeShoutColor
+                : PaidShoutTailRegex.IsMatch(line) ? settings.PaidShoutColor
+                : settings.NoticeShoutColor;
+            return ChatBrushResolver.ToBrush(hex);
+        }
+
         /// <summary>검색어와 일치하는 부분을 강조 표시하며 라인을 추가한다.</summary>
-        private static void AppendHighlighted(Paragraph para, string line, string term)
+        private static void AppendHighlighted(Paragraph para, string line, string term, Brush? body)
         {
             int start = 0;
             while (true)
@@ -303,12 +371,12 @@ namespace TWChatOverlay.Views
                 int idx = line.IndexOf(term, start, StringComparison.OrdinalIgnoreCase);
                 if (idx < 0)
                 {
-                    para.Inlines.Add(new Run(line.Substring(start)));
+                    para.Inlines.Add(new Run(line.Substring(start)) { Foreground = body });
                     break;
                 }
 
                 if (idx > start)
-                    para.Inlines.Add(new Run(line.Substring(start, idx - start)));
+                    para.Inlines.Add(new Run(line.Substring(start, idx - start)) { Foreground = body });
 
                 para.Inlines.Add(new Run(line.Substring(idx, term.Length))
                 {
