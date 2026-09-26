@@ -23,6 +23,10 @@ namespace TWChatOverlay
             public bool IsMagicCircleAlert { get; set; } = false;
             public bool IsReflectionPatternAlert { get; set; } = false;
             public bool IsReflectionPatternEndAlert { get; set; } = false;
+            /// <summary>상태이상 [방전] 줄 — 어비스에서 방전에 걸린 순간.</summary>
+            public bool IsDischargeAlert { get; set; } = false;
+            /// <summary>"방전상태가 풀렸습니다" 줄 — 방전이 풀린 순간.</summary>
+            public bool IsDischargeCleared { get; set; } = false;
             public long GainedExp { get; set; } = 0;
             public string? EtosImagePath { get; set; } = null;
             public bool IsTrackedItemDrop { get; set; } = false;

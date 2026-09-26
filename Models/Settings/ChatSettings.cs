@@ -531,6 +531,8 @@ namespace TWChatOverlay.Models
         [JsonIgnore]
         public bool EnableReflectionPatternAlert { get => Alerts.Dungeon.ReflectionPatternAlert; set { Alerts.Dungeon.ReflectionPatternAlert = value; OnPropertyChanged(); } }
         [JsonIgnore]
+        public bool EnableDischargeAlert { get => Alerts.Dungeon.DischargeAlert; set { Alerts.Dungeon.DischargeAlert = value; OnPropertyChanged(); } }
+        [JsonIgnore]
         public double ReflectionPatternAlertVolume
         {
             get => Alerts.Dungeon.ReflectionPatternVolume;
@@ -1043,6 +1045,19 @@ namespace TWChatOverlay.Models
         }
 
         [JsonIgnore]
+        public double? PatternAlertWindowLeft
+        {
+            get => Windows.PatternAlert.Left;
+            set { if (Windows.PatternAlert.Left == value) return; Windows.PatternAlert.Left = value; OnPropertyChanged(); }
+        }
+
+        [JsonIgnore]
+        public double? PatternAlertWindowTop
+        {
+            get => Windows.PatternAlert.Top;
+            set { if (Windows.PatternAlert.Top == value) return; Windows.PatternAlert.Top = value; OnPropertyChanged(); }
+        }
+
         public double? BossAlertToastWindowLeft
         {
             get => Windows.BossAlertToast.Left;

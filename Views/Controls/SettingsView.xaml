@@ -1193,6 +1193,15 @@
                             </Border>
                             <Border Style="{StaticResource SettingsRowStyle}">
                                 <DockPanel>
+                                    <CheckBox DockPanel.Dock="Right" IsChecked="{Binding Settings.EnableDischargeAlert, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
+                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                        <TextBlock Text="감전 패턴 알림" Style="{StaticResource SettingsRowLabelStyle}"
+                                                   ToolTip="방전 상태에 걸리면 알림 창을 띄우고, 풀리면 닫습니다"/>
+                                    </StackPanel>
+                                </DockPanel>
+                            </Border>
+                            <Border Style="{StaticResource SettingsRowStyle}">
+                                <DockPanel>
                                     <CheckBox DockPanel.Dock="Right" IsChecked="{Binding Settings.EnableTreasuryGoldCountAlert, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
                                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                                         <TextBlock Text="보물창고 금화 카운트" Style="{StaticResource SettingsRowLabelStyle}"

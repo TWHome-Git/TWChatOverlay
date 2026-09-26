@@ -17,6 +17,13 @@ namespace TWChatOverlay.Services.LogAnalysis
 
         public void Analyze(LogLineContext context)
         {
+            // 방전은 시스템 줄이라 아래 카테고리 걸러내기 전에 먼저 본다.
+            // "방전되었습니다 : 상태이상 [방전]" — 보낸이 자리가 문구라 본문만 볼 수도, 줄 전체를 볼 수도 있다.
+            if (IsSystemMessage(context, DischargeKeyword))
+                context.Result.IsDischargeAlert = true;
+            else if (IsSystemMessage(context, DischargeClearedKeyword) || IsSystemMessage(context, DischargeClearedSpacedKeyword))
+                context.Result.IsDischargeCleared = true;
+
             var settings = context.Settings;
             if (settings == null || (!settings.UseAlertColor &&
                                      !settings.UseAlertSound &&
@@ -77,6 +84,20 @@ namespace TWChatOverlay.Services.LogAnalysis
             return keywordInput.Split(new[] { ' ', '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries)
                 .Where(static keyword => keyword.StartsWith("@"))
                 .ToList();
+        }
+
+        private const string DischargeKeyword = "상태이상 [방전]";
+        private const string DischargeClearedKeyword = "방전상태가 풀렸습니다";
+        private const string DischargeClearedSpacedKeyword = "방전 상태가 풀렸습니다";
+
+        /// <summary>시스템 줄에 그 문구가 있는지. 다른 사람이 채팅으로 같은 말을 적어도 세지 않게 시스템 줄만 본다.</summary>
+        private static bool IsSystemMessage(LogLineContext context, string keyword)
+        {
+            if (!context.IsSystemLog)
+                return false;
+
+            return context.MessageOnly.Contains(keyword, StringComparison.Ordinal) ||
+                   context.ChatContent.Contains(keyword, StringComparison.Ordinal);
         }
 
         private static bool IsReflectionPatternAlertMessage(LogLineContext context)

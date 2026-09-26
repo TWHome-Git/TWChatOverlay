@@ -206,6 +206,9 @@ namespace TWChatOverlay.Views
         }
 
         /// <summary>부수효과 한 기능의 실패가 같은 줄의 다른 기능(채팅 표시 등)까지 막지 않게 격리한다.</summary>
+        /// <summary>방전에 걸린 시각 — 풀린 줄이 올 때 얼마나 걸려 있었는지 적으려고 둔다.</summary>
+        private DateTime? _dischargeStartedAt;
+
         private static void GuardSideEffect(string what, Action action)
         {
             try { action(); }
@@ -276,11 +279,37 @@ namespace TWChatOverlay.Views
 
             if (shouldRunLiveUiEffects)
             {
+                // 감전 패턴: 방전에 걸린 동안 알림 창을 띄우고 풀리면 닫는다 (설정 - 던전 도우미 - 어비스)
+                if (parseResult.IsDischargeAlert)
+                {
+                    GuardSideEffect("discharge-alert", () =>
+                    {
+                        _dischargeStartedAt = DateTime.Now;
+                        AppLogger.Info($"Discharge status detected. Line='{parseResult.FormattedText}'");
+                        if (_settings.EnableDischargeAlert)
+                            PatternAlertWindow.Show(_settings, "감전", "방전 상태");
+                    });
+                }
+                else if (parseResult.IsDischargeCleared)
+                {
+                    GuardSideEffect("discharge-cleared", () =>
+                    {
+                        string held = _dischargeStartedAt is DateTime at
+                            ? $"{(DateTime.Now - at).TotalSeconds:F1}s"
+                            : "unknown";
+                        _dischargeStartedAt = null;
+                        AppLogger.Info($"Discharge status cleared after {held}. Line='{parseResult.FormattedText}'");
+                        PatternAlertWindow.HideAlert();   // 설정을 끈 뒤 풀린 경우에도 남지 않게 항상 닫는다
+                    });
+                }
+
                 if (parseResult.IsReflectionPatternAlert)
                 {
                     GuardSideEffect("reflection-alert", () =>
                     {
                         AppServices.Get<NotificationService>().PlayAlert("Reflection.wav");
+                        // 반사는 순간 알림이라 잠깐 떴다 사라진다
+                        PatternAlertWindow.Flash(_settings, "반사", "반사 패턴", TimeSpan.FromSeconds(5));
                         if (parseResult.IsReflectionPatternEndAlert)
                             ScheduleReflectionEndAlert();
                     });

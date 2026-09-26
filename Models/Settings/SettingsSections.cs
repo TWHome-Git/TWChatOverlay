@@ -153,6 +153,8 @@ namespace TWChatOverlay.Models
         public bool EtosDirectionAlert { get; set; } = false;
         public bool ShowEtosHelperWindow { get; set; } = false;
         public bool ReflectionPatternAlert { get; set; } = false;
+        /// <summary>감전 패턴: 방전에 걸린 동안 알림 창을 띄운다.</summary>
+        public bool DischargeAlert { get; set; } = false;
         public double ReflectionPatternVolume { get; set; } = 1.0;
         public bool AbandonRoadCountAlert { get; set; } = false;
         /// <summary>심연의 보물창고: 입장 후 금화 주머니 획득 카운트 표시.</summary>
@@ -248,6 +250,8 @@ namespace TWChatOverlay.Models
         public WindowRect ContentTimer { get; set; } = new();
         public WindowRect ExperienceLimitAlert { get; set; } = new();
         public WindowRect BossAlertToast { get; set; } = new();
+        /// <summary>어비스 패턴 알림(감전·반사) 창 위치.</summary>
+        public WindowRect PatternAlert { get; set; } = new();
         /// <summary>통합 알림 스택(외치기·던전·경험치·아이템·보스) 기준 위치.</summary>
         public WindowRect ToastStack { get; set; } = new();
         /// <summary>알림 표시 위치 통합 여부. false면 알림 종류별로 각자의 저장 위치에 표시한다.</summary>
