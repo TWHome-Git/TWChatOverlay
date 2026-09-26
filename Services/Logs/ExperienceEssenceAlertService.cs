@@ -37,7 +37,7 @@ namespace TWChatOverlay.Services
             _isTracking = true;
             _showDelayTimer = new DispatcherTimer
             {
-                Interval = TimeSpan.FromSeconds(3)
+                Interval = TimeSpan.FromSeconds(1)
             };
             _showDelayTimer.Tick += (_, _) =>
             {
@@ -86,9 +86,11 @@ namespace TWChatOverlay.Services
 
             if (_trackedExp >= ThresholdExp)
             {
-                if (_settings.EnableExperienceLimitAlert)
+                // 1초 뒤에 띄운다 (곧 이어질 차감 줄을 기다리는 여유).
+                // 이미 기다리는 중이면 다시 걸지 않는다 — 사냥 중에는 경험치가 0.1초 간격으로 들어와
+                // 매번 타이머를 다시 시작하면 사냥을 멈출 때까지 영영 뜨지 않았다.
+                if (_settings.EnableExperienceLimitAlert && !_showDelayTimer.IsEnabled)
                 {
-                    _showDelayTimer.Stop();
                     _showDelayTimer.Start();
                 }
             }
