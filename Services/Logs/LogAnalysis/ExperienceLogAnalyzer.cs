@@ -29,34 +29,39 @@ namespace TWChatOverlay.Services.LogAnalysis
 
         public void Analyze(LogLineContext context)
         {
-            string chatContent = context.ChatContent ?? string.Empty;
+            long gained = ExtractGain(context.ChatContent, context.IsSystemLog);
+            if (gained != 0)
+                context.Result.GainedExp = gained;
+        }
+
+        /// <summary>
+        /// 한 줄에서 경험치 증감을 읽는다. 없으면 0, 감소 문구는 음수.
+        /// 지난 로그를 훑어 사냥 기록을 복원할 때도 같은 규칙을 쓰도록 여기로 모아 둔다.
+        /// </summary>
+        public static long ExtractGain(string? content, bool isSystemLog)
+        {
+            string chatContent = content ?? string.Empty;
 
             // 모든 경험치 획득/증감 메시지와 특수 보상 문자열(별동대 토벌 보상)은 "경험치"를 포함한다.
             // 포함하지 않는 라인은 어떤 정규식도 매칭될 수 없으므로, 비싼 Regex.Replace + 정규식 매칭을
             // 건너뛴다. 결과는 완전히 동일하며 일반 채팅(대부분)의 처리 비용만 제거한다.
             if (!chatContent.Contains("경험치", StringComparison.Ordinal))
-                return;
+                return 0;
 
             string normalized = Regex.Replace(chatContent, @"\s+", " ").Trim();
             if (normalized.Contains(DetachedForceExpText, StringComparison.Ordinal))
-            {
-                context.Result.GainedExp = DetachedForceExpValue;
-                return;
-            }
+                return DetachedForceExpValue;
 
             if (chatContent.Contains("룬 경험치", StringComparison.Ordinal) ||
                 chatContent.Replace(" ", string.Empty).Contains("룬경험치", StringComparison.Ordinal))
             {
-                return;
+                return 0;
             }
 
             // 상승량이 따로 적히는 문구는 시스템 줄에서만 센다 (다른 사람이 채팅으로 같은 말을 해도 세지 않게)
-            Match amountMatch = context.IsSystemLog ? ExpAmountRegex.Match(normalized) : Match.Empty;
+            Match amountMatch = isSystemLog ? ExpAmountRegex.Match(normalized) : Match.Empty;
             if (amountMatch.Success && TryParseKoreanAmount(amountMatch.Groups["amount"].Value, out long amount))
-            {
-                context.Result.GainedExp = amount;
-                return;
-            }
+                return amount;
 
             Match? expMatch = null;
             foreach (var regex in ExpRegexes)
@@ -67,7 +72,7 @@ namespace TWChatOverlay.Services.LogAnalysis
             }
 
             if (expMatch == null || !expMatch.Success)
-                return;
+                return 0;
 
             string expText = expMatch.Groups["exp"].Value.Replace(",", string.Empty);
             if (long.TryParse(expText, out long expValue))
@@ -80,8 +85,10 @@ namespace TWChatOverlay.Services.LogAnalysis
                     expValue = -expValue;
                 }
 
-                context.Result.GainedExp = expValue;
+                return expValue;
             }
+
+            return 0;
         }
 
         /// <summary>"8억", "1조 2000억", "35000" 꼴의 수를 숫자로. 하나도 못 읽으면 false.</summary>

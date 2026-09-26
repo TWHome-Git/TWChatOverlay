@@ -233,7 +233,12 @@ namespace TWChatOverlay.Views
                 GuardSideEffect("buff-tracker", () => _buffTrackerService.ProcessLog(analysis));
 
                 if (analysis.HasExperienceGain)
+                {
                     GuardSideEffect("exp-gain", () => _expService.AddExp(parseResult.GainedExp));
+                    // 사냥 기록(판 단위 요약)은 실시간 줄만 센다. 과거 로그는 시작할 때 따로 훑는다
+                    if (context.IsRealTime)
+                        GuardSideEffect("hunt-session", () => _huntSessionService.AddGain(DateTime.Now, parseResult.GainedExp));
+                }
             }
 
             if (shouldRunLiveUiEffects)

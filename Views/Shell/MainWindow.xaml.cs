@@ -36,6 +36,7 @@ namespace TWChatOverlay.Views
         private ExpTrackerWindow? _expTrackerWindow;
         private ExpTrackerViewModel? _expTrackerViewModel;
         private ExperienceService _expService;
+        private ExpHuntSessionService _huntSessionService;
         private WindowStickyService? _stickyService;
         private BossAlarmSchedulerService? _bossAlarmSchedulerService;
         private BuffTrackerService _buffTrackerService;
@@ -136,6 +137,7 @@ namespace TWChatOverlay.Views
             _settingsViewModel = new SettingsViewModel(_settings, OnColorsUpdatedFromSettings, ConfirmExit, OnSettingsResetFromSettings, ApplyHotKeys, ExecuteManualLogReloadFromSettingsAsync, OnSettingsReplacedFromSettings);
 
             _expService = AppServices.Get<ExperienceService>();
+            _huntSessionService = AppServices.Get<ExpHuntSessionService>();
             _expTrackerViewModel = new ExpTrackerViewModel(_expService, _settings);
             _expService.SessionState.PropertyChanged += ExpSessionState_PropertyChanged;
             _expService.TrackerActiveChanged += () => Dispatcher.BeginInvoke(new Action(RefreshExpTrackerWindow), DispatcherPriority.Background);
@@ -414,6 +416,9 @@ namespace TWChatOverlay.Views
                 _bossAlarmSchedulerService.Start();
                 _expService.Reset();
                 _expService.Start();
+                _huntSessionService.Start();
+                // 지난 로그의 사냥 판은 처음 한 번만 훑는다 (이후에는 새 날짜만)
+                _ = _huntSessionService.BackfillAsync(_settings.ChatLogFolderPath);
                 StartLogServiceWhenReady();
 
                 _settings.PropertyChanged += OnSettingsPropertyChanged;

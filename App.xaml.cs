@@ -105,6 +105,7 @@ namespace TWChatOverlay
                 services.AddSingleton<IIdTagService, IdTagService>();
                 services.AddSingleton<IOverlayOpacityService, OverlayOpacityService>();
                 services.AddSingleton<ExperienceService>();
+                services.AddSingleton<ExpHuntSessionService>();
                 services.AddSingleton<LogAnalysisService>();
                 services.AddSingleton<MainLogPipelineCoordinator>();
                 services.AddSingleton<ExperienceEssenceAlertService>();

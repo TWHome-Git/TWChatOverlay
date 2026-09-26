@@ -99,7 +99,7 @@
                            Foreground="{DynamicResource ButtonTextBrush}"/>
             </Button>
 
-            <UniformGrid x:Name="ButtonsGrid" Rows="10" Columns="1" HorizontalAlignment="Center" VerticalAlignment="Center">
+            <UniformGrid x:Name="ButtonsGrid" Rows="11" Columns="1" HorizontalAlignment="Center" VerticalAlignment="Center">
                 <!-- 1: MainWindow ON/OFF -->
                 <Button x:Name="BtnChat" Width="{DynamicResource MenuIconSize}" Height="{DynamicResource MenuIconSize}" Click="OpenChild_Click" ToolTip="대화창 열기/닫기" Style="{StaticResource MenuIconButtonStyle}" Margin="2,2,2,2">
                     <Image Source="/TWChatOverlay;component/Data/images/MenuIcon/Chat.png" MaxWidth="{DynamicResource MenuIconSize}" MaxHeight="{DynamicResource MenuIconSize}" Stretch="Uniform" HorizontalAlignment="Center" VerticalAlignment="Center" />
@@ -111,6 +111,10 @@
                 <!-- 던전 타이머 기록 열기/닫기 (TW DB 바로 아래) -->
                 <Button x:Name="BtnTimer" Width="{DynamicResource MenuIconSize}" Height="{DynamicResource MenuIconSize}" Click="OpenChild_Click" ToolTip="던전 타이머 기록" Style="{StaticResource MenuIconButtonStyle}" Margin="2,2,2,2">
                     <TextBlock Text="&#xE916;" FontFamily="Segoe MDL2 Assets" FontSize="16" Foreground="{DynamicResource TextBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                </Button>
+                <!-- 사냥 기록(경험치 판 기록) 열기/닫기 -->
+                <Button x:Name="BtnHuntRecord" Width="{DynamicResource MenuIconSize}" Height="{DynamicResource MenuIconSize}" Click="OpenChild_Click" ToolTip="사냥 기록" Style="{StaticResource MenuIconButtonStyle}" Margin="2,2,2,2">
+                    <TextBlock Text="&#xE9D2;" FontFamily="Segoe MDL2 Assets" FontSize="16" Foreground="{DynamicResource TextBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                 </Button>
                 <!-- 3: Daily/Weekly Content -->
                 <Button x:Name="BtnDailyWeekly" Width="{DynamicResource MenuIconSize}" Height="{DynamicResource MenuIconSize}" Click="OpenChild_Click" ToolTip="일일/주간 컨텐츠" Style="{StaticResource MenuIconButtonStyle}" Margin="2,2,2,2">

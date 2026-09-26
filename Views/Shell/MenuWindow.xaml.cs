@@ -71,6 +71,11 @@ namespace TWChatOverlay.Views
             {
                 try { Dispatcher.Invoke(() => SetButtonActive(BtnTimer, visible)); } catch { }
             };
+            // 사냥 기록 창도 같은 방식으로 버튼 상태를 맞춘다
+            ExpHuntRecordWindow.VisibilityChanged += visible =>
+            {
+                try { Dispatcher.Invoke(() => SetButtonActive(BtnHuntRecord, visible)); } catch { }
+            };
             ApplyMinimizeHighlight(AppServices.Get<TrayAllWindowsService>().IsTrayed);
             AppLogger.Info("Menu window initialized.");
         }
@@ -173,8 +178,10 @@ namespace TWChatOverlay.Views
 
             RootPanel.Orientation = horizontal ? Orientation.Horizontal : Orientation.Vertical;
             MenuBody.Orientation = horizontal ? Orientation.Horizontal : Orientation.Vertical;
-            ButtonsGrid.Rows = horizontal ? 1 : 10;
-            ButtonsGrid.Columns = horizontal ? 10 : 1;
+            // 칸 수는 버튼 수에 맞춘다 — 고정해 두면 버튼을 하나 더 넣었을 때 마지막 버튼(종료)이 칸 밖으로 밀린다
+            int buttonCount = Math.Max(1, ButtonsGrid.Children.Count);
+            ButtonsGrid.Rows = horizontal ? 1 : buttonCount;
+            ButtonsGrid.Columns = horizontal ? buttonCount : 1;
 
             if (horizontal)
             {
@@ -425,6 +432,9 @@ namespace TWChatOverlay.Views
                     break;
                 case "BtnTimer":
                     AppServices.Get<ContentTimerService>().ToggleManualWindow(GetSharedSettings());
+                    break;
+                case "BtnHuntRecord":
+                    ExpHuntRecordWindow.Toggle(AppServices.Get<ExpHuntSessionService>());
                     break;
                 case "BtnSettings":
                     OpenSettings();
