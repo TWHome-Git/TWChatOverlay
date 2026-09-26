@@ -101,11 +101,12 @@ namespace TWChatOverlay.Views
                 StartCloseAnimation();
             };
 
-            // 잠금 해제 모드에서는 창 어디를 잡아도 선택+드래그 가능.
-            // 단 작게/크게 버튼은 눌리게 둔다 — 자리를 잡는 중에 실제로 쓸 모드의 크기로 바꿔 볼 수 있어야 한다.
+            // 창 어디를 잡아도 옮길 수 있다 (잠금 상태와 무관).
+            // 단 버튼(작게/크게·닫기·묶음 목록·화살표)과 눌러서 바꾸는 머리글은 그대로 눌려야 하므로 가로채지 않는다.
             PreviewMouseLeftButtonDown += (_, e) =>
             {
-                if (e.OriginalSource is DependencyObject source && IsInside(source, ModeButton))
+                if (e.OriginalSource is DependencyObject source &&
+                    (IsOnButton(source) || (_previousHeader != null && IsInside(source, _previousHeader))))
                 {
                     AppServices.Get<UiLockService>().Select(this); // 잠금 상태면 내부에서 무시된다
                     return;
@@ -121,6 +122,23 @@ namespace TWChatOverlay.Views
                 ApplyFontSize(_settings.ContentTimerFontSize);
                 _settings.PropertyChanged += Settings_PropertyChanged;
             }
+        }
+
+        /// <summary>창은 잠금 상태에서도 끌어 옮길 수 있다 (기록만 보는 창이라 자리 잡기가 잦다).</summary>
+        protected override bool DragRequiresUnlock => false;
+
+        /// <summary>눌린 곳이 버튼 안인지 — 버튼은 드래그로 가로채지 않는다.</summary>
+        private static bool IsOnButton(DependencyObject source)
+        {
+            for (DependencyObject? current = source; current != null;
+                 current = current is Visual || current is System.Windows.Media.Media3D.Visual3D
+                     ? VisualTreeHelper.GetParent(current)
+                     : LogicalTreeHelper.GetParent(current))
+            {
+                if (current is System.Windows.Controls.Primitives.ButtonBase)
+                    return true;
+            }
+            return false;
         }
 
         /// <summary>눌린 요소가 target 안쪽(자기 자신 포함)인지. Run 같은 글자 요소는 논리 트리로 거슬러 올라간다.</summary>
