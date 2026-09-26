@@ -242,8 +242,18 @@ namespace TWChatOverlay.Views
         /// </summary>
         private void ApplyInteractiveStyle()
         {
+            // 창이 아직 뜨기 전이면 핸들이 0이다. HwndSource.FromHwnd(0)은 예외를 던지므로
+            // 이때는 건너뛰고, 창이 떠서 핸들이 생길 때(OnSourceInitialized) 다시 건다.
+            IntPtr handle = new WindowInteropHelper(this).Handle;
+            if (handle == IntPtr.Zero)
+                return;
+
             SetExStyleFlags(add: NativeMethods.WS_EX_TOOLWINDOW | NativeMethods.WS_EX_NOACTIVATE, remove: NativeMethods.WS_EX_TRANSPARENT);
-            HwndSource.FromHwnd(new WindowInteropHelper(this).Handle)?.AddHook(PreventActivationHook);
+
+            // 같은 훅이 두 번 걸리지 않게 한 번 떼고 건다
+            HwndSource? source = HwndSource.FromHwnd(handle);
+            source?.RemoveHook(PreventActivationHook);
+            source?.AddHook(PreventActivationHook);
         }
 
         /// <summary>클릭해도 활성화하지 않는다 (WS_EX_NOACTIVATE를 무시하는 경우 대비).</summary>
