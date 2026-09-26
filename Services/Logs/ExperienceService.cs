@@ -66,10 +66,15 @@ namespace TWChatOverlay.Services
         {
             if (gained <= 0) return;
 
-            if (_isSessionExpired)
+            // 마지막 획득에서 오래 지났으면 새 사냥으로 본다.
+            // 비활동 점검(30초 간격)이 공백 사이에 돌았는지와 무관하게 같은 기준으로 판정해야
+            // 같은 길이의 공백인데 리셋이 되기도 하고 안 되기도 하는 일이 없다.
+            bool longGap = _lastExpAt is DateTime lastAt && DateTime.Now - lastAt >= InactivityTimeout;
+            if (_isSessionExpired || longGap)
             {
                 SessionState.Reset();
                 _isSessionExpired = false;
+                _expiredAt = null;
             }
 
             SessionState.LastGainedExp = gained;
