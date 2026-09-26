@@ -171,23 +171,44 @@ namespace TWChatOverlay.Services
             try
             {
                 Directory.CreateDirectory(Path.GetDirectoryName(_sessionFilePath)!);
-                // 같은 판인지는 시작 시각으로 본다. 실시간으로 적은 판과 로그에서 다시 읽은 판은
-                // 시각이 1~2초 어긋날 수 있어 조금 넉넉하게 잡는다 (판 사이는 최소 1분이라 겹칠 일이 없다)
-                var known = LoadUnlocked().Select(static s => s.StartedAt).ToList();
-                var lines = new List<string>();
+                // 판과 판 사이는 최소 1분이 비어 있으므로, 시간대가 겹치면 같은 판이다.
+                // (앱을 켠 뒤부터 센 실시간 판과, 나중에 로그에서 통째로 읽은 판은 시작 시각이 달라진다)
+                var kept = LoadUnlocked();
+                var appended = new List<string>();
+                bool rewrite = false;
                 foreach (var session in incoming)
                 {
-                    if (known.Any(at => Math.Abs((at - session.StartedAt).TotalSeconds) <= 30))
+                    int index = kept.FindIndex(existing => Overlaps(existing, session));
+                    if (index >= 0)
+                    {
+                        // 더 길게 잡힌 쪽(대개 로그에서 읽은 쪽)이 실제 판에 가깝다
+                        if (session.Duration > kept[index].Duration || session.TotalExp > kept[index].TotalExp)
+                        {
+                            kept[index] = session;
+                            rewrite = true;
+                        }
                         continue;
-                    known.Add(session.StartedAt);
-                    lines.Add(session.ToLine());
+                    }
+
+                    kept.Add(session);
+                    appended.Add(session.ToLine());
                 }
 
-                if (lines.Count == 0)
+                if (rewrite)
+                {
+                    kept.Sort((x, y) => x.StartedAt.CompareTo(y.StartedAt));
+                    File.WriteAllLines(_sessionFilePath, kept.Select(static s => s.ToLine()), Encoding.UTF8);
+                    AppLogger.Info($"Hunt sessions rewritten. Count={kept.Count}");
+                }
+                else if (appended.Count > 0)
+                {
+                    File.AppendAllLines(_sessionFilePath, appended, Encoding.UTF8);
+                    AppLogger.Info($"Hunt sessions appended. Count={appended.Count}");
+                }
+                else
+                {
                     return;
-
-                File.AppendAllLines(_sessionFilePath, lines, Encoding.UTF8);
-                AppLogger.Info($"Hunt sessions appended. Count={lines.Count}");
+                }
             }
             catch (Exception ex)
             {
@@ -196,6 +217,48 @@ namespace TWChatOverlay.Services
             }
 
             try { SessionsChanged?.Invoke(); } catch { }
+        }
+
+        /// <summary>이미 쌓인 기록에서 시간대가 겹치는 판을 하나로 합친다 (예전에 두 번 들어간 것 정리).</summary>
+        private void DedupeExistingUnlocked()
+        {
+            var all = LoadUnlocked();
+            var merged = new List<ExpHuntSession>();
+            foreach (var session in all)
+            {
+                int index = merged.FindIndex(existing => Overlaps(existing, session));
+                if (index < 0)
+                {
+                    merged.Add(session);
+                    continue;
+                }
+
+                if (session.Duration > merged[index].Duration || session.TotalExp > merged[index].TotalExp)
+                    merged[index] = session;
+            }
+
+            if (merged.Count == all.Count)
+                return;
+
+            try
+            {
+                merged.Sort((x, y) => x.StartedAt.CompareTo(y.StartedAt));
+                Directory.CreateDirectory(Path.GetDirectoryName(_sessionFilePath)!);
+                File.WriteAllLines(_sessionFilePath, merged.Select(static s => s.ToLine()), Encoding.UTF8);
+                AppLogger.Info($"Hunt sessions deduped. {all.Count} -> {merged.Count}");
+                SessionsChanged?.Invoke();
+            }
+            catch (Exception ex)
+            {
+                AppLogger.Warn("Failed to dedupe hunt sessions.", ex);
+            }
+        }
+
+        /// <summary>두 판의 시간대가 겹치는지 (1분 여유). 판 사이는 최소 1분이 비므로 겹치면 같은 판이다.</summary>
+        private static bool Overlaps(ExpHuntSession a, ExpHuntSession b)
+        {
+            TimeSpan slack = TimeSpan.FromSeconds(30);
+            return a.StartedAt - slack <= b.EndedAt && b.StartedAt - slack <= a.EndedAt;
         }
 
         // ===== 지난 로그 훑기 =====
@@ -215,6 +278,9 @@ namespace TWChatOverlay.Services
                     : chatLogFolder!;
                 if (!Directory.Exists(folder))
                     return 0;
+
+                lock (_syncRoot)
+                    DedupeExistingUnlocked();
 
                 DateTime scannedUntil = ReadScannedUntil();
                 DateTime today = DateTime.Today;
