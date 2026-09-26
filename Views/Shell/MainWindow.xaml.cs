@@ -140,7 +140,9 @@ namespace TWChatOverlay.Views
             _huntSessionService = AppServices.Get<ExpHuntSessionService>();
             _expTrackerViewModel = new ExpTrackerViewModel(_expService, _settings);
             _expService.SessionState.PropertyChanged += ExpSessionState_PropertyChanged;
-            _expService.TrackerActiveChanged += () => Dispatcher.BeginInvoke(new Action(RefreshExpTrackerWindow), DispatcherPriority.Background);
+            // 창을 띄우고/닫는 전환은 한 판에 한 번뿐이라 보통 우선순위로 바로 처리한다.
+            // (사냥 중에는 경험치 줄이 초당 십수 개씩 들어와 Background 큐가 밀리므로 창이 늦게 떴다)
+            _expService.TrackerActiveChanged += () => Dispatcher.BeginInvoke(new Action(RefreshExpTrackerWindow), DispatcherPriority.Normal);
             _expTrackerViewModel.UpdateDisplay();
             _experienceEssenceAlertService = AppServices.Get<ExperienceEssenceAlertService>();
             AppServices.Get<ExperienceAlertWindowService>().ConfigureStateBridge(
@@ -255,8 +257,25 @@ namespace TWChatOverlay.Views
                 e.PropertyName == nameof(ExpSessionState.HasLastExp) ||
                 e.PropertyName == nameof(ExpSessionState.LastGainedExpDisplay))
             {
-                Dispatcher.BeginInvoke(new Action(RefreshExpTrackerWindow), DispatcherPriority.Background);
+                QueueExpTrackerRefresh();
             }
+        }
+
+        // 경험치 한 번 얻을 때마다 값이 여러 개 바뀌므로 그대로 두면 같은 갱신이 큐에 수십 개씩 쌓인다.
+        // 아직 처리되지 않은 요청이 있으면 더 넣지 않는다.
+        private bool _expTrackerRefreshQueued;
+
+        private void QueueExpTrackerRefresh()
+        {
+            if (_expTrackerRefreshQueued)
+                return;
+
+            _expTrackerRefreshQueued = true;
+            Dispatcher.BeginInvoke(new Action(() =>
+            {
+                _expTrackerRefreshQueued = false;
+                RefreshExpTrackerWindow();
+            }), DispatcherPriority.Background);
         }
 
         private void RefreshExpTrackerWindow()
