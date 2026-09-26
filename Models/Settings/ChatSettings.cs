@@ -663,6 +663,20 @@ namespace TWChatOverlay.Models
                 OnPropertyChanged();
             }
         }
+        /// <summary>사냥 기록 창 글자 크기(11~26).</summary>
+        [JsonIgnore]
+        public double ExpHuntRecordFontSize
+        {
+            get => Alerts.Dungeon.ExpHuntRecordFontSize < 11.0 ? 15.0 : Alerts.Dungeon.ExpHuntRecordFontSize;
+            set
+            {
+                double clamped = Math.Max(11.0, Math.Min(26.0, value));
+                if (Math.Abs(Alerts.Dungeon.ExpHuntRecordFontSize - clamped) < 0.0001) return;
+                Alerts.Dungeon.ExpHuntRecordFontSize = clamped;
+                OnPropertyChanged();
+            }
+        }
+
         /// <summary>던전 타이머 기록 창을 마지막에 작은 모드로 봤는지. 메뉴 버튼으로 열 때 이 모드로 연다.</summary>
         [JsonIgnore]
         public bool ContentTimerCompact

@@ -156,6 +156,8 @@ namespace TWChatOverlay.Models
         public bool ReflectionPatternAlert { get; set; } = false;
         /// <summary>감전 패턴: 방전에 걸린 동안 알림 창을 띄운다.</summary>
         public bool DischargeAlert { get; set; } = false;
+        /// <summary>사냥 기록 창 글자 크기.</summary>
+        public double ExpHuntRecordFontSize { get; set; } = 15.0;
         public double ReflectionPatternVolume { get; set; } = 1.0;
         public bool AbandonRoadCountAlert { get; set; } = false;
         /// <summary>심연의 보물창고: 입장 후 금화 주머니 획득 카운트 표시.</summary>

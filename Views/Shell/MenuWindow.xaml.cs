@@ -434,7 +434,7 @@ namespace TWChatOverlay.Views
                     AppServices.Get<ContentTimerService>().ToggleManualWindow(GetSharedSettings());
                     break;
                 case "BtnHuntRecord":
-                    ExpHuntRecordWindow.Toggle(AppServices.Get<ExpHuntSessionService>());
+                    ExpHuntRecordWindow.Toggle(AppServices.Get<ExpHuntSessionService>(), GetSharedSettings());
                     break;
                 case "BtnSettings":
                     OpenSettings();
