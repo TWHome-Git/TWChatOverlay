@@ -162,6 +162,8 @@ namespace TWChatOverlay.Models
         public string EtaLevelRange4Color { get => Chat.IdDisplay.EtaLevelRange4Color; set { Chat.IdDisplay.EtaLevelRange4Color = value; OnPropertyChanged(); } }
         [JsonIgnore]
         public string EtaLevelRange5Color { get => Chat.IdDisplay.EtaLevelRange5Color; set { Chat.IdDisplay.EtaLevelRange5Color = value; OnPropertyChanged(); } }
+        [JsonIgnore]
+        public string EtaLevelRange6Color { get => Chat.IdDisplay.EtaLevelRange6Color; set { Chat.IdDisplay.EtaLevelRange6Color = value; OnPropertyChanged(); } }
 
         #endregion
 

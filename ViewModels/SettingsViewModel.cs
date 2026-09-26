@@ -390,6 +390,7 @@ namespace TWChatOverlay.ViewModels
         public Brush EtaLevelRange3Color => StringToBrush(_settings.EtaLevelRange3Color);
         public Brush EtaLevelRange4Color => StringToBrush(_settings.EtaLevelRange4Color);
         public Brush EtaLevelRange5Color => StringToBrush(_settings.EtaLevelRange5Color);
+        public Brush EtaLevelRange6Color => StringToBrush(_settings.EtaLevelRange6Color);
 
         public bool SenderIdColorEditable => !_settings.SenderIdColorSync;
         public bool EtaLevelColorEditable => !_settings.EtaLevelColorSync;
@@ -794,6 +795,7 @@ namespace TWChatOverlay.ViewModels
                 "EtaLevelRange3" => EtaLevelRange3Color,
                 "EtaLevelRange4" => EtaLevelRange4Color,
                 "EtaLevelRange5" => EtaLevelRange5Color,
+                "EtaLevelRange6" => EtaLevelRange6Color,
                 _ => null
             };
 
@@ -822,6 +824,7 @@ namespace TWChatOverlay.ViewModels
                 OnPropertyChanged(nameof(EtaLevelRange3Color));
                 OnPropertyChanged(nameof(EtaLevelRange4Color));
                 OnPropertyChanged(nameof(EtaLevelRange5Color));
+                OnPropertyChanged(nameof(EtaLevelRange6Color));
 
                 _onColorsUpdated?.Invoke(colorType);
                 SaveSettings();
@@ -943,6 +946,7 @@ namespace TWChatOverlay.ViewModels
             OnPropertyChanged(nameof(EtaLevelRange3Color));
             OnPropertyChanged(nameof(EtaLevelRange4Color));
             OnPropertyChanged(nameof(EtaLevelRange5Color));
+            OnPropertyChanged(nameof(EtaLevelRange6Color));
             OnPropertyChanged(nameof(ClubBossColorSync));
             OnPropertyChanged(nameof(ClubBossColorEditable));
             OnPropertyChanged(nameof(ClubBossColor));

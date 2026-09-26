@@ -24,6 +24,7 @@
                 case "EtaLevelRange3": EtaLevelRange3Color = hex; break;
                 case "EtaLevelRange4": EtaLevelRange4Color = hex; break;
                 case "EtaLevelRange5": EtaLevelRange5Color = hex; break;
+                case "EtaLevelRange6": EtaLevelRange6Color = hex; break;
             }
         }
 

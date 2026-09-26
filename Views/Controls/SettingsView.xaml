@@ -505,12 +505,13 @@
                                         <Button Style="{StaticResource HelpButtonStyle}" Tag="chat.id.eta_range" Click="Help_Click"/>
                                     </StackPanel>
                                     <Border Margin="28,8,0,2" HorizontalAlignment="Left" BorderBrush="{DynamicResource SeparatorBrush}" BorderThickness="1" CornerRadius="3">
-                                        <UniformGrid Columns="5" Width="440" Height="22">
+                                        <UniformGrid Columns="6" Width="440" Height="22">
                                             <Button Content="1~20" Background="{Binding EtaLevelRange1Color}" IsEnabled="{Binding EtaLevelColorEditable}" Command="{Binding ColorPickCommand}" CommandParameter="EtaLevelRange1" Style="{StaticResource EtaRangeSegmentStyle}"/>
                                             <Button Content="21~40" Background="{Binding EtaLevelRange2Color}" IsEnabled="{Binding EtaLevelColorEditable}" Command="{Binding ColorPickCommand}" CommandParameter="EtaLevelRange2" Style="{StaticResource EtaRangeSegmentStyle}"/>
                                             <Button Content="41~60" Background="{Binding EtaLevelRange3Color}" IsEnabled="{Binding EtaLevelColorEditable}" Command="{Binding ColorPickCommand}" CommandParameter="EtaLevelRange3" Style="{StaticResource EtaRangeSegmentStyle}"/>
                                             <Button Content="61~80" Background="{Binding EtaLevelRange4Color}" IsEnabled="{Binding EtaLevelColorEditable}" Command="{Binding ColorPickCommand}" CommandParameter="EtaLevelRange4" Style="{StaticResource EtaRangeSegmentStyle}"/>
-                                            <Button Content="81~" Background="{Binding EtaLevelRange5Color}" IsEnabled="{Binding EtaLevelColorEditable}" Command="{Binding ColorPickCommand}" CommandParameter="EtaLevelRange5" Style="{StaticResource EtaRangeSegmentStyle}"/>
+                                            <Button Content="81~90" Background="{Binding EtaLevelRange5Color}" IsEnabled="{Binding EtaLevelColorEditable}" Command="{Binding ColorPickCommand}" CommandParameter="EtaLevelRange5" Style="{StaticResource EtaRangeSegmentStyle}"/>
+                                            <Button Content="91~" Background="{Binding EtaLevelRange6Color}" IsEnabled="{Binding EtaLevelColorEditable}" Command="{Binding ColorPickCommand}" CommandParameter="EtaLevelRange6" Style="{StaticResource EtaRangeSegmentStyle}"/>
                                         </UniformGrid>
                                     </Border>
                                 </StackPanel>

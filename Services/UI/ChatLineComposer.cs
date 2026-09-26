@@ -141,7 +141,7 @@ namespace TWChatOverlay.Services
             paragraph.Foreground = baseBrush;
         }
 
-        /// <summary>"[N]" 형태의 레벨 텍스트에서 숫자를 읽어 구간(1~20/21~40/41~60/61~80/81~) 색을 고른다.</summary>
+        /// <summary>"[N]" 형태의 레벨 텍스트에서 숫자를 읽어 구간(1~20/21~40/41~60/61~80/81~90/91~) 색을 고른다.</summary>
         private static Brush? EtaLevelRangeBrush(string text, ChatSettings settings)
         {
             int level = 0;
@@ -156,14 +156,15 @@ namespace TWChatOverlay.Services
             return ChatBrushResolver.ToBrush(EtaLevelRangeHex(level, settings));
         }
 
-        /// <summary>에타 레벨 구간(1~20/21~40/41~60/61~80/81~)의 설정 색. 채팅창과 1:1 대화 에타 팝업이 같은 색을 쓴다.</summary>
+        /// <summary>에타 레벨 구간(1~20/21~40/41~60/61~80/81~90/91~)의 설정 색. 채팅창과 1:1 대화 에타 팝업이 같은 색을 쓴다.</summary>
         public static string EtaLevelRangeHex(int level, ChatSettings settings) => level switch
         {
             <= 20 => settings.EtaLevelRange1Color,
             <= 40 => settings.EtaLevelRange2Color,
             <= 60 => settings.EtaLevelRange3Color,
             <= 80 => settings.EtaLevelRange4Color,
-            _ => settings.EtaLevelRange5Color,
+            <= 90 => settings.EtaLevelRange5Color,
+            _ => settings.EtaLevelRange6Color,
         };
 
         private static List<ChatSegment> BuildDecorations(LogParser.ParseResult log, ChatSettings settings)

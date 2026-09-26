@@ -72,7 +72,8 @@ namespace TWChatOverlay.Models
         public string EtaLevelRange2Color { get; set; } = "#7EE081"; // 21~40
         public string EtaLevelRange3Color { get; set; } = "#5AC8E8"; // 41~60
         public string EtaLevelRange4Color { get; set; } = "#C08BFF"; // 61~80
-        public string EtaLevelRange5Color { get; set; } = "#FFD84A"; // 81~
+        public string EtaLevelRange5Color { get; set; } = "#FFD84A"; // 81~90
+        public string EtaLevelRange6Color { get; set; } = "#FF6B6B"; // 91~100
         public string EtaCharacterColor { get; set; } = "#5AC8E8";
         public string TimestampColor { get; set; } = "#9AA0A6";
         public string IdTagColor { get; set; } = "#B4BBC2";
