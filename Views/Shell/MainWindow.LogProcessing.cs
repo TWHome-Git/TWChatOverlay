@@ -209,6 +209,31 @@ namespace TWChatOverlay.Views
         /// <summary>방전에 걸린 시각 — 풀린 줄이 올 때 얼마나 걸려 있었는지 적으려고 둔다.</summary>
         private DateTime? _dischargeStartedAt;
 
+        /// <summary>"[ 9시 03분 32초] …" 앞머리에서 시각을 읽는다. 날짜는 오늘로 보되, 미래면 어제로 본다(자정 넘김).</summary>
+        private static readonly System.Text.RegularExpressions.Regex LogLineTimeRegex =
+            new(@"^[s*(?<h>d{1,2})시s*(?<m>d{1,2})분s*(?<s>d{1,2})초s*]", System.Text.RegularExpressions.RegexOptions.Compiled);
+
+        private static DateTime? TryReadLogTime(string? text)
+        {
+            if (string.IsNullOrEmpty(text))
+                return null;
+
+            var match = LogLineTimeRegex.Match(text);
+            if (!match.Success)
+                return null;
+
+            int hour = int.Parse(match.Groups["h"].Value);
+            int minute = int.Parse(match.Groups["m"].Value);
+            int second = int.Parse(match.Groups["s"].Value);
+            if (hour > 23 || minute > 59 || second > 59)
+                return null;
+
+            DateTime at = DateTime.Today.AddHours(hour).AddMinutes(minute).AddSeconds(second);
+            if (at > DateTime.Now.AddMinutes(1))
+                at = at.AddDays(-1);
+            return at;
+        }
+
         private static void GuardSideEffect(string what, Action action)
         {
             try { action(); }
@@ -237,7 +262,9 @@ namespace TWChatOverlay.Views
 
                 if (analysis.HasExperienceGain)
                 {
-                    GuardSideEffect("exp-gain", () => _expService.AddExp(parseResult.GainedExp));
+                    // 공백 판정이 처리 지연에 휘둘리지 않게 로그에 찍힌 시각을 함께 넘긴다
+                    DateTime? logTime = TryReadLogTime(parseResult.FormattedText);
+                    GuardSideEffect("exp-gain", () => _expService.AddExp(parseResult.GainedExp, logTime));
                     // 사냥 기록(판 단위 요약)은 실시간 줄만 센다. 과거 로그는 시작할 때 따로 훑는다
                     if (context.IsRealTime)
                         GuardSideEffect("hunt-session", () => _huntSessionService.AddGain(DateTime.Now, parseResult.GainedExp));

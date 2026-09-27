@@ -94,7 +94,7 @@ namespace TWChatOverlay.Models
                         : _frozenExpPerHourDisplay;
                 }
 
-                TimeSpan elapsed = DateTime.Now - _startTime;
+                TimeSpan elapsed = Elapsed;
                 double hours = elapsed.TotalHours;
 
                 if (_totalExp == 0 || elapsed.TotalSeconds < 30 || hours <= 0)
@@ -109,7 +109,15 @@ namespace TWChatOverlay.Models
         public bool IsMeasurementStopped => _isFrozen;
 
         /// <summary>측정을 시작한 뒤 지난 시간. 멈춘 뒤에는 멈춘 시각에서 더 가지 않는다 (1시간 예상과 같은 기준 시각).</summary>
-        public TimeSpan Elapsed => (_isFrozen ? _frozenAt : DateTime.Now) - _startTime;
+        public TimeSpan Elapsed
+        {
+            get
+            {
+                DateTime until = _isFrozen ? _frozenAt : DateTime.Now;
+                TimeSpan span = until - _startTime;
+                return span > TimeSpan.Zero ? span : TimeSpan.Zero;
+            }
+        }
 
         /// <summary>측정 시간 표시 — 분 단위로 "12분", 한 시간이 넘으면 "1시간 2분".</summary>
         public string ElapsedDisplay

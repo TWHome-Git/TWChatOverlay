@@ -11,7 +11,6 @@ namespace TWChatOverlay.Services
     public class ExperienceService
     {
         private static readonly TimeSpan InactivityTimeout = TimeSpan.FromMinutes(1);
-        private static readonly TimeSpan HideAfterStopTimeout = TimeSpan.FromMinutes(1);
         private readonly ChatSettings _settings;
         private readonly DispatcherTimer _expTimer;
         private readonly DispatcherTimer _inactivityTimer;
@@ -62,26 +61,36 @@ namespace TWChatOverlay.Services
         /// <summary>
         /// 경험치를 추가하고 UI에 반영합니다.
         /// </summary>
-        public void AddExp(long gained)
+        public void AddExp(long gained, DateTime? logTime = null)
         {
             if (gained <= 0) return;
 
-            // 마지막 획득에서 오래 지났으면 새 사냥으로 본다.
-            // 비활동 점검(30초 간격)이 공백 사이에 돌았는지와 무관하게 같은 기준으로 판정해야
-            // 같은 길이의 공백인데 리셋이 되기도 하고 안 되기도 하는 일이 없다.
-            bool longGap = _lastExpAt is DateTime lastAt && DateTime.Now - lastAt >= InactivityTimeout;
-            if (_isSessionExpired || longGap)
+            // 공백 판정은 "로그에 찍힌 시각"으로 한다.
+            // 처리 시각(벽시계)으로 재면 로그가 몰려 늦게 처리될 때 10초 간격도 1분으로 보여 엉뚱하게 리셋된다.
+            DateTime at = logTime ?? DateTime.Now;
+
+            // 1분 넘게 경험치가 없었으면 새 사냥으로 보고 처음부터 다시 잰다.
+            // 비활동 점검(30초 간격)이 공백 사이에 돌았는지와 무관하게 같은 기준으로 판정해
+            // 같은 길이의 공백인데 리셋이 되기도 하고 안 되기도 하는 일이 없게 한다.
+            bool longGap = _lastExpAt is DateTime lastAt && at - lastAt >= InactivityTimeout;
+            if (longGap)
             {
                 SessionState.Reset();
-                _isSessionExpired = false;
-                _expiredAt = null;
+                SessionState.UnfreezeTotalExpDisplay();
             }
+            else if (_isSessionExpired)
+            {
+                // 처리만 늦었을 뿐 실제로는 계속 사냥 중이었다 — 표시만 되돌리고 값은 이어 간다
+                SessionState.UnfreezeTotalExpDisplay();
+            }
+
+            _isSessionExpired = false;
+            _expiredAt = null;
 
             SessionState.LastGainedExp = gained;
             SessionState.TotalExp += gained;
             SessionState.GainCount += 1;
-            _lastExpAt = DateTime.Now;
-            _expiredAt = null;
+            _lastExpAt = at;
 
             if (!_isReady || (DateTime.Now - _startTime).TotalSeconds < 5)
             {
@@ -110,6 +119,8 @@ namespace TWChatOverlay.Services
         /// </summary>
         public void Reset()
         {
+            // 누가 초기화했는지 남긴다 — 사냥 중에 값이 0이 되는 일이 또 생기면 여기서 찾는다
+            AppLogger.Info($"Exp session reset. Total={SessionState.TotalExp:N0}, Count={SessionState.GainCount}");
             SessionState.Reset();
             _lastExpAt = null;
             _expiredAt = null;
@@ -128,17 +139,12 @@ namespace TWChatOverlay.Services
 
                 SessionState.FreezeTotalExpDisplay();
                 _isSessionExpired = true;
-                _expiredAt = DateTime.Now;
+                _expiredAt = _lastExpAt;   // 마지막 획득 시점부터 쉰 것으로 친다
                 return;
             }
 
-            // [중단] 표시 후 1분이 더 지나면 추적창을 숨긴다
-            if (_isTrackerActive && _expiredAt.HasValue &&
-                DateTime.Now - _expiredAt.Value >= HideAfterStopTimeout)
-            {
-                _isTrackerActive = false;
-                TrackerActiveChanged?.Invoke();
-            }
+            // 측정이 끝나도 창은 그대로 둔다 — 마지막 판의 누적·마리수·측정 시간을 계속 볼 수 있어야 한다.
+            // (새 경험치가 들어오면 그때 초기화하고 처음부터 다시 잰다)
         }
     }
 }
