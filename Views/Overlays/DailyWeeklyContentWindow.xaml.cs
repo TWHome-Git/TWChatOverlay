@@ -480,6 +480,15 @@ namespace TWChatOverlay.Views
                 Width = _settings.DailyWeeklyContentOverlayWidth.Value;
             if (_settings.DailyWeeklyContentOverlayHeight.HasValue && _settings.DailyWeeklyContentOverlayHeight.Value > 100)
                 Height = _settings.DailyWeeklyContentOverlayHeight.Value;
+            // 저장된 자리가 있으면 창을 만들 때 바로 잡아 둔다.
+            // 창을 켜는 길이 여럿이라(메뉴·트레이 복원·설정 변경) 그중 하나라도 위치를 안 잡고 Show하면
+            // XAML의 CenterScreen이 먹어 화면 가운데로 옮겨지고, 그 자리가 곧바로 저장돼 버린다.
+            if (_settings.DailyWeeklyContentOverlayLeft.HasValue && _settings.DailyWeeklyContentOverlayTop.HasValue)
+            {
+                WindowStartupLocation = WindowStartupLocation.Manual;
+                Left = _settings.DailyWeeklyContentOverlayLeft.Value;
+                Top = _settings.DailyWeeklyContentOverlayTop.Value;
+            }
             DataContext = this;
             this.FontFamily = FontService.GetFont(_settings.FontFamily);
             InitializeScanCache();
@@ -617,6 +626,10 @@ namespace TWChatOverlay.Views
 
         private void PersistWindowPosition()
         {
+            // 아직 화면에 뜨기 전(0,0이나 화면 가운데로 잡혀 있는 동안)의 자리는 저장하지 않는다
+            if (!IsVisible)
+                return;
+
             _settings.DailyWeeklyContentOverlayLeft = this.Left;
             _settings.DailyWeeklyContentOverlayTop = this.Top;
             _settings.DailyWeeklyContentOverlayWidth = this.Width;
