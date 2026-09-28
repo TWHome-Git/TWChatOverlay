@@ -212,12 +212,16 @@ namespace TWChatOverlay.Views
             ShowItemCalendarWindow();
         }
 
-        public void ShowAbandonRoadSummaryWindow(bool previewMode = false, bool restartLifetime = true, bool activateWindow = true, bool forcePreview = false)
+        /// <param name="userRequested">
+        /// 사용자가 직접 띄운 경우(일일/주간 창의 "어밴던로드 통계" 바로가기).
+        /// 자동 표시 토글은 로그가 들어올 때 창을 띄울지를 정하는 설정이라, 직접 누른 경우에는 보지 않는다.
+        /// </param>
+        public void ShowAbandonRoadSummaryWindow(bool previewMode = false, bool restartLifetime = true, bool activateWindow = true, bool forcePreview = false, bool userRequested = false)
         {
             if (AppServices.Get<TrayAllWindowsService>().IsTrayed && !forcePreview)
                 return; // 트레이 최소화 중에는 알림 창을 띄우지 않는다
 
-            if (!_settings.ShowAbandonRoadSummaryWindow && !forcePreview)
+            if (!_settings.ShowAbandonRoadSummaryWindow && !forcePreview && !userRequested)
             {
                 if (_AbandonRoadSummaryWindow != null)
                 {

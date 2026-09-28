@@ -1457,7 +1457,7 @@ namespace TWChatOverlay.Views
         private void AbandonStats_Click(object sender, RoutedEventArgs e)
         {
             var main = Application.Current?.Windows.OfType<MainWindow>().FirstOrDefault();
-            main?.ShowAbandonRoadSummaryWindow();
+            main?.ShowAbandonRoadSummaryWindow(userRequested: true);
         }
 
         /// <summary>통계 바로가기: 심연의 보물창고 주간 통계 (저장된 이번 주 데이터).</summary>
