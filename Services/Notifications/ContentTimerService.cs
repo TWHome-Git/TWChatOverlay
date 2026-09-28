@@ -952,7 +952,8 @@ namespace TWChatOverlay.Services
         private static readonly string ArchiveDirectoryPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Config", "DungeonTimerArchive");
         private static readonly string ArchiveScanMarkerPath = Path.Combine(ArchiveDirectoryPath, "_fullscan.json");
         /// <summary>던전 정의가 크게 바뀌어 과거 로그를 다시 뽑아야 할 때만 올린다.</summary>
-        private const int ArchiveScanVersion = 1;
+        // 2: 5.0.8~5.0.9의 추출이 판 날짜를 하루 앞당겨 저장했다 → 옛 아카이브·기록·최고 기록을 backup으로 옮기고 로그 전체를 다시 읽는다
+        private const int ArchiveScanVersion = 2;
         private static readonly JsonSerializerOptions ArchiveJsonOptions = new()
         {
             WriteIndented = false,
@@ -1356,7 +1357,13 @@ namespace TWChatOverlay.Services
         }
 
         /// <summary>"[ 6시 39분 58초] …" 앞의 시각을 날짜와 합친다. 못 읽으면 fallback.</summary>
-        private DateTime ResolveLogTime(string text, DateTime date, DateTime fallback)
+        /// <summary>
+        /// 줄의 "[H시 M분 S초]"를 date의 그 시각으로 읽는다. 시각이 없는 줄(이어지는 줄)은 fallback.
+        /// yesterdayIfAfterFallback: 실시간 경로용 — 지금(fallback)보다 1분 넘게 미래인 시각은 자정 직전에 찍힌 어제 줄로 본다.
+        /// 과거 파일을 통째로 읽을 때는 false로 두어야 한다. 그때 fallback은 파일의 0시라, 이 보정을 켜면 0시 1분 이후 모든 줄이
+        /// 하루 전으로 밀린다 (5.0.8~5.0.9의 기록 추출이 그래서 날짜를 하루 앞당겨 저장했다).
+        /// </summary>
+        private DateTime ResolveLogTime(string text, DateTime date, DateTime fallback, bool yesterdayIfAfterFallback = true)
         {
             Match m = LogTimeRegex.Match(text);
             if (!m.Success)
@@ -1370,7 +1377,7 @@ namespace TWChatOverlay.Services
                 if (h > 23 || mi > 59 || s > 59)
                     return fallback;
                 DateTime at = date.AddHours(h).AddMinutes(mi).AddSeconds(s);
-                if (at > fallback.AddMinutes(1) && date == fallback.Date)
+                if (yesterdayIfAfterFallback && at > fallback.AddMinutes(1) && date == fallback.Date)
                     at = at.AddDays(-1); // 자정 직후 어제 시각
                 return at;
             }
@@ -1406,6 +1413,8 @@ namespace TWChatOverlay.Services
                     // 평소에는 지난주 월요일부터만 읽는다 (앱이 꺼져 있던 동안의 판 복원).
                     // 전체 기록 아카이브를 아직 만든 적이 없으면 이번 한 번만 남아 있는 로그 전부에서 기록을 뽑고, 끝나면 표시를 남겨 다시 읽지 않는다.
                     bool fullScan = !IsArchiveFullScanDone();
+                    if (fullScan && File.Exists(ArchiveScanMarkerPath))
+                        ResetArchiveForRescan(); // 옛 버전 추출물 — 날짜가 틀려 다시 만든다
                     IsArchiveScanRunning = fullScan;
                     DateTime oldest = fullScan ? DateTime.MinValue : LastWeekStart(DateTime.Now);
                     int foundTotal = 0, addedTotal = 0, filesRead = 0;
@@ -1428,9 +1437,11 @@ namespace TWChatOverlay.Services
                         var found = new List<DungeonRunRecord>();
                         var tracker = new RunTracker(Definitions);
                         tracker.RunFinished += (_, record) => found.Add(record);
+                        DateTime last = day;
                         foreach (string line in ReadLogLines(path))
                         {
-                            DateTime at = ResolveLogTime(line, day, day);
+                            DateTime at = ResolveLogTime(line, day, last, yesterdayIfAfterFallback: false);
+                            last = at;
                             tracker.Feed(line, at, at);
                         }
                         filesRead++;
@@ -1726,6 +1737,49 @@ namespace TWChatOverlay.Services
         }
 
         /// <summary>과거 로그 전체 추출을 이미 마쳤는지. 표시 파일이 없거나 추출 버전이 낮으면 아직이다.</summary>
+        /// <summary>
+        /// 옛 버전이 만든 아카이브·2주 기록·최고 기록을 backup 폴더로 옮기고 메모리도 비운다. 이어지는 전체 추출이 로그에서 다시 채운다.
+        /// 채팅 로그 파일은 게임이 지우지 않으므로 잃는 판은 없다 (사용자가 로그 파일을 지웠다면 그 날짜 판만 사라진다).
+        /// </summary>
+        private void ResetArchiveForRescan()
+        {
+            lock (SyncRoot)
+            {
+                try
+                {
+                    string backup = Path.Combine(ArchiveDirectoryPath, $"backup_v{ReadArchiveMarkerVersion()}_{DateTime.Now:yyyyMMdd_HHmmss}");
+                    Directory.CreateDirectory(backup);
+                    foreach (string file in Directory.EnumerateFiles(ArchiveDirectoryPath, "*.jsonl"))
+                        File.Move(file, Path.Combine(backup, Path.GetFileName(file)), overwrite: true);
+                    foreach (string file in new[] { HistoryFilePath, BestFilePath, ArchiveScanMarkerPath })
+                        if (File.Exists(file))
+                            File.Move(file, Path.Combine(backup, Path.GetFileName(file)), overwrite: true);
+                    AppLogger.Info($"Dungeon timer archive reset for rescan. Backup={backup}");
+                }
+                catch (Exception ex)
+                {
+                    AppLogger.Warn("Failed to move old dungeon timer archive to backup; rescanning on top of it.", ex);
+                }
+                _history = null;
+                _best = null;
+                _bestDirty = false;
+                _archiveIndex = null;
+            }
+        }
+
+        private int ReadArchiveMarkerVersion()
+        {
+            try
+            {
+                using var doc = JsonDocument.Parse(File.ReadAllText(ArchiveScanMarkerPath));
+                return doc.RootElement.TryGetProperty("Version", out var v) ? v.GetInt32() : 0;
+            }
+            catch
+            {
+                return 0;
+            }
+        }
+
         private bool IsArchiveFullScanDone()
         {
             try
