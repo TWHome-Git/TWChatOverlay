@@ -95,22 +95,89 @@ namespace TWChatOverlay.Views
             // 원본이 바뀌면 여기서 디바운스 저장한다. (250ms 안에 몰리는 변경은 한 번만 쓴다)
             ConfigService.SaveDeferred(_settings);
 
+            // 이름 없는 변경은 "설정 전체 교체"(프로필 불러오기·설정 초기화·마법사 기본값) 신호다.
+            // 이름별 표(SettingsChangeRoutes)로는 하나도 걸리지 않으므로 여기서 전체를 다시 적용한다.
+            bool allChanged = string.IsNullOrEmpty(e.PropertyName);
+
             // 추가 기능 위치 미리보기 중 토글이 바뀌면 해당 탭의 창 표시를 다시 계산한다
             // (활성화하면 즉시 나타나고, 끄면 사라진다)
-            if (_isAddonPositionMode && e.PropertyName != null && AddonPreviewToggleNames.Contains(e.PropertyName))
+            if (_isAddonPositionMode && !allChanged && AddonPreviewToggleNames.Contains(e.PropertyName!))
             {
                 try { ShowSettingsPositionWindows(); } catch (Exception ex) { AppLogger.Warn("Addon preview refresh failed.", ex); }
             }
 
             Dispatcher.Invoke(() =>
             {
-                if (e.PropertyName != null && SettingsChangeRoutes.TryGetValue(e.PropertyName, out Action? handler))
+                if (allChanged)
+                    ApplyAllSettingsToWindows();
+                else if (SettingsChangeRoutes.TryGetValue(e.PropertyName!, out Action? handler))
                     handler();
-                else if (e.PropertyName != null && e.PropertyName.StartsWith("Show"))
+                else if (e.PropertyName!.StartsWith("Show"))
                     RequestRefreshLogDisplay(); // 그 밖의 Show* (채팅 표시 필터류)는 채팅 표시만 다시 그린다
 
                 PersistSettings();
             });
+        }
+
+        /// <summary>
+        /// 지금 설정 값으로 창 표시 상태를 전부 다시 맞춘다.
+        /// 개별 토글은 이름별 표(SettingsChangeRoutes)가 처리하지만, 설정이 통째로 바뀌는 경로
+        /// (프로필 불러오기·설정 초기화·마법사 기본값)는 이름 없는 알림 하나만 오므로 그 경로가 이 함수를 쓴다.
+        /// 값만 바뀌고 창은 이전 상태로 남는 것(설정은 켜짐인데 창은 안 뜨는 상태)을 막는다.
+        /// </summary>
+        private void ApplyAllSettingsToWindows()
+        {
+            ApplyInitialSettings();
+            _stickyService?.UpdatePositionImmediately();
+            OnMainWindowChatTabTagChanged();
+
+            ApplyDailyWeeklyWindowVisibility();
+            ApplySubAddonWindowSettings();
+            ApplyItemDropHelperWindowSettings();
+            ApplyBuffTrackerWindowSettings();
+            ApplyBuffTrackerHelperWindowSettings();
+            RefreshExpTrackerWindow();
+            ApplyChatCloneWindowState();
+            ApplyAbandonRoadSummaryWindowVisibility();
+
+            // 던전 카운트 표시창은 입장할 때 서비스가 띄운다. 꺼졌으면 미리보기만 내린다.
+            if (!_settings.ShowDungeonCountDisplayWindow)
+                AppServices.Get<DungeonCountDisplayWindowService>().ClosePositionPreview(_settings);
+
+            AppServices.Get<ExperienceAlertWindowService>().RefreshState(_settings);
+            AppServices.Get<ToastStackService>().RefreshPreviews(_settings);
+
+            try { ApplyHotKeys(); }
+            catch (Exception ex) { AppLogger.Warn("Failed to reapply hotkeys.", ex); }
+
+            RequestRefreshLogDisplay(force: true);
+
+            if (_isAddonPositionMode)
+            {
+                try { ShowSettingsPositionWindows(); } catch (Exception ex) { AppLogger.Warn("Addon preview refresh failed.", ex); }
+            }
+        }
+
+        /// <summary>채팅 복제창 2개를 설정의 열림 상태에 맞춘다.</summary>
+        private void ApplyChatCloneWindowState()
+        {
+            for (int slot = 1; slot <= 2; slot++)
+            {
+                bool shouldOpen = slot == 1 ? _settings.ChatCloneWindow1IsOpen : _settings.ChatCloneWindow2IsOpen;
+                var opened = Application.Current.Windows.OfType<ChatCloneWindow>().FirstOrDefault(w => w.Slot == slot);
+
+                try
+                {
+                    if (shouldOpen && opened == null)
+                        ChatCloneWindow.TryRestore(_settings, slot);
+                    else if (!shouldOpen && opened != null)
+                        opened.Close();
+                }
+                catch (Exception ex)
+                {
+                    AppLogger.Warn($"Failed to apply chat clone window state. Slot={slot}", ex);
+                }
+            }
         }
 
         /// <summary>추가 기능 위치 미리보기 중 바뀌면 미리보기 창 표시를 다시 계산해야 하는 토글들.</summary>

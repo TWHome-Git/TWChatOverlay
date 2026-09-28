@@ -146,7 +146,9 @@ namespace TWChatOverlay.Views
 
         private void SharedSettings_PropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
         {
-            if (e.PropertyName != nameof(Models.ChatSettings.MenuWindowHorizontal))
+            // 이름이 비어 있으면 설정이 통째로 바뀐 것(프로필 불러오기·초기화)이므로 함께 다시 적용한다.
+            if (!string.IsNullOrEmpty(e.PropertyName) &&
+                e.PropertyName != nameof(Models.ChatSettings.MenuWindowHorizontal))
                 return;
 
             try

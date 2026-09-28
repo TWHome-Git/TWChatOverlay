@@ -742,7 +742,17 @@ namespace TWChatOverlay.ViewModels
 
         private void SettingsOnPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
         {
-            if (e.PropertyName == nameof(ChatSettings.LineMarginLeft))
+            // 이름이 비어 있으면 설정이 통째로 바뀐 것(프로필 불러오기·초기화)이다. 화면 값을 전부 다시 읽는다.
+            if (string.IsNullOrEmpty(e.PropertyName))
+            {
+                OnPropertyChanged(nameof(LineMarginLeft));
+                OnPropertyChanged(nameof(LineMargin));
+                OnPropertyChanged(nameof(ShoutToastFontSize));
+                OnPropertyChanged(nameof(Clone1Enabled));
+                OnPropertyChanged(nameof(Clone2Enabled));
+                NotifyAllSettingsChanged();
+            }
+            else if (e.PropertyName == nameof(ChatSettings.LineMarginLeft))
             {
                 OnPropertyChanged(nameof(LineMarginLeft));
                 OnPropertyChanged(nameof(ExitHotKey));

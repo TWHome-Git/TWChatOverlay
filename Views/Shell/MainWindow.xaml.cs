@@ -344,11 +344,8 @@ namespace TWChatOverlay.Views
         /// <summary>설정이 통째로 바뀐 뒤(프로필 불러오기/파일 불러오기) 화면·창 위치·핫키를 다시 맞춘다. 마법사는 띄우지 않는다.</summary>
         private void OnSettingsReplacedFromSettings()
         {
-            ApplyInitialSettings();
             ReapplyStoredWindowPositions();
-            RequestRefreshLogDisplay();
-            try { ApplyHotKeys(); }
-            catch (Exception ex) { AppLogger.Warn("Failed to reapply hotkeys after settings replacement.", ex); }
+            ApplyAllSettingsToWindows();
 
             try
             {
