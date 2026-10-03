@@ -30,6 +30,7 @@ namespace TWChatOverlay.Views
         private readonly ObservableCollection<DailyWeeklyContentLog> _dailyContentItems = new();
         private readonly ObservableCollection<DailyWeeklyContentLog> _weeklyContentItems = new();
         private readonly ObservableCollection<DailyWeeklyContentLog> _completedItems = new();
+        private readonly ObservableCollection<DailyWeeklyContentLog> _inProgressItems = new();
         private DailyWeeklyLogAnalyzer _dailyWeeklyLogAnalyzer = null!;
         private readonly Dictionary<string, AccumulatedCountState> _AbandonCountStates = new();
         private readonly ScanCache _scanCache = new();
@@ -263,6 +264,13 @@ namespace TWChatOverlay.Views
         public ObservableCollection<DailyWeeklyContentLog> CompletedItems => _completedItems;
 
         public bool HasCompletedItems => _completedItems.Count > 0;
+
+        /// <summary>지금 진행중인 항목만 모은 목록 (지역 묶음·묶음 헤더 없이 항목만).</summary>
+        public ObservableCollection<DailyWeeklyContentLog> InProgressItems => _inProgressItems;
+
+        public bool HasInProgressItems => _inProgressItems.Count > 0;
+
+        public string InProgressCountDisplay => $"{_inProgressItems.Count}개";
 
         public string ProgressDisplay => FormatProgress(CountLeafItems(TrackItems));
 
@@ -504,6 +512,11 @@ namespace TWChatOverlay.Views
                         OnPropertyChanged(nameof(DailyProgressDisplay));
                         OnPropertyChanged(nameof(WeeklyProgressDisplay));
                         ReorderItems();
+                    }
+                    else if (e.PropertyName == nameof(DailyWeeklyContentLog.CurrentCount))
+                    {
+                        // 0에서 올라가면 진행중 섹션에 들어가고, 다 채우면 빠진다
+                        RefreshInProgressItems();
                     }
                 };
 
@@ -840,7 +853,63 @@ namespace TWChatOverlay.Views
             AddCompletedFrom(DailyContentItems, added);
             AddCompletedFrom(WeeklyContentItems, added);
             OnPropertyChanged(nameof(HasCompletedItems));
+            RefreshInProgressItems();
         }
+
+        /// <summary>
+        /// 진행중인 항목을 모아 맨 위 섹션에 넣는다.
+        /// 지역 묶음·묶음은 넣지 않고, 실제로 횟수가 올라간 항목만 소속 묶음 이름과 함께 보여준다.
+        /// </summary>
+        private void RefreshInProgressItems()
+        {
+            var found = new List<DailyWeeklyContentLog>();
+            CollectInProgress(DailyContentItems, found);
+            CollectInProgress(WeeklyContentItems, found);
+
+            bool changed = found.Count != _inProgressItems.Count;
+            if (!changed)
+            {
+                for (int i = 0; i < found.Count; i++)
+                {
+                    if (!ReferenceEquals(found[i], _inProgressItems[i])) { changed = true; break; }
+                }
+            }
+
+            if (changed)
+            {
+                _inProgressItems.Clear();
+                foreach (var item in found) _inProgressItems.Add(item);
+                OnPropertyChanged(nameof(HasInProgressItems));
+                OnPropertyChanged(nameof(InProgressCountDisplay));
+            }
+        }
+
+        private static void CollectInProgress(IEnumerable<DailyWeeklyContentLog> source, List<DailyWeeklyContentLog> found)
+        {
+            foreach (var item in source)
+            {
+                if (!item.IsEnabled) continue;
+
+                if (item.HasChildren)
+                {
+                    foreach (var child in item.Children!)
+                    {
+                        child.ParentName = item.IsRegionGroup ? null : item.Name;
+                        CollectInProgress(new[] { child }, found);
+                    }
+                    continue;
+                }
+
+                // 펼쳐진 목록에는 같은 항목이 여러 번 들어 있다 (묶음 아래 + 평면 목록)
+                if (!IsInProgressLeaf(item)) continue;
+                if (found.Any(x => ReferenceEquals(x, item))) continue;
+                found.Add(item);
+            }
+        }
+
+        /// <summary>횟수가 하나 이상 올라갔고 아직 다 못 채운 항목.</summary>
+        private static bool IsInProgressLeaf(DailyWeeklyContentLog item)
+            => item.HasCount && item.CurrentCount > 0 && !item.IsCleared;
 
         private void AddCompletedFrom(
             ObservableCollection<DailyWeeklyContentLog> source,

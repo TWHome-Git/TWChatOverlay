@@ -162,6 +162,40 @@ namespace TWChatOverlay.Models
             }
         }
 
+        /// <summary>상위 묶음 이름. 진행중 섹션은 묶음 헤더 없이 항목만 모으므로 어디 소속인지 여기서 보여준다.</summary>
+        public string? ParentName { get; set; }
+
+        /// <summary>진행중 섹션에서 쓰는 이름 — "묶음 · 항목" 형태.</summary>
+        public string InProgressDisplayName
+        {
+            get
+            {
+                string name = DisplayName;
+                if (string.IsNullOrWhiteSpace(ParentName)) return name;
+
+                string prefix = TrimSharedTail(ParentName!, name);
+                return string.IsNullOrWhiteSpace(prefix) ? name : $"{prefix} · {name}";
+            }
+        }
+
+        /// <summary>
+        /// 묶음 이름에서 항목 이름과 겹치는 뒷말을 덜어낸다.
+        /// ("이클립스 코어 마스터" + "로카고스 코어 마스터" -> "이클립스")
+        /// 좁은 창에서 같은 말이 두 번 나와 이름이 잘리는 것을 막는다.
+        /// </summary>
+        private static string TrimSharedTail(string parent, string child)
+        {
+            string[] p = parent.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+            string[] c = child.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+
+            int shared = 0;
+            while (shared < p.Length - 1 && shared < c.Length &&
+                   string.Equals(p[p.Length - 1 - shared], c[c.Length - 1 - shared], StringComparison.Ordinal))
+                shared++;
+
+            return string.Join(' ', p.Take(p.Length - shared));
+        }
+
         public string CountDisplay => $"{_currentCount}/{MaxCount}";
 
         public string VisualCountDisplay => HasCount ? CountDisplay : (IsCleared ? "1/1" : "0/1");

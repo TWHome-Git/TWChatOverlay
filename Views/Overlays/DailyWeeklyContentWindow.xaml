@@ -165,6 +165,63 @@
                     </Style>
                 </ScrollViewer.Style>
                 <StackPanel>
+                    <!-- 진행중 (지역 묶음·묶음 헤더 없이 지금 진행중인 항목만 모아 맨 위에 보여준다) -->
+                    <DockPanel Margin="0,2,4,6" LastChildFill="False">
+                        <DockPanel.Style>
+                            <Style TargetType="DockPanel">
+                                <Setter Property="Visibility" Value="Collapsed"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding HasInProgressItems}" Value="True">
+                                        <Setter Property="Visibility" Value="Visible"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </DockPanel.Style>
+                        <Border DockPanel.Dock="Left" Width="3" Background="{DynamicResource OverlayRareAccentBrush}" CornerRadius="1" Margin="0,0,6,0"/>
+                        <TextBlock DockPanel.Dock="Left" Text="진행중" Foreground="{DynamicResource OverlayRareAccentBrush}" FontSize="13" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                        <TextBlock DockPanel.Dock="Right" Text="{Binding InProgressCountDisplay}" Foreground="{DynamicResource OverlaySubtleTextBrush}" FontSize="11" VerticalAlignment="Center"/>
+                    </DockPanel>
+                    <ItemsControl ItemsSource="{Binding InProgressItems}">
+                        <ItemsControl.Style>
+                            <Style TargetType="ItemsControl">
+                                <Setter Property="Visibility" Value="Collapsed"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding HasInProgressItems}" Value="True">
+                                        <Setter Property="Visibility" Value="Visible"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </ItemsControl.Style>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate DataType="{x:Type models:DailyWeeklyContentLog}">
+                                <Border Padding="4,2">
+                                    <DockPanel LastChildFill="True">
+                                        <TextBlock DockPanel.Dock="Left" Text="•" Foreground="{DynamicResource OverlaySubtleTextBrush}" FontSize="10"
+                                                   VerticalAlignment="Center" Margin="0,0,4,0"/>
+                                        <TextBlock DockPanel.Dock="Right"
+                                                   Text="{Binding VisualCountDisplay}"
+                                                   Foreground="{DynamicResource OverlayRareAccentBrush}" FontSize="11"
+                                                   VerticalAlignment="Center" Margin="4,0,0,0">
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding ShowVisualCount}" Value="True">
+                                                            <Setter Property="Visibility" Value="Visible"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
+                                        <TextBlock Text="{Binding InProgressDisplayName}" VerticalAlignment="Center"
+                                                   Foreground="{DynamicResource OverlayRareAccentBrush}"
+                                                   FontSize="{Binding DataContext.DailyWeeklyContentFontSize, RelativeSource={RelativeSource AncestorType=Window}}"/>
+                                    </DockPanel>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+
                     <DockPanel Margin="0,2,4,6" LastChildFill="False">
                         <Border DockPanel.Dock="Left" Width="3" Background="{DynamicResource OverlayExpAccentBrush}" CornerRadius="1" Margin="0,0,6,0"/>
                         <TextBlock DockPanel.Dock="Left" Text="일일 컨텐츠" Foreground="{DynamicResource OverlayInfoTextBrush}"
