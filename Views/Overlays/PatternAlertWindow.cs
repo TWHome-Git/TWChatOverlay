@@ -13,7 +13,7 @@ namespace TWChatOverlay.Views
     /// 잠금 해제 모드에서 끌어 옮기면 그 위치가 설정에 남는다.
     ///
     /// 감전은 상태라 풀릴 때까지 떠 있고(<see cref="Show"/> → <see cref="Hide"/>),
-    /// 반사는 순간 알림이라 잠깐 떴다 사라진다(<see cref="Flash"/>).
+    /// 반사는 패턴이 도는 동안만 떠 있다(<see cref="Flash"/>).
     /// </summary>
     public sealed class PatternAlertWindow : OverlayWindowBase
     {
@@ -109,7 +109,7 @@ namespace TWChatOverlay.Views
         public static void Show(ChatSettings? settings, string title, string message)
             => ShowInternal(settings, title, message, SafetyLifetime, isPreview: false);
 
-        /// <summary>잠깐 떴다 사라지는 알림 (반사).</summary>
+        /// <summary>정해진 시간 동안만 떠 있는 알림 (반사). 패턴이 도는 시간과 같게 준다.</summary>
         public static void Flash(ChatSettings? settings, string title, string message, TimeSpan lifetime)
             => ShowInternal(settings, title, message, lifetime, isPreview: false);
 

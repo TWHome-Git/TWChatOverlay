@@ -125,6 +125,12 @@ namespace TWChatOverlay.Views
 
         private HiddenChatContinuationFamily _pendingHiddenChatContinuationFamily = HiddenChatContinuationFamily.None;
         private string? _pendingHiddenChatContinuationTimestamp;
+        /// <summary>
+        /// 반사 패턴이 걸려 있는 시간. 이 시간이 지나면 종료 알림음이 울린다.
+        /// 알림 창 글자도 같은 값을 써야 패턴이 아직 도는데 글자만 먼저 사라지는 일이 없다.
+        /// </summary>
+        private static readonly TimeSpan ReflectionPatternDuration = TimeSpan.FromSeconds(7);
+
         private readonly object _reflectionEndAlertTimerLock = new();
         private readonly HashSet<DispatcherTimer> _reflectionEndAlertTimers = new();
 
@@ -335,8 +341,8 @@ namespace TWChatOverlay.Views
                     GuardSideEffect("reflection-alert", () =>
                     {
                         AppServices.Get<NotificationService>().PlayAlert("Reflection.wav");
-                        // 반사는 순간 알림이라 잠깐 떴다 사라진다
-                        PatternAlertWindow.Flash(_settings, "반사", "반사 패턴", TimeSpan.FromSeconds(5));
+                        // 패턴이 도는 동안 떠 있다가 종료 알림음과 함께 사라진다
+                        PatternAlertWindow.Flash(_settings, "반사", "반사 패턴", ReflectionPatternDuration);
                         if (parseResult.IsReflectionPatternEndAlert)
                             ScheduleReflectionEndAlert();
                     });
@@ -642,7 +648,7 @@ namespace TWChatOverlay.Views
         {
             var timer = new DispatcherTimer
             {
-                Interval = TimeSpan.FromSeconds(7)
+                Interval = ReflectionPatternDuration
             };
 
             EventHandler? tickHandler = null;
