@@ -59,8 +59,17 @@ namespace TWChatOverlay.Views
         private bool _showTable;
         /// <summary>그래프 기준: false = 그 주의 평균, true = 그 주의 최고(가장 빠른 판).</summary>
         private bool _useBest;
-        /// <summary>표에서 펼쳐 둔 주 (그 주의 판 목록을 아래에 보여 준다). null이면 모두 접힘.</summary>
+        /// <summary>
+        /// 골라 둔 주. 표에서는 그 주의 판 목록을 아래에 펼치고, 그래프에서는 그 주의 판별 추이로 바꿔 그린다.
+        /// 두 보기가 같은 값을 쓰므로 표에서 펼친 주를 그래프로 넘어가 바로 볼 수 있다. null이면 전체 주.
+        /// </summary>
         private DateTime? _expandedWeek;
+
+        /// <summary>그래프가 한 주를 파고든 상태일 때 그 주의 판들 (마우스 올림에 쓴다).</summary>
+        private List<(DateTime At, double Seconds)> _drillRuns = new();
+
+        /// <summary>파고든 주의 판별 가로 위치 (시각이 아니라 순서로 둔다 — 몰아 돈 판이 겹치지 않게).</summary>
+        private List<double> _drillX = new();
 
         private const string MetricAverage = "평균", MetricBest = "최고";
 
@@ -190,6 +199,7 @@ namespace TWChatOverlay.Views
             _chart = new Canvas { Width = ChartWidth, Height = ChartHeight, ClipToBounds = true, Background = Brushes.Transparent };
             _chart.MouseMove += (_, e) => ShowHoverAt(e.GetPosition(_chart).X);
             _chart.MouseLeave += (_, _) => HideHover();
+            _chart.MouseLeftButtonUp += (_, e) => DrillIntoWeekAt(e.GetPosition(_chart).X);
             _chartCard = MakeCard(_chart, new Thickness(14, 10, 14, 8));
 
             // ── 표 카드 ──
@@ -483,7 +493,14 @@ namespace TWChatOverlay.Views
         {
             string what = _segment == WholeRunChoice ? string.Empty : $" · {_segment}";
             string diff = string.IsNullOrEmpty(_difficulty) ? string.Empty : $" ({_difficulty})";
-            _titleText.Text = $"{_def.Name}{diff}{what} 주간 {(_useBest ? "최고 기록" : "평균")} 추이";
+            // 한 주를 파고든 그래프를 보는 중이면 그 주를 제목에 적는다 (표 보기는 전체 목록 그대로라 평소 제목)
+            WeekPoint? drilled = _expandedWeek.HasValue && !_showTable
+                ? _weeks.FirstOrDefault(w => w.WeekStart == _expandedWeek.Value)
+                : null;
+
+            _titleText.Text = drilled != null
+                ? $"{_def.Name}{diff}{what} · {FormatWeek(drilled)} 판별 기록"
+                : $"{_def.Name}{diff}{what} 주간 {(_useBest ? "최고 기록" : "평균")} 추이";
 
             RenderTiles();
             RenderChart();
@@ -565,10 +582,45 @@ namespace TWChatOverlay.Views
             return card;
         }
 
+        /// <summary>그래프에서 누른 자리와 가장 가까운 주로 파고든다. 이미 파고든 상태면 아무것도 하지 않는다 (되돌리기는 왼쪽 위 알약).</summary>
+        private void DrillIntoWeekAt(double pointerX)
+        {
+            if (_showTable || _expandedWeek.HasValue || _weeks.Count == 0)
+                return;
+            if (pointerX < PlotLeft - 10 || pointerX > ChartWidth - PlotRight + 10)
+                return;
+
+            double plotW = ChartWidth - PlotLeft - PlotRight;
+            WeekPoint week = _weeks.MinBy(w => Math.Abs(X(w.Middle, plotW) - pointerX))!;
+            _expandedWeek = week.WeekStart;
+            HideHover();
+            RenderAll();
+        }
+
+        /// <summary>전체 주 보기로 돌아간다.</summary>
+        private void LeaveWeekDrill()
+        {
+            _expandedWeek = null;
+            HideHover();
+            RenderAll();
+        }
+
         private void RenderChart()
         {
             _chart.Children.Clear();
             _crosshair = null; _hoverDot = null; _tooltip = null;
+            _drillRuns = new List<(DateTime, double)>();
+
+            if (_expandedWeek.HasValue)
+            {
+                WeekPoint? week = _weeks.FirstOrDefault(w => w.WeekStart == _expandedWeek.Value);
+                if (week != null)
+                {
+                    RenderWeekChart(week);
+                    return;
+                }
+                _expandedWeek = null; // 그 사이 없어진 주
+            }
 
             Brush gridBrush = ResourceBrush("ControlBorderBrush", Color.FromRgb(0x2E, 0x38, 0x33));
             Brush hintBrush = ResourceBrush("OverlayHintTextBrush", Color.FromRgb(0x77, 0x80, 0x7B));
@@ -737,6 +789,225 @@ namespace TWChatOverlay.Views
             _chart.Children.Add(_tooltip);
         }
 
+        // ===== 한 주 파고들기: 가로축이 그 주의 월~일, 점 하나가 판 하나 =====
+
+        private void RenderWeekChart(WeekPoint week)
+        {
+            Brush gridBrush = ResourceBrush("ControlBorderBrush", Color.FromRgb(0x2E, 0x38, 0x33));
+            Brush hintBrush = ResourceBrush("OverlayHintTextBrush", Color.FromRgb(0x77, 0x80, 0x7B));
+            Brush mutedBrush = ResourceBrush("OverlayMutedTextBrush", Color.FromRgb(0x8C, 0x91, 0x97));
+            Brush textBrush = ResourceBrush("TextBrush", Colors.White);
+            Color surface = (ResourceBrush("OverlayCardBackgroundBrush", Color.FromRgb(0x16, 0x1D, 0x1A)) as SolidColorBrush)?.Color
+                            ?? Color.FromRgb(0x16, 0x1D, 0x1A);
+            var surfaceBrush = new SolidColorBrush(Color.FromRgb(surface.R, surface.G, surface.B));
+            var seriesBrush = new SolidColorBrush(Mint);
+
+            double plotW = ChartWidth - PlotLeft - PlotRight;
+            double plotH = ChartHeight - PlotTop - PlotBottom;
+            double baselineY = PlotTop + plotH;
+
+            DateTime from = week.WeekStart, to = week.WeekStart.AddDays(7);
+            _drillRuns = _runs.Where(r => r.At >= from && r.At < to).OrderBy(r => r.At).ToList();
+
+            AddBackPill();
+
+            if (_drillRuns.Count == 0)
+            {
+                var empty = new TextBlock { Text = "이 주의 판 기록이 없습니다", FontSize = 13, Foreground = hintBrush };
+                Canvas.SetLeft(empty, PlotLeft + plotW / 2 - 80);
+                Canvas.SetTop(empty, PlotTop + plotH / 2 - 10);
+                _chart.Children.Add(empty);
+                return;
+            }
+
+            // 가로축은 판 순서. 시각 그대로 놓으면 몇 분 안에 몰아 돈 판들이 세로로 겹쳐 읽을 수 없다.
+            // 날짜는 아래쪽에 구간으로 적어 어느 날 돈 판인지 알 수 있게 한다.
+            _drillX = new List<double>(_drillRuns.Count);
+            for (int i = 0; i < _drillRuns.Count; i++)
+            {
+                double t = _drillRuns.Count == 1 ? 0.5 : (double)i / (_drillRuns.Count - 1);
+                _drillX.Add(PlotLeft + 14 + t * (plotW - 28));
+            }
+
+            double dataMin = _drillRuns.Min(r => r.Seconds), dataMax = _drillRuns.Max(r => r.Seconds);
+            double step = NiceStep(Math.Max(dataMax - dataMin, 1) * 1.15);
+            _yMin = Math.Max(0, Math.Floor(dataMin / step) * step);
+            _yMax = Math.Ceiling(dataMax / step) * step;
+            if (_yMax <= _yMin) _yMax = _yMin + step;
+            if ((dataMax - _yMin) > (_yMax - _yMin) * 0.92) _yMax += step;
+            if ((dataMin - _yMin) < (_yMax - _yMin) * 0.10 && _yMin >= step) _yMin -= step;
+
+            // 격자(가로) + 세로축 눈금
+            for (double v = _yMin; v <= _yMax + 0.001; v += step)
+            {
+                double y = Y(v, plotH);
+                _chart.Children.Add(new Line { X1 = PlotLeft, X2 = PlotLeft + plotW, Y1 = y, Y2 = y, Stroke = gridBrush, StrokeThickness = 1, SnapsToDevicePixels = true, Opacity = 0.55 });
+                var label = new TextBlock { Text = FormatDuration(v), FontSize = 11, Foreground = hintBrush, Width = PlotLeft - 8, TextAlignment = TextAlignment.Right };
+                Canvas.SetLeft(label, 0);
+                Canvas.SetTop(label, y - 7);
+                _chart.Children.Add(label);
+            }
+
+            // 가로축: 날짜가 바뀌는 자리에 세로선을 긋고, 그 날 구간 가운데에 날짜를 적는다
+            int dayStart = 0;
+            for (int i = 1; i <= _drillRuns.Count; i++)
+            {
+                bool isEnd = i == _drillRuns.Count;
+                if (!isEnd && _drillRuns[i].At.Date == _drillRuns[dayStart].At.Date)
+                    continue;
+
+                double left = _drillX[dayStart], right = _drillX[i - 1];
+                if (dayStart > 0)
+                {
+                    double split = (_drillX[dayStart - 1] + left) / 2;
+                    _chart.Children.Add(new Line { X1 = split, X2 = split, Y1 = PlotTop, Y2 = baselineY, Stroke = gridBrush, StrokeThickness = 1, SnapsToDevicePixels = true, Opacity = 0.45 });
+                }
+
+                var label = new TextBlock
+                {
+                    Text = _drillRuns[dayStart].At.ToString("M.d(ddd)", Korean),
+                    FontSize = 11,
+                    Foreground = hintBrush,
+                    Width = 70,
+                    TextAlignment = TextAlignment.Center,
+                };
+                Canvas.SetLeft(label, Math.Min(Math.Max((left + right) / 2 - 35, 0), ChartWidth - 70));
+                Canvas.SetTop(label, baselineY + 7);
+                _chart.Children.Add(label);
+
+                dayStart = i;
+            }
+            _chart.Children.Add(new Line { X1 = PlotLeft, X2 = PlotLeft + plotW, Y1 = baselineY, Y2 = baselineY, Stroke = gridBrush, StrokeThickness = 1, SnapsToDevicePixels = true });
+
+            var points = _drillRuns.Select((r, i) => new Point(_drillX[i], Y(r.Seconds, plotH))).ToList();
+
+            if (points.Count > 1)
+            {
+                var area = new Polygon
+                {
+                    Fill = new LinearGradientBrush(Color.FromArgb(0x2E, Mint.R, Mint.G, Mint.B), Color.FromArgb(0x00, Mint.R, Mint.G, Mint.B), 90),
+                    IsHitTestVisible = false,
+                };
+                foreach (Point p in points) area.Points.Add(p);
+                area.Points.Add(new Point(points[^1].X, baselineY));
+                area.Points.Add(new Point(points[0].X, baselineY));
+                _chart.Children.Add(area);
+            }
+
+            // 기준선: 그 주 평균
+            if (week.Average >= _yMin && week.Average <= _yMax)
+            {
+                double y = Y(week.Average, plotH);
+                _chart.Children.Add(new Line { X1 = PlotLeft, X2 = PlotLeft + plotW, Y1 = y, Y2 = y, Stroke = mutedBrush, StrokeThickness = 1, Opacity = 0.75, SnapsToDevicePixels = true });
+                var tag = new Border
+                {
+                    Background = surfaceBrush,
+                    Padding = new Thickness(4, 0, 4, 1),
+                    CornerRadius = new CornerRadius(3),
+                    Child = new TextBlock { Text = $"그 주 평균 {FormatDuration(week.Average)}", FontSize = 11, Foreground = mutedBrush },
+                };
+                tag.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
+                bool firstNear = Math.Abs(points[0].Y - y) < 16 && points[0].X < PlotLeft + tag.DesiredSize.Width + 10;
+                bool lastNear = Math.Abs(points[^1].Y - y) < 16;
+                Canvas.SetLeft(tag, firstNear && !lastNear ? PlotLeft + plotW - tag.DesiredSize.Width : PlotLeft);
+                Canvas.SetTop(tag, y - tag.DesiredSize.Height / 2);
+                _chart.Children.Add(tag);
+            }
+
+            if (points.Count > 1)
+            {
+                var line = new Polyline
+                {
+                    Stroke = seriesBrush,
+                    StrokeThickness = 2,
+                    StrokeLineJoin = PenLineJoin.Round,
+                    StrokeStartLineCap = PenLineCap.Round,
+                    StrokeEndLineCap = PenLineCap.Round,
+                    IsHitTestVisible = false,
+                };
+                foreach (Point p in points) line.Points.Add(p);
+                _chart.Children.Add(line);
+            }
+
+            foreach (Point p in points)
+                _chart.Children.Add(MakeDot(p.X, p.Y, 4.5, seriesBrush, surfaceBrush));
+
+            // 직접 표기: 그 주에서 가장 빨랐던 판 (같은 시간이 여러 판이면 가장 이른 판)
+            int bestIndex = _drillRuns.FindIndex(r => Math.Abs(r.Seconds - week.Best) < 0.0001);
+            if (bestIndex >= 0)
+                AddPointLabel(points[bestIndex], $"가장 빠름 {FormatDuration(_drillRuns[bestIndex].Seconds)}", below: true, plotH, textBrush, surfaceBrush);
+
+            // 마우스 올림 요소 (전체 주 그래프와 같은 모양)
+            _crosshair = new Line { Y1 = PlotTop, Y2 = baselineY, Stroke = mutedBrush, StrokeThickness = 1, Opacity = 0.7, Visibility = Visibility.Collapsed, IsHitTestVisible = false, SnapsToDevicePixels = true };
+            _chart.Children.Add(_crosshair);
+            _hoverDot = MakeDot(0, 0, 6.5, seriesBrush, surfaceBrush);
+            _hoverDot.Visibility = Visibility.Collapsed;
+            _hoverDot.IsHitTestVisible = false;
+            _chart.Children.Add(_hoverDot);
+
+            _tooltipValue = new TextBlock { FontSize = 14, FontWeight = FontWeights.SemiBold, Foreground = textBrush };
+            _tooltipDetail = new TextBlock { FontSize = 11, Foreground = mutedBrush, Margin = new Thickness(0, 2, 0, 0), LineHeight = 15 };
+            var tipStack = new StackPanel();
+            tipStack.Children.Add(_tooltipValue);
+            tipStack.Children.Add(_tooltipDetail);
+            _tooltip = new Border
+            {
+                Child = tipStack,
+                Padding = new Thickness(10, 6, 10, 7),
+                CornerRadius = new CornerRadius(6),
+                BorderThickness = new Thickness(1),
+                BorderBrush = gridBrush,
+                Background = ResourceBrush("OverlaySurfaceAltBackgroundBrush", Color.FromRgb(0x1A, 0x23, 0x20)),
+                Visibility = Visibility.Collapsed,
+                IsHitTestVisible = false,
+            };
+            _chart.Children.Add(_tooltip);
+        }
+
+        /// <summary>파고든 상태에서 전체 주로 돌아가는 알약. 그래프 왼쪽 위에 둔다.</summary>
+        private void AddBackPill()
+        {
+            var text = new TextBlock { Text = "◀ 전체 주", FontSize = 11, FontWeight = FontWeights.SemiBold };
+            text.SetResourceReference(TextBlock.ForegroundProperty, "TextBrush");
+            var pill = new Border
+            {
+                Child = text,
+                CornerRadius = new CornerRadius(9),
+                Padding = new Thickness(9, 2, 9, 3),
+                BorderThickness = new Thickness(1),
+                Cursor = Cursors.Hand,
+                ToolTip = "전체 주 추이로 돌아가기",
+            };
+            pill.SetResourceReference(Border.BackgroundProperty, "OverlayTabSelectedBrush");
+            pill.SetResourceReference(Border.BorderBrushProperty, "OverlayTabSelectedBorderBrush");
+            pill.MouseLeftButtonUp += (_, e) => { e.Handled = true; LeaveWeekDrill(); };
+            Canvas.SetLeft(pill, PlotLeft);
+            Canvas.SetTop(pill, 0);
+            _chart.Children.Add(pill);
+        }
+
+        /// <summary>점 하나에 붙이는 직접 표기 (주 파고들기용).</summary>
+        private void AddPointLabel(Point point, string text, bool below, double plotH, Brush textBrush, Brush surfaceBrush)
+        {
+            var label = new Border
+            {
+                Background = surfaceBrush,
+                CornerRadius = new CornerRadius(3),
+                Padding = new Thickness(5, 1, 5, 2),
+                Child = new TextBlock { Text = text, FontSize = 11, FontWeight = FontWeights.SemiBold, Foreground = textBrush },
+                IsHitTestVisible = false,
+            };
+            label.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
+            double w = label.DesiredSize.Width, h = label.DesiredSize.Height;
+            double left = Math.Min(Math.Max(point.X - w / 2, PlotLeft + 2), ChartWidth - PlotRight - w + 14);
+            double top = below ? point.Y + 12 : point.Y - h - 12;
+            if (top < PlotTop + 2) top = point.Y + 12;
+            if (top + h > PlotTop + plotH - 2) top = point.Y - h - 12;
+            Canvas.SetLeft(label, left);
+            Canvas.SetTop(label, top);
+            _chart.Children.Add(label);
+        }
+
         private void AddDirectLabel(WeekPoint week, string text, bool below, double plotW, double plotH, Brush textBrush, Brush surfaceBrush)
         {
             double x = X(week.Middle, plotW), y = Y(Value(week), plotH);
@@ -802,6 +1073,12 @@ namespace TWChatOverlay.Views
                 return;
             }
 
+            if (_expandedWeek.HasValue)
+            {
+                ShowRunHoverAt(pointerX, plotW, plotH);
+                return;
+            }
+
             WeekPoint week = _weeks.MinBy(w => Math.Abs(X(w.Middle, plotW) - pointerX))!;
             double x = X(week.Middle, plotW), y = Y(Value(week), plotH);
 
@@ -817,6 +1094,44 @@ namespace TWChatOverlay.Views
             string other = _useBest ? $"평균 {FormatDuration(week.Average)}" : $"최고 {FormatDuration(week.Best)}";
             _tooltipDetail!.Text = $"{FormatWeek(week)}\n{week.Count}판 · {other}";
             _tooltip.Visibility = Visibility.Visible;
+            _tooltip.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
+            double tw = _tooltip.DesiredSize.Width, th = _tooltip.DesiredSize.Height;
+            double left = x + 14;
+            if (left + tw > ChartWidth - 2) left = x - 14 - tw;
+            double top = Math.Min(Math.Max(y - th / 2, 2), ChartHeight - th - 2);
+            Canvas.SetLeft(_tooltip, left);
+            Canvas.SetTop(_tooltip, top);
+        }
+
+        /// <summary>한 주를 파고든 상태: 가장 가까운 판으로 십자선이 붙는다.</summary>
+        private void ShowRunHoverAt(double pointerX, double plotW, double plotH)
+        {
+            if (_drillRuns.Count == 0)
+            {
+                HideHover();
+                return;
+            }
+
+            int hit = 0;
+            for (int i = 1; i < _drillX.Count; i++)
+            {
+                if (Math.Abs(_drillX[i] - pointerX) < Math.Abs(_drillX[hit] - pointerX))
+                    hit = i;
+            }
+
+            var run = _drillRuns[hit];
+            double x = _drillX[hit], y = Y(run.Seconds, plotH);
+
+            _crosshair!.X1 = _crosshair.X2 = x;
+            _crosshair.Visibility = Visibility.Visible;
+            Canvas.SetLeft(_hoverDot!, x - _hoverDot!.Width / 2);
+            Canvas.SetTop(_hoverDot, y - _hoverDot.Height / 2);
+            _hoverDot.Visibility = Visibility.Visible;
+
+            int index = hit + 1;
+            _tooltipValue!.Text = FormatDuration(run.Seconds);
+            _tooltipDetail!.Text = $"{run.At.ToString("M.d(ddd) HH:mm", Korean)}\n그 주 {index}번째 판";
+            _tooltip!.Visibility = Visibility.Visible;
             _tooltip.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
             double tw = _tooltip.DesiredSize.Width, th = _tooltip.DesiredSize.Height;
             double left = x + 14;
