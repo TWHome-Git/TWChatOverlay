@@ -229,8 +229,8 @@ namespace TWChatOverlay.Views
             if (settings.EnableDischargeAlert || settings.EnableReflectionPatternAlert)
                 ShowInternal(PatternAlertSlot.AbyssPattern, settings, "패턴 알림", "방전 상태", TimeSpan.Zero, isPreview: true);
 
-            if (settings.ShowOrlyRemainingAttackDisplay)
-                ShowInternal(PatternAlertSlot.OrlyAttack, settings, "오를리 방어전", "남은 공격 23회", TimeSpan.Zero, isPreview: true);
+            // 오를리는 끄고 켜는 설정이 없는 기본 기능이라 자리만 잡게 늘 띄운다
+            ShowInternal(PatternAlertSlot.OrlyAttack, settings, "오를리 방어전", "남은 공격 23회", TimeSpan.Zero, isPreview: true);
         }
 
         /// <summary>잠금 해제 종료: 미리보기로 떠 있던 창만 닫는다.</summary>

@@ -167,8 +167,6 @@ namespace TWChatOverlay.Models
         public List<int> TreasuryRunCounts { get; set; } = new();
         public bool ShowAbandonRoadSummaryWindow { get; set; } = false;
         public bool CravingPleasureCountAlert { get; set; } = false;
-        /// <summary>오를리 방어전: "남은 공격 횟수"를 채팅에서 빼고 작은 창으로 따로 보여준다.</summary>
-        public bool OrlyRemainingAttackDisplay { get; set; } = true;
         public bool ShowCountDisplayWindow { get; set; } = false;
         public int CountAlertDurationSeconds { get; set; } = 30;
         public double CountDisplayFontSize { get; set; } = 18.0;

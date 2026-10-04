@@ -562,8 +562,6 @@ namespace TWChatOverlay.Models
         [JsonIgnore]
         public bool EnableCravingPleasureCountAlert { get => Alerts.Dungeon.CravingPleasureCountAlert; set { Alerts.Dungeon.CravingPleasureCountAlert = value; OnPropertyChanged(); } }
         [JsonIgnore]
-        public bool ShowOrlyRemainingAttackDisplay { get => Alerts.Dungeon.OrlyRemainingAttackDisplay; set { Alerts.Dungeon.OrlyRemainingAttackDisplay = value; OnPropertyChanged(); } }
-        [JsonIgnore]
         public bool ShowDungeonCountDisplayWindow { get => Alerts.Dungeon.ShowCountDisplayWindow; set { Alerts.Dungeon.ShowCountDisplayWindow = value; OnPropertyChanged(); } }
         [JsonIgnore]
         public int AbandonRoadCountAlertDurationSeconds

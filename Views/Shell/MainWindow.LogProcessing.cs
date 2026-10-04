@@ -625,14 +625,11 @@ namespace TWChatOverlay.Views
 
         /// <summary>
         /// 오를리 방어전 "남은 공격 횟수"는 한 대 때릴 때마다 찍혀 채팅을 덮는다.
-        /// 따로 보여주는 설정을 켠 동안에는 채팅에 남기지 않는다 (끄면 예전처럼 채팅에 그대로 나온다).
+        /// 따로 보여주는 창이 있으므로 채팅에는 남기지 않는다.
         /// 실시간으로 더할 때와 탭을 바꿔 다시 그릴 때 둘 다 같은 판정을 쓴다.
         /// </summary>
-        private bool IsHiddenOrlyRemainingAttackLine(LogParser.ParseResult parseResult)
+        private static bool IsHiddenOrlyRemainingAttackLine(LogParser.ParseResult parseResult)
         {
-            if (!_settings.ShowOrlyRemainingAttackDisplay)
-                return false;
-
             string? text = parseResult?.FormattedText;
             // 채팅 줄마다 도는 자리라 값싼 검사로 먼저 거르고, 걸린 줄만 태그를 떼어 정확히 본다
             if (string.IsNullOrWhiteSpace(text) || !text.Contains("남은 공격 횟수", StringComparison.Ordinal))

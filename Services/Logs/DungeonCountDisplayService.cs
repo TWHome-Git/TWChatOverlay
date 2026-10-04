@@ -189,12 +189,9 @@ namespace TWChatOverlay.Services
             return true;
         }
 
-        /// <summary>오를리 방어전 "남은 공격 횟수 : N" → 작은 창에 남은 횟수만 띄운다 (채팅에서는 감춘다).</summary>
+        /// <summary>오를리 방어전 "남은 공격 횟수 : N" → 작은 창에 남은 횟수만 띄운다 (채팅에서는 감춘다). 끄고 켜는 설정 없이 늘 동작한다.</summary>
         private bool TryShowOrlyRemainingAttack(string text)
         {
-            if (!_settings.ShowOrlyRemainingAttackDisplay)
-                return false;
-
             Match match = OrlyRemainingAttackRegex.Match(text);
             if (!match.Success || !int.TryParse(match.Groups["remain"].Value, out int remain))
                 return false;
