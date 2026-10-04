@@ -253,10 +253,11 @@ namespace TWChatOverlay.Models
         public WindowRect ContentTimer { get; set; } = new();
         public WindowRect ExperienceLimitAlert { get; set; } = new();
         public WindowRect BossAlertToast { get; set; } = new();
-        /// <summary>어비스 패턴 알림(감전·반사) 창 위치.</summary>
+        /// <summary>
+        /// 던전 알림 창 위치. 감전·반사·오를리·베스티지가 한 창을 함께 쓰므로 자리도 하나다.
+        /// 저장 키는 예전 이름(PatternAlert) 그대로 둬서 이미 잡아 둔 자리를 잃지 않는다.
+        /// </summary>
         public WindowRect PatternAlert { get; set; } = new();
-        /// <summary>오를리 방어전 남은 공격 횟수 창. 패턴 알림과 자리를 따로 둔다.</summary>
-        public WindowRect OrlyAttack { get; set; } = new();
         /// <summary>통합 알림 스택(외치기·던전·경험치·아이템·보스) 기준 위치.</summary>
         public WindowRect ToastStack { get; set; } = new();
         /// <summary>알림 표시 위치 통합 여부. false면 알림 종류별로 각자의 저장 위치에 표시한다.</summary>

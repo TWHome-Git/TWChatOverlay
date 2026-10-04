@@ -45,6 +45,10 @@ namespace TWChatOverlay.Services
         /// <summary>표시 창이 떠 있는 시간. 다음 공격이 곧 들어와 값을 새로 쓰므로 길게 둘 필요가 없다.</summary>
         private const int OrlyRemainingAttackDurationSeconds = 15;
 
+        /// <summary>베스티지에서 보스가 나왔을 때. 처치하면 별사탕이 떨어지고, 그 줄로 알림을 내린다.</summary>
+        private const string VestigeBossAppearKeyword = "성난 빅테디가 출현하였습니다";
+        private const string VestigeBossClearedKeyword = "[성난 빅테디의 별사탕] 아이템을 획득하였습니다";
+
         private readonly ChatSettings _settings;
 
         public DungeonCountDisplayService(ChatSettings settings)
@@ -82,6 +86,9 @@ namespace TWChatOverlay.Services
                 return;
 
             if (TryShowOrlyRemainingAttack(text))
+                return;
+
+            if (TryShowVestigeBoss(text))
                 return;
 
             TryShowTreasuryGoldPouch(text);
@@ -197,13 +204,35 @@ namespace TWChatOverlay.Services
                 return false;
 
             // 감전 패턴 알림과 같은 모양의 창 — 통합 스택에 얹지 않고 자기 자리를 따로 갖는다
-            Views.PatternAlertWindow.Flash(
-                Views.PatternAlertSlot.OrlyAttack,
+            Views.DungeonAlertWindow.Flash(
+                Views.DungeonAlertSource.OrlyAttack,
                 _settings,
                 "오를리 방어전",
                 $"남은 공격 {remain}회",
                 TimeSpan.FromSeconds(OrlyRemainingAttackDurationSeconds));
             return true;
+        }
+
+        /// <summary>
+        /// 베스티지: 성난 빅테디가 나오면 알림 창을 띄우고, 처치해서 별사탕이 떨어지면 내린다.
+        /// 처치 줄을 놓쳐도 창이 영영 남지 않도록 상한 시간(3분)이 지나면 저절로 닫힌다.
+        /// </summary>
+        private bool TryShowVestigeBoss(string text)
+        {
+            if (text.Contains(VestigeBossAppearKeyword, StringComparison.Ordinal))
+            {
+                Views.DungeonAlertWindow.Show(
+                    Views.DungeonAlertSource.VestigeBoss, _settings, "베스티지", "성난 빅테디 출현");
+                return true;
+            }
+
+            if (text.Contains(VestigeBossClearedKeyword, StringComparison.Ordinal))
+            {
+                Views.DungeonAlertWindow.HideAlert(Views.DungeonAlertSource.VestigeBoss);
+                return true;
+            }
+
+            return false;
         }
 
         private static string Normalize(string? text)

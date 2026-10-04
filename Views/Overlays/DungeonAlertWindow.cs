@@ -10,25 +10,30 @@ using TWChatOverlay.Services;
 
 namespace TWChatOverlay.Views
 {
-    /// <summary>알림 자리. 자리마다 창과 저장 위치가 따로라 겹치지 않는다.</summary>
-    public enum PatternAlertSlot
+    /// <summary>던전 알림을 띄우는 쪽. 창은 하나뿐이고, 지금 누가 쓰고 있는지 가려내는 데 쓴다.</summary>
+    public enum DungeonAlertSource
     {
         /// <summary>어비스 감전·반사 패턴.</summary>
         AbyssPattern,
         /// <summary>오를리 방어전 남은 공격 횟수.</summary>
         OrlyAttack,
+        /// <summary>베스티지 성난 빅테디 출현.</summary>
+        VestigeBoss,
     }
 
     /// <summary>
-    /// 자기 자리를 따로 갖는 알림 창 (어비스 감전·반사, 오를리 남은 공격).
+    /// 던전 알림 창 하나 (어비스 감전·반사, 오를리 남은 공격, 베스티지 빅테디 출현).
+    /// 서로 다른 던전의 알림이라 같이 뜰 일이 없으므로 창과 자리를 하나로 쓴다 —
+    /// 자리를 한 번만 잡으면 어느 던전에서든 같은 곳에 뜬다.
     /// 통합 알림 스택에 얹지 않고, 잠금 해제 모드에서 끌어 옮기면 그 위치가 설정에 남는다.
     ///
-    /// 감전은 상태라 풀릴 때까지 떠 있고(<see cref="Show"/> → <see cref="HideAlert"/>),
+    /// 감전·빅테디는 상태라 풀릴 때까지 떠 있고(<see cref="Show"/> → <see cref="HideAlert"/>),
     /// 반사·오를리는 정해진 시간만 떠 있다(<see cref="Flash"/>).
+    /// 내릴 때는 띄운 쪽을 함께 넘겨, 그 사이 다른 던전 알림이 창을 가져갔으면 건드리지 않는다.
     /// </summary>
-    public sealed class PatternAlertWindow : OverlayWindowBase
+    public sealed class DungeonAlertWindow : OverlayWindowBase
     {
-        private static readonly Dictionary<PatternAlertSlot, PatternAlertWindow> Instances = new();
+        private static DungeonAlertWindow? _instance;
 
         /// <summary>풀림 줄을 못 봤을 때 알림이 영영 남지 않도록 하는 상한.</summary>
         private static readonly TimeSpan SafetyLifetime = TimeSpan.FromMinutes(3);
@@ -38,19 +43,19 @@ namespace TWChatOverlay.Views
         private static readonly Color DangerColor = Color.FromRgb(0xFF, 0x5A, 0x5A);
 
         private readonly ChatSettings? _settings;
-        private readonly PatternAlertSlot _slot;
         private readonly TextBlock _titleText;
         private readonly TextBlock _bodyText;
         private readonly DispatcherTimer _closeTimer;
         private bool _isPreview;
+        /// <summary>지금 창에 떠 있는 내용을 띄운 쪽.</summary>
+        private DungeonAlertSource _owner;
 
         protected override bool UseToolWindowStyle => true;
         protected override ChatSettings? ResolveSettings() => _settings;
 
-        private PatternAlertWindow(ChatSettings? settings, PatternAlertSlot slot)
+        private DungeonAlertWindow(ChatSettings? settings)
         {
             _settings = settings;
-            _slot = slot;
 
             WindowStyle = WindowStyle.None;
             AllowsTransparency = true;
@@ -78,11 +83,7 @@ namespace TWChatOverlay.Views
                 Margin = new Thickness(0, 4, 0, 0),
             };
 
-            // 감전·반사는 조심하라는 경고라 붉은색, 오를리는 그냥 세는 숫자라 다른 곳의 횟수와 같은 색을 쓴다
-            if (slot == PatternAlertSlot.OrlyAttack)
-                _bodyText.SetResourceReference(TextBlock.ForegroundProperty, "OverlayRareAccentBrush");
-            else
-                _bodyText.Foreground = new SolidColorBrush(DangerColor);
+            _bodyText.Foreground = new SolidColorBrush(DangerColor);
 
             var stack = new StackPanel { VerticalAlignment = VerticalAlignment.Center };
             stack.Children.Add(_titleText);
@@ -116,36 +117,22 @@ namespace TWChatOverlay.Views
             if (!IsVisible || !AppServices.Get<UiLockService>().IsUnlocked)
                 return false;
 
-            if (_slot == PatternAlertSlot.OrlyAttack)
-            {
-                settings.OrlyAttackWindowLeft = Left;
-                settings.OrlyAttackWindowTop = Top;
-            }
-            else
-            {
-                settings.PatternAlertWindowLeft = Left;
-                settings.PatternAlertWindowTop = Top;
-            }
+            settings.DungeonAlertWindowLeft = Left;
+            settings.DungeonAlertWindowTop = Top;
             return true;
         }
 
-        /// <summary>자리별 저장 위치.</summary>
-        private static (double? Left, double? Top) StoredPosition(ChatSettings? settings, PatternAlertSlot slot)
-            => slot == PatternAlertSlot.OrlyAttack
-                ? (settings?.OrlyAttackWindowLeft, settings?.OrlyAttackWindowTop)
-                : (settings?.PatternAlertWindowLeft, settings?.PatternAlertWindowTop);
-
         // ===== 표시 =====
 
-        /// <summary>풀릴 때까지 떠 있는 알림 (감전).</summary>
-        public static void Show(PatternAlertSlot slot, ChatSettings? settings, string title, string message)
-            => ShowInternal(slot, settings, title, message, SafetyLifetime, isPreview: false);
+        /// <summary>풀릴 때까지 떠 있는 알림 (감전·빅테디 출현).</summary>
+        public static void Show(DungeonAlertSource source, ChatSettings? settings, string title, string message)
+            => ShowInternal(source, settings, title, message, SafetyLifetime, isPreview: false);
 
         /// <summary>정해진 시간 동안만 떠 있는 알림 (반사·오를리). 패턴이 도는 시간과 같게 준다.</summary>
-        public static void Flash(PatternAlertSlot slot, ChatSettings? settings, string title, string message, TimeSpan lifetime)
-            => ShowInternal(slot, settings, title, message, lifetime, isPreview: false);
+        public static void Flash(DungeonAlertSource source, ChatSettings? settings, string title, string message, TimeSpan lifetime)
+            => ShowInternal(source, settings, title, message, lifetime, isPreview: false);
 
-        private static void ShowInternal(PatternAlertSlot slot, ChatSettings? settings, string title, string message, TimeSpan lifetime, bool isPreview)
+        private static void ShowInternal(DungeonAlertSource source, ChatSettings? settings, string title, string message, TimeSpan lifetime, bool isPreview)
         {
             if (!isPreview && AppServices.Get<TrayAllWindowsService>().IsTrayed)
                 return;
@@ -154,27 +141,28 @@ namespace TWChatOverlay.Views
             {
                 try
                 {
-                    if (!Instances.TryGetValue(slot, out var window) || !window.IsLoaded)
+                    if (_instance == null || !_instance.IsLoaded)
                     {
-                        var created = new PatternAlertWindow(settings, slot);
+                        var created = new DungeonAlertWindow(settings);
                         created.Closed += (_, _) =>
                         {
-                            if (Instances.TryGetValue(slot, out var current) && ReferenceEquals(current, created))
-                                Instances.Remove(slot);
+                            if (ReferenceEquals(_instance, created))
+                                _instance = null;
                         };
-                        Instances[slot] = created;
-                        window = created;
+                        _instance = created;
                     }
 
+                    var window = _instance;
                     window._isPreview = isPreview;
+                    window._owner = source;
                     window._titleText.Text = title;
                     window._bodyText.Text = message;
+                    ApplyBodyColor(window, source, isPreview);
 
                     if (!window.IsVisible)
                     {
-                        var (storedLeft, storedTop) = StoredPosition(settings, slot);
                         var (left, top) = ToastPresentationHelper.ResolveBasePosition(
-                            storedLeft, storedTop, DefaultWidth, DefaultTop);
+                            settings?.DungeonAlertWindowLeft, settings?.DungeonAlertWindowTop, DefaultWidth, DefaultTop);
                         window.Left = left;
                         window.Top = top;
                         window.Show();
@@ -191,46 +179,58 @@ namespace TWChatOverlay.Views
                 }
                 catch (Exception ex)
                 {
-                    AppLogger.Warn("Failed to show pattern alert.", ex);
+                    AppLogger.Warn("Failed to show dungeon alert.", ex);
                 }
             }));
         }
 
-        /// <summary>알림을 닫는다 (감전이 풀렸을 때, 또는 상한 시간이 지났을 때).</summary>
-        public static void HideAlert(PatternAlertSlot slot)
+        /// <summary>경고(감전·반사·빅테디)는 붉은색, 세는 숫자(오를리)는 다른 곳의 횟수와 같은 색. 자리 잡기 미리보기는 경고가 아니므로 평소 글자색.</summary>
+        private static void ApplyBodyColor(DungeonAlertWindow window, DungeonAlertSource source, bool isPreview)
+        {
+            if (isPreview)
+                window._bodyText.SetResourceReference(TextBlock.ForegroundProperty, "TextBrush");
+            else if (source == DungeonAlertSource.OrlyAttack)
+                window._bodyText.SetResourceReference(TextBlock.ForegroundProperty, "OverlayRareAccentBrush");
+            else
+                window._bodyText.Foreground = new SolidColorBrush(DangerColor);
+        }
+
+        /// <summary>
+        /// 알림을 내린다 (감전이 풀렸을 때, 빅테디를 잡았을 때, 또는 상한 시간이 지났을 때).
+        /// 그 사이 다른 던전 알림이 창을 가져갔으면 그대로 둔다.
+        /// </summary>
+        public static void HideAlert(DungeonAlertSource source)
         {
             Application.Current?.Dispatcher.BeginInvoke(new Action(() =>
             {
-                if (!Instances.TryGetValue(slot, out var window))
+                var window = _instance;
+                if (window == null || window._owner != source)
                     return;
 
                 try
                 {
                     window._closeTimer.Stop();
-                    Instances.Remove(slot);
+                    _instance = null;
                     window.Close();
                 }
                 catch (Exception ex)
                 {
-                    AppLogger.Warn("Failed to hide pattern alert.", ex);
+                    AppLogger.Warn("Failed to hide dungeon alert.", ex);
                 }
             }));
         }
 
         // ===== 잠금 해제 위치 조정 =====
 
-        /// <summary>잠금 해제 모드: 켜져 있는 알림의 자리를 잡을 수 있게 띄운다. 저절로 닫히지 않는다.</summary>
+        /// <summary>잠금 해제 모드: 자리를 잡을 수 있게 띄운다. 저절로 닫히지 않는다.</summary>
         public static void ShowPositionPreview(ChatSettings settings)
         {
             if (settings == null)
                 return;
 
-            // 꺼져 있는 알림은 배치할 창도 없다
-            if (settings.EnableDischargeAlert || settings.EnableReflectionPatternAlert)
-                ShowInternal(PatternAlertSlot.AbyssPattern, settings, "패턴 알림", "방전 상태", TimeSpan.Zero, isPreview: true);
-
-            // 오를리는 끄고 켜는 설정이 없는 기본 기능이라 자리만 잡게 늘 띄운다
-            ShowInternal(PatternAlertSlot.OrlyAttack, settings, "오를리 방어전", "남은 공격 23회", TimeSpan.Zero, isPreview: true);
+            // 네 알림이 한 창을 쓰므로, 특정 알림 문구 대신 창이 무엇인지와 누가 쓰는지를 적는다
+            ShowInternal(DungeonAlertSource.AbyssPattern, settings,
+                "감전 · 반사 · 오를리 · 빅테디", "던전 특수 알림", TimeSpan.Zero, isPreview: true);
         }
 
         /// <summary>잠금 해제 종료: 미리보기로 떠 있던 창만 닫는다.</summary>
@@ -238,14 +238,11 @@ namespace TWChatOverlay.Views
         {
             Application.Current?.Dispatcher.BeginInvoke(new Action(() =>
             {
-                foreach (var slot in Instances.Keys.ToList())
-                {
-                    if (!Instances.TryGetValue(slot, out var window) || !window._isPreview)
-                        continue;
+                if (_instance?._isPreview != true)
+                    return;
 
-                    try { window.Close(); } catch { }
-                    Instances.Remove(slot);
-                }
+                try { _instance.Close(); } catch { }
+                _instance = null;
             }));
         }
     }

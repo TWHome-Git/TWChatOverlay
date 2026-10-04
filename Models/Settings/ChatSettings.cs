@@ -1060,32 +1060,19 @@ namespace TWChatOverlay.Models
             set { if (Windows.ExperienceLimitAlert.Top == value) return; Windows.ExperienceLimitAlert.Top = value; OnPropertyChanged(); }
         }
 
+        /// <summary>던전 알림 창(감전·반사·오를리·베스티지 공용) 위치.</summary>
         [JsonIgnore]
-        public double? PatternAlertWindowLeft
+        public double? DungeonAlertWindowLeft
         {
             get => Windows.PatternAlert.Left;
             set { if (Windows.PatternAlert.Left == value) return; Windows.PatternAlert.Left = value; OnPropertyChanged(); }
         }
 
         [JsonIgnore]
-        public double? PatternAlertWindowTop
+        public double? DungeonAlertWindowTop
         {
             get => Windows.PatternAlert.Top;
             set { if (Windows.PatternAlert.Top == value) return; Windows.PatternAlert.Top = value; OnPropertyChanged(); }
-        }
-
-        [JsonIgnore]
-        public double? OrlyAttackWindowLeft
-        {
-            get => Windows.OrlyAttack.Left;
-            set { if (Windows.OrlyAttack.Left == value) return; Windows.OrlyAttack.Left = value; OnPropertyChanged(); }
-        }
-
-        [JsonIgnore]
-        public double? OrlyAttackWindowTop
-        {
-            get => Windows.OrlyAttack.Top;
-            set { if (Windows.OrlyAttack.Top == value) return; Windows.OrlyAttack.Top = value; OnPropertyChanged(); }
         }
 
         public double? BossAlertToastWindowLeft

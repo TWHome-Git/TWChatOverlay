@@ -144,7 +144,7 @@ namespace TWChatOverlay.Views
             TreasurySummaryWindow.ShowPositionPreview(_settings);
 
             // 어비스 패턴 알림(감전·반사) 위치
-            PatternAlertWindow.ShowPositionPreview(_settings);
+            DungeonAlertWindow.ShowPositionPreview(_settings);
 
             // 컨텐츠 타이머 창 위치/크기
             if (_settings.ShowContentTimer)
@@ -177,7 +177,7 @@ namespace TWChatOverlay.Views
             AppServices.Get<RecaptureSupplyAlertService>().ClosePositionPreview();
             AppServices.Get<RecaptureSupplyPadOrderService>().ClosePositionPreview();
             TreasurySummaryWindow.ClosePositionPreview();
-            PatternAlertWindow.ClosePositionPreview();
+            DungeonAlertWindow.ClosePositionPreview();
             AppServices.Get<ContentTimerService>().ClosePositionPreview();
             CloseAddonPositionPreviewWindows(savePositions: true, restoreNormalWindows: true);
             RefreshExpTrackerWindow();

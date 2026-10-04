@@ -401,6 +401,7 @@ namespace TWChatOverlay.Services
                 "ExpTrackerWindow" => "경험치 추적창",
                 "ExperienceAlertWindow" => "경험치 누적 알림",
                 "DungeonCountDisplayWindow" => "던전 도우미",
+                "DungeonAlertWindow" => "던전 특수 알림",
                 "SubAddonWindow" => "에토스 방향 안내",
                 "ItemDropHelperWindow" => "아이템 드롭 알림",
                 "BuffTrackerHelperWindow" => "버프 추적",
