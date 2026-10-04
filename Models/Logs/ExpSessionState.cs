@@ -12,7 +12,8 @@ namespace TWChatOverlay.Models
         private long _lastGainedExp;
         private long _totalExp;
         private int _gainCount;
-        private DateTime _startTime = DateTime.Now;
+        /// <summary>첫 경험치가 들어온 시각. null이면 아직 재기 시작하지 않은 것 — 리셋만 하고 두면 시계가 돌지 않는다.</summary>
+        private DateTime? _startedAt;
         private bool _isFrozen;
         private DateTime _frozenAt;
         private string _frozenTotalValueDisplay = string.Empty;
@@ -108,13 +109,19 @@ namespace TWChatOverlay.Models
         /// <summary>비활동으로 측정이 멈춘 상태인지 여부.</summary>
         public bool IsMeasurementStopped => _isFrozen;
 
-        /// <summary>측정을 시작한 뒤 지난 시간. 멈춘 뒤에는 멈춘 시각에서 더 가지 않는다 (1시간 예상과 같은 기준 시각).</summary>
+        /// <summary>
+        /// 측정을 시작한 뒤 지난 시간. 멈춘 뒤에는 멈춘 시각에서 더 가지 않는다 (1시간 예상과 같은 기준 시각).
+        /// 경험치가 한 번도 안 들어왔으면 0 — 리셋을 누르고 사냥을 안 해도 시간이 가는 일이 없다.
+        /// </summary>
         public TimeSpan Elapsed
         {
             get
             {
+                if (_startedAt is not DateTime start)
+                    return TimeSpan.Zero;
+
                 DateTime until = _isFrozen ? _frozenAt : DateTime.Now;
-                TimeSpan span = until - _startTime;
+                TimeSpan span = until - start;
                 return span > TimeSpan.Zero ? span : TimeSpan.Zero;
             }
         }
@@ -132,7 +139,11 @@ namespace TWChatOverlay.Models
 
         public string TotalExpDisplay => $"{TotalExpValueDisplay} | {ExpPerHourDisplay}/h";
 
-        public void ResetStartTime() => _startTime = DateTime.Now;
+        /// <summary>측정 시작 시각을 비운다. 다음 경험치가 들어올 때 다시 잡는다.</summary>
+        public void ResetStartTime() => _startedAt = null;
+
+        /// <summary>경험치가 들어왔다 — 아직 시작 전이면 지금을 시작 시각으로 잡는다.</summary>
+        public void MarkStarted() => _startedAt ??= DateTime.Now;
 
         public void FreezeTotalExpDisplay()
         {

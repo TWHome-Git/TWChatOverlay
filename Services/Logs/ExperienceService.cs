@@ -87,6 +87,8 @@ namespace TWChatOverlay.Services
             _isSessionExpired = false;
             _expiredAt = null;
 
+            // 측정은 경험치가 들어온 이 순간부터 잰다 (리셋을 누른 시각이 아니라)
+            SessionState.MarkStarted();
             SessionState.LastGainedExp = gained;
             SessionState.TotalExp += gained;
             SessionState.GainCount += 1;
