@@ -59,6 +59,8 @@ namespace TWChatOverlay.Views
         private bool _showTable;
         /// <summary>그래프 기준: false = 그 주의 평균, true = 그 주의 최고(가장 빠른 판).</summary>
         private bool _useBest;
+        /// <summary>표에서 펼쳐 둔 주 (그 주의 판 목록을 아래에 보여 준다). null이면 모두 접힘.</summary>
+        private DateTime? _expandedWeek;
 
         private const string MetricAverage = "평균", MetricBest = "최고";
 
@@ -368,6 +370,10 @@ namespace TWChatOverlay.Views
                 .OrderBy(g => g.Key)
                 .Select(g => new WeekPoint(g.Key, g.Average(r => r.Seconds), g.Count(), g.Min(r => r.Seconds)))
                 .ToList();
+
+            // 다른 던전·난이도·구간으로 바꾸면 펼쳐 둔 주가 없어질 수 있다
+            if (_expandedWeek.HasValue && !_weeks.Any(w => w.WeekStart == _expandedWeek.Value))
+                _expandedWeek = null;
         }
 
         // ===== 선택 칩 =====
@@ -855,7 +861,79 @@ namespace TWChatOverlay.Views
 
             int index = 0;
             for (int i = _weeks.Count - 1; i >= 0; i--, index++)
-                _tableRows.Children.Add(BuildTableRow(_weeks[i], index % 2 == 1, maxAverage, ReferenceEquals(_weeks[i], fastest), Math.Abs(_weeks[i].Best - allTimeBest) < 0.0001));
+            {
+                WeekPoint week = _weeks[i];
+                _tableRows.Children.Add(BuildTableRow(week, index % 2 == 1, maxAverage, ReferenceEquals(week, fastest), Math.Abs(week.Best - allTimeBest) < 0.0001));
+                if (_expandedWeek == week.WeekStart)
+                    _tableRows.Children.Add(BuildWeekRuns(week));
+            }
+        }
+
+        /// <summary>펼친 주의 판 목록 — 그 주에 돈 판을 끝난 시각 순으로 하나씩 적는다.</summary>
+        private FrameworkElement BuildWeekRuns(WeekPoint week)
+        {
+            DateTime from = week.WeekStart, to = week.WeekStart.AddDays(7);
+            var runs = _runs.Where(r => r.At >= from && r.At < to).OrderBy(r => r.At).ToList();
+
+            var panel = new StackPanel { Margin = new Thickness(26, 2, 8, 8) };
+
+            if (runs.Count == 0)
+            {
+                var none = new TextBlock { Text = "이 주의 판 기록이 없습니다", FontSize = 11, Margin = new Thickness(0, 2, 0, 2) };
+                none.SetResourceReference(TextBlock.ForegroundProperty, "OverlayHintTextBrush");
+                panel.Children.Add(none);
+            }
+            else
+            {
+                double bestSeconds = runs.Min(r => r.Seconds);
+                // 같은 시간이 여러 판 나오면 가장 이른 판 하나에만 표시한다
+                int bestIndex = runs.FindIndex(r => Math.Abs(r.Seconds - bestSeconds) < 0.0001);
+                int n = 0;
+                foreach (var run in runs)
+                {
+                    bool isBest = n == bestIndex;
+                    var line = new Grid();
+                    line.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(34) });   // 번호
+                    line.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(150) });  // 끝난 시각
+                    line.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(80) });   // 걸린 시간
+                    line.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+
+                    var no = new TextBlock { Text = $"{++n}", FontSize = 11, TextAlignment = TextAlignment.Right, Margin = new Thickness(0, 0, 10, 0) };
+                    no.SetResourceReference(TextBlock.ForegroundProperty, "OverlayHintTextBrush");
+                    Grid.SetColumn(no, 0);
+                    line.Children.Add(no);
+
+                    var when = new TextBlock { Text = run.At.ToString("M.d(ddd) HH:mm", Korean), FontSize = 11 };
+                    when.SetResourceReference(TextBlock.ForegroundProperty, "OverlayLabelTextBrush");
+                    Grid.SetColumn(when, 1);
+                    line.Children.Add(when);
+
+                    var took = new TextBlock
+                    {
+                        Text = FormatDuration(run.Seconds),
+                        FontSize = 12,
+                        FontWeight = isBest ? FontWeights.SemiBold : FontWeights.Normal,
+                        TextAlignment = TextAlignment.Right,
+                    };
+                    if (isBest) took.Foreground = new SolidColorBrush(Mint);
+                    else took.SetResourceReference(TextBlock.ForegroundProperty, "TextBrush");
+                    Grid.SetColumn(took, 2);
+                    line.Children.Add(took);
+
+                    if (isBest)
+                    {
+                        var mark = new TextBlock { Text = "그 주 최고", FontSize = 10, Margin = new Thickness(8, 1, 0, 0), Foreground = new SolidColorBrush(Mint) };
+                        Grid.SetColumn(mark, 3);
+                        line.Children.Add(mark);
+                    }
+
+                    panel.Children.Add(new Border { Child = line, Padding = new Thickness(0, 2, 0, 2) });
+                }
+            }
+
+            var box = new Border { Child = panel, CornerRadius = new CornerRadius(5), Margin = new Thickness(8, 0, 8, 2) };
+            box.SetResourceReference(Border.BackgroundProperty, "OverlaySurfaceAltBackgroundBrush");
+            return box;
         }
 
         private FrameworkElement BuildTableHeader()
@@ -897,8 +975,19 @@ namespace TWChatOverlay.Views
         {
             var grid = NewTableGrid();
 
+            bool expanded = _expandedWeek == week.WeekStart;
+
             // 주
             var weekPanel = new StackPanel { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Center };
+            var caret = new TextBlock
+            {
+                Text = expanded ? "▾" : "▸",
+                FontSize = 10,
+                Margin = new Thickness(0, 0, 5, 0),
+                VerticalAlignment = VerticalAlignment.Center,
+            };
+            caret.SetResourceReference(TextBlock.ForegroundProperty, "OverlayHintTextBrush");
+            weekPanel.Children.Add(caret);
             var weekText = new TextBlock { Text = FormatWeek(week), FontSize = 12, VerticalAlignment = VerticalAlignment.Center };
             weekText.SetResourceReference(TextBlock.ForegroundProperty, "TextBrush");
             weekPanel.Children.Add(weekText);
@@ -967,6 +1056,16 @@ namespace TWChatOverlay.Views
                 row.MouseLeave += (_, _) => row.Background = Brushes.Transparent;
             }
             row.MouseEnter += (_, _) => row.SetResourceReference(Border.BackgroundProperty, "OverlayTabHoverBrush");
+
+            // 눌러서 그 주의 판 목록을 펼친다 (한 번 더 누르면 접는다)
+            row.Cursor = Cursors.Hand;
+            row.ToolTip = "눌러서 이 주에 돈 판 보기";
+            row.MouseLeftButtonUp += (_, e) =>
+            {
+                _expandedWeek = expanded ? null : week.WeekStart;
+                RenderTable();
+                e.Handled = true;
+            };
             return row;
         }
 
