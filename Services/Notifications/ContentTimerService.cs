@@ -46,6 +46,17 @@ namespace TWChatOverlay.Services
         public string?[] Times { get; } = new string?[ContentTimerService.ColumnCount];
     }
 
+    /// <summary>표 가운데 열에 무엇을 놓을지. 머리글을 누르면 이 순서로 돈다.</summary>
+    public enum MiddleColumn
+    {
+        /// <summary>남아 있는 기록 전체에서 가장 빠른 판.</summary>
+        AllTimeBest,
+        /// <summary>이번 달에 돈 판 중 가장 빠른 판.</summary>
+        MonthBest,
+        /// <summary>바로 전에 돈 판.</summary>
+        Previous,
+    }
+
     /// <summary>타이머 창이 그릴 내용 전체. 서비스가 만들고 창은 그리기만 한다.</summary>
     public sealed class TimerView
     {
@@ -71,6 +82,8 @@ namespace TWChatOverlay.Services
         public bool[] TotalsCapped { get; } = new bool[ContentTimerService.ColumnCount];
         /// <summary>가운데 열이 직전 판 대신 최고 기록인지 (머리글을 눌러 바꾼 상태).</summary>
         public bool PreviousIsBest { get; init; }
+        /// <summary>가운데 열 머리글 글자 ("Best" · "이달 Best" · "직전 판").</summary>
+        public string PreviousHeaderText { get; init; } = string.Empty;
     }
 
     /// <summary>
@@ -962,14 +975,18 @@ namespace TWChatOverlay.Services
         // 기록키/난이도 → 이미 보관한 판의 끝난 시각(초). 같은 판을 두 번 적지 않기 위한 색인
         private Dictionary<string, HashSet<long>>? _archiveIndex;
         private bool _archiveAppended;
+        // 이번 달 최고 기록. 판이 더해지거나 달이 바뀌면 다시 센다 (이번 달 파일 하나만 읽는다)
+        private Dictionary<string, DungeonRunRecord>? _monthBest;
+        private string _monthBestKey = string.Empty;
+        private bool _monthBestStale;
 
         /// <summary>아카이브에 판이 더해지면 발생 (실시간 클리어, 과거 로그 추출). 기록 추이 창이 다시 그린다.</summary>
         public event Action? ArchiveChanged;
 
         /// <summary>과거 로그 전체에서 기록을 뽑는 1회성 작업이 도는 중인지.</summary>
         public bool IsArchiveScanRunning { get; private set; }
-        /// <summary>가운데 열을 최고 기록으로 보여주는 중인지 ("직전 판" 머리글을 누르면 직전 판으로 바뀐다). 기본은 최고 기록 — 앱을 다시 켜면 최고 기록으로 돌아온다.</summary>
-        private bool _showBest = true;
+        /// <summary>가운데 열에 무엇을 보여줄지. 머리글을 누르면 차례로 바뀐다. 앱을 다시 켜면 이달 최고로 돌아온다.</summary>
+        private MiddleColumn _middleColumn = MiddleColumn.MonthBest;
         /// <summary>마지막으로 그린 표의 재료 — 머리글을 눌러 같은 내용을 다시 그릴 때 쓴다.</summary>
         private (DungeonDefinition Def, string Difficulty, string Status, int? Current, int? Max,
             DungeonRunRecord? InProgress, string? Highlight)? _lastViewArgs;
@@ -1194,7 +1211,8 @@ namespace TWChatOverlay.Services
                 Status = status,
                 ShowTotal = segmentMode && def.ShowTotal,
                 ShowColumnTimes = true,
-                PreviousIsBest = _showBest,
+                PreviousIsBest = _middleColumn != MiddleColumn.Previous,
+                PreviousHeaderText = MiddleColumnHeader(_middleColumn),
             };
 
             if (segmentMode)
@@ -1204,7 +1222,7 @@ namespace TWChatOverlay.Services
                 if (inProgress != null)
                     cols = cols with { Previous = cols.Latest, Latest = inProgress };
                 // 가운데 열: 평소에는 직전 판, 머리글을 눌러 Best로 바꾸면 가장 빨랐던 판
-                DungeonRunRecord? middle = _showBest ? GetBest(def, difficulty) : cols.Previous;
+                DungeonRunRecord? middle = ResolveMiddle(def, difficulty, cols.Previous);
                 view.ColumnSub[0] = cols.LastWeek.Count > 0 ? $"{cols.LastWeek.Count}판 평균" : null;
                 view.ColumnSub[1] = FormatWhen(middle?.EndedAt);
                 view.ColumnSub[2] = inProgress != null ? "진행 중" : FormatWhen(cols.Latest?.EndedAt);
@@ -1236,7 +1254,7 @@ namespace TWChatOverlay.Services
                         continue;
                     string memberDifficulty = string.IsNullOrEmpty(difficulty) ? GetLastDifficulty(member) : difficulty;
                     Columns cols = PickColumns(GetHistory(member, memberDifficulty));
-                    DungeonRunRecord? middle = _showBest ? GetBest(member, memberDifficulty) : cols.Previous;
+                    DungeonRunRecord? middle = ResolveMiddle(member, memberDifficulty, cols.Previous);
                     lastWeekTotalRuns += cols.LastWeek.Count;
                     previousLatest = MaxDate(previousLatest, cols.Previous?.EndedAt);
                     latestLatest = MaxDate(latestLatest, cols.Latest?.EndedAt);
@@ -1716,6 +1734,7 @@ namespace TWChatOverlay.Services
                 File.AppendAllText(file, JsonSerializer.Serialize(record, ArchiveJsonOptions) + Environment.NewLine, new UTF8Encoding(false));
                 seen.Add(at);
                 _archiveAppended = true;
+                _monthBestStale = true;   // 새 판이 들어왔으니 이번 달 최고를 다시 센다
             }
             catch (Exception ex)
             {
@@ -1764,6 +1783,7 @@ namespace TWChatOverlay.Services
                 _best = null;
                 _bestDirty = false;
                 _archiveIndex = null;
+                _monthBest = null;
             }
         }
 
@@ -1818,6 +1838,88 @@ namespace TWChatOverlay.Services
             {
                 EnsureHistoryLoaded(); // 기록을 읽으면서 최고 기록도 함께 채워진다
                 return _best!.TryGetValue(HistoryKey(def.Key, difficulty), out var best) ? best : null;
+            }
+        }
+
+        /// <summary>가운데 열에 놓을 판 — 고른 모드에 따라 전체 최고 · 이달 최고 · 직전 판.</summary>
+        private DungeonRunRecord? ResolveMiddle(DungeonDefinition def, string difficulty, DungeonRunRecord? previous)
+            => _middleColumn switch
+            {
+                MiddleColumn.AllTimeBest => GetBest(def, difficulty),
+                MiddleColumn.MonthBest => GetMonthBest(def, difficulty),
+                _ => previous,
+            };
+
+        /// <summary>가운데 열 머리글 글자. 양옆 머리글("지난주"·"최근 판")과 같은 말투로 적는다.</summary>
+        private static string MiddleColumnHeader(MiddleColumn mode)
+            => mode switch
+            {
+                MiddleColumn.AllTimeBest => "전체 최고",
+                MiddleColumn.MonthBest => "이달 최고",
+                _ => "직전 판",
+            };
+
+        /// <summary>이번 달 아카이브에서 가장 빠른 판. 달이 바뀌거나 판이 더해지면 다시 센다.</summary>
+        public DungeonRunRecord? GetMonthBest(DungeonDefinition def, string difficulty)
+        {
+            lock (SyncRoot)
+            {
+                EnsureHistoryLoaded(); // 기록 파일에만 있던 판도 이때 아카이브로 옮겨진다
+                EnsureMonthBestUnlocked();
+                return _monthBest!.TryGetValue(HistoryKey(def.Key, difficulty), out var best) ? best : null;
+            }
+        }
+
+        /// <summary>이번 달 최고 기록 표를 만든다 (이번 달 파일 한 개만 읽는다).</summary>
+        private void EnsureMonthBestUnlocked()
+        {
+            DateTime month = DateTime.Now;
+            string monthKey = month.ToString("yyyy-MM", System.Globalization.CultureInfo.InvariantCulture);
+
+            if (_monthBest != null && string.Equals(_monthBestKey, monthKey, StringComparison.Ordinal) && !_monthBestStale)
+                return;
+
+            var map = new Dictionary<string, DungeonRunRecord>(StringComparer.Ordinal);
+            string file = Path.Combine(ArchiveDirectoryPath, monthKey + ".jsonl");
+            foreach (DungeonRunRecord record in ReadArchiveFileUnlocked(file))
+            {
+                // 상한 기록("30초 이하")은 실제 시간을 모르므로 최고 기록으로 삼지 않는다 — 전체 최고와 같은 규칙
+                if (record.Capped || record.TotalSeconds <= 0)
+                    continue;
+
+                string key = HistoryKey(record.DungeonKey, record.Difficulty ?? string.Empty);
+                if (map.TryGetValue(key, out var best) && best.TotalSeconds <= record.TotalSeconds)
+                    continue;
+                map[key] = record;
+            }
+
+            _monthBest = map;
+            _monthBestKey = monthKey;
+            _monthBestStale = false;
+        }
+
+        private IEnumerable<DungeonRunRecord> ReadArchiveFileUnlocked(string file)
+        {
+            if (!File.Exists(file))
+                yield break;
+
+            string[] lines;
+            try { lines = File.ReadAllLines(file, Encoding.UTF8); }
+            catch (Exception ex)
+            {
+                AppLogger.Warn($"Failed to read dungeon timer archive '{file}'.", ex);
+                yield break;
+            }
+
+            foreach (string line in lines)
+            {
+                if (string.IsNullOrWhiteSpace(line))
+                    continue;
+                DungeonRunRecord? record = null;
+                try { record = JsonSerializer.Deserialize<DungeonRunRecord>(line, ArchiveJsonOptions); }
+                catch { /* 깨진 줄은 건너뛴다 */ }
+                if (record != null && !string.IsNullOrEmpty(record.DungeonKey))
+                    yield return record;
             }
         }
 
@@ -2078,7 +2180,7 @@ namespace TWChatOverlay.Services
         }
 
         /// <summary>
-        /// "직전 판" 머리글 클릭: 가운데 열을 최고 기록(Best)과 번갈아 보여준다.
+        /// 가운데 열 머리글 클릭: 전체 최고(Best) → 이달 최고 → 직전 판 → 다시 전체 최고 순으로 돈다.
         /// 지금 보고 있는 표를 그대로(작게/크게 모드, 진행 중인 판까지) 다시 그린다.
         /// </summary>
         public void TogglePreviousColumn()
@@ -2088,7 +2190,12 @@ namespace TWChatOverlay.Services
                 var window = _window;
                 if (window == null || !window.IsLoaded || _lastViewArgs == null)
                     return;
-                _showBest = !_showBest;
+                _middleColumn = _middleColumn switch
+                {
+                    MiddleColumn.AllTimeBest => MiddleColumn.MonthBest,
+                    MiddleColumn.MonthBest => MiddleColumn.Previous,
+                    _ => MiddleColumn.AllTimeBest,
+                };
                 var (def, difficulty, status, cur, max, inProgress, highlight) = _lastViewArgs.Value;
                 window.RefreshView(BuildView(def, difficulty, status, cur, max, inProgress, highlight));
             }));

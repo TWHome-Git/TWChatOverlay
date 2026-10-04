@@ -80,7 +80,7 @@ namespace TWChatOverlay.Views
         private TextBlock[] _rowLabels = Array.Empty<TextBlock>();
         private TextBlock[,] _cells = new TextBlock[0, 0];  // [행][열], 마지막 행은 합계 자리
         private TextBlock[] _deltas = Array.Empty<TextBlock>();  // 행별 최근 판 차이 칸
-        private TextBlock? _previousHeader;                      // 눌러서 직전 판 ↔ Best를 바꾸는 머리글
+        private TextBlock? _previousHeader;                      // 눌러서 이달 최고 → 직전 판 → 전체 최고를 돌리는 머리글
         private Border? _totalSeparator;
         private int _totalRowIndex = -1;
         private bool _isPreviewMode;
@@ -371,7 +371,7 @@ namespace TWChatOverlay.Views
 
             SetTitle(view.Title, view.TitleSub);
             HighlightGroup(view.GroupKey);
-            ApplyPreviousHeader(view.PreviousIsBest);
+            ApplyPreviousHeader(view.PreviousIsBest, view.PreviousHeaderText);
 
             for (int c = 0; c < ColumnHeaders.Length; c++)
             {
@@ -442,16 +442,16 @@ namespace TWChatOverlay.Views
             label.Inlines.Add(subRun);
         }
 
-        /// <summary>가운데 열 머리글: 평소 "직전 판", 최고 기록을 보는 중이면 "Best"로 또렷하게 적는다.</summary>
-        private void ApplyPreviousHeader(bool isBest)
+        /// <summary>가운데 열 머리글: 서비스가 정한 글자("Best" · "이달 Best" · "직전 판")를 적고, 최고 기록을 볼 때만 또렷하게 둔다.</summary>
+        private void ApplyPreviousHeader(bool isBest, string? headerText)
         {
             if (_previousHeader == null)
                 return;
-            _previousHeader.Text = isBest ? "Best" : ColumnHeaders[PreviousColumn];
+            _previousHeader.Text = string.IsNullOrWhiteSpace(headerText) ? ColumnHeaders[PreviousColumn] : headerText;
             _previousHeader.SetResourceReference(TextBlock.ForegroundProperty, isBest ? AccentTextBrushKey : MutedBrushKey);
         }
 
-        /// <summary>가운데 열 머리글 클릭: 직전 판 ↔ 최고 기록. 잠금 해제(위치 조정) 중에는 창을 끌어 옮기는 중이라 넘긴다.</summary>
+        /// <summary>가운데 열 머리글 클릭: 이달 최고 → 직전 판 → 전체 최고 순으로 돈다. 잠금 해제(위치 조정) 중에는 창을 끌어 옮기는 중이라 넘긴다.</summary>
         private void PreviousHeader_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
         {
             if (AppServices.Get<UiLockService>().IsUnlocked || _isPreviewMode)
@@ -555,10 +555,10 @@ namespace TWChatOverlay.Views
                     Grid.SetColumnSpan(header, 2); // 최근 판 머리글은 값 열 + 차이 칸에 걸친다
                 if (c == PreviousColumn)
                 {
-                    // 누르면 직전 판 ↔ 최고 기록. 글자만으로는 눌러지는지 모르므로 손 모양 커서와 설명을 붙인다
+                    // 누르면 이달 최고 → 직전 판 → 전체 최고. 글자만으로는 눌러지는지 모르므로 손 모양 커서와 설명을 붙인다
                     header.Background = Brushes.Transparent; // 글자 사이 빈 곳도 눌리게
                     header.Cursor = Cursors.Hand;
-                    header.ToolTip = "눌러서 최고 기록(Best) ↔ 직전 판 (기본: 최고 기록)";
+                    header.ToolTip = "눌러서 이달 최고 → 직전 판 → 전체 최고 (기본: 이달 최고)";
                     header.MouseLeftButtonUp += PreviousHeader_MouseLeftButtonUp;
                     _previousHeader = header;
                 }
