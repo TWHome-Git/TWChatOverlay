@@ -38,9 +38,6 @@ namespace TWChatOverlay.Services
             @"^(?:\[[^\]]*\]\s*)?남은\s*공격\s*횟수\s*:\s*(?<remain>\d+)",
             RegexOptions.Compiled);
 
-        /// <summary>로그 한 줄(HTML)이 오를리 "남은 공격 횟수" 줄인지. 채팅에서 감출지 판단할 때 쓴다.</summary>
-        public static bool IsOrlyRemainingAttackLine(string? html)
-            => !string.IsNullOrWhiteSpace(html) && OrlyRemainingAttackRegex.IsMatch(Normalize(html));
 
         /// <summary>표시 창이 떠 있는 시간. 다음 공격이 곧 들어와 값을 새로 쓰므로 길게 둘 필요가 없다.</summary>
         private const int OrlyRemainingAttackDurationSeconds = 15;

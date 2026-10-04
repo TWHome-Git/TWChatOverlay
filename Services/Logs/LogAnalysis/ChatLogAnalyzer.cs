@@ -157,6 +157,8 @@ namespace TWChatOverlay.Services.LogAnalysis
                 "94ddfa" => (ChatCategory.Club, ClubBrush),
                 "f7b73c" => (ChatCategory.Team, TeamBrush),
                 "ff64ff" => (ChatCategory.System, SystemBrush),
+                // 공지·던전 상황 안내 색. 분류표에 없어 Unknown이 되면 설정과 무관하게 기본 탭에만 강제로 남는다
+                "64ff80" => (ChatCategory.System, SystemBrush),
                 "00ffff" => (ChatCategory.System2, Brushes.Cyan),
                 "ff6464" => (ChatCategory.System3, System3Brush),
                 _ => (ChatCategory.Unknown, Brushes.White)

@@ -624,19 +624,11 @@ namespace TWChatOverlay.Views
         }
 
         /// <summary>
-        /// 오를리 방어전 "남은 공격 횟수"는 한 대 때릴 때마다 찍혀 채팅을 덮는다.
-        /// 따로 보여주는 창이 있으므로 채팅에는 남기지 않는다.
+        /// 채팅을 덮기만 하는 반복 안내 줄은 남기지 않는다 (판정은 <see cref="NoisyNoticeFilter"/>).
         /// 실시간으로 더할 때와 탭을 바꿔 다시 그릴 때 둘 다 같은 판정을 쓴다.
         /// </summary>
         private static bool IsHiddenDungeonNoticeLine(LogParser.ParseResult parseResult)
-        {
-            string? text = parseResult?.FormattedText;
-            // 채팅 줄마다 도는 자리라 값싼 검사로 먼저 거르고, 걸린 줄만 태그를 떼어 정확히 본다
-            if (string.IsNullOrWhiteSpace(text) || !text.Contains("남은 공격 횟수", StringComparison.Ordinal))
-                return false;
-
-            return DungeonCountDisplayService.IsOrlyRemainingAttackLine(text);
-        }
+            => NoisyNoticeFilter.IsNoise(parseResult?.FormattedText);
 
         private bool ShouldSuppressOverlayText(LogParser.ParseResult parseResult)
         {
