@@ -36,8 +36,58 @@ namespace TWChatOverlay.Services
             "지팡이의 사제, 고이티아",
             "데스포이나",
             "키시니크",
-            "Happy Birthday"
+            "Happy Birthday",
+            // 회랑·이공간
+            "설계자",
+            "환희의 레이티아",
+            "레이티아",
+            "회랑의 거목, 에테르",
+            "양면의 군주, 야누아르",
+            "슬픔의 무희, 오페리아",
+            "회랑의 파수꾼, 가고일",
+            "회랑의 잔재, 루이나스",
+            "운명의 심판자, 노아",
+            // 그 밖의 몬스터·장치
+            "CS-87H",
+            "하수인",
+            "지원부대 부대장",
+            "선봉대 부대장",
+            "끈질긴 먼지 개미",
+            "봉인 결계",
+            "근원의 핵",
+            "유마 올름"
         };
+
+        /// <summary>
+        /// 보스·몬스터가 하는 대사 (화자 → 그 몬스터가 실제로 하는 말).
+        ///
+        /// 화자 이름만으로 판정하지 않는 이유: 같은 이름을 쓰는 실제 유저가 있다.
+        /// "스페르첸드"는 필드 보스 이름이면서 같은 아이디의 유저도 채팅을 한다 —
+        /// 이름으로 막으면 그 유저가 말할 때도 에타 레벨이 사라진다.
+        /// 그래서 그 몬스터가 실제로 하는 대사일 때만 몬스터 줄로 본다.
+        /// </summary>
+        private static readonly Dictionary<string, string[]> MonsterDialogues = new(StringComparer.Ordinal)
+        {
+            ["스페르첸드"] = new[] { "어둠의 힘이 너희를 베고 지나가리라!" },
+        };
+
+        /// <summary>이 줄이 보스·몬스터 대사인지. 맞으면 에타 레벨·캐릭터·아이디 태그를 붙이지 않는다.</summary>
+        public static bool IsMonsterDialogue(string? senderId, string? text)
+        {
+            if (string.IsNullOrWhiteSpace(senderId) || string.IsNullOrWhiteSpace(text))
+                return false;
+
+            if (!MonsterDialogues.TryGetValue(senderId.Trim(), out string[]? dialogues))
+                return false;
+
+            foreach (string dialogue in dialogues)
+            {
+                if (text.Contains(dialogue, StringComparison.Ordinal))
+                    return true;
+            }
+
+            return false;
+        }
 
         /// <summary>화자 없이 흰색으로 찍히는 시스템 안내문. 본문에 이 문장이 들어 있으면 숨긴다.</summary>
         private static readonly string[] IgnoredNoticePhrases =
@@ -54,13 +104,18 @@ namespace TWChatOverlay.Services
             "[클럽 보스]"
         };
 
-        /// <summary>형태가 정해진 안내문. 화자 유무와 무관하게 본문 전체에 대해 본다.</summary>
+        /// <summary>
+        /// 형태가 정해진 안내문. 화자 유무와 무관하게 본문 전체에 대해 본다.
+        /// 여기는 일반(흰색·내 채팅색) 줄만 지나간다 — 공지색(#64ff80) 안내는
+        /// <see cref="NoisyNoticeFilter"/>가 맡는다 (자동 퇴장, 오를리 남은 공격 등).
+        /// </summary>
         private static readonly Regex[] NormalIgnoredRegexes =
         {
             new(@"^(?:\[[^\]]+\]\s*)?(SP|MP|Fever|HP)가\s*\d+%\s*회복되었습니다\.?$", RegexOptions.Compiled),
             new(@"^(?:\[[^\]]+\]\s*)?체력이\s*\d+%\s*회복되었습니다\.?$", RegexOptions.Compiled),
-            new(@"^3분 후 자동으로 퇴장합니다\.$", RegexOptions.Compiled),
-            new(@"남은\s*공격\s*횟수\s*:\s*\d+", RegexOptions.Compiled),
+            // 상자를 이미 먹었거나 꽝일 때 — "열었습니다"와 짝을 이루는 문구들
+            new(@"(?:보상|상자)를?\s*이미\s*획득\s*하였습니다\.?$", RegexOptions.Compiled),
+            new(@"보상을\s*획득하지\s*못했습니다\.?$", RegexOptions.Compiled),
             new(@"절제와\s*균형의\s*중심에서\s*빗나간\s*힘은\s*칼날이\s*되어\s*돌아오지\.?", RegexOptions.Compiled)
         };
 
@@ -79,23 +134,23 @@ namespace TWChatOverlay.Services
             if (!string.IsNullOrWhiteSpace(senderId))
             {
                 // 화자가 있는 줄: 화자 이름으로만 숨긴다. 사람 대화 본문에 몬스터 이름이 있어도 숨기지 않는다.
+                // 이름이 정확히 같을 때만 본다 — "설계자"로 시작한다는 이유로 "설계자123" 같은
+                // 유저 아이디까지 숨기면 사람 말이 조용히 사라진다.
                 string speaker = senderId.Trim();
                 foreach (string ignored in IgnoredSpeakers)
                 {
-                    if (speaker.Equals(ignored, StringComparison.Ordinal) ||
-                        speaker.StartsWith(ignored, StringComparison.Ordinal))
+                    if (speaker.Equals(ignored, StringComparison.Ordinal))
                         return true;
                 }
 
-                return MatchesNoticeRegex(message);
+                // 게임이 내 아이디를 화자로 붙여 찍는 안내문도 있다 ("드드해 : 금화 주머니를 획득 했습니다.").
+                // 문구가 통째로 일치할 때만 보므로 사람이 쓴 대화가 걸릴 일은 거의 없다.
+                return MatchesNoticePhrase(message) || MatchesNoticeRegex(message);
             }
 
             // 화자가 없는 줄(안내문): 본문 포함 여부로 판정한다
-            foreach (string phrase in IgnoredNoticePhrases)
-            {
-                if (message.Contains(phrase, StringComparison.Ordinal))
-                    return true;
-            }
+            if (MatchesNoticePhrase(message))
+                return true;
 
             foreach (string ignored in IgnoredSpeakers)
             {
@@ -104,6 +159,17 @@ namespace TWChatOverlay.Services
             }
 
             return MatchesNoticeRegex(message);
+        }
+
+        private static bool MatchesNoticePhrase(string message)
+        {
+            foreach (string phrase in IgnoredNoticePhrases)
+            {
+                if (message.Contains(phrase, StringComparison.Ordinal))
+                    return true;
+            }
+
+            return false;
         }
 
         private static bool MatchesNoticeRegex(string message)

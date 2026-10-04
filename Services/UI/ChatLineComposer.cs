@@ -177,6 +177,12 @@ namespace TWChatOverlay.Services
             if (!settings.ShowEtaLevel && !settings.ShowEtaCharacter && !settings.ShowIdTag)
                 return result;
 
+            // 보스·몬스터 대사에는 꾸밈을 붙이지 않는다.
+            // 같은 이름을 쓰는 유저가 랭킹에 있으면 그 사람의 에타 레벨이 몬스터 줄에 붙어 버린다.
+            if (IgnoredChatMessageService.IsMonsterDialogue(lookupSenderId, log.FormattedText) ||
+                IgnoredChatMessageService.IsMonsterDialogue(displaySenderId, log.FormattedText))
+                return result;
+
             if (settings.ShowEtaLevel || settings.ShowEtaCharacter)
             {
                 if (EtaProfileResolver.TryGetProfile(lookupSenderId, out var profile)
