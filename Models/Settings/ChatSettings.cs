@@ -562,6 +562,8 @@ namespace TWChatOverlay.Models
         [JsonIgnore]
         public bool EnableCravingPleasureCountAlert { get => Alerts.Dungeon.CravingPleasureCountAlert; set { Alerts.Dungeon.CravingPleasureCountAlert = value; OnPropertyChanged(); } }
         [JsonIgnore]
+        public bool ShowOrlyRemainingAttackDisplay { get => Alerts.Dungeon.OrlyRemainingAttackDisplay; set { Alerts.Dungeon.OrlyRemainingAttackDisplay = value; OnPropertyChanged(); } }
+        [JsonIgnore]
         public bool ShowDungeonCountDisplayWindow { get => Alerts.Dungeon.ShowCountDisplayWindow; set { Alerts.Dungeon.ShowCountDisplayWindow = value; OnPropertyChanged(); } }
         [JsonIgnore]
         public int AbandonRoadCountAlertDurationSeconds
@@ -1072,6 +1074,20 @@ namespace TWChatOverlay.Models
         {
             get => Windows.PatternAlert.Top;
             set { if (Windows.PatternAlert.Top == value) return; Windows.PatternAlert.Top = value; OnPropertyChanged(); }
+        }
+
+        [JsonIgnore]
+        public double? OrlyAttackWindowLeft
+        {
+            get => Windows.OrlyAttack.Left;
+            set { if (Windows.OrlyAttack.Left == value) return; Windows.OrlyAttack.Left = value; OnPropertyChanged(); }
+        }
+
+        [JsonIgnore]
+        public double? OrlyAttackWindowTop
+        {
+            get => Windows.OrlyAttack.Top;
+            set { if (Windows.OrlyAttack.Top == value) return; Windows.OrlyAttack.Top = value; OnPropertyChanged(); }
         }
 
         public double? BossAlertToastWindowLeft

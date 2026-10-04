@@ -320,7 +320,7 @@ namespace TWChatOverlay.Views
                         _dischargeStartedAt = DateTime.Now;
                         AppLogger.Info($"Discharge status detected. Line='{parseResult.FormattedText}'");
                         if (_settings.EnableDischargeAlert)
-                            PatternAlertWindow.Show(_settings, "감전", "방전 상태");
+                            PatternAlertWindow.Show(PatternAlertSlot.AbyssPattern, _settings, "감전", "방전 상태");
                     });
                 }
                 else if (parseResult.IsDischargeCleared)
@@ -332,7 +332,7 @@ namespace TWChatOverlay.Views
                             : "unknown";
                         _dischargeStartedAt = null;
                         AppLogger.Info($"Discharge status cleared after {held}. Line='{parseResult.FormattedText}'");
-                        PatternAlertWindow.HideAlert();   // 설정을 끈 뒤 풀린 경우에도 남지 않게 항상 닫는다
+                        PatternAlertWindow.HideAlert(PatternAlertSlot.AbyssPattern);   // 설정을 끈 뒤 풀린 경우에도 남지 않게 항상 닫는다
                     });
                 }
 
@@ -342,7 +342,7 @@ namespace TWChatOverlay.Views
                     {
                         AppServices.Get<NotificationService>().PlayAlert("Reflection.wav");
                         // 패턴이 도는 동안 떠 있다가 종료 알림음과 함께 사라진다
-                        PatternAlertWindow.Flash(_settings, "반사", "반사 패턴", ReflectionPatternDuration);
+                        PatternAlertWindow.Flash(PatternAlertSlot.AbyssPattern, _settings, "반사", "반사 패턴", ReflectionPatternDuration);
                         if (parseResult.IsReflectionPatternEndAlert)
                             ScheduleReflectionEndAlert();
                     });
@@ -445,7 +445,8 @@ namespace TWChatOverlay.Views
             {
                 if (_logAnalysisService.ShouldRenderToTab(parseResult, _currentTabTag))
                 {
-                    bool suppressOverlayText = suppressChatLine || !string.IsNullOrWhiteSpace(parseResult.EtosImagePath) || ShouldSuppressEtosChatLine(parseResult);
+                    bool suppressOverlayText = suppressChatLine || !string.IsNullOrWhiteSpace(parseResult.EtosImagePath) || ShouldSuppressEtosChatLine(parseResult)
+                                               || IsHiddenOrlyRemainingAttackLine(parseResult);
 
                     if (!suppressOverlayText)
                         AddToUI(parseResult, isRealTime: context.IsRealTime, deferScroll: context.DeferUiScroll);
@@ -622,6 +623,24 @@ namespace TWChatOverlay.Views
             _pendingHiddenChatContinuationTimestamp = timestamp;
         }
 
+        /// <summary>
+        /// 오를리 방어전 "남은 공격 횟수"는 한 대 때릴 때마다 찍혀 채팅을 덮는다.
+        /// 따로 보여주는 설정을 켠 동안에는 채팅에 남기지 않는다 (끄면 예전처럼 채팅에 그대로 나온다).
+        /// 실시간으로 더할 때와 탭을 바꿔 다시 그릴 때 둘 다 같은 판정을 쓴다.
+        /// </summary>
+        private bool IsHiddenOrlyRemainingAttackLine(LogParser.ParseResult parseResult)
+        {
+            if (!_settings.ShowOrlyRemainingAttackDisplay)
+                return false;
+
+            string? text = parseResult?.FormattedText;
+            // 채팅 줄마다 도는 자리라 값싼 검사로 먼저 거르고, 걸린 줄만 태그를 떼어 정확히 본다
+            if (string.IsNullOrWhiteSpace(text) || !text.Contains("남은 공격 횟수", StringComparison.Ordinal))
+                return false;
+
+            return DungeonCountDisplayService.IsOrlyRemainingAttackLine(text);
+        }
+
         private bool ShouldSuppressOverlayText(LogParser.ParseResult parseResult)
         {
             if (parseResult == null || string.IsNullOrWhiteSpace(parseResult.FormattedText))
@@ -629,6 +648,9 @@ namespace TWChatOverlay.Views
 
             // 반사 패턴 알림 트리거 문구는 알림 소리만 울리고 채팅에는 남기지 않는다.
             if (parseResult.IsReflectionPatternAlert)
+                return true;
+
+            if (IsHiddenOrlyRemainingAttackLine(parseResult))
                 return true;
 
             // 에토스 방향 알림 트리거 문구는 방향 오버레이만 표시하고 일반 채팅 오버레이에는 노출하지 않음.

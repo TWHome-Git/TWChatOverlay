@@ -30,6 +30,21 @@ namespace TWChatOverlay.Services
             @"남은\s*에너지는\s*\[\s*(?<remain>\d+)\s*\]",
             RegexOptions.Compiled);
 
+        /// <summary>
+        /// 오를리 방어전에서 한 대 때릴 때마다 찍히는 줄. 채팅을 가득 채우므로 따로 빼서 보여준다.
+        /// 시각 다음에 바로 와야 잡는다 — 외치기나 일반 채팅에 같은 말이 섞인 줄("남은 공격 횟수 : 5 팝니다")은 건드리지 않는다.
+        /// </summary>
+        private static readonly Regex OrlyRemainingAttackRegex = new(
+            @"^(?:\[[^\]]*\]\s*)?남은\s*공격\s*횟수\s*:\s*(?<remain>\d+)",
+            RegexOptions.Compiled);
+
+        /// <summary>로그 한 줄(HTML)이 오를리 "남은 공격 횟수" 줄인지. 채팅에서 감출지 판단할 때 쓴다.</summary>
+        public static bool IsOrlyRemainingAttackLine(string? html)
+            => !string.IsNullOrWhiteSpace(html) && OrlyRemainingAttackRegex.IsMatch(Normalize(html));
+
+        /// <summary>표시 창이 떠 있는 시간. 다음 공격이 곧 들어와 값을 새로 쓰므로 길게 둘 필요가 없다.</summary>
+        private const int OrlyRemainingAttackDurationSeconds = 15;
+
         private readonly ChatSettings _settings;
 
         public DungeonCountDisplayService(ChatSettings settings)
@@ -64,6 +79,9 @@ namespace TWChatOverlay.Services
                 return;
 
             if (TryShowCravingPleasure(text))
+                return;
+
+            if (TryShowOrlyRemainingAttack(text))
                 return;
 
             TryShowTreasuryGoldPouch(text);
@@ -168,6 +186,26 @@ namespace TWChatOverlay.Services
                 _settings.CravingPleasureCountAlertDurationSeconds,
                 _settings,
                 _settings.CravingPleasureCountFontSize);
+            return true;
+        }
+
+        /// <summary>오를리 방어전 "남은 공격 횟수 : N" → 작은 창에 남은 횟수만 띄운다 (채팅에서는 감춘다).</summary>
+        private bool TryShowOrlyRemainingAttack(string text)
+        {
+            if (!_settings.ShowOrlyRemainingAttackDisplay)
+                return false;
+
+            Match match = OrlyRemainingAttackRegex.Match(text);
+            if (!match.Success || !int.TryParse(match.Groups["remain"].Value, out int remain))
+                return false;
+
+            // 감전 패턴 알림과 같은 모양의 창 — 통합 스택에 얹지 않고 자기 자리를 따로 갖는다
+            Views.PatternAlertWindow.Flash(
+                Views.PatternAlertSlot.OrlyAttack,
+                _settings,
+                "오를리 방어전",
+                $"남은 공격 {remain}회",
+                TimeSpan.FromSeconds(OrlyRemainingAttackDurationSeconds));
             return true;
         }
 

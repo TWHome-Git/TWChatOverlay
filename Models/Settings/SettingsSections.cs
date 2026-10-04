@@ -167,6 +167,8 @@ namespace TWChatOverlay.Models
         public List<int> TreasuryRunCounts { get; set; } = new();
         public bool ShowAbandonRoadSummaryWindow { get; set; } = false;
         public bool CravingPleasureCountAlert { get; set; } = false;
+        /// <summary>오를리 방어전: "남은 공격 횟수"를 채팅에서 빼고 작은 창으로 따로 보여준다.</summary>
+        public bool OrlyRemainingAttackDisplay { get; set; } = true;
         public bool ShowCountDisplayWindow { get; set; } = false;
         public int CountAlertDurationSeconds { get; set; } = 30;
         public double CountDisplayFontSize { get; set; } = 18.0;
@@ -255,6 +257,8 @@ namespace TWChatOverlay.Models
         public WindowRect BossAlertToast { get; set; } = new();
         /// <summary>어비스 패턴 알림(감전·반사) 창 위치.</summary>
         public WindowRect PatternAlert { get; set; } = new();
+        /// <summary>오를리 방어전 남은 공격 횟수 창. 패턴 알림과 자리를 따로 둔다.</summary>
+        public WindowRect OrlyAttack { get; set; } = new();
         /// <summary>통합 알림 스택(외치기·던전·경험치·아이템·보스) 기준 위치.</summary>
         public WindowRect ToastStack { get; set; } = new();
         /// <summary>알림 표시 위치 통합 여부. false면 알림 종류별로 각자의 저장 위치에 표시한다.</summary>

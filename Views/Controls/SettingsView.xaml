@@ -1219,6 +1219,15 @@
                         <WrapPanel>
                             <Border Style="{StaticResource SettingsRowStyle}">
                                 <DockPanel>
+                                    <CheckBox DockPanel.Dock="Right" IsChecked="{Binding Settings.ShowOrlyRemainingAttackDisplay, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
+                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                        <TextBlock Text="오를리 남은 공격 횟수 따로 보기" Style="{StaticResource SettingsRowLabelStyle}"/>
+                                        <Button Style="{StaticResource HelpButtonStyle}" Tag="dungeon.orly_remaining_attack" Click="Help_Click"/>
+                                    </StackPanel>
+                                </DockPanel>
+                            </Border>
+                            <Border Style="{StaticResource SettingsRowStyle}">
+                                <DockPanel>
                                     <CheckBox DockPanel.Dock="Right" IsChecked="{Binding Settings.ShowEtosDirectionAlert}" Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
                                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                                         <TextBlock Text="에토스 방향 알림" Style="{StaticResource SettingsRowLabelStyle}"/>

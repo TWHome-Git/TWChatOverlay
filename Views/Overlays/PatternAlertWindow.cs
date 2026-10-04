@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
@@ -8,16 +10,25 @@ using TWChatOverlay.Services;
 
 namespace TWChatOverlay.Views
 {
+    /// <summary>알림 자리. 자리마다 창과 저장 위치가 따로라 겹치지 않는다.</summary>
+    public enum PatternAlertSlot
+    {
+        /// <summary>어비스 감전·반사 패턴.</summary>
+        AbyssPattern,
+        /// <summary>오를리 방어전 남은 공격 횟수.</summary>
+        OrlyAttack,
+    }
+
     /// <summary>
-    /// 어비스 패턴 알림 창 (감전·반사). 다른 알림 스택에 얹지 않고 자기 자리를 따로 가진다.
-    /// 잠금 해제 모드에서 끌어 옮기면 그 위치가 설정에 남는다.
+    /// 자기 자리를 따로 갖는 알림 창 (어비스 감전·반사, 오를리 남은 공격).
+    /// 통합 알림 스택에 얹지 않고, 잠금 해제 모드에서 끌어 옮기면 그 위치가 설정에 남는다.
     ///
-    /// 감전은 상태라 풀릴 때까지 떠 있고(<see cref="Show"/> → <see cref="Hide"/>),
-    /// 반사는 패턴이 도는 동안만 떠 있다(<see cref="Flash"/>).
+    /// 감전은 상태라 풀릴 때까지 떠 있고(<see cref="Show"/> → <see cref="HideAlert"/>),
+    /// 반사·오를리는 정해진 시간만 떠 있다(<see cref="Flash"/>).
     /// </summary>
     public sealed class PatternAlertWindow : OverlayWindowBase
     {
-        private static PatternAlertWindow? _instance;
+        private static readonly Dictionary<PatternAlertSlot, PatternAlertWindow> Instances = new();
 
         /// <summary>풀림 줄을 못 봤을 때 알림이 영영 남지 않도록 하는 상한.</summary>
         private static readonly TimeSpan SafetyLifetime = TimeSpan.FromMinutes(3);
@@ -27,6 +38,7 @@ namespace TWChatOverlay.Views
         private static readonly Color DangerColor = Color.FromRgb(0xFF, 0x5A, 0x5A);
 
         private readonly ChatSettings? _settings;
+        private readonly PatternAlertSlot _slot;
         private readonly TextBlock _titleText;
         private readonly TextBlock _bodyText;
         private readonly DispatcherTimer _closeTimer;
@@ -35,9 +47,10 @@ namespace TWChatOverlay.Views
         protected override bool UseToolWindowStyle => true;
         protected override ChatSettings? ResolveSettings() => _settings;
 
-        private PatternAlertWindow(ChatSettings? settings)
+        private PatternAlertWindow(ChatSettings? settings, PatternAlertSlot slot)
         {
             _settings = settings;
+            _slot = slot;
 
             WindowStyle = WindowStyle.None;
             AllowsTransparency = true;
@@ -63,8 +76,13 @@ namespace TWChatOverlay.Views
                 FontWeight = FontWeights.Bold,
                 TextAlignment = TextAlignment.Center,
                 Margin = new Thickness(0, 4, 0, 0),
-                Foreground = new SolidColorBrush(DangerColor),
             };
+
+            // 감전·반사는 조심하라는 경고라 붉은색, 오를리는 그냥 세는 숫자라 다른 곳의 횟수와 같은 색을 쓴다
+            if (slot == PatternAlertSlot.OrlyAttack)
+                _bodyText.SetResourceReference(TextBlock.ForegroundProperty, "OverlayRareAccentBrush");
+            else
+                _bodyText.Foreground = new SolidColorBrush(DangerColor);
 
             var stack = new StackPanel { VerticalAlignment = VerticalAlignment.Center };
             stack.Children.Add(_titleText);
@@ -98,22 +116,36 @@ namespace TWChatOverlay.Views
             if (!IsVisible || !AppServices.Get<UiLockService>().IsUnlocked)
                 return false;
 
-            settings.PatternAlertWindowLeft = Left;
-            settings.PatternAlertWindowTop = Top;
+            if (_slot == PatternAlertSlot.OrlyAttack)
+            {
+                settings.OrlyAttackWindowLeft = Left;
+                settings.OrlyAttackWindowTop = Top;
+            }
+            else
+            {
+                settings.PatternAlertWindowLeft = Left;
+                settings.PatternAlertWindowTop = Top;
+            }
             return true;
         }
+
+        /// <summary>자리별 저장 위치.</summary>
+        private static (double? Left, double? Top) StoredPosition(ChatSettings? settings, PatternAlertSlot slot)
+            => slot == PatternAlertSlot.OrlyAttack
+                ? (settings?.OrlyAttackWindowLeft, settings?.OrlyAttackWindowTop)
+                : (settings?.PatternAlertWindowLeft, settings?.PatternAlertWindowTop);
 
         // ===== 표시 =====
 
         /// <summary>풀릴 때까지 떠 있는 알림 (감전).</summary>
-        public static void Show(ChatSettings? settings, string title, string message)
-            => ShowInternal(settings, title, message, SafetyLifetime, isPreview: false);
+        public static void Show(PatternAlertSlot slot, ChatSettings? settings, string title, string message)
+            => ShowInternal(slot, settings, title, message, SafetyLifetime, isPreview: false);
 
-        /// <summary>정해진 시간 동안만 떠 있는 알림 (반사). 패턴이 도는 시간과 같게 준다.</summary>
-        public static void Flash(ChatSettings? settings, string title, string message, TimeSpan lifetime)
-            => ShowInternal(settings, title, message, lifetime, isPreview: false);
+        /// <summary>정해진 시간 동안만 떠 있는 알림 (반사·오를리). 패턴이 도는 시간과 같게 준다.</summary>
+        public static void Flash(PatternAlertSlot slot, ChatSettings? settings, string title, string message, TimeSpan lifetime)
+            => ShowInternal(slot, settings, title, message, lifetime, isPreview: false);
 
-        private static void ShowInternal(ChatSettings? settings, string title, string message, TimeSpan lifetime, bool isPreview)
+        private static void ShowInternal(PatternAlertSlot slot, ChatSettings? settings, string title, string message, TimeSpan lifetime, bool isPreview)
         {
             if (!isPreview && AppServices.Get<TrayAllWindowsService>().IsTrayed)
                 return;
@@ -122,26 +154,27 @@ namespace TWChatOverlay.Views
             {
                 try
                 {
-                    if (_instance == null || !_instance.IsLoaded)
+                    if (!Instances.TryGetValue(slot, out var window) || !window.IsLoaded)
                     {
-                        var created = new PatternAlertWindow(settings);
+                        var created = new PatternAlertWindow(settings, slot);
                         created.Closed += (_, _) =>
                         {
-                            if (ReferenceEquals(_instance, created))
-                                _instance = null;
+                            if (Instances.TryGetValue(slot, out var current) && ReferenceEquals(current, created))
+                                Instances.Remove(slot);
                         };
-                        _instance = created;
+                        Instances[slot] = created;
+                        window = created;
                     }
 
-                    var window = _instance;
                     window._isPreview = isPreview;
                     window._titleText.Text = title;
                     window._bodyText.Text = message;
 
                     if (!window.IsVisible)
                     {
+                        var (storedLeft, storedTop) = StoredPosition(settings, slot);
                         var (left, top) = ToastPresentationHelper.ResolveBasePosition(
-                            settings?.PatternAlertWindowLeft, settings?.PatternAlertWindowTop, DefaultWidth, DefaultTop);
+                            storedLeft, storedTop, DefaultWidth, DefaultTop);
                         window.Left = left;
                         window.Top = top;
                         window.Show();
@@ -164,18 +197,17 @@ namespace TWChatOverlay.Views
         }
 
         /// <summary>알림을 닫는다 (감전이 풀렸을 때, 또는 상한 시간이 지났을 때).</summary>
-        public static void HideAlert()
+        public static void HideAlert(PatternAlertSlot slot)
         {
             Application.Current?.Dispatcher.BeginInvoke(new Action(() =>
             {
-                var window = _instance;
-                if (window == null)
+                if (!Instances.TryGetValue(slot, out var window))
                     return;
 
                 try
                 {
                     window._closeTimer.Stop();
-                    _instance = null;
+                    Instances.Remove(slot);
                     window.Close();
                 }
                 catch (Exception ex)
@@ -187,13 +219,18 @@ namespace TWChatOverlay.Views
 
         // ===== 잠금 해제 위치 조정 =====
 
-        /// <summary>잠금 해제 모드: 자리를 잡을 수 있게 띄운다. 저절로 닫히지 않는다.</summary>
+        /// <summary>잠금 해제 모드: 켜져 있는 알림의 자리를 잡을 수 있게 띄운다. 저절로 닫히지 않는다.</summary>
         public static void ShowPositionPreview(ChatSettings settings)
         {
-            if (settings == null || (!settings.EnableDischargeAlert && !settings.EnableReflectionPatternAlert))
-                return; // 두 알림이 다 꺼져 있으면 배치할 창도 없다
+            if (settings == null)
+                return;
 
-            ShowInternal(settings, "패턴 알림", "방전 상태", TimeSpan.Zero, isPreview: true);
+            // 꺼져 있는 알림은 배치할 창도 없다
+            if (settings.EnableDischargeAlert || settings.EnableReflectionPatternAlert)
+                ShowInternal(PatternAlertSlot.AbyssPattern, settings, "패턴 알림", "방전 상태", TimeSpan.Zero, isPreview: true);
+
+            if (settings.ShowOrlyRemainingAttackDisplay)
+                ShowInternal(PatternAlertSlot.OrlyAttack, settings, "오를리 방어전", "남은 공격 23회", TimeSpan.Zero, isPreview: true);
         }
 
         /// <summary>잠금 해제 종료: 미리보기로 떠 있던 창만 닫는다.</summary>
@@ -201,11 +238,14 @@ namespace TWChatOverlay.Views
         {
             Application.Current?.Dispatcher.BeginInvoke(new Action(() =>
             {
-                if (_instance?._isPreview != true)
-                    return;
+                foreach (var slot in Instances.Keys.ToList())
+                {
+                    if (!Instances.TryGetValue(slot, out var window) || !window._isPreview)
+                        continue;
 
-                try { _instance.Close(); } catch { }
-                _instance = null;
+                    try { window.Close(); } catch { }
+                    Instances.Remove(slot);
+                }
             }));
         }
     }
