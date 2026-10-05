@@ -13,8 +13,10 @@ namespace TWChatOverlay.Views
     /// <summary>던전 알림을 띄우는 쪽. 창은 하나뿐이고, 지금 누가 쓰고 있는지 가려내는 데 쓴다.</summary>
     public enum DungeonAlertSource
     {
-        /// <summary>어비스 감전·반사 패턴.</summary>
-        AbyssPattern,
+        /// <summary>어비스 감전(방전 상태). 풀릴 때까지 떠 있다.</summary>
+        AbyssDischarge,
+        /// <summary>어비스 반사 패턴. 정해진 시간만 떠 있다.</summary>
+        AbyssReflection,
         /// <summary>오를리 방어전 남은 공격 횟수.</summary>
         OrlyAttack,
         /// <summary>베스티지 성난 빅테디 출현.</summary>
@@ -34,6 +36,13 @@ namespace TWChatOverlay.Views
     public sealed class DungeonAlertWindow : OverlayWindowBase
     {
         private static DungeonAlertWindow? _instance;
+
+        /// <summary>
+        /// 풀릴 때까지 떠 있어야 하는 알림(감전·빅테디)의 내용.
+        /// 그 위로 잠깐 뜨는 알림(반사)이 지나가면 이 내용으로 되돌린다 —
+        /// 창이 하나뿐이라 되돌리지 않으면 아직 안 풀린 상태인데 표시가 사라진다.
+        /// </summary>
+        private static (DungeonAlertSource Source, string Title, string Message)? _sticky;
 
         /// <summary>풀림 줄을 못 봤을 때 알림이 영영 남지 않도록 하는 상한.</summary>
         private static readonly TimeSpan SafetyLifetime = TimeSpan.FromMinutes(3);
@@ -107,6 +116,20 @@ namespace TWChatOverlay.Views
             _closeTimer.Tick += (_, _) =>
             {
                 _closeTimer.Stop();
+
+                // 잠깐 뜨는 알림(반사)이 끝났는데 아직 안 풀린 알림(감전)이 있으면 그 내용으로 되돌린다
+                if (_sticky is { } sticky && sticky.Source != _owner)
+                {
+                    _owner = sticky.Source;
+                    _titleText.Text = sticky.Title;
+                    _bodyText.Text = sticky.Message;
+                    ApplyBodyColor(this, sticky.Source, isPreview: false);
+                    _closeTimer.Interval = SafetyLifetime;
+                    _closeTimer.Start();
+                    return;
+                }
+
+                _sticky = null;
                 Hide();
             };
         }
@@ -126,7 +149,10 @@ namespace TWChatOverlay.Views
 
         /// <summary>풀릴 때까지 떠 있는 알림 (감전·빅테디 출현).</summary>
         public static void Show(DungeonAlertSource source, ChatSettings? settings, string title, string message)
-            => ShowInternal(source, settings, title, message, SafetyLifetime, isPreview: false);
+        {
+            _sticky = (source, title, message);
+            ShowInternal(source, settings, title, message, SafetyLifetime, isPreview: false);
+        }
 
         /// <summary>정해진 시간 동안만 떠 있는 알림 (반사·오를리). 패턴이 도는 시간과 같게 준다.</summary>
         public static void Flash(DungeonAlertSource source, ChatSettings? settings, string title, string message, TimeSpan lifetime)
@@ -203,6 +229,11 @@ namespace TWChatOverlay.Views
         {
             Application.Current?.Dispatcher.BeginInvoke(new Action(() =>
             {
+                // 되돌릴 내용도 함께 지운다 — 지금 다른 알림(반사)이 떠 있더라도
+                // 감전이 풀린 뒤에 그 알림이 끝나면서 감전이 되살아나면 안 된다
+                if (_sticky?.Source == source)
+                    _sticky = null;
+
                 var window = _instance;
                 if (window == null || window._owner != source)
                     return;
@@ -229,7 +260,7 @@ namespace TWChatOverlay.Views
                 return;
 
             // 네 알림이 한 창을 쓰므로, 특정 알림 문구 대신 창이 무엇인지와 누가 쓰는지를 적는다
-            ShowInternal(DungeonAlertSource.AbyssPattern, settings,
+            ShowInternal(DungeonAlertSource.AbyssDischarge, settings,
                 "감전 · 반사 · 오를리 · 빅테디", "던전 특수 알림", TimeSpan.Zero, isPreview: true);
         }
 
@@ -243,6 +274,7 @@ namespace TWChatOverlay.Views
 
                 try { _instance.Close(); } catch { }
                 _instance = null;
+                _sticky = null;   // 미리보기로 띄운 내용이 되살아나지 않게
             }));
         }
     }

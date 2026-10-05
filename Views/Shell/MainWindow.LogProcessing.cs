@@ -320,7 +320,7 @@ namespace TWChatOverlay.Views
                         _dischargeStartedAt = DateTime.Now;
                         AppLogger.Info($"Discharge status detected. Line='{parseResult.FormattedText}'");
                         if (_settings.EnableDischargeAlert)
-                            DungeonAlertWindow.Show(DungeonAlertSource.AbyssPattern, _settings, "감전", "방전 상태");
+                            DungeonAlertWindow.Show(DungeonAlertSource.AbyssDischarge, _settings, "감전", "방전 상태");
                     });
                 }
                 else if (parseResult.IsDischargeCleared)
@@ -332,7 +332,7 @@ namespace TWChatOverlay.Views
                             : "unknown";
                         _dischargeStartedAt = null;
                         AppLogger.Info($"Discharge status cleared after {held}. Line='{parseResult.FormattedText}'");
-                        DungeonAlertWindow.HideAlert(DungeonAlertSource.AbyssPattern);   // 설정을 끈 뒤 풀린 경우에도 남지 않게 항상 닫는다
+                        DungeonAlertWindow.HideAlert(DungeonAlertSource.AbyssDischarge);   // 설정을 끈 뒤 풀린 경우에도 남지 않게 항상 닫는다
                     });
                 }
 
@@ -342,7 +342,7 @@ namespace TWChatOverlay.Views
                     {
                         AppServices.Get<NotificationService>().PlayAlert("Reflection.wav");
                         // 패턴이 도는 동안 떠 있다가 종료 알림음과 함께 사라진다
-                        DungeonAlertWindow.Flash(DungeonAlertSource.AbyssPattern, _settings, "반사", "반사 패턴", ReflectionPatternDuration);
+                        DungeonAlertWindow.Flash(DungeonAlertSource.AbyssReflection, _settings, "반사", "반사 패턴", ReflectionPatternDuration);
                         if (parseResult.IsReflectionPatternEndAlert)
                             ScheduleReflectionEndAlert();
                     });
