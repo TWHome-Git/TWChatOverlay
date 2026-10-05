@@ -130,12 +130,18 @@ namespace TWChatOverlay.Views
                 Style = (Style)FindResource("SecondaryButtonStyle"),
                 ToolTip = "날짜 고르기",
             };
-            _dateButton.Click += (_, _) => _datePopup.IsOpen = !_datePopup.IsOpen;
-
             _dayList = new ListBox { Width = 226, MaxHeight = 380, BorderThickness = new Thickness(0) };
             ScrollViewer.SetHorizontalScrollBarVisibility(_dayList, ScrollBarVisibility.Disabled);
             _dayList.SetResourceReference(BackgroundProperty, "InputFieldBackgroundBrush");
             _dayList.SetResourceReference(ForegroundProperty, "TextBrush");
+
+            var popupBorder = new Border { BorderThickness = new Thickness(1), Padding = new Thickness(2), Child = _dayList };
+            popupBorder.SetResourceReference(Border.BackgroundProperty, "OverlaySurfaceBackgroundBrush");
+            popupBorder.SetResourceReference(Border.BorderBrushProperty, "OverlayCardBorderBrush");
+            _datePopup = new Popup { PlacementTarget = _dateButton, Placement = PlacementMode.Bottom, StaysOpen = false, Child = popupBorder };
+
+            // 팝업을 만든 뒤에 연결한다 — 핸들러가 _datePopup을 쓰므로 먼저 걸면 아직 없는 것을 참조하는 모양이 된다
+            _dateButton.Click += (_, _) => _datePopup.IsOpen = !_datePopup.IsOpen;
             _dayList.SelectionChanged += (_, _) =>
             {
                 if (_dayList.SelectedItem is ListBoxItem item && item.Tag is DateTime day && day != _selectedDay)
@@ -145,11 +151,6 @@ namespace TWChatOverlay.Views
                     RenderDay();
                 }
             };
-
-            var popupBorder = new Border { BorderThickness = new Thickness(1), Padding = new Thickness(2), Child = _dayList };
-            popupBorder.SetResourceReference(Border.BackgroundProperty, "OverlaySurfaceBackgroundBrush");
-            popupBorder.SetResourceReference(Border.BorderBrushProperty, "OverlayCardBorderBrush");
-            _datePopup = new Popup { PlacementTarget = _dateButton, Placement = PlacementMode.Bottom, StaysOpen = false, Child = popupBorder };
 
             _summaryText = new TextBlock { FontSize = 12, VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(14, 0, 0, 0) };
             _summaryText.SetResourceReference(TextBlock.ForegroundProperty, "TextBrush");
