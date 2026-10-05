@@ -21,6 +21,8 @@ namespace TWChatOverlay.Views
         OrlyAttack,
         /// <summary>베스티지 성난 빅테디 출현.</summary>
         VestigeBoss,
+        /// <summary>심연의 보물창고 자동 퇴장 예고.</summary>
+        TreasuryExit,
     }
 
     /// <summary>
@@ -210,12 +212,12 @@ namespace TWChatOverlay.Views
             }));
         }
 
-        /// <summary>경고(감전·반사·빅테디)는 붉은색, 세는 숫자(오를리)는 다른 곳의 횟수와 같은 색. 자리 잡기 미리보기는 경고가 아니므로 평소 글자색.</summary>
+        /// <summary>경고(감전·반사·빅테디)는 붉은색, 세거나 알려 주는 값(오를리·보물창고 퇴장)은 다른 곳의 횟수와 같은 색. 자리 잡기 미리보기는 경고가 아니므로 평소 글자색.</summary>
         private static void ApplyBodyColor(DungeonAlertWindow window, DungeonAlertSource source, bool isPreview)
         {
             if (isPreview)
                 window._bodyText.SetResourceReference(TextBlock.ForegroundProperty, "TextBrush");
-            else if (source == DungeonAlertSource.OrlyAttack)
+            else if (source is DungeonAlertSource.OrlyAttack or DungeonAlertSource.TreasuryExit)
                 window._bodyText.SetResourceReference(TextBlock.ForegroundProperty, "OverlayRareAccentBrush");
             else
                 window._bodyText.Foreground = new SolidColorBrush(DangerColor);

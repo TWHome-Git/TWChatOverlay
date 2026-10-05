@@ -46,6 +46,14 @@ namespace TWChatOverlay.Services
         private const string VestigeBossAppearKeyword = "성난 빅테디가 출현하였습니다";
         private const string VestigeBossClearedKeyword = "[성난 빅테디의 별사탕] 아이템을 획득하였습니다";
 
+        /// <summary>심연의 보물창고가 끝나 곧 밖으로 나가게 될 때.</summary>
+        private static readonly Regex TreasuryExitRegex = new(
+            @"\d+\s*분\s*후\s*심연의\s*보물창고\s*밖으로\s*자동\s*이동합니다",
+            RegexOptions.Compiled);
+
+        /// <summary>퇴장 예고는 한 번만 오므로 잠깐 보여 주고 지운다.</summary>
+        private const int TreasuryExitDurationSeconds = 15;
+
         private readonly ChatSettings _settings;
 
         public DungeonCountDisplayService(ChatSettings settings)
@@ -86,6 +94,9 @@ namespace TWChatOverlay.Services
                 return;
 
             if (TryShowVestigeBoss(text))
+                return;
+
+            if (TryShowTreasuryExit(text))
                 return;
 
             TryShowTreasuryGoldPouch(text);
@@ -130,6 +141,8 @@ namespace TWChatOverlay.Services
                 _treasurySessionStartedUtc = DateTime.UtcNow;
                 ConfigService.SaveDeferred(_settings);
                 Views.TreasurySummaryWindow.ShowOrUpdate(_settings, dungeon.TreasuryRunCounts.ToArray(), run);
+                // 새 회차에 들어왔으니 지난 회차의 퇴장 예고는 지운다
+                Views.DungeonAlertWindow.HideAlert(Views.DungeonAlertSource.TreasuryExit);
                 return true;
             }
 
@@ -230,6 +243,21 @@ namespace TWChatOverlay.Services
             }
 
             return false;
+        }
+
+        /// <summary>심연의 보물창고 종료 — 알림 창에 잠깐 띄운다. 다음 회차에 들어가면 그때 지운다.</summary>
+        private bool TryShowTreasuryExit(string text)
+        {
+            if (!TreasuryExitRegex.IsMatch(text))
+                return false;
+
+            Views.DungeonAlertWindow.Flash(
+                Views.DungeonAlertSource.TreasuryExit,
+                _settings,
+                "심연의 보물창고",
+                "종료",
+                TimeSpan.FromSeconds(TreasuryExitDurationSeconds));
+            return true;
         }
 
         private static string Normalize(string? text)
