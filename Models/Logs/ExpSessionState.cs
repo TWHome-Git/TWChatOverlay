@@ -106,8 +106,11 @@ namespace TWChatOverlay.Models
             }
         }
 
-        /// <summary>비활동으로 측정이 멈춘 상태인지 여부.</summary>
-        public bool IsMeasurementStopped => _isFrozen;
+        /// <summary>
+        /// 측정 중이 아닌 상태인지 여부 — 비활동으로 멈췄거나, 리셋 뒤 아직 경험치가 안 들어와 시작 전이거나.
+        /// "경험치가 들어오면 측정 시작"이므로 시작 전은 측정 중이 아니다.
+        /// </summary>
+        public bool IsMeasurementStopped => _isFrozen || _startedAt is null;
 
         /// <summary>
         /// 측정을 시작한 뒤 지난 시간. 멈춘 뒤에는 멈춘 시각에서 더 가지 않는다 (1시간 예상과 같은 기준 시각).
