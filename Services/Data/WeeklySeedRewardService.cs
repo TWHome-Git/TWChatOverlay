@@ -374,7 +374,14 @@ namespace TWChatOverlay.Services
         /// <summary>보관본이 바뀌었을 때(실시간 기록·보충 스캔). 백그라운드 스레드에서 올라온다.</summary>
         public event Action? Changed;
 
+        /// <summary>열람용 HTML. 사람이 열어 보는 파일이라 주·날짜 머리글과 합계가 붙는다. 전체 저장 때만 다시 쓴다.</summary>
         private string ArchivePath => Path.Combine(LogStoragePaths.SeedDirectory, "SeedHistory.html");
+
+        /// <summary>
+        /// 앱이 읽고 쓰는 데이터 파일. 줄 하나가 기록 하나라 새 기록은 끝에 덧붙이기만 한다.
+        /// 예전에는 열람용 HTML이 데이터 파일을 겸해, 시드를 얻을 때마다 1년치 전체를 다시 썼다.
+        /// </summary>
+        private string DataPath => Path.Combine(LogStoragePaths.SeedDirectory, "SeedHistory.log");
 
         private static readonly Regex ArchiveEntryRegex = new(
             "<div class=\"seed (?<kind>weekly|daily|partial|marker)\" data-date=\"(?<date>\\d{4}-\\d{2}-\\d{2})\" data-amount=\"(?<amount>\\d+)\">(?<text>.*?)</div>",
@@ -528,6 +535,8 @@ namespace TWChatOverlay.Services
 
             record.Entries.Add(entry);
             record.LiveSinceScan.Add(entry);
+            lock (PendingLock)
+                _pendingAppends.Add((key, entry));
             _liveChanged = true;
         }
 
@@ -540,6 +549,9 @@ namespace TWChatOverlay.Services
         // 실시간 기록은 몇 초 안에 몰려 들어오므로 저장을 잠깐 모아서 한 번에 쓴다
         private int _savePending;
 
+        private readonly object PendingLock = new();
+        private readonly List<(string Key, SeedEntry Entry)> _pendingAppends = new();
+
         private void ScheduleSave()
         {
             if (Interlocked.Exchange(ref _savePending, 1) == 1)
@@ -548,12 +560,55 @@ namespace TWChatOverlay.Services
             _ = Task.Delay(1500).ContinueWith(_ =>
             {
                 Interlocked.Exchange(ref _savePending, 0);
+                AppendPending();
+            }, TaskScheduler.Default);
+        }
+
+        /// <summary>
+        /// 새로 들어온 기록만 데이터 파일 끝에 덧붙인다.
+        /// 날짜별 "어디까지 읽었는지"도 같이 적어 두는데, 같은 날이 여러 번 나오면 나중 줄이 이기므로 덮어쓸 필요가 없다.
+        /// 열람용 HTML은 여기서 건드리지 않는다 — 전체를 다시 쓰는 비용이 크고, 보충 스캔 때 어차피 새로 만든다.
+        /// </summary>
+        private void AppendPending()
+        {
+            var lines = new List<string>();
+            lock (PendingLock)
+            {
+                if (_pendingAppends.Count == 0)
+                    return;
+
                 lock (ArchiveLock)
                 {
-                    if (_archive is not null)
-                        SaveArchive(_archive);
+                    var archive = _archive;
+                    if (archive is null)
+                        return;
+
+                    var days = new HashSet<string>(StringComparer.Ordinal);
+                    foreach (var (key, entry) in _pendingAppends)
+                    {
+                        lines.Add(EntryLine(key, entry));
+                        days.Add(key);
+                    }
+
+                    foreach (string key in days)
+                    {
+                        if (archive.TryGetValue(key, out var record))
+                            lines.Add(DayMetaLine(key, record));
+                    }
                 }
-            }, TaskScheduler.Default);
+
+                _pendingAppends.Clear();
+            }
+
+            try
+            {
+                Directory.CreateDirectory(LogStoragePaths.SeedDirectory);
+                File.AppendAllLines(DataPath, lines, new UTF8Encoding(false));
+            }
+            catch (Exception ex)
+            {
+                AppLogger.Warn("Failed to append seed history.", ex);
+            }
         }
 
         // ───────────────────────── 보충 스캔 ─────────────────────────
@@ -714,6 +769,17 @@ namespace TWChatOverlay.Services
             var result = new SortedDictionary<string, DayRecord>(StringComparer.Ordinal);
             try
             {
+                if (File.Exists(DataPath))
+                {
+                    foreach (string line in File.ReadLines(DataPath))
+                        ReadDataLine(result, line);
+
+                    // 구버전 합계 캐시는 아카이브로 대체되었으므로 정리한다
+                    DeleteLegacySeedCache();
+                    return _archive = result;
+                }
+
+                // 데이터 파일이 아직 없다 — 예전 열람용 HTML에서 한 번만 옮겨 온다 (HTML은 지우지 않는다)
                 if (File.Exists(ArchivePath))
                 {
                     foreach (string line in File.ReadLines(ArchivePath))
@@ -738,12 +804,12 @@ namespace TWChatOverlay.Services
                             long.Parse(entryMatch.Groups["amount"].Value),
                             WebUtility.HtmlDecode(entryMatch.Groups["text"].Value)));
                     }
+
+                    WriteDataFile(result);
+                    AppLogger.Info($"Seed history migrated to append-only data file. Days={result.Count}");
                 }
 
-                // 구버전 합계 캐시는 아카이브로 대체되었으므로 정리한다
-                string legacyCache = Path.Combine(LogStoragePaths.StateDirectory, "seed_daily.json");
-                if (File.Exists(legacyCache))
-                    File.Delete(legacyCache);
+                DeleteLegacySeedCache();
             }
             catch (Exception ex)
             {
@@ -764,9 +830,86 @@ namespace TWChatOverlay.Services
             return (weekly, daily);
         }
 
-        /// <summary>아카이브를 주별 섹션·합계가 붙은 열람용 HTML로 통째로 다시 쓴다.</summary>
+        private static void DeleteLegacySeedCache()
+        {
+            try
+            {
+                string legacyCache = Path.Combine(LogStoragePaths.StateDirectory, "seed_daily.json");
+                if (File.Exists(legacyCache))
+                    File.Delete(legacyCache);
+            }
+            catch { /* 지우지 못해도 동작에는 지장이 없다 */ }
+        }
+
+        // ── 데이터 파일: 한 줄이 기록 하나 ──
+        //   D|날짜|스캔판|반영한 파일 길이
+        //   E|날짜|종류|금액|원문          (원문에 | 가 있을 수 있어 맨 뒤에 둔다)
+
+        private static string DayMetaLine(string key, DayRecord record)
+            => $"D|{key}|{record.ScanVersion}|{record.CoveredLength}";
+
+        private static string EntryLine(string key, SeedEntry entry)
+            => $"E|{key}|{entry.Kind}|{entry.Amount}|{entry.Text.Replace('\n', ' ').Replace('\r', ' ')}";
+
+        private void ReadDataLine(SortedDictionary<string, DayRecord> archive, string line)
+        {
+            if (string.IsNullOrWhiteSpace(line))
+                return;
+
+            string[] parts = line.Split('|', 5);
+            if (parts.Length < 4)
+                return;
+
+            if (parts[0] == "D")
+            {
+                var record = GetOrCreateRecord(archive, parts[1]);
+                // 같은 날이 여러 번 나오면 나중 줄이 이긴다 (덧붙이기라 최신이 뒤에 온다)
+                if (int.TryParse(parts[2], out int scan))
+                    record.ScanVersion = scan;
+                if (long.TryParse(parts[3], out long len))
+                    record.CoveredLength = len;
+                return;
+            }
+
+            if (parts[0] == "E" && parts.Length == 5 && long.TryParse(parts[3], out long amount))
+                GetOrCreateRecord(archive, parts[1]).Entries.Add(new SeedEntry(parts[2], amount, parts[4]));
+        }
+
+        /// <summary>데이터 파일을 통째로 다시 쓴다 (보충 스캔처럼 과거 날짜가 바뀌었을 때만).</summary>
+        private void WriteDataFile(SortedDictionary<string, DayRecord> archive)
+        {
+            Directory.CreateDirectory(LogStoragePaths.SeedDirectory);
+
+            var sb = new StringBuilder();
+            foreach (var kv in archive)
+            {
+                sb.AppendLine(DayMetaLine(kv.Key, kv.Value));
+                foreach (var entry in kv.Value.Entries)
+                    sb.AppendLine(EntryLine(kv.Key, entry));
+            }
+
+            File.WriteAllText(DataPath, sb.ToString(), new UTF8Encoding(false));
+        }
+
+        /// <summary>
+        /// 데이터 파일과 열람용 HTML을 통째로 다시 쓴다.
+        /// 과거 날짜가 바뀌는 경우(보충 스캔·미보관분 채우기)에만 부른다 —
+        /// 실시간 기록은 <see cref="ScheduleSave"/>가 끝에 덧붙이기만 한다.
+        /// </summary>
         private void SaveArchive(SortedDictionary<string, DayRecord> archive)
         {
+            try
+            {
+                lock (PendingLock)
+                    _pendingAppends.Clear();   // 전체를 다시 쓰므로 대기분은 이미 반영됐다
+
+                WriteDataFile(archive);
+            }
+            catch (Exception ex)
+            {
+                AppLogger.Warn("Failed to save seed history data file.", ex);
+            }
+
             try
             {
                 Directory.CreateDirectory(LogStoragePaths.SeedDirectory);
