@@ -10,7 +10,7 @@ using TWChatOverlay.Services;
 
 namespace TWChatOverlay.Views
 {
-    /// <summary>던전 알림을 띄우는 쪽. 창은 하나뿐이고, 지금 누가 쓰고 있는지 가려내는 데 쓴다.</summary>
+    /// <summary>던전 알림의 종류. 종류마다 창이 따로 뜨고, 자리(설정)만 함께 쓴다.</summary>
     public enum DungeonAlertSource
     {
         /// <summary>어비스 감전(방전 상태). 풀릴 때까지 떠 있다.</summary>
@@ -26,30 +26,27 @@ namespace TWChatOverlay.Views
     }
 
     /// <summary>
-    /// 던전 알림 창 하나 (어비스 감전·반사, 오를리 남은 공격, 베스티지 빅테디 출현).
-    /// 서로 다른 던전의 알림이라 같이 뜰 일이 없으므로 창과 자리를 하나로 쓴다 —
-    /// 자리를 한 번만 잡으면 어느 던전에서든 같은 곳에 뜬다.
+    /// 던전 알림 창 (어비스 감전·반사, 오를리 남은 공격, 베스티지 빅테디 출현, 보물창고 종료).
+    ///
+    /// 종류마다 창을 따로 만들고, 자리 설정만 하나를 함께 쓴다 —
+    /// 자리를 한 번 잡으면 어느 던전에서든 거기서부터 뜨고, 둘이 겹치면 아래로 쌓인다.
+    /// 감전이 걸린 채 반사가 돌 때처럼 둘 다 유효한 상황에서 하나가 가려지지 않게 하기 위함이다.
     /// 통합 알림 스택에 얹지 않고, 잠금 해제 모드에서 끌어 옮기면 그 위치가 설정에 남는다.
     ///
     /// 감전·빅테디는 상태라 풀릴 때까지 떠 있고(<see cref="Show"/> → <see cref="HideAlert"/>),
-    /// 반사·오를리는 정해진 시간만 떠 있다(<see cref="Flash"/>).
-    /// 내릴 때는 띄운 쪽을 함께 넘겨, 그 사이 다른 던전 알림이 창을 가져갔으면 건드리지 않는다.
+    /// 반사·오를리·보물창고는 정해진 시간만 떠 있다(<see cref="Flash"/>).
     /// </summary>
     public sealed class DungeonAlertWindow : OverlayWindowBase
     {
-        private static DungeonAlertWindow? _instance;
-
-        /// <summary>
-        /// 풀릴 때까지 떠 있어야 하는 알림(감전·빅테디)의 내용.
-        /// 그 위로 잠깐 뜨는 알림(반사)이 지나가면 이 내용으로 되돌린다 —
-        /// 창이 하나뿐이라 되돌리지 않으면 아직 안 풀린 상태인데 표시가 사라진다.
-        /// </summary>
-        private static (DungeonAlertSource Source, string Title, string Message)? _sticky;
+        /// <summary>종류별로 떠 있는 창. 쌓는 순서는 열거형 순서를 따른다.</summary>
+        private static readonly Dictionary<DungeonAlertSource, DungeonAlertWindow> Instances = new();
 
         /// <summary>풀림 줄을 못 봤을 때 알림이 영영 남지 않도록 하는 상한.</summary>
         private static readonly TimeSpan SafetyLifetime = TimeSpan.FromMinutes(3);
         private const double DefaultWidth = 220;
         private const double DefaultTop = 200;
+        /// <summary>쌓을 때 창 사이 간격.</summary>
+        private const double StackGap = 6;
 
         private static readonly Color DangerColor = Color.FromRgb(0xFF, 0x5A, 0x5A);
 
@@ -58,15 +55,16 @@ namespace TWChatOverlay.Views
         private readonly TextBlock _bodyText;
         private readonly DispatcherTimer _closeTimer;
         private bool _isPreview;
-        /// <summary>지금 창에 떠 있는 내용을 띄운 쪽.</summary>
-        private DungeonAlertSource _owner;
+        /// <summary>이 창이 맡은 알림 종류.</summary>
+        private readonly DungeonAlertSource _source;
 
         protected override bool UseToolWindowStyle => true;
         protected override ChatSettings? ResolveSettings() => _settings;
 
-        private DungeonAlertWindow(ChatSettings? settings)
+        private DungeonAlertWindow(ChatSettings? settings, DungeonAlertSource source)
         {
             _settings = settings;
+            _source = source;
 
             WindowStyle = WindowStyle.None;
             AllowsTransparency = true;
@@ -118,43 +116,74 @@ namespace TWChatOverlay.Views
             _closeTimer.Tick += (_, _) =>
             {
                 _closeTimer.Stop();
-
-                // 잠깐 뜨는 알림(반사)이 끝났는데 아직 안 풀린 알림(감전)이 있으면 그 내용으로 되돌린다
-                if (_sticky is { } sticky && sticky.Source != _owner)
-                {
-                    _owner = sticky.Source;
-                    _titleText.Text = sticky.Title;
-                    _bodyText.Text = sticky.Message;
-                    ApplyBodyColor(this, sticky.Source, isPreview: false);
-                    _closeTimer.Interval = SafetyLifetime;
-                    _closeTimer.Start();
-                    return;
-                }
-
-                _sticky = null;
-                Hide();
+                CloseSelf();
             };
         }
 
-        /// <summary>잠금 해제 중 옮긴 자리만 저장한다 (자동으로 뜰 때의 기본 자리는 저장하지 않는다).</summary>
+        /// <summary>자기 창만 닫고 남은 창을 다시 쌓는다.</summary>
+        private void CloseSelf()
+        {
+            if (Instances.TryGetValue(_source, out var current) && ReferenceEquals(current, this))
+                Instances.Remove(_source);
+
+            try { Close(); } catch { }
+            Restack();
+        }
+
+        /// <summary>
+        /// 잠금 해제 중 옮긴 자리만 저장한다 (자동으로 뜰 때의 기본 자리는 저장하지 않는다).
+        /// 아래에 쌓인 창을 끌었으면 그만큼 빼서 맨 위 기준 자리로 저장한다.
+        /// </summary>
         protected override bool PersistBounds(ChatSettings settings)
         {
             if (!IsVisible || !AppServices.Get<UiLockService>().IsUnlocked)
                 return false;
 
             settings.DungeonAlertWindowLeft = Left;
-            settings.DungeonAlertWindowTop = Top;
+            settings.DungeonAlertWindowTop = Top - StackOffsetOf(_source);
             return true;
+        }
+
+        /// <summary>이 종류보다 위에 쌓인 창들의 높이 합.</summary>
+        private static double StackOffsetOf(DungeonAlertSource source)
+        {
+            double offset = 0;
+            foreach (var pair in Instances.OrderBy(x => x.Key))
+            {
+                if (pair.Key == source)
+                    break;
+                if (pair.Value.IsVisible)
+                    offset += pair.Value.ActualHeight + StackGap;
+            }
+
+            return offset;
+        }
+
+        /// <summary>떠 있는 창들을 저장된 자리에서부터 아래로 쌓는다.</summary>
+        private static void Restack()
+        {
+            ChatSettings? settings = Instances.Values.Select(w => w._settings).FirstOrDefault(s => s != null);
+            var (left, top) = ToastPresentationHelper.ResolveBasePosition(
+                settings?.DungeonAlertWindowLeft, settings?.DungeonAlertWindowTop, DefaultWidth, DefaultTop);
+
+            double y = top;
+            foreach (var pair in Instances.OrderBy(x => x.Key))
+            {
+                DungeonAlertWindow window = pair.Value;
+                if (!window.IsVisible)
+                    continue;
+
+                window.Left = left;
+                window.Top = y;
+                y += window.ActualHeight + StackGap;
+            }
         }
 
         // ===== 표시 =====
 
         /// <summary>풀릴 때까지 떠 있는 알림 (감전·빅테디 출현).</summary>
         public static void Show(DungeonAlertSource source, ChatSettings? settings, string title, string message)
-        {
-            _sticky = (source, title, message);
-            ShowInternal(source, settings, title, message, SafetyLifetime, isPreview: false);
-        }
+            => ShowInternal(source, settings, title, message, SafetyLifetime, isPreview: false);
 
         /// <summary>정해진 시간 동안만 떠 있는 알림 (반사·오를리). 패턴이 도는 시간과 같게 준다.</summary>
         public static void Flash(DungeonAlertSource source, ChatSettings? settings, string title, string message, TimeSpan lifetime)
@@ -169,32 +198,29 @@ namespace TWChatOverlay.Views
             {
                 try
                 {
-                    if (_instance == null || !_instance.IsLoaded)
+                    if (!Instances.TryGetValue(source, out var window) || !window.IsLoaded)
                     {
-                        var created = new DungeonAlertWindow(settings);
+                        var created = new DungeonAlertWindow(settings, source);
                         created.Closed += (_, _) =>
                         {
-                            if (ReferenceEquals(_instance, created))
-                                _instance = null;
+                            if (Instances.TryGetValue(source, out var cur) && ReferenceEquals(cur, created))
+                                Instances.Remove(source);
                         };
-                        _instance = created;
+                        Instances[source] = created;
+                        window = created;
                     }
 
-                    var window = _instance;
                     window._isPreview = isPreview;
-                    window._owner = source;
                     window._titleText.Text = title;
                     window._bodyText.Text = message;
                     ApplyBodyColor(window, source, isPreview);
 
                     if (!window.IsVisible)
-                    {
-                        var (left, top) = ToastPresentationHelper.ResolveBasePosition(
-                            settings?.DungeonAlertWindowLeft, settings?.DungeonAlertWindowTop, DefaultWidth, DefaultTop);
-                        window.Left = left;
-                        window.Top = top;
                         window.Show();
-                    }
+
+                    // 내용이 바뀌면 높이가 달라질 수 있으므로 재어 본 뒤 쌓는다
+                    window.UpdateLayout();
+                    Restack();
 
                     window._closeTimer.Stop();
                     if (lifetime > TimeSpan.Zero)
@@ -223,28 +249,18 @@ namespace TWChatOverlay.Views
                 window._bodyText.Foreground = new SolidColorBrush(DangerColor);
         }
 
-        /// <summary>
-        /// 알림을 내린다 (감전이 풀렸을 때, 빅테디를 잡았을 때, 또는 상한 시간이 지났을 때).
-        /// 그 사이 다른 던전 알림이 창을 가져갔으면 그대로 둔다.
-        /// </summary>
+        /// <summary>그 종류의 알림만 내린다 (감전이 풀렸을 때, 빅테디를 잡았을 때, 보물창고에 다시 들어갔을 때).</summary>
         public static void HideAlert(DungeonAlertSource source)
         {
             Application.Current?.Dispatcher.BeginInvoke(new Action(() =>
             {
-                // 되돌릴 내용도 함께 지운다 — 지금 다른 알림(반사)이 떠 있더라도
-                // 감전이 풀린 뒤에 그 알림이 끝나면서 감전이 되살아나면 안 된다
-                if (_sticky?.Source == source)
-                    _sticky = null;
-
-                var window = _instance;
-                if (window == null || window._owner != source)
+                if (!Instances.TryGetValue(source, out var window))
                     return;
 
                 try
                 {
                     window._closeTimer.Stop();
-                    _instance = null;
-                    window.Close();
+                    window.CloseSelf();
                 }
                 catch (Exception ex)
                 {
@@ -261,7 +277,7 @@ namespace TWChatOverlay.Views
             if (settings == null)
                 return;
 
-            // 네 알림이 한 창을 쓰므로, 특정 알림 문구 대신 창이 무엇인지와 누가 쓰는지를 적는다
+            // 자리는 맨 위 한 자리만 잡으면 되므로 미리보기도 하나만 띄운다 (겹치면 아래로 쌓인다)
             ShowInternal(DungeonAlertSource.AbyssDischarge, settings,
                 "감전 · 반사 · 오를리 · 빅테디", "던전 특수 알림", TimeSpan.Zero, isPreview: true);
         }
@@ -271,12 +287,13 @@ namespace TWChatOverlay.Views
         {
             Application.Current?.Dispatcher.BeginInvoke(new Action(() =>
             {
-                if (_instance?._isPreview != true)
-                    return;
+                foreach (var source in Instances.Keys.ToList())
+                {
+                    if (!Instances.TryGetValue(source, out var window) || !window._isPreview)
+                        continue;
 
-                try { _instance.Close(); } catch { }
-                _instance = null;
-                _sticky = null;   // 미리보기로 띄운 내용이 되살아나지 않게
+                    try { window.CloseSelf(); } catch { }
+                }
             }));
         }
     }

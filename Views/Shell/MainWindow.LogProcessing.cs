@@ -131,6 +131,13 @@ namespace TWChatOverlay.Views
         /// </summary>
         private static readonly TimeSpan ReflectionPatternDuration = TimeSpan.FromSeconds(7);
 
+        /// <summary>
+        /// 알림 창을 종료 알림음보다 조금 더 두는 시간.
+        /// 둘을 같은 시각에 맞추면 창이 먼저 닫히고 소리가 뒤따라 나는 것처럼 보인다
+        /// (타이머가 거의 동시에 돌고, 소리는 재생까지 약간 늦다).
+        /// </summary>
+        private static readonly TimeSpan ReflectionAlertLinger = TimeSpan.FromMilliseconds(150);
+
         private readonly object _reflectionEndAlertTimerLock = new();
         private readonly HashSet<DispatcherTimer> _reflectionEndAlertTimers = new();
 
@@ -341,8 +348,9 @@ namespace TWChatOverlay.Views
                     GuardSideEffect("reflection-alert", () =>
                     {
                         AppServices.Get<NotificationService>().PlayAlert("Reflection.wav");
-                        // 패턴이 도는 동안 떠 있다가 종료 알림음과 함께 사라진다
-                        DungeonAlertWindow.Flash(DungeonAlertSource.AbyssReflection, _settings, "반사", "반사 패턴", ReflectionPatternDuration);
+                        // 패턴이 도는 동안 떠 있다가 종료 알림음이 난 직후 사라진다
+                        DungeonAlertWindow.Flash(DungeonAlertSource.AbyssReflection, _settings, "반사", "반사 패턴",
+                            ReflectionPatternDuration + ReflectionAlertLinger);
                         if (parseResult.IsReflectionPatternEndAlert)
                             ScheduleReflectionEndAlert();
                     });
