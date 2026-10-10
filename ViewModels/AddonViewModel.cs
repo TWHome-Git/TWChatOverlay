@@ -45,6 +45,8 @@ namespace TWChatOverlay.ViewModels
         public ICommand LoadCustomDropItemFilterCommand { get; }
         public ICommand SaveCustomDropItemFilterCommand { get; }
         public ICommand ApplyExperienceLimitStateCommand { get; }
+        public ICommand ClearDungeonTimerRecordsCommand { get; }
+        public ICommand RebuildDungeonTimerRecordsCommand { get; }
 
         public bool EnableExperienceLimitAlert
         {
@@ -163,6 +165,8 @@ namespace TWChatOverlay.ViewModels
             LoadCustomDropItemFilterCommand = new RelayCommand(_ => LoadCustomDropItemFilter());
             SaveCustomDropItemFilterCommand = new RelayCommand(_ => SaveCustomDropItemFilter());
             ApplyExperienceLimitStateCommand = new RelayCommand(_ => ApplyExperienceLimitState());
+            ClearDungeonTimerRecordsCommand = new RelayCommand(_ => ClearDungeonTimerRecords());
+            RebuildDungeonTimerRecordsCommand = new RelayCommand(async _ => await RebuildDungeonTimerRecordsAsync());
 
             _enableExperienceLimitAlert = _settings.EnableExperienceLimitAlert;
             _expAlarmThresholdMan = _settings.ExpAlarmThreshold;
@@ -612,6 +616,82 @@ namespace TWChatOverlay.ViewModels
             [JsonPropertyName("abbr")]
             public string? Abbreviation { get; set; }
         }
+
+        #region 던전 타이머 기록
+
+        private bool _isDungeonRecordWorkRunning;
+
+        /// <summary>지금까지의 기록을 비우고 이제부터 새로 모은다. 과거 로그는 다시 읽지 않는다.</summary>
+        private void ClearDungeonTimerRecords()
+        {
+            if (_isDungeonRecordWorkRunning)
+                return;
+
+            var answer = MessageBox.Show(
+                "던전 타이머의 모든 기록(최고 기록·주간 기록·추이)을 비우고 지금부터 새로 모읍니다.\n" +
+                "옛 기록은 Config\\DungeonTimerArchive\\backup_… 폴더에 남겨 둡니다.\n\n계속할까요?",
+                "기록 초기화", MessageBoxButton.OKCancel, MessageBoxImage.Warning);
+            if (answer != MessageBoxResult.OK)
+                return;
+
+            _isDungeonRecordWorkRunning = true;
+            try
+            {
+                if (AppServices.Get<ContentTimerService>().ClearAllRecords())
+                    MessageBox.Show("기록을 초기화했습니다.", "기록 초기화", MessageBoxButton.OK, MessageBoxImage.Information);
+                else
+                    MessageBox.Show("지금 과거 로그에서 기록을 뽑는 중입니다. 끝난 뒤에 다시 눌러주세요.", "기록 초기화", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
+            catch (Exception ex)
+            {
+                AppLogger.Warn("Failed to clear dungeon timer records.", ex);
+                MessageBox.Show("기록 초기화 중 오류가 발생했습니다.", "기록 초기화", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
+            finally
+            {
+                _isDungeonRecordWorkRunning = false;
+            }
+        }
+
+        /// <summary>기록을 비우고 남아 있는 채팅 로그 전체에서 다시 뽑는다.</summary>
+        private async Task RebuildDungeonTimerRecordsAsync()
+        {
+            if (_isDungeonRecordWorkRunning)
+                return;
+
+            if (string.IsNullOrWhiteSpace(_settings.ChatLogFolderPath))
+            {
+                MessageBox.Show("채팅 로그 폴더가 지정되지 않아 다시 읽을 수 없습니다.", "기록 재작성", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            var answer = MessageBox.Show(
+                "남아 있는 채팅 로그 전체를 다시 읽어 던전 타이머 기록을 새로 만듭니다.\n" +
+                "로그가 많으면 몇십 초가 걸리며, 그동안 기록 표가 차례로 채워집니다.\n\n계속할까요?",
+                "기록 재작성", MessageBoxButton.OKCancel, MessageBoxImage.Warning);
+            if (answer != MessageBoxResult.OK)
+                return;
+
+            _isDungeonRecordWorkRunning = true;
+            try
+            {
+                if (await AppServices.Get<ContentTimerService>().RebuildFromLogsAsync(_settings.ChatLogFolderPath))
+                    MessageBox.Show("기록을 다시 만들었습니다.", "기록 재작성", MessageBoxButton.OK, MessageBoxImage.Information);
+                else
+                    MessageBox.Show("지금 과거 로그에서 기록을 뽑는 중입니다. 끝난 뒤에 다시 눌러주세요.", "기록 재작성", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
+            catch (Exception ex)
+            {
+                AppLogger.Warn("Failed to rebuild dungeon timer records.", ex);
+                MessageBox.Show("기록 재작성 중 오류가 발생했습니다.", "기록 재작성", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
+            finally
+            {
+                _isDungeonRecordWorkRunning = false;
+            }
+        }
+
+        #endregion
     }
 
     public sealed class DropItemFilterEntry

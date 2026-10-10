@@ -975,6 +975,10 @@ namespace TWChatOverlay.Services
         // 기록키/난이도 → 이미 보관한 판의 끝난 시각(초). 같은 판을 두 번 적지 않기 위한 색인
         private Dictionary<string, HashSet<long>>? _archiveIndex;
         private bool _archiveAppended;
+        // 기록 초기화를 누른 시각. 이보다 먼저 끝난 판은 받지 않는다 —
+        // 그러지 않으면 다음 실행의 보충 스캔(지난주 월요일부터)이 지운 판을 되살린다. 표시 파일에 남겨 앱을 다시 켜도 지켜진다.
+        private DateTime? _recordFloor;
+        private bool _recordFloorLoaded;
         // 이번 달 최고 기록. 판이 더해지거나 달이 바뀌면 다시 센다 (이번 달 파일 하나만 읽는다)
         private Dictionary<string, DungeonRunRecord>? _monthBest;
         private string _monthBestKey = string.Empty;
@@ -1604,6 +1608,10 @@ namespace TWChatOverlay.Services
         /// </summary>
         private bool AddRecordUnlocked(DungeonRunRecord record)
         {
+            // 기록 초기화 이전에 끝난 판은 받지 않는다 (보충 스캔이 지운 판을 되살리지 못하게)
+            if (RecordFloorUnlocked() is DateTime floor && record.EndedAt < floor)
+                return false;
+
             // 합계는 언제나 구간 합 — 옛 파일(판 전체 경과 시간으로 저장)도 여기서 맞춘다
             if (record.Segments.Count > 0)
                 record.TotalSeconds = record.Segments.Values.Sum();
@@ -1815,18 +1823,122 @@ namespace TWChatOverlay.Services
             }
         }
 
-        private void MarkArchiveFullScanDone(int files, int runs)
+        private void MarkArchiveFullScanDone(int files, int runs, DateTime? clearedAt = null)
         {
             try
             {
+                // 초기화 시각을 주지 않았으면 이미 적혀 있던 값을 지킨다 —
+                // 전체 추출이 도는 동안 사용자가 기록 초기화를 누르면, 추출이 끝나며 쓰는 이 표시가 하한을 지워 버린다.
+                clearedAt ??= ReadMarkerClearedAt();
+
                 Directory.CreateDirectory(ArchiveDirectoryPath);
-                var marker = new { Version = ArchiveScanVersion, CompletedAt = DateTime.Now, Files = files, Runs = runs };
+                var marker = new { Version = ArchiveScanVersion, CompletedAt = DateTime.Now, Files = files, Runs = runs, ClearedAt = clearedAt };
                 File.WriteAllText(ArchiveScanMarkerPath, JsonSerializer.Serialize(marker, JsonOptions), new UTF8Encoding(false));
             }
             catch (Exception ex)
             {
                 AppLogger.Warn("Failed to write dungeon timer archive scan marker.", ex);
             }
+        }
+
+        /// <summary>표시 파일에 적힌 기록 초기화 시각. 없으면 null.</summary>
+        private static DateTime? ReadMarkerClearedAt()
+        {
+            try
+            {
+                if (!File.Exists(ArchiveScanMarkerPath))
+                    return null;
+
+                using var doc = JsonDocument.Parse(File.ReadAllText(ArchiveScanMarkerPath));
+                return doc.RootElement.TryGetProperty("ClearedAt", out var cleared) &&
+                       cleared.ValueKind == JsonValueKind.String &&
+                       cleared.TryGetDateTime(out DateTime at)
+                    ? at
+                    : null;
+            }
+            catch (Exception ex)
+            {
+                AppLogger.Warn("Failed to read dungeon timer record floor.", ex);
+                return null;
+            }
+        }
+
+        /// <summary>기록 초기화를 누른 시각. 표시 파일에서 한 번만 읽는다.</summary>
+        private DateTime? RecordFloorUnlocked()
+        {
+            if (_recordFloorLoaded)
+                return _recordFloor;
+
+            _recordFloorLoaded = true;
+            _recordFloor = ReadMarkerClearedAt();
+            return _recordFloor;
+        }
+
+        // ===== 사용자가 누르는 기록 관리 =====
+
+        /// <summary>
+        /// 지금까지의 기록을 모두 비우고 이제부터 새로 모은다. 과거 로그는 다시 읽지 않는다.
+        /// 옛 기록은 Config\DungeonTimerArchive\backup_… 으로 옮겨 두므로 되살릴 수 있다.
+        /// </summary>
+        public bool ClearAllRecords()
+        {
+            if (IsArchiveScanRunning)
+                return false;
+
+            ResetArchiveForRescan();
+
+            DateTime clearedAt = DateTime.Now;
+            lock (SyncRoot)
+            {
+                _recordFloor = clearedAt;
+                _recordFloorLoaded = true;
+                // 전체 추출을 마친 것으로 표시해 둔다 — 그러지 않으면 다음 실행이 로그 전체를 다시 읽어 기록이 돌아온다
+                MarkArchiveFullScanDone(files: 0, runs: 0, clearedAt: clearedAt);
+            }
+
+            AppLogger.Warn($"Dungeon timer records cleared by user at {clearedAt:yyyy-MM-dd HH:mm:ss}.");
+            try { ArchiveChanged?.Invoke(); } catch { }
+            RefreshCurrentView();
+            return true;
+        }
+
+        /// <summary>
+        /// 기록을 비우고 남아 있는 채팅 로그 전체에서 다시 뽑는다. 끝나면 ArchiveChanged가 발생한다.
+        /// 로그 파일이 많으면 몇십 초가 걸리므로 백그라운드에서 돈다.
+        /// </summary>
+        public Task<bool> RebuildFromLogsAsync(string? chatLogFolder)
+        {
+            if (IsArchiveScanRunning)
+                return Task.FromResult(false);
+
+            ResetArchiveForRescan();
+
+            lock (SyncRoot)
+            {
+                // 초기화로 걸어 둔 하한을 풀고 전체 추출을 다시 하게 만든다
+                _recordFloor = null;
+                _recordFloorLoaded = true;
+                _backfillStarted = false;
+            }
+
+            AppLogger.Warn("Dungeon timer records rebuild requested by user.");
+            try { ArchiveChanged?.Invoke(); } catch { }
+            RefreshCurrentView();
+            return BackfillFromLogsAsync(chatLogFolder).ContinueWith(_ => true);
+        }
+
+        /// <summary>떠 있는 타이머 창을 지금 기록으로 다시 그린다 (기록을 비운 뒤 옛 숫자가 남지 않게).</summary>
+        private void RefreshCurrentView()
+        {
+            Application.Current?.Dispatcher.BeginInvoke(new Action(() =>
+            {
+                var window = _window;
+                if (window == null || !window.IsLoaded || _lastViewArgs == null)
+                    return;
+
+                var (def, difficulty, status, cur, max, inProgress, highlight) = _lastViewArgs.Value;
+                window.RefreshView(BuildView(def, difficulty, status, cur, max, inProgress, highlight));
+            }));
         }
 
         // ===== 최고 기록 =====

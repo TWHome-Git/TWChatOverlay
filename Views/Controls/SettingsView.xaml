@@ -1169,6 +1169,24 @@
                                     <TextBlock Text="글자 크기" Style="{StaticResource SettingsRowLabelStyle}"/>
                                 </DockPanel>
                             </Border>
+                            <Border Style="{StaticResource SettingsRowStyle}">
+                                <DockPanel>
+                                    <Button DockPanel.Dock="Right" Content="초기화" Width="70" Height="26" Padding="0" Command="{Binding ClearDungeonTimerRecordsCommand}" Style="{StaticResource SecondaryButtonStyle}" FontSize="12"/>
+                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                        <TextBlock Text="기록 초기화" Style="{StaticResource SettingsRowLabelStyle}"
+                                                   ToolTip="최고 기록·주간 기록·추이를 모두 비우고 지금부터 새로 모읍니다 (옛 기록은 backup 폴더에 남습니다)"/>
+                                    </StackPanel>
+                                </DockPanel>
+                            </Border>
+                            <Border Style="{StaticResource SettingsRowStyle}">
+                                <DockPanel>
+                                    <Button DockPanel.Dock="Right" Content="재작성" Width="70" Height="26" Padding="0" Command="{Binding RebuildDungeonTimerRecordsCommand}" Style="{StaticResource SecondaryButtonStyle}" FontSize="12"/>
+                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                        <TextBlock Text="기록 재작성" Style="{StaticResource SettingsRowLabelStyle}"
+                                                   ToolTip="남아 있는 채팅 로그 전체를 다시 읽어 기록을 새로 만듭니다"/>
+                                    </StackPanel>
+                                </DockPanel>
+                            </Border>
                         </WrapPanel>
                         </StackPanel>
 
