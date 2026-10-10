@@ -160,6 +160,9 @@ namespace TWChatOverlay.Views
         }
 
         /// <summary>떠 있는 창들을 저장된 자리에서부터 아래로 쌓는다.</summary>
+        /// <summary>저장된 자리로 떠 있는 알림들을 다시 쌓는다. 설정 전체 교체·위치 초기화 뒤에 쓴다.</summary>
+        public static void ApplyStoredPosition() => Restack();
+
         private static void Restack()
         {
             ChatSettings? settings = Instances.Values.Select(w => w._settings).FirstOrDefault(s => s != null);

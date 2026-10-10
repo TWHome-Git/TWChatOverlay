@@ -22,6 +22,7 @@ namespace TWChatOverlay.ViewModels
         private readonly Action? _onSettingsReplaced;
         private readonly Action? _onHotKeysChanged;
         private readonly Func<System.Threading.Tasks.Task<bool>>? _onManualLogReload;
+        private readonly Action? _onWindowPositionsChanged;
         private bool _isManualLogReloadRunning;
         private bool _isManualUpdateRunning;
 
@@ -258,9 +259,50 @@ namespace TWChatOverlay.ViewModels
                 if (_settings.UnifiedToastStack == value) return;
                 _settings.UnifiedToastStack = value;
                 OnPropertyChanged();
+                // 통합이면 알림들이 한 자리를 쓰므로 목록도 통합 항목 하나로 바뀐다
+                RebuildWindowPositions();
                 SaveSettings();
             }
         }
+
+        #region 창 위치
+
+        /// <summary>
+        /// 창마다 지금 저장된 좌표와 0,0 되돌리기 버튼. 창을 화면 밖으로 끌고 나가 잡을 수 없게 됐을 때 쓴다.
+        /// 알림 표시 위치 통합이 켜져 있으면 알림들은 통합 항목 하나로 묶여 보인다.
+        /// </summary>
+        public ObservableCollection<WindowPositionRowViewModel> WindowPositions { get; } = new();
+
+        private void RebuildWindowPositions()
+        {
+            WindowPositions.Clear();
+            foreach (WindowPositionEntry entry in WindowPositionCatalog.VisibleFor(_settings))
+                WindowPositions.Add(new WindowPositionRowViewModel(_settings, entry, OnWindowPositionReset));
+        }
+
+        private void OnWindowPositionReset()
+        {
+            SaveSettings();
+            // 이미 떠 있는 창은 스스로 설정을 다시 읽지 않는다 — 지금 자리에서 새 좌표로 옮겨 준다
+            try { _onWindowPositionsChanged?.Invoke(); }
+            catch (Exception ex) { AppLogger.Warn("Failed to move windows after position reset.", ex); }
+        }
+
+        /// <summary>목록의 좌표 표시를 지금 설정값으로 다시 읽는다. 창을 끌어 옮긴 뒤 목록을 열 때 쓴다.</summary>
+        public void RefreshWindowPositions()
+        {
+            foreach (WindowPositionRowViewModel row in WindowPositions)
+                row.Refresh();
+        }
+
+        /// <summary>창 위치를 담는 설정 이름인지. 메인 채팅창만 예전 이름(LineMargin)을 쓴다.</summary>
+        private static bool IsWindowPositionProperty(string? name)
+            => !string.IsNullOrEmpty(name)
+            && (name.EndsWith("Left", StringComparison.Ordinal)
+                || name.EndsWith("Top", StringComparison.Ordinal)
+                || name == nameof(ChatSettings.LineMargin));
+
+        #endregion
 
         public bool MenuWindowHorizontal
         {
@@ -716,7 +758,8 @@ namespace TWChatOverlay.ViewModels
                                  Action? onExit = null, Action? onSettingsReset = null,
                                  Action? onHotKeysChanged = null,
                                  Func<System.Threading.Tasks.Task<bool>>? onManualLogReload = null,
-                                 Action? onSettingsReplaced = null)
+                                 Action? onSettingsReplaced = null,
+                                 Action? onWindowPositionsChanged = null)
         {
             _settings = settings ?? throw new ArgumentNullException(nameof(settings));
             _onColorsUpdated = onColorsUpdated;
@@ -725,6 +768,9 @@ namespace TWChatOverlay.ViewModels
             _onSettingsReplaced = onSettingsReplaced;
             _onHotKeysChanged = onHotKeysChanged;
             _onManualLogReload = onManualLogReload;
+            _onWindowPositionsChanged = onWindowPositionsChanged;
+
+            RebuildWindowPositions();
 
             ColorPickCommand = new RelayCommand<string?>(ExecuteColorPick);
             InitSettingsCommand = new RelayCommand<object?>(_ => ExecuteInitSettings());
@@ -742,6 +788,10 @@ namespace TWChatOverlay.ViewModels
 
         private void SettingsOnPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
         {
+            // 창을 끌어 옮기면 그 창이 좌표를 설정에 쓴다 — "창 위치" 목록의 표시를 따라가게 한다
+            if (IsWindowPositionProperty(e.PropertyName))
+                RefreshWindowPositions();
+
             // 이름이 비어 있으면 설정이 통째로 바뀐 것(프로필 불러오기·초기화)이다. 화면 값을 전부 다시 읽는다.
             if (string.IsNullOrEmpty(e.PropertyName))
             {
@@ -750,6 +800,7 @@ namespace TWChatOverlay.ViewModels
                 OnPropertyChanged(nameof(ShoutToastFontSize));
                 OnPropertyChanged(nameof(Clone1Enabled));
                 OnPropertyChanged(nameof(Clone2Enabled));
+                RebuildWindowPositions();
                 NotifyAllSettingsChanged();
             }
             else if (e.PropertyName == nameof(ChatSettings.LineMarginLeft))

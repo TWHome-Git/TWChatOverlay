@@ -666,6 +666,9 @@ namespace TWChatOverlay.Views
             SyncPositionToSettings();
         }
 
+        /// <summary>설정에 저장된 위치로 옮긴다. 설정 전체 교체(프로필 불러오기)·위치 초기화 뒤에 쓴다.</summary>
+        public void ReapplyStoredPosition() => ApplyStoredPosition();
+
         private void ApplyStoredPosition()
         {
             // 옮기는 동안의 LocationChanged 저장은 막는다 (중간 상태가 설정에 남지 않게)

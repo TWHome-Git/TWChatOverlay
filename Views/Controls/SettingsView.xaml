@@ -746,9 +746,37 @@
                     <StackPanel x:Name="DisplayPanel" Visibility="Collapsed">
                         <Border Style="{StaticResource SettingsTabStripStyle}">
                             <StackPanel Orientation="Horizontal">
-                                <RadioButton Content="오버레이" IsChecked="True" GroupName="DisplayTabs" IsHitTestVisible="False" Style="{StaticResource SettingsTabStyle}"/>
+                                <RadioButton x:Name="DisplayTabOverlay" Content="오버레이" IsChecked="True" GroupName="DisplayTabs" Style="{StaticResource SettingsTabStyle}"/>
+                                <RadioButton x:Name="DisplayTabPositions" Content="창 위치" GroupName="DisplayTabs" Checked="DisplayTabPositions_Checked" Style="{StaticResource SettingsTabStyle}"
+                                             ToolTip="창을 화면 밖으로 옮겨 잡을 수 없게 됐을 때 0,0으로 되돌립니다"/>
                             </StackPanel>
                         </Border>
+
+                        <!-- 창 위치 -->
+                        <StackPanel Visibility="{Binding IsChecked, ElementName=DisplayTabPositions, Converter={StaticResource BooleanToVisibilityConverter}}">
+                            <TextBlock Text="잠금 해제 모드에서 창을 화면 밖으로 끌고 나가면 다시 잡을 수 없습니다. 좌표 옆 초기화를 누르면 그 창만 0,0으로 돌아옵니다."
+                                       Style="{StaticResource SettingsRowHintStyle}" Margin="0,0,0,6"/>
+                            <ItemsControl ItemsSource="{Binding WindowPositions}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border Style="{StaticResource SettingsRowStyle}">
+                                            <DockPanel>
+                                                <Button DockPanel.Dock="Right" Content="초기화" Width="70" Height="26" Padding="0"
+                                                        Command="{Binding ResetCommand}" Style="{StaticResource SecondaryButtonStyle}" FontSize="12"
+                                                        ToolTip="이 창만 0,0으로 옮깁니다"/>
+                                                <TextBlock DockPanel.Dock="Right" Text="{Binding Coordinates}" Width="110" TextAlignment="Right"
+                                                           Margin="0,0,10,0" VerticalAlignment="Center" FontSize="12"
+                                                           Foreground="{DynamicResource TextBrush}"/>
+                                                <TextBlock Text="{Binding Name}" Style="{StaticResource SettingsRowLabelStyle}"/>
+                                            </DockPanel>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+
+                        <!-- 오버레이 -->
+                        <StackPanel Visibility="{Binding IsChecked, ElementName=DisplayTabOverlay, Converter={StaticResource BooleanToVisibilityConverter}}">
                         <WrapPanel>
                             <Border Style="{StaticResource SettingsRowStyle}">
                                 <DockPanel>
@@ -800,6 +828,7 @@
                                 </DockPanel>
                             </Border>
                         </WrapPanel>
+                        </StackPanel>
                     </StackPanel>
 
                     <!-- ===================== 단축키 ===================== -->

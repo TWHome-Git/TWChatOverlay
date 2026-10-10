@@ -419,7 +419,7 @@ namespace TWChatOverlay.Views
         /// 각 창은 이동·종료 때 자기 위치를 설정에 다시 쓰므로, 옮기지 않으면 예전 위치가 프로필 값을 덮어쓴다.
         /// 아직 만들어지지 않은 창은 나중에 열릴 때 설정값을 읽으므로 손대지 않는다.
         /// </summary>
-        private void ReapplyStoredWindowPositions()
+        internal void ReapplyStoredWindowPositions()
         {
             // 메인 채팅창: 스티키 서비스는 잠금 해제/위치 조정 모드에서 저장 좌표로 되돌리지 않으므로 직접 옮긴다
             try
@@ -454,6 +454,18 @@ namespace TWChatOverlay.Views
                 _expTrackerWindow?.ApplyStoredPosition(_settings.ExpTrackerWindowLeft, _settings.ExpTrackerWindowTop, _settings.ExpTrackerWindowRight);
             }
             catch (Exception ex) { AppLogger.Warn("Failed to reapply overlay window positions.", ex); }
+
+            try
+            {
+                foreach (var clone in Application.Current.Windows.OfType<ChatCloneWindow>().ToList())
+                    clone.ReapplyStoredPosition();
+                foreach (var replay in Application.Current.Windows.OfType<ShoutReplayWindow>().ToList())
+                    replay.ApplyStoredBounds();
+                foreach (var memo in Application.Current.Windows.OfType<MemoOverlayWindow>().ToList())
+                    memo.ApplyStoredPosition();
+                DungeonAlertWindow.ApplyStoredPosition();
+            }
+            catch (Exception ex) { AppLogger.Warn("Failed to reapply sub window positions.", ex); }
 
             // 잠금 해제 미리보기로 떠 있을 수 있는 창들 — 각 서비스가 창이 없으면 아무것도 하지 않는다
             try

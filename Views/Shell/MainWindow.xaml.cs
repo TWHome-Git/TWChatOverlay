@@ -134,7 +134,7 @@ namespace TWChatOverlay.Views
                         primary,
                         IsContentCompletionRelevantLog(primary.Parsed.FormattedText));
                 });
-            _settingsViewModel = new SettingsViewModel(_settings, OnColorsUpdatedFromSettings, ConfirmExit, OnSettingsResetFromSettings, ApplyHotKeys, ExecuteManualLogReloadFromSettingsAsync, OnSettingsReplacedFromSettings);
+            _settingsViewModel = new SettingsViewModel(_settings, OnColorsUpdatedFromSettings, ConfirmExit, OnSettingsResetFromSettings, ApplyHotKeys, ExecuteManualLogReloadFromSettingsAsync, OnSettingsReplacedFromSettings, ReapplyStoredWindowPositions);
 
             _expService = AppServices.Get<ExperienceService>();
             _huntSessionService = AppServices.Get<ExpHuntSessionService>();

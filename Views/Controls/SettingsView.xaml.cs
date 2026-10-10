@@ -70,6 +70,12 @@ namespace TWChatOverlay.Views
             HelpWindow.ShowTopic(key, Window.GetWindow(this), anchor);
         }
 
+        /// <summary>창 위치 목록을 열 때 저장된 좌표를 다시 읽는다 (잠금 해제 중에 옮긴 뒤 들어올 수 있다).</summary>
+        private void DisplayTabPositions_Checked(object sender, RoutedEventArgs e)
+        {
+            (DataContext as ViewModels.SettingsViewModel)?.RefreshWindowPositions();
+        }
+
         /// <summary>잠금 해제 모드를 시작하고, 배치가 잘 보이도록 설정 창을 닫는다.</summary>
         private void UnlockMode_Click(object sender, RoutedEventArgs e)
         {
