@@ -22,7 +22,6 @@ namespace TWChatOverlay.ViewModels
         private readonly Action? _onSettingsReplaced;
         private readonly Action? _onHotKeysChanged;
         private readonly Func<System.Threading.Tasks.Task<bool>>? _onManualLogReload;
-        private readonly Action? _onWindowPositionsChanged;
         private bool _isManualLogReloadRunning;
         private bool _isManualUpdateRunning;
 
@@ -280,13 +279,8 @@ namespace TWChatOverlay.ViewModels
                 WindowPositions.Add(new WindowPositionRowViewModel(_settings, entry, OnWindowPositionChanged));
         }
 
-        private void OnWindowPositionChanged()
-        {
-            SaveSettings();
-            // 이미 떠 있는 창은 스스로 설정을 다시 읽지 않는다 — 지금 자리에서 새 좌표로 옮겨 준다
-            try { _onWindowPositionsChanged?.Invoke(); }
-            catch (Exception ex) { AppLogger.Warn("Failed to move windows after position change.", ex); }
-        }
+        /// <summary>창을 옮긴 뒤. 옮기는 일은 각 줄이 그 창에만 하고, 여기서는 저장만 한다.</summary>
+        private void OnWindowPositionChanged() => SaveSettings();
 
         /// <summary>목록의 좌표 표시를 지금 설정값으로 다시 읽는다. 창을 끌어 옮긴 뒤 목록을 열 때 쓴다.</summary>
         public void RefreshWindowPositions()
@@ -758,8 +752,7 @@ namespace TWChatOverlay.ViewModels
                                  Action? onExit = null, Action? onSettingsReset = null,
                                  Action? onHotKeysChanged = null,
                                  Func<System.Threading.Tasks.Task<bool>>? onManualLogReload = null,
-                                 Action? onSettingsReplaced = null,
-                                 Action? onWindowPositionsChanged = null)
+                                 Action? onSettingsReplaced = null)
         {
             _settings = settings ?? throw new ArgumentNullException(nameof(settings));
             _onColorsUpdated = onColorsUpdated;
@@ -768,7 +761,6 @@ namespace TWChatOverlay.ViewModels
             _onSettingsReplaced = onSettingsReplaced;
             _onHotKeysChanged = onHotKeysChanged;
             _onManualLogReload = onManualLogReload;
-            _onWindowPositionsChanged = onWindowPositionsChanged;
 
             RebuildWindowPositions();
 

@@ -419,7 +419,14 @@ namespace TWChatOverlay.Views
         /// 각 창은 이동·종료 때 자기 위치를 설정에 다시 쓰므로, 옮기지 않으면 예전 위치가 프로필 값을 덮어쓴다.
         /// 아직 만들어지지 않은 창은 나중에 열릴 때 설정값을 읽으므로 손대지 않는다.
         /// </summary>
-        internal void ReapplyStoredWindowPositions()
+        /// <summary>바깥(설정의 창 위치 목록)에서 채팅창을 옮긴 뒤. 스티키가 옛 자리로 되돌리지 않게 알린다.</summary>
+        internal void NotifyPositionMovedExternally()
+        {
+            try { _stickyService?.UpdatePositionImmediately(); }
+            catch (Exception ex) { AppLogger.Warn("Failed to sync sticky position after external move.", ex); }
+        }
+
+        private void ReapplyStoredWindowPositions()
         {
             // 메인 채팅창: 스티키 서비스는 잠금 해제/위치 조정 모드에서 저장 좌표로 되돌리지 않으므로 직접 옮긴다
             try

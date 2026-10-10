@@ -108,6 +108,8 @@ namespace TWChatOverlay.ViewModels
         {
             _entry.Write(_settings, left, top);
             Refresh();
+            // 이 창만 새 자리로 옮긴다 — 다른 창(설정 창 포함)은 건드리지 않는다
+            _entry.MoveToStored(_settings);
             _onChanged();
         }
 
