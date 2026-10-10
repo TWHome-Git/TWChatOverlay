@@ -764,9 +764,21 @@
                                                 <Button DockPanel.Dock="Right" Content="초기화" Width="70" Height="26" Padding="0"
                                                         Command="{Binding ResetCommand}" Style="{StaticResource SecondaryButtonStyle}" FontSize="12"
                                                         ToolTip="이 창만 0,0으로 옮깁니다"/>
-                                                <TextBlock DockPanel.Dock="Right" Text="{Binding Coordinates}" Width="110" TextAlignment="Right"
-                                                           Margin="0,0,10,0" VerticalAlignment="Center" FontSize="12"
-                                                           Foreground="{DynamicResource TextBrush}"/>
+                                                <Grid DockPanel.Dock="Right" Width="110" Margin="0,0,10,0" Background="Transparent"
+                                                      MouseLeftButtonDown="CoordinateDisplay_MouseLeftButtonDown">
+                                                    <TextBlock Text="{Binding Coordinates}" TextAlignment="Right"
+                                                               VerticalAlignment="Center" FontSize="12"
+                                                               Foreground="{DynamicResource TextBrush}"
+                                                               ToolTip="더블클릭하면 좌표를 직접 입력할 수 있습니다 (예: 1920, 480)"
+                                                               Visibility="{Binding IsNotEditing, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                                                    <TextBox Text="{Binding EditText, UpdateSourceTrigger=PropertyChanged}"
+                                                             Style="{StaticResource SettingsRowInputStyle}" Width="110" TextAlignment="Right"
+                                                             Visibility="{Binding IsEditing, Converter={StaticResource BooleanToVisibilityConverter}}"
+                                                             PreviewTextInput="CoordinatePair_PreviewTextInput"
+                                                             KeyDown="CoordinateEdit_KeyDown"
+                                                             LostFocus="CoordinateEdit_LostFocus"
+                                                             IsVisibleChanged="CoordinateEdit_IsVisibleChanged"/>
+                                                </Grid>
                                                 <TextBlock Text="{Binding Name}" Style="{StaticResource SettingsRowLabelStyle}"/>
                                             </DockPanel>
                                         </Border>

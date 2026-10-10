@@ -76,6 +76,69 @@ namespace TWChatOverlay.Views
             (DataContext as ViewModels.SettingsViewModel)?.RefreshWindowPositions();
         }
 
+        /// <summary>좌표를 더블클릭하면 그 자리에서 직접 고칠 수 있게 입력칸으로 바꾼다.</summary>
+        private void CoordinateDisplay_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            if (e.ClickCount != 2 ||
+                sender is not FrameworkElement element ||
+                element.DataContext is not ViewModels.WindowPositionRowViewModel row)
+                return;
+
+            row.BeginEdit();
+            e.Handled = true;
+        }
+
+        /// <summary>입력칸이 나타나면 바로 칠 수 있게 포커스를 주고 글을 모두 고른다.</summary>
+        private void CoordinateEdit_IsVisibleChanged(object sender, DependencyPropertyChangedEventArgs e)
+        {
+            if (sender is not TextBox box || !box.IsVisible)
+                return;
+
+            // 아직 배치가 끝나지 않은 순간이라 바로 Focus하면 먹지 않는다
+            box.Dispatcher.BeginInvoke(new System.Action(() =>
+            {
+                box.Focus();
+                box.SelectAll();
+            }), System.Windows.Threading.DispatcherPriority.Input);
+        }
+
+        /// <summary>Enter는 적용, Esc는 취소.</summary>
+        private void CoordinateEdit_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (sender is not TextBox box || box.DataContext is not ViewModels.WindowPositionRowViewModel row)
+                return;
+
+            if (e.Key == Key.Enter)
+            {
+                row.CommitEdit();
+                e.Handled = true;
+            }
+            else if (e.Key == Key.Escape)
+            {
+                row.CancelEdit();
+                e.Handled = true;
+            }
+        }
+
+        /// <summary>다른 곳을 눌러 입력칸을 떠날 때도 적용한다 (꼴이 맞지 않으면 원래 값으로 돌아간다).</summary>
+        private void CoordinateEdit_LostFocus(object sender, RoutedEventArgs e)
+        {
+            if (sender is TextBox box && box.DataContext is ViewModels.WindowPositionRowViewModel row)
+                row.CommitEdit();
+        }
+
+        /// <summary>좌표 입력칸은 "숫자, 숫자" 꼴로 쳐 나가는 글자만 받는다.</summary>
+        private void CoordinatePair_PreviewTextInput(object sender, TextCompositionEventArgs e)
+        {
+            if (sender is not TextBox textBox) return;
+
+            string fullText = textBox.Text.Remove(textBox.SelectionStart, textBox.SelectionLength)
+                                          .Insert(textBox.SelectionStart, e.Text);
+
+            // 치는 도중의 모습("1920", "1920,", "1920, 4")도 통과시킨다
+            e.Handled = !Regex.IsMatch(fullText, @"^-?[0-9]*(, ?-?[0-9]*)?$");
+        }
+
         /// <summary>잠금 해제 모드를 시작하고, 배치가 잘 보이도록 설정 창을 닫는다.</summary>
         private void UnlockMode_Click(object sender, RoutedEventArgs e)
         {

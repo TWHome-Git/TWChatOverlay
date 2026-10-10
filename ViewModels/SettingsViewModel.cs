@@ -277,15 +277,15 @@ namespace TWChatOverlay.ViewModels
         {
             WindowPositions.Clear();
             foreach (WindowPositionEntry entry in WindowPositionCatalog.VisibleFor(_settings))
-                WindowPositions.Add(new WindowPositionRowViewModel(_settings, entry, OnWindowPositionReset));
+                WindowPositions.Add(new WindowPositionRowViewModel(_settings, entry, OnWindowPositionChanged));
         }
 
-        private void OnWindowPositionReset()
+        private void OnWindowPositionChanged()
         {
             SaveSettings();
             // 이미 떠 있는 창은 스스로 설정을 다시 읽지 않는다 — 지금 자리에서 새 좌표로 옮겨 준다
             try { _onWindowPositionsChanged?.Invoke(); }
-            catch (Exception ex) { AppLogger.Warn("Failed to move windows after position reset.", ex); }
+            catch (Exception ex) { AppLogger.Warn("Failed to move windows after position change.", ex); }
         }
 
         /// <summary>목록의 좌표 표시를 지금 설정값으로 다시 읽는다. 창을 끌어 옮긴 뒤 목록을 열 때 쓴다.</summary>
