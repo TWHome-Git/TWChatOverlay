@@ -99,7 +99,7 @@ namespace TWChatOverlay.Services
 
         private void ScheduleReassert()
         {
-            // 확대 프로그램(Magpie·Lossless Scaling)은 게임이 전경이 되는 순간 확대 화면을 올리므로 그쪽 점검을 먼저 짧게 돌린다
+            // 확대 프로그램(Magpie)은 게임이 전경이 되는 순간 확대 화면을 올리므로 그쪽 점검을 먼저 짧게 돌린다
             AppServices.TryGet<ScalerTopmostGuard>()?.NotifyForegroundChanged();
 
             if (_reassertTimer == null)
@@ -146,7 +146,7 @@ namespace TWChatOverlay.Services
 
         /// <summary>
         /// 전경 창과 상관없이 지금 바로 오버레이를 최상단으로 다시 올린다. 규칙(트레이·잠금 해제·항상 위 OFF)은 같다.
-        /// 확대 프로그램(Magpie·Lossless Scaling) 화면처럼 전경 변화 없이 다른 topmost 창이 오버레이를 덮을 때 ScalerTopmostGuard가 부른다.
+        /// 확대 프로그램(Magpie) 화면처럼 전경 변화 없이 다른 topmost 창이 오버레이를 덮을 때 ScalerTopmostGuard가 부른다.
         /// </summary>
         /// <returns>규칙상 올릴 수 있어 올렸으면 true.</returns>
         public bool ReassertNow()
@@ -212,7 +212,7 @@ namespace TWChatOverlay.Services
 
         /// <summary>
         /// 전경 창이 설정의 대상 프로그램(기본: 게임 클라이언트)인지. 목록이 비어 있으면 예전처럼 모두 대상으로 본다.
-        /// 확대 프로그램(Magpie·Lossless Scaling)의 확대 화면 창도 대상이다 — 확대 중에는 그 창이 전경이 되어 오버레이를 덮을 수 있다.
+        /// 확대 프로그램(Magpie)의 확대 화면 창도 대상이다 — 확대 중에는 그 창이 전경이 되어 오버레이를 덮을 수 있다.
         /// </summary>
         private bool IsGuardTarget(IntPtr hwnd, string? processNames)
         {

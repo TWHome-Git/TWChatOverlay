@@ -186,8 +186,8 @@ namespace TWChatOverlay.Services
 
         /// <summary>
         /// 다른 프로그램 창이 실제로 화면을 가리는 창인지. DWM이 숨겨 둔(cloaked) 창, 클릭이 통과하는 투명 오버레이
-        /// (그래픽 드라이버·녹화 프로그램 오버레이 등)는 가린다고 보지 않는다. 확대 프로그램(Magpie·Lossless Scaling)의 확대 화면 창은
-        /// 클릭 통과 스타일이어도 화면 전체를 그리므로 가리는 창이다 (Lossless Scaling은 게임이 전경이면 topmost+클릭 통과가 된다).
+        /// (그래픽 드라이버·녹화 프로그램 오버레이 등)는 가린다고 보지 않는다. 확대 프로그램(Magpie)의 확대 화면 창은
+        /// 클릭 통과 스타일이어도 화면 전체를 그리므로 가리는 창이다.
         /// </summary>
         public static bool IsOpaqueOtherWindow(IntPtr hwnd)
         {
