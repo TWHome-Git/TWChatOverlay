@@ -119,6 +119,7 @@ namespace TWChatOverlay
                 services.AddSingleton<UiLockService>();
                 services.AddSingleton<ContentTimerService>();
                 services.AddSingleton<ForegroundTopmostGuard>();
+                services.AddSingleton<ScalerTopmostGuard>();
                 services.AddSingleton<SecondaryWindowTopmostRefreshService>();
                 services.AddSingleton<ItemDropToastService>();
                 services.AddSingleton<NotificationService>();
@@ -272,6 +273,7 @@ namespace TWChatOverlay
             }
 
             AppServices.Get<ForegroundTopmostGuard>().Shutdown();
+            AppServices.TryGet<ScalerTopmostGuard>()?.Detach();
             EtaProfileResolver.DeleteCache();
             AppServices.Get<NotificationService>().DeleteCachedAudioFiles();
             _mutex?.ReleaseMutex();

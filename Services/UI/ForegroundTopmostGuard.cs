@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -15,6 +16,7 @@ namespace TWChatOverlay.Services
     ///
     /// 단, 전경으로 온 창이 게임(설정의 대상 프로세스)일 때만 그렇게 한다. 캡처 도구 같은 다른 앱이
     /// 전경이 될 때도 올리면 그 앱의 전체 화면 오버레이 위로 우리 창이 튀어나온다.
+    /// 그리고 오버레이가 실제로 가려졌을 때만 올린다 — 이미 맨 위인데 다시 올리면 복귀할 때마다 깜박인다.
     /// </summary>
     public sealed class ForegroundTopmostGuard
     {
@@ -97,6 +99,9 @@ namespace TWChatOverlay.Services
 
         private void ScheduleReassert()
         {
+            // 확대 프로그램(Magpie·Lossless Scaling)은 게임이 전경이 되는 순간 확대 화면을 올리므로 그쪽 점검을 먼저 짧게 돌린다
+            AppServices.TryGet<ScalerTopmostGuard>()?.NotifyForegroundChanged();
+
             if (_reassertTimer == null)
             {
                 _reassertTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(250) };
@@ -115,17 +120,7 @@ namespace TWChatOverlay.Services
         {
             try
             {
-                if (AppServices.Get<TrayAllWindowsService>().IsTrayed)
-                    return;
-
-                // 잠금 해제 모드는 배경/배너/인스펙터가 자체적으로 z-순서를 관리한다
-                if (AppServices.Get<UiLockService>().IsUnlocked)
-                    return;
-
-                //  - 항상 위 ON: 게임이 전경이 될 때 오버레이를 최상단 밴드로 재승격
-                //  - 항상 위 OFF: 아무것도 하지 않는다 — 시작 때의 z-순서를 그대로 두고 OS에 맡긴다
-                var settings = ToastPresentationHelper.FindSharedSettings();
-                if (settings?.OverlaysAlwaysOnTop == false)
+                if (!CanReassert(out var settings))
                     return;
 
                 // 지연 뒤 실제 전경 창을 다시 읽는다. 250ms 사이에 또 바뀌었을 수 있다.
@@ -135,23 +130,13 @@ namespace TWChatOverlay.Services
                 if (!IsGuardTarget(foreground, settings?.TopmostGuardProcessNames))
                     return;
 
-                Window? settingsHost = null;
-                foreach (Window window in Application.Current.Windows)
-                {
-                    if (window is SubMenuWindow && window.IsVisible)
-                    {
-                        settingsHost = window;
-                        continue; // 마지막에 올려 설정 창이 오버레이 위에 남게 한다
-                    }
+                // 이미 맨 위에 있으면 건드리지 않는다. 다른 창에 갔다가 돌아올 때마다 다시 올리면
+                // z-순서가 바뀌는 순간 오버레이가 깜박인다. 실제로 가려졌을 때(게임·확대 창이 위로 올라옴,
+                // Windows가 topmost를 떼어 냄)만 올린다.
+                if (!TopmostWindowHelper.IsAnyOverlayCovered())
+                    return;
 
-                    if (!window.IsVisible || !window.Topmost)
-                        continue;
-
-                    TopmostWindowHelper.BringToTopmost(window);
-                }
-
-                if (settingsHost != null)
-                    TopmostWindowHelper.BringToTopmost(settingsHost);
+                BringVisibleTopmostWindowsToTop();
             }
             catch (Exception ex)
             {
@@ -159,11 +144,83 @@ namespace TWChatOverlay.Services
             }
         }
 
-        /// <summary>전경 창이 설정의 대상 프로그램(기본: 게임 클라이언트)인지. 목록이 비어 있으면 예전처럼 모두 대상으로 본다.</summary>
+        /// <summary>
+        /// 전경 창과 상관없이 지금 바로 오버레이를 최상단으로 다시 올린다. 규칙(트레이·잠금 해제·항상 위 OFF)은 같다.
+        /// 확대 프로그램(Magpie·Lossless Scaling) 화면처럼 전경 변화 없이 다른 topmost 창이 오버레이를 덮을 때 ScalerTopmostGuard가 부른다.
+        /// </summary>
+        /// <returns>규칙상 올릴 수 있어 올렸으면 true.</returns>
+        public bool ReassertNow()
+        {
+            try
+            {
+                if (!CanReassert(out _))
+                    return false;
+
+                BringVisibleTopmostWindowsToTop();
+                return true;
+            }
+            catch (Exception ex)
+            {
+                AppLogger.Warn("Failed to reassert topmost overlays.", ex);
+                return false;
+            }
+        }
+
+        private static bool CanReassert(out Models.ChatSettings? settings)
+        {
+            settings = null;
+            if (AppServices.Get<TrayAllWindowsService>().IsTrayed)
+                return false;
+
+            // 잠금 해제 모드는 배경/배너/인스펙터가 자체적으로 z-순서를 관리한다
+            if (AppServices.Get<UiLockService>().IsUnlocked)
+                return false;
+
+            //  - 항상 위 ON: 게임이 전경이 될 때 오버레이를 최상단 밴드로 재승격
+            //  - 항상 위 OFF: 아무것도 하지 않는다 — 시작 때의 z-순서를 그대로 두고 OS에 맡긴다
+            settings = ToastPresentationHelper.FindSharedSettings();
+            return settings?.OverlaysAlwaysOnTop != false;
+        }
+
+        private static void BringVisibleTopmostWindowsToTop()
+        {
+            // 예전에 창 목록 순서대로 하나씩 올리던 것과 같은 최종 순서(나중 창이 위, 설정 창은 맨 위)를 한 번에 적용한다
+            Window? settingsHost = null;
+            var overlays = new List<Window>();
+            foreach (Window window in Application.Current.Windows)
+            {
+                if (window is SubMenuWindow && window.IsVisible)
+                {
+                    settingsHost = window;
+                    continue; // 설정 창이 오버레이 위에 남게 맨 위에 둔다
+                }
+
+                if (!window.IsVisible || !window.Topmost)
+                    continue;
+
+                overlays.Add(window);
+            }
+
+            var topFirst = new List<Window>(overlays.Count + 1);
+            if (settingsHost != null)
+                topFirst.Add(settingsHost);
+            for (int i = overlays.Count - 1; i >= 0; i--)
+                topFirst.Add(overlays[i]);
+
+            TopmostWindowHelper.BringToTopmostInOrder(topFirst);
+        }
+
+        /// <summary>
+        /// 전경 창이 설정의 대상 프로그램(기본: 게임 클라이언트)인지. 목록이 비어 있으면 예전처럼 모두 대상으로 본다.
+        /// 확대 프로그램(Magpie·Lossless Scaling)의 확대 화면 창도 대상이다 — 확대 중에는 그 창이 전경이 되어 오버레이를 덮을 수 있다.
+        /// </summary>
         private bool IsGuardTarget(IntPtr hwnd, string? processNames)
         {
             if (hwnd == IntPtr.Zero)
                 return false;
+
+            if (ScalerTopmostGuard.IsScalerWindow(hwnd))
+                return true;
 
             string[] names = (processNames ?? string.Empty)
                 .Split(new[] { ',', ';', ' ' }, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);

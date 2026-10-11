@@ -196,7 +196,7 @@ namespace TWChatOverlay.Views
 
         private void MainWindow_Closed(object? sender, EventArgs e)
         {
-            
+
             try { AppServices.Get<UiLockService>().UnlockChanged -= OnUiUnlockChanged; } catch { }
             try { AppServices.Get<UiLockService>().WindowAdjusted -= OnUnlockWindowAdjusted; } catch { }
             try { _mainTabAutoHideTimer.Stop(); } catch { }
@@ -241,6 +241,7 @@ namespace TWChatOverlay.Views
             try { _bossAlarmSchedulerService?.Stop(); } catch { }
             try { _messengerLogWatcherService?.Dispose(); } catch { }
             try { _hotKeyService?.Dispose(); } catch { }
+            try { AppServices.Get<ScalerTopmostGuard>().Detach(); } catch { }
             try { ConfigService.Save(_settings); } catch { }
         }
 
@@ -428,6 +429,10 @@ namespace TWChatOverlay.Views
                 };
                 _stickyService.Start();
                 _stickyService.UpdatePositionImmediately();
+
+                // 확대 프로그램(Magpie·Lossless Scaling) 화면 위에 오버레이 유지. Magpie 알림(브로드캐스트)은 최상위 창으로 오므로 메인 창 핸들에 훅을 건다
+                AppServices.Get<ScalerTopmostGuard>().Attach(handle);
+
                 _bossAlarmSchedulerService = new BossAlarmSchedulerService(_settings);
                 _bossAlarmSchedulerService.Start();
                 _expService.Reset();

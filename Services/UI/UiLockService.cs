@@ -435,6 +435,28 @@ namespace TWChatOverlay.Services
         }
 
         /// <summary>
+        /// 잠금 해제 중 다른 프로그램의 topmost 창(예: Magpie 확대 창)이 격자·오버레이를 덮었을 때
+        /// 격자 → 오버레이·배너 → 인스펙터 순서로 다시 올린다. 잠금 상태면 아무것도 하지 않는다.
+        /// </summary>
+        public void ReassertZOrder()
+        {
+            if (!IsUnlocked)
+                return;
+
+            try
+            {
+                if (_backdrop?.IsVisible == true)
+                    TopmostWindowHelper.BringToTopmost(_backdrop);
+                RaiseOverlaysAboveBackdrop();
+                _inspector?.BringToFront();
+            }
+            catch (Exception ex)
+            {
+                AppLogger.Warn("Failed to reassert unlock z-order.", ex);
+            }
+        }
+
+        /// <summary>
         /// 백드롭보다 우리 오버레이 창/배너가 위에 오도록 Topmost 밴드 최상단으로 재삽입한다.
         /// (백드롭이 나중에 Show되면 같은 밴드 최상단에 끼어들어 격자가 오버레이 위에 그려짐)
         /// </summary>
@@ -1038,6 +1060,13 @@ namespace TWChatOverlay.Services
                     : VertZone - ButtonH - 4 - Gap - panelHeight);
 
                 RaiseToTop();
+            }
+
+            /// <summary>다른 창이 덮었을 때 밖에서 다시 맨 위로 올린다 (UiLockService.ReassertZOrder).</summary>
+            public void BringToFront()
+            {
+                if (IsVisible)
+                    RaiseToTop();
             }
 
             /// <summary>
