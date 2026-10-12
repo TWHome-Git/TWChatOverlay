@@ -16,8 +16,10 @@ namespace TWChatOverlay.Services
     public sealed class BuffTrackerService : ViewModelBase, IDisposable
     {
         private static readonly Regex TimeRegex = new(@"\[(?:\s*(?<h1>\d{1,2})시\s*(?<m1>\d{1,2})분\s*(?<s1>\d{1,2})초|(?<h2>\d{1,2}):(?<m2>\d{2}):(?<s2>\d{2}))\]", RegexOptions.Compiled);
-        private static readonly Regex MagicEyeStartRegex = new(@"마법의 눈을 사용하였습니다\.\s*\[\s*(?:(?<hours>\d+)시간\s*)?(?<minutes>\d+)분\s*(?<seconds>\d+)초\s*\]\s*시간 동안", RegexOptions.Compiled);
-        private static readonly Regex MagicEyeSavedRegex = new(@"마법의 눈 유지시간이 저장되었습니다\.\s*\(보유 시간\s*:\s*\[\s*(?:(?<hours>\d+)시간\s*)?(?<minutes>\d+)분\s*(?<seconds>\d+)초\s*\]\)", RegexOptions.Compiled);
+        // 시간은 "[1시간 23분 45초]" 꼴이지만 자투리가 없으면 "[2시간]"·"[30분]"처럼 줄여 찍힐 수 있다 — 시·분·초 모두 선택으로 받는다
+        private const string DurationPattern = @"\[\s*(?:(?<hours>\d+)시간\s*)?(?:(?<minutes>\d+)분\s*)?(?:(?<seconds>\d+)초\s*)?\]";
+        private static readonly Regex MagicEyeStartRegex = new(@"마법의 눈을 사용하였습니다\.\s*" + DurationPattern + @"\s*시간 동안", RegexOptions.Compiled);
+        private static readonly Regex MagicEyeSavedRegex = new(@"마법의 눈 유지시간이 저장되었습니다\.\s*\(보유 시간\s*:\s*" + DurationPattern + @"\)", RegexOptions.Compiled);
         private const string MagicEyeKey = "rare-magic-eye";
         private static readonly string StateFilePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Cache", "buff_tracker_state.json");
 
@@ -130,6 +132,26 @@ namespace TWChatOverlay.Services
                 return;
 
             ProcessLog(analysis.Parsed.FormattedText);
+        }
+
+        private static readonly List<BuffDefinition> KnownDefinitions = CreateDefinitions();
+
+        /// <summary>
+        /// 버프 문구가 든 줄인지 — 화자(내 아이디)가 붙어 시스템 줄로 분류되지 않은 줄도 잡는다.
+        /// 게임은 "드드해 : 마법의 눈을 사용하였습니다. [...]"처럼 내 아이디를 붙여 찍기도 해서, 시스템 줄만 보면 그 줄을 놓친다.
+        /// </summary>
+        public static bool LooksLikeBuffLog(string? formattedText)
+        {
+            if (string.IsNullOrWhiteSpace(formattedText))
+                return false;
+            if (MagicEyeStartRegex.IsMatch(formattedText) || MagicEyeSavedRegex.IsMatch(formattedText))
+                return true;
+            foreach (var definition in KnownDefinitions)
+            {
+                if (definition.Key != MagicEyeKey && definition.IsMatch(formattedText))
+                    return true;
+            }
+            return false;
         }
 
         public bool IsTrackableBuffLog(string? formattedText)
@@ -325,11 +347,13 @@ namespace TWChatOverlay.Services
                 return false;
             }
 
-            if (!int.TryParse(match.Groups["minutes"].Value, out int minutes) ||
-                !int.TryParse(match.Groups["seconds"].Value, out int seconds))
-            {
+            int minutes = 0, seconds = 0;
+            if (match.Groups["minutes"].Success && !int.TryParse(match.Groups["minutes"].Value, out minutes))
                 return false;
-            }
+            if (match.Groups["seconds"].Success && !int.TryParse(match.Groups["seconds"].Value, out seconds))
+                return false;
+            if (!match.Groups["hours"].Success && !match.Groups["minutes"].Success && !match.Groups["seconds"].Success)
+                return false; // 숫자가 하나도 없는 괄호
 
             duration = new TimeSpan(hours, minutes, seconds);
             return duration >= TimeSpan.Zero;

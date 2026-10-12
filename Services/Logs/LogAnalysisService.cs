@@ -59,7 +59,8 @@ namespace TWChatOverlay.Services
                 HasExperienceGain: parsed.GainedExp > 0,
                 HasTrackedItemDrop: parsed.IsTrackedItemDrop,
                 IsRareTrackedItemDrop: isRareTrackedItem,
-                ShouldRunBuffTracker: isSystemLog,
+                // 버프 줄은 시스템 줄이 보통이지만, 게임이 내 아이디를 화자로 붙여 찍으면 일반 채팅으로 분류된다 — 문구로도 본다
+                ShouldRunBuffTracker: isSystemLog || BuffTrackerService.LooksLikeBuffLog(parsed.FormattedText),
                 ShouldRunDailyWeeklyContent: isRealTime && isSystemLog,
                 ShouldShowItemDropToast: isRealTime && parsed.IsTrackedItemDrop && _settings.ShowItemDropAlert,
                 ShouldShowEtosDirection: isRealTime &&
