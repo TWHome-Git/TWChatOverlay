@@ -1949,6 +1949,8 @@ namespace TWChatOverlay.Services
             lock (SyncRoot)
             {
                 EnsureHistoryLoaded(); // 기록을 읽으면서 최고 기록도 함께 채워진다
+                // 두 주 기록이 비어 있으면(판이 없거나 재작성 직후) 위에서 최고 기록 파일을 아직 안 읽었다 — 여기서 읽는다
+                EnsureBestLoaded();
                 return _best!.TryGetValue(HistoryKey(def.Key, difficulty), out var best) ? best : null;
             }
         }
