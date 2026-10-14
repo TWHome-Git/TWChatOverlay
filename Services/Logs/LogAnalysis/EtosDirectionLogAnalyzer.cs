@@ -21,21 +21,21 @@ namespace TWChatOverlay.Services.LogAnalysis
                 return;
 
             if (lower.Contains("갈퀴 모양 번개") || lower.Contains("갈퀴모양 번개"))
-                context.Result.EtosImagePath = $"{EtosImageBasePath}/NE.jpg";
+                context.Result.EtosImagePath = $"{EtosImageBasePath}/NE.png";
             else if (lower.Contains("갈퀴모양갈고리") || lower.Contains("갈퀴 모양 갈고리") || lower.Contains("갈퀴 모양갈고리"))
-                context.Result.EtosImagePath = $"{EtosImageBasePath}/SE.jpg";
+                context.Result.EtosImagePath = $"{EtosImageBasePath}/SE.png";
             else if (lower.Contains("파도모양갈고리") || lower.Contains("파도 모양 갈고리"))
-                context.Result.EtosImagePath = $"{EtosImageBasePath}/SW.jpg";
+                context.Result.EtosImagePath = $"{EtosImageBasePath}/SW.png";
             else if (lower.Contains("갈퀴"))
-                context.Result.EtosImagePath = $"{EtosImageBasePath}/E.jpg";
+                context.Result.EtosImagePath = $"{EtosImageBasePath}/E.png";
             else if (lower.Contains("갈고리") && !lower.Contains("갈퀴"))
-                context.Result.EtosImagePath = $"{EtosImageBasePath}/S.jpg";
+                context.Result.EtosImagePath = $"{EtosImageBasePath}/S.png";
             else if (lower.Contains("파도모양번개") || lower.Contains("파도 모양 번개"))
-                context.Result.EtosImagePath = $"{EtosImageBasePath}/NW.jpg";
+                context.Result.EtosImagePath = $"{EtosImageBasePath}/NW.png";
             else if (lower.Contains("파도") && !lower.Contains("파도모양") && !lower.Contains("파도 모양"))
-                context.Result.EtosImagePath = $"{EtosImageBasePath}/W.jpg";
+                context.Result.EtosImagePath = $"{EtosImageBasePath}/W.png";
             else if (lower.Contains("번개") && !lower.Contains("갈퀴") && !lower.Contains("파도"))
-                context.Result.EtosImagePath = $"{EtosImageBasePath}/N.jpg";
+                context.Result.EtosImagePath = $"{EtosImageBasePath}/N.png";
         }
     }
 }
