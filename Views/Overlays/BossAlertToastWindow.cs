@@ -28,6 +28,8 @@ namespace TWChatOverlay.Views
 
         private readonly Grid _normalContent;
         private readonly TextBlock _bodyText;
+        /// <summary>문구 앞의 보스 이름 — 민트로 강조해 어느 보스인지 먼저 눈에 들어오게 한다.</summary>
+        private string _bossName = string.Empty;
         private readonly TextBlock _previewLabel;
         private readonly DispatcherTimer _closeTimer;
         private readonly DispatcherTimer _countdownTimer;
@@ -118,6 +120,7 @@ namespace TWChatOverlay.Views
         public void StartCountdown(string bossName, DateTime occurrence, TimeSpan? entryWindow = null)
         {
             _countdownBossName = bossName;
+            _bossName = bossName ?? string.Empty;
             _countdownOccurrence = occurrence;
             _entryWindow = entryWindow;
             _lastCountdownText = null;
@@ -137,7 +140,7 @@ namespace TWChatOverlay.Views
                     if (entryRemaining <= TimeSpan.Zero)
                     {
                         _countdownTimer.Stop();
-                        SetCountdownText($"{_countdownBossName} 입장 종료");
+                        SetCountdownText($"{_countdownBossName} 입장 종료", highlightName: true);
                         _bodyText.SetResourceReference(TextBlock.ForegroundProperty, "TextBrush");
                         return;
                     }
@@ -146,13 +149,13 @@ namespace TWChatOverlay.Views
                     string entryText = entrySeconds >= 60
                         ? $"{entrySeconds / 60}분 {entrySeconds % 60:00}초"
                         : $"{entrySeconds}초";
-                    if (SetCountdownText($"{_countdownBossName} 입장 가능 {entryText}"))
+                    if (SetCountdownText($"{_countdownBossName} 입장 가능 {entryText}", highlightName: false)) // 줄 전체가 민트
                         _bodyText.SetResourceReference(TextBlock.ForegroundProperty, "OverlayTitleAccentTextBrush");
                     return;
                 }
 
                 _countdownTimer.Stop();
-                SetCountdownText($"{_countdownBossName} 등장!");
+                SetCountdownText($"{_countdownBossName} 등장!", highlightName: false); // 줄 전체가 붉은색
                 _bodyText.Foreground = new SolidColorBrush(DangerCol);
                 return;
             }
@@ -161,25 +164,44 @@ namespace TWChatOverlay.Views
             if (totalSeconds <= 5)
             {
                 // 등장 임박: "곧 등장!" + 초 카운트다운 (5초 → 1초)
-                if (SetCountdownText($"{_countdownBossName} 곧 등장! {totalSeconds}초"))
+                if (SetCountdownText($"{_countdownBossName} 곧 등장! {totalSeconds}초", highlightName: false))
                     _bodyText.Foreground = new SolidColorBrush(DangerCol);
             }
             else
             {
-                if (SetCountdownText($"{_countdownBossName} 등장 {totalSeconds}초 전"))
+                if (SetCountdownText($"{_countdownBossName} 등장 {totalSeconds}초 전", highlightName: true))
                     _bodyText.SetResourceReference(TextBlock.ForegroundProperty, "TextBrush");
             }
         }
 
         /// <summary>표시할 문구가 바뀌었을 때만 갱신한다 (200ms 틱마다 불필요한 레이아웃 방지). 바뀌었으면 true.</summary>
-        private bool SetCountdownText(string text)
+        private bool SetCountdownText(string text, bool highlightName)
         {
             if (string.Equals(_lastCountdownText, text, StringComparison.Ordinal))
                 return false;
 
             _lastCountdownText = text;
-            _bodyText.Text = text;
+            SetBody(text, highlightName);
             return true;
+        }
+
+        /// <summary>
+        /// 본문을 쓴다. highlightName이면 앞의 보스 이름만 민트로 칠한다 ("혼란한 대지 등장 1분 전").
+        /// 줄 전체에 색이 있는 상태(곧 등장 = 붉은색, 입장 가능 = 민트)에서는 이름도 그 색을 따른다.
+        /// </summary>
+        private void SetBody(string text, bool highlightName)
+        {
+            _bodyText.Inlines.Clear();
+            string name = _bossName;
+            if (highlightName && name.Length > 0 && text.StartsWith(name, StringComparison.Ordinal))
+            {
+                var nameRun = new System.Windows.Documents.Run(name);
+                nameRun.SetResourceReference(System.Windows.Documents.TextElement.ForegroundProperty, "OverlayTitleAccentTextBrush");
+                _bodyText.Inlines.Add(nameRun);
+                _bodyText.Inlines.Add(new System.Windows.Documents.Run(text.Substring(name.Length)));
+                return;
+            }
+            _bodyText.Inlines.Add(new System.Windows.Documents.Run(text));
         }
 
         protected override void OnClosed(EventArgs e)
@@ -212,7 +234,8 @@ namespace TWChatOverlay.Views
         public void SetAlert(string bossName, string label)
         {
             bool imminent = string.Equals(label, "5초 전", StringComparison.Ordinal);
-            _bodyText.Text = imminent ? $"{bossName} 곧 등장!" : $"{bossName} 등장 {label}";
+            _bossName = bossName ?? string.Empty;
+            SetBody(imminent ? $"{bossName} 곧 등장!" : $"{bossName} 등장 {label}", highlightName: !imminent);
             if (imminent)
                 _bodyText.Foreground = new SolidColorBrush(DangerCol);
             else
