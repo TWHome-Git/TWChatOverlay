@@ -273,7 +273,8 @@ namespace TWChatOverlay.Views
             {
                 GuardSideEffect("buff-tracker", () => _buffTrackerService.ProcessLog(analysis));
 
-                if (analysis.HasExperienceGain)
+                // 추적창·사냥 기록은 사냥 경험치만 센다 (탐험·별동대·훈련소 같은 보상은 빼고)
+                if (analysis.HasExperienceGain && parseResult.IsHuntingExp)
                 {
                     // 공백 판정이 처리 지연에 휘둘리지 않게 로그에 찍힌 시각을 함께 넘긴다
                     DateTime? logTime = TryReadLogTime(parseResult.FormattedText);

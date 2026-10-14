@@ -28,6 +28,8 @@ namespace TWChatOverlay
             /// <summary>"방전상태가 풀렸습니다" 줄 — 방전이 풀린 순간.</summary>
             public bool IsDischargeCleared { get; set; } = false;
             public long GainedExp { get; set; } = 0;
+            /// <summary>몬스터 처치로 얻은 경험치 줄인지 (보상 경험치가 아님). 경험치 추적창·사냥 기록은 이것만 센다.</summary>
+            public bool IsHuntingExp { get; set; } = false;
             public string? EtosImagePath { get; set; } = null;
             public bool IsTrackedItemDrop { get; set; } = false;
             public string? TrackedItemName { get; set; } = null;

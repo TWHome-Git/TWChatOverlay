@@ -280,7 +280,10 @@ namespace TWChatOverlay.Services
                     return 0;
 
                 lock (_syncRoot)
+                {
+                    RebuildIfOldVersionUnlocked();
                     DedupeExistingUnlocked();
+                }
 
                 DateTime scannedUntil = ReadScannedUntil();
                 DateTime today = DateTime.Today;
@@ -320,6 +323,35 @@ namespace TWChatOverlay.Services
                 AppLogger.Info($"Hunt session backfill done. Files={targets.Count}, Sessions={found.Count}");
                 return found.Count;
             });
+        }
+
+        /// <summary>
+        /// 기록 규칙 버전. 2: 보상 경험치를 판에서 뺐다 — 그 전에 쌓인 판은 보상이 섞여 있으므로
+        /// 옛 파일을 sessions.v1.csv로 옮기고 지난 로그 전체를 다시 읽어 새로 만든다 (한 번만).
+        /// </summary>
+        private const int RecordVersion = 2;
+
+        private void RebuildIfOldVersionUnlocked()
+        {
+            string versionPath = Path.Combine(Path.GetDirectoryName(_sessionFilePath)!, "version.txt");
+            try
+            {
+                if (File.Exists(versionPath) && int.TryParse(File.ReadAllText(versionPath).Trim(), out int version) && version >= RecordVersion)
+                    return;
+
+                Directory.CreateDirectory(Path.GetDirectoryName(_sessionFilePath)!);
+                if (File.Exists(_sessionFilePath))
+                    File.Move(_sessionFilePath, Path.Combine(Path.GetDirectoryName(_sessionFilePath)!, "sessions.v1.csv"), overwrite: true);
+                if (File.Exists(_scanStateFilePath))
+                    File.Delete(_scanStateFilePath);
+                File.WriteAllText(versionPath, RecordVersion.ToString(CultureInfo.InvariantCulture), Encoding.UTF8);
+                AppLogger.Info($"Hunt sessions reset for rebuild (record version {RecordVersion}).");
+                SessionsChanged?.Invoke();
+            }
+            catch (Exception ex)
+            {
+                AppLogger.Warn("Failed to reset hunt sessions for rebuild.", ex);
+            }
         }
 
         /// <summary>로그 파일 하루치에서 판을 뽑는다.</summary>
@@ -378,8 +410,8 @@ namespace TWChatOverlay.Services
 
                 string body = text.Substring(time.Length).Trim();
                 long gained = ExperienceLogAnalyzer.ExtractGain(body, isSystemLog: true);
-                if (gained <= 0)
-                    continue;
+                if (gained <= 0 || !ExperienceLogAnalyzer.IsHuntingGain(body))
+                    continue; // 보상 경험치는 판에 넣지 않는다
 
                 if (startedAt.HasValue && at - lastGainAt > SessionGap)
                     Close();

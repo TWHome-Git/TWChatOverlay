@@ -127,7 +127,7 @@ namespace TWChatOverlay.ViewModels
             if (!analysis.IsSuccess) return;
             var parseResult = analysis.Parsed;
 
-            if (analysis.HasExperienceGain)
+            if (analysis.HasExperienceGain && parseResult.IsHuntingExp)
                 _expService.AddExp(parseResult.GainedExp);
             _experienceEssenceAlertService.Process(analysis);
 

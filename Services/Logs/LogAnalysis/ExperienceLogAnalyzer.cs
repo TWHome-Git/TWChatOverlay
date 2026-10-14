@@ -21,6 +21,18 @@ namespace TWChatOverlay.Services.LogAnalysis
             @"경험치\s*(?:가|를|을)?\s*\[?\s*(?<amount>[\d,]+\s*[조억만]?(?:\s*[\d,]+\s*[조억만])*)\s*\]?\s*(?:만큼|이\(가\)|을|를|이|가)?\s*(?:추가로\s*)?(?:획득\s*(?:하였|했)습니다|지급\s*(?:되었|됐)습니다|올랐습니다|상승했습니다)",
             RegexOptions.Compiled);
 
+        // 몬스터를 잡아 얻는 경험치 줄 — 앞뒤에 다른 말이 없는 "경험치가 N 올랐습니다." 하나뿐이다 (285일치 로그 기준).
+        // 탐험·별동대·훈련소·축제·보물상자 같은 보상은 앞에 이유가 붙거나 숫자가 대괄호에 싸여 있어 여기 걸리지 않는다.
+        private static readonly Regex HuntingGainRegex = new(@"^경험치가\s*[\d,]+\s*올랐습니다\.?$", RegexOptions.Compiled);
+
+        /// <summary>
+        /// 사냥(몬스터 처치)으로 얻은 경험치 줄인지. 경험치 추적창과 사냥 기록은 이 줄만 센다 —
+        /// 보상 경험치가 섞이면 사냥을 멈춘 뒤에 들어온 탐험 보상 하나로 추적창이 새로 시작되거나 판 합계가 부풀기 때문이다.
+        /// (누적 경험치 알림처럼 실제로 쌓인 경험치가 필요한 곳은 보상까지 모두 센다)
+        /// </summary>
+        public static bool IsHuntingGain(string? content)
+            => !string.IsNullOrEmpty(content) && HuntingGainRegex.IsMatch(content.Trim());
+
         // "1조 2000억 3만" 처럼 한글 단위가 섞인 수. 단위가 없으면 그대로 더한다.
         private static readonly Regex KoreanUnitRegex = new(@"(?<num>[\d,]+)\s*(?<unit>[조억만])?", RegexOptions.Compiled);
 
@@ -38,7 +50,10 @@ namespace TWChatOverlay.Services.LogAnalysis
         {
             long gained = ExtractGain(context.ChatContent, context.IsSystemLog);
             if (gained != 0)
+            {
                 context.Result.GainedExp = gained;
+                context.Result.IsHuntingExp = gained > 0 && IsHuntingGain(context.ChatContent);
+            }
         }
 
         /// <summary>
