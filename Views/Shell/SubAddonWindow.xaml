@@ -14,24 +14,14 @@
             BorderBrush="{DynamicResource OverlayAccentBorderBrush}"
             BorderThickness="1"
             CornerRadius="8"
-            Padding="10"
+            Padding="8"
+            HorizontalAlignment="Left"
+            VerticalAlignment="Top"
             MouseLeftButtonDown="RootBorder_MouseLeftButtonDown">
-        <StackPanel>
-            <TextBlock x:Name="WindowTitleText"
-                       Text="에토스 방향 안내"
-                       Foreground="{DynamicResource TextBrush}"
-                       FontSize="13"
-                       FontWeight="Bold"
-                       HorizontalAlignment="Center"
-                       Margin="0,0,0,4"/>
-            <TextBlock x:Name="WindowHintText"
-                       Text="드래그해서 위치를 옮길 수 있습니다"
-                       Foreground="{DynamicResource OverlayHintTextBrush}"
-                       FontSize="11"
-                       HorizontalAlignment="Center"
-                       Margin="0,0,0,8"/>
-            <Border x:Name="HostContent"
-                    Background="Transparent"/>
-        </StackPanel>
+        <!-- 윈도우는 OS 최소 폭(약 136px)보다 좁아지지 않는다 — 상자를 왼쪽 위에 붙여 내용 크기로만 그리고, 나머지는 투명(클릭 통과)으로 둔다 -->
+        <!-- 제목·안내 글 없이 방향만 보여준다 — 창 크기는 내용(화살표 + 방향 그림)에 맞춰 잡힌다.
+             잠금 해제 모드에서 어떤 창인지는 선택 표시(인스펙터)가 "에토스 방향 안내"로 알려 준다. -->
+        <Border x:Name="HostContent"
+                Background="Transparent"/>
     </Border>
 </Window>

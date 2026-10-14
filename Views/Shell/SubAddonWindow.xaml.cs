@@ -42,13 +42,9 @@ namespace TWChatOverlay.Views
         public void ShowAddonContent(FrameworkElement? view, string? title = null)
         {
             if (title != null)
-            {
                 Title = title;
-                WindowTitleText.Text = title;
-            }
 
             HostContent.Child = view;
-            UpdateHintVisibility();
         }
 
         public void ClearAddonContent()
@@ -77,7 +73,6 @@ namespace TWChatOverlay.Views
 
             Visibility = Visibility.Visible;
             TopmostWindowHelper.BringToTopmost(this);
-            UpdateHintVisibility();
 
             _hideTimer.Stop();
             if (!IsPinnedVisible())
@@ -134,7 +129,6 @@ namespace TWChatOverlay.Views
 
                 Visibility = Visibility.Visible;
                 TopmostWindowHelper.BringToTopmost(this);
-                UpdateHintVisibility();
                 return;
             }
 
@@ -191,14 +185,6 @@ namespace TWChatOverlay.Views
 
             Visibility = Visibility.Visible;
             TopmostWindowHelper.BringToTopmost(this);
-            UpdateHintVisibility();
-        }
-
-        private void UpdateHintVisibility()
-        {
-            WindowHintText.Visibility = IsPinnedVisible()
-                ? Visibility.Visible
-                : Visibility.Collapsed;
         }
 
         private static bool IsEtosAlertEnabled()
