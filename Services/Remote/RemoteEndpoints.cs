@@ -19,7 +19,7 @@ namespace TWChatOverlay.Services
         public const string RecaptureSupplyImage = DataRawBase + "Recapture%20supplies.png";
 
         // === 웹 홈페이지 (에타 순위 / 장비 DB / 계산기 / 시뮬레이터 통합) ===
-        public const string TwPageUrl = "https://twhome-git.github.io/TWPage/";
+        public const string TwPageUrl = "https://talesdb.xyz/";
 
         // === 앱 저장소 (GitHub API, 자동 업데이트용) ===
         public const string AppRepoOwner = "TWHome-Git";
