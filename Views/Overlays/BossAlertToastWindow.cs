@@ -46,20 +46,11 @@ namespace TWChatOverlay.Views
             ShowActivated = false;
             Topmost = true;
             ResizeMode = ResizeMode.NoResize;
-            // 다른 알림 창(던전 도우미 등)과 같은 기본 크기 — 인스펙터에서 크기 조절·저장 가능
-            Width = 420;
-            Height = 72;
-            MinWidth = 160;
-            MinHeight = 56;
-
-            var title = new TextBlock
-            {
-                Text = "필드 보스",
-                FontSize = 13,
-                FontWeight = FontWeights.SemiBold,
-                TextAlignment = TextAlignment.Center,
-            };
-            title.SetResourceReference(TextBlock.ForegroundProperty, "OverlayTitleAccentTextBrush");
+            // 크기는 문구에 맞춰 잡힌다 (글자 크기는 잠금 해제 인스펙터에서). 카운트다운 숫자가 바뀔 때마다
+            // 폭이 흔들리지 않게 흔한 문구("혼란한 대지 입장 가능 3분 59초")가 들어갈 만큼은 최소 폭으로 잡아 둔다.
+            SizeToContent = SizeToContent.WidthAndHeight;
+            MinWidth = 280;
+            UseLayoutRounding = true;
 
             _bodyText = new TextBlock
             {
@@ -67,12 +58,11 @@ namespace TWChatOverlay.Views
                 FontWeight = FontWeights.Bold,
                 TextAlignment = TextAlignment.Center,
                 TextTrimming = TextTrimming.CharacterEllipsis,
-                Margin = new Thickness(0, 4, 0, 0),
             };
             _bodyText.SetResourceReference(TextBlock.ForegroundProperty, "TextBrush");
 
+            // 본문이 "아칸 등장 3분 전"처럼 이미 무엇인지 말하므로 "필드 보스" 제목은 두지 않는다
             var stack = new StackPanel { VerticalAlignment = VerticalAlignment.Center };
-            stack.Children.Add(title);
             stack.Children.Add(_bodyText);
 
             _normalContent = new Grid();
@@ -98,7 +88,7 @@ namespace TWChatOverlay.Views
             {
                 BorderThickness = new Thickness(1.2),
                 CornerRadius = new CornerRadius(8),
-                Padding = new Thickness(16, 10, 16, 11),
+                Padding = new Thickness(16, 9, 16, 10),
                 Child = rootGrid,
             };
             root.SetResourceReference(Border.BackgroundProperty, "OverlayWindowBackgroundBrush");
@@ -215,16 +205,8 @@ namespace TWChatOverlay.Views
             TryBeginDrag(e);
         }
 
-        protected override bool PersistBounds(ChatSettings settings)
-        {
-            // 위치는 통합 알림 스택(앵커)이 관리하므로 크기만 저장한다
-            if (!IsVisible)
-                return false;
-
-            settings.BossAlertToastWindowWidth = Width;
-            settings.BossAlertToastWindowHeight = Height;
-            return true;
-        }
+        /// <summary>위치는 통합 알림 스택(앵커)이, 크기는 문구가 정하므로 창이 저장할 것은 없다.</summary>
+        protected override bool PersistBounds(ChatSettings settings) => false;
 
         /// <summary>알림 문구 설정. 5초 전(등장 임박)은 붉은색으로 강조한다.</summary>
         public void SetAlert(string bossName, string label)
@@ -336,15 +318,8 @@ namespace TWChatOverlay.Views
 
         private static void ShowAtStoredPosition(BossAlertToastWindow window, ChatSettings? settings)
         {
+            // 크기는 문구에 맞춰 잡힌다 (예전에 저장된 420x72 고정 크기는 더 쓰지 않는다)
             bool needsShow = !window.IsVisible;
-            if (needsShow)
-            {
-                // 저장된 크기 복원 (기본 420x72)
-                if (settings?.BossAlertToastWindowWidth is double width && width >= window.MinWidth)
-                    window.Width = width;
-                if (settings?.BossAlertToastWindowHeight is double height && height >= window.MinHeight)
-                    window.Height = height;
-            }
 
             // 통합 알림 스택: 자리를 먼저 받고 그 자리에서 보인다 (Show 뒤에 붙이면 겹칠 수 있다)
             var (left, top) = AppServices.Get<ToastStackService>().Attach(window);
