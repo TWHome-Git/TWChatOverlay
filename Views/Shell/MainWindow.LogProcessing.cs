@@ -224,7 +224,7 @@ namespace TWChatOverlay.Views
 
         /// <summary>"[ 9시 03분 32초] …" 앞머리에서 시각을 읽는다. 날짜는 오늘로 보되, 미래면 어제로 본다(자정 넘김).</summary>
         private static readonly System.Text.RegularExpressions.Regex LogLineTimeRegex =
-            new(@"^[s*(?<h>d{1,2})시s*(?<m>d{1,2})분s*(?<s>d{1,2})초s*]", System.Text.RegularExpressions.RegexOptions.Compiled);
+            new(@"^\[\s*(?<h>\d{1,2})시\s*(?<m>\d{1,2})분\s*(?<s>\d{1,2})초\s*\]", System.Text.RegularExpressions.RegexOptions.Compiled);
 
         private static DateTime? TryReadLogTime(string? text)
         {
@@ -280,7 +280,7 @@ namespace TWChatOverlay.Views
                     GuardSideEffect("exp-gain", () => _expService.AddExp(parseResult.GainedExp, logTime));
                     // 사냥 기록(판 단위 요약)은 실시간 줄만 센다. 과거 로그는 시작할 때 따로 훑는다
                     if (context.IsRealTime)
-                        GuardSideEffect("hunt-session", () => _huntSessionService.AddGain(DateTime.Now, parseResult.GainedExp));
+                        GuardSideEffect("hunt-session", () => _huntSessionService.AddGain(logTime ?? DateTime.Now, parseResult.GainedExp));
                 }
             }
 

@@ -14,6 +14,13 @@ namespace TWChatOverlay.Services.LogAnalysis
             @"경험치\s*(?:상승량|획득량|증가량)\s*[:：]?\s*(?<amount>(?:[\d,]+\s*[조억만]?\s*)+)",
             RegexOptions.Compiled);
 
+        // 대괄호·한글 단위·조사가 섞여 위 정규식들이 못 읽는 획득 문구 (시스템 줄에서만 본다):
+        //   "경험치 1000만을 획득 했습니다" · "경험치가 [20억] 올랐습니다" · "경험치가 [289,753,322]만큼 지급되었습니다"
+        //   "경험치 [3200000]을 추가로 획득하였습니다" · "경험치 [10억]이(가) 지급 되었습니다"
+        private static readonly Regex LooseGainRegex = new(
+            @"경험치\s*(?:가|를|을)?\s*\[?\s*(?<amount>[\d,]+\s*[조억만]?(?:\s*[\d,]+\s*[조억만])*)\s*\]?\s*(?:만큼|이\(가\)|을|를|이|가)?\s*(?:추가로\s*)?(?:획득\s*(?:하였|했)습니다|지급\s*(?:되었|됐)습니다|올랐습니다|상승했습니다)",
+            RegexOptions.Compiled);
+
         // "1조 2000억 3만" 처럼 한글 단위가 섞인 수. 단위가 없으면 그대로 더한다.
         private static readonly Regex KoreanUnitRegex = new(@"(?<num>[\d,]+)\s*(?<unit>[조억만])?", RegexOptions.Compiled);
 
@@ -52,8 +59,11 @@ namespace TWChatOverlay.Services.LogAnalysis
             if (normalized.Contains(DetachedForceExpText, StringComparison.Ordinal))
                 return DetachedForceExpValue;
 
-            if (chatContent.Contains("룬 경험치", StringComparison.Ordinal) ||
-                chatContent.Replace(" ", string.Empty).Contains("룬경험치", StringComparison.Ordinal))
+            // 룬 경험치·소울링크(링크 캐릭터) 경험치는 내 캐릭터 경험치가 아니다
+            string compact = chatContent.Replace(" ", string.Empty);
+            if (compact.Contains("룬경험치", StringComparison.Ordinal) ||
+                compact.Contains("소울링크경험치", StringComparison.Ordinal) ||
+                compact.Contains("링크캐릭터경험치", StringComparison.Ordinal))
             {
                 return 0;
             }
@@ -72,7 +82,10 @@ namespace TWChatOverlay.Services.LogAnalysis
             }
 
             if (expMatch == null || !expMatch.Success)
-                return 0;
+            {
+                Match loose = isSystemLog ? LooseGainRegex.Match(normalized) : Match.Empty;
+                return loose.Success && TryParseKoreanAmount(loose.Groups["amount"].Value, out long looseAmount) ? looseAmount : 0;
+            }
 
             string expText = expMatch.Groups["exp"].Value.Replace(",", string.Empty);
             if (long.TryParse(expText, out long expValue))
