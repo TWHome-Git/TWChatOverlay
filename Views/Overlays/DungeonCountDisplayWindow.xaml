@@ -2,8 +2,9 @@
         xmlns:ov="clr-namespace:TWChatOverlay.Views"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Width="420"
-        Height="72"
+        MinWidth="280"
+        SizeToContent="WidthAndHeight"
+        UseLayoutRounding="True"
         WindowStyle="None"
         AllowsTransparency="True"
         Background="Transparent"
@@ -16,24 +17,12 @@
             BorderBrush="{DynamicResource OverlayAccentBorderBrush}"
             BorderThickness="1.2"
             CornerRadius="8"
-            Padding="16,10"
+            Padding="16,9,16,10"
             MouseLeftButtonDown="RootBorder_MouseLeftButtonDown">
         <Grid>
+            <!-- 문구("어밴던로드 3단계" 등)와 아이콘만 보여준다 — "던전 도우미" 제목은 두지 않고, 크기는 문구에 맞춘다 -->
             <Grid x:Name="NormalContent">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="*"/>
-                </Grid.RowDefinitions>
-
-                <TextBlock Text="던전 도우미"
-                           Foreground="{DynamicResource OverlayTitleAccentTextBrush}"
-                           FontSize="13"
-                           FontWeight="SemiBold"
-                           TextAlignment="Center"/>
-
-                <StackPanel Grid.Row="1"
-                            Margin="0,4,0,0"
-                            Orientation="Horizontal"
+                <StackPanel Orientation="Horizontal"
                             HorizontalAlignment="Center"
                             VerticalAlignment="Center">
                     <Image x:Name="MessageIcon"
