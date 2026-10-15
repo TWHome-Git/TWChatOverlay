@@ -29,7 +29,6 @@ namespace TWChatOverlay.Views
     public partial class MainWindow
     {
         // ── 이 부분 클래스가 주로 쓰는 상태 ──
-        private bool _canShowAuxiliaryWindows = true;
         private bool _isRefreshLogDisplayScheduled;
         private AbandonSummaryValue _AbandonWeeklySummary = new();
         private string _AbandonWeeklySummaryWeekKey = string.Empty;
@@ -433,7 +432,6 @@ namespace TWChatOverlay.Views
                     _itemCalendarWindow?.ApplyRealtimeAbandonLog(parseResult.FormattedText, DateTime.Today);
 
                     if (_settings.ShowAbandonRoadSummaryWindow &&
-                        _canShowAuxiliaryWindows &&
                         WindowState != WindowState.Minimized)
                     {
                         ShowAbandonRoadSummaryWindow(previewMode: false, restartLifetime: true, activateWindow: false);
@@ -442,7 +440,6 @@ namespace TWChatOverlay.Views
                 }
                 else if (isAbandonCountEntry &&
                          _settings.ShowAbandonRoadSummaryWindow &&
-                         _canShowAuxiliaryWindows &&
                          WindowState != WindowState.Minimized)
                 {
                     ShowAbandonRoadSummaryWindow(previewMode: false, restartLifetime: true, activateWindow: false);

@@ -471,11 +471,11 @@ namespace TWChatOverlay.Views
             }
         }
 
+        // 채팅창이 숨거나 다시 보일 때. 보조 창은 채팅창과 무관하게 뜨므로 표시 여부는 바꾸지 않고, 맨 위 순서만 다시 맞춘다.
         private void StickyService_AuxiliaryWindowVisibilityChanged(bool canShow)
         {
             Dispatcher.BeginInvoke(new Action(() =>
             {
-                _canShowAuxiliaryWindows = canShow;
                 ApplyBuffTrackerWindowSettings();
                 ApplyAbandonRoadSummaryWindowVisibility();
             }), DispatcherPriority.Background);

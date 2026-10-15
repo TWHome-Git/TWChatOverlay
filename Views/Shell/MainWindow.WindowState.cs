@@ -671,24 +671,17 @@ namespace TWChatOverlay.Views
             }
         }
 
+        /// <summary>
+        /// 채팅창 표시 여부와는 무관하다 — 일일/주간·버프 추적 같은 다른 보조 창처럼 채팅창을 꺼 둬도 뜬다
+        /// (채팅창을 끄고 일일/주간 창만 쓰는 사람은 통계 버튼을 눌러도 아무것도 뜨지 않았다).
+        /// 메인 창이 최소화됐을 때만 숨긴다.
+        /// </summary>
         private bool CanShowAbandonRoadSummaryWindow(bool previewMode)
         {
             if (previewMode || _isAddonPositionMode)
                 return true;
 
-            if (!_isOverlayVisible)
-                return false;
-
-            if (WindowState == WindowState.Minimized)
-                return false;
-
-            if (!_canShowAuxiliaryWindows)
-                return false;
-
-            if (Visibility != Visibility.Visible || Opacity <= 0)
-                return false;
-
-            return true;
+            return WindowState != WindowState.Minimized;
         }
 
         private void ApplyAbandonRoadSummaryWindowVisibility()
