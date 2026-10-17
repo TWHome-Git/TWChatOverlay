@@ -1226,6 +1226,11 @@ namespace TWChatOverlay.Views
                 try
                 {
                     var seenPrimary = new HashSet<string>();
+                    // 어비스 심층은 실시간(DailyWeeklyLogAnalyzer)과 같은 기준으로 센다:
+                    // 입장 → 같은 층의 회차 안내 → 보상 줄까지 이어져야 한 판이다.
+                    // 회차 안내("7회 중 N회째")는 깨지 않고 나와도 입장할 때마다 찍히므로 그 줄 개수로 세면 안 된다.
+                    string? pendingAbyssEntryFloor = null;
+                    string? pendingAbyssFloor = null;
                     var accumulatedLastRawCounts = new Dictionary<string, int>();
                     var accumulatedOffsets = new Dictionary<string, int>();
 
@@ -1280,6 +1285,26 @@ namespace TWChatOverlay.Views
                                     specialCounts.TryGetValue(DailyWeeklyLogAnalyzer.CatacombsSpecialKey, out int existingCatacombs)
                                         ? existingCatacombs + 1
                                         : 1;
+                            }
+
+                            if (DailyWeeklyLogAnalyzer.TryMatchAbyssEntry(effectiveLine, out string abyssEntryFloor))
+                            {
+                                pendingAbyssEntryFloor = abyssEntryFloor;
+                                pendingAbyssFloor = null;
+                            }
+                            else if (DailyWeeklyLogAnalyzer.TryMatchAbyssFloor(effectiveLine, out string abyssFloor))
+                            {
+                                pendingAbyssFloor = pendingAbyssEntryFloor == abyssFloor ? abyssFloor : null;
+                                pendingAbyssEntryFloor = null;
+                            }
+                            else if (pendingAbyssFloor != null &&
+                                     DailyWeeklyLogAnalyzer.TryMatchAbyssReward(effectiveLine, out _))
+                            {
+                                string abyssKey = DailyWeeklyLogAnalyzer.AbyssSpecialKeyPrefix + pendingAbyssFloor;
+                                specialCounts[abyssKey] = specialCounts.TryGetValue(abyssKey, out int existingAbyss)
+                                    ? existingAbyss + 1
+                                    : 1;
+                                pendingAbyssFloor = null;
                             }
 
                             string normalizedLine = NormalizeLogText(effectiveLine);
@@ -1370,9 +1395,11 @@ namespace TWChatOverlay.Views
             {
                 if (item.LogKeyword == null) continue;
                 if (!item.IsEnabled) continue;
+                // 아래 항목들은 줄 개수가 아니라 따로 센 값(specialCounts·maxExtractedCounts)을 쓴다
                 if (item.LogKeyword.Contains(DailyWeeklyLogAnalyzer.AbandonRoadKeywordToken, StringComparison.Ordinal) ||
                     item.LogKeyword.Contains(DailyWeeklyLogAnalyzer.CatacombsKeywordToken, StringComparison.Ordinal) ||
-                    item.LogKeyword.Contains(DailyWeeklyLogAnalyzer.NestOfShinjoKeywordToken, StringComparison.Ordinal))
+                    item.LogKeyword.Contains(DailyWeeklyLogAnalyzer.NestOfShinjoKeywordToken, StringComparison.Ordinal) ||
+                    item.LogKeyword.Contains(DailyWeeklyLogAnalyzer.AbyssKeywordToken, StringComparison.Ordinal))
                     continue;
                 if (!counts.TryGetValue(item.LogKeyword, out int count) || count == 0) continue;
                 if (count <= 0) continue;
