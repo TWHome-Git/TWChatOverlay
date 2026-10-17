@@ -75,9 +75,10 @@ namespace TWChatOverlay.Services
                 _taskbarProxy.Closed += (_, _) =>
                 {
                     _taskbarProxy = null;
-                    // 작업 표시줄에서 '창 닫기'로 닫힌 경우에도 진입점이 사라지지 않게 복원한다
+                    // 숨긴 채로 닫혔다면 작업 표시줄의 '창 닫기'다 → 프로그램을 끝낸다.
+                    // (복원하면서 닫을 때는 RestoreAll이 IsTrayed를 먼저 풀어서 여기로 오지 않는다)
                     if (IsTrayed)
-                        RestoreAll();
+                        ExitFromTaskbar();
                 };
                 _taskbarProxy.Show();
             }
@@ -85,6 +86,14 @@ namespace TWChatOverlay.Services
             {
                 AppLogger.Warn("Failed to show taskbar restore proxy.", ex);
             }
+        }
+
+        /// <summary>메뉴의 종료 버튼과 같은 순서로 끝낸다.</summary>
+        private static void ExitFromTaskbar()
+        {
+            AppLogger.Warn("Exit requested from taskbar (closed while all windows were hidden).");
+            try { AppServices.Get<ChatWindowHub>().BeginShutdown(); } catch { }
+            Application.Current?.Shutdown();
         }
 
         private void CloseTaskbarProxy()

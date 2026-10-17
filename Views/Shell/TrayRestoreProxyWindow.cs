@@ -6,6 +6,7 @@ namespace TWChatOverlay.Views
     /// <summary>
     /// 최소화(모든 창 숨기기) 동안 작업 표시줄에 남는 복원용 창.
     /// 작업 표시줄 버튼을 클릭하면 모든 창을 복원하고 스스로 닫힌다.
+    /// 작업 표시줄에서 '창 닫기'로 닫으면 프로그램을 끝낸다 (TrayAllWindowsService).
     /// </summary>
     public sealed class TrayRestoreProxyWindow : Window
     {
