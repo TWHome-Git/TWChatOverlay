@@ -538,6 +538,25 @@ namespace TWChatOverlay.Services
         private DungeonDefinition? RecordDefinitionByKey(string key)
             => RecordDefinitions.FirstOrDefault(d => d.Key == key);
 
+        /// <summary>
+        /// 합계를 구간 값으로 다시 맞춘다. 판 전체를 재는 구간이 있는 던전(렐릭 '전체')은 그 구간 값, 아니면 구간 합.
+        /// 구간 합으로만 맞추면 렐릭은 '전체'에 그 안에서 잰 석상 시간이 한 번 더 더해져,
+        /// 석상을 건너뛴 판일수록 합계가 작아 최고 기록으로 뽑힌다 (그 판엔 건너뛴 석상이 없어 최고 열이 '–'로 남았다).
+        /// 기록을 넣을 때와 파일에서 읽을 때 모두 거친다 — 이미 저장된 기록의 합계도 읽는 순간 바로잡힌다.
+        /// </summary>
+        private static void NormalizeTotal(DungeonRunRecord record)
+        {
+            if (record.Segments.Count == 0)
+                return;
+
+            SegmentDefinition? whole = RecordDefinitions
+                .FirstOrDefault(d => d.Key == record.DungeonKey)?
+                .Segments.FirstOrDefault(s => s.WholeRun);
+            record.TotalSeconds = whole != null && record.Segments.TryGetValue(whole.Name, out double wholeSeconds)
+                ? wholeSeconds
+                : record.Segments.Values.Sum();
+        }
+
         /// <summary>추적 정의가 낳을 수 있는 기록 정의들 (변형이 없으면 자기 자신).</summary>
         private IEnumerable<DungeonDefinition> RecordDefinitionsOf(DungeonDefinition tracking)
             => tracking.Variants is { Length: > 0 }
@@ -1612,9 +1631,8 @@ namespace TWChatOverlay.Services
             if (RecordFloorUnlocked() is DateTime floor && record.EndedAt < floor)
                 return false;
 
-            // 합계는 언제나 구간 합 — 옛 파일(판 전체 경과 시간으로 저장)도 여기서 맞춘다
-            if (record.Segments.Count > 0)
-                record.TotalSeconds = record.Segments.Values.Sum();
+            // 합계는 구간 값으로 다시 맞춘다 — 옛 파일(판 전체 경과 시간으로 저장)도 여기서 맞춘다
+            NormalizeTotal(record);
 
             // 두 주 기록의 중복 판정·정리와 무관하게, 처음 보는 판이면 전체 기록에 남긴다
             ArchiveAppendIfNewUnlocked(record);
@@ -1689,7 +1707,10 @@ namespace TWChatOverlay.Services
                     try { record = JsonSerializer.Deserialize<DungeonRunRecord>(line, ArchiveJsonOptions); }
                     catch { /* 깨진 줄은 건너뛴다 */ }
                     if (record != null && !string.IsNullOrEmpty(record.DungeonKey))
+                    {
+                        NormalizeTotal(record);
                         yield return record;
+                    }
                 }
             }
         }
@@ -2033,7 +2054,10 @@ namespace TWChatOverlay.Services
                 try { record = JsonSerializer.Deserialize<DungeonRunRecord>(line, ArchiveJsonOptions); }
                 catch { /* 깨진 줄은 건너뛴다 */ }
                 if (record != null && !string.IsNullOrEmpty(record.DungeonKey))
+                {
+                    NormalizeTotal(record);
                     yield return record;
+                }
             }
         }
 
@@ -2069,12 +2093,61 @@ namespace TWChatOverlay.Services
                     // 정의가 사라진 던전은 버린다
                     if (pair.Value == null || RecordDefinitionByKey(pair.Value.DungeonKey) == null)
                         continue;
+                    NormalizeTotal(pair.Value);
                     _best[pair.Key] = pair.Value;
                 }
             }
             catch (Exception ex)
             {
                 AppLogger.Warn("Failed to load dungeon timer best records.", ex);
+            }
+
+            RebuildWholeRunBestsUnlocked();
+        }
+
+        /// <summary>
+        /// 판 전체 구간이 있는 던전(렐릭·신조의 둥지·최후의 결전·환희의 잔상)의 최고 기록을 보관함에서 다시 고른다.
+        /// 예전에는 합계를 '전체' + 그 안의 구간으로 매겨 최고 기록 파일에 엉뚱한 판(구간을 건너뛴 판)이 남아 있을 수 있다.
+        /// 보관함에서 그 던전 줄만 골라 읽으므로 가볍다.
+        /// </summary>
+        private void RebuildWholeRunBestsUnlocked()
+        {
+            try
+            {
+                string[] markers = RecordDefinitions
+                    .Where(d => d.Segments.Any(s => s.WholeRun))
+                    .Select(d => $"\"DungeonKey\":\"{d.Key}\"")
+                    .ToArray();
+                if (markers.Length == 0 || !Directory.Exists(ArchiveDirectoryPath))
+                    return;
+
+                foreach (string file in Directory.EnumerateFiles(ArchiveDirectoryPath, "*.jsonl"))
+                {
+                    foreach (string line in File.ReadLines(file, Encoding.UTF8))
+                    {
+                        if (!markers.Any(m => line.Contains(m, StringComparison.Ordinal)))
+                            continue;
+
+                        DungeonRunRecord? record = null;
+                        try { record = JsonSerializer.Deserialize<DungeonRunRecord>(line, ArchiveJsonOptions); }
+                        catch { /* 깨진 줄은 건너뛴다 */ }
+                        DungeonDefinition? def = record == null ? null : RecordDefinitionByKey(record.DungeonKey);
+                        if (record == null || def == null)
+                            continue;
+
+                        if (!HasDifficulty(def))
+                            record.Difficulty = string.Empty;
+                        else
+                            record.Difficulty ??= def.NormalLabel;
+                        NormalizeTotal(record);
+                        UpdateBestUnlocked(HistoryKey(record.DungeonKey, record.Difficulty ?? string.Empty), record);
+                    }
+                }
+                SaveBestIfDirty();
+            }
+            catch (Exception ex)
+            {
+                AppLogger.Warn("Failed to rebuild whole-run dungeon best records.", ex);
             }
         }
 
