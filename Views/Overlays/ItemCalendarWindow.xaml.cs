@@ -307,6 +307,24 @@ namespace TWChatOverlay.Views
         }
 
         /// <summary>
+        /// 하루 한 파일(yyyy-MM-dd.html)인 아카이브에서 기간에 걸친 파일만 고른다.
+        /// 예전에는 기간과 상관없이 모든 날짜 파일(1년이면 수백 개)을 열어 줄마다 날짜를 비교해, 기록이 쌓일수록
+        /// 주간 득템 통계를 열거나 주를 넘길 때(UI 스레드) 멈칫했다. 자정 직후 줄은 전날 파일에 들어갈 수 있어
+        /// 앞뒤로 하루씩 넓혀 읽고, 이름에서 날짜를 못 읽는 파일은 놓치지 않게 그대로 읽는다.
+        /// </summary>
+        private static IEnumerable<string> ArchiveFilesForRange(string directory, DateTime startDate, DateTime endDate)
+        {
+            DateTime from = startDate.Date.AddDays(-1), to = endDate.Date.AddDays(1);
+            foreach (string path in Directory.EnumerateFiles(directory, "*.html").OrderBy(p => p, StringComparer.OrdinalIgnoreCase))
+            {
+                if (DateTime.TryParseExact(Path.GetFileNameWithoutExtension(path), "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime day)
+                    && (day < from || day > to))
+                    continue;
+                yield return path;
+            }
+        }
+
+        /// <summary>
         /// 주간 득템 통계용: 기간 내 아이템 획득 스냅샷을 읽는다 (달력과 같은 아카이브 소스).
         /// </summary>
         internal static List<ItemLogSnapshotEntry> ReadItemSnapshotsForRange(DateTime startDate, DateTime endDate)
@@ -315,7 +333,7 @@ namespace TWChatOverlay.Views
             if (!Directory.Exists(ItemDirectoryPath))
                 return result;
 
-            foreach (string path in Directory.EnumerateFiles(ItemDirectoryPath, "*.html").OrderBy(p => p, StringComparer.OrdinalIgnoreCase))
+            foreach (string path in ArchiveFilesForRange(ItemDirectoryPath, startDate, endDate))
             {
                 foreach (var entry in ReadItemEntries(path))
                 {
@@ -340,7 +358,7 @@ namespace TWChatOverlay.Views
             if (!Directory.Exists(ExpDirectoryPath))
                 return total;
 
-            foreach (string path in Directory.EnumerateFiles(ExpDirectoryPath, "*.html").OrderBy(p => p, StringComparer.OrdinalIgnoreCase))
+            foreach (string path in ArchiveFilesForRange(ExpDirectoryPath, startDate, endDate))
             {
                 foreach (var entry in ReadExpEntries(path))
                 {
@@ -375,7 +393,7 @@ namespace TWChatOverlay.Views
             Directory.CreateDirectory(AbandonDirectoryPath);
             if (Directory.Exists(ItemDirectoryPath))
             {
-                foreach (string path in Directory.EnumerateFiles(ItemDirectoryPath, "*.html").OrderBy(p => p, StringComparer.OrdinalIgnoreCase))
+                foreach (string path in ArchiveFilesForRange(ItemDirectoryPath, monthStart, monthEnd))
                 {
                     foreach (var entry in ReadItemEntries(path))
                     {
@@ -401,7 +419,7 @@ namespace TWChatOverlay.Views
 
             if (Directory.Exists(ExpDirectoryPath))
             {
-                foreach (string path in Directory.EnumerateFiles(ExpDirectoryPath, "*.html").OrderBy(p => p, StringComparer.OrdinalIgnoreCase))
+                foreach (string path in ArchiveFilesForRange(ExpDirectoryPath, monthStart, monthEnd))
                 {
                     foreach (var entry in ReadExpEntries(path))
                     {
