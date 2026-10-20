@@ -1,4 +1,4 @@
-# TWChatOverlay
+# 테일즈 채팅 오버레이
 <img alt="TWChatOverlay" src="docs/images/main.jpg" />
 
 **테일즈위버 채팅 로그 기반의 보조 프로그램** — 실시간 채팅 로그 분석으로 인게임에서 놓치기 쉬운 정보를 오버레이로 제공합니다.
