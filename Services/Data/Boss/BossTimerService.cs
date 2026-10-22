@@ -67,7 +67,25 @@ namespace TWChatOverlay.Services
             }
         }
 
+        /// <summary>설정 카드에 보이는 출현 시간 설명. 항목 전체 기간이 있으면 끝나는(또는 시작하는) 시각을 붙인다.</summary>
         public static string BuildScheduleText(BossTimerDefinition boss)
+        {
+            string text = BuildScheduleTextCore(boss);
+            BossTimerSchedule? schedule = boss.Schedule;
+            if (schedule == null)
+                return text;
+
+            DateTime now = DateTime.Now;
+            if (schedule.UntilTime is DateTime until && now >= until)
+                return text + $"\n기간 끝남 ({until:MM.dd HH:mm})";
+            if (schedule.FromTime is DateTime from && now < from)
+                return text + $"\n{from:MM.dd HH:mm}부터";
+            if (schedule.UntilTime is DateTime end)
+                return text + $"\n~ {end:MM.dd HH:mm}";
+            return text;
+        }
+
+        private static string BuildScheduleTextCore(BossTimerDefinition boss)
         {
             if (boss.Schedule == null)
                 return "-";
@@ -122,7 +140,23 @@ namespace TWChatOverlay.Services
                    boss.Schedule.Times.Any(static value => !string.IsNullOrWhiteSpace(value));
         }
 
+        /// <summary>그 날의 출현 시각. 항목 전체 기간(schedule의 from·until) 밖의 시각은 뺀다.</summary>
         public static IEnumerable<DateTime> GetOccurrences(BossTimerDefinition boss, DateTime date)
+        {
+            BossTimerSchedule? schedule = boss.Schedule;
+            if (schedule == null)
+                return Enumerable.Empty<DateTime>();
+
+            DateTime? from = schedule.FromTime;
+            DateTime? until = schedule.UntilTime;
+            var occurrences = GetOccurrencesIgnoringPeriod(boss, date);
+            if (from == null && until == null)
+                return occurrences;
+
+            return occurrences.Where(at => (from == null || at >= from.Value) && (until == null || at < until.Value));
+        }
+
+        private static IEnumerable<DateTime> GetOccurrencesIgnoringPeriod(BossTimerDefinition boss, DateTime date)
         {
             if (boss.Schedule == null)
                 yield break;
@@ -375,6 +409,25 @@ namespace TWChatOverlay.Services
             public int? EntryMinutes { get; set; }
 
             /// <summary>
+            /// 항목 전체의 기간 — 시작(포함). fixed·hourly 공통. 비우면 제한 없음.
+            /// rules를 쓸 수 없는 매시 반복 이벤트를 날짜로 열고 닫을 때 쓴다.
+            /// 예) "from": "2026-10-23", "until": "2026-11-20T08:00"
+            /// 옛 버전 앱은 이 값을 모르고 계속 울리므로, 끝난 항목은 데이터에서 빼는 것이 확실하다.
+            /// </summary>
+            [JsonPropertyName("from")]
+            public string? From { get; set; }
+
+            /// <summary>항목 전체의 기간 — 끝(미포함). 이 시각부터는 출현하지 않는다. 비우면 제한 없음.</summary>
+            [JsonPropertyName("until")]
+            public string? Until { get; set; }
+
+            [JsonIgnore]
+            public DateTime? FromTime => ParsePeriodTime(From);
+
+            [JsonIgnore]
+            public DateTime? UntilTime => ParsePeriodTime(Until);
+
+            /// <summary>
             /// 날짜 규칙 목록 (fixed 전용). 있으면 times 대신 규칙들의 합으로 출현 시각을 만든다.
             /// times는 규칙을 모르는 옛 버전 앱을 위해 그대로 둔다.
             /// </summary>
@@ -407,18 +460,19 @@ namespace TWChatOverlay.Services
             public string? Until { get; set; }
 
             [JsonIgnore]
-            public DateTime? FromTime => ParseDateTime(From);
+            public DateTime? FromTime => ParsePeriodTime(From);
 
             [JsonIgnore]
-            public DateTime? UntilTime => ParseDateTime(Until);
-
-            private static DateTime? ParseDateTime(string? value)
-                => !string.IsNullOrWhiteSpace(value) &&
-                   DateTime.TryParse(value, System.Globalization.CultureInfo.InvariantCulture,
-                       System.Globalization.DateTimeStyles.None, out DateTime parsed)
-                    ? parsed
-                    : null;
+            public DateTime? UntilTime => ParsePeriodTime(Until);
         }
+
+        /// <summary>기간 값("2026-09-17" 또는 "2026-09-17T08:00")을 읽는다. 비었거나 형식이 틀리면 null(제한 없음).</summary>
+        private static DateTime? ParsePeriodTime(string? value)
+            => !string.IsNullOrWhiteSpace(value) &&
+               DateTime.TryParse(value, System.Globalization.CultureInfo.InvariantCulture,
+                   System.Globalization.DateTimeStyles.None, out DateTime parsed)
+                ? parsed
+                : null;
 
         private sealed class BossTimerPayload
         {
