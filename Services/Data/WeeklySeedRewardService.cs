@@ -43,7 +43,7 @@ namespace TWChatOverlay.Services
                 new("마티아", 245L * Man * 100),
                 new("라이코스", 245L * Man * 100),
                 new("티로로스", 245L * Man * 100),
-                new("이클립스 토벌전", 840L * Man * 100),
+                new("이클립스 토벌전", 560L * Man * 100),   // 1회 4000만 × 주간 획득 제한 14회 (입장은 21회)
                 new("보급품 탈환", 210L * Man * 100),
                 new("훈련소", 245L * Man * 100),
                 new("최후의 결전", 20L * Eok),
