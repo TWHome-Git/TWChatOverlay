@@ -59,6 +59,8 @@ namespace TWChatOverlay.Views
         private readonly DungeonAlertSource _source;
 
         protected override bool UseToolWindowStyle => true;
+        /// <summary>표시만 하는 알림. 잠금 중엔 클릭이 아래 게임으로 간다.</summary>
+        protected override bool PassthroughWhenLocked => true;
         protected override ChatSettings? ResolveSettings() => _settings;
 
         private DungeonAlertWindow(ChatSettings? settings, DungeonAlertSource source)

@@ -32,6 +32,9 @@ namespace TWChatOverlay.Views
         private void RootBorder_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
             => TryBeginDrag(e);
 
+        /// <summary>위치 미리보기 창. 잠금 중엔 클릭이 아래 게임으로 간다.</summary>
+        protected override bool PassthroughWhenLocked => true;
+
         protected override bool PersistBounds(ChatSettings settings)
         {
             settings.ItemDropWindowLeft = Left;

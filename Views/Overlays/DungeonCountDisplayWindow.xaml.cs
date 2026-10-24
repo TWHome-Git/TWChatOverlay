@@ -42,18 +42,15 @@ namespace TWChatOverlay.Views
         protected override bool ApplyAppFont => false;
         protected override bool UseToolWindowStyle => true;
         protected override ChatSettings? ResolveSettings() => _settings;
-
-        protected override void OnSourceInitialized(EventArgs e)
-        {
-            base.OnSourceInitialized(e);
-            SetMousePassthrough(false); // 알림창은 클릭을 받아야 잠금 해제 편집이 된다
-        }
+        /// <summary>표시만 하는 창. 잠금 중엔 클릭이 아래 게임으로 가고, 잠금 해제 때만 클릭을 받아 편집된다.</summary>
+        protected override bool PassthroughWhenLocked => true;
 
         public void SetSettings(ChatSettings settings)
         {
             _settings = settings ?? throw new ArgumentNullException(nameof(settings));
             MessageTextBlock.FontSize = _settings.DungeonCountDisplayFontSize;
-            SetExStyleFlags(add: NativeMethods.WS_EX_TOOLWINDOW, remove: NativeMethods.WS_EX_TRANSPARENT);
+            SetExStyleFlags(add: NativeMethods.WS_EX_TOOLWINDOW);
+            ApplyLockPassthrough();
         }
 
         /// <summary>잠금 해제 인스펙터에서 폰트 크기 변경 시 즉시 반영.</summary>

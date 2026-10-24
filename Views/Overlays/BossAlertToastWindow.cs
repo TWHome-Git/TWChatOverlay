@@ -219,6 +219,8 @@ namespace TWChatOverlay.Views
         // 알림 스택이 위치를 정하므로 설정 창 아래 배치 등록은 하지 않는다 (기존 동작 유지)
         protected override bool KeepBelowSettingsHost => false;
         protected override bool UseToolWindowStyle => true;
+        /// <summary>표시만 하는 알림. 잠금 중엔 클릭이 아래 게임으로 간다.</summary>
+        protected override bool PassthroughWhenLocked => true;
         protected override ChatSettings? ResolveSettings() => _settings;
 
         private void RootBorder_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)

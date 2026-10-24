@@ -51,6 +51,13 @@ namespace TWChatOverlay.Views
         /// <summary>LocationChanged/SizeChanged마다 <see cref="PersistBounds"/>를 부를지. false면 드래그 종료·명시 호출 때만.</summary>
         protected virtual bool PersistBoundsOnChange => true;
 
+        /// <summary>
+        /// true면 잠금 상태에서 마우스 통과(WS_EX_TRANSPARENT)로 두고, 잠금 해제 때만 클릭을 받는다.
+        /// 표시만 하는 창(알림·추적창)에 쓴다. 통과 중에는 아래 게임이 눌리고, 확대 프로그램(Magpie)도 이 창을
+        /// "가리는 창"으로 보지 않아 커서 캡처를 유지한다. 플레이 중 눌러야 할 버튼이 있는 창에는 쓰지 않는다.
+        /// </summary>
+        protected virtual bool PassthroughWhenLocked => false;
+
         #endregion
 
         #region 초기화
@@ -67,6 +74,45 @@ namespace TWChatOverlay.Views
             EnsureCommonSetup();
             if (UseToolWindowStyle)
                 SetExStyleFlags(add: NativeMethods.WS_EX_TOOLWINDOW);
+
+            if (PassthroughWhenLocked)
+            {
+                _lockPassthroughHandler ??= _ => Dispatcher.BeginInvoke(new Action(ApplyLockPassthrough));
+                AppServices.Get<UiLockService>().UnlockChanged += _lockPassthroughHandler;
+                ApplyLockPassthrough();
+            }
+        }
+
+        protected override void OnClosed(EventArgs e)
+        {
+            if (_lockPassthroughHandler != null)
+            {
+                try { AppServices.Get<UiLockService>().UnlockChanged -= _lockPassthroughHandler; } catch { }
+                _lockPassthroughHandler = null;
+            }
+
+            base.OnClosed(e);
+        }
+
+        private Action<bool>? _lockPassthroughHandler;
+
+        /// <summary>
+        /// <see cref="PassthroughWhenLocked"/> 창의 통과 스타일을 지금 잠금 상태에 맞춘다.
+        /// 창이 확장 스타일을 스스로 다시 쓴 뒤(툴윈도우 비트 추가 등)에도 부른다.
+        /// </summary>
+        protected void ApplyLockPassthrough()
+        {
+            if (!PassthroughWhenLocked)
+                return;
+
+            try
+            {
+                SetMousePassthrough(!AppServices.Get<UiLockService>().IsUnlocked);
+            }
+            catch (Exception ex)
+            {
+                AppLogger.Warn($"Failed to apply lock passthrough of '{GetType().Name}'.", ex);
+            }
         }
 
         private void EnsureCommonSetup()
