@@ -33,9 +33,9 @@ namespace TWChatOverlay.Models
     {
         public bool ShowNormal { get; set; } = true;
         public bool ShowTeam { get; set; } = true;
-        public bool ShowClub { get; set; } = true;
+        public bool ShowClub { get; set; } = false;
         public bool ShowShout { get; set; } = true;
-        public bool ShowSystem { get; set; } = true;
+        public bool ShowSystem { get; set; } = false;
         public bool ShowClubBoss { get; set; } = true;
         /// <summary>각 줄 앞에 [일반]/[팀]/[클럽]/[시스템] 종류 말머리를 붙인다.</summary>
         public bool ShowCategoryPrefix { get; set; } = false;
@@ -57,16 +57,16 @@ namespace TWChatOverlay.Models
     public class IdDisplaySettings
     {
         public bool ShowEtaLevel { get; set; } = true;
-        public bool ShowEtaCharacter { get; set; } = true;
+        public bool ShowEtaCharacter { get; set; } = false;
         public bool ShowIdTag { get; set; } = true;
         public bool ShowTimestamp { get; set; } = true;
         // 항목별 색상 동기화: 켜면 줄 색을 따르고, 끄면 아래 개별 색을 쓴다
-        public bool SenderIdColorSync { get; set; } = true;
-        public bool EtaLevelColorSync { get; set; } = true;
+        public bool SenderIdColorSync { get; set; } = false;
+        public bool EtaLevelColorSync { get; set; } = false;
         public bool EtaCharacterColorSync { get; set; } = true;
-        public bool TimestampColorSync { get; set; } = true;
-        public bool IdTagColorSync { get; set; } = true;
-        public string SenderIdColor { get; set; } = "#E8EAE9";
+        public bool TimestampColorSync { get; set; } = false;
+        public bool IdTagColorSync { get; set; } = false;
+        public string SenderIdColor { get; set; } = "#FFFFFF";
         // 에타 레벨 구간별 색상: 켜면 동기화/개별 색 대신 레벨 구간에 따라 칠한다 (레벨 0은 에타 정보 없음 → 표기 자체를 생략)
         public string EtaLevelRange1Color { get; set; } = "#C8CDD2"; // 1~20
         public string EtaLevelRange2Color { get; set; } = "#7EE081"; // 21~40
@@ -75,8 +75,8 @@ namespace TWChatOverlay.Models
         public string EtaLevelRange5Color { get; set; } = "#FFD84A"; // 81~90
         public string EtaLevelRange6Color { get; set; } = "#FF6B6B"; // 91~100
         public string EtaCharacterColor { get; set; } = "#5AC8E8";
-        public string TimestampColor { get; set; } = "#9AA0A6";
-        public string IdTagColor { get; set; } = "#B4BBC2";
+        public string TimestampColor { get; set; } = "#FFFF00";
+        public string IdTagColor { get; set; } = "#80FFFF";
         // 클럽 보스 공지 줄 색: 동기화를 끄면 클럽 색 대신 이 색을 쓴다
         public bool ClubBossColorSync { get; set; } = true;
         public string ClubBossColor { get; set; } = "#00FF00";
@@ -84,17 +84,17 @@ namespace TWChatOverlay.Models
 
     public class ChatFontSettings
     {
-        public string Family { get; set; } = "사용자 설정";
+        public string Family { get; set; } = "쿠키런";
         public double Size { get; set; } = 17.0;
-        public double LineMargin { get; set; } = 0.0;
-        public double LineMarginLeft { get; set; } = 0.0;
+        public double LineMargin { get; set; } = 899.2;
+        public double LineMarginLeft { get; set; } = 836.8;
     }
 
     public class ChatCloneSettings
     {
         public bool IsOpen { get; set; } = false;
         public bool FollowMainFont { get; set; } = true;
-        public string FontFamily { get; set; } = string.Empty;
+        public string FontFamily { get; set; } = "사용자 설정";
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public double? FontSize { get; set; }
         public string TabTag { get; set; } = "General";
@@ -106,7 +106,7 @@ namespace TWChatOverlay.Models
         public IdDisplaySettings IdDisplay { get; set; } = new();
         public ChatFontSettings Font { get; set; } = new();
         public string MainTabTag { get; set; } = "Basic";
-        public ChatCloneSettings Clone1 { get; set; } = new();
+        public ChatCloneSettings Clone1 { get; set; } = new() { IsOpen = true, TabTag = "Club" };
         public ChatCloneSettings Clone2 { get; set; } = new();
     }
 
@@ -117,7 +117,7 @@ namespace TWChatOverlay.Models
         public bool ToastPopup { get; set; } = true;
         public bool AutoCopyNickname { get; set; } = false;
         public int ToastDurationSeconds { get; set; } = 5;
-        public double ToastFontSize { get; set; } = 15.0;
+        public double ToastFontSize { get; set; } = 20.0;
         public double ReplayFontSize { get; set; } = 14.0;
     }
 
@@ -126,20 +126,20 @@ namespace TWChatOverlay.Models
     public class KeywordAlertSettings
     {
         public bool Enabled { get; set; } = false;
-        public bool UseColor { get; set; } = false;
-        public bool UseSound { get; set; } = false;
+        public bool UseColor { get; set; } = true;
+        public bool UseSound { get; set; } = true;
         public double Volume { get; set; } = 1.0;
         public string Keywords { get; set; } = string.Empty;
     }
 
     public class ExperienceAlertSettings
     {
-        public bool ShowTracker { get; set; } = false;
+        public bool ShowTracker { get; set; } = true;
         public bool LowEfficiencyAlarm { get; set; } = false;
-        public long Threshold { get; set; } = 10000;
+        public long Threshold { get; set; } = 52000000;
         public double Volume { get; set; } = 1.0;
         public double AlertFontSize { get; set; } = 18.0;
-        public bool LimitAlertEnabled { get; set; } = false;
+        public bool LimitAlertEnabled { get; set; } = true;
         public bool ShowLimitAlertWindow { get; set; } = false;
         public long LimitTotalExp { get; set; } = 0;
         public bool LimitStateInitialized { get; set; } = false;
@@ -149,33 +149,33 @@ namespace TWChatOverlay.Models
 
     public class DungeonAlertSettings
     {
-        public bool MagicCircleAlert { get; set; } = false;
+        public bool MagicCircleAlert { get; set; } = true;
         public double MagicCircleVolume { get; set; } = 1.0;
-        public bool EtosDirectionAlert { get; set; } = false;
+        public bool EtosDirectionAlert { get; set; } = true;
         public bool ShowEtosHelperWindow { get; set; } = false;
-        public bool ReflectionPatternAlert { get; set; } = false;
+        public bool ReflectionPatternAlert { get; set; } = true;
         /// <summary>감전 패턴: 방전에 걸린 동안 알림 창을 띄운다.</summary>
         public bool DischargeAlert { get; set; } = true;
         /// <summary>사냥 기록 창 글자 크기.</summary>
         public double ExpHuntRecordFontSize { get; set; } = 15.0;
         public double ReflectionPatternVolume { get; set; } = 1.0;
-        public bool AbandonRoadCountAlert { get; set; } = false;
+        public bool AbandonRoadCountAlert { get; set; } = true;
         /// <summary>심연의 보물창고: 입장 후 금화 주머니 획득 카운트 표시.</summary>
         public bool TreasuryGoldCountAlert { get; set; } = true;
         /// <summary>심연의 보물창고 주간 상태: 주 키(ISO)와 회차별 금화 주머니 획득 수.</summary>
         public string TreasuryWeekKey { get; set; } = string.Empty;
         public List<int> TreasuryRunCounts { get; set; } = new();
-        public bool ShowAbandonRoadSummaryWindow { get; set; } = false;
-        public bool CravingPleasureCountAlert { get; set; } = false;
+        public bool ShowAbandonRoadSummaryWindow { get; set; } = true;
+        public bool CravingPleasureCountAlert { get; set; } = true;
         public bool ShowCountDisplayWindow { get; set; } = false;
-        public int CountAlertDurationSeconds { get; set; } = 30;
+        public int CountAlertDurationSeconds { get; set; } = 60;
         public double CountDisplayFontSize { get; set; } = 18.0;
         /// <summary>갈망하는 즐거움 알림 창 지속 시간(초). 어밴던로드와 별도.</summary>
         public int CravingDurationSeconds { get; set; } = 30;
         /// <summary>갈망하는 즐거움 알림 창 폰트 크기. 어밴던로드와 별도.</summary>
         public double CravingFontSize { get; set; } = 18.0;
         /// <summary>보급품 탈환 진입 시 미니 지도 창 표시.</summary>
-        public bool ShowRecaptureSupplyMap { get; set; } = true;
+        public bool ShowRecaptureSupplyMap { get; set; } = false;
         /// <summary>보급품 탈환에서 경보 장치 해제 문구가 뜨면 발판 색 순서 창 표시.</summary>
         public bool ShowRecaptureSupplyPadOrder { get; set; } = true;
         /// <summary>발판 순서 창 지속 시간(초).</summary>
@@ -193,7 +193,7 @@ namespace TWChatOverlay.Models
 
     public class ItemDropAlertSettings
     {
-        public bool Enabled { get; set; } = false;
+        public bool Enabled { get; set; } = true;
         public double Volume { get; set; } = 0.1;
         public double ToastFontSize { get; set; } = 18.0;
         public bool ShowHelperWindow { get; set; } = false;
@@ -203,8 +203,8 @@ namespace TWChatOverlay.Models
 
     public class BuffTrackerAlertSettings
     {
-        public bool Enabled { get; set; } = false;
-        public bool EndSound { get; set; } = false;
+        public bool Enabled { get; set; } = true;
+        public bool EndSound { get; set; } = true;
         public double EndSoundVolume { get; set; } = 1.0;
     }
 
@@ -233,15 +233,15 @@ namespace TWChatOverlay.Models
 
     public class WindowsSection
     {
-        public WindowRect Main { get; set; } = new() { Width = 650.0, Height = 250.0 };
-        public WindowRect Menu { get; set; } = new() { Left = 0.0, Top = 0.0 };
-        public WindowRect SubMenu { get; set; } = new() { Left = 0.0, Top = 0.0 };
-        public WindowRect DailyWeekly { get; set; } = new() { Left = 0.0, Top = 0.0, Width = 280.0, Height = 540.0 };
-        public WindowRect SubAddon { get; set; } = new() { Left = 0.0, Top = 0.0 };
-        public WindowRect ItemDropHelper { get; set; } = new() { Left = 0.0, Top = 0.0 };
-        public WindowRect BuffTracker { get; set; } = new() { Left = 0.0, Top = 0.0 };
-        public WindowRect ItemCalendar { get; set; } = new() { Left = 0.0, Top = 0.0 };
-        public WindowRect AbandonRoadSummary { get; set; } = new() { Left = 0.0, Top = 0.0 };
+        public WindowRect Main { get; set; } = new() { Width = 547.2, Height = 180.0 };
+        public WindowRect Menu { get; set; } = new() { Left = 416.8, Top = 8.0 };
+        public WindowRect SubMenu { get; set; } = new() { Left = 188.8, Top = 261.6 };
+        public WindowRect DailyWeekly { get; set; } = new() { Left = 2337.6, Top = 0.8, Width = 326.4, Height = 1040.8 };
+        public WindowRect SubAddon { get; set; } = new() { Left = 1458.4, Top = 472.0 };
+        public WindowRect ItemDropHelper { get; set; } = new() { Left = 1156.8, Top = 57.6 };
+        public WindowRect BuffTracker { get; set; } = new() { Left = 864.0, Top = 784.8 };
+        public WindowRect ItemCalendar { get; set; } = new() { Left = 671.2, Top = 53.6 };
+        public WindowRect AbandonRoadSummary { get; set; } = new() { Left = 1941.6, Top = 776.8 };
         /// <summary>심연의 보물창고 주간 통계 창 위치 (미설정 시 어밴던로드 통계창 위치를 따른다).</summary>
         public WindowRect TreasurySummary { get; set; } = new();
         public WindowRect ShoutToast { get; set; } = new();
@@ -282,10 +282,10 @@ namespace TWChatOverlay.Models
 
     public class DailyWeeklyUiSettings
     {
-        public bool Show { get; set; } = false;
+        public bool Show { get; set; } = true;
         public bool AutoCollapseEnabled { get; set; } = false;
-        public int AutoCollapseSeconds { get; set; } = 10;
-        public double FontSize { get; set; } = 12.0;
+        public int AutoCollapseSeconds { get; set; } = 3;
+        public double FontSize { get; set; } = 14.0;
     }
 
     public class CalendarUiSettings
@@ -297,7 +297,7 @@ namespace TWChatOverlay.Models
     public class MemoUiSettings
     {
         public string Text { get; set; } = string.Empty;
-        public bool TextOnlyMode { get; set; } = false;
+        public bool TextOnlyMode { get; set; } = true;
         public double FontSize { get; set; } = 20.0;
         public bool Bold { get; set; } = false;
         public bool Italic { get; set; } = false;
@@ -307,9 +307,9 @@ namespace TWChatOverlay.Models
     public class UiSection
     {
         /// <summary>메인·서브 채팅창과 자동으로 뜨는 창의 통합 배경 불투명도(%). 20~100.</summary>
-        public double OverlayOpacityPercent { get; set; } = 96.0;
+        public double OverlayOpacityPercent { get; set; } = 100.0;
         /// <summary>오버레이 항상 위. 끄면 처음 실행 때만 위에 두고, 이후에는 일반 창처럼 다른 앱 뒤로 내려간다.</summary>
-        public bool OverlaysAlwaysOnTop { get; set; } = true;
+        public bool OverlaysAlwaysOnTop { get; set; } = false;
         /// <summary>
         /// 항상 위를 다시 올릴 대상 프로세스 이름(쉼표 구분, .exe 없이). 이 프로그램이 전경이 될 때만 오버레이를 최상단으로 재승격한다.
         /// 캡처 도구 같은 다른 앱이 전경이 될 때는 손대지 않아 그 위로 올라가지 않는다. 게임 클라이언트는 InphaseNXD로 뜬다.
@@ -334,16 +334,16 @@ namespace TWChatOverlay.Models
         public string ToggleOverlay { get; set; } = string.Empty;
         public string ToggleDailyWeekly { get; set; } = string.Empty;
         public string ToggleSettings { get; set; } = string.Empty;
-        public string ToggleTrayAll { get; set; } = string.Empty;
+        public string ToggleTrayAll { get; set; } = "NumPad9";
         public string ToggleUnlock { get; set; } = string.Empty;
     }
 
     public class SystemSection
     {
         public string ChatLogFolderPath { get; set; } = @"C:\Nexon\TalesWeaver\ChatLog";
-        public bool WizardCompleted { get; set; } = false;
+        public bool WizardCompleted { get; set; } = true;
         public bool StartupLogReadCanceled { get; set; } = false;
-        public bool StartupTodayOnlyBootstrapCompleted { get; set; } = false;
+        public bool StartupTodayOnlyBootstrapCompleted { get; set; } = true;
     }
 
 }
