@@ -29,52 +29,6 @@
     <ov:OverlayWindowBase.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVis"/>
         <converters:AddValueConverter x:Key="AddValueConverter"/>
-        <Style x:Key="IncrementButtonStyle" TargetType="Button">
-            <Setter Property="Background" Value="{DynamicResource OverlayCardBackgroundBrush}"/>
-            <Setter Property="Foreground" Value="{DynamicResource OverlayRareAccentBrush}"/>
-            <Setter Property="BorderBrush" Value="{DynamicResource OverlayStrongBorderBrush}"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="FontSize" Value="14"/>
-            <Setter Property="Padding" Value="0"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="Button">
-                        <Border Background="{TemplateBinding Background}"
-                                BorderBrush="{TemplateBinding BorderBrush}"
-                                BorderThickness="{TemplateBinding BorderThickness}"
-                                CornerRadius="4">
-                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                        </Border>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-            <Style.Triggers>
-                <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="Background" Value="{DynamicResource OverlaySurfaceAltBackgroundBrush}"/>
-                </Trigger>
-            </Style.Triggers>
-        </Style>
-        <Style x:Key="SettingsButtonStyle" TargetType="Button">
-            <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="Foreground" Value="{DynamicResource OverlaySubtleTextBrush}"/>
-            <Setter Property="BorderThickness" Value="0"/>
-            <Setter Property="FontSize" Value="13"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="Button">
-                        <Border Background="{TemplateBinding Background}" CornerRadius="4">
-                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                        </Border>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-            <Style.Triggers>
-                <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="Background" Value="{DynamicResource OverlaySurfaceAltBackgroundBrush}"/>
-                    <Setter Property="Foreground" Value="{DynamicResource OverlayExpAccentBrush}"/>
-                </Trigger>
-            </Style.Triggers>
-        </Style>
         <Style x:Key="CountButtonStyle" TargetType="Button">
             <Setter Property="Background" Value="{DynamicResource OverlayCardBackgroundBrush}"/>
             <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>

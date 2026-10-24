@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Media;
 using System.Windows.Threading;
 using TWChatOverlay.Models;
 
@@ -17,7 +16,6 @@ namespace TWChatOverlay.Services
         private DateTime _lastAlarmTime = DateTime.MinValue;
         private readonly DateTime _startTime = DateTime.Now;
         private DateTime? _lastExpAt;
-        private DateTime? _expiredAt;
         private bool _isReady = false;
         private bool _isSessionExpired = false;
         private bool _isTrackerActive = false;
@@ -85,7 +83,6 @@ namespace TWChatOverlay.Services
             }
 
             _isSessionExpired = false;
-            _expiredAt = null;
 
             // 측정은 경험치가 들어온 이 순간부터 잰다 (리셋을 누른 시각이 아니라)
             SessionState.MarkStarted();
@@ -125,7 +122,6 @@ namespace TWChatOverlay.Services
             AppLogger.Info($"Exp session reset. Total={SessionState.TotalExp:N0}, Count={SessionState.GainCount}");
             SessionState.Reset();
             _lastExpAt = null;
-            _expiredAt = null;
             _isSessionExpired = false;
         }
 
@@ -141,7 +137,6 @@ namespace TWChatOverlay.Services
 
                 SessionState.FreezeTotalExpDisplay();
                 _isSessionExpired = true;
-                _expiredAt = _lastExpAt;   // 마지막 획득 시점부터 쉰 것으로 친다
                 return;
             }
 

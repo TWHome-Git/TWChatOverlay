@@ -1,8 +1,6 @@
-﻿using System.Collections.Generic;
-using System.Windows.Media;
+﻿using System.Windows.Media;
 using TWChatOverlay.Models;
 using TWChatOverlay.Services;
-using TWChatOverlay.Services.LogAnalysis;
 
 namespace TWChatOverlay
 {
@@ -22,7 +20,6 @@ namespace TWChatOverlay
             public bool IsHighlight { get; set; } = false;
             public bool IsMagicCircleAlert { get; set; } = false;
             public bool IsReflectionPatternAlert { get; set; } = false;
-            public bool IsReflectionPatternEndAlert { get; set; } = false;
             /// <summary>상태이상 [방전] 줄 — 어비스에서 방전에 걸린 순간.</summary>
             public bool IsDischargeAlert { get; set; } = false;
             /// <summary>"방전상태가 풀렸습니다" 줄 — 방전이 풀린 순간.</summary>
@@ -42,12 +39,6 @@ namespace TWChatOverlay
             public bool IsClubBossMessage { get; set; } = false;
         }
 
-        public static ParseResult ParseLine(string html, ChatSettings settings)
-            => new LogAnalysisService(settings).Analyze(html, isRealTime: false).Parsed;
-
-        public static List<string> ParseKeywords(string? keywordInput)
-            => AlertLogAnalyzer.ParseKeywords(keywordInput);
-
         public static bool IsMatchTab(ParseResult log, string tabTag, ChatSettings settings)
         {
             return tabTag switch
@@ -58,8 +49,6 @@ namespace TWChatOverlay
                 "Club" => log.Category == ChatCategory.Club,
                 "Shout" => log.Category == ChatCategory.Shout,
                 "System" => log.Category is ChatCategory.System or ChatCategory.System2 or ChatCategory.System3,
-                "Item" => log.IsTrackedItemDrop,
-                "All" => true,
                 _ => false
             };
         }
@@ -85,7 +74,6 @@ namespace TWChatOverlay
             return category switch
             {
                 ChatCategory.NormalSelf or ChatCategory.Normal => settings.ShowNormal,
-                ChatCategory.Shout => settings.ShowShout,
                 ChatCategory.Club => settings.ShowClub,
                 ChatCategory.Team => settings.ShowTeam,
                 ChatCategory.System or ChatCategory.System2 or ChatCategory.System3 => settings.ShowSystem,

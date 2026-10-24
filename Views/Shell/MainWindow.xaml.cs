@@ -101,7 +101,6 @@ namespace TWChatOverlay.Views
                 _pendingInitialSetupWizard = true;
             }
             _currentTabTag = NormalizeMainTabTag(_settings.MainWindowChatTabTag);
-            _ = IgnoredChatMessageService.EnsureLoadedAsync();
             this.DataContext = _settings;
             MainWindowHost.Current = this;
             this.Closed += (_, _) =>

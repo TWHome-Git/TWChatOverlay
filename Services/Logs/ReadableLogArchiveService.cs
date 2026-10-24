@@ -273,30 +273,6 @@ namespace TWChatOverlay.Services
             }
         }
 
-        public void ResetRawLogRebuildCheckpoint()
-        {
-            lock (_syncRoot)
-            {
-                try
-                {
-                    Directory.CreateDirectory(_stateDirectory);
-                    var state = LoadMigrationState();
-                    if (state.Checkpoints.Remove(RawLogRebuildCheckpointKey))
-                    {
-                        string migrationPath = Path.Combine(_stateDirectory, MigrationStateFileName);
-                        string json = JsonSerializer.Serialize(state, JsonOptions);
-                        File.WriteAllText(migrationPath, json, Utf8BomEncoding);
-                    }
-
-                    DeleteLegacyStateFiles();
-                }
-                catch (Exception ex)
-                {
-                    AppLogger.Warn("Failed to reset raw log rebuild checkpoint.", ex);
-                }
-            }
-        }
-
         public void ClearArchiveLogsAndResetCheckpoint()
         {
             lock (_syncRoot)
@@ -339,7 +315,6 @@ namespace TWChatOverlay.Services
             if (parsed == null || string.IsNullOrWhiteSpace(parsed.FormattedText))
                 return;
 
-            string text = parsed.FormattedText;
             lock (_syncRoot)
             {
                 AppendFromAnalysisSelective(
@@ -1174,7 +1149,6 @@ namespace TWChatOverlay.Services
             private const int FlushThresholdChars = 256 * 1024;
             private readonly Dictionary<string, StringBuilder> _bufferByPath = new(StringComparer.OrdinalIgnoreCase);
             private readonly Dictionary<string, StreamWriter> _writerByPath = new(StringComparer.OrdinalIgnoreCase);
-            public HashSet<string> TouchedPaths { get; } = new(StringComparer.OrdinalIgnoreCase);
 
             public void Enqueue(string path, string title, string htmlLine)
             {
@@ -1185,7 +1159,6 @@ namespace TWChatOverlay.Services
                 }
 
                 buffer.AppendLine(htmlLine);
-                TouchedPaths.Add(path);
                 if (buffer.Length >= FlushThresholdChars)
                     FlushPath(path, title);
             }

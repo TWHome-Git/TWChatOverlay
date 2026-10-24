@@ -18,8 +18,7 @@ namespace TWChatOverlay.Services
             { "Team", new List<LogParser.ParseResult>() },
             { "Club", new List<LogParser.ParseResult>() },
             { "Shout", new List<LogParser.ParseResult>() },
-            { "System", new List<LogParser.ParseResult>() },
-            { "Item", new List<LogParser.ParseResult>() }
+            { "System", new List<LogParser.ParseResult>() }
         };
 
         private readonly int _maxCountPerTab;
@@ -111,19 +110,6 @@ namespace TWChatOverlay.Services
             }
 
             return Array.Empty<LogParser.ParseResult>();
-        }
-
-        public IReadOnlyDictionary<string, IReadOnlyList<LogParser.ParseResult>> GetAllLogsSnapshot()
-        {
-            lock (_sync)
-            {
-                var snapshot = new Dictionary<string, IReadOnlyList<LogParser.ParseResult>>(StringComparer.Ordinal);
-                foreach (var pair in _buffers)
-                {
-                    snapshot[pair.Key] = pair.Value.ToList();
-                }
-                return snapshot;
-            }
         }
 
         public void Replace(string tabName, IEnumerable<LogParser.ParseResult> logs)

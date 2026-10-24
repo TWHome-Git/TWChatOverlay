@@ -1,27 +1,20 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Text.Json;
 using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Controls.Primitives;
 using System.Windows.Documents;
-using System.Windows.Input;
 using System.Windows.Interop;
 using System.Windows.Media;
-using System.Windows.Media.Imaging;
 using System.Windows.Threading;
 using TWChatOverlay.Models;
 using TWChatOverlay.Services;
 using TWChatOverlay.Services.LogAnalysis;
-using TWChatOverlay.ViewModels;
 
 namespace TWChatOverlay.Views
 {
@@ -32,11 +25,6 @@ namespace TWChatOverlay.Views
         private bool _isRefreshLogDisplayScheduled;
         private AbandonSummaryValue _AbandonWeeklySummary = new();
         private string _AbandonWeeklySummaryWeekKey = string.Empty;
-        private const string SeedIconUri = "pack://application:,,,/Data/images/Item/시드.png";
-        private const string LowMagicStoneIconUri = "pack://application:,,,/Data/images/Item/하급마정석.png";
-        private const string MiddleMagicStoneIconUri = "pack://application:,,,/Data/images/Item/중급마정석.png";
-        private const string HighMagicStoneIconUri = "pack://application:,,,/Data/images/Item/상급마정석.png";
-        private const string TopMagicStoneIconUri = "pack://application:,,,/Data/images/Item/최상급마정석.png";
 
         private static readonly Regex ShoutToastSourceRegex = new(
             @"^\s*\[\s*(?:\d{1,2}:\d{2}(?::\d{2})?|\d{1,2}\s*시\s*\d{1,2}\s*분(?:\s*\d{1,2}\s*초)?)\s*\]\s*외치기\s*:",
@@ -292,12 +280,6 @@ namespace TWChatOverlay.Views
                 _settings.ShowDailyWeeklyContentOverlay &&
                 (analysis.ShouldRunDailyWeeklyContent || isContentCompletionRelevant))
             {
-                if (parseResult.FormattedText.Contains("남은 공격 횟수 : 1", StringComparison.Ordinal) ||
-                    parseResult.FormattedText.Contains("[경험의 정수] 아이템을 획득하였습니다.", StringComparison.Ordinal))
-                {
-                    AppLogger.Debug($"[DailyWeekly] Realtime dispatch. StartupBackfill={context.IsStartupBackfill}, OverlayExists={_dailyWeeklyContentOverlay != null}, OverlayVisible={_dailyWeeklyContentOverlay?.IsVisible == true}, Text='{parseResult.FormattedText}'");
-                }
-
                 GuardSideEffect("daily-weekly", () =>
                 {
                     EnsureDailyWeeklyWindowForRealtimeProcessing();
@@ -351,8 +333,7 @@ namespace TWChatOverlay.Views
                         // 패턴이 도는 동안 떠 있다가 종료 알림음이 난 직후 사라진다
                         DungeonAlertWindow.Flash(DungeonAlertSource.AbyssReflection, _settings, "반사", "반사 패턴",
                             ReflectionPatternDuration + ReflectionAlertLinger);
-                        if (parseResult.IsReflectionPatternEndAlert)
-                            ScheduleReflectionEndAlert();
+                        ScheduleReflectionEndAlert();
                     });
                 }
 
@@ -802,16 +783,6 @@ namespace TWChatOverlay.Views
         private void EnsureDailyWeeklyWindowForRealtimeProcessing()
             => EnsureDailyWeeklyContentWindow();
 
-        private static bool IsMercurialSeedCompletionLog(string text)
-        {
-            return false;
-        }
-
-        private static bool IsStrictMercurialCompletionLog(string text)
-        {
-            return false;
-        }
-
         private static bool IsConfusedOrColorlessElsoRewardLine(string text)
             => LogTextClassifier.IsConfusedOrColorlessElsoReward(text);
 
@@ -959,60 +930,6 @@ namespace TWChatOverlay.Views
                 }
             }), DispatcherPriority.Background);
         }
-
-        private static void AddMoneyLine(RichTextBox box, string label, string amountText, FontFamily family, double size, Brush brush)
-        {
-            var p = new Paragraph
-            {
-                Foreground = brush,
-                FontFamily = family,
-                FontSize = size,
-                Margin = new Thickness(0, 0, 0, 2)
-            };
-            p.Inlines.Add(new Run(label));
-            p.Inlines.Add(BuildIconInline(SeedIconUri, 16));
-            p.Inlines.Add(new Run($" {amountText}"));
-            box.Document.Blocks.Add(p);
-        }
-
-        private static void AddStoneIconLine(RichTextBox box, FontFamily family, double size, AbandonSummaryValue summary)
-        {
-            var p = new Paragraph
-            {
-                Foreground = Brushes.LightGray,
-                FontFamily = family,
-                FontSize = size,
-                Margin = new Thickness(0, 0, 0, 2)
-            };
-
-            p.Inlines.Add(BuildIconInline(LowMagicStoneIconUri, 16));
-            p.Inlines.Add(new Run($" {FormatSignedCount(summary.Low)}  "));
-            p.Inlines.Add(BuildIconInline(MiddleMagicStoneIconUri, 16));
-            p.Inlines.Add(new Run($" {FormatSignedCount(summary.Mid)}  "));
-            p.Inlines.Add(BuildIconInline(HighMagicStoneIconUri, 16));
-            p.Inlines.Add(new Run($" {FormatSignedCount(summary.High)}  "));
-            p.Inlines.Add(BuildIconInline(TopMagicStoneIconUri, 16));
-            p.Inlines.Add(new Run($" {FormatSignedCount(summary.Top)}"));
-
-            box.Document.Blocks.Add(p);
-        }
-
-        private static InlineUIContainer BuildIconInline(string uri, double size)
-        {
-            var img = new Image
-            {
-                Width = size,
-                Height = size,
-                Stretch = Stretch.Uniform,
-                SnapsToDevicePixels = true,
-                Source = new BitmapImage(new Uri(uri, UriKind.Absolute))
-            };
-            RenderOptions.SetBitmapScalingMode(img, BitmapScalingMode.HighQuality);
-            return new InlineUIContainer(img) { BaselineAlignment = BaselineAlignment.Center };
-        }
-
-        private static string FormatSignedCount(long count)
-            => AbandonSummaryCalculator.FormatSignedCount(count);
 
         private void EnsureAbandonWeeklySummaryCurrent(DateTime date)
         {

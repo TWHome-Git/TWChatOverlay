@@ -32,11 +32,7 @@ namespace TWChatOverlay.Services.LogAnalysis
                 return;
 
             if (settings.EnableReflectionPatternAlert && IsReflectionPatternAlertMessage(context))
-            {
                 context.Result.IsReflectionPatternAlert = true;
-                if (IsReflectionPatternEndAlertMessage(context))
-                    context.Result.IsReflectionPatternEndAlert = true;
-            }
 
             if (settings.UseMagicCircleAlert &&
                 (context.Result.Category == ChatCategory.System ||
@@ -124,21 +120,6 @@ namespace TWChatOverlay.Services.LogAnalysis
             }
 
             return false;
-        }
-
-        private static bool IsReflectionPatternEndAlertMessage(LogLineContext context)
-        {
-            if (context.Result.Category != ChatCategory.Normal &&
-                context.Result.Category != ChatCategory.NormalSelf)
-            {
-                return false;
-            }
-
-            if (string.IsNullOrWhiteSpace(context.Result.SenderId) || string.IsNullOrWhiteSpace(context.MessageOnly))
-                return false;
-
-            return context.Result.SenderId.Trim().Equals(ReflectionPatternEndAlertSender, StringComparison.Ordinal) &&
-                   context.MessageOnly.Trim().Contains(ReflectionPatternEndAlertMessage, StringComparison.Ordinal);
         }
     }
 }

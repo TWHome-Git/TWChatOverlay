@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 using TWChatOverlay.Models;
-using TWChatOverlay.Services;
 
 namespace TWChatOverlay.Services.LogAnalysis
 {
@@ -22,7 +21,6 @@ namespace TWChatOverlay.Services.LogAnalysis
         public const string AbyssKeywordToken = "어비스 - 심층";
         public const string CatacombsKeywordToken = "이번 주 사명의 계승자 닉스 보상을";
         public const string NestOfShinjoKeywordToken = "이번 주 신조 보상을";
-        public const string SiochanheimKeywordToken = "시오칸하임";
 
         public const string AbyssSpecialKeyPrefix = "Abyss:";
         public const string CatacombsSpecialKey = "Catacombs";
@@ -30,8 +28,6 @@ namespace TWChatOverlay.Services.LogAnalysis
         public const string MercurialCaveSpecialKey = "MercurialCave";
 
         private const string MercurialSingleEntryKeyword = "머큐리얼 케이브의 [싱글 플레이] 모드로 입장 하였습니다.";
-        private const string MercurialSingleRewardKeyword1 = "경험치가 5000000 올랐습니다";
-        private const string MercurialSingleRewardKeyword2 = "콘텐츠 클리어 보상으로 1500만 SEED를 획득했습니다.";
         private const string MercurialEntryTokenDungeon = "머큐리얼 케이브";
         private const string MercurialEntryTokenMode = "싱글 플레이";
         private const string MercurialEntryTokenEnter = "입장";
@@ -51,7 +47,6 @@ namespace TWChatOverlay.Services.LogAnalysis
 
         private readonly IReadOnlyList<DailyWeeklyContentLog> _trackItems;
         private readonly HashSet<DailyWeeklyContentLog> _pendingDoubleKeyword = new();
-        private readonly Dictionary<string, AccumulatedCountState> _countStates = new();
         private string? _pendingAbyssEntryFloor;
         private string? _pendingAbyssFloor;
         private bool _pendingMercurialSingleEntry;
@@ -122,11 +117,6 @@ namespace TWChatOverlay.Services.LogAnalysis
             _pendingMercurialSingleEntry = false;
             _pendingMercurialRewardExpSeen = false;
             _pendingMercurialRewardSeedSeen = false;
-        }
-
-        public void ResetAccumulatedCounts()
-        {
-            _countStates.Clear();
         }
 
         private bool TryProcessMercurialSingleLog(string text)
@@ -213,20 +203,6 @@ namespace TWChatOverlay.Services.LogAnalysis
             return text.Contains(MercurialEntryTokenDungeon, StringComparison.Ordinal) &&
                    text.Contains(MercurialEntryTokenMode, StringComparison.Ordinal) &&
                    text.Contains(MercurialEntryTokenEnter, StringComparison.Ordinal);
-        }
-
-        public static bool IsMercurialRewardMessage(string text)
-        {
-            if (text.Contains(MercurialSingleRewardKeyword1, StringComparison.Ordinal) ||
-                text.Contains(MercurialSingleRewardKeyword2, StringComparison.Ordinal))
-                return true;
-
-            bool expReward = text.Contains(MercurialRewardExpToken1, StringComparison.Ordinal) &&
-                             text.Contains(MercurialRewardExpToken2, StringComparison.Ordinal);
-            bool seedReward = text.Contains(MercurialRewardSeedToken1, StringComparison.Ordinal) &&
-                              text.Contains(MercurialRewardSeedToken2, StringComparison.Ordinal) &&
-                              text.Contains(MercurialRewardSeedToken3, StringComparison.Ordinal);
-            return expReward || seedReward;
         }
 
         public static bool IsMercurialRewardExpMessage(string text)
@@ -394,30 +370,6 @@ namespace TWChatOverlay.Services.LogAnalysis
                 ? $"Count={item.CurrentCount}/{item.MaxCount}"
                 : $"Cleared={item.IsCleared}";
             AppLogger.Debug($"[DailyWeekly] Content confirmed. Item='{item.Name}', Reason='{reason}', State={state}, Text='{text}'");
-        }
-
-        private void SetAccumulatedCount(DailyWeeklyContentLog? item, int rawCount)
-        {
-            if (item == null)
-                return;
-
-            if (!_countStates.TryGetValue(item.Name, out var state))
-            {
-                state = new AccumulatedCountState();
-                _countStates[item.Name] = state;
-            }
-
-            if (rawCount < state.LastRawCount)
-                state.Offset += state.LastRawCount;
-
-            state.LastRawCount = rawCount;
-            item.SetCount(state.Offset + rawCount);
-        }
-
-        private sealed class AccumulatedCountState
-        {
-            public int LastRawCount { get; set; }
-            public int Offset { get; set; }
         }
     }
 

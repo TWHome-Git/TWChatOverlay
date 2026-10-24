@@ -13,7 +13,6 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
-using System.Windows.Media;
 using System.Windows.Threading;
 using TWChatOverlay.Models;
 using TWChatOverlay.Services;
@@ -32,7 +31,6 @@ namespace TWChatOverlay.Views
         private readonly ObservableCollection<DailyWeeklyContentLog> _completedItems = new();
         private readonly ObservableCollection<DailyWeeklyContentLog> _inProgressItems = new();
         private DailyWeeklyLogAnalyzer _dailyWeeklyLogAnalyzer = null!;
-        private readonly Dictionary<string, AccumulatedCountState> _AbandonCountStates = new();
         private readonly ScanCache _scanCache = new();
         private bool _suppressSave = false;
         private bool _pendingRescanAfterSettings = false;
@@ -211,20 +209,12 @@ namespace TWChatOverlay.Views
         private const string OrlyDefenseHellEntryLogKeyword = "남은 공격 횟수 : 1";
         private const string OrlyDefenseHellClearLogKeyword = "[경험의 정수] 아이템을 획득하였습니다.";
 
-        private static readonly Regex HtmlTagRegex = new("<[^>]+>", RegexOptions.Compiled);
-        private static readonly Regex WhiteSpaceRegex = new(@"\s+", RegexOptions.Compiled);
         private static readonly Regex ContentArchiveEntryRegex = new(
             "<div\\s+class=\"log\\s+content\"(?<attrs>[^>]*)>(?<text>.*?)</div>",
             RegexOptions.IgnoreCase | RegexOptions.Compiled);
         private static readonly Regex ArchiveAttrRegex = new(
             "(?<name>data-[a-z0-9\\-]+)=\"(?<value>[^\"]*)\"",
             RegexOptions.IgnoreCase | RegexOptions.Compiled);
-        private static readonly Regex AbandonRoadCountRegex = new(
-            @"이번\s*주\s*어밴던\s*로드\s*(?<region>필멸의\s*땅|카디프|오를란느)\s*지역의\s*도전\s*횟수는\s*(?<count>\d+)\s*번",
-            RegexOptions.Compiled);
-        private static readonly Regex CravingPleasureEnergyRegex = new(
-            @"남은\s*에너지는\s*\[\s*(?<remain>\d+)\s*\]",
-            RegexOptions.Compiled);
         private static readonly Regex FreeClearTitleRegex = new(
             @"[?？]\s*(?<title>[^?？]+?)\s*[?？]\s*-\s*오늘 무료 클리어 횟수\s*:\s*1/1\s*회",
             RegexOptions.Compiled);
@@ -995,23 +985,6 @@ namespace TWChatOverlay.Views
             _scanCache.IsDirty = true;
         }
 
-        private void SaveAllConfigs()
-        {
-            foreach (var item in TrackItems.Where(i => !i.HasChildren))
-            {
-                if (!_settings.DungeonItemConfigs.TryGetValue(item.Name, out var config))
-                    config = new DungeonItemConfig();
-                config.IsEnabled = item.IsEnabled;
-                config.RequiredCount = (item.MaxCount == item.DefaultMaxCount) ? 0 : item.MaxCount;
-                config.CurrentCount = 0;
-                config.IsCleared = false;
-                config.SavedAt = DateTime.MinValue;
-                _settings.DungeonItemConfigs[item.Name] = config;
-            }
-            ConfigService.SaveDeferred(_settings);
-            _scanCache.IsDirty = true;
-        }
-
         /// <summary>
         /// 로그 파일 전체를 백그라운드에서 스캔하여 금일 클리어 현황을 복원합니다.
         /// </summary>
@@ -1022,22 +995,6 @@ namespace TWChatOverlay.Views
             {
                 var snapshot = await EnsureScanCacheAsync(forceRescan: false);
                 ApplySnapshot(snapshot);
-            }
-            finally
-            {
-                IsLoading = false;
-            }
-        }
-
-        public async Task EnsureInitialTabsLoadedAsync()
-        {
-            if (_scanCache.Snapshot != null)
-                return;
-
-            IsLoading = true;
-            try
-            {
-                await EnsureScanCacheAsync(forceRescan: false);
             }
             finally
             {
@@ -1085,8 +1042,6 @@ namespace TWChatOverlay.Views
                 ResetScannedItems(dailyItems);
                 ResetScannedItems(weeklyItems);
                 _dailyWeeklyLogAnalyzer.ResetPending();
-                _dailyWeeklyLogAnalyzer.ResetAccumulatedCounts();
-                _AbandonCountStates.Clear();
 
                 await ScanAndApplyAsync(dailyItems, new[] { GetLogPath(today) }, today.Date);
                 await ScanAndApplyAsync(weeklyItems, GetWeekLogPaths(today), null);
@@ -1625,12 +1580,6 @@ namespace TWChatOverlay.Views
             }
         }
 
-        private void Increment_Click(object sender, RoutedEventArgs e)
-        {
-            if (sender is Button btn && btn.Tag is DailyWeeklyContentLog item)
-                item.Mark();
-        }
-
         // 일간/주간 컨텐츠 창은 잠금 모드와 무관하게 항상 이동 가능. 폰트·z-순서·위치 저장은 기존대로 창 자체가 처리한다.
         protected override bool KeepBelowSettingsHost => false;
         protected override bool ApplyAppFont => false;
@@ -1639,9 +1588,6 @@ namespace TWChatOverlay.Views
 
         private void TitleBar_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
             => TryBeginDrag(e);
-
-        [System.Runtime.InteropServices.DllImport("user32.dll")]
-        private static extern IntPtr SendMessage(IntPtr hWnd, int msg, IntPtr wp, IntPtr lp);
 
         /// <summary>그립 드래그로만 크기를 조절한다. (평상시 ResizeMode=NoResize에서도 동작)</summary>
         private void ResizeGrip_DragDelta(object sender, System.Windows.Controls.Primitives.DragDeltaEventArgs e)
@@ -1833,39 +1779,13 @@ namespace TWChatOverlay.Views
         {
             foreach (var item in TrackItems.Where(i => !i.IsSubItem && i.IsWeekly && i.Name != AbandonRoadGroupName))
                 item.Reset();
-            _dailyWeeklyLogAnalyzer.ResetAccumulatedCounts();
             _scanCache.IsDirty = true;
         }
 
         private void ResetAbandonItems()
         {
             TrackItems.FirstOrDefault(i => i.Name == AbandonRoadGroupName)?.Reset();
-            _AbandonCountStates.Clear();
             _scanCache.IsDirty = true;
-        }
-
-        private static void SetAccumulatedCount(
-            Dictionary<string, AccumulatedCountState> states,
-            DailyWeeklyContentLog item,
-            int rawCount)
-        {
-            if (!states.TryGetValue(item.Name, out var state))
-            {
-                state = new AccumulatedCountState();
-                states[item.Name] = state;
-            }
-
-            if (rawCount < state.LastRawCount)
-                state.Offset += state.LastRawCount;
-
-            state.LastRawCount = rawCount;
-            item.SetCount(state.Offset + rawCount);
-        }
-
-        private sealed class AccumulatedCountState
-        {
-            public int LastRawCount { get; set; }
-            public int Offset { get; set; }
         }
 
         protected override void OnClosing(System.ComponentModel.CancelEventArgs e)

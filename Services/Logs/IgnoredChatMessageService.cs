@@ -218,9 +218,5 @@ namespace TWChatOverlay.Services
 
             return false;
         }
-
-        // Kept for compatibility with existing startup call path.
-        public static System.Threading.Tasks.Task EnsureLoadedAsync(bool forceRefresh = false)
-            => System.Threading.Tasks.Task.CompletedTask;
     }
 }

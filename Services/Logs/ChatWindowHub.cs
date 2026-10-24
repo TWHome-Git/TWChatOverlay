@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
 using System.Windows.Threading;
-using TWChatOverlay.Views;
 
 namespace TWChatOverlay.Services
 {
@@ -101,20 +100,6 @@ namespace TWChatOverlay.Services
             };
 
             return timer;
-        }
-
-        public void FlushBufferNotifications()
-        {
-            lock (NotificationLock)
-            {
-                if (!_isBufferNotificationPending)
-                    return;
-
-                _isBufferNotificationPending = false;
-                _bufferNotificationTimer?.Stop();
-            }
-
-            BuffersChanged?.Invoke(null, EventArgs.Empty);
         }
 
         /// <summary>잠금 해제 모드의 자석 스냅. 설정(WindowSnapEnabled)이 꺼져 있으면 아무것도 하지 않는다.</summary>

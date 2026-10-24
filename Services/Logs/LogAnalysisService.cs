@@ -46,10 +46,6 @@ namespace TWChatOverlay.Services
                                        IgnoredChatMessageService.IsIgnoredClubMessage(parsed.FormattedText);
             parsed.Brush = ChatBrushResolver.Resolve(_settings, parsed);
 
-            bool isRareTrackedItem = parsed.IsTrackedItemDrop &&
-                                     (parsed.TrackedItemGrade == ItemDropGrade.Rare ||
-                                      parsed.TrackedItemGrade == ItemDropGrade.Special);
-
             return new LogAnalysisResult(
                 RawHtml: html,
                 IsRealTime: isRealTime,
@@ -58,7 +54,6 @@ namespace TWChatOverlay.Services
                 IsSystemLog: isSystemLog,
                 HasExperienceGain: parsed.GainedExp > 0,
                 HasTrackedItemDrop: parsed.IsTrackedItemDrop,
-                IsRareTrackedItemDrop: isRareTrackedItem,
                 // 버프 줄은 시스템 줄이 보통이지만, 게임이 내 아이디를 화자로 붙여 찍으면 일반 채팅으로 분류된다 — 문구로도 본다
                 ShouldRunBuffTracker: isSystemLog || BuffTrackerService.LooksLikeBuffLog(parsed.FormattedText),
                 ShouldRunDailyWeeklyContent: isRealTime && isSystemLog,
@@ -138,7 +133,6 @@ namespace TWChatOverlay.Services
         bool IsSystemLog,
         bool HasExperienceGain,
         bool HasTrackedItemDrop,
-        bool IsRareTrackedItemDrop,
         bool ShouldRunBuffTracker,
         bool ShouldRunDailyWeeklyContent,
         bool ShouldShowItemDropToast,
@@ -154,7 +148,6 @@ namespace TWChatOverlay.Services
                 IsSystemLog: false,
                 HasExperienceGain: false,
                 HasTrackedItemDrop: false,
-                IsRareTrackedItemDrop: false,
                 ShouldRunBuffTracker: false,
                 ShouldRunDailyWeeklyContent: false,
                 ShouldShowItemDropToast: false,
