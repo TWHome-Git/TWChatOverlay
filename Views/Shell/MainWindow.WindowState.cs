@@ -33,6 +33,7 @@ namespace TWChatOverlay.Views
             _isSettingsPositionMode = isEnabled;
             ApplyPositionModeWindows();
             RefreshExpTrackerWindow();
+            RefreshChatPassthrough();
         }
 
         public void SetAddonPositionMode(bool isEnabled)
@@ -47,6 +48,7 @@ namespace TWChatOverlay.Views
             }
             ApplyPositionModeWindows();
             RefreshExpTrackerWindow();
+            RefreshChatPassthrough();
         }
 
         public void SetAddonPositionPreviewTabIndex(int tabIndex)
@@ -200,6 +202,7 @@ namespace TWChatOverlay.Views
             _isWizardChatPositionMode = isEnabled;
             SetSettingsPositionMode(isEnabled);
             ApplyWizardChatPositionUi(isEnabled);
+            RefreshChatPassthrough();
         }
 
         private void ApplyWizardChatPositionUi(bool enabled)

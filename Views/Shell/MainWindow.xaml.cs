@@ -197,6 +197,7 @@ namespace TWChatOverlay.Views
         private void MainWindow_Closed(object? sender, EventArgs e)
         {
 
+            try { AppServices.TryGet<ChatWheelPassthroughService>()?.Detach(this); } catch { }
             try { AppServices.Get<UiLockService>().UnlockChanged -= OnUiUnlockChanged; } catch { }
             try { AppServices.Get<UiLockService>().WindowAdjusted -= OnUnlockWindowAdjusted; } catch { }
             try { _mainTabAutoHideTimer.Stop(); } catch { }
@@ -432,6 +433,9 @@ namespace TWChatOverlay.Views
 
                 // 확대 프로그램(Magpie) 화면 위에 오버레이 유지. Magpie 알림(브로드캐스트)은 최상위 창으로 오므로 메인 창 핸들에 훅을 건다
                 AppServices.Get<ScalerTopmostGuard>().Attach(handle);
+
+                // 휠로 깨어나는 클릭 통과: 평소엔 채팅창 아래 게임이 눌리고, 휠을 굴리면 잠시 창이 마우스를 받는다
+                AppServices.Get<ChatWheelPassthroughService>().Attach(this);
 
                 _bossAlarmSchedulerService = new BossAlarmSchedulerService(_settings);
                 _bossAlarmSchedulerService.Start();

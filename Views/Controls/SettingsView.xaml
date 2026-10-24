@@ -838,6 +838,23 @@
                             </Border>
                             <Border Style="{StaticResource SettingsRowStyle}">
                                 <DockPanel>
+                                    <CheckBox DockPanel.Dock="Right" IsChecked="{Binding ChatPassthroughEnabled}" Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
+                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                        <TextBlock Text="잠금 중 채팅창 클릭 통과" Style="{StaticResource SettingsRowLabelStyle}"
+                                                   ToolTip="켜면 채팅창 아래 게임 버튼이 눌리고, 휠을 굴리면 잠시 채팅창이 마우스를 받습니다"/>
+                                        <Button Style="{StaticResource HelpButtonStyle}" Tag="display.chat_passthrough" Click="Help_Click"/>
+                                    </StackPanel>
+                                </DockPanel>
+                            </Border>
+                            <Border Style="{StaticResource SettingsRowStyle}">
+                                <DockPanel>
+                                    <TextBox DockPanel.Dock="Right" Width="70" Text="{Binding ChatPassthroughIdleSeconds, UpdateSourceTrigger=LostFocus}" Style="{StaticResource SettingsRowInputStyle}" PreviewTextInput="NumberOnly_PreviewTextInput" KeyDown="OffsetInput_KeyDown"/>
+                                    <TextBlock Text="채팅창 통과 복귀 시간(초)" Style="{StaticResource SettingsRowLabelStyle}"
+                                               ToolTip="휠로 깨어난 채팅창에 입력이 없으면 이 시간 뒤 다시 클릭 통과로 돌아갑니다"/>
+                                </DockPanel>
+                            </Border>
+                            <Border Style="{StaticResource SettingsRowStyle}">
+                                <DockPanel>
                                     <CheckBox DockPanel.Dock="Right" IsChecked="{Binding UnifiedToastStack}" Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
                                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                                         <TextBlock Text="알림 표시 위치 통합" Style="{StaticResource SettingsRowLabelStyle}"

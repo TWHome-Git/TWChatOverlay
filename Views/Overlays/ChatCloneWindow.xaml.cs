@@ -13,7 +13,7 @@ using TWChatOverlay.Services;
 
 namespace TWChatOverlay.Views
 {
-    public partial class ChatCloneWindow : OverlayWindowBase, INotifyPropertyChanged
+    public partial class ChatCloneWindow : OverlayWindowBase, INotifyPropertyChanged, IWheelPassthroughTarget
     {
         private readonly ChatSettings _settings;
         private readonly LogDocumentRenderer _renderer = new(200);
@@ -170,8 +170,40 @@ namespace TWChatOverlay.Views
             ApplyTabState(_currentTabTag, persistSettings: false, refreshLogDisplay: false);
         }
 
+        protected override void OnSourceInitialized(EventArgs e)
+        {
+            base.OnSourceInitialized(e);
+            // 휠로 깨어나는 클릭 통과 (메인 채팅창과 같은 동작)
+            try { AppServices.Get<ChatWheelPassthroughService>().Attach(this); }
+            catch (Exception ex) { AppLogger.Warn("Failed to attach wheel passthrough to chat clone.", ex); }
+        }
+
+        #region 휠로 깨어나는 클릭 통과
+
+        Window IWheelPassthroughTarget.Window => this;
+
+        bool IWheelPassthroughTarget.IsAutoPassthroughAllowed
+            => _mainWindow?.IsChatAutoPassthroughAllowed ?? !AppServices.Get<UiLockService>().IsUnlocked;
+
+        void IWheelPassthroughTarget.ScrollByWheel(int delta)
+            => ChatDisplay?.ScrollByWheelDelta(delta);
+
+        void IWheelPassthroughTarget.OnInteractiveChanged(bool interactive)
+        {
+            if (interactive)
+                ShowCloneTabsTemporarily();
+        }
+
+        void IWheelPassthroughTarget.OnInteractiveActivity()
+            => ShowCloneTabsTemporarily();
+
+        #endregion
+
         private void ChatCloneWindow_Closed(object? sender, EventArgs e)
         {
+            try { AppServices.TryGet<ChatWheelPassthroughService>()?.Detach(this); }
+            catch { }
+
             try
             {
                 if (!AppServices.Get<ChatWindowHub>().IsShuttingDown)

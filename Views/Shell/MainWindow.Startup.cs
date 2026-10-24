@@ -95,6 +95,7 @@ namespace TWChatOverlay.Views
 
             _isInitialSetupWizardRunning = true;
             _pendingInitialSetupWizard = false;
+            RefreshChatPassthrough();
 
             try
             {
@@ -198,6 +199,7 @@ namespace TWChatOverlay.Views
         private void RevealMainUiAfterWizard()
         {
             _isInitialSetupWizardRunning = false;
+            RefreshChatPassthrough();
 
             if (!IsVisible)
             {
