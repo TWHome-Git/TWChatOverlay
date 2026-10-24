@@ -37,6 +37,8 @@ namespace TWChatOverlay.Models
         public bool ShowShout { get; set; } = true;
         public bool ShowSystem { get; set; } = false;
         public bool ShowClubBoss { get; set; } = true;
+        /// <summary>보스·몬스터 대사("보스 이름 : 대사")를 채팅에 보인다. 끄면 숨긴다 (등장 안내 같은 화자 없는 안내문은 별개).</summary>
+        public bool ShowBossDialogue { get; set; } = false;
         /// <summary>각 줄 앞에 [일반]/[팀]/[클럽]/[시스템] 종류 말머리를 붙인다.</summary>
         public bool ShowCategoryPrefix { get; set; } = false;
         public string NormalColor { get; set; } = "#FFFFFF";

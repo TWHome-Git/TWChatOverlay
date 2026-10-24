@@ -88,6 +88,8 @@ namespace TWChatOverlay.Models
         [JsonIgnore]
         public bool ShowClubBoss { get => Chat.Filters.ShowClubBoss; set { Chat.Filters.ShowClubBoss = value; OnPropertyChanged(); } }
         [JsonIgnore]
+        public bool ShowBossDialogue { get => Chat.Filters.ShowBossDialogue; set { Chat.Filters.ShowBossDialogue = value; OnPropertyChanged(); } }
+        [JsonIgnore]
         public bool ShowCategoryPrefix { get => Chat.Filters.ShowCategoryPrefix; set { Chat.Filters.ShowCategoryPrefix = value; OnPropertyChanged(); } }
         [JsonIgnore]
         public string NormalColor { get => Chat.Filters.NormalColor; set { Chat.Filters.NormalColor = value; OnPropertyChanged(); } }

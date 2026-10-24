@@ -109,6 +109,20 @@ namespace TWChatOverlay.ViewModels
             }
         }
 
+        public bool ShowBossDialogue
+        {
+            get => _settings.ShowBossDialogue;
+            set
+            {
+                if (_settings.ShowBossDialogue != value)
+                {
+                    _settings.ShowBossDialogue = value;
+                    OnPropertyChanged();
+                    SaveSettings();
+                }
+            }
+        }
+
         /// <summary>각 줄 앞에 [일반]/[팀]/[클럽]/[시스템] 종류 말머리 표시.</summary>
         public bool ShowCategoryPrefix
         {
@@ -971,6 +985,7 @@ namespace TWChatOverlay.ViewModels
             OnPropertyChanged(nameof(ShowTeam));
             OnPropertyChanged(nameof(ShowClub));
             OnPropertyChanged(nameof(ShowClubBoss));
+            OnPropertyChanged(nameof(ShowBossDialogue));
             OnPropertyChanged(nameof(ShowShout));
             OnPropertyChanged(nameof(ShowFreeShout));
             OnPropertyChanged(nameof(ShowPaidShout));

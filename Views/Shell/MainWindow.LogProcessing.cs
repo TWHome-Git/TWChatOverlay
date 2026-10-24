@@ -555,7 +555,7 @@ namespace TWChatOverlay.Views
             bool isHiddenNormal = (parseResult.Category == ChatCategory.Normal ||
                                    parseResult.Category == ChatCategory.NormalSelf) &&
                                   TrySplitTimestampAndBody(text, out _, out string normalBody) &&
-                                  IgnoredChatMessageService.IsIgnoredNormalMessage(normalBody, parseResult.SenderId);
+                                  IgnoredChatMessageService.IsIgnoredNormalMessage(normalBody, parseResult.SenderId, !_settings.ShowBossDialogue);
 
             if (!isHiddenClub && !isHiddenNormal)
                 return false;

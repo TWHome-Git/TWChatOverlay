@@ -124,7 +124,11 @@ namespace TWChatOverlay.Services
         /// </summary>
         /// <param name="messageOnly">타임스탬프를 뗀 본문 ("화자 : 내용" 또는 안내문).</param>
         /// <param name="senderId">파서가 뽑은 화자. 사람 채팅이면 닉네임, NPC 대사면 NPC 이름, 안내문이면 null.</param>
-        public static bool IsIgnoredNormalMessage(string messageOnly, string? senderId)
+        /// <remarks>
+        /// 보스·몬스터 대사("보스 이름 : 대사")는 <paramref name="hideBossDialogue"/>가 켜져 있을 때만 숨긴다 (설정의 "보스 대사" 토글).
+        /// 화자 없는 안내문(등장 안내 등)은 이 값과 상관없이 본문으로 판정한다.
+        /// </remarks>
+        public static bool IsIgnoredNormalMessage(string messageOnly, string? senderId, bool hideBossDialogue = true)
         {
             if (string.IsNullOrWhiteSpace(messageOnly))
                 return false;
@@ -137,10 +141,13 @@ namespace TWChatOverlay.Services
                 // 이름이 정확히 같을 때만 본다 — "설계자"로 시작한다는 이유로 "설계자123" 같은
                 // 유저 아이디까지 숨기면 사람 말이 조용히 사라진다.
                 string speaker = senderId.Trim();
-                foreach (string ignored in IgnoredSpeakers)
+                if (hideBossDialogue)
                 {
-                    if (speaker.Equals(ignored, StringComparison.Ordinal))
-                        return true;
+                    foreach (string ignored in IgnoredSpeakers)
+                    {
+                        if (speaker.Equals(ignored, StringComparison.Ordinal))
+                            return true;
+                    }
                 }
 
                 // 게임이 내 아이디를 화자로 붙여 찍는 안내문도 있다 ("드드해 : 금화 주머니를 획득 했습니다.").
