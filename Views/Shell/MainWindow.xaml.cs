@@ -118,7 +118,7 @@ namespace TWChatOverlay.Views
                 ProcessUiLogBatch,
                 backgroundHandler: evt =>
                 {
-                    if (!evt.IsRealTime && !evt.IsStartupBackfill)
+                    if (!evt.IsRealTime)
                         return; // 과거 로그 표시 전용은 집계/아카이브 부수효과 없음
 
                     // 클리어 보상 시드는 줄이 들어올 때 바로 기록한다 (통계 창은 보관본만 읽는다)

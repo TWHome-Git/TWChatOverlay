@@ -2,9 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Net;
 using System.Text;
-using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Windows;
@@ -16,18 +14,9 @@ namespace TWChatOverlay.Services
     public sealed record LogFeedItem(
         string Html,
         bool IsRealTime,
-        bool IsStartupBackfill,
         string SourcePath = "",
         long CheckpointPosition = -1,
         DateTime ReadAtUtc = default); // 파일에서 읽은 시각 — 앱 파이프라인 지연 계측용
-
-    public sealed class LogPipelineCheckpoint
-    {
-        public string LogPath { get; set; } = string.Empty;
-        public long LastPosition { get; set; }
-        public string LastLogTimeText { get; set; } = string.Empty;
-        public DateTime UpdatedAtUtc { get; set; }
-    }
 
     /// <summary>
     /// ?뚯씪利덉쐞踰?濡쒓렇(HTML)瑜??대쭅 湲곕컲 ?⑥씪 ?뚯씠?꾨씪?몄쑝濡??섏쭛?⑸땲??
@@ -50,12 +39,6 @@ namespace TWChatOverlay.Services
         private readonly Decoder _logDecoder;
         private string _pendingRawContent = string.Empty;
         private DateTime _pendingSinceUtc = DateTime.MinValue;
-        private long _lastSavedCheckpointPosition = -1;
-
-        // UI가 소비를 알린 최신 위치 (실제 체크포인트 저장은 폴링 스레드에서)
-        private readonly object _consumedSync = new();
-        private string? _pendingConsumedPath;
-        private long _pendingConsumedPosition = -1;
 
         // 게임이 로그 꼬리를 다시 쓰는 경우(타임스탬프 보정 등)를 감지하기 위한 연속성 검증 상태.
         // _lastTailBytes: 직전에 읽은 내용의 끝 바이트(원본과 대조), _resyncAnchorText: 마지막으로
@@ -68,7 +51,6 @@ namespace TWChatOverlay.Services
         private const int TailVerifyLength = 256;
         private const int ResyncSearchBack = 128 * 1024;
         private const int ResyncSearchForward = 4096;
-        private string _lastLogTimeText = string.Empty;
 
         private const int InitialLogTailBytes = 2 * 1024 * 1024;
         private const int PollingIntervalMilliseconds = 30;
@@ -77,15 +59,10 @@ namespace TWChatOverlay.Services
         private const int PendingFlushMilliseconds = 500;
         // 자정 이후 이 시간 안에는 새 날짜 파일이 생길 때까지 옛 파일을 계속 읽는다 (게임의 파일 전환 지연 대비)
         private static readonly TimeSpan RolloverGraceAfterMidnight = TimeSpan.FromMinutes(10);
-        private static readonly string StateDirectoryPath = LogStoragePaths.StateDirectory;
-        private static readonly string CheckpointPath = Path.Combine(StateDirectoryPath, "log_pipeline_checkpoint.json");
-        private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.General);
-        private static readonly UTF8Encoding Utf8BomEncoding = new(encoderShouldEmitUTF8Identifier: true);
 
         public event Action<LogFeedItem>? OnNewLogRead;
         public event Action? InitialLogsLoaded;
         private static readonly Regex LineSplitRegex = new(@"</?br\s*>|\r?\n", RegexOptions.IgnoreCase | RegexOptions.Compiled);
-        private static readonly Regex LeadingTimeRegex = new(@"\[\s*(?<time>[^\]]+)\s*\]", RegexOptions.Compiled);
 
         #endregion
 
@@ -128,7 +105,6 @@ namespace TWChatOverlay.Services
 
             try { Stop(); } catch (Exception ex) { AppLogger.Warn("Failed to stop LogService during dispose.", ex); }
             try { _pollingTimer.Dispose(); } catch (Exception ex) { AppLogger.Warn("Failed to dispose polling timer.", ex); }
-            try { FlushConsumedCheckpoint(force: true); } catch (Exception ex) { AppLogger.Warn("Failed to flush checkpoint during dispose.", ex); }
             lock (_lockObj) { CloseStream(); }
             GC.SuppressFinalize(this);
         }
@@ -147,7 +123,6 @@ namespace TWChatOverlay.Services
             {
                 CheckDateAndPath();
                 ReadLog();
-                FlushConsumedCheckpoint();
             }
             catch (Exception ex)
             {
@@ -218,31 +193,16 @@ namespace TWChatOverlay.Services
                 // 경로가 바뀌었으므로 기존 스트림을 닫아 새 경로로 재오픈되게 한다.
                 CloseStream();
                 _pendingRawContent = string.Empty;
-                _lastLogTimeText = string.Empty;
                 _logDecoder.Reset();
 
                 if (File.Exists(_logPath))
                 {
-                    var fileInfo = new FileInfo(_logPath);
-                    long sourceLength = fileInfo.Length;
-                    // 프로그램 시작 시에는 체크포인트로 이어읽지 않고 항상 최근 로그(tail)를 표시해,
+                    // 시작·롤오버 시에는 이어읽지 않고 항상 최근 로그(tail)를 표시한 뒤 파일 끝부터 실시간으로 읽는다.
                     // 재실행해도 채팅창이 비지 않고 최근 과거 외치기/대화를 볼 수 있게 한다.
                     // (같은 날 재실행 = 그날 첫 실행과 동일한 표시 동작으로 통일)
-                    bool resumedFromCheckpoint = !isInitialLoad && TryRestoreCheckpoint(sourceLength);
-
-                    if (!resumedFromCheckpoint)
-                    {
-                        LoadInitialLogsFromTail(1000);
-                        _lastPosition = sourceLength;
-                        SaveCheckpoint();
-                    }
-
-                    if (_lastPosition < sourceLength)
-                    {
-                        // Startup backfill must flow through the same real-time pipeline
-                        // so content/abandon/exp/item/shout analyzers are not skipped.
-                        ReadLog(isRealTimeOverride: true, isStartupBackfill: true);
-                    }
+                    long sourceLength = new FileInfo(_logPath).Length;
+                    LoadInitialLogsFromTail(1000);
+                    _lastPosition = sourceLength;
 
                     AppLogger.Info($"Log file ready: {_logPath}, resume position={_lastPosition}.");
                 }
@@ -253,15 +213,11 @@ namespace TWChatOverlay.Services
                 }
             }
 
-            if (!isInitialLoad)
-            {
-                // 롤오버/경로 변경으로 버퍼만 채워진 줄들이 화면에도 반영되도록 전체 갱신을 요청한다
-                InitialLogsLoaded?.Invoke();
-            }
+            // 시작 시 tail 표시, 롤오버/경로 변경으로 버퍼만 채워진 줄들이 화면에도 반영되도록 전체 갱신을 요청한다
+            InitialLogsLoaded?.Invoke();
 
             if (isInitialLoad)
             {
-                InitialLogsLoaded?.Invoke();
                 Application.Current.Dispatcher.BeginInvoke(new Action(() =>
                 {
                     _experienceService.SetReady();
@@ -313,7 +269,7 @@ namespace TWChatOverlay.Services
         /// <summary>
         /// ?ㅼ떆媛꾩쑝濡?異붽???濡쒓렇瑜?利앸텇?쇰줈 ?쎌뒿?덈떎.
         /// </summary>
-        public void ReadLog(bool? isRealTimeOverride = null, bool isStartupBackfill = false)
+        private void ReadLog(bool? isRealTimeOverride = null)
         {
             lock (_lockObj)
             {
@@ -365,7 +321,6 @@ namespace TWChatOverlay.Services
                         _lastPosition = length;
                         _pendingRawContent = string.Empty;
                         _logDecoder.Reset();
-                        SaveCheckpoint();
                         return;
                     }
 
@@ -383,19 +338,11 @@ namespace TWChatOverlay.Services
 
                     _lastPosition = _logStream.Position;
                     if (totalRead == 0)
-                    {
-                        SaveCheckpoint();
                         return;
-                    }
 
                     UpdateTailBytes(buffer, totalRead);
                     string newContent = DecodeIncrementalBytes(buffer, totalRead);
-                    ProcessIncrementalContent(
-                        newContent,
-                        isRealTimeOverride ?? _experienceService.IsReady,
-                        isStartupBackfill);
-                    // 체크포인트는 소비(UI 배치 처리) 확인 후 NotifyConsumed에서 저장한다 — 읽자마자 저장하면
-                    // 처리 전에 앱이 죽었을 때 그 줄들이 유실된다
+                    ProcessIncrementalContent(newContent, isRealTimeOverride ?? _experienceService.IsReady);
                 }
                 catch (Exception ex)
                 {
@@ -749,7 +696,7 @@ namespace TWChatOverlay.Services
         /// <summary>
         /// ?쎌뼱???먮Ц HTML??<br> ?쒓렇 ?⑥쐞濡?遺꾨━???대깽?몃? 諛쒖깮?쒗궢?덈떎.
         /// </summary>
-        private void ProcessRawContent(string content, bool isRealTime, int takeLastCount = -1, bool isStartupBackfill = false, string sourcePath = "", long checkpointPosition = -1)
+        private void ProcessRawContent(string content, bool isRealTime, int takeLastCount = -1, string sourcePath = "", long checkpointPosition = -1)
         {
             if (string.IsNullOrWhiteSpace(content)) return;
 
@@ -773,11 +720,7 @@ namespace TWChatOverlay.Services
                 if (normalized.Length == 0)
                     continue;
 
-                string? logTimeText = ExtractLogTimeText(normalized);
-                if (!string.IsNullOrWhiteSpace(logTimeText))
-                    _lastLogTimeText = logTimeText;
-
-                OnNewLogRead?.Invoke(new LogFeedItem(normalized, isRealTime, isStartupBackfill, sourcePath, checkpointPosition, DateTime.UtcNow));
+                OnNewLogRead?.Invoke(new LogFeedItem(normalized, isRealTime, sourcePath, checkpointPosition, DateTime.UtcNow));
             }
         }
 
@@ -804,64 +747,6 @@ namespace TWChatOverlay.Services
         }
 
         /// <summary>
-        /// UI 파이프라인이 이 위치까지의 줄을 실제로 소비했음을 알린다. 이때 체크포인트를 저장해
-        /// "읽었지만 처리 전에 죽으면 유실"되는 창을 없앤다. 경로가 바뀌었으면(롤오버) 무시한다.
-        /// </summary>
-        public void NotifyConsumed(string sourcePath, long position)
-        {
-            if (string.IsNullOrEmpty(sourcePath) || position < 0)
-                return;
-
-            // UI 스레드에서 호출된다 — 파일 IO와 _lockObj(폴링 스레드가 파일 읽는 동안 보유) 경합을 피하기 위해
-            // 위치만 기록하고 실제 저장은 폴링 스레드(FlushConsumedCheckpoint)에서 한다.
-            lock (_consumedSync)
-            {
-                if (!string.Equals(sourcePath, _pendingConsumedPath, StringComparison.OrdinalIgnoreCase))
-                {
-                    _pendingConsumedPath = sourcePath;
-                    _pendingConsumedPosition = position;
-                }
-                else if (position > _pendingConsumedPosition)
-                {
-                    _pendingConsumedPosition = position;
-                }
-            }
-        }
-
-        private DateTime _lastCheckpointSaveUtc = DateTime.MinValue;
-
-        /// <summary>UI가 알린 소비 위치를 체크포인트로 저장한다. 폴링 스레드(및 Dispose)에서만 호출.</summary>
-        private void FlushConsumedCheckpoint(bool force = false)
-        {
-            // 줄마다 파일을 쓰면 백신 검사 등으로 폴링이 수백 ms 막힐 수 있다 — 1초로 스로틀.
-            // (크래시 시 유실 창이 최대 1초로 늘어날 뿐, 재시작하면 그 구간은 다시 읽힌다)
-            if (!force && (DateTime.UtcNow - _lastCheckpointSaveUtc).TotalSeconds < 1.0)
-                return;
-
-            string? path;
-            long position;
-            lock (_consumedSync)
-            {
-                path = _pendingConsumedPath;
-                position = _pendingConsumedPosition;
-            }
-
-            if (path == null || position < 0)
-                return;
-
-            lock (_lockObj)
-            {
-                if (!string.Equals(path, _logPath, StringComparison.OrdinalIgnoreCase))
-                    return;
-                if (position <= _lastSavedCheckpointPosition || position > _lastPosition)
-                    return;
-
-                SaveCheckpoint(position);
-                _lastCheckpointSaveUtc = DateTime.UtcNow;
-            }
-        }
-
-        /// <summary>
         /// 줄 구분자가 아직 안 와서 대기 중인 조각을 내보낸다.
         /// force=true(롤오버 등)면 즉시, 아니면 PendingFlushMilliseconds 이상 조용했을 때만.
         /// 반드시 _lockObj를 보유한 상태에서 호출해야 한다.
@@ -880,7 +765,7 @@ namespace TWChatOverlay.Services
             ProcessRawContent(stale, _experienceService.IsReady, sourcePath: _logPath, checkpointPosition: _lastPosition);
         }
 
-        private void ProcessIncrementalContent(string content, bool isRealTime, bool isStartupBackfill)
+        private void ProcessIncrementalContent(string content, bool isRealTime)
         {
             if (string.IsNullOrEmpty(content))
                 return;
@@ -897,7 +782,7 @@ namespace TWChatOverlay.Services
             string readyContent = combined.Substring(0, completeEnd);
             _pendingRawContent = completeEnd < combined.Length ? combined.Substring(completeEnd) : string.Empty;
             _pendingSinceUtc = _pendingRawContent.Length > 0 ? DateTime.UtcNow : DateTime.MinValue;
-            ProcessRawContent(readyContent, isRealTime, isStartupBackfill: isStartupBackfill, sourcePath: _logPath, checkpointPosition: _lastPosition);
+            ProcessRawContent(readyContent, isRealTime, sourcePath: _logPath, checkpointPosition: _lastPosition);
         }
 
         private static int FindLastCompleteLogBoundary(string content)
@@ -943,77 +828,6 @@ namespace TWChatOverlay.Services
             if (i < end && content[i] == '/')
                 i++;
             return i == end && content[end] == '>';
-        }
-
-        #endregion
-
-        #region Checkpoint
-
-        private bool TryRestoreCheckpoint(long sourceLength)
-        {
-            LogPipelineCheckpoint? checkpoint = LoadCheckpoint();
-            if (checkpoint == null)
-                return false;
-
-            if (!string.Equals(checkpoint.LogPath, _logPath, StringComparison.OrdinalIgnoreCase))
-                return false;
-
-            if (checkpoint.LastPosition < 0 || checkpoint.LastPosition > sourceLength)
-                return false;
-
-            _lastPosition = checkpoint.LastPosition;
-            _lastLogTimeText = checkpoint.LastLogTimeText ?? string.Empty;
-            return true;
-        }
-
-        private static LogPipelineCheckpoint? LoadCheckpoint()
-        {
-            if (!File.Exists(CheckpointPath))
-                return null;
-
-            try
-            {
-                string json = File.ReadAllText(CheckpointPath, Encoding.UTF8);
-                return JsonSerializer.Deserialize<LogPipelineCheckpoint>(json, JsonOptions);
-            }
-            catch (Exception ex)
-            {
-                AppLogger.Warn($"Failed to load log checkpoint '{CheckpointPath}'.", ex);
-                return null;
-            }
-        }
-
-        private void SaveCheckpoint(long? positionOverride = null)
-        {
-            try
-            {
-                long position = positionOverride ?? _lastPosition;
-                Directory.CreateDirectory(StateDirectoryPath);
-                var checkpoint = new LogPipelineCheckpoint
-                {
-                    LogPath = _logPath,
-                    LastPosition = position,
-                    LastLogTimeText = _lastLogTimeText,
-                    UpdatedAtUtc = DateTime.UtcNow
-                };
-
-                File.WriteAllText(CheckpointPath, JsonSerializer.Serialize(checkpoint, JsonOptions), Utf8BomEncoding);
-                _lastSavedCheckpointPosition = position;
-            }
-            catch (Exception ex)
-            {
-                AppLogger.Warn($"Failed to save log checkpoint '{CheckpointPath}'.", ex);
-            }
-        }
-
-        private static string? ExtractLogTimeText(string line)
-        {
-            Match match = LeadingTimeRegex.Match(WebUtility.HtmlDecode(line));
-            if (!match.Success)
-                return null;
-
-            string value = match.Groups["time"].Value.Trim();
-            return string.IsNullOrWhiteSpace(value) ? null : value;
         }
 
         #endregion

@@ -148,12 +148,12 @@ namespace TWChatOverlay.Views
                     // 한 줄의 처리 실패가 배치의 나머지 줄을 잃게 하지 않는다 (로그 씹힘 방지)
                     try
                     {
-                        var context = CreateLogPipelineContext(item.Html, item.IsRealTime, item.IsStartupBackfill, deferUiScroll: true);
+                        var context = CreateLogPipelineContext(item.Html, item.IsRealTime, deferUiScroll: true);
                         context.PipelineAnalysis = item.Analysis; // 백그라운드에서 이미 분석됨
                         ProcessLogPipelineContext(context);
 #if DEBUG
                         // 디버그 빌드: 로그 시각 대비 표시 지연 HUD
-                        if (item.IsRealTime && !item.IsStartupBackfill)
+                        if (item.IsRealTime)
                             ChatLatencyHud.Report(item.Analysis?.Primary?.Parsed?.FormattedText, item.Source.ReadAtUtc, item.AnalyzedAtUtc);
 #endif
                     }
@@ -172,26 +172,14 @@ namespace TWChatOverlay.Views
                     if (shouldAutoScroll)
                         ScrollLogDisplayToEndAfterLayout();
                 }
-
-                // 이 배치까지 소비 완료 — 파일 위치를 체크포인트로 확정 (뒤에서부터 파일 유래 항목을 찾는다)
-                for (int i = batch.Count - 1; i >= 0; i--)
-                {
-                    var source = batch[i].Source;
-                    if (source.CheckpointPosition >= 0 && !string.IsNullOrEmpty(source.SourcePath))
-                    {
-                        try { _logService?.NotifyConsumed(source.SourcePath, source.CheckpointPosition); } catch { }
-                        break;
-                    }
-                }
             }
         }
 
-        private UnifiedLogPipelineContext CreateLogPipelineContext(string html, bool isRealTime, bool isStartupBackfill, bool deferUiScroll)
+        private UnifiedLogPipelineContext CreateLogPipelineContext(string html, bool isRealTime, bool deferUiScroll)
         {
             var context = new UnifiedLogPipelineContext(
                 html,
                 isRealTime,
-                isStartupBackfill,
                 deferUiScroll,
                 1,
                 false);
@@ -251,10 +239,10 @@ namespace TWChatOverlay.Views
             var parseResult = analysis.Parsed;
             bool isActualShout = parseResult.Category == ChatCategory.Shout && IsActualShoutSource(parseResult.FormattedText);
             bool isContentCompletionRelevant = IsContentCompletionRelevantLog(parseResult.FormattedText);
-            bool shouldRunLiveUiEffects = context.IsRealTime && !context.IsStartupBackfill;
+            bool shouldRunLiveUiEffects = context.IsRealTime;
             // 시작 시 과거 로그(tail) 표시나 테스트 주입은 화면 표시만 하고 집계/아카이브 등 부수효과는 하지 않는다.
             // (그렇지 않으면 재실행 때마다 최근 1000줄이 재집계되어 카운트가 틀어지고, 외치기/컨텐츠 로그가 두 번씩 쌓인다.)
-            bool isHistoricalDisplayOnly = !context.IsRealTime && !context.IsStartupBackfill;
+            bool isHistoricalDisplayOnly = !context.IsRealTime;
 
             if (!isHistoricalDisplayOnly)
             {

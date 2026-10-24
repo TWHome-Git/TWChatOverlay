@@ -14,7 +14,6 @@ namespace TWChatOverlay.Services
     {
         public string Html => Source.Html;
         public bool IsRealTime => Source.IsRealTime;
-        public bool IsStartupBackfill => Source.IsStartupBackfill;
     }
 
     /// <summary>
@@ -125,12 +124,8 @@ namespace TWChatOverlay.Services
             {
                 try
                 {
-                    // 실시간 줄은 Input 우선순위로 — Background는 타이머·유휴 작업에 밀려
-                    // 수백 ms 지연될 수 있다. 시작 백필은 UI를 막지 않게 Background 유지.
-                    var priority = analyzed.IsStartupBackfill
-                        ? DispatcherPriority.Background
-                        : DispatcherPriority.Input;
-                    _dispatcher.BeginInvoke(new Action(FlushToUi), priority);
+                    // Input 우선순위로 — Background는 타이머·유휴 작업에 밀려 수백 ms 지연될 수 있다.
+                    _dispatcher.BeginInvoke(new Action(FlushToUi), DispatcherPriority.Input);
                 }
                 catch (Exception ex)
                 {

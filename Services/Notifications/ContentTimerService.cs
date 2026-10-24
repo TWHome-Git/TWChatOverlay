@@ -2274,6 +2274,7 @@ namespace TWChatOverlay.Services
             Application.Current.Dispatcher.BeginInvoke(new Action(HideOrIdle));
         }
 
+#if DEBUG
         /// <summary>디버그 빌드용: 창을 항상 띄워 둔다. 대기 상태로 기록만 보여주고, 결과가 끝나도 닫지 않는다.</summary>
         public void EnsureVisibleForDebug(ChatSettings settings)
         {
@@ -2283,6 +2284,7 @@ namespace TWChatOverlay.Services
                 ShowIdle();
             }));
         }
+#endif
 
         /// <summary>창이 떠 있으면 대기 상태(기록만 표시)로 바꾼다.</summary>
         public void ShowIdle()

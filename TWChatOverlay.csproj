@@ -30,6 +30,12 @@
     <Page Remove="Tests\**" />
   </ItemGroup>
 
+  <!-- 디버그 전용 로그 주입 창은 Release 빌드에서 제외 (XAML은 #if를 못 쓰므로 빌드 조건으로) -->
+  <ItemGroup Condition="'$(Configuration)' == 'Release'">
+    <Page Remove="Views\Overlays\DebugLogTestWindow.xaml" />
+    <Compile Remove="Views\Overlays\DebugLogTestWindow.xaml.cs" />
+  </ItemGroup>
+
   <!-- Default None 항목에서 제외 (Resource로 재등록) -->
   <ItemGroup>
     <None Remove="Data\images\**\*" />
