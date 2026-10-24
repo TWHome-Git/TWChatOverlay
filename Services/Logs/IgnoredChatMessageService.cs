@@ -115,7 +115,16 @@ namespace TWChatOverlay.Services
             new(@"^(?:\[[^\]]+\]\s*)?체력이\s*\d+%\s*회복되었습니다\.?$", RegexOptions.Compiled),
             // 상자를 이미 먹었거나 꽝일 때 — "열었습니다"와 짝을 이루는 문구들
             new(@"(?:보상|상자)를?\s*이미\s*획득\s*하였습니다\.?$", RegexOptions.Compiled),
-            new(@"보상을\s*획득하지\s*못했습니다\.?$", RegexOptions.Compiled),
+            new(@"보상을\s*획득하지\s*못했습니다\.?$", RegexOptions.Compiled)
+        };
+
+        /// <summary>
+        /// 보스 대사 문구 — 화자를 못 읽은 줄이라도 대사만으로 보스 대사로 본다.
+        /// 보스 화자 목록과 같이 "보스 대사" 토글을 따른다 (꺼져 있을 때만 숨긴다).
+        /// </summary>
+        private static readonly Regex[] BossDialogueRegexes =
+        {
+            // 심연의 제2사도 반사 패턴 — 켜져 있으면 반사 알림과 함께 채팅에도 남는다
             new(@"절제와\s*균형의\s*중심에서\s*빗나간\s*힘은\s*칼날이\s*되어\s*돌아오지\.?", RegexOptions.Compiled)
         };
 
@@ -134,6 +143,9 @@ namespace TWChatOverlay.Services
                 return false;
 
             string message = messageOnly.Trim();
+
+            if (hideBossDialogue && MatchesAny(BossDialogueRegexes, message))
+                return true;
 
             if (!string.IsNullOrWhiteSpace(senderId))
             {
@@ -180,8 +192,11 @@ namespace TWChatOverlay.Services
         }
 
         private static bool MatchesNoticeRegex(string message)
+            => MatchesAny(NormalIgnoredRegexes, message);
+
+        private static bool MatchesAny(Regex[] regexes, string message)
         {
-            foreach (var regex in NormalIgnoredRegexes)
+            foreach (var regex in regexes)
             {
                 if (regex.IsMatch(message))
                     return true;

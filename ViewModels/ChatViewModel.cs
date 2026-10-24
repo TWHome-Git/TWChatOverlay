@@ -165,8 +165,9 @@ namespace TWChatOverlay.ViewModels
             RefreshLogDisplay();
         }
 
+        // 반사 패턴 대사(심연의 제2사도)는 보스 대사라 "보스 대사" 토글을 따른다
         private bool ShouldSuppressDisplay(LogParser.ParseResult log)
-            => log.IsReflectionPatternAlert ||
+            => (log.IsReflectionPatternAlert && !_settings.ShowBossDialogue) ||
                (log.Category == ChatCategory.Club &&
                 !_settings.ShowClubBoss &&
                 IgnoredChatMessageService.IsIgnoredClubMessage(log.FormattedText));

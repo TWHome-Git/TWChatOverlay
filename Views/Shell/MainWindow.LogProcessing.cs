@@ -641,8 +641,9 @@ namespace TWChatOverlay.Views
             if (parseResult == null || string.IsNullOrWhiteSpace(parseResult.FormattedText))
                 return false;
 
-            // 반사 패턴 알림 트리거 문구는 알림 소리만 울리고 채팅에는 남기지 않는다.
-            if (parseResult.IsReflectionPatternAlert)
+            // 반사 패턴 알림 트리거 문구(심연의 제2사도 대사)는 보스 대사이므로 "보스 대사" 토글을 따른다.
+            // 꺼져 있으면 알림 소리만 울리고 채팅에는 남기지 않는다.
+            if (parseResult.IsReflectionPatternAlert && !_settings.ShowBossDialogue)
                 return true;
 
             if (IsHiddenDungeonNoticeLine(parseResult))
