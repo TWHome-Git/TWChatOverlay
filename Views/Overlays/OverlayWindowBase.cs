@@ -176,24 +176,8 @@ namespace TWChatOverlay.Views
         /// <returns>설정에 썼으면 true (false면 저장을 걸지 않는다).</returns>
         protected virtual bool PersistBounds(ChatSettings settings) => false;
 
-        /// <summary>설정 인스턴스. 생성자에서 설정을 받는 창은 override해 그 인스턴스를 돌려주면 탐색 비용이 없다.</summary>
-        protected virtual ChatSettings? ResolveSettings()
-        {
-            if (Owner is MainWindow ownerMain && ownerMain.DataContext is ChatSettings ownerSettings)
-                return ownerSettings;
-
-            try
-            {
-                foreach (Window window in Application.Current.Windows)
-                {
-                    if (window is MainWindow main && main.DataContext is ChatSettings settings)
-                        return settings;
-                }
-            }
-            catch { }
-
-            return null;
-        }
+        /// <summary>설정 인스턴스(DI 싱글턴). 컨테이너가 없는 도움말 이미지 생성 모드에서는 null.</summary>
+        protected virtual ChatSettings? ResolveSettings() => AppServices.TryGet<ChatSettings>();
 
         /// <summary>지금 위치/크기를 설정에 쓰고 디바운스 저장을 건다. 닫힐 때 안전망으로도 쓴다.</summary>
         protected void PersistBoundsNow()

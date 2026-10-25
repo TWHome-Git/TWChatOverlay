@@ -559,7 +559,7 @@ namespace TWChatOverlay.Services
             {
                 try
                 {
-                    return new BitmapImage(new Uri($"pack://application:,,,/Data/images/Buff/{file}", UriKind.Absolute));
+                    return PackImageCache.Get($"pack://application:,,,/Data/images/Buff/{file}");
                 }
                 catch
                 {
@@ -759,7 +759,7 @@ namespace TWChatOverlay.Services
                     Height = cell - 6,
                     Stretch = Stretch.Uniform,
                 };
-                try { image.Source = new BitmapImage(new Uri(uri, UriKind.Absolute)); } catch { }
+                try { image.Source = PackImageCache.Get(uri); } catch { }
                 return Cell(image);
             }
 

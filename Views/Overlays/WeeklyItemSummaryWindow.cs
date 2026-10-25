@@ -5,7 +5,6 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
-using System.Windows.Interop;
 using System.Windows.Media;
 using TWChatOverlay.Models;
 using TWChatOverlay.Services;
@@ -52,7 +51,7 @@ namespace TWChatOverlay.Views
             WindowStartupLocation = WindowStartupLocation.CenterScreen;
 
             DateTime today = DateTime.Today;
-            DateTime weekStart = today.AddDays(-(((int)today.DayOfWeek + 6) % 7)); // 월요일 시작
+            DateTime weekStart = LogTextClassifier.GetWeekStart(today); // 월요일 시작
             DateTime weekEnd = weekStart.AddDays(6);
             _weekStart = weekStart;
             _weekEnd = weekEnd;
@@ -180,8 +179,7 @@ namespace TWChatOverlay.Views
 
         private static DateTime GetCurrentWeekStart()
         {
-            DateTime today = DateTime.Today;
-            return today.AddDays(-(((int)today.DayOfWeek + 6) % 7));
+            return LogTextClassifier.GetWeekStart(DateTime.Today);
         }
 
         /// <summary>표시 주를 이동하고 아이템 목록·시드 행을 해당 주 기준으로 다시 집계한다.</summary>
@@ -231,8 +229,7 @@ namespace TWChatOverlay.Views
                     Height = 18,
                     Margin = new Thickness(0, 0, 6, 0),
                     VerticalAlignment = VerticalAlignment.Center,
-                    Source = new System.Windows.Media.Imaging.BitmapImage(
-                        new Uri("pack://application:,,,/Data/images/Item/시드.png")),
+                    Source = PackImageCache.Get("pack://application:,,,/Data/images/Item/시드.png"),
                 };
                 RenderOptions.SetBitmapScalingMode(icon, BitmapScalingMode.NearestNeighbor);
                 labelPanel.Children.Add(icon);
@@ -468,18 +465,10 @@ namespace TWChatOverlay.Views
                     Margin = new Thickness(0, 0, 8, 0),
                 };
                 // 아이템 필터(획득 알림·달력)와 동일한 등급 색상을 따른다
-                switch (grade)
-                {
-                    case ItemDropGrade.Rare:
-                        nameText.Foreground = new SolidColorBrush(Color.FromRgb(0xFF, 0xD8, 0x4A));
-                        break;
-                    case ItemDropGrade.Special:
-                        nameText.Foreground = new SolidColorBrush(Color.FromRgb(0xFF, 0x7E, 0xDB));
-                        break;
-                    default:
-                        nameText.SetResourceReference(TextBlock.ForegroundProperty, "OverlayInfoTextBrush");
-                        break;
-                }
+                if (ChatBrushResolver.ForItemGrade(grade) is SolidColorBrush gradeBrush)
+                    nameText.Foreground = gradeBrush;
+                else
+                    nameText.SetResourceReference(TextBlock.ForegroundProperty, "OverlayInfoTextBrush");
                 row.Children.Add(nameText);
                 panel.Children.Add(row);
             }
@@ -512,8 +501,7 @@ namespace TWChatOverlay.Views
                     Height = 18,
                     Margin = new Thickness(0, 0, 6, 0),
                     VerticalAlignment = VerticalAlignment.Center,
-                    Source = new System.Windows.Media.Imaging.BitmapImage(
-                        new Uri("pack://application:,,,/Data/images/Item/경험의 정수.png")),
+                    Source = PackImageCache.Get("pack://application:,,,/Data/images/Item/경험의 정수.png"),
                 };
                 RenderOptions.SetBitmapScalingMode(icon, BitmapScalingMode.NearestNeighbor);
                 labelPanel.Children.Add(icon);

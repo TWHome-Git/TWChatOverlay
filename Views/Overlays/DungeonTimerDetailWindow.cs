@@ -340,7 +340,7 @@ namespace TWChatOverlay.Views
 
         /// <summary>월요일 0시 기준의 주 시작.</summary>
         private static DateTime WeekStartOf(DateTime at)
-            => at.Date.AddDays(-(((int)at.DayOfWeek + 6) % 7));
+            => LogTextClassifier.GetWeekStart(at.Date);
 
         /// <summary>고른 난이도·구간의 판들을 모으고, 월~일 단위 평균으로 묶는다.</summary>
         private void RebuildWeeks()

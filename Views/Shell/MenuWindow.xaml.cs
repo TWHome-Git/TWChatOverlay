@@ -331,22 +331,7 @@ namespace TWChatOverlay.Views
             catch { }
         }
 
-        private static Models.ChatSettings GetSharedSettings()
-        {
-            try
-            {
-                foreach (Window w in Application.Current.Windows)
-                {
-                    if (w is MainWindow main && main.DataContext is Models.ChatSettings shared)
-                        return shared;
-                }
-            }
-            catch
-            {
-            }
-
-            return ConfigService.Load();
-        }
+        private static Models.ChatSettings GetSharedSettings() => AppServices.Get<Models.ChatSettings>();
 
         private static MainWindow? GetMainWindow()
         {
@@ -758,23 +743,6 @@ namespace TWChatOverlay.Views
 
         private void PersistMenuWindowPosition()
         {
-            try
-            {
-                foreach (Window w in Application.Current.Windows)
-                {
-                    if (w is MainWindow main && main.DataContext is Models.ChatSettings appSettings)
-                    {
-                        appSettings.MenuWindowLeft = Left;
-                        appSettings.MenuWindowTop = Top;
-                        ConfigService.SaveDeferred(appSettings);
-                        return;
-                    }
-                }
-            }
-            catch
-            {
-            }
-
             var settings = GetSharedSettings();
             settings.MenuWindowLeft = Left;
             settings.MenuWindowTop = Top;

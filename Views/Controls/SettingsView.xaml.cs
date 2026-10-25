@@ -337,7 +337,7 @@ namespace TWChatOverlay.Views
                 return;
 
             string bossName = item.Content as string ?? bossId;
-            var settings = Application.Current?.Windows.OfType<MainWindow>().FirstOrDefault()?.DataContext as Models.ChatSettings;
+            var settings = Services.AppServices.TryGet<Models.ChatSettings>();
             Services.BossAlarmSchedulerService.FireTestAlert(bossId, bossName, label, settings);
         }
 

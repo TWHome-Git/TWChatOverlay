@@ -42,16 +42,10 @@ namespace TWChatOverlay.Services
         private static extern bool ChangeWindowMessageFilterEx(IntPtr hwnd, uint message, uint action, IntPtr pChangeFilterStruct);
 
         [DllImport("user32.dll", CharSet = CharSet.Unicode)]
-        private static extern IntPtr FindWindow(string lpClassName, string? lpWindowName);
-
-        [DllImport("user32.dll", CharSet = CharSet.Unicode)]
         private static extern int GetClassName(IntPtr hWnd, StringBuilder lpClassName, int nMaxCount);
 
         [DllImport("user32.dll")]
         private static extern bool IsWindow(IntPtr hWnd);
-
-        [DllImport("user32.dll")]
-        private static extern bool IsWindowVisible(IntPtr hWnd);
 
         private readonly ChatSettings _settings;
         private HwndSource? _source;
@@ -230,12 +224,12 @@ namespace TWChatOverlay.Services
         /// <summary>보이는 확대 화면 창. 알고 있던 창이 사라졌으면 클래스 이름으로 다시 찾는다.</summary>
         private IntPtr ResolveScalerWindow()
         {
-            if (_scalerWindow != IntPtr.Zero && IsWindow(_scalerWindow) && IsWindowVisible(_scalerWindow) && IsScalerWindow(_scalerWindow))
+            if (_scalerWindow != IntPtr.Zero && IsWindow(_scalerWindow) && NativeMethods.IsWindowVisible(_scalerWindow) && IsScalerWindow(_scalerWindow))
                 return _scalerWindow;
 
             _scalerWindow = IntPtr.Zero;
-            IntPtr hwnd = FindWindow(MagpieWindowClass, null);
-            if (hwnd != IntPtr.Zero && IsWindowVisible(hwnd))
+            IntPtr hwnd = NativeMethods.FindWindow(MagpieWindowClass, null);
+            if (hwnd != IntPtr.Zero && NativeMethods.IsWindowVisible(hwnd))
                 _scalerWindow = hwnd;
 
             return _scalerWindow;

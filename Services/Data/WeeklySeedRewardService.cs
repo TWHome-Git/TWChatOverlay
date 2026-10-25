@@ -400,8 +400,8 @@ namespace TWChatOverlay.Services
 
         private string ToDateKey(DateTime date) => date.ToString("yyyy-MM-dd");
 
-        private DateTime GetWeekStartOf(DateTime date)
-            => date.AddDays(-(((int)date.DayOfWeek + 6) % 7));
+        private static DateTime GetWeekStartOf(DateTime date)
+            => LogTextClassifier.GetWeekStart(date);
 
         private string GetLogPath(string logDir, DateTime day)
             => Path.Combine(logDir, $"TWChatLog_{day:yyyy_MM_dd}.html");

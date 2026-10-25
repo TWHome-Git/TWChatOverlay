@@ -2,7 +2,6 @@
 using System.IO;
 using System.Net.Http;
 using System.Text.RegularExpressions;
-using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media.Imaging;
@@ -195,25 +194,7 @@ namespace TWChatOverlay.Services
                 : WindowStartupLocation.CenterScreen;
         }
 
-        private ChatSettings? GetSharedSettings()
-        {
-            try
-            {
-                foreach (Window window in Application.Current.Windows)
-                {
-                    if (window is Views.MainWindow main && main.DataContext is ChatSettings settings)
-                    {
-                        return settings;
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                AppLogger.Warn("Failed to resolve shared settings for Recapture supply alert.", ex);
-            }
-
-            return null;
-        }
+        private static ChatSettings? GetSharedSettings() => AppServices.TryGet<ChatSettings>();
 
         private async Task<bool> EnsureImageReadyAsync()
         {

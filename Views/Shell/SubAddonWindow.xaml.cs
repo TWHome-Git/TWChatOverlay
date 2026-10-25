@@ -181,47 +181,17 @@ namespace TWChatOverlay.Views
             TopmostWindowHelper.BringToTopmost(this);
         }
 
-        private static bool IsEtosAlertEnabled()
-        {
-            foreach (Window window in Application.Current.Windows)
-            {
-                if (window is MainWindow mainWindow && mainWindow.DataContext is ChatSettings settings)
-                {
-                    return settings.ShowEtosDirectionAlert;
-                }
-            }
+        private static bool IsEtosAlertEnabled() => AppServices.TryGet<ChatSettings>()?.ShowEtosDirectionAlert ?? true;
 
-            return true;
-        }
-
-        private static bool IsPinnedVisible()
-        {
-            foreach (Window window in Application.Current.Windows)
-            {
-                if (window is MainWindow mainWindow && mainWindow.DataContext is ChatSettings settings)
-                {
-                    return settings.ShowEtosHelperWindow;
-                }
-            }
-
-            return false;
-        }
+        private static bool IsPinnedVisible() => AppServices.TryGet<ChatSettings>()?.ShowEtosHelperWindow ?? false;
 
         private void SyncWindowPositionToLiveSettings()
         {
-            try
+            if (AppServices.TryGet<ChatSettings>() is ChatSettings settings)
             {
-                foreach (Window window in Application.Current.Windows)
-                {
-                    if (window is MainWindow mainWindow && mainWindow.DataContext is ChatSettings settings)
-                    {
-                        settings.SubAddonWindowLeft = Left;
-                        settings.SubAddonWindowTop = Top;
-                        break;
-                    }
-                }
+                settings.SubAddonWindowLeft = Left;
+                settings.SubAddonWindowTop = Top;
             }
-            catch { }
         }
 
         private void RefreshMousePassthroughStyle(bool forceInteractive = false)

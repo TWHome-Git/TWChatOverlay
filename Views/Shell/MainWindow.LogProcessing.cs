@@ -1,15 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Globalization;
-using System.IO;
-using System.Linq;
-using System.Security.Cryptography;
-using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Documents;
-using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Threading;
 using TWChatOverlay.Models;
@@ -885,16 +877,13 @@ namespace TWChatOverlay.Views
 
         private void EnsureAbandonWeeklySummaryCurrent(DateTime date)
         {
-            string weekKey = GetIsoWeekKey(date);
+            string weekKey = LogTextClassifier.GetIsoWeekKey(date);
             if (string.Equals(_AbandonWeeklySummaryWeekKey, weekKey, StringComparison.Ordinal))
                 return;
 
             _AbandonWeeklySummary = _readableLogArchiveService.LoadAbandonWeeklySummary(date);
             _AbandonWeeklySummaryWeekKey = weekKey;
         }
-
-        private static string GetIsoWeekKey(DateTime date)
-            => LogTextClassifier.GetIsoWeekKey(date);
 
         #endregion
     }

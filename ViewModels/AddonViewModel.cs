@@ -706,12 +706,7 @@ namespace TWChatOverlay.ViewModels
             Name = name;
             Grade = grade;
             Abbreviation = string.IsNullOrWhiteSpace(abbreviation) ? null : abbreviation.Trim();
-            Foreground = grade switch
-            {
-                ItemDropGrade.Rare => new SolidColorBrush(Color.FromRgb(0xFF, 0xD8, 0x4A)),
-                ItemDropGrade.Special => new SolidColorBrush(Color.FromRgb(0xFF, 0x7E, 0xDB)),
-                _ => Brushes.White
-            };
+            Foreground = (Brush?)ChatBrushResolver.ForItemGrade(grade) ?? Brushes.White;
         }
     }
 

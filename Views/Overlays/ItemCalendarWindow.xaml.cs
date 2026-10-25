@@ -927,10 +927,7 @@ namespace TWChatOverlay.Views
             => new(date.Year, date.Month, 1);
 
         private static DateTime GetGridStart(DateTime monthStart)
-        {
-            int diff = ((int)monthStart.DayOfWeek + 6) % 7;
-            return monthStart.AddDays(-diff);
-        }
+            => LogTextClassifier.GetWeekStart(monthStart);
 
         private static int GetGradeSortOrder(ItemDropGrade grade)
         {

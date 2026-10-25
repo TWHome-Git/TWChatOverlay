@@ -20,6 +20,20 @@ namespace TWChatOverlay.Services
         /// <summary>마법진 알림 줄 배경 (Frozen).</summary>
         public static readonly SolidColorBrush MagicCircleBackgroundBrush = CreateFrozen(Color.FromArgb(140, 180, 60, 255));
 
+        /// <summary>아이템 레어 등급 색 (획득 알림·드롭 필터·달력·주간 요약 공용, Frozen).</summary>
+        public static readonly SolidColorBrush ItemGradeRareBrush = CreateFrozen(Color.FromRgb(0xFF, 0xD8, 0x4A));
+
+        /// <summary>아이템 스페셜 등급 색 (Frozen).</summary>
+        public static readonly SolidColorBrush ItemGradeSpecialBrush = CreateFrozen(Color.FromRgb(0xFF, 0x7E, 0xDB));
+
+        /// <summary>등급 색 브러시. 일반 등급은 쓰는 곳마다 기본색이 달라 null을 돌려준다.</summary>
+        public static SolidColorBrush? ForItemGrade(ItemDropGrade grade) => grade switch
+        {
+            ItemDropGrade.Rare => ItemGradeRareBrush,
+            ItemDropGrade.Special => ItemGradeSpecialBrush,
+            _ => null
+        };
+
         private static SolidColorBrush CreateFrozen(Color color)
         {
             var brush = new SolidColorBrush(color);

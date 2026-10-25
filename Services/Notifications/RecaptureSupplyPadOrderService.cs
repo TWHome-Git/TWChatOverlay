@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using System.Windows;
 using TWChatOverlay.Models;
@@ -137,22 +136,6 @@ namespace TWChatOverlay.Services
                 settings.RecaptureSupplyPadOrderWindowWidth, settings.RecaptureSupplyPadOrderWindowHeight);
         }
 
-        private ChatSettings? GetSharedSettings()
-        {
-            try
-            {
-                foreach (Window window in Application.Current.Windows)
-                {
-                    if (window is MainWindow main && main.DataContext is ChatSettings settings)
-                        return settings;
-                }
-            }
-            catch (Exception ex)
-            {
-                AppLogger.Warn("Failed to resolve shared settings for recapture supply pad order.", ex);
-            }
-
-            return null;
-        }
+        private static ChatSettings? GetSharedSettings() => AppServices.TryGet<ChatSettings>();
     }
 }

@@ -70,7 +70,7 @@ namespace TWChatOverlay.Views
                     return;
                 }
 
-                MessageIcon.Source = new System.Windows.Media.Imaging.BitmapImage(new Uri(packUri, UriKind.Absolute));
+                MessageIcon.Source = Services.PackImageCache.Get(packUri);
                 MessageIcon.Visibility = Visibility.Visible;
             }
             catch

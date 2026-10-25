@@ -1780,10 +1780,7 @@ namespace TWChatOverlay.Views
         }
 
         internal static DateTime GetWeeklyResetKey(DateTime now)
-        {
-            int diff = (7 + (int)now.DayOfWeek - (int)DayOfWeek.Monday) % 7;
-            return now.Date.AddDays(-diff);
-        }
+            => LogTextClassifier.GetWeekStart(now.Date);
 
         private static DateTime GetAbandonResetKey(DateTime now)
         {

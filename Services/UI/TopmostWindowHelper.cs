@@ -18,9 +18,6 @@ namespace TWChatOverlay.Services
         [DllImport("user32.dll")]
         private static extern IntPtr GetWindow(IntPtr hWnd, uint uCmd);
 
-        [DllImport("user32.dll")]
-        private static extern bool IsWindowVisible(IntPtr hWnd);
-
         [DllImport("dwmapi.dll")]
         private static extern int DwmGetWindowAttribute(IntPtr hwnd, int dwAttribute, out int pvAttribute, int cbAttribute);
 
@@ -165,7 +162,7 @@ namespace TWChatOverlay.Services
             IntPtr cursor = GetWindow(hwnd, GW_HWNDPREV);
             for (int walked = 0; cursor != IntPtr.Zero && walked < MaxZOrderWalk; walked++, cursor = GetWindow(cursor, GW_HWNDPREV))
             {
-                if (!IsWindowVisible(cursor))
+                if (!NativeMethods.IsWindowVisible(cursor))
                     continue;
 
                 // 우리 창끼리의 순서는 재승격 대상이 아니다 (설정 창이 오버레이 위에 있는 것 등)

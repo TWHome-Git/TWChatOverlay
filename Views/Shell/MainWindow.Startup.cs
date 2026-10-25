@@ -1,29 +1,12 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
 using System.Diagnostics;
-using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Security.Cryptography;
-using System.Text;
-using System.Text.RegularExpressions;
-using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Controls.Primitives;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Interop;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
 using System.Windows.Threading;
-using TWChatOverlay.Models;
 using TWChatOverlay.Services;
-using TWChatOverlay.Services.LogAnalysis;
-using TWChatOverlay.ViewModels;
 
 namespace TWChatOverlay.Views
 {
@@ -281,7 +264,7 @@ namespace TWChatOverlay.Views
                 }, cancellationToken).ConfigureAwait(false);
 
                 _AbandonWeeklySummary = _readableLogArchiveService.LoadAbandonWeeklySummary(DateTime.Today);
-                _AbandonWeeklySummaryWeekKey = GetIsoWeekKey(DateTime.Today);
+                _AbandonWeeklySummaryWeekKey = LogTextClassifier.GetIsoWeekKey(DateTime.Today);
                 _settings.StartupLogReadCanceled = false;
                 ConfigService.SaveDeferred(_settings);
 
@@ -354,7 +337,7 @@ namespace TWChatOverlay.Views
                         try
                         {
                             _AbandonWeeklySummary = _readableLogArchiveService.LoadAbandonWeeklySummary(DateTime.Today);
-                            _AbandonWeeklySummaryWeekKey = GetIsoWeekKey(DateTime.Today);
+                            _AbandonWeeklySummaryWeekKey = LogTextClassifier.GetIsoWeekKey(DateTime.Today);
                         }
                         catch (Exception ex)
                         {

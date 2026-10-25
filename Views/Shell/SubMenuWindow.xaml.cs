@@ -78,24 +78,7 @@ namespace TWChatOverlay.Views
             catch { }
         }
 
-        private static Models.ChatSettings GetSharedSettings()
-        {
-            try
-            {
-                foreach (Window w in Application.Current.Windows)
-                {
-                    if (w is MainWindow main && main.DataContext is Models.ChatSettings shared)
-                    {
-                        return shared;
-                    }
-                }
-            }
-            catch
-            {
-            }
-
-            return Services.ConfigService.Load();
-        }
+        private static Models.ChatSettings GetSharedSettings() => Services.AppServices.Get<Models.ChatSettings>();
 
         public void ShowHostContent(FrameworkElement? view, string? title = null)
         {

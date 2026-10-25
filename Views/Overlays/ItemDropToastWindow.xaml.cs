@@ -29,17 +29,12 @@ namespace TWChatOverlay.Views
                 string? iconUri = Models.ItemCalendarEntryViewModel.GetIconUri(itemName);
                 if (iconUri != null)
                 {
-                    ItemIcon.Source = new System.Windows.Media.Imaging.BitmapImage(new Uri(iconUri));
+                    ItemIcon.Source = PackImageCache.Get(iconUri);
                     ItemIcon.Visibility = Visibility.Visible;
                 }
             }
             catch { }
-            ItemNameText.Foreground = grade switch
-            {
-                ItemDropGrade.Rare => new SolidColorBrush(Color.FromRgb(0xFF, 0xD8, 0x4A)),
-                ItemDropGrade.Special => new SolidColorBrush(Color.FromRgb(0xFF, 0x7E, 0xDB)),
-                _ => Brushes.White
-            };
+            ItemNameText.Foreground = (Brush?)ChatBrushResolver.ForItemGrade(grade) ?? Brushes.White;
 
             _lifetimeTimer = new DispatcherTimer
             {

@@ -12,32 +12,7 @@
         WindowStartupLocation="Manual"
         Background="Transparent"
         AllowsTransparency="True">
-    <ov:OverlayWindowBase.Resources>
-        <!-- 실제 버프 추적창과 동일한 타일 (BuffTrackerWindow.xaml 참고) -->
-        <DataTemplate x:Key="BuffTileTemplate">
-            <StackPanel Orientation="Horizontal"
-                        Margin="0,0,12,5"
-                        ToolTip="{Binding DisplayName}">
-                <Border Width="26"
-                        Height="26"
-                        CornerRadius="5"
-                        Background="{DynamicResource OverlayBuffTileBackgroundBrush}"
-                        BorderBrush="{Binding AccentBrush}"
-                        BorderThickness="1">
-                    <Image Source="{Binding IconSource}"
-                           Stretch="Uniform"
-                           Margin="2"/>
-                </Border>
-                <TextBlock Text="{Binding RemainingText}"
-                           Foreground="{DynamicResource TextBrush}"
-                           FontSize="13"
-                           FontWeight="SemiBold"
-                           VerticalAlignment="Center"
-                           Margin="7,0,0,0"/>
-            </StackPanel>
-        </DataTemplate>
-    </ov:OverlayWindowBase.Resources>
-
+    <!-- 실제 버프 추적창과 동일한 타일: BuffTileTemplate(Resources/Styles.xaml) -->
     <Border Background="{DynamicResource OverlayWindowBackgroundBrush}"
             BorderBrush="{DynamicResource OverlayHelperWindowBorderBrush}"
             BorderThickness="1.2"

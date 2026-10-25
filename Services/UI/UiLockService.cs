@@ -421,12 +421,9 @@ namespace TWChatOverlay.Services
             try
             {
                 var handle = new WindowInteropHelper(window).Handle;
-                const int GWL_EXSTYLE = -20;
-                const int WS_EX_TRANSPARENT = 0x00000020;
-                const int WS_EX_NOACTIVATE = 0x08000000;
-                const int WS_EX_TOOLWINDOW = 0x00000080;
-                int ex = NativeMethods.GetWindowLong(handle, GWL_EXSTYLE);
-                NativeMethods.SetWindowLong(handle, GWL_EXSTYLE, ex | WS_EX_TRANSPARENT | WS_EX_NOACTIVATE | WS_EX_TOOLWINDOW);
+                int ex = NativeMethods.GetWindowLong(handle, NativeMethods.GWL_EXSTYLE);
+                NativeMethods.SetWindowLong(handle, NativeMethods.GWL_EXSTYLE,
+                    ex | NativeMethods.WS_EX_TRANSPARENT | NativeMethods.WS_EX_NOACTIVATE | NativeMethods.WS_EX_TOOLWINDOW);
             }
             catch (Exception ex)
             {
@@ -465,11 +462,6 @@ namespace TWChatOverlay.Services
             var app = Application.Current;
             if (app == null) return;
 
-            const int SWP_NOMOVE = 0x0002;
-            const int SWP_NOSIZE = 0x0001;
-            const int SWP_NOACTIVATE = 0x0010;
-            var HWND_TOPMOST = new IntPtr(-1);
-
             foreach (Window window in app.Windows)
             {
                 if (ReferenceEquals(window, _backdrop) || !window.IsVisible)
@@ -479,7 +471,8 @@ namespace TWChatOverlay.Services
                 if (handle == IntPtr.Zero)
                     continue;
 
-                NativeMethods.SetWindowPos(handle, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
+                NativeMethods.SetWindowPos(handle, NativeMethods.HWND_TOPMOST, 0, 0, 0, 0,
+                    NativeMethods.SWP_NOMOVE | NativeMethods.SWP_NOSIZE | NativeMethods.SWP_NOACTIVATE);
             }
         }
 
@@ -1097,10 +1090,8 @@ namespace TWChatOverlay.Services
                     if (handle == IntPtr.Zero)
                         return;
 
-                    const int SWP_NOMOVE = 0x0002;
-                    const int SWP_NOSIZE = 0x0001;
-                    const int SWP_NOACTIVATE = 0x0010;
-                    NativeMethods.SetWindowPos(handle, new IntPtr(-1), 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
+                    NativeMethods.SetWindowPos(handle, NativeMethods.HWND_TOPMOST, 0, 0, 0, 0,
+                        NativeMethods.SWP_NOMOVE | NativeMethods.SWP_NOSIZE | NativeMethods.SWP_NOACTIVATE);
                 }
                 catch { }
             }
@@ -1142,18 +1133,6 @@ namespace TWChatOverlay.Services
                 RefreshValues();
             }
 
-        }
-
-        private static class NativeMethods
-        {
-            [System.Runtime.InteropServices.DllImport("user32.dll")]
-            public static extern int GetWindowLong(IntPtr hWnd, int nIndex);
-
-            [System.Runtime.InteropServices.DllImport("user32.dll")]
-            public static extern int SetWindowLong(IntPtr hWnd, int nIndex, int dwNewLong);
-
-            [System.Runtime.InteropServices.DllImport("user32.dll")]
-            public static extern bool SetWindowPos(IntPtr hWnd, IntPtr hWndInsertAfter, int x, int y, int cx, int cy, int flags);
         }
     }
 }

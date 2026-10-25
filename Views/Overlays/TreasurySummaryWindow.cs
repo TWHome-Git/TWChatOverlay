@@ -4,10 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Input;
-using System.Windows.Interop;
 using System.Windows.Media;
-using System.Windows.Media.Imaging;
 using System.Windows.Threading;
 using TWChatOverlay.Models;
 using TWChatOverlay.Services;
@@ -111,7 +108,7 @@ namespace TWChatOverlay.Views
                     Visibility = Visibility.Collapsed,
                 };
                 RenderOptions.SetBitmapScalingMode(_runIcons[i], BitmapScalingMode.NearestNeighbor);
-                try { _runIcons[i].Source = new BitmapImage(new Uri(SeedPouchIconUri, UriKind.Absolute)); } catch { }
+                try { _runIcons[i].Source = PackImageCache.Get(SeedPouchIconUri); } catch { }
 
                 var valuePanel = new StackPanel { Orientation = Orientation.Horizontal };
                 valuePanel.Children.Add(_runIcons[i]);
@@ -310,7 +307,7 @@ namespace TWChatOverlay.Views
             try
             {
                 DateTime today = DateTime.Today;
-                DateTime weekStart = today.AddDays(-(((int)today.DayOfWeek + 6) % 7));
+                DateTime weekStart = LogTextClassifier.GetWeekStart(today);
                 var (counts, _) = await AppServices.Get<TreasuryHistoryService>().GetWeekAsync(settings.ChatLogFolderPath, weekStart);
 
                 Application.Current?.Dispatcher.BeginInvoke(new Action(() =>

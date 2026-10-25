@@ -6,8 +6,6 @@
              mc:Ignorable="d"
              d:DesignHeight="56" d:DesignWidth="330">
     <UserControl.Resources>
-        <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
-
         <!-- 항목 라벨: 값보다 확실히 작고 어둡게 -->
         <Style x:Key="ExpFieldLabelStyle" TargetType="TextBlock">
             <Setter Property="Foreground" Value="{DynamicResource OverlayMutedTextBrush}"/>

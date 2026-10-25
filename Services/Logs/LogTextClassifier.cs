@@ -45,6 +45,10 @@ namespace TWChatOverlay.Services
             return $"{isoYear}-W{isoWeek:00}";
         }
 
+        /// <summary>그 날이 속한 주의 월요일(월~일 주). 시각 부분은 그대로 두므로 날짜만 원하면 .Date를 넘긴다.</summary>
+        public static DateTime GetWeekStart(DateTime date)
+            => date.AddDays(-(((int)date.DayOfWeek + 6) % 7));
+
         /// <summary>메인 채팅 탭 태그를 알려진 값으로 정규화한다(미지값은 "Basic").</summary>
         public static string NormalizeMainTabTag(string? tabTag)
         {

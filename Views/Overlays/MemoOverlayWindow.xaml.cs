@@ -239,15 +239,7 @@ namespace TWChatOverlay.Views
                 ConfigService.SaveDeferred(_settings);
         }
 
-        private static ChatSettings ResolveSharedSettings()
-        {
-            foreach (Window w in Application.Current.Windows)
-            {
-                if (w is MainWindow main && main.DataContext is ChatSettings shared)
-                    return shared;
-            }
-            return ConfigService.Load();
-        }
+        private static ChatSettings ResolveSharedSettings() => AppServices.Get<ChatSettings>();
 
         private void FontSizeSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
         {

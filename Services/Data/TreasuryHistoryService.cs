@@ -285,7 +285,7 @@ namespace TWChatOverlay.Services
         private DateTime ParseDateKey(string key)
             => DateTime.ParseExact(key, "yyyy-MM-dd", CultureInfo.InvariantCulture);
 
-        private DateTime GetWeekStartOf(DateTime date)
-            => date.AddDays(-(((int)date.DayOfWeek + 6) % 7));
+        private static DateTime GetWeekStartOf(DateTime date)
+            => LogTextClassifier.GetWeekStart(date);
     }
 }

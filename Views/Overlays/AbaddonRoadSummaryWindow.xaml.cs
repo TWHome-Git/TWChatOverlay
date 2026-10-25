@@ -221,7 +221,7 @@ namespace TWChatOverlay.Views
 
         public void UpdateSummary(AbandonMonthlySummarySnapshotEntry summary)
         {
-            SummaryText = $"어밴던로드 주간 합계: {FormatManAmount(summary.NetProfitMan)}";
+            SummaryText = $"어밴던로드 주간 합계: {AbandonSummaryCalculator.FormatManAmount(summary.NetProfitMan)}";
 
             StoneEntries.Clear();
             StoneEntries.Add(new AbandonMonthlyStoneSummaryEntryViewModel("하급 마정석", LowMagicStoneIconUri, summary.Low));
@@ -246,7 +246,7 @@ namespace TWChatOverlay.Views
             if (_displayWeekStart != GetCurrentWeekRange().WeekStart)
                 return;
 
-            SummaryText = $"어밴던로드 주간 합계: {FormatManAmount(summary.NetProfitMan)}";
+            SummaryText = $"어밴던로드 주간 합계: {AbandonSummaryCalculator.FormatManAmount(summary.NetProfitMan)}";
 
             StoneEntries.Clear();
             StoneEntries.Add(new AbandonMonthlyStoneSummaryEntryViewModel("하급 마정석", LowMagicStoneIconUri, summary.Low));
@@ -267,9 +267,7 @@ namespace TWChatOverlay.Views
 
         private static (DateTime WeekStart, DateTime WeekEnd) GetCurrentWeekRange(DateTime? now = null)
         {
-            DateTime current = (now ?? DateTime.Today).Date;
-            int diff = (7 + (int)current.DayOfWeek - (int)DayOfWeek.Monday) % 7;
-            DateTime weekStart = current.AddDays(-diff);
+            DateTime weekStart = LogTextClassifier.GetWeekStart((now ?? DateTime.Today).Date);
             DateTime weekEnd = weekStart.AddDays(6);
             return (weekStart, weekEnd);
         }
@@ -277,15 +275,6 @@ namespace TWChatOverlay.Views
         private void UpdateHeaderText((DateTime WeekStart, DateTime WeekEnd) range)
         {
             WeekText = $"{range.WeekStart:yyyy.MM.dd} ~ {range.WeekEnd:yyyy.MM.dd}";
-        }
-
-        private static string FormatManAmount(long totalMan)
-        {
-            string sign = totalMan < 0 ? "-" : string.Empty;
-            long abs = Math.Abs(totalMan);
-            long eok = abs / 10000;
-            long man = abs % 10000;
-            return $"{sign}{eok:N0}억 {man:N0}만";
         }
 
         // 위치 저장은 MainWindow가 닫힐 때 처리한다

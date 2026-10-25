@@ -914,67 +914,12 @@ namespace TWChatOverlay.ViewModels
         /// <summary>설정을 통째로 바꾼 뒤(초기화/프로필) 바인딩·오버레이 상태를 일괄 갱신한다.</summary>
         private void NotifyAllSettingsChanged()
         {
-            OnPropertyChanged(nameof(ShowNormal));
-            OnPropertyChanged(nameof(ShowTeam));
-            OnPropertyChanged(nameof(ShowClub));
-            OnPropertyChanged(nameof(ShowClubBoss));
-            OnPropertyChanged(nameof(ShowBossDialogue));
-            OnPropertyChanged(nameof(ShowFreeShout));
-            OnPropertyChanged(nameof(ShowPaidShout));
-            OnPropertyChanged(nameof(ShowNoticeShout));
-            OnPropertyChanged(nameof(ShowSystem));
-            OnPropertyChanged(nameof(ShowEtaLevel));
-            OnPropertyChanged(nameof(ShowEtaCharacter));
-            OnPropertyChanged(nameof(ShowIdTag));
-            OnPropertyChanged(nameof(ShowTimestamp));
-            OnPropertyChanged(nameof(SenderIdColorSync));
-            OnPropertyChanged(nameof(SenderIdColorEditable));
-            OnPropertyChanged(nameof(SenderIdColor));
-            OnPropertyChanged(nameof(EtaLevelColorSync));
-            OnPropertyChanged(nameof(EtaCharacterColorSync));
-            OnPropertyChanged(nameof(TimestampColorSync));
-            OnPropertyChanged(nameof(IdTagColorSync));
-            OnPropertyChanged(nameof(EtaLevelColorEditable));
-            OnPropertyChanged(nameof(EtaCharacterColorEditable));
-            OnPropertyChanged(nameof(TimestampColorEditable));
-            OnPropertyChanged(nameof(IdTagColorEditable));
-            OnPropertyChanged(nameof(EtaCharacterColor));
-            OnPropertyChanged(nameof(TimestampColor));
-            OnPropertyChanged(nameof(IdTagColor));
-            OnPropertyChanged(nameof(EtaLevelRange1Color));
-            OnPropertyChanged(nameof(EtaLevelRange2Color));
-            OnPropertyChanged(nameof(EtaLevelRange3Color));
-            OnPropertyChanged(nameof(EtaLevelRange4Color));
-            OnPropertyChanged(nameof(EtaLevelRange5Color));
-            OnPropertyChanged(nameof(EtaLevelRange6Color));
-            OnPropertyChanged(nameof(ClubBossColorSync));
-            OnPropertyChanged(nameof(ClubBossColorEditable));
-            OnPropertyChanged(nameof(ClubBossColor));
-            OnPropertyChanged(nameof(ShowShoutToastPopup));
-            OnPropertyChanged(nameof(AutoCopyShoutNickname));
-            OnPropertyChanged(nameof(ShoutToastDurationSeconds));
-            OnPropertyChanged(nameof(ShoutToastFontSize));
-            OnPropertyChanged(nameof(EnableDebugLogging));
-            OnPropertyChanged(nameof(NormalColor));
-            OnPropertyChanged(nameof(TeamColor));
-            OnPropertyChanged(nameof(ClubColor));
-            OnPropertyChanged(nameof(FreeShoutColor));
-            OnPropertyChanged(nameof(PaidShoutColor));
-            OnPropertyChanged(nameof(NoticeShoutColor));
-            OnPropertyChanged(nameof(SystemColor));
-            OnPropertyChanged(nameof(FontSize));
-            OnPropertyChanged(nameof(FontFamily));
-            OnPropertyChanged(nameof(ExitHotKey));
-            OnPropertyChanged(nameof(ToggleOverlayHotKey));
-            OnPropertyChanged(nameof(ToggleDailyWeeklyContentHotKey));
-            OnPropertyChanged(nameof(ToggleSettingsHotKey));
-            OnPropertyChanged(nameof(ToggleTrayAllHotKey));
-            OnPropertyChanged(nameof(ToggleUnlockHotKey));
             var opacity = AppServices.Get<IOverlayOpacityService>();
             opacity.Apply(_settings.OverlayOpacityPercent);
             opacity.ApplyToOpenWindows();
             opacity.NotifyAllGroupsChanged();
-            OnPropertyChanged(nameof(OverlayOpacityPercent));
+            // 빈 이름 = 이 뷰모델의 모든 속성. 바인딩이 색·토글·단축키 등을 전부 다시 읽는다.
+            OnPropertyChanged(string.Empty);
         }
 
         private void ExecuteApplyHotkeys()
@@ -1077,11 +1022,13 @@ namespace TWChatOverlay.ViewModels
         /// <summary>
         /// Hex 색상 문자열을 Brush로 변환
         /// </summary>
+        private static readonly BrushConverter SharedBrushConverter = new();
+
         private static Brush StringToBrush(string hex)
         {
             try
             {
-                return new BrushConverter().ConvertFromString(hex) as SolidColorBrush ?? Brushes.White;
+                return SharedBrushConverter.ConvertFromString(hex) as SolidColorBrush ?? Brushes.White;
             }
             catch
             {

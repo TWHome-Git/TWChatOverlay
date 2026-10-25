@@ -2489,22 +2489,6 @@ namespace TWChatOverlay.Services
             WindowPlacement.ApplyStored(window, settings.ContentTimerWindowLeft, settings.ContentTimerWindowTop);
         }
 
-        private ChatSettings? GetSharedSettings()
-        {
-            try
-            {
-                foreach (Window window in Application.Current.Windows)
-                {
-                    if (window is MainWindow main && main.DataContext is ChatSettings settings)
-                        return settings;
-                }
-            }
-            catch (Exception ex)
-            {
-                AppLogger.Warn("Failed to resolve shared settings for dungeon timer.", ex);
-            }
-
-            return null;
-        }
+        private static ChatSettings? GetSharedSettings() => AppServices.TryGet<ChatSettings>();
     }
 }

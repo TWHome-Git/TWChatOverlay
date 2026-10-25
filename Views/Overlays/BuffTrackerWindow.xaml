@@ -12,34 +12,7 @@
         WindowStartupLocation="Manual"
         Background="Transparent"
         AllowsTransparency="True">
-    <ov:OverlayWindowBase.Resources>
-        <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
-
-        <!-- 버프 타일: 아이콘 + 오른쪽에 남은 시간. 판 위에 올려 게임 화면과 상관없이 읽힌다. -->
-        <DataTemplate x:Key="BuffTileTemplate">
-            <StackPanel Orientation="Horizontal"
-                        Margin="0,0,12,5"
-                        ToolTip="{Binding DisplayName}">
-                <Border Width="26"
-                        Height="26"
-                        CornerRadius="5"
-                        Background="{DynamicResource OverlayBuffTileBackgroundBrush}"
-                        BorderBrush="{Binding AccentBrush}"
-                        BorderThickness="1">
-                    <Image Source="{Binding IconSource}"
-                           Stretch="Uniform"
-                           Margin="2"/>
-                </Border>
-                <TextBlock Text="{Binding RemainingText}"
-                           Foreground="{DynamicResource TextBrush}"
-                           FontSize="13"
-                           FontWeight="SemiBold"
-                           VerticalAlignment="Center"
-                           Margin="7,0,0,0"/>
-            </StackPanel>
-        </DataTemplate>
-    </ov:OverlayWindowBase.Resources>
-
+    <!-- 버프 타일(BuffTileTemplate)과 BooleanToVisibilityConverter는 Resources/Styles.xaml(앱 리소스)에 있다 -->
     <Border Background="{DynamicResource OverlayWindowBackgroundBrush}"
             BorderBrush="{DynamicResource OverlayWindowBorderBrush}"
             BorderThickness="1"

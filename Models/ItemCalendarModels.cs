@@ -424,13 +424,17 @@ namespace TWChatOverlay.Models
 
             return ApplyDisplayNameAlias(string.IsNullOrWhiteSpace(displayName) ? (itemName ?? "아이템") : displayName!);
         }
-        public Brush BorderBrush => Grade switch
+        // 일반 등급도 테두리가 보이도록 밝은 회백색
+        private static readonly SolidColorBrush NormalGradeBorderBrush = CreateFrozen(Color.FromRgb(0xB4, 0xBB, 0xC2));
+
+        private static SolidColorBrush CreateFrozen(Color color)
         {
-            ItemDropGrade.Special => new SolidColorBrush(Color.FromRgb(0xFF, 0x7E, 0xDB)),
-            ItemDropGrade.Rare => new SolidColorBrush(Color.FromRgb(0xFF, 0xD8, 0x4A)),
-            // 일반 등급도 테두리가 보이도록 밝은 회백색
-            _ => new SolidColorBrush(Color.FromRgb(0xB4, 0xBB, 0xC2))
-        };
+            var brush = new SolidColorBrush(color);
+            brush.Freeze();
+            return brush;
+        }
+
+        public Brush BorderBrush => (Brush?)ChatBrushResolver.ForItemGrade(Grade) ?? NormalGradeBorderBrush;
     }
 
     public sealed class AbandonMonthlyStoneSummaryEntryViewModel

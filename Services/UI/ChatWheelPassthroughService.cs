@@ -138,12 +138,6 @@ namespace TWChatOverlay.Services
         [DllImport("user32.dll", CharSet = CharSet.Unicode)]
         private static extern IntPtr GetProp(IntPtr hWnd, string lpString);
 
-        [DllImport("user32.dll", CharSet = CharSet.Unicode)]
-        private static extern IntPtr FindWindow(string lpClassName, string? lpWindowName);
-
-        [DllImport("user32.dll")]
-        private static extern bool IsWindowVisible(IntPtr hWnd);
-
         [DllImport("user32.dll")]
         private static extern short GetAsyncKeyState(int vKey);
 
@@ -390,7 +384,7 @@ namespace TWChatOverlay.Services
                     {
                         State = state,
                         Handle = hwnd,
-                        IsVisible = state.Target.Window.IsVisible && IsWindowVisible(hwnd),
+                        IsVisible = state.Target.Window.IsVisible && NativeMethods.IsWindowVisible(hwnd),
                         IsPassthrough = state.IsPassthrough,
                         IsAllowed = state.Target.IsAutoPassthroughAllowed,
                         IdleTimerRunning = state.IdleTimer.IsEnabled,
@@ -801,14 +795,14 @@ namespace TWChatOverlay.Services
         {
             long now = Environment.TickCount64;
             if (_cachedScaler != IntPtr.Zero && now - _cachedScalerTick < ScalerCacheMs)
-                return IsWindowVisible(_cachedScaler) ? _cachedScaler : IntPtr.Zero;
+                return NativeMethods.IsWindowVisible(_cachedScaler) ? _cachedScaler : IntPtr.Zero;
 
             if (now - _cachedScalerTick < ScalerCacheMs)
                 return IntPtr.Zero; // 방금 찾아봤는데 없었다
 
             _cachedScalerTick = now;
-            IntPtr hwnd = FindWindow(ScalerTopmostGuard.MagpieWindowClass, null);
-            _cachedScaler = hwnd != IntPtr.Zero && IsWindowVisible(hwnd) ? hwnd : IntPtr.Zero;
+            IntPtr hwnd = NativeMethods.FindWindow(ScalerTopmostGuard.MagpieWindowClass, null);
+            _cachedScaler = hwnd != IntPtr.Zero && NativeMethods.IsWindowVisible(hwnd) ? hwnd : IntPtr.Zero;
             return _cachedScaler;
         }
 

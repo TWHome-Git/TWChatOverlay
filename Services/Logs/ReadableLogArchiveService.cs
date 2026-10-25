@@ -901,11 +901,7 @@ namespace TWChatOverlay.Services
         }
 
         private static DateTime GetIsoWeekStart(DateTime date)
-        {
-            DateTime day = date.Date;
-            int diff = (7 + (int)day.DayOfWeek - (int)DayOfWeek.Monday) % 7;
-            return day.AddDays(-diff);
-        }
+            => LogTextClassifier.GetWeekStart(date.Date);
 
         private static DateTime MinDate(DateTime left, DateTime right)
             => left <= right ? left : right;

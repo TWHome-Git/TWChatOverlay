@@ -82,38 +82,35 @@ namespace TWChatOverlay.Services
         {
             try
             {
-                foreach (System.Windows.Window window in System.Windows.Application.Current.Windows)
+                if (AppServices.TryGet<Models.ChatSettings>() is Models.ChatSettings settings)
                 {
-                    if (window is Views.MainWindow mainWindow && mainWindow.DataContext is Models.ChatSettings settings)
+                    return fileName.ToLowerInvariant() switch
                     {
-                        return fileName.ToLowerInvariant() switch
-                        {
-                            "drop.mp3" => Math.Max(0.0, Math.Min(0.1, settings.ItemDropAlertVolume)),
-                            "drop_low.mp3" => Math.Max(0.0, Math.Min(0.1, settings.ItemDropAlertVolume)),
-                            "highlight.wav" => Math.Max(0.0, Math.Min(1.0, settings.HighlightAlertVolume)),
-                            "wave.wav" => Math.Max(0.0, Math.Min(1.0, settings.MagicCircleAlertVolume)),
-                            "reflection.wav" => Math.Max(0.0, Math.Min(1.0, settings.ReflectionPatternAlertVolume)),
-                            "reflectionend.wav" => Math.Max(0.0, Math.Min(1.0, settings.ReflectionPatternAlertVolume)),
-                            "expbuffcheck.wav" => Math.Max(0.0, Math.Min(1.0, settings.ExpBuffAlertVolume)),
-                            "buffcheck.wav" => Math.Max(0.0, Math.Min(1.0, settings.BuffTrackerEndSoundVolume)),
-                            "arkan.wav" => Math.Max(0.0, Math.Min(1.0, settings.BossAlertVolume)),
-                            "arkan_before1.wav" => Math.Max(0.0, Math.Min(1.0, settings.BossAlertVolume)),
-                            "arkan_before3.wav" => Math.Max(0.0, Math.Min(1.0, settings.BossAlertVolume)),
-                            "scherzendo.wav" => Math.Max(0.0, Math.Min(1.0, settings.BossAlertVolume)),
-                            "scherzendo_before1.wav" => Math.Max(0.0, Math.Min(1.0, settings.BossAlertVolume)),
-                            "scherzendo_before3.wav" => Math.Max(0.0, Math.Min(1.0, settings.BossAlertVolume)),
-                            "originofdoom.wav" => Math.Max(0.0, Math.Min(1.0, settings.BossAlertVolume)),
-                            "originofdoom_before1.wav" => Math.Max(0.0, Math.Min(1.0, settings.BossAlertVolume)),
-                            "originofdoom_before3.wav" => Math.Max(0.0, Math.Min(1.0, settings.BossAlertVolume)),
-                            "confusedland.wav" => Math.Max(0.0, Math.Min(1.0, settings.BossAlertVolume)),
-                            "confusedland_before1.wav" => Math.Max(0.0, Math.Min(1.0, settings.BossAlertVolume)),
-                            "confusedland_before3.wav" => Math.Max(0.0, Math.Min(1.0, settings.BossAlertVolume)),
-                            "event.wav" => Math.Max(0.0, Math.Min(1.0, settings.BossAlertVolume)),
-                            "event_before1.wav" => Math.Max(0.0, Math.Min(1.0, settings.BossAlertVolume)),
-                            "event_before3.wav" => Math.Max(0.0, Math.Min(1.0, settings.BossAlertVolume)),
-                            _ => 1.0
-                        };
-                    }
+                        "drop.mp3" => Math.Max(0.0, Math.Min(0.1, settings.ItemDropAlertVolume)),
+                        "drop_low.mp3" => Math.Max(0.0, Math.Min(0.1, settings.ItemDropAlertVolume)),
+                        "highlight.wav" => Math.Max(0.0, Math.Min(1.0, settings.HighlightAlertVolume)),
+                        "wave.wav" => Math.Max(0.0, Math.Min(1.0, settings.MagicCircleAlertVolume)),
+                        "reflection.wav" => Math.Max(0.0, Math.Min(1.0, settings.ReflectionPatternAlertVolume)),
+                        "reflectionend.wav" => Math.Max(0.0, Math.Min(1.0, settings.ReflectionPatternAlertVolume)),
+                        "expbuffcheck.wav" => Math.Max(0.0, Math.Min(1.0, settings.ExpBuffAlertVolume)),
+                        "buffcheck.wav" => Math.Max(0.0, Math.Min(1.0, settings.BuffTrackerEndSoundVolume)),
+                        "arkan.wav" => Math.Max(0.0, Math.Min(1.0, settings.BossAlertVolume)),
+                        "arkan_before1.wav" => Math.Max(0.0, Math.Min(1.0, settings.BossAlertVolume)),
+                        "arkan_before3.wav" => Math.Max(0.0, Math.Min(1.0, settings.BossAlertVolume)),
+                        "scherzendo.wav" => Math.Max(0.0, Math.Min(1.0, settings.BossAlertVolume)),
+                        "scherzendo_before1.wav" => Math.Max(0.0, Math.Min(1.0, settings.BossAlertVolume)),
+                        "scherzendo_before3.wav" => Math.Max(0.0, Math.Min(1.0, settings.BossAlertVolume)),
+                        "originofdoom.wav" => Math.Max(0.0, Math.Min(1.0, settings.BossAlertVolume)),
+                        "originofdoom_before1.wav" => Math.Max(0.0, Math.Min(1.0, settings.BossAlertVolume)),
+                        "originofdoom_before3.wav" => Math.Max(0.0, Math.Min(1.0, settings.BossAlertVolume)),
+                        "confusedland.wav" => Math.Max(0.0, Math.Min(1.0, settings.BossAlertVolume)),
+                        "confusedland_before1.wav" => Math.Max(0.0, Math.Min(1.0, settings.BossAlertVolume)),
+                        "confusedland_before3.wav" => Math.Max(0.0, Math.Min(1.0, settings.BossAlertVolume)),
+                        "event.wav" => Math.Max(0.0, Math.Min(1.0, settings.BossAlertVolume)),
+                        "event_before1.wav" => Math.Max(0.0, Math.Min(1.0, settings.BossAlertVolume)),
+                        "event_before3.wav" => Math.Max(0.0, Math.Min(1.0, settings.BossAlertVolume)),
+                        _ => 1.0
+                    };
                 }
             }
             catch (Exception ex)

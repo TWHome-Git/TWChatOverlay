@@ -14,33 +14,7 @@ namespace TWChatOverlay.Services
         /// <summary>
         /// 토스트 폰트를 3단계로 해석한다: MainWindow.CurrentFont → 설정 FontFamily → "Malgun Gothic".
         /// </summary>
-        public static FontFamily ResolveToastFont()
-        {
-            try
-            {
-                FontFamily? hostFont = MainWindowHost.Current?.CurrentFont;
-                if (hostFont != null && !string.IsNullOrWhiteSpace(hostFont.Source))
-                    return hostFont;
-            }
-            catch (Exception ex)
-            {
-                AppLogger.Warn("Failed to resolve toast font from MainWindow host.", ex);
-            }
-
-            try
-            {
-                ChatSettings settings = ConfigService.Load();
-                FontFamily configured = FontService.GetFont(settings.FontFamily);
-                if (configured != null && !string.IsNullOrWhiteSpace(configured.Source))
-                    return configured;
-            }
-            catch (Exception ex)
-            {
-                AppLogger.Warn("Failed to resolve toast font from settings.", ex);
-            }
-
-            return new FontFamily("Malgun Gothic");
-        }
+        public static FontFamily ResolveToastFont() => WindowFontService.ResolveCurrentFont();
 
         /// <summary>
         /// 저장된 좌표가 모두 있으면 그 위치를, 없으면 작업 영역 가로 중앙 + defaultTop을 반환한다.

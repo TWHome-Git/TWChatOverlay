@@ -1,5 +1,4 @@
-﻿using System;
-using TWChatOverlay.Models;
+﻿using TWChatOverlay.Models;
 
 namespace TWChatOverlay.Services.LogAnalysis
 {

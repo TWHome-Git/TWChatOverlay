@@ -203,28 +203,17 @@ namespace TWChatOverlay
             try { TWChatOverlay.Services.ConfigService.FlushPendingSave(); } catch { }
             try
             {
-                Models.ChatSettings? cfg = null;
+                Models.ChatSettings cfg;
 
-                foreach (Window w in Current.Windows)
+                // 시작이 DI 초기화 전에 끝난 경우(중복 실행 등)에만 디스크 사본을 읽는다
+                try
                 {
-                    if (w is Views.MainWindow main && main.DataContext is Models.ChatSettings sharedSettings)
-                    {
-                        cfg = sharedSettings;
-                        break;
-                    }
+                    cfg = AppServices.TryGet<Models.ChatSettings>() ?? TWChatOverlay.Services.ConfigService.Load();
                 }
-
-                if (cfg == null)
+                catch (Exception ex)
                 {
-                    try
-                    {
-                        cfg = AppServices.TryGet<Models.ChatSettings>() ?? TWChatOverlay.Services.ConfigService.Load();
-                    }
-                    catch (Exception ex)
-                    {
-                        AppLogger.Warn("Failed to reload persisted settings during shutdown. Using in-memory defaults as last resort.", ex);
-                        cfg = new Models.ChatSettings();
-                    }
+                    AppLogger.Warn("Failed to reload persisted settings during shutdown. Using in-memory defaults as last resort.", ex);
+                    cfg = new Models.ChatSettings();
                 }
 
                 foreach (Window w in Current.Windows)
