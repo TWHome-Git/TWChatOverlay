@@ -48,6 +48,9 @@ namespace TWChatOverlay.Services
         private const int CurrentContentArchiveMigrationVersion = 1;
         private const string RawLogRebuildCheckpointKey = "raw-log-rebuild";
         private const string LogsFolderResetMigrationKey = "logs-folder-reset-5x";
+        // 컨텐츠 아카이브 판정 기준이 바뀐 뒤(어비스 입장·보상 줄 등 정규식 판정 포함) 예전 빌드가 쓴 주간 파일을 1회 재구축
+        private const string ContentArchiveRebuildMigrationKey = "content-archive-rebuild";
+        private const int CurrentContentArchiveRebuildVersion = 1;
         private const int CurrentLogsFolderResetVersion = 1;
         private const string AbandonDaySummarySuffix = ".summary.day.json";
         private readonly Dictionary<DateTime, AbandonMonthlySummarySnapshotEntry> _abandonDayBuffer = new();
@@ -99,6 +102,7 @@ namespace TWChatOverlay.Services
             try
             {
                 cancellationToken.ThrowIfCancellationRequested();
+                RebuildContentArchiveIfNeeded();
                 List<RawLogFile> allSourceFiles = RawChatLogReader.EnumerateFiles(chatLogFolderPath);
                 if (sourceDateFilter != null)
                     allSourceFiles.RemoveAll(f => !sourceDateFilter(f.Date));
@@ -418,6 +422,48 @@ namespace TWChatOverlay.Services
         /// [레거시] 컨텐츠 아카이브에 섞여 있던 경험치 줄 제거(버전 1). 시작 시 전경 패스 뒤에 한 번 부른다.
         /// 적용 뒤에는 옛 상태 파일 정리만 한다.
         /// </summary>
+        /// <summary>
+        /// 컨텐츠 아카이브를 예전 빌드가 썼다면(어비스 입장·보상 줄이 빠진 채) 주간 파일을 모두 지워
+        /// 다음 패스가 원본 로그에서 다시 만들게 한다. 체크포인트도 함께 지워 지운 주가 '누락'으로 잡히게 한다. 1회만.
+        /// </summary>
+        private void RebuildContentArchiveIfNeeded()
+        {
+            lock (_syncRoot)
+            {
+                try
+                {
+                    EnsureArchiveDirectoriesExist();
+                    if (LoadMigrationVersion(ContentArchiveRebuildMigrationKey) >= CurrentContentArchiveRebuildVersion)
+                        return;
+
+                    _liveWrites.FlushAll();
+                    // 일일/주간 창이 같은 파일을 읽고 있으면 삭제가 공유 위반으로 막힌다 — 그때는 내용을 비워 '누락'으로 잡히게 한다
+                    foreach (string path in Directory.EnumerateFiles(_contentDirectory, "*.html", SearchOption.TopDirectoryOnly))
+                    {
+                        try { File.Delete(path); }
+                        catch (IOException)
+                        {
+                            using var fs = new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.ReadWrite | FileShare.Delete);
+                        }
+                    }
+
+                    var state = LoadMigrationState();
+                    if (state.Checkpoints.Remove(RawLogRebuildCheckpointKey))
+                    {
+                        string migrationPath = Path.Combine(_stateDirectory, MigrationStateFileName);
+                        File.WriteAllText(migrationPath, JsonSerializer.Serialize(state, JsonOptions), Utf8BomEncoding);
+                    }
+
+                    SaveMigrationVersion(ContentArchiveRebuildMigrationKey, CurrentContentArchiveRebuildVersion);
+                    AppLogger.Info("Content archive cleared for rebuild (migration v" + CurrentContentArchiveRebuildVersion + ").");
+                }
+                catch (Exception ex)
+                {
+                    AppLogger.Warn("Failed to reset content archive for rebuild.", ex);
+                }
+            }
+        }
+
         public void MigrateContentArchiveIfNeeded()
         {
             lock (_syncRoot)
