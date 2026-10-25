@@ -44,6 +44,15 @@ namespace TWChatOverlay.Services
             var parsed = context.Result;
             parsed.IsClubBossMessage = parsed.Category == ChatCategory.Club &&
                                        IgnoredChatMessageService.IsIgnoredClubMessage(parsed.FormattedText);
+            if (parsed.Category is ChatCategory.Normal or ChatCategory.NormalSelf)
+            {
+                // 숨김 판정의 설정 무관 부분만 여기서 한 번 계산한다 (정규식은 이 한 번만 돈다).
+                // ShowBossDialogue/ShowClubBoss 결합은 IsHiddenByChatFilter가 소비 시점마다 현재 설정으로 한다 —
+                // 재표시(RequestRefreshLogDisplay)가 토글 변경을 반영해야 하기 때문.
+                string messageOnly = GetMessageOnly(parsed.FormattedText);
+                parsed.IsBossDialogueLine = IgnoredChatMessageService.MatchesBossDialogue(messageOnly, parsed.SenderId);
+                parsed.IsIgnoredNoticeLine = IgnoredChatMessageService.MatchesIgnoredNotice(messageOnly, parsed.SenderId);
+            }
             parsed.Brush = ChatBrushResolver.Resolve(_settings, parsed);
 
             return new LogAnalysisResult(
@@ -96,7 +105,11 @@ namespace TWChatOverlay.Services
             return tabs;
         }
 
-        private bool IsHiddenByChatFilter(LogParser.ParseResult parsed)
+        /// <summary>
+        /// 무시 목록(클럽 보스 공지·보스 대사·안내문)에 걸려 숨길 줄인지.
+        /// 분석 시점에 캐시한 매치 결과와 현재 설정만 결합하므로 정규식 없이 싸고, 설정 토글 뒤 재표시에도 그대로 쓸 수 있다.
+        /// </summary>
+        public bool IsHiddenByChatFilter(LogParser.ParseResult parsed)
         {
             if (parsed.IsClubBossMessage && !_settings.ShowClubBoss)
             {
@@ -104,7 +117,7 @@ namespace TWChatOverlay.Services
             }
 
             if ((parsed.Category == ChatCategory.Normal || parsed.Category == ChatCategory.NormalSelf) &&
-                IgnoredChatMessageService.IsIgnoredNormalMessage(GetMessageOnly(parsed.FormattedText), parsed.SenderId, !_settings.ShowBossDialogue))
+                (parsed.IsIgnoredNoticeLine || (parsed.IsBossDialogueLine && !_settings.ShowBossDialogue)))
             {
                 return true;
             }

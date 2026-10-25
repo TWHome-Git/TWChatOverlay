@@ -1429,9 +1429,14 @@ namespace TWChatOverlay.Views
             UpdateCacheAfterRealtimeProcess(wasAppliedToCurrentView: true);
         }
 
-        public bool TryProcessAbandonOrCravingLog(string rawLog)
+        /// <summary>
+        /// 실시간 줄의 어밴던로드 도전 횟수·갈망하는 즐거움 남은 에너지 문구를 바로 반영한다.
+        /// 입력은 분석기가 이미 디코드·공백 정리한 FormattedText — 원본 HTML을 다시 정규화하지 않는다
+        /// (과거 로그 스캔은 원본 줄을 읽으므로 거기서만 <see cref="NormalizeLogText"/>를 쓴다).
+        /// </summary>
+        public bool TryProcessAbandonOrCravingLog(string formattedText)
         {
-            string text = NormalizeLogText(rawLog);
+            string text = formattedText;
             if (string.IsNullOrWhiteSpace(text))
                 return false;
 

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Net;
 using System.Text.RegularExpressions;
 using TWChatOverlay.Models;
 
@@ -13,14 +12,6 @@ namespace TWChatOverlay.Services
         private const int AbandonMaxCount = 10;
         private const int CravingPleasureMaxCount = 20;
         private const int CravingPleasureDailyEnergy = 21;
-
-        private static readonly Regex HtmlTagRegex = new(
-            "<[^>]+>",
-            RegexOptions.Compiled);
-
-        private static readonly Regex WhiteSpaceRegex = new(
-            @"\s+",
-            RegexOptions.Compiled);
 
         private static readonly Regex AbandonRoadRegex = new(
             @"이번\s*주\s*어밴던\s*로드\s*(?<region>.+?)\s*지역의\s*도전\s*횟수는\s*(?<count>\d+)\s*번",
@@ -61,22 +52,16 @@ namespace TWChatOverlay.Services
             _settings = settings ?? throw new ArgumentNullException(nameof(settings));
         }
 
+        /// <summary>
+        /// 실시간 줄 하나를 본다. 분석기가 이미 HTML 디코드·공백 정리를 끝낸 FormattedText("[시각] 내용")를 그대로 쓰므로
+        /// 원본 HTML을 다시 정규화하지 않는다 (OrlyRemainingAttackRegex의 선두 시각 괄호 허용과 호환).
+        /// </summary>
         public void Process(LogAnalysisResult analysis)
         {
             if (!analysis.IsSuccess || !analysis.IsRealTime)
                 return;
 
-            string text = Normalize(analysis.Parsed.FormattedText);
-            ProcessNormalized(text);
-        }
-
-        public void ProcessRaw(string html, bool isRealTime)
-        {
-            if (!isRealTime)
-                return;
-
-            string text = Normalize(html);
-            ProcessNormalized(text);
+            ProcessNormalized(analysis.Parsed.FormattedText);
         }
 
         private void ProcessNormalized(string text)
@@ -258,16 +243,6 @@ namespace TWChatOverlay.Services
                 "종료",
                 TimeSpan.FromSeconds(TreasuryExitDurationSeconds));
             return true;
-        }
-
-        private static string Normalize(string? text)
-        {
-            if (string.IsNullOrWhiteSpace(text))
-                return string.Empty;
-
-            string decoded = WebUtility.HtmlDecode(text);
-            decoded = HtmlTagRegex.Replace(decoded, " ");
-            return WhiteSpaceRegex.Replace(decoded, " ").Trim();
         }
     }
 }

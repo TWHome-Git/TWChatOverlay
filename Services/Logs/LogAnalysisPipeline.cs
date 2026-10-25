@@ -10,7 +10,8 @@ namespace TWChatOverlay.Services
     public sealed record AnalyzedLogEvent(
         LogFeedItem Source,
         MainLogPipelineAnalysis Analysis,
-        DateTime AnalyzedAtUtc = default) // 분석 완료 시각 — 지연 구간 분해 계측용
+        DateTime AnalyzedAtUtc = default, // 분석 완료 시각 — 지연 구간 분해 계측용
+        bool IsContentCompletionRelevant = false) // 일일/주간 컨텐츠 완료 문구인지 — 분석 스레드에서 한 번만 계산 (아카이브·UI 공용)
     {
         public string Html => Source.Html;
         public bool IsRealTime => Source.IsRealTime;
@@ -34,6 +35,7 @@ namespace TWChatOverlay.Services
         private readonly Dispatcher _dispatcher;
         private readonly Action<IReadOnlyList<AnalyzedLogEvent>> _onBatchReady;
         private readonly Action<AnalyzedLogEvent>? _backgroundHandler;
+        private readonly Func<string, bool>? _isContentCompletionRelevant;
         private readonly int _batchSize;
 
         private readonly Channel<LogFeedItem> _channel;
@@ -49,6 +51,7 @@ namespace TWChatOverlay.Services
             Dispatcher dispatcher,
             Action<IReadOnlyList<AnalyzedLogEvent>> onBatchReady,
             Action<AnalyzedLogEvent>? backgroundHandler = null,
+            Func<string, bool>? isContentCompletionRelevant = null,
             int batchSize = 60,
             int maxQueueSize = 20000)
         {
@@ -56,6 +59,7 @@ namespace TWChatOverlay.Services
             _dispatcher = dispatcher ?? throw new ArgumentNullException(nameof(dispatcher));
             _onBatchReady = onBatchReady ?? throw new ArgumentNullException(nameof(onBatchReady));
             _backgroundHandler = backgroundHandler;
+            _isContentCompletionRelevant = isContentCompletionRelevant;
             _batchSize = batchSize > 0 ? batchSize : 60;
 
             _channel = Channel.CreateBounded<LogFeedItem>(new BoundedChannelOptions(maxQueueSize > 0 ? maxQueueSize : 20000)
@@ -86,7 +90,10 @@ namespace TWChatOverlay.Services
                 try
                 {
                     var analysis = _coordinator.Analyze(item.Html, item.IsRealTime);
-                    analyzed = new AnalyzedLogEvent(item, analysis, DateTime.UtcNow);
+                    // 컨텐츠 완료 판정(정규식 7 + 키워드 ~70개)은 여기서 한 번만 — 백그라운드 핸들러(아카이브)와 UI가 같은 값을 읽는다
+                    bool isContentCompletionRelevant = analysis.Primary.IsSuccess &&
+                                                       _isContentCompletionRelevant?.Invoke(analysis.Primary.Parsed.FormattedText) == true;
+                    analyzed = new AnalyzedLogEvent(item, analysis, DateTime.UtcNow, isContentCompletionRelevant);
                 }
                 catch (Exception ex)
                 {

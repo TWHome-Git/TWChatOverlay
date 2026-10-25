@@ -37,6 +37,13 @@ namespace TWChatOverlay
             public bool HasLeadingBodyWhitespace { get; set; } = false;
             /// <summary>클럽 보스 공지 줄인지 ([클럽 보스] 포함) — 표시 여부·개별 색상에 사용.</summary>
             public bool IsClubBossMessage { get; set; } = false;
+            /// <summary>
+            /// 일반(흰색) 줄 중 보스·몬스터 대사(문구 또는 화자 일치) — "보스 대사" 토글이 꺼져 있을 때만 숨긴다.
+            /// 설정과 무관한 매치 결과만 담으므로 분석 시점에 한 번 계산하고, 토글 결합은 소비 시점에 한다.
+            /// </summary>
+            public bool IsBossDialogueLine { get; set; } = false;
+            /// <summary>일반(흰색) 줄 중 토글과 무관하게 늘 숨기는 안내문(상자 획득, 회복, 등장 안내 등).</summary>
+            public bool IsIgnoredNoticeLine { get; set; } = false;
         }
 
         public static bool IsMatchTab(ParseResult log, string tabTag, ChatSettings settings)

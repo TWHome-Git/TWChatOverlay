@@ -47,7 +47,6 @@ namespace TWChatOverlay.Views
         private ChatSettings _settings;
         private LogService? _logService;
         private LogAnalysisService _logAnalysisService;
-        private MainLogPipelineCoordinator _logPipelineCoordinator;
         private SettingsViewModel _settingsViewModel;
 
         private string _currentTabTag = "Basic";
@@ -109,11 +108,11 @@ namespace TWChatOverlay.Views
                     MainWindowHost.Current = null;
             };
             _logAnalysisService = AppServices.Get<LogAnalysisService>();
-            _logPipelineCoordinator = AppServices.Get<MainLogPipelineCoordinator>();
             // 파싱·분석을 백그라운드로 — UI 스레드는 분석 결과를 소비만 한다.
             // 아카이브 기록(파일 IO)은 UI가 필요 없으므로 분석 스레드에서 바로 처리한다.
+            // 분석은 파이프라인 안에서만 돈다 — UI 스레드에서 다시 분석하는 경로는 없다.
             _logAnalysisPipeline = new LogAnalysisPipeline(
-                _logPipelineCoordinator,
+                AppServices.Get<MainLogPipelineCoordinator>(),
                 Dispatcher,
                 ProcessUiLogBatch,
                 backgroundHandler: evt =>
@@ -131,8 +130,10 @@ namespace TWChatOverlay.Views
                     _readableLogArchiveService?.AppendFromAnalysis(
                         DateTime.Today,
                         primary,
-                        IsContentCompletionRelevantLog(primary.Parsed.FormattedText));
-                });
+                        evt.IsContentCompletionRelevant);
+                },
+                // 컨텐츠 완료 판정은 분석 스레드에서 줄마다 한 번만 — 아카이브와 UI(일일/주간 창)가 같은 값을 쓴다
+                isContentCompletionRelevant: IsContentCompletionRelevantLog);
             _settingsViewModel = new SettingsViewModel(_settings, OnColorsUpdatedFromSettings, ConfirmExit, OnSettingsResetFromSettings, ApplyHotKeys, ExecuteManualLogReloadFromSettingsAsync, OnSettingsReplacedFromSettings);
 
             _expService = AppServices.Get<ExperienceService>();

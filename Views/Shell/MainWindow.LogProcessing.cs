@@ -148,13 +148,26 @@ namespace TWChatOverlay.Views
                     // 한 줄의 처리 실패가 배치의 나머지 줄을 잃게 하지 않는다 (로그 씹힘 방지)
                     try
                     {
-                        var context = CreateLogPipelineContext(item.Html, item.IsRealTime, deferUiScroll: true);
-                        context.PipelineAnalysis = item.Analysis; // 백그라운드에서 이미 분석됨
-                        ProcessLogPipelineContext(context);
+                        // 백그라운드에서 이미 분석됨 — UI 스레드는 결과를 소비만 한다
+                        var analysis = item.Analysis.Primary;
+
+                        // 던전 입장 횟수 표시·일일/주간 어밴던/갈망 카운트는 분석기가 만든 FormattedText로 본다
+                        // (원본 HTML을 UI 스레드에서 다시 디코드·정규화하지 않는다). 파싱이 안 된 줄(font 태그 2개 미만)은 건너뛴다.
+                        bool handledDailyWeeklyCountLog = false;
+                        if (analysis.IsSuccess)
+                        {
+                            _dungeonCountDisplayService.Process(analysis);
+                            handledDailyWeeklyCountLog =
+                                item.IsRealTime &&
+                                _dailyWeeklyContentOverlay?.IsVisible == true &&
+                                _dailyWeeklyContentOverlay.TryProcessAbandonOrCravingLog(analysis.Parsed.FormattedText);
+                        }
+
+                        ProcessLogPipelineContext(item, handledDailyWeeklyCountLog);
 #if DEBUG
                         // 디버그 빌드: 로그 시각 대비 표시 지연 HUD
                         if (item.IsRealTime)
-                            ChatLatencyHud.Report(item.Analysis?.Primary?.Parsed?.FormattedText, item.Source.ReadAtUtc, item.AnalyzedAtUtc);
+                            ChatLatencyHud.Report(analysis.Parsed.FormattedText, item.Source.ReadAtUtc, item.AnalyzedAtUtc);
 #endif
                     }
                     catch (Exception ex)
@@ -175,25 +188,6 @@ namespace TWChatOverlay.Views
             }
         }
 
-        private UnifiedLogPipelineContext CreateLogPipelineContext(string html, bool isRealTime, bool deferUiScroll)
-        {
-            var context = new UnifiedLogPipelineContext(
-                html,
-                isRealTime,
-                deferUiScroll,
-                1,
-                false);
-
-            _dungeonCountDisplayService.ProcessRaw(context.RawHtml, context.IsRealTime);
-            context.HandledDailyWeeklyCountLog =
-                context.IsRealTime &&
-                _dailyWeeklyContentOverlay?.IsVisible == true &&
-                _dailyWeeklyContentOverlay.TryProcessAbandonOrCravingLog(context.RawHtml);
-
-            return context;
-        }
-
-        /// <summary>부수효과 한 기능의 실패가 같은 줄의 다른 기능(채팅 표시 등)까지 막지 않게 격리한다.</summary>
         /// <summary>방전에 걸린 시각 — 풀린 줄이 올 때 얼마나 걸려 있었는지 적으려고 둔다.</summary>
         private DateTime? _dischargeStartedAt;
 
@@ -222,27 +216,27 @@ namespace TWChatOverlay.Views
             return at;
         }
 
+        /// <summary>부수효과 한 기능의 실패가 같은 줄의 다른 기능(채팅 표시 등)까지 막지 않게 격리한다.</summary>
         private static void GuardSideEffect(string what, Action action)
         {
             try { action(); }
             catch (Exception ex) { AppLogger.Warn($"Log side effect '{what}' failed.", ex); }
         }
 
-        private void ProcessLogPipelineContext(UnifiedLogPipelineContext context)
+        /// <param name="item">백그라운드 파이프라인이 분석을 끝낸 줄. 여기서 다시 분석하지 않는다.</param>
+        /// <param name="handledDailyWeeklyCountLog">일일/주간 창이 어밴던/갈망 카운트 줄로 이미 처리했는지 (중복 반영 방지).</param>
+        private void ProcessLogPipelineContext(AnalyzedLogEvent item, bool handledDailyWeeklyCountLog)
         {
-            if (string.IsNullOrWhiteSpace(context.RawHtml)) return;
-
-            var pipelineAnalysis = context.PipelineAnalysis ?? _logPipelineCoordinator.Analyze(context.RawHtml, context.IsRealTime);
-            context.PipelineAnalysis = pipelineAnalysis;
+            var pipelineAnalysis = item.Analysis;
             var analysis = pipelineAnalysis.Primary;
             if (!analysis.IsSuccess) return;
             var parseResult = analysis.Parsed;
             bool isActualShout = parseResult.Category == ChatCategory.Shout && IsActualShoutSource(parseResult.FormattedText);
-            bool isContentCompletionRelevant = IsContentCompletionRelevantLog(parseResult.FormattedText);
-            bool shouldRunLiveUiEffects = context.IsRealTime;
+            bool isContentCompletionRelevant = item.IsContentCompletionRelevant; // 분석 스레드에서 한 번 계산한 값
+            bool shouldRunLiveUiEffects = item.IsRealTime;
             // 시작 시 과거 로그(tail) 표시나 테스트 주입은 화면 표시만 하고 집계/아카이브 등 부수효과는 하지 않는다.
             // (그렇지 않으면 재실행 때마다 최근 1000줄이 재집계되어 카운트가 틀어지고, 외치기/컨텐츠 로그가 두 번씩 쌓인다.)
-            bool isHistoricalDisplayOnly = !context.IsRealTime;
+            bool isHistoricalDisplayOnly = !item.IsRealTime;
 
             if (!isHistoricalDisplayOnly)
             {
@@ -255,7 +249,7 @@ namespace TWChatOverlay.Views
                     DateTime? logTime = TryReadLogTime(parseResult.FormattedText);
                     GuardSideEffect("exp-gain", () => _expService.AddExp(parseResult.GainedExp, logTime));
                     // 사냥 기록(판 단위 요약)은 실시간 줄만 센다. 과거 로그는 시작할 때 따로 훑는다
-                    if (context.IsRealTime)
+                    if (item.IsRealTime)
                         GuardSideEffect("hunt-session", () => _huntSessionService.AddGain(logTime ?? DateTime.Now, parseResult.GainedExp));
                 }
             }
@@ -263,7 +257,7 @@ namespace TWChatOverlay.Views
             if (shouldRunLiveUiEffects)
                 GuardSideEffect("essence-alert", () => _experienceEssenceAlertService.Process(analysis));
 
-            if (!context.HandledDailyWeeklyCountLog &&
+            if (!handledDailyWeeklyCountLog &&
                 shouldRunLiveUiEffects &&
                 _settings.ShowDailyWeeklyContentOverlay &&
                 (analysis.ShouldRunDailyWeeklyContent || isContentCompletionRelevant))
@@ -336,14 +330,12 @@ namespace TWChatOverlay.Views
                 if (parseResult.Category == ChatCategory.Shout)
                 GuardSideEffect("shout-actions", () =>
                 {
-                    bool allowLiveShoutActions = true;
-
                     if (!isActualShout)
                     {
                         AppLogger.Debug($"Skipped shout toast for non-shout formatted line: '{parseResult.FormattedText}'");
                     }
 
-                    if (_settings.AutoCopyShoutNickname && isActualShout && allowLiveShoutActions)
+                    if (_settings.AutoCopyShoutNickname && isActualShout)
                     {
                         string? shoutNickname = GetShoutNicknameForClipboard(parseResult);
                         if (!string.IsNullOrWhiteSpace(shoutNickname))
@@ -357,7 +349,7 @@ namespace TWChatOverlay.Views
                     }
 
                     // 표시를 꺼 둔 종류(무료/유료/공지)의 외치기는 토스트도 띄우지 않는다
-                    if (_settings.ShowShoutToastPopup && isActualShout && allowLiveShoutActions &&
+                    if (_settings.ShowShoutToastPopup && isActualShout &&
                         LogParser.IsVisible(parseResult, _settings))
                         AppServices.Get<ShoutToastService>().Show(parseResult, _settings);
                 });
@@ -418,13 +410,11 @@ namespace TWChatOverlay.Views
 
             if (shouldRunLiveUiEffects)
             {
-                if (_logAnalysisService.ShouldRenderToTab(parseResult, _currentTabTag))
+                // 실시간 추가와 탭 재표시(RequestRefreshLogDisplay)가 같은 억제 판정을 쓴다
+                if (_logAnalysisService.ShouldRenderToTab(parseResult, _currentTabTag) &&
+                    !ShouldSuppressOverlayText(parseResult, suppressChatLine))
                 {
-                    bool suppressOverlayText = suppressChatLine || !string.IsNullOrWhiteSpace(parseResult.EtosImagePath) || ShouldSuppressEtosChatLine(parseResult)
-                                               || IsHiddenDungeonNoticeLine(parseResult);
-
-                    if (!suppressOverlayText)
-                        AddToUI(parseResult, isRealTime: context.IsRealTime, deferScroll: context.DeferUiScroll);
+                    AddToUI(parseResult, isRealTime: item.IsRealTime);
                 }
             }
 
@@ -515,18 +505,9 @@ namespace TWChatOverlay.Views
             if (IsContinuationOfHiddenChat(parseResult))
                 return true;
 
-            string text = parseResult.FormattedText;
-            bool isHiddenClub = parseResult.Category == ChatCategory.Club &&
-                                !_settings.ShowClubBoss &&
-                                IgnoredChatMessageService.IsIgnoredClubMessage(text);
-
-            // 무시 판정은 타임스탬프를 뗀 본문 + 파서가 뽑은 화자로 한다 (분석 서비스 쪽과 같은 입력)
-            bool isHiddenNormal = (parseResult.Category == ChatCategory.Normal ||
-                                   parseResult.Category == ChatCategory.NormalSelf) &&
-                                  TrySplitTimestampAndBody(text, out _, out string normalBody) &&
-                                  IgnoredChatMessageService.IsIgnoredNormalMessage(normalBody, parseResult.SenderId, !_settings.ShowBossDialogue);
-
-            if (!isHiddenClub && !isHiddenNormal)
+            // 무시 판정(클럽 보스 공지·보스 대사·안내문)은 분석 시점에 캐시한 매치 결과 + 현재 설정으로 한다 — 여기서 정규식을 다시 돌리지 않는다.
+            // 이어지는 줄(continuation) 추적만 UI 상태라 이 창에 남긴다.
+            if (!_logAnalysisService.IsHiddenByChatFilter(parseResult))
                 return false;
 
             TrackHiddenChatContinuation(parseResult);
@@ -605,14 +586,17 @@ namespace TWChatOverlay.Views
         private static bool IsHiddenDungeonNoticeLine(LogParser.ParseResult parseResult)
             => NoisyNoticeFilter.IsNoise(parseResult?.FormattedText);
 
-        private bool ShouldSuppressOverlayText(LogParser.ParseResult parseResult)
+        /// <summary>
+        /// 메인 채팅 오버레이에 이 줄을 그리지 않을지. 실시간 추가와 탭 재표시가 같은 판정을 쓴다.
+        /// 숨김 판정(<see cref="ShouldHideChatLine"/>)은 이어지는 줄 추적 상태를 바꾸므로 호출자가 줄마다 한 번만 계산해 넘긴다.
+        /// 반사 패턴 알림 줄(심연의 제2사도 대사)은 보스 대사 판정(화자·문구 모두 일치)에 포함되므로 따로 보지 않는다.
+        /// </summary>
+        private static bool ShouldSuppressOverlayText(LogParser.ParseResult parseResult, bool isHiddenChatLine)
         {
             if (parseResult == null || string.IsNullOrWhiteSpace(parseResult.FormattedText))
                 return false;
 
-            // 반사 패턴 알림 트리거 문구(심연의 제2사도 대사)는 보스 대사이므로 "보스 대사" 토글을 따른다.
-            // 꺼져 있으면 알림 소리만 울리고 채팅에는 남기지 않는다.
-            if (parseResult.IsReflectionPatternAlert && !_settings.ShowBossDialogue)
+            if (isHiddenChatLine)
                 return true;
 
             if (IsHiddenDungeonNoticeLine(parseResult))
@@ -622,13 +606,7 @@ namespace TWChatOverlay.Views
             if (!string.IsNullOrWhiteSpace(parseResult.EtosImagePath))
                 return true;
 
-            if ((parseResult.Category == ChatCategory.Normal ||
-                 parseResult.Category == ChatCategory.NormalSelf ||
-                 parseResult.Category == ChatCategory.Team) &&
-                IsEtosEtosSender(parseResult))
-                return true;
-
-            return ShouldHideChatLine(parseResult);
+            return ShouldSuppressEtosChatLine(parseResult);
         }
 
         private void ScheduleReflectionEndAlert()
@@ -794,11 +772,10 @@ namespace TWChatOverlay.Views
             AppServices.Get<ChatWindowHub>().NotifyBuffersChanged();
         }
 
-        private void AddToUI(LogParser.ParseResult log, bool isRealTime = false, bool deferScroll = false)
+        /// <summary>문단 하나를 채팅 문서에 더한다. 스크롤은 하지 않는다 — 호출자가 배치 끝에서 <see cref="ScrollLogDisplayToEndAfterLayout"/>를 부른다.</summary>
+        private void AddToUI(LogParser.ParseResult log, bool isRealTime = false)
         {
             if (LogDisplay == null) return;
-
-            bool shouldAutoScroll = ChatDisplay?.IsAutoScrollEnabled == true;
 
             bool isBlacklisted = AppServices.Get<BlacklistService>().TryGetReason(log.SenderId, out string blacklistReason);
             Brush foreground = isBlacklisted ? BlacklistService.HighlightBrush : log.Brush;
@@ -850,13 +827,6 @@ namespace TWChatOverlay.Views
             blocks.Add(p);
 
             if (blocks.Count > 200) blocks.Remove(blocks.FirstBlock);
-            if (!deferScroll)
-            {
-                if (shouldAutoScroll)
-                {
-                    Dispatcher.BeginInvoke(new Action(ScrollLogDisplayToEndAfterLayout), DispatcherPriority.Background);
-                }
-            }
         }
 
         private void ScrollLogDisplayToEndAfterLayout()
@@ -902,9 +872,11 @@ namespace TWChatOverlay.Views
                     var logs = _logTabBufferStore.GetLogs(_currentTabTag);
                     foreach (var log in logs)
                     {
-                        if (ShouldSuppressOverlayText(log))
+                        // 실시간 경로와 같게 숨김 판정(이어지는 줄 추적 포함)을 줄마다 먼저 한 번 하고 억제 판정에 넘긴다
+                        bool isHiddenChatLine = ShouldHideChatLine(log);
+                        if (ShouldSuppressOverlayText(log, isHiddenChatLine))
                             continue;
-                        AddToUI(log, isRealTime: false, deferScroll: true);
+                        AddToUI(log, isRealTime: false);
                     }
                 }
                 finally

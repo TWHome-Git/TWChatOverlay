@@ -138,43 +138,64 @@ namespace TWChatOverlay.Services
         /// 화자 없는 안내문(등장 안내 등)은 이 값과 상관없이 본문으로 판정한다.
         /// </remarks>
         public static bool IsIgnoredNormalMessage(string messageOnly, string? senderId, bool hideBossDialogue = true)
+            => (hideBossDialogue && MatchesBossDialogue(messageOnly, senderId)) || MatchesIgnoredNotice(messageOnly, senderId);
+
+        /// <summary>
+        /// "보스 대사" 토글이 꺼져 있을 때만 숨기는 부분 — 보스 대사 문구, 또는 화자가 보스·몬스터 이름과 정확히 같은 줄.
+        /// 설정과 무관한 순수 판정이라 분석 시점에 한 번 계산해 둘 수 있다 (<see cref="IsIgnoredNormalMessage"/>의 토글 의존 절반).
+        /// </summary>
+        /// <param name="messageOnly">타임스탬프를 뗀 본문 ("화자 : 내용" 또는 안내문).</param>
+        /// <param name="senderId">파서가 뽑은 화자. 사람 채팅이면 닉네임, NPC 대사면 NPC 이름, 안내문이면 null.</param>
+        public static bool MatchesBossDialogue(string messageOnly, string? senderId)
         {
             if (string.IsNullOrWhiteSpace(messageOnly))
                 return false;
 
             string message = messageOnly.Trim();
 
-            if (hideBossDialogue && MatchesAny(BossDialogueRegexes, message))
+            if (MatchesAny(BossDialogueRegexes, message))
                 return true;
 
-            if (!string.IsNullOrWhiteSpace(senderId))
-            {
-                // 화자가 있는 줄: 화자 이름으로만 숨긴다. 사람 대화 본문에 몬스터 이름이 있어도 숨기지 않는다.
-                // 이름이 정확히 같을 때만 본다 — "설계자"로 시작한다는 이유로 "설계자123" 같은
-                // 유저 아이디까지 숨기면 사람 말이 조용히 사라진다.
-                string speaker = senderId.Trim();
-                if (hideBossDialogue)
-                {
-                    foreach (string ignored in IgnoredSpeakers)
-                    {
-                        if (speaker.Equals(ignored, StringComparison.Ordinal))
-                            return true;
-                    }
-                }
+            if (string.IsNullOrWhiteSpace(senderId))
+                return false;
 
-                // 게임이 내 아이디를 화자로 붙여 찍는 안내문도 있다 ("드드해 : 금화 주머니를 획득 했습니다.").
-                // 문구가 통째로 일치할 때만 보므로 사람이 쓴 대화가 걸릴 일은 거의 없다.
-                return MatchesNoticePhrase(message) || MatchesNoticeRegex(message);
+            // 화자가 있는 줄: 화자 이름으로만 숨긴다. 사람 대화 본문에 몬스터 이름이 있어도 숨기지 않는다.
+            // 이름이 정확히 같을 때만 본다 — "설계자"로 시작한다는 이유로 "설계자123" 같은
+            // 유저 아이디까지 숨기면 사람 말이 조용히 사라진다.
+            string speaker = senderId.Trim();
+            foreach (string ignored in IgnoredSpeakers)
+            {
+                if (speaker.Equals(ignored, StringComparison.Ordinal))
+                    return true;
             }
 
-            // 화자가 없는 줄(안내문): 본문 포함 여부로 판정한다
+            return false;
+        }
+
+        /// <summary>
+        /// 토글과 무관하게 늘 숨기는 부분 — 안내문 문구·정규식, 그리고 화자 없는 줄에 보스·몬스터 이름이 들어간 등장 안내.
+        /// (<see cref="IsIgnoredNormalMessage"/>의 토글 비의존 절반.)
+        /// </summary>
+        public static bool MatchesIgnoredNotice(string messageOnly, string? senderId)
+        {
+            if (string.IsNullOrWhiteSpace(messageOnly))
+                return false;
+
+            string message = messageOnly.Trim();
+
+            // 게임이 내 아이디를 화자로 붙여 찍는 안내문도 있다 ("드드해 : 금화 주머니를 획득 했습니다.").
+            // 문구가 통째로 일치할 때만 보므로 사람이 쓴 대화가 걸릴 일은 거의 없다.
             if (MatchesNoticePhrase(message))
                 return true;
 
-            foreach (string ignored in IgnoredSpeakers)
+            if (string.IsNullOrWhiteSpace(senderId))
             {
-                if (message.Contains(ignored, StringComparison.Ordinal))
-                    return true;
+                // 화자가 없는 줄(안내문): 본문 포함 여부로 판정한다
+                foreach (string ignored in IgnoredSpeakers)
+                {
+                    if (message.Contains(ignored, StringComparison.Ordinal))
+                        return true;
+                }
             }
 
             return MatchesNoticeRegex(message);
