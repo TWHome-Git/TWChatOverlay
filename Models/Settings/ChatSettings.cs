@@ -208,9 +208,6 @@ namespace TWChatOverlay.Models
         [JsonIgnore]
         public double WindowHeight { get => Windows.Main.Height ?? 250.0; set { Windows.Main.Height = value; OnPropertyChanged(); } }
 
-        [JsonIgnore]
-        public List<string> AvailableFonts { get; } = new() { "나눔고딕", "굴림", "사용자 설정" };
-
         #endregion
 
         #region 서브 채팅창 (facade)

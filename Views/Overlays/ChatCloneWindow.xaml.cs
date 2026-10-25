@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -13,7 +12,7 @@ using TWChatOverlay.Services;
 
 namespace TWChatOverlay.Views
 {
-    public partial class ChatCloneWindow : OverlayWindowBase, INotifyPropertyChanged, IWheelPassthroughTarget
+    public partial class ChatCloneWindow : OverlayWindowBase, IWheelPassthroughTarget
     {
         private readonly ChatSettings _settings;
         private readonly LogDocumentRenderer _renderer = new(200);
@@ -24,8 +23,6 @@ namespace TWChatOverlay.Views
         private bool _isResizingWindow;
         private bool _isApplyingStoredPosition;
         private readonly DispatcherTimer _tabAutoHideTimer = new() { Interval = TimeSpan.FromSeconds(2.5) };
-
-        public event PropertyChangedEventHandler? PropertyChanged;
 
         public int Slot => _slot;
 
@@ -47,23 +44,9 @@ namespace TWChatOverlay.Views
             set => SetValue(CurrentFontSizeProperty, value);
         }
 
-        public IReadOnlyList<string> AvailableFonts => _settings.AvailableFonts;
+        private bool FollowMainFont => GetFollowMainFont();
 
-        public bool FollowMainFont
-        {
-            get => GetFollowMainFont();
-            set
-            {
-                if (GetFollowMainFont() == value)
-                    return;
-
-                SetFollowMainFont(value);
-                OnPropertyChanged();
-                ApplyEffectiveFont();
-            }
-        }
-
-        public string SelectedFontFamily
+        private string SelectedFontFamily
         {
             get => GetSelectedFontFamily();
             set
@@ -73,12 +56,11 @@ namespace TWChatOverlay.Views
                     return;
 
                 SetSelectedFontFamily(next);
-                OnPropertyChanged();
                 ApplyEffectiveFont();
             }
         }
 
-        public double SelectedFontSize
+        private double SelectedFontSize
         {
             get => GetSelectedFontSize();
             set
@@ -88,7 +70,6 @@ namespace TWChatOverlay.Views
                     return;
 
                 SetSelectedFontSize(next);
-                OnPropertyChanged();
                 ApplyEffectiveFont();
             }
         }
@@ -353,9 +334,6 @@ namespace TWChatOverlay.Views
                 Dispatcher.BeginInvoke(new Action(() =>
                 {
                     ApplyStoredPosition();
-                    OnPropertyChanged(nameof(FollowMainFont));
-                    OnPropertyChanged(nameof(SelectedFontFamily));
-                    OnPropertyChanged(nameof(SelectedFontSize));
                     string normalizedTag = NormalizeTabTag(GetStoredTabTag());
                     if (!string.Equals(_currentTabTag, normalizedTag, StringComparison.Ordinal))
                         ApplyTabState(normalizedTag, persistSettings: false, refreshLogDisplay: false);
@@ -375,9 +353,6 @@ namespace TWChatOverlay.Views
             {
                 Dispatcher.BeginInvoke(new Action(() =>
                 {
-                    OnPropertyChanged(nameof(FollowMainFont));
-                    OnPropertyChanged(nameof(SelectedFontFamily));
-                    OnPropertyChanged(nameof(SelectedFontSize));
                     ApplyEffectiveFont();
                 }), System.Windows.Threading.DispatcherPriority.Background);
             }
@@ -774,16 +749,6 @@ namespace TWChatOverlay.Views
         private bool GetFollowMainFont()
             => _slot == 1 ? _settings.ChatCloneWindow1FollowMainFont : _settings.ChatCloneWindow2FollowMainFont;
 
-        private void SetFollowMainFont(bool value)
-        {
-            if (_slot == 1)
-                _settings.ChatCloneWindow1FollowMainFont = value;
-            else
-                _settings.ChatCloneWindow2FollowMainFont = value;
-
-            ConfigService.SaveDeferred(_settings);
-        }
-
         private string GetSelectedFontFamily()
         {
             string value = _slot == 1 ? _settings.ChatCloneWindow1FontFamily : _settings.ChatCloneWindow2FontFamily;
@@ -817,11 +782,6 @@ namespace TWChatOverlay.Views
                 _settings.ChatCloneWindow2FontSize = value;
 
             ConfigService.SaveDeferred(_settings);
-        }
-
-        private void OnPropertyChanged([CallerMemberName] string? propertyName = null)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
 
         private void Window_Loaded(object sender, RoutedEventArgs e)

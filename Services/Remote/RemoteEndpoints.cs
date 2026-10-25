@@ -1,3 +1,6 @@
+using System;
+using System.Net.Http;
+
 namespace TWChatOverlay.Services
 {
     /// <summary>
@@ -27,5 +30,12 @@ namespace TWChatOverlay.Services
         public const string LatestReleaseApi = "https://api.github.com/repos/" + AppRepoOwner + "/" + AppRepoName + "/releases/latest";
         // 프리릴리즈(베타) 포함 목록 — 수동 업데이트에서 사용. /releases/latest는 프리릴리즈를 제외한다.
         public const string ReleaseListApi = "https://api.github.com/repos/" + AppRepoOwner + "/" + AppRepoName + "/releases?per_page=10";
+
+        // === 공용 HTTP 클라이언트 ===
+        // RemoteJsonCacheClient 소비자(보스 타이머·드롭 아이템·에타 순위·manifest)가 함께 쓴다. 공유 인스턴스이므로 Dispose 하지 않는다.
+        public static readonly HttpClient SharedHttpClient = new()
+        {
+            Timeout = TimeSpan.FromSeconds(5)
+        };
     }
 }

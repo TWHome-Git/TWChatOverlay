@@ -137,7 +137,9 @@ namespace TWChatOverlay.Views
             _buffTrackerService = AppServices.Get<BuffTrackerService>();
             _buffTrackerService.PropertyChanged += BuffTrackerService_PropertyChanged;
             _logService = AppServices.Get<LogService>();
+#if DEBUG
             TryLoadTestDropItemJsonForSession();
+#endif
             AppServices.Get<DropItemResolver>().InitializeAsync(_settings);
             _logService.OnNewLogRead += (logItem) => _logAnalysisPipeline?.Enqueue(logItem);
             _logService.InitialLogsLoaded += () =>

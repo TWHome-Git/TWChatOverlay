@@ -170,6 +170,7 @@ namespace TWChatOverlay.Views
             }
         }
 
+#if DEBUG
         private void TryLoadTestDropItemJsonForSession()
         {
             try
@@ -198,6 +199,7 @@ namespace TWChatOverlay.Views
                 AppLogger.Warn("Failed to load session DropItem JSON.", ex);
             }
         }
+#endif
 
         private void ReleaseMouseForce()
         {

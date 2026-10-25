@@ -27,6 +27,9 @@ namespace TWChatOverlay.Services
         private const string LatestReleaseUrl = RemoteEndpoints.LatestReleaseApi;
         private static readonly TimeSpan UpdateMetadataTimeout = TimeSpan.FromSeconds(8);
         private static readonly TimeSpan UpdateDownloadTimeout = TimeSpan.FromMinutes(15);
+        // GitHub 전용 헤더·타임아웃이 달라 공용 클라이언트와 분리. 호출마다 만들지 않고 재사용하므로 Dispose 하지 않는다.
+        private static readonly HttpClient MetadataClient = CreateClient(UpdateMetadataTimeout);
+        private static readonly HttpClient DownloadClient = CreateClient(UpdateDownloadTimeout);
 
         private sealed record ReleaseInfo(string TagName, Version LatestVersion, string ReleaseBody, string? DownloadUrl, bool IsPrerelease = false);
 
@@ -39,10 +42,8 @@ namespace TWChatOverlay.Services
             try
             {
                 AppLogger.Info($"Starting update check. ForceInstallLatest={forceInstallLatest}, ShowNoUpdateMessage={showNoUpdateMessage}");
-                using var metadataClient = CreateClient(UpdateMetadataTimeout);
-
                 // 수동 업데이트는 베타(프리릴리즈)를 포함한 최신 릴리즈를, 자동 확인은 정식 릴리즈만 본다
-                ReleaseInfo? release = await GetLatestReleaseInfoAsync(metadataClient, includePrerelease: forceInstallLatest).ConfigureAwait(false);
+                ReleaseInfo? release = await GetLatestReleaseInfoAsync(MetadataClient,includePrerelease: forceInstallLatest).ConfigureAwait(false);
                 if (release == null)
                 {
                     AppLogger.Warn($"Update check returned no release metadata after {stopwatch.ElapsedMilliseconds} ms.");
@@ -91,8 +92,7 @@ namespace TWChatOverlay.Services
                     return UpdateCheckResult.Failed;
                 }
 
-                using var downloadClient = CreateClient(UpdateDownloadTimeout);
-                bool applied = await DownloadAndApplyUpdateAsync(downloadClient, release.DownloadUrl).ConfigureAwait(false);
+                bool applied = await DownloadAndApplyUpdateAsync(DownloadClient,release.DownloadUrl).ConfigureAwait(false);
                 AppLogger.Info($"Update apply finished with result={applied} after {stopwatch.ElapsedMilliseconds} ms.");
                 return applied ? UpdateCheckResult.UpdateApplied : UpdateCheckResult.Failed;
             }

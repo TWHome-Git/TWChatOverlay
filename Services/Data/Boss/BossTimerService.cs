@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net.Http;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading;
@@ -13,15 +12,11 @@ namespace TWChatOverlay.Services
     {
         private const string BossTimerUrl = RemoteEndpoints.BossTimer;
         private static readonly TimeSpan CacheTtl = TimeSpan.FromHours(6);
-        private static readonly HttpClient HttpClient = new()
-        {
-            Timeout = TimeSpan.FromSeconds(5)
-        };
         private static readonly RemoteJsonCacheClient CacheClient = new(
             "BossTimerService",
             BossTimerUrl,
             CacheTtl,
-            HttpClient,
+            RemoteEndpoints.SharedHttpClient,
             refreshAnchorHourLocal: 11,
             forceRemoteCheckOnFirstCall: true);
         private static readonly SemaphoreSlim LoadLock = new(1, 1);

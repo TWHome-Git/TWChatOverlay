@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Net.Http;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
@@ -11,12 +10,11 @@ namespace TWChatOverlay.Services
     public static class RemoteResourceManifestService
     {
         private const string ManifestUrl = RemoteEndpoints.Manifest;
-        private static readonly HttpClient HttpClient = new() { Timeout = TimeSpan.FromSeconds(5) };
         private static readonly RemoteJsonCacheClient ManifestCacheClient = new(
             "RemoteResourceManifestService.Manifest",
             ManifestUrl,
             TimeSpan.FromMinutes(10),
-            HttpClient,
+            RemoteEndpoints.SharedHttpClient,
             forceRemoteCheckOnFirstCall: true);
 
         private static readonly string LocalVersionPath = Path.Combine(

@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Net.Http;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
@@ -26,16 +25,11 @@ namespace TWChatOverlay.Services
         private const string DropItemUrl = RemoteEndpoints.DropItem;
         private static readonly TimeSpan CacheTtl = TimeSpan.FromHours(6);
 
-        private static readonly HttpClient HttpClient = new()
-        {
-            Timeout = TimeSpan.FromSeconds(5)
-        };
-
         private readonly RemoteJsonCacheClient CacheClient = new(
             "DropItemResolver",
             DropItemUrl,
             CacheTtl,
-            HttpClient,
+            RemoteEndpoints.SharedHttpClient,
             refreshAnchorHourLocal: 11,
             forceRemoteCheckOnFirstCall: true);
 

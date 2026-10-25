@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Linq;
-using System.Net.Http;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading;
@@ -20,16 +19,11 @@ namespace TWChatOverlay.Services
         private static readonly TimeSpan CacheTtl = TimeSpan.FromHours(6);
         private const int RefreshAnchorHourLocal = 10;
 
-        private static readonly HttpClient HttpClient = new()
-        {
-            Timeout = TimeSpan.FromSeconds(5)
-        };
-
         private readonly RemoteJsonCacheClient CacheClient = new(
             "EtaRankingService",
             EtaRankingUrl,
             CacheTtl,
-            HttpClient,
+            RemoteEndpoints.SharedHttpClient,
             refreshAnchorHourLocal: RefreshAnchorHourLocal,
             forceRemoteCheckOnFirstCall: true);
 
