@@ -50,7 +50,7 @@ namespace TWChatOverlay.Services
         private const string LogsFolderResetMigrationKey = "logs-folder-reset-5x";
         // 컨텐츠 아카이브 판정 기준이 바뀐 뒤(어비스 입장·보상 줄 등 정규식 판정 포함) 예전 빌드가 쓴 주간 파일을 1회 재구축
         private const string ContentArchiveRebuildMigrationKey = "content-archive-rebuild";
-        private const int CurrentContentArchiveRebuildVersion = 2;
+        private const int CurrentContentArchiveRebuildVersion = 3;
         private const int CurrentLogsFolderResetVersion = 1;
         private const string AbandonDaySummarySuffix = ".summary.day.json";
         private readonly Dictionary<DateTime, AbandonMonthlySummarySnapshotEntry> _abandonDayBuffer = new();

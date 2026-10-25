@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Text.RegularExpressions;
+using TWChatOverlay.Services.LogAnalysis;
 
 namespace TWChatOverlay.Services
 {
@@ -95,5 +97,43 @@ namespace TWChatOverlay.Services
 
             return false;
         }
+        private static readonly Regex OrlyRemainingAttackOneRegex = new(@"남은\s*공격\s*횟수\s*:\s*1(?!\d)", RegexOptions.Compiled);
+
+        /// <summary>
+        /// 이 줄을 컨텐츠 아카이브에 남길지. 실시간 기록·원본 로그 재구축·일일/주간 창의 갱신이 모두 이 하나를 쓴다
+        /// (어비스 심층은 입장·회차·보상 세 줄이 다 있어야 한 판으로 세므로 키워드만으로 고르면 안 된다).
+        /// </summary>
+        public static bool IsArchiveRelevant(string? formattedText)
+        {
+            if (string.IsNullOrWhiteSpace(formattedText))
+                return false;
+
+            string text = formattedText;
+
+            if (LogTextClassifier.IsConfusedOrColorlessElsoReward(text))
+                return false;
+
+            if (text.Contains("[1+1] 이벤트", StringComparison.Ordinal))
+                return false;
+
+            if (DailyWeeklyLogAnalyzer.TryMatchAbyssEntry(text, out _) ||
+                DailyWeeklyLogAnalyzer.TryMatchAbyssFloor(text, out _) ||
+                DailyWeeklyLogAnalyzer.TryMatchAbyssReward(text, out _) ||
+                DailyWeeklyLogAnalyzer.TryMatchSinjoReward(text, out _) ||
+                DailyWeeklyLogAnalyzer.TryMatchCatacombsReward(text, out _) ||
+                DailyWeeklyLogAnalyzer.TryMatchAbandonRoadCount(text, out _))
+            {
+                return true;
+            }
+
+            if (ContainsAny(text))
+                return true;
+
+            if (OrlyRemainingAttackOneRegex.IsMatch(text))
+                return true;
+
+            return text.Contains("[경험의 정수] 아이템을 획득하였습니다.", StringComparison.Ordinal);
+        }
+
     }
 }

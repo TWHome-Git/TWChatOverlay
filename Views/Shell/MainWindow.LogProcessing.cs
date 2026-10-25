@@ -566,39 +566,7 @@ namespace TWChatOverlay.Views
         }
 
         private static bool IsContentCompletionRelevantLog(string? formattedText)
-        {
-            if (string.IsNullOrWhiteSpace(formattedText))
-                return false;
-
-            string text = formattedText;
-
-            if (IsConfusedOrColorlessElsoRewardLine(text))
-                return false;
-
-            if (text.Contains("[1+1] 이벤트", StringComparison.Ordinal))
-                return false;
-
-            if (DailyWeeklyLogAnalyzer.TryMatchAbyssEntry(text, out _) ||
-                DailyWeeklyLogAnalyzer.TryMatchAbyssFloor(text, out _) ||
-                DailyWeeklyLogAnalyzer.TryMatchAbyssReward(text, out _) ||
-                DailyWeeklyLogAnalyzer.TryMatchSinjoReward(text, out _) ||
-                DailyWeeklyLogAnalyzer.TryMatchCatacombsReward(text, out _) ||
-                DailyWeeklyLogAnalyzer.TryMatchAbandonRoadCount(text, out _))
-            {
-                return true;
-            }
-
-            if (DailyWeeklyContentArchiveKeywords.ContainsAny(text))
-                return true;
-
-            if (OrlyRemainingAttackOneRegex.IsMatch(text))
-                return true;
-
-            if (text.Contains("[경험의 정수] 아이템을 획득하였습니다.", StringComparison.Ordinal))
-                return true;
-
-            return false;
-        }
+            => DailyWeeklyContentArchiveKeywords.IsArchiveRelevant(formattedText);
 
         /// <summary>
         /// 일일/주간 컨텐츠 추적 항목의 현재 횟수/최대 횟수. 던전 타이머의 진행도 표시(아페티리아 3/7)에 쓴다.
@@ -657,9 +625,6 @@ namespace TWChatOverlay.Views
 
         private void EnsureDailyWeeklyWindowForRealtimeProcessing()
             => EnsureDailyWeeklyContentWindow();
-
-        private static bool IsConfusedOrColorlessElsoRewardLine(string text)
-            => LogTextClassifier.IsConfusedOrColorlessElsoReward(text);
 
         private static bool IsExperienceEssenceExchangeLog(string text)
             => LogTextClassifier.IsExperienceEssenceExchange(text);

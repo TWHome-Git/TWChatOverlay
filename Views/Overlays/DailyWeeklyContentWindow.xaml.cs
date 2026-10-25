@@ -1643,18 +1643,6 @@ namespace TWChatOverlay.Views
                 if (!string.IsNullOrWhiteSpace(weekDir))
                     Directory.CreateDirectory(weekDir);
 
-                var keywords = TrackItems
-                    .Where(i => !string.IsNullOrWhiteSpace(i.LogKeyword))
-                    .Select(i => i.LogKeyword!)
-                    .Distinct(StringComparer.Ordinal)
-                    .ToArray();
-
-                var keyword2 = TrackItems
-                    .Where(i => !string.IsNullOrWhiteSpace(i.LogKeyword2))
-                    .Select(i => i.LogKeyword2!)
-                    .Distinct(StringComparer.Ordinal)
-                    .ToArray();
-
                 string logDir = _settings.ChatLogFolderPath;
                 if (string.IsNullOrWhiteSpace(logDir) || !Directory.Exists(logDir))
                     return;
@@ -1683,15 +1671,15 @@ namespace TWChatOverlay.Views
                             continue;
 
                         string text = a.Parsed.FormattedText.Trim();
-                        bool match = keywords.Any(k => text.Contains(k, StringComparison.Ordinal)) ||
-                                     keyword2.Any(k => text.Contains(k, StringComparison.Ordinal));
-                        if (!match)
+                        // 실시간 기록·재구축과 같은 기준 — 키워드만으로 고르면 어비스 입장·보상 줄이 빠져 심층 횟수가 0이 된다
+                        if (!DailyWeeklyContentArchiveKeywords.IsArchiveRelevant(text))
                             continue;
 
                         lines.Add($"<div class=\"log content\" data-date=\"{day:yyyy-MM-dd}\">{WebUtility.HtmlEncode(text)}</div>");
                     }
                 }
 
+                try { AppServices.Get<ReadableLogArchiveService>().FlushAll(); } catch { } // 실시간 배치에 남은 이번 주 줄을 먼저 내려 쓴다
                 using (var fs = new FileStream(weekPath, FileMode.Create, FileAccess.Write, FileShare.Read))
                 {
                     byte[] bom = new UTF8Encoding(encoderShouldEmitUTF8Identifier: true).GetPreamble();
