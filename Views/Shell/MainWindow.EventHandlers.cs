@@ -61,8 +61,8 @@ namespace TWChatOverlay.Views
 
         private void OnSettingsPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
         {
-            // 설정 화면의 단순 설정은 ChatSettings에 직접 바인딩되어 ViewModel의 저장 경로를 거치지 않는다.
-            // 원본이 바뀌면 여기서 디바운스 저장한다. (250ms 안에 몰리는 변경은 한 번만 쓴다)
+            // 설정 화면은 ChatSettings에 직접(또는 뷰모델을 거쳐) 쓰고 저장은 하지 않는다.
+            // 원본이 바뀌면 여기 한 곳에서만 디바운스 저장한다. (250ms 안에 몰리는 변경은 한 번만 쓴다)
             ConfigService.SaveDeferred(_settings);
 
             // 이름 없는 변경은 "설정 전체 교체"(프로필 불러오기·설정 초기화·마법사 기본값) 신호다.
@@ -84,8 +84,6 @@ namespace TWChatOverlay.Views
                     handler();
                 else if (ChatDisplayFilterNames.Contains(e.PropertyName!))
                     RequestRefreshLogDisplay(); // 채팅 표시 필터류는 채팅 표시만 다시 그린다
-
-                PersistSettings();
             });
         }
 

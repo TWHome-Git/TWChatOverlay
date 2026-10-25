@@ -19,7 +19,6 @@ namespace TWChatOverlay.ViewModels
         private readonly Action? _onExit;
         private readonly Action? _onSettingsReset;
         private readonly Action? _onSettingsReplaced;
-        private readonly Action? _onHotKeysChanged;
         private readonly Func<System.Threading.Tasks.Task<bool>>? _onManualLogReload;
         private bool _isManualLogReloadRunning;
         private bool _isManualUpdateRunning;
@@ -35,19 +34,12 @@ namespace TWChatOverlay.ViewModels
 
         public ObservableCollection<string> AvailableFonts { get; }
 
-        public bool ShowNormal
-        {
-            get => _settings.ShowNormal;
-            set
-            {
-                if (_settings.ShowNormal != value)
-                {
-                    _settings.ShowNormal = value;
-                    OnPropertyChanged();
-                    SaveSettings();
-                }
-            }
-        }
+        /// <summary>
+        /// 부수 효과가 없는 단순 설정은 화면이 이 원본에 바로 바인딩한다 (예: {Binding Settings.ShowNormal}).
+        /// ChatSettings가 PropertyChanged를 올리고 MainWindow가 그 알림으로 디바운스 저장하므로 여기서 다시 알리거나 저장하지 않는다.
+        /// 아래 남은 속성들은 세터에 추가 동작(다시 그리기·창 열기·서비스 호출·되비춤)이 있어 뷰모델에 둔다.
+        /// </summary>
+        public ChatSettings Settings => _settings;
 
         public bool EnableDebugLogging
         {
@@ -59,63 +51,6 @@ namespace TWChatOverlay.ViewModels
                     _settings.EnableDebugLogging = value;
                     AppLogger.IsEnabled = value;
                     OnPropertyChanged();
-                    SaveSettings();
-                }
-            }
-        }
-
-        public bool ShowTeam
-        {
-            get => _settings.ShowTeam;
-            set
-            {
-                if (_settings.ShowTeam != value)
-                {
-                    _settings.ShowTeam = value;
-                    OnPropertyChanged();
-                    SaveSettings();
-                }
-            }
-        }
-
-        public bool ShowClub
-        {
-            get => _settings.ShowClub;
-            set
-            {
-                if (_settings.ShowClub != value)
-                {
-                    _settings.ShowClub = value;
-                    OnPropertyChanged();
-                    SaveSettings();
-                }
-            }
-        }
-
-        public bool ShowClubBoss
-        {
-            get => _settings.ShowClubBoss;
-            set
-            {
-                if (_settings.ShowClubBoss != value)
-                {
-                    _settings.ShowClubBoss = value;
-                    OnPropertyChanged();
-                    SaveSettings();
-                }
-            }
-        }
-
-        public bool ShowBossDialogue
-        {
-            get => _settings.ShowBossDialogue;
-            set
-            {
-                if (_settings.ShowBossDialogue != value)
-                {
-                    _settings.ShowBossDialogue = value;
-                    OnPropertyChanged();
-                    SaveSettings();
                 }
             }
         }
@@ -131,118 +66,7 @@ namespace TWChatOverlay.ViewModels
                     _settings.ShowCategoryPrefix = value;
                     OnPropertyChanged();
                     _onColorsUpdated?.Invoke("CategoryPrefix"); // 열린 채팅창 즉시 다시 그리기
-                    SaveSettings();
                 }
-            }
-        }
-
-        public bool ShowFreeShout
-        {
-            get => _settings.ShowFreeShout;
-            set
-            {
-                if (_settings.ShowFreeShout != value)
-                {
-                    _settings.ShowFreeShout = value;
-                    OnPropertyChanged();
-                    SaveSettings();
-                }
-            }
-        }
-
-        public bool ShowPaidShout
-        {
-            get => _settings.ShowPaidShout;
-            set
-            {
-                if (_settings.ShowPaidShout != value)
-                {
-                    _settings.ShowPaidShout = value;
-                    OnPropertyChanged();
-                    SaveSettings();
-                }
-            }
-        }
-
-        public bool ShowNoticeShout
-        {
-            get => _settings.ShowNoticeShout;
-            set
-            {
-                if (_settings.ShowNoticeShout != value)
-                {
-                    _settings.ShowNoticeShout = value;
-                    OnPropertyChanged();
-                    SaveSettings();
-                }
-            }
-        }
-
-        public bool ShowEtaLevel
-        {
-            get => _settings.ShowEtaLevel;
-            set
-            {
-                if (_settings.ShowEtaLevel != value)
-                {
-                    _settings.ShowEtaLevel = value;
-                    OnPropertyChanged();
-                    SaveSettings();
-                }
-            }
-        }
-
-        public bool ShowEtaCharacter
-        {
-            get => _settings.ShowEtaCharacter;
-            set
-            {
-                if (_settings.ShowEtaCharacter != value)
-                {
-                    _settings.ShowEtaCharacter = value;
-                    OnPropertyChanged();
-                    SaveSettings();
-                }
-            }
-        }
-
-        public bool ShowIdTag
-        {
-            get => _settings.ShowIdTag;
-            set
-            {
-                if (_settings.ShowIdTag != value)
-                {
-                    _settings.ShowIdTag = value;
-                    OnPropertyChanged();
-                    SaveSettings();
-                }
-            }
-        }
-
-        public bool ShowTimestamp
-        {
-            get => _settings.ShowTimestamp;
-            set
-            {
-                if (_settings.ShowTimestamp != value)
-                {
-                    _settings.ShowTimestamp = value;
-                    OnPropertyChanged();
-                    SaveSettings();
-                }
-            }
-        }
-
-        public bool OverlaysAlwaysOnTop
-        {
-            get => _settings.OverlaysAlwaysOnTop;
-            set
-            {
-                if (_settings.OverlaysAlwaysOnTop == value) return;
-                _settings.OverlaysAlwaysOnTop = value;
-                OnPropertyChanged();
-                SaveSettings();
             }
         }
 
@@ -257,7 +81,6 @@ namespace TWChatOverlay.ViewModels
                 OnPropertyChanged();
                 // 통합이면 알림들이 한 자리를 쓰므로 목록도 통합 항목 하나로 바뀐다
                 RebuildWindowPositions();
-                SaveSettings();
             }
         }
 
@@ -295,62 +118,6 @@ namespace TWChatOverlay.ViewModels
 
         #endregion
 
-        public bool MenuWindowHorizontal
-        {
-            get => _settings.MenuWindowHorizontal;
-            set
-            {
-                if (_settings.MenuWindowHorizontal != value)
-                {
-                    _settings.MenuWindowHorizontal = value;
-                    OnPropertyChanged();
-                    SaveSettings();
-                }
-            }
-        }
-
-        public bool ShowShoutToastPopup
-        {
-            get => _settings.ShowShoutToastPopup;
-            set
-            {
-                if (_settings.ShowShoutToastPopup != value)
-                {
-                    _settings.ShowShoutToastPopup = value;
-                    OnPropertyChanged();
-                    SaveSettings();
-                }
-            }
-        }
-
-        public bool AutoCopyShoutNickname
-        {
-            get => _settings.AutoCopyShoutNickname;
-            set
-            {
-                if (_settings.AutoCopyShoutNickname != value)
-                {
-                    _settings.AutoCopyShoutNickname = value;
-                    OnPropertyChanged();
-                    SaveSettings();
-                }
-            }
-        }
-
-        public int ShoutToastDurationSeconds
-        {
-            get => _settings.ShoutToastDurationSeconds;
-            set
-            {
-                if (_settings.ShoutToastDurationSeconds != value)
-                {
-                    _settings.ShoutToastDurationSeconds = value;
-                    OnPropertyChanged();
-                    SaveSettings();
-                }
-            }
-        }
-
         public double ShoutToastFontSize
         {
             get => _settings.ShoutToastFontSize;
@@ -360,22 +127,7 @@ namespace TWChatOverlay.ViewModels
                 {
                     _settings.ShoutToastFontSize = value;
                     OnPropertyChanged();
-                    SaveSettings();
                     AppServices.Get<ShoutToastService>().ApplyFontSize(value);
-                }
-            }
-        }
-
-        public bool ShowSystem
-        {
-            get => _settings.ShowSystem;
-            set
-            {
-                if (_settings.ShowSystem != value)
-                {
-                    _settings.ShowSystem = value;
-                    OnPropertyChanged();
-                    SaveSettings();
                 }
             }
         }
@@ -384,38 +136,38 @@ namespace TWChatOverlay.ViewModels
         public bool SenderIdColorSync
         {
             get => _settings.SenderIdColorSync;
-            set { if (_settings.SenderIdColorSync == value) return; _settings.SenderIdColorSync = value; OnPropertyChanged(); OnPropertyChanged(nameof(SenderIdColorEditable)); _onColorsUpdated?.Invoke("Decoration"); SaveSettings(); }
+            set { if (_settings.SenderIdColorSync == value) return; _settings.SenderIdColorSync = value; OnPropertyChanged(); OnPropertyChanged(nameof(SenderIdColorEditable)); _onColorsUpdated?.Invoke("Decoration"); }
         }
 
         public bool EtaLevelColorSync
         {
             get => _settings.EtaLevelColorSync;
-            set { if (_settings.EtaLevelColorSync == value) return; _settings.EtaLevelColorSync = value; OnPropertyChanged(); OnPropertyChanged(nameof(EtaLevelColorEditable)); _onColorsUpdated?.Invoke("Decoration"); SaveSettings(); }
+            set { if (_settings.EtaLevelColorSync == value) return; _settings.EtaLevelColorSync = value; OnPropertyChanged(); OnPropertyChanged(nameof(EtaLevelColorEditable)); _onColorsUpdated?.Invoke("Decoration"); }
         }
 
         public bool EtaCharacterColorSync
         {
             get => _settings.EtaCharacterColorSync;
-            set { if (_settings.EtaCharacterColorSync == value) return; _settings.EtaCharacterColorSync = value; OnPropertyChanged(); OnPropertyChanged(nameof(EtaCharacterColorEditable)); _onColorsUpdated?.Invoke("Decoration"); SaveSettings(); }
+            set { if (_settings.EtaCharacterColorSync == value) return; _settings.EtaCharacterColorSync = value; OnPropertyChanged(); OnPropertyChanged(nameof(EtaCharacterColorEditable)); _onColorsUpdated?.Invoke("Decoration"); }
         }
 
         public bool TimestampColorSync
         {
             get => _settings.TimestampColorSync;
-            set { if (_settings.TimestampColorSync == value) return; _settings.TimestampColorSync = value; OnPropertyChanged(); OnPropertyChanged(nameof(TimestampColorEditable)); _onColorsUpdated?.Invoke("Decoration"); SaveSettings(); }
+            set { if (_settings.TimestampColorSync == value) return; _settings.TimestampColorSync = value; OnPropertyChanged(); OnPropertyChanged(nameof(TimestampColorEditable)); _onColorsUpdated?.Invoke("Decoration"); }
         }
 
         public bool IdTagColorSync
         {
             get => _settings.IdTagColorSync;
-            set { if (_settings.IdTagColorSync == value) return; _settings.IdTagColorSync = value; OnPropertyChanged(); OnPropertyChanged(nameof(IdTagColorEditable)); _onColorsUpdated?.Invoke("Decoration"); SaveSettings(); }
+            set { if (_settings.IdTagColorSync == value) return; _settings.IdTagColorSync = value; OnPropertyChanged(); OnPropertyChanged(nameof(IdTagColorEditable)); _onColorsUpdated?.Invoke("Decoration"); }
         }
 
         /// <summary>클럽 보스 공지 색 동기화: 켜면 클럽 색을 따르고, 끄면 전용 색을 쓴다.</summary>
         public bool ClubBossColorSync
         {
             get => _settings.ClubBossColorSync;
-            set { if (_settings.ClubBossColorSync == value) return; _settings.ClubBossColorSync = value; OnPropertyChanged(); OnPropertyChanged(nameof(ClubBossColorEditable)); _onColorsUpdated?.Invoke("Decoration"); SaveSettings(); }
+            set { if (_settings.ClubBossColorSync == value) return; _settings.ClubBossColorSync = value; OnPropertyChanged(); OnPropertyChanged(nameof(ClubBossColorEditable)); _onColorsUpdated?.Invoke("Decoration"); }
         }
 
         public Brush EtaLevelRange1Color => StringToBrush(_settings.EtaLevelRange1Color);
@@ -439,69 +191,15 @@ namespace TWChatOverlay.ViewModels
         public Brush TimestampColor => StringToBrush(_settings.TimestampColor);
         public Brush IdTagColor => StringToBrush(_settings.IdTagColor);
 
-        public Brush NormalColor
-        {
-            get => StringToBrush(_settings.NormalColor);
-        }
+        public Brush NormalColor => StringToBrush(_settings.NormalColor);
+        public Brush TeamColor => StringToBrush(_settings.TeamColor);
+        public Brush ClubColor => StringToBrush(_settings.ClubColor);
+        public Brush FreeShoutColor => StringToBrush(_settings.FreeShoutColor);
+        public Brush PaidShoutColor => StringToBrush(_settings.PaidShoutColor);
+        public Brush NoticeShoutColor => StringToBrush(_settings.NoticeShoutColor);
+        public Brush SystemColor => StringToBrush(_settings.SystemColor);
 
-        public Brush TeamColor
-        {
-            get => StringToBrush(_settings.TeamColor);
-        }
-
-        public Brush ClubColor
-        {
-            get => StringToBrush(_settings.ClubColor);
-        }
-
-        public Brush FreeShoutColor
-        {
-            get => StringToBrush(_settings.FreeShoutColor);
-        }
-
-        public Brush PaidShoutColor
-        {
-            get => StringToBrush(_settings.PaidShoutColor);
-        }
-
-        public Brush NoticeShoutColor
-        {
-            get => StringToBrush(_settings.NoticeShoutColor);
-        }
-
-        public Brush SystemColor
-        {
-            get => StringToBrush(_settings.SystemColor);
-        }
-
-        public double FontSize
-        {
-            get => _settings.FontSize;
-            set
-            {
-                if (!_settings.FontSize.Equals(value))
-                {
-                    _settings.FontSize = value;
-                    OnPropertyChanged();
-                    SaveSettings();
-                }
-            }
-        }
-
-        public string FontFamily
-        {
-            get => _settings.FontFamily;
-            set
-            {
-                if (_settings.FontFamily != value)
-                {
-                    _settings.FontFamily = value;
-                    OnPropertyChanged();
-                    SaveSettings();
-                }
-            }
-        }
-
+        // 단축키: HotKeySettingsService가 충돌 정리 후 이 이름들로 OnPropertyChanged를 올리므로 뷰모델 속성으로 둔다
         public string ExitHotKey
         {
             get => _settings.ExitHotKey;
@@ -510,7 +208,6 @@ namespace TWChatOverlay.ViewModels
                 if (_settings.ExitHotKey == value) return;
                 _settings.ExitHotKey = value;
                 OnPropertyChanged();
-                SaveSettings();
             }
         }
 
@@ -522,7 +219,6 @@ namespace TWChatOverlay.ViewModels
                 if (_settings.ToggleOverlayHotKey == value) return;
                 _settings.ToggleOverlayHotKey = value;
                 OnPropertyChanged();
-                SaveSettings();
             }
         }
 
@@ -534,7 +230,6 @@ namespace TWChatOverlay.ViewModels
                 if (_settings.ToggleDailyWeeklyContentHotKey == value) return;
                 _settings.ToggleDailyWeeklyContentHotKey = value;
                 OnPropertyChanged();
-                SaveSettings();
             }
         }
 
@@ -546,7 +241,6 @@ namespace TWChatOverlay.ViewModels
                 if (_settings.ToggleSettingsHotKey == value) return;
                 _settings.ToggleSettingsHotKey = value;
                 OnPropertyChanged();
-                SaveSettings();
             }
         }
 
@@ -558,10 +252,19 @@ namespace TWChatOverlay.ViewModels
                 if (_settings.ToggleTrayAllHotKey == value) return;
                 _settings.ToggleTrayAllHotKey = value;
                 OnPropertyChanged();
-                SaveSettings();
             }
         }
 
+        public string ToggleUnlockHotKey
+        {
+            get => _settings.ToggleUnlockHotKey;
+            set
+            {
+                if (_settings.ToggleUnlockHotKey == value) return;
+                _settings.ToggleUnlockHotKey = value;
+                OnPropertyChanged();
+            }
+        }
 
         public bool Clone1Enabled
         {
@@ -598,18 +301,7 @@ namespace TWChatOverlay.ViewModels
             OnPropertyChanged(slot == 1 ? nameof(Clone1Enabled) : nameof(Clone2Enabled));
         }
 
-        public bool Clone1FollowMainFont
-        {
-            get => _settings.ChatCloneWindow1FollowMainFont;
-            set
-            {
-                if (_settings.ChatCloneWindow1FollowMainFont == value) return;
-                _settings.ChatCloneWindow1FollowMainFont = value;
-                OnPropertyChanged();
-                SaveSettings();
-            }
-        }
-
+        // 서브 채팅창 폰트: 비어 있으면 메인 폰트로 보여 주고(폴백), 크기는 범위를 잘라 넣는다
         public string Clone1FontFamily
         {
             get => string.IsNullOrWhiteSpace(_settings.ChatCloneWindow1FontFamily) ? _settings.FontFamily : _settings.ChatCloneWindow1FontFamily;
@@ -619,7 +311,6 @@ namespace TWChatOverlay.ViewModels
                 if (_settings.ChatCloneWindow1FontFamily == next) return;
                 _settings.ChatCloneWindow1FontFamily = next;
                 OnPropertyChanged();
-                SaveSettings();
             }
         }
 
@@ -632,19 +323,6 @@ namespace TWChatOverlay.ViewModels
                 if (System.Math.Abs((_settings.ChatCloneWindow1FontSize ?? 0) - next) < 0.001) return;
                 _settings.ChatCloneWindow1FontSize = next;
                 OnPropertyChanged();
-                SaveSettings();
-            }
-        }
-
-        public bool Clone2FollowMainFont
-        {
-            get => _settings.ChatCloneWindow2FollowMainFont;
-            set
-            {
-                if (_settings.ChatCloneWindow2FollowMainFont == value) return;
-                _settings.ChatCloneWindow2FollowMainFont = value;
-                OnPropertyChanged();
-                SaveSettings();
             }
         }
 
@@ -657,7 +335,6 @@ namespace TWChatOverlay.ViewModels
                 if (_settings.ChatCloneWindow2FontFamily == next) return;
                 _settings.ChatCloneWindow2FontFamily = next;
                 OnPropertyChanged();
-                SaveSettings();
             }
         }
 
@@ -670,19 +347,6 @@ namespace TWChatOverlay.ViewModels
                 if (System.Math.Abs((_settings.ChatCloneWindow2FontSize ?? 0) - next) < 0.001) return;
                 _settings.ChatCloneWindow2FontSize = next;
                 OnPropertyChanged();
-                SaveSettings();
-            }
-        }
-
-        public string ToggleUnlockHotKey
-        {
-            get => _settings.ToggleUnlockHotKey;
-            set
-            {
-                if (_settings.ToggleUnlockHotKey == value) return;
-                _settings.ToggleUnlockHotKey = value;
-                OnPropertyChanged();
-                SaveSettings();
             }
         }
 
@@ -695,18 +359,6 @@ namespace TWChatOverlay.ViewModels
                 if (Math.Abs(_settings.OverlayOpacityPercent - value) < 0.001) return;
                 AppServices.Get<IOverlayOpacityService>().SetGroupOpacity(OverlayOpacityService.GroupShared, value);
                 OnPropertyChanged();
-            }
-        }
-
-        public string ChatLogFolderPath
-        {
-            get => _settings.ChatLogFolderPath;
-            set
-            {
-                if (_settings.ChatLogFolderPath == value) return;
-                _settings.ChatLogFolderPath = value;
-                OnPropertyChanged();
-                SaveSettings();
             }
         }
 
@@ -723,7 +375,7 @@ namespace TWChatOverlay.ViewModels
             _onExit = onExit;
             _onSettingsReset = onSettingsReset;
             _onSettingsReplaced = onSettingsReplaced;
-            _onHotKeysChanged = onHotKeysChanged;
+            // onHotKeysChanged: 단축키 재등록은 MainWindow가 ChatSettings 변경 라우트로 이미 하므로 여기서는 쓰지 않는다
             _onManualLogReload = onManualLogReload;
 
             RebuildWindowPositions();
@@ -827,7 +479,6 @@ namespace TWChatOverlay.ViewModels
                 OnPropertyChanged(nameof(EtaLevelRange6Color));
 
                 _onColorsUpdated?.Invoke(colorType);
-                SaveSettings();
             }
         }
 
@@ -922,21 +573,18 @@ namespace TWChatOverlay.ViewModels
             OnPropertyChanged(string.Empty);
         }
 
+        /// <summary>
+        /// 단축키 칸을 Esc로 비웠을 때. 중복만 정리하고 저장은 디바운스에 맡긴다.
+        /// 단축키 재등록은 ChatSettings 변경 → MainWindow 라우트(ApplyHotKeys)가 이미 하므로 여기서 다시 하지 않는다.
+        /// </summary>
         private void ExecuteApplyHotkeys()
         {
             try
             {
                 HotKeySettingsService.NormalizeDuplicates(_settings, OnPropertyChanged);
-                // Save immediately
-                ConfigService.Save(_settings);
+                SaveSettings();
             }
-            catch (Exception ex) { AppLogger.Warn("Immediate hotkey settings save failed.", ex); }
-
-            try
-            {
-                _onHotKeysChanged?.Invoke();
-            }
-            catch (Exception ex) { AppLogger.Warn("Applying hotkeys from settings view failed.", ex); }
+            catch (Exception ex) { AppLogger.Warn("Hotkey settings normalize failed.", ex); }
 
             AppLogger.Info("Hotkey settings applied.");
         }

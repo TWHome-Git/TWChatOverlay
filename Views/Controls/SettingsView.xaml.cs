@@ -18,15 +18,59 @@ namespace TWChatOverlay.Views
             this.PreviewKeyDown += SettingsView_PreviewKeyDown;
             Loaded += SettingsView_Loaded;
             Unloaded += SettingsView_Unloaded;
-            DataContextChanged += (_, _) => SyncFontOptions();
             _debugOptionsAllowed = false;
 #if DEBUG
             _debugOptionsAllowed = true;
 #endif
+            _panelsReady = true;
             ApplyPanelVisibility();
         }
 
         private readonly bool _debugOptionsAllowed;
+
+        /// <summary>InitializeComponent 중 NavChat의 IsChecked="True"가 Nav_Checked를 먼저 올리므로, 그때는 패널을 만들지 않는다.</summary>
+        private readonly bool _panelsReady;
+
+        /// <summary>디버그 빌드 전용 행(Debug.log·보스 알림 테스트). 패널이 만들어질 때 표시 여부를 정한다.</summary>
+        private void DebugOnlyRow_Loaded(object sender, RoutedEventArgs e)
+        {
+            if (sender is FrameworkElement row)
+                row.Visibility = _debugOptionsAllowed ? Visibility.Visible : Visibility.Collapsed;
+        }
+
+        #region 패널 지연 생성
+
+        /// <summary>
+        /// 패널 호스트에 템플릿을 처음 한 번만 꽂는다. 설정을 열 때마다 12개 패널(바인딩 200여 개)을 전부
+        /// 만들지 않고, 내비에서 고른 패널만 만든다. 내용(DataContext)은 기본 패널은 이 뷰의 DataContext(SettingsViewModel),
+        /// 추가 기능 패널은 AddonViewModel이다.
+        /// </summary>
+        private void EnsurePanel(ContentControl host, object? addonContent = null)
+        {
+            if (host.ContentTemplate != null)
+                return;
+
+            host.ContentTemplate = (DataTemplate)FindResource(host.Name + "Template");
+            if (addonContent != null)
+                host.Content = addonContent;
+            else
+                host.SetBinding(ContentProperty, new System.Windows.Data.Binding());
+        }
+
+        private IEnumerable<ContentControl> AddonPanelHosts
+        {
+            get
+            {
+                yield return AddonKeywordPanel;
+                yield return AddonExpPanel;
+                yield return AddonDungeonPanel;
+                yield return AddonItemPanel;
+                yield return AddonBuffPanel;
+                yield return AddonBossPanel;
+            }
+        }
+
+        #endregion
 
         /// <summary>
         /// 단축키 화면이 실제로 보이며 선택된 상태인지. (이때만 전역 단축키를 억제)
@@ -175,29 +219,40 @@ namespace TWChatOverlay.Views
             get
             {
                 if (NavAddonKeyword.IsChecked == true) return 0;
-                if (NavAddonExp.IsChecked == true)
-                    return 10 + (ExpTabLowEff.IsChecked == true ? 1 : 0);
-                if (NavAddonDungeon.IsChecked == true)
-                {
-                    int sub = DungeonTabAbyss.IsChecked == true ? 1
-                        : DungeonTabEclipse.IsChecked == true ? 2
-                        : DungeonTabAbandon.IsChecked == true ? 3
-                        : DungeonTabCraving.IsChecked == true ? 4
-                        : DungeonTabTimer.IsChecked == true ? 5
-                        : 0;
-                    return 20 + sub;
-                }
-                if (NavAddonItem.IsChecked == true)
-                    return 30 + (ItemTabFilter.IsChecked == true ? 1 : 0);
+                if (NavAddonExp.IsChecked == true) return 10 + _expSubTab;
+                if (NavAddonDungeon.IsChecked == true) return 20 + _dungeonSubTab;
+                if (NavAddonItem.IsChecked == true) return 30 + _itemSubTab;
                 if (NavAddonBuff.IsChecked == true) return 40;
                 if (NavAddonBoss.IsChecked == true) return 50;
                 return -1;
             }
         }
 
+        // 서브 탭 라디오는 패널 템플릿 안에 있어 이름으로 못 읽으므로 Checked에서 받아 둔다 (0 = 각 패널의 첫 탭)
+        private int _expSubTab;
+        private int _dungeonSubTab;
+        private int _itemSubTab;
+
         /// <summary>추가 기능 서브 탭 전환 시 해당 탭의 창만 미리보기로 갱신한다.</summary>
         private void AddonSubTab_Checked(object sender, RoutedEventArgs e)
         {
+            if (sender is RadioButton tab)
+            {
+                switch (tab.Name)
+                {
+                    case "ExpTabTracker": _expSubTab = 0; break;
+                    case "ExpTabLowEff": _expSubTab = 1; break;
+                    case "DungeonTabRune": _dungeonSubTab = 0; break;
+                    case "DungeonTabAbyss": _dungeonSubTab = 1; break;
+                    case "DungeonTabEclipse": _dungeonSubTab = 2; break;
+                    case "DungeonTabAbandon": _dungeonSubTab = 3; break;
+                    case "DungeonTabCraving": _dungeonSubTab = 4; break;
+                    case "DungeonTabTimer": _dungeonSubTab = 5; break;
+                    case "ItemTabAlert": _itemSubTab = 0; break;
+                    case "ItemTabFilter": _itemSubTab = 1; break;
+                }
+            }
+
             if (!IsLoaded || !_addonPreviewActive)
                 return;
 
@@ -259,12 +314,12 @@ namespace TWChatOverlay.Views
             if (mainWindow?.DataContext is not Models.ChatSettings settings) return;
 
             _addonViewModel = new ViewModels.AddonViewModel(settings);
-            AddonKeywordPanel.DataContext = _addonViewModel;
-            AddonExpPanel.DataContext = _addonViewModel;
-            AddonDungeonPanel.DataContext = _addonViewModel;
-            AddonItemPanel.DataContext = _addonViewModel;
-            AddonBuffPanel.DataContext = _addonViewModel;
-            AddonBossPanel.DataContext = _addonViewModel;
+            // 아직 만들어지지 않은 패널은 EnsurePanel이 만들 때 이 뷰모델을 받는다
+            foreach (ContentControl host in AddonPanelHosts)
+            {
+                if (host.ContentTemplate != null)
+                    host.Content = _addonViewModel;
+            }
         }
 
         /// <summary>추가 기능 카테고리 표시 중 관련 오버레이 창의 위치 미리보기를 켜고 끈다.</summary>
@@ -286,7 +341,7 @@ namespace TWChatOverlay.Views
         /// </summary>
         private void ApplyPanelVisibility()
         {
-            if (ChatPanel == null) return;
+            if (!_panelsReady) return;
 
             // 설정 마법사 임베드 모드: 내비/도구/헤더 없이 선택된 패널만 보여준다
             NavColumn.Visibility = _wizardSingleMode ? Visibility.Collapsed : Visibility.Visible;
@@ -306,26 +361,33 @@ namespace TWChatOverlay.Views
                 SetAddonPositionPreview(false, -1);
             }
 
-            ChatPanel.Visibility = NavChat.IsChecked == true ? Visibility.Visible : Visibility.Collapsed;
-            ShoutPanel.Visibility = NavShout.IsChecked == true ? Visibility.Visible : Visibility.Collapsed;
-            DisplayPanel.Visibility = NavDisplay.IsChecked == true ? Visibility.Visible : Visibility.Collapsed;
-            HotkeyPanel.Visibility = NavHotkeys.IsChecked == true ? Visibility.Visible : Visibility.Collapsed;
-            SystemPanel.Visibility = NavSystem.IsChecked == true ? Visibility.Visible : Visibility.Collapsed;
-            PresetPanel.Visibility = NavPresets.IsChecked == true ? Visibility.Visible : Visibility.Collapsed;
+            // 고른 패널만 만들고(처음 한 번) 보인다. 나머지는 접어 둔다.
+            void Show(ContentControl host, RadioButton nav, bool isAddon = false)
+            {
+                bool selected = nav.IsChecked == true;
+                if (selected)
+                    EnsurePanel(host, isAddon ? _addonViewModel : null);
+                host.Visibility = selected ? Visibility.Visible : Visibility.Collapsed;
+            }
+
+            Show(ChatPanel, NavChat);
+            Show(ShoutPanel, NavShout);
+            Show(DisplayPanel, NavDisplay);
+            Show(HotkeyPanel, NavHotkeys);
+            Show(SystemPanel, NavSystem);
+            Show(PresetPanel, NavPresets);
             if (NavPresets.IsChecked == true)
                 RefreshProfileList();
-            AddonKeywordPanel.Visibility = NavAddonKeyword.IsChecked == true ? Visibility.Visible : Visibility.Collapsed;
-            AddonExpPanel.Visibility = NavAddonExp.IsChecked == true ? Visibility.Visible : Visibility.Collapsed;
-            AddonDungeonPanel.Visibility = NavAddonDungeon.IsChecked == true ? Visibility.Visible : Visibility.Collapsed;
-            AddonItemPanel.Visibility = NavAddonItem.IsChecked == true ? Visibility.Visible : Visibility.Collapsed;
-            AddonBuffPanel.Visibility = NavAddonBuff.IsChecked == true ? Visibility.Visible : Visibility.Collapsed;
-            AddonBossPanel.Visibility = NavAddonBoss.IsChecked == true ? Visibility.Visible : Visibility.Collapsed;
+            Show(AddonKeywordPanel, NavAddonKeyword, isAddon: true);
+            Show(AddonExpPanel, NavAddonExp, isAddon: true);
+            Show(AddonDungeonPanel, NavAddonDungeon, isAddon: true);
+            Show(AddonItemPanel, NavAddonItem, isAddon: true);
+            Show(AddonBuffPanel, NavAddonBuff, isAddon: true);
+            Show(AddonBossPanel, NavAddonBoss, isAddon: true);
             // 보스 카드는 BossTimer.json을 읽은 시점의 내용으로 만들어진다. 화면을 열 때마다 다시 만들어,
             // 앱을 켜 둔 사이에 보스나 옵션(입장 시간 카운트 등)이 늘어나도 재시작 없이 보이게 한다.
             if (AddonBossPanel.Visibility == Visibility.Visible && _addonViewModel != null)
                 _ = _addonViewModel.RefreshBossAlarmCardsAsync();
-            DebugOptionsBorder.Visibility = _debugOptionsAllowed ? Visibility.Visible : Visibility.Collapsed;
-            BossAlertTestBorder.Visibility = _debugOptionsAllowed ? Visibility.Visible : Visibility.Collapsed;
         }
 
         /// <summary>디버그 전용: 선택한 보스의 실제 알림 흐름(사운드+팝업)을 즉시 발사한다.</summary>
@@ -333,7 +395,9 @@ namespace TWChatOverlay.Views
         {
             if (sender is not Button button || button.Tag is not string label)
                 return;
-            if (BossAlertTestCombo.SelectedItem is not ComboBoxItem item || item.Tag is not string bossId)
+            // 보스 콤보는 같은 줄(StackPanel)에 있다
+            var combo = (button.Parent as Panel)?.Children.OfType<ComboBox>().FirstOrDefault();
+            if (combo?.SelectedItem is not ComboBoxItem item || item.Tag is not string bossId)
                 return;
 
             string bossName = item.Content as string ?? bossId;
@@ -343,15 +407,24 @@ namespace TWChatOverlay.Views
 
         // ===== 프로필: 현재 설정 전체 저장/불러오기 =====
 
+        /// <summary>프로필 패널 템플릿 안의 목록 컨테이너. 패널이 만들어질 때 받아 둔다.</summary>
+        private StackPanel? _profileListPanel;
+
+        private void ProfileListPanel_Loaded(object sender, RoutedEventArgs e)
+        {
+            _profileListPanel = sender as StackPanel;
+            RefreshProfileList();
+        }
+
         /// <summary>프로필 목록 UI를 다시 그린다. (기본 2개 + 추가 프로필)</summary>
         private void RefreshProfileList()
         {
-            if (ProfileListPanel == null)
+            if (_profileListPanel == null)
                 return;
 
-            ProfileListPanel.Children.Clear();
+            _profileListPanel.Children.Clear();
             foreach (string name in Services.SettingsProfileService.GetProfileNames())
-                ProfileListPanel.Children.Add(BuildProfileRow(name));
+                _profileListPanel.Children.Add(BuildProfileRow(name));
         }
 
         private UIElement BuildProfileRow(string name)
@@ -662,27 +735,8 @@ namespace TWChatOverlay.Views
             e.Handled = !regex.IsMatch(fullText);
         }
 
-        private void FontFamilyCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            if (FontFamilyCombo.SelectedItem is string fontName &&
-                DataContext is ViewModels.SettingsViewModel viewModel &&
-                viewModel.FontFamily != fontName)
-            {
-                viewModel.FontFamily = fontName;
-            }
-        }
-
-        private void SyncFontOptions()
-        {
-            if (DataContext is not ViewModels.SettingsViewModel viewModel) return;
-
-            FontFamilyCombo.ItemsSource ??= Services.FontService.GetAvailableFonts();
-            FontFamilyCombo.SelectedItem = viewModel.FontFamily;
-        }
-
         private void SettingsView_Loaded(object sender, RoutedEventArgs e)
         {
-            SyncFontOptions();
             _addonViewModel?.Attach();
         }
 
@@ -746,16 +800,27 @@ namespace TWChatOverlay.Views
             _itemDropPreviewTimer.Start();
         }
 
+        // 아이템 알림 필터 목록 2개. 패널 템플릿 안에 있어 만들어질 때 받아 둔다.
+        private ListBox? _defaultDropItemsListBox;
+        private ListBox? _customDropItemsListBox;
+
+        private void DropItemsListBox_Loaded(object sender, RoutedEventArgs e)
+        {
+            if (sender is not ListBox listBox) return;
+            if (listBox.Name == "DefaultDropItemsListBox") _defaultDropItemsListBox = listBox;
+            else if (listBox.Name == "CustomDropItemsListBox") _customDropItemsListBox = listBox;
+        }
+
         private void MoveDropItemsToCustom_Click(object sender, RoutedEventArgs e)
         {
-            _addonViewModel?.MoveToCustom(System.Linq.Enumerable.ToList(
-                System.Linq.Enumerable.Cast<ViewModels.DropItemFilterEntry>(DefaultDropItemsListBox.SelectedItems)));
+            if (_defaultDropItemsListBox == null) return;
+            _addonViewModel?.MoveToCustom(_defaultDropItemsListBox.SelectedItems.Cast<ViewModels.DropItemFilterEntry>().ToList());
         }
 
         private void MoveDropItemsToDefault_Click(object sender, RoutedEventArgs e)
         {
-            _addonViewModel?.MoveToDefault(System.Linq.Enumerable.ToList(
-                System.Linq.Enumerable.Cast<ViewModels.DropItemFilterEntry>(CustomDropItemsListBox.SelectedItems)));
+            if (_customDropItemsListBox == null) return;
+            _addonViewModel?.MoveToDefault(_customDropItemsListBox.SelectedItems.Cast<ViewModels.DropItemFilterEntry>().ToList());
         }
 
         private void ExperienceLimitExp_PreviewTextInput(object sender, TextCompositionEventArgs e)

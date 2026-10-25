@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
@@ -398,50 +399,26 @@ namespace TWChatOverlay.Views
             };
         }
 
+        /// <summary>
+        /// 최초 실행 시 모든 창 좌표를 0,0으로 되돌린다. 창 목록은 설정 화면 '창 위치'와 같은 카탈로그를 쓴다.
+        /// 카탈로그는 알림 표시 위치 통합 여부로 알림 항목을 가리므로 두 상태를 합쳐 전체를 돈다.
+        /// </summary>
         private void ResetInitialWindowPositionsToOrigin()
         {
-            _settings.LineMarginLeft = 0.0;
-            _settings.LineMargin = 0.0;
-            _settings.DailyWeeklyContentOverlayLeft = 0.0;
-            _settings.DailyWeeklyContentOverlayTop = 0.0;
-            _settings.SubAddonWindowLeft = 0.0;
-            _settings.SubAddonWindowTop = 0.0;
-            _settings.SubMenuWindowLeft = 0.0;
-            _settings.SubMenuWindowTop = 0.0;
-            _settings.MenuWindowLeft = 0.0;
-            _settings.MenuWindowTop = 0.0;
-            _settings.ItemDropWindowLeft = 0.0;
-            _settings.ItemDropWindowTop = 0.0;
-            _settings.BuffTrackerWindowLeft = 0.0;
-            _settings.BuffTrackerWindowTop = 0.0;
-            _settings.ItemCalendarWindowLeft = 0.0;
-            _settings.ItemCalendarWindowTop = 0.0;
-            _settings.AbandonRoadSummaryWindowLeft = 0.0;
-            _settings.AbandonRoadSummaryWindowTop = 0.0;
-            _settings.RecaptureSupplyWindowLeft = 0.0;
-            _settings.RecaptureSupplyWindowTop = 0.0;
-            _settings.ExperienceLimitAlertWindowLeft = 0.0;
-            _settings.ExperienceLimitAlertWindowTop = 0.0;
-            _settings.DungeonCountDisplayWindowLeft = 0.0;
-            _settings.DungeonCountDisplayWindowTop = 0.0;
-            _settings.ShoutToastWindowLeft = 0.0;
-            _settings.ShoutToastWindowTop = 0.0;
-            _settings.MessengerToastWindowLeft = 0.0;
-            _settings.MessengerToastWindowTop = 0.0;
-            _settings.ChatCloneWindow1Left = 0.0;
-            _settings.ChatCloneWindow1Top = 0.0;
+            var otherMode = new ChatSettings { UnifiedToastStack = !_settings.UnifiedToastStack };
+            var entries = WindowPositionCatalog.VisibleFor(_settings)
+                .Concat(WindowPositionCatalog.VisibleFor(otherMode))
+                .Distinct();
+            foreach (WindowPositionEntry entry in entries)
+                entry.Write(_settings, 0.0, 0.0);
+
+            // 카탈로그에 없는 서브 채팅창 크기·열림 상태
             _settings.ChatCloneWindow1Width = null;
             _settings.ChatCloneWindow1Height = null;
-            _settings.ChatCloneWindow2Left = 0.0;
-            _settings.ChatCloneWindow2Top = 0.0;
             _settings.ChatCloneWindow2Width = null;
             _settings.ChatCloneWindow2Height = null;
             _settings.ChatCloneWindow1IsOpen = false;
             _settings.ChatCloneWindow2IsOpen = false;
-            _settings.ShoutReplayWindowLeft = 0.0;
-            _settings.ShoutReplayWindowTop = 0.0;
-            _settings.MemoOverlayWindowLeft = 0.0;
-            _settings.MemoOverlayWindowTop = 0.0;
         }
 
         private void PrevButton_Click(object sender, RoutedEventArgs e)

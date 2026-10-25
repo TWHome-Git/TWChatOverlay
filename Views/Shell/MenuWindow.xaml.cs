@@ -93,10 +93,11 @@ namespace TWChatOverlay.Views
 
             try
             {
+                var settings = GetSharedSettings();
                 if (_memoWindow?.IsLoaded == true)
-                    _memoWindow.ApplyStoredPosition();
+                    _memoWindow.ApplyStoredBounds(settings);
                 if (_shoutReplayWindow?.IsLoaded == true)
-                    _shoutReplayWindow.ApplyStoredBounds();
+                    _shoutReplayWindow.ApplyStoredBounds(settings);
             }
             catch (Exception ex) { AppLogger.Warn("Failed to apply stored positions of menu-owned windows.", ex); }
         }
