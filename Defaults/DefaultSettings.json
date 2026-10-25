@@ -490,6 +490,9 @@
       "Left": 517.6,
       "Top": 124
     },
+    "DungeonTimerDetail": {},
+    "WeeklyItemSummary": {},
+    "ExpHuntRecord": {},
     "OpacityPercents": {
       "BuffTrackerHelperWindow": 50
     }

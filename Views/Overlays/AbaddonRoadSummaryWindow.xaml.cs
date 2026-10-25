@@ -14,24 +14,18 @@ using TWChatOverlay.Services;
 
 namespace TWChatOverlay.Views
 {
-    public partial class AbandonRoadSummaryWindow : OverlayWindowBase, INotifyPropertyChanged
+    public partial class AbandonRoadSummaryWindow : ToastWindowBase, INotifyPropertyChanged
     {
         private static readonly string AbandonDirectoryPath = LogStoragePaths.AbandonDirectory;
 
-        private const string LowMagicStoneIconUri = "pack://application:,,,/Data/images/Item/하급마정석.png";
-        private const string MiddleMagicStoneIconUri = "pack://application:,,,/Data/images/Item/중급마정석.png";
-        private const string HighMagicStoneIconUri = "pack://application:,,,/Data/images/Item/상급마정석.png";
-        private const string TopMagicStoneIconUri = "pack://application:,,,/Data/images/Item/최상급마정석.png";
         private const string AbandonDaySummarySuffix = ".summary.day.json";
 
         private readonly ObservableCollection<AbandonMonthlyStoneSummaryEntryViewModel> _stoneEntries = new();
-        private readonly DispatcherTimer _autoCloseTimer;
         private string _weekText = string.Empty;
         private string _summaryText = string.Empty;
         private bool _isLoading;
         private int _loadVersion;
         private bool _isPreviewMode;
-        private DateTime _autoCloseAtUtc = DateTime.MinValue;
         private DateTime _displayWeekStart;
 
         public event PropertyChangedEventHandler? PropertyChanged;
@@ -40,9 +34,6 @@ namespace TWChatOverlay.Views
         {
             InitializeComponent();
             DataContext = this;
-            // 1회성: StartAutoClose가 마감까지 남은 시간으로 Interval을 정해 건다
-            _autoCloseTimer = new DispatcherTimer();
-            _autoCloseTimer.Tick += AutoCloseTimer_Tick;
             _displayWeekStart = GetCurrentWeekRange().WeekStart;
             UpdateHeaderText(GetCurrentWeekRange());
         }
@@ -92,38 +83,33 @@ namespace TWChatOverlay.Views
         {
             _isPreviewMode = isPreview;
             if (isPreview)
-            {
-                _autoCloseTimer.Stop();
-                _autoCloseAtUtc = DateTime.MinValue;
-            }
+                CancelAutoClose();
         }
 
-        public void StartAutoClose(int durationSeconds)
+        /// <summary>표시 시간이 지나면 닫는다 (1~300초). 0 이하면 바로 닫는다.</summary>
+        public new void StartAutoClose(int durationSeconds)
         {
             _isPreviewMode = false;
 
             if (durationSeconds <= 0)
             {
-                _autoCloseTimer.Stop();
-                _autoCloseAtUtc = DateTime.UtcNow;
+                CancelAutoClose();
                 Close();
                 return;
             }
 
-            int clampedSeconds = Math.Max(1, Math.Min(300, durationSeconds));
-            _autoCloseAtUtc = DateTime.UtcNow.AddSeconds(clampedSeconds);
-            ArmAutoCloseTimer(TimeSpan.FromSeconds(clampedSeconds));
+            base.StartAutoClose(durationSeconds);
         }
 
-        /// <summary>마감까지 남은 시간으로 1회성 타이머를 다시 건다. 이미 돌던 타이머는 멈추고 새 마감 기준으로 시작한다.</summary>
-        private void ArmAutoCloseTimer(TimeSpan delay)
+        public bool IsAutoClosePending => !_isPreviewMode && IsAutoCloseArmed;
+
+        /// <summary>시간이 다 되면 페이드 없이 바로 닫는다 (기존 동작). 미리보기는 닫지 않는다.</summary>
+        protected override void OnAutoCloseElapsed()
         {
-            _autoCloseTimer.Stop();
-            _autoCloseTimer.Interval = delay > TimeSpan.Zero ? delay : TimeSpan.FromMilliseconds(1);
-            _autoCloseTimer.Start();
+            if (_isPreviewMode)
+                return;
+            Close();
         }
-
-        public bool IsAutoClosePending => !_isPreviewMode && _autoCloseTimer.IsEnabled && _autoCloseAtUtc > DateTime.UtcNow;
 
         /// <summary>표시 주를 이동한다 (이번 주 이후로는 이동 불가).</summary>
         private void ChangeWeek(int deltaWeeks)
@@ -134,8 +120,7 @@ namespace TWChatOverlay.Views
                 target = currentWeekStart;
 
             // 과거 주를 보는 동안에는 자동 닫힘을 멈춘다 (사용자가 조작 중)
-            _autoCloseTimer.Stop();
-            _autoCloseAtUtc = DateTime.MinValue;
+            CancelAutoClose();
             _ = LoadWeekAsync(target);
         }
 
@@ -220,25 +205,7 @@ namespace TWChatOverlay.Views
         }
 
         public void UpdateSummary(AbandonMonthlySummarySnapshotEntry summary)
-        {
-            SummaryText = $"어밴던로드 주간 합계: {AbandonSummaryCalculator.FormatManAmount(summary.NetProfitMan)}";
-
-            StoneEntries.Clear();
-            StoneEntries.Add(new AbandonMonthlyStoneSummaryEntryViewModel("하급 마정석", LowMagicStoneIconUri, summary.Low));
-            StoneEntries.Add(new AbandonMonthlyStoneSummaryEntryViewModel("중급 마정석", MiddleMagicStoneIconUri, summary.Mid));
-            StoneEntries.Add(new AbandonMonthlyStoneSummaryEntryViewModel("상급 마정석", HighMagicStoneIconUri, summary.High));
-            StoneEntries.Add(new AbandonMonthlyStoneSummaryEntryViewModel("최상급 마정석", TopMagicStoneIconUri, summary.Top));
-            long lowLossCount = Math.Abs(summary.LowLoss);
-            if (lowLossCount == 0 && summary.Low < 0)
-                lowLossCount = Math.Abs(summary.Low);
-            StoneEntries.Add(new AbandonMonthlyStoneSummaryEntryViewModel(
-                "누에게 빼앗긴 마정석",
-                LowMagicStoneIconUri,
-                lowLossCount,
-                "#FF6B6B",
-                "#FF6B6B",
-                $"{lowLossCount:N0}개"));
-        }
+            => FillSummary(summary.NetProfitMan, summary.Low, summary.Mid, summary.High, summary.Top, summary.LowLoss);
 
         public void UpdateSummary(AbandonSummaryValue summary)
         {
@@ -246,23 +213,13 @@ namespace TWChatOverlay.Views
             if (_displayWeekStart != GetCurrentWeekRange().WeekStart)
                 return;
 
-            SummaryText = $"어밴던로드 주간 합계: {AbandonSummaryCalculator.FormatManAmount(summary.NetProfitMan)}";
+            FillSummary(summary.NetProfitMan, summary.Low, summary.Mid, summary.High, summary.Top, summary.LowLoss);
+        }
 
-            StoneEntries.Clear();
-            StoneEntries.Add(new AbandonMonthlyStoneSummaryEntryViewModel("하급 마정석", LowMagicStoneIconUri, summary.Low));
-            StoneEntries.Add(new AbandonMonthlyStoneSummaryEntryViewModel("중급 마정석", MiddleMagicStoneIconUri, summary.Mid));
-            StoneEntries.Add(new AbandonMonthlyStoneSummaryEntryViewModel("상급 마정석", HighMagicStoneIconUri, summary.High));
-            StoneEntries.Add(new AbandonMonthlyStoneSummaryEntryViewModel("최상급 마정석", TopMagicStoneIconUri, summary.Top));
-            long lowLossCount = Math.Abs(summary.LowLoss);
-            if (lowLossCount == 0 && summary.Low < 0)
-                lowLossCount = Math.Abs(summary.Low);
-            StoneEntries.Add(new AbandonMonthlyStoneSummaryEntryViewModel(
-                "누에게 빼앗긴 마정석",
-                LowMagicStoneIconUri,
-                lowLossCount,
-                "#FF6B6B",
-                "#FF6B6B",
-                $"{lowLossCount:N0}개"));
+        private void FillSummary(long netProfitMan, long low, long mid, long high, long top, long lowLoss)
+        {
+            SummaryText = $"어밴던로드 주간 합계: {AbandonSummaryCalculator.FormatManAmount(netProfitMan)}";
+            AbandonStoneRows.Fill(StoneEntries, low, mid, high, top, lowLoss);
         }
 
         private static (DateTime WeekStart, DateTime WeekEnd) GetCurrentWeekRange(DateTime? now = null)
@@ -277,40 +234,24 @@ namespace TWChatOverlay.Views
             WeekText = $"{range.WeekStart:yyyy.MM.dd} ~ {range.WeekEnd:yyyy.MM.dd}";
         }
 
-        // 위치 저장은 MainWindow가 닫힐 때 처리한다
-        protected override bool PersistBoundsOnChange => false;
+        // 위치는 드래그 끝·닫힘에 베이스 경로로 저장한다 (알림 베이스 기본은 꺼짐이라 닫힘 저장만 켠다)
+        protected override bool PersistBoundsOnClose => true;
+
+        protected override bool PersistBounds(ChatSettings settings)
+        {
+            settings.AbandonRoadSummaryWindowLeft = Left;
+            settings.AbandonRoadSummaryWindowTop = Top;
+            return true;
+        }
+
+        protected override (double? Left, double? Top, double? Width, double? Height)? StoredBounds(ChatSettings settings)
+            => (settings.AbandonRoadSummaryWindowLeft, settings.AbandonRoadSummaryWindowTop, null, null);
 
         private void TitleBar_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
             => TryBeginDrag(e);
 
         private void Close_Click(object sender, RoutedEventArgs e)
         {
-            Close();
-        }
-
-        protected override void OnClosed(EventArgs e)
-        {
-            _autoCloseTimer.Stop();
-            base.OnClosed(e);
-        }
-
-        private void AutoCloseTimer_Tick(object? sender, EventArgs e)
-        {
-            if (_isPreviewMode || _autoCloseAtUtc == DateTime.MinValue)
-            {
-                _autoCloseTimer.Stop();
-                return;
-            }
-
-            TimeSpan remaining = _autoCloseAtUtc - DateTime.UtcNow;
-            if (remaining > TimeSpan.Zero)
-            {
-                // 타이머가 마감보다 조금 일찍 깨어난 경우 남은 만큼만 다시 기다린다
-                ArmAutoCloseTimer(remaining);
-                return;
-            }
-
-            _autoCloseTimer.Stop();
             Close();
         }
 

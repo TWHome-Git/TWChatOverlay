@@ -18,7 +18,8 @@ namespace TWChatOverlay
         {
             AppLogger.Info("Application startup initiated.");
 
-            // 도움말 예시 이미지 생성 모드: 창을 띄우지 않고 PNG만 만들고 종료
+#if DEBUG
+            // 도움말 예시 이미지 생성 모드: 창을 띄우지 않고 PNG만 만들고 종료 (HelpShotRenderer는 Release 빌드에서 제외된다)
             int shotArg = Array.IndexOf(e.Args, "--render-help-shots");
             if (shotArg >= 0)
             {
@@ -35,6 +36,7 @@ namespace TWChatOverlay
                 Shutdown();
                 return;
             }
+#endif
 
             // 렌더링 모드: 기본은 소프트웨어. 작은 오버레이 창들이라 GPU 가속의 이점이 없는 반면,
             // 하드웨어 경로는 D3D 드라이버가 창마다 잡는 네이티브 메모리가 커서(측정상 Private Bytes 약 -130MB)
@@ -199,7 +201,8 @@ namespace TWChatOverlay
         protected override void OnExit(ExitEventArgs e)
         {
             AppLogger.Info("Application shutdown initiated.");
-            // 창들이 닫히며 걸어 둔 지연 저장(SaveDeferred)을 디스크 사본을 다시 읽기 전에 먼저 기록한다
+            // 오버레이 창(OverlayWindowBase)은 닫히며 스스로 마지막 위치를 설정에 쓰고 지연 저장(SaveDeferred)을 건다.
+            // 그 대기분을 디스크 사본을 다시 읽기 전에 먼저 기록한다.
             try { TWChatOverlay.Services.ConfigService.FlushPendingSave(); } catch { }
             try
             {
@@ -216,6 +219,7 @@ namespace TWChatOverlay
                     cfg = new Models.ChatSettings();
                 }
 
+                // 메뉴 바·서브 메뉴만 베이스(OverlayWindowBase)가 아닌 일반 Window라 여기서 직접 저장한다
                 foreach (Window w in Current.Windows)
                 {
                     if (w is Views.MenuWindow menu)
@@ -228,32 +232,6 @@ namespace TWChatOverlay
                         cfg.SubMenuWindowLeft = sub.Left;
                         cfg.SubMenuWindowTop = sub.Top;
                     }
-                    else if (w is Views.DailyWeeklyContentWindow dw)
-                    {
-                        cfg.DailyWeeklyContentOverlayLeft = dw.Left;
-                        cfg.DailyWeeklyContentOverlayTop = dw.Top;
-                    }
-                    else if (w is Views.ItemCalendarWindow itemCalendar)
-                    {
-                        cfg.ItemCalendarWindowLeft = itemCalendar.Left;
-                        cfg.ItemCalendarWindowTop = itemCalendar.Top;
-                    }
-                    else if (w is Views.AbandonRoadSummaryWindow Abandon)
-                    {
-                        cfg.AbandonRoadSummaryWindowLeft = Abandon.Left;
-                        cfg.AbandonRoadSummaryWindowTop = Abandon.Top;
-                    }
-                    else if (w is Views.ExpTrackerWindow exp)
-                    {
-                        // ExpTracker는 스스로 SaveDeferred 하지만 종료 시 확정 저장이 없어 안전망 추가.
-                        exp.PersistPositionNow();
-                    }
-                    else if (w is Views.BuffTrackerWindow buff)
-                    {
-                        // BuffTracker는 헬퍼 창이 열렸을 때만 저장되므로 종료 시 직접 저장.
-                        if (buff.WindowState != WindowState.Minimized)
-                            cfg.SetBuffTrackerWindowPosition(buff.Left, buff.Top, false);
-                    }
                 }
                 TWChatOverlay.Services.ConfigService.Save(cfg);
             }
@@ -265,7 +243,6 @@ namespace TWChatOverlay
             AppServices.Get<ForegroundTopmostGuard>().Shutdown();
             AppServices.TryGet<ScalerTopmostGuard>()?.Detach();
             AppServices.TryGet<ChatWheelPassthroughService>()?.Shutdown();
-            EtaProfileResolver.DeleteCache();
             AppServices.Get<NotificationService>().DeleteCachedAudioFiles();
             _mutex?.ReleaseMutex();
             _mutex?.Dispose();     

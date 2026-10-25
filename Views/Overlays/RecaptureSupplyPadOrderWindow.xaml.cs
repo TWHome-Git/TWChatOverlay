@@ -3,10 +3,7 @@ using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
-using System.Windows.Interop;
-using System.Windows.Media.Animation;
 using System.Windows.Media.Imaging;
-using System.Windows.Threading;
 using TWChatOverlay.Models;
 using TWChatOverlay.Services;
 
@@ -17,7 +14,7 @@ namespace TWChatOverlay.Views
     /// 지정한 시간이 지나면 저절로 닫히고, X를 눌러도 닫힌다.
     /// 잠금 해제 모드에서는 끌어서 옮기고 가장자리를 잡아 크기를 바꿀 수 있다. 발판은 창 크기에 맞춰 함께 커진다.
     /// </summary>
-    public partial class RecaptureSupplyPadOrderWindow : OverlayWindowBase
+    public partial class RecaptureSupplyPadOrderWindow : ToastWindowBase
     {
         // 게임에서 잘라 온 발판 그림. 키는 서비스가 넘기는 한 글자 색 이름이다.
         private static readonly Dictionary<string, string> PadImageFiles = new()
@@ -53,48 +50,25 @@ namespace TWChatOverlay.Views
             }
         }
 
-        private const int ResizeBorderThickness = 6;
-        private const int WM_NCHITTEST = 0x0084;
-        private const int HTLEFT = 10;
-        private const int HTRIGHT = 11;
-        private const int HTTOP = 12;
-        private const int HTTOPLEFT = 13;
-        private const int HTTOPRIGHT = 14;
-        private const int HTBOTTOM = 15;
-        private const int HTBOTTOMLEFT = 16;
-        private const int HTBOTTOMRIGHT = 17;
-
-        private readonly DispatcherTimer _lifetimeTimer;
         private readonly ChatSettings? _settings;
         private bool _isPreviewMode;
-        private bool _isClosing;
 
         public RecaptureSupplyPadOrderWindow(ChatSettings? settings)
         {
             _settings = settings;
             InitializeComponent();
 
-            _lifetimeTimer = new DispatcherTimer();
-            _lifetimeTimer.Tick += (_, _) =>
-            {
-                _lifetimeTimer.Stop();
-                StartCloseAnimation();
-            };
-
-            SourceInitialized += (_, _) =>
-            {
-                try
-                {
-                    HwndSource.FromHwnd(new WindowInteropHelper(this).Handle)?.AddHook(WndProc);
-                }
-                catch { }
-            };
+            // 가장자리 6px를 잡으면 크기 조절. 잠금 상태에서는 그냥 창 안쪽으로 취급해 실수로 늘어나지 않게 한다.
+            EnableEdgeResize(thickness: 6, when: () => AppServices.Get<UiLockService>().IsUnlocked);
 
             // 잠금 해제 모드에서는 창 어디를 잡아도 선택+드래그 가능
             PreviewMouseLeftButtonDown += (_, e) => TryBeginDrag(e, markHandled: true);
         }
 
         protected override ChatSettings? ResolveSettings() => _settings;
+        // 자리를 사용자가 정하는 창이라 알림이지만 LocationChanged·닫힘에 저장한다
+        protected override bool PersistBoundsOnChange => true;
+        protected override bool PersistBoundsOnClose => true;
 
         /// <summary>발판 색을 순서대로 채우고 N초 뒤 닫히게 한다. 이미 떠 있으면 내용만 바꾸고 시간을 다시 센다.</summary>
         public void ShowOrder(IReadOnlyList<string> colors, string phrase, int durationSeconds)
@@ -102,30 +76,26 @@ namespace TWChatOverlay.Views
             _isPreviewMode = false;
             ApplyColors(colors);
             PhraseText.Text = phrase;
-
-            BeginAnimation(OpacityProperty, null);
-            Opacity = 1;
-            if (!IsVisible)
-                Show();
-            TopmostWindowHelper.BringToTopmost(this);
-
-            _lifetimeTimer.Stop();
-            _lifetimeTimer.Interval = TimeSpan.FromSeconds(Math.Max(1, Math.Min(300, durationSeconds)));
-            _lifetimeTimer.Start();
+            Reveal();
+            StartAutoClose(durationSeconds);
         }
 
         /// <summary>잠금 해제 모드에서 위치·크기를 잡을 수 있게 예시 순서로 띄운다. 저절로 닫히지 않는다.</summary>
         public void ShowPreview()
         {
             _isPreviewMode = true;
-            _lifetimeTimer.Stop();
+            CancelAutoClose();
             ApplyColors(new[] { "파", "노", "빨" });
             PhraseText.Text = "위치·크기 조정 미리보기";
-            BeginAnimation(OpacityProperty, null);
-            Opacity = 1;
+            Reveal();
+        }
+
+        private void Reveal()
+        {
+            ResetPresentation();
             if (!IsVisible)
                 Show();
-            TopmostWindowHelper.BringToTopmost(this);
+            BringToFront();
         }
 
         private void ApplyColors(IReadOnlyList<string> colors)
@@ -138,20 +108,11 @@ namespace TWChatOverlay.Views
             }
         }
 
-        private void StartCloseAnimation()
+        protected override void OnAutoCloseElapsed()
         {
-            if (_isPreviewMode || _isClosing)
+            if (_isPreviewMode)
                 return;
-
-            _isClosing = true;
-            var fade = new DoubleAnimation
-            {
-                To = 0,
-                Duration = TimeSpan.FromMilliseconds(220),
-                EasingFunction = new QuadraticEase { EasingMode = EasingMode.EaseIn },
-            };
-            fade.Completed += (_, _) => Close();
-            BeginAnimation(OpacityProperty, fade);
+            CloseWithFade();
         }
 
         private void TitleBar_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
@@ -159,49 +120,8 @@ namespace TWChatOverlay.Views
 
         private void CloseButton_Click(object sender, RoutedEventArgs e)
         {
-            _lifetimeTimer.Stop();
+            CancelAutoClose();
             Close();
-        }
-
-        protected override void OnClosed(EventArgs e)
-        {
-            _lifetimeTimer.Stop();
-            // 닫힐 때는 즉시 저장한다 (앱 종료 경로에서 지연 저장이 유실되지 않게)
-            if (_settings != null && PersistBounds(_settings))
-                ConfigService.Save(_settings);
-            base.OnClosed(e);
-        }
-
-        /// <summary>가장자리 6px를 잡으면 크기 조절. 잠금 상태에서는 그냥 창 안쪽으로 취급해 실수로 늘어나지 않게 한다.</summary>
-        private IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
-        {
-            try
-            {
-                if (msg != WM_NCHITTEST || !AppServices.Get<UiLockService>().IsUnlocked)
-                    return IntPtr.Zero;
-
-                Point screenPoint = new(
-                    unchecked((short)(lParam.ToInt64() & 0xFFFF)),
-                    unchecked((short)((lParam.ToInt64() >> 16) & 0xFFFF)));
-                Point localPoint = PointFromScreen(screenPoint);
-
-                bool left = localPoint.X <= ResizeBorderThickness;
-                bool right = localPoint.X >= ActualWidth - ResizeBorderThickness;
-                bool top = localPoint.Y <= ResizeBorderThickness;
-                bool bottom = localPoint.Y >= ActualHeight - ResizeBorderThickness;
-
-                if (left && top) { handled = true; return (IntPtr)HTTOPLEFT; }
-                if (right && top) { handled = true; return (IntPtr)HTTOPRIGHT; }
-                if (left && bottom) { handled = true; return (IntPtr)HTBOTTOMLEFT; }
-                if (right && bottom) { handled = true; return (IntPtr)HTBOTTOMRIGHT; }
-                if (left) { handled = true; return (IntPtr)HTLEFT; }
-                if (right) { handled = true; return (IntPtr)HTRIGHT; }
-                if (top) { handled = true; return (IntPtr)HTTOP; }
-                if (bottom) { handled = true; return (IntPtr)HTBOTTOM; }
-            }
-            catch { }
-
-            return IntPtr.Zero;
         }
 
         protected override bool PersistBounds(ChatSettings settings)
@@ -217,5 +137,9 @@ namespace TWChatOverlay.Views
                 settings.RecaptureSupplyPadOrderWindowHeight = ActualHeight;
             return true;
         }
+
+        protected override (double? Left, double? Top, double? Width, double? Height)? StoredBounds(ChatSettings settings)
+            => (settings.RecaptureSupplyPadOrderWindowLeft, settings.RecaptureSupplyPadOrderWindowTop,
+                settings.RecaptureSupplyPadOrderWindowWidth, settings.RecaptureSupplyPadOrderWindowHeight);
     }
 }

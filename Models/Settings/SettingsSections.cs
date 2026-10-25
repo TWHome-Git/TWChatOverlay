@@ -270,6 +270,12 @@ namespace TWChatOverlay.Models
         public WindowRect Clone2 { get; set; } = new();
         public WindowRect ShoutReplay { get; set; } = new();
         public WindowRect Memo { get; set; } = new();
+        /// <summary>던전 타이머 기록 추이 창 위치 (미설정 시 화면 가운데).</summary>
+        public WindowRect DungeonTimerDetail { get; set; } = new();
+        /// <summary>주간 득템 통계 창 위치 (미설정 시 화면 가운데).</summary>
+        public WindowRect WeeklyItemSummary { get; set; } = new();
+        /// <summary>사냥 기록 창 위치 (미설정 시 화면 가운데).</summary>
+        public WindowRect ExpHuntRecord { get; set; } = new();
         /// <summary>잠금 해제 인스펙터에서 지정한 창별 투명도(10~100%). 키 = 창 타입명.</summary>
         public Dictionary<string, double> OpacityPercents { get; set; } = new();
     }

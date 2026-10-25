@@ -1,22 +1,22 @@
 ﻿using System;
-using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Windows;
 using System.Windows.Input;
-using System.Windows.Interop;
-using System.Windows.Threading;
 using TWChatOverlay.Models;
 using TWChatOverlay.Services;
 
 namespace TWChatOverlay.Views
 {
+    /// <summary>
+    /// 버프 추적창. z-순서는 베이스에 맡긴다: 설정 창이 떠 있으면 SettingsHostZOrder가 그 바로 아래에 두고,
+    /// 게임 창이 덮으면 ForegroundTopmostGuard가 다시 올린다. 잠금 중엔 클릭이 아래 게임으로 간다(PassthroughWhenLocked).
+    /// </summary>
     public partial class BuffTrackerWindow : OverlayWindowBase
     {
         public static BuffTrackerWindow? Instance { get; private set; }
 
         private readonly BuffTrackerService _tracker;
         private readonly ChatSettings _settings;
-        private bool _isTopmostRefreshQueued;
 
         public BuffTrackerWindow(BuffTrackerService tracker, ChatSettings settings)
         {
@@ -26,23 +26,13 @@ namespace TWChatOverlay.Views
             _settings = settings;
             DataContext = tracker;
             _tracker.PropertyChanged += Tracker_PropertyChanged;
-            _tracker.ActiveRareBuffs.CollectionChanged += TrackerBuffs_CollectionChanged;
-            _tracker.ActiveExpBuffs.CollectionChanged += TrackerBuffs_CollectionChanged;
             AppServices.Get<UiLockService>().UnlockChanged += OnUnlockChanged;
             // 표시는 호출자(ApplyBuffTrackerWindowSettings)가 위치를 맞춘 뒤 ApplyVisibility로 결정한다
-        }
-
-        protected override void OnSourceInitialized(EventArgs e)
-        {
-            base.OnSourceInitialized(e);
-            ApplyMousePassthroughStyle();
         }
 
         protected override void OnClosed(EventArgs e)
         {
             _tracker.PropertyChanged -= Tracker_PropertyChanged;
-            _tracker.ActiveRareBuffs.CollectionChanged -= TrackerBuffs_CollectionChanged;
-            _tracker.ActiveExpBuffs.CollectionChanged -= TrackerBuffs_CollectionChanged;
             AppServices.Get<UiLockService>().UnlockChanged -= OnUnlockChanged;
 
             if (ReferenceEquals(Instance, this))
@@ -57,12 +47,6 @@ namespace TWChatOverlay.Views
             {
                 Dispatcher.BeginInvoke(new Action(ApplyVisibility));
             }
-        }
-
-        private void TrackerBuffs_CollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
-        {
-            // The tracker refreshes these collections every second while buffs are active.
-            QueueTopmostRefresh();
         }
 
         public void ApplyVisibility()
@@ -80,8 +64,7 @@ namespace TWChatOverlay.Views
                 if (!IsVisible)
                     Show();
 
-                RefreshTopmost();
-                QueueTopmostRefresh();
+                BringToFront(); // 설정 창이 떠 있으면 그 바로 아래까지만 올라간다
             }
             else if (IsVisible)
             {
@@ -92,6 +75,8 @@ namespace TWChatOverlay.Views
 
         // 위치는 드래그가 끝났을 때만 저장한다 (표시 중 위치는 도우미 창이 밀어 넣는다)
         protected override bool PersistBoundsOnChange => false;
+        protected override bool UseToolWindowStyle => true;
+        protected override bool PassthroughWhenLocked => true;
         protected override ChatSettings? ResolveSettings() => _settings;
 
         private void RootBorder_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
@@ -110,23 +95,8 @@ namespace TWChatOverlay.Views
             return true;
         }
 
-        /// <summary>평소에는 클릭 통과, 잠금 해제 모드에서는 잡고 끌 수 있게 통과를 해제한다.</summary>
-        private void ApplyMousePassthroughStyle()
-        {
-            try
-            {
-                IntPtr hwnd = new WindowInteropHelper(this).EnsureHandle();
-                int exStyle = NativeMethods.GetWindowLong(hwnd, NativeMethods.GWL_EXSTYLE) | NativeMethods.WS_EX_TOOLWINDOW;
-
-                if (AppServices.Get<UiLockService>().IsUnlocked)
-                    exStyle &= ~NativeMethods.WS_EX_TRANSPARENT;
-                else
-                    exStyle |= NativeMethods.WS_EX_TRANSPARENT;
-
-                NativeMethods.SetWindowLong(hwnd, NativeMethods.GWL_EXSTYLE, exStyle);
-            }
-            catch { }
-        }
+        protected override (double? Left, double? Top, double? Width, double? Height)? StoredBounds(ChatSettings settings)
+            => (settings.BuffTrackerWindowLeft, settings.BuffTrackerWindowTop, null, null);
 
         private void OnUnlockChanged(bool unlocked)
         {
@@ -134,7 +104,6 @@ namespace TWChatOverlay.Views
             {
                 Dispatcher.Invoke(() =>
                 {
-                    ApplyMousePassthroughStyle();
                     if (unlocked)
                         Close(); // 미리보기(도우미)가 대신 표시되고, 해제 후 MainWindow가 다시 만든다
                     else
@@ -142,60 +111,6 @@ namespace TWChatOverlay.Views
                 });
             }
             catch { }
-        }
-
-        /// <summary>최상단 복귀 (설정 창이 떠 있으면 양보한다는 점이 베이스의 BringToFront와 다르다).</summary>
-        private void RefreshTopmost()
-        {
-            if (!IsVisible)
-                return;
-
-            // 설정 창이 열려 있는 동안에는 최상단을 양보해 설정 화면을 가리지 않는다
-            if (IsSettingsHostVisible())
-            {
-                if (Topmost)
-                    Topmost = false;
-                return;
-            }
-
-            TopmostWindowHelper.BringToTopmost(this);
-        }
-
-        /// <summary>설정/서브 메뉴 호스트 창이 화면에 떠 있는지.</summary>
-        private static bool IsSettingsHostVisible()
-        {
-            try
-            {
-                foreach (Window window in Application.Current.Windows)
-                {
-                    if (window is SubMenuWindow && window.IsVisible)
-                        return true;
-                }
-            }
-            catch { }
-
-            return false;
-        }
-
-        private void QueueTopmostRefresh()
-        {
-            if (_isTopmostRefreshQueued)
-                return;
-
-            if (!IsVisible || !_settings.EnableBuffTrackerAlert || !_tracker.HasAnyActiveBuffs)
-                return;
-
-            _isTopmostRefreshQueued = true;
-            Dispatcher.BeginInvoke(
-                new Action(() =>
-                {
-                    _isTopmostRefreshQueued = false;
-                    if (IsVisible && _settings.EnableBuffTrackerAlert && _tracker.HasAnyActiveBuffs)
-                    {
-                        RefreshTopmost(); // 설정 창이 닫히면 다음 틱(1초 이내)에 최상단 복귀
-                    }
-                }),
-                DispatcherPriority.Background);
         }
     }
 }

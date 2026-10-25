@@ -24,17 +24,30 @@ namespace TWChatOverlay.Views
             _settings = sharedSettings;
             Loaded += MemoOverlayWindow_Loaded;
             Closing += MemoOverlayWindow_Closing;
-            LocationChanged += MemoOverlayWindow_LocationChanged;
-            SizeChanged += MemoOverlayWindow_SizeChanged;
             MemoTextBox.TextChanged += MemoTextBox_TextChanged;
             Application.Current.Exit += Current_Exit;
             Closed += MemoOverlayWindow_Closed;
         }
 
-        // 메모 창은 잠금 모드와 무관하게 항상 이동 가능. 위치 저장은 이 창의 LocationChanged 핸들러가 맡는다.
+        // 메모 창은 잠금 모드와 무관하게 항상 이동 가능. 위치는 베이스 경로(PersistBounds)로, 글·서식은 PersistState로 저장한다.
         protected override bool KeepBelowSettingsHost => false;
         protected override bool DragRequiresUnlock => false;
-        protected override bool PersistBoundsOnChange => false;
+        protected override ChatSettings? ResolveSettings() => _settings ??= ResolveSharedSettings();
+
+        /// <summary>글만 보기 모드면 실제로 보이는 글 전용 창의 자리를 저장한다.</summary>
+        protected override bool PersistBounds(ChatSettings settings)
+        {
+            if (!_isStateReady || _isApplyingLoadedState)
+                return false;
+
+            bool textOnlyShown = _isOverlayMode && _textOnly?.IsVisible == true;
+            settings.MemoOverlayWindowLeft = textOnlyShown ? _textOnly!.Left : Left;
+            settings.MemoOverlayWindowTop = textOnlyShown ? _textOnly!.Top : Top;
+            return true;
+        }
+
+        protected override (double? Left, double? Top, double? Width, double? Height)? StoredBounds(ChatSettings settings)
+            => (settings.MemoOverlayWindowLeft, settings.MemoOverlayWindowTop, null, null);
 
         private void TitleBar_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
             => TryBeginDrag(e);
@@ -47,33 +60,29 @@ namespace TWChatOverlay.Views
         }
 
         /// <summary>
-        /// 설정에 저장된 위치로 옮긴다. 설정 전체 교체(프로필 불러오기) 뒤에 쓴다.
-        /// 글만 보기 모드면 실제로 보이는 글 전용 창을 옮긴다.
+        /// 설정에 저장된 위치로 옮긴다 (복원 경로). 글만 보기 모드면 실제로 보이는 글 전용 창을 옮긴다.
         /// </summary>
-        public void ApplyStoredPosition()
+        public override void ApplyStoredBounds(ChatSettings? settings = null)
         {
-            _settings ??= ResolveSharedSettings();
-            if (_settings == null)
+            settings ??= ResolveSettings();
+            if (settings == null)
                 return;
 
-            bool wasApplying = _isApplyingLoadedState;
-            _isApplyingLoadedState = true; // 옮기는 동안의 LocationChanged 저장은 막는다
-            try
+            if (_isOverlayMode && _textOnly?.IsVisible == true)
             {
-                Window target = (_isOverlayMode && _textOnly?.IsVisible == true) ? _textOnly : this;
-                WindowPlacement.ApplyStored(target, _settings.MemoOverlayWindowLeft, _settings.MemoOverlayWindowTop);
+                using (SuppressBoundsPersist())
+                    WindowPlacement.ApplyStored(_textOnly, settings.MemoOverlayWindowLeft, settings.MemoOverlayWindowTop);
+                return;
             }
-            finally
-            {
-                _isApplyingLoadedState = wasApplying;
-            }
+
+            base.ApplyStoredBounds(settings);
         }
 
         private void MemoOverlayWindow_Loaded(object sender, RoutedEventArgs e)
         {
             _isApplyingLoadedState = true;
             _settings ??= ResolveSharedSettings();
-            WindowPlacement.ApplyStored(this, _settings.MemoOverlayWindowLeft, _settings.MemoOverlayWindowTop);
+            ApplyStoredBounds(_settings);
             MemoTextBox.Text = _settings.MemoOverlayText ?? string.Empty;
             FontSizeSlider.Value = _settings.MemoOverlayFontSize <= 0 ? 20.0 : _settings.MemoOverlayFontSize;
             MemoTextBox.FontWeight = _settings.MemoOverlayBold ? FontWeights.Bold : FontWeights.Normal;
@@ -99,16 +108,12 @@ namespace TWChatOverlay.Views
         {
             try { Application.Current.Exit -= Current_Exit; } catch { }
             try { MemoTextBox.TextChanged -= MemoTextBox_TextChanged; } catch { }
-            try { LocationChanged -= MemoOverlayWindow_LocationChanged; } catch { }
-            try { SizeChanged -= MemoOverlayWindow_SizeChanged; } catch { }
             try { Loaded -= MemoOverlayWindow_Loaded; } catch { }
             try { Closing -= MemoOverlayWindow_Closing; } catch { }
             try { Closed -= MemoOverlayWindow_Closed; } catch { }
         }
         private void Current_Exit(object? sender, ExitEventArgs e) => PersistState(immediate: true);
 
-        private void MemoOverlayWindow_LocationChanged(object? sender, System.EventArgs e) => PersistState();
-        private void MemoOverlayWindow_SizeChanged(object sender, SizeChangedEventArgs e) => PersistState();
         private void MemoTextBox_TextChanged(object sender, TextChangedEventArgs e) => PersistState();
 
         private void OpacitySlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
@@ -149,11 +154,11 @@ namespace TWChatOverlay.Views
                 _textOnly = new MemoTextOnlyWindow();
                 _textOnly.LocationChanged += (_, _) =>
                 {
+                    // 숨은 편집 창의 Left/Top을 따라 바꾸면 베이스의 LocationChanged 저장 경로가 글 전용 창 자리를 저장한다
                     if (_isOverlayMode && _textOnly.IsVisible)
                     {
                         Left = _textOnly.Left;
                         Top = _textOnly.Top;
-                        PersistState();
                     }
                 };
                 _textOnly.Closed += (_, _) =>
@@ -223,10 +228,7 @@ namespace TWChatOverlay.Views
                 return;
 
             string text = MemoTextBox?.Text ?? string.Empty;
-            double left = (_isOverlayMode && _textOnly?.IsVisible == true) ? _textOnly.Left : Left;
-            double top = (_isOverlayMode && _textOnly?.IsVisible == true) ? _textOnly.Top : Top;
-            _settings.MemoOverlayWindowLeft = left;
-            _settings.MemoOverlayWindowTop = top;
+            PersistBounds(_settings); // 위치는 베이스 경로와 같은 규칙으로 (즉시 저장 때 최신 자리가 함께 가도록)
             _settings.MemoOverlayText = text;
             _settings.MemoOverlayTextOnlyMode = _isOverlayMode;
             _settings.MemoOverlayFontSize = MemoTextBox?.FontSize ?? 20.0;

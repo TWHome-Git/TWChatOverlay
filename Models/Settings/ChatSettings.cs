@@ -1192,6 +1192,45 @@ namespace TWChatOverlay.Models
             set { if (Windows.Memo.Top == value) return; Windows.Memo.Top = value; OnPropertyChanged(); }
         }
 
+        [JsonIgnore]
+        public double? DungeonTimerDetailWindowLeft
+        {
+            get => Windows.DungeonTimerDetail.Left;
+            set { if (Windows.DungeonTimerDetail.Left == value) return; Windows.DungeonTimerDetail.Left = value; OnPropertyChanged(); }
+        }
+        [JsonIgnore]
+        public double? DungeonTimerDetailWindowTop
+        {
+            get => Windows.DungeonTimerDetail.Top;
+            set { if (Windows.DungeonTimerDetail.Top == value) return; Windows.DungeonTimerDetail.Top = value; OnPropertyChanged(); }
+        }
+
+        [JsonIgnore]
+        public double? WeeklyItemSummaryWindowLeft
+        {
+            get => Windows.WeeklyItemSummary.Left;
+            set { if (Windows.WeeklyItemSummary.Left == value) return; Windows.WeeklyItemSummary.Left = value; OnPropertyChanged(); }
+        }
+        [JsonIgnore]
+        public double? WeeklyItemSummaryWindowTop
+        {
+            get => Windows.WeeklyItemSummary.Top;
+            set { if (Windows.WeeklyItemSummary.Top == value) return; Windows.WeeklyItemSummary.Top = value; OnPropertyChanged(); }
+        }
+
+        [JsonIgnore]
+        public double? ExpHuntRecordWindowLeft
+        {
+            get => Windows.ExpHuntRecord.Left;
+            set { if (Windows.ExpHuntRecord.Left == value) return; Windows.ExpHuntRecord.Left = value; OnPropertyChanged(); }
+        }
+        [JsonIgnore]
+        public double? ExpHuntRecordWindowTop
+        {
+            get => Windows.ExpHuntRecord.Top;
+            set { if (Windows.ExpHuntRecord.Top == value) return; Windows.ExpHuntRecord.Top = value; OnPropertyChanged(); }
+        }
+
         /// <summary>잠금 해제 인스펙터에서 지정한 창별 투명도(10~100%). 키 = 창 타입명(서브 채팅창은 슬롯 포함).</summary>
         [JsonIgnore]
         public Dictionary<string, double> WindowOpacityPercents

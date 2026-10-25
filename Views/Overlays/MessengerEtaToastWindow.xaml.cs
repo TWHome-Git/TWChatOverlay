@@ -32,7 +32,10 @@ namespace TWChatOverlay.Views
         private IReadOnlyList<MessengerEtaEntry> _entries = Array.Empty<MessengerEtaEntry>();
 
         protected override bool ApplyAppFont => false;          // 생성자 인자의 폰트를 쓴다
-        protected override bool PersistBoundsOnChange => false; // 스택이 옮긴 위치를 설정에 되쓰지 않는다
+        protected override bool PersistBoundsOnChange => false; // 서비스가 배치한 위치를 설정에 되쓰지 않는다
+        protected override bool PersistBoundsOnClose => false;  // 닫힐 때도 (미리보기 드래그·SaveCurrentPosition만 저장)
+        // 늘 설정 창 위에 떠 있던 창이라 설정 창 아래 배치 등록은 하지 않는다 (기존 z-순서 유지)
+        protected override bool KeepBelowSettingsHost => false;
         protected override ChatSettings? ResolveSettings() => _settings;
 
         /// <summary>잠금 해제 인스펙터에서 폰트 크기 변경 시 즉시 반영. 아이디 글자가 기준이고 알약·캐릭터 이름은 그에 비례한다.</summary>
@@ -210,24 +213,7 @@ namespace TWChatOverlay.Views
             Visibility = Visibility.Visible;
             Opacity = 1.0;
             // Activate()는 부르지 않는다 — 게임이 키보드 포커스를 잃는다
-            Topmost = true;
-            BringToFront();
-            try
-            {
-                IntPtr hwnd = new WindowInteropHelper(this).EnsureHandle();
-                NativeMethods.SetWindowPos(
-                    hwnd,
-                    NativeMethods.HWND_TOPMOST,
-                    0,
-                    0,
-                    0,
-                    0,
-                    NativeMethods.SWP_NOMOVE |
-                    NativeMethods.SWP_NOSIZE |
-                    NativeMethods.SWP_NOACTIVATE |
-                    NativeMethods.SWP_NOOWNERZORDER);
-            }
-            catch { }
+            BringToFront(); // Topmost 대입 + topmost 밴드 맨 위 (설정 창 아래 등록을 안 했으므로 그대로 올라간다)
         }
 
         protected override void OnSourceInitialized(EventArgs e)

@@ -39,7 +39,6 @@ namespace TWChatOverlay.Views
             FontSizeSlider.Value = _settings.ShoutReplayFontSize;
             FontSizeText.Text = $"{_settings.ShoutReplayFontSize:F0}px";
             Loaded += ShoutReplayWindow_Loaded;
-            Closing += ShoutReplayWindow_Closing;
             RefreshDates();
             if (_dates.Count > 0)
                 _ = LoadDateAsync(_dates[^1]);
@@ -48,7 +47,20 @@ namespace TWChatOverlay.Views
         // 외치기 다시 보기 창은 잠금 모드와 무관하게 항상 이동 가능
         protected override bool KeepBelowSettingsHost => false;
         protected override bool DragRequiresUnlock => false;
-        protected override bool PersistBoundsOnChange => false;
+        protected override bool PersistBoundsOnChange => false; // 드래그 끝·닫힘에 저장
+        protected override ChatSettings? ResolveSettings() => _settings;
+
+        protected override bool PersistBounds(ChatSettings settings)
+        {
+            settings.ShoutReplayWindowLeft = Left;
+            settings.ShoutReplayWindowTop = Top;
+            settings.ShoutReplayWindowWidth = Width;
+            settings.ShoutReplayWindowHeight = Height;
+            return true;
+        }
+
+        protected override (double? Left, double? Top, double? Width, double? Height)? StoredBounds(ChatSettings settings)
+            => (settings.ShoutReplayWindowLeft, settings.ShoutReplayWindowTop, settings.ShoutReplayWindowWidth, settings.ShoutReplayWindowHeight);
 
         private void TitleBar_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
             => TryBeginDrag(e);
@@ -72,25 +84,8 @@ namespace TWChatOverlay.Views
         private void ShoutReplayWindow_Loaded(object sender, RoutedEventArgs e)
         {
             EnsureMouseHitTestEnabled();
-            ApplyStoredBounds();
+            ApplyStoredBounds(_settings);
             Services.OsSnapGuard.Disable(this); // 상단 드래그 시 OS 스냅(최대화) 차단
-        }
-
-        /// <summary>설정에 저장된 위치/크기로 맞춘다. 시작 시와 설정 전체 교체(프로필 불러오기) 뒤에 쓴다.</summary>
-        public void ApplyStoredBounds()
-        {
-            Services.WindowPlacement.ApplyStoredBounds(this,
-                _settings.ShoutReplayWindowLeft, _settings.ShoutReplayWindowTop,
-                _settings.ShoutReplayWindowWidth, _settings.ShoutReplayWindowHeight);
-        }
-
-        private void ShoutReplayWindow_Closing(object? sender, System.ComponentModel.CancelEventArgs e)
-        {
-            _settings.ShoutReplayWindowLeft = Left;
-            _settings.ShoutReplayWindowTop = Top;
-            _settings.ShoutReplayWindowWidth = Width;
-            _settings.ShoutReplayWindowHeight = Height;
-            ConfigService.SaveDeferred(_settings);
         }
 
         private void RefreshDates()
@@ -136,6 +131,8 @@ namespace TWChatOverlay.Views
                     parsedLines = await Task.Run(() =>
                     {
                         var list = new List<string>(512);
+                        // 실시간 아카이브는 1초 모아 쓰므로 읽기 전에 내려 쓴다 (마지막 외치기를 놓치지 않게)
+                        AppServices.Get<ReadableLogArchiveService>().FlushAll();
                         string html = File.ReadAllText(path, Encoding.UTF8);
                         foreach (Match m in DivLogRegex.Matches(html))
                             list.Add(WebUtility.HtmlDecode(m.Groups["text"].Value));

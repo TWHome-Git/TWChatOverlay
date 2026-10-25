@@ -36,7 +36,7 @@ namespace TWChatOverlay.Views
     /// 감전·빅테디는 상태라 풀릴 때까지 떠 있고(<see cref="Show"/> → <see cref="HideAlert"/>),
     /// 반사·오를리·보물창고는 정해진 시간만 떠 있다(<see cref="Flash"/>).
     /// </summary>
-    public sealed class DungeonAlertWindow : OverlayWindowBase
+    public sealed class DungeonAlertWindow : ToastWindowBase
     {
         /// <summary>종류별로 떠 있는 창. 쌓는 순서는 열거형 순서를 따른다.</summary>
         private static readonly Dictionary<DungeonAlertSource, DungeonAlertWindow> Instances = new();
@@ -60,7 +60,6 @@ namespace TWChatOverlay.Views
         private readonly ChatSettings? _settings;
         private readonly TextBlock _titleText;
         private readonly TextBlock _bodyText;
-        private readonly DispatcherTimer _closeTimer;
         private bool _isPreview;
         /// <summary>이 창이 맡은 알림 종류.</summary>
         private readonly DungeonAlertSource _source;
@@ -69,6 +68,10 @@ namespace TWChatOverlay.Views
         /// <summary>표시만 하는 알림. 잠금 중엔 클릭이 아래 게임으로 간다.</summary>
         protected override bool PassthroughWhenLocked => true;
         protected override ChatSettings? ResolveSettings() => _settings;
+        // 자리를 잠금 해제 중에만 저장하는 창 — 스택에 얹히지 않으므로 LocationChanged·닫힘 저장을 켜 둔다 (PersistBounds가 잠금 중엔 거른다)
+        protected override bool PersistBoundsOnChange => true;
+        protected override bool PersistBoundsOnClose => true;
+        protected override bool PersistOnlyWhenUnlocked => true;
 
         private DungeonAlertWindow(ChatSettings? settings, DungeonAlertSource source)
         {
@@ -120,14 +123,10 @@ namespace TWChatOverlay.Views
 
             // 잠금 해제 모드에서 창을 잡고 옮긴다
             PreviewMouseLeftButtonDown += (_, e) => TryBeginDrag(e);
-
-            _closeTimer = new DispatcherTimer();
-            _closeTimer.Tick += (_, _) =>
-            {
-                _closeTimer.Stop();
-                CloseSelf();
-            };
         }
+
+        /// <summary>수명이 다하면 자기 창만 닫고 남은 창을 다시 쌓는다 (페이드 없음).</summary>
+        protected override void OnAutoCloseElapsed() => CloseSelf();
 
         /// <summary>자기 창만 닫고 남은 창을 다시 쌓는다.</summary>
         private void CloseSelf()
@@ -145,7 +144,7 @@ namespace TWChatOverlay.Views
         /// </summary>
         protected override bool PersistBounds(ChatSettings settings)
         {
-            if (!IsVisible || !AppServices.Get<UiLockService>().IsUnlocked)
+            if (!IsVisible)
                 return false;
 
             settings.DungeonAlertWindowLeft = Left;
@@ -172,6 +171,9 @@ namespace TWChatOverlay.Views
         /// <summary>저장된 자리로 떠 있는 알림들을 다시 쌓는다. 설정 전체 교체·위치 초기화 뒤에 쓴다.</summary>
         public static void ApplyStoredPosition() => Restack();
 
+        /// <summary>복원 경로(베이스): 이 창 하나가 아니라 같은 자리를 쓰는 창 전부를 다시 쌓는다.</summary>
+        public override void ApplyStoredBounds(ChatSettings? settings = null) => Restack();
+
         private static void Restack()
         {
             ChatSettings? settings = Instances.Values.Select(w => w._settings).FirstOrDefault(s => s != null);
@@ -185,8 +187,11 @@ namespace TWChatOverlay.Views
                 if (!window.IsVisible)
                     continue;
 
-                window.Left = left;
-                window.Top = y;
+                using (window.SuppressBoundsPersist()) // 쌓느라 옮긴 자리는 저장하지 않는다
+                {
+                    window.Left = left;
+                    window.Top = y;
+                }
                 y += window.ActualHeight + StackGap;
             }
         }
@@ -234,12 +239,7 @@ namespace TWChatOverlay.Views
                     window.UpdateLayout();
                     Restack();
 
-                    window._closeTimer.Stop();
-                    if (lifetime > TimeSpan.Zero)
-                    {
-                        window._closeTimer.Interval = lifetime;
-                        window._closeTimer.Start();
-                    }
+                    window.StartAutoClose(lifetime); // 0이면 풀릴 때까지 떠 있다 (안전 상한은 호출한 쪽이 넘긴다)
 
                     TopmostWindowHelper.BringToTopmost(window);
                 }
@@ -271,7 +271,7 @@ namespace TWChatOverlay.Views
 
                 try
                 {
-                    window._closeTimer.Stop();
+                    window.CancelAutoClose();
                     window.CloseSelf();
                 }
                 catch (Exception ex)

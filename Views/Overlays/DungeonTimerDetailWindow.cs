@@ -10,6 +10,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Shapes;
 using System.Windows.Threading;
+using TWChatOverlay.Models;
 using TWChatOverlay.Services;
 
 namespace TWChatOverlay.Views
@@ -38,7 +39,7 @@ namespace TWChatOverlay.Views
         private const double PlotLeft = 52, PlotRight = 20, PlotTop = 24, PlotBottom = 30;
         private const string WholeRunChoice = "전체";
 
-        private static readonly Color Mint = Color.FromRgb(0x0C, 0xD2, 0x9D);
+        private static readonly Color Mint = OverlayChrome.Mint;
         private static readonly CultureInfo Korean = CultureInfo.GetCultureInfo("ko-KR");
 
         /// <summary>한 주(월요일 0시 ~ 일요일)의 집계.</summary>
@@ -158,31 +159,11 @@ namespace TWChatOverlay.Views
             SnapsToDevicePixels = true;
 
             // ── 제목줄 ──
-            _titleText = new TextBlock { FontSize = 16, FontWeight = FontWeights.SemiBold, VerticalAlignment = VerticalAlignment.Center };
-            _titleText.SetResourceReference(TextBlock.ForegroundProperty, "OverlayTitleAccentTextBrush");
-
-            var closeButton = new Button
-            {
-                Content = "닫기",
-                Height = 24,
-                MinWidth = 44,
-                Padding = new Thickness(10, 0, 10, 0),
-                FontSize = 11,
-                Cursor = Cursors.Hand,
-                VerticalAlignment = VerticalAlignment.Center,
-                Margin = new Thickness(8, 0, 0, 0),
-            };
-            closeButton.SetResourceReference(StyleProperty, "SecondaryButtonStyle");
-            closeButton.Click += (_, _) => { try { Close(); } catch { } };
-
+            _titleText = OverlayChrome.MakeTitle(string.Empty);
+            var closeButton = OverlayChrome.MakeCloseButton(() => Close(), new Thickness(8, 0, 0, 0));
+            closeButton.VerticalAlignment = VerticalAlignment.Center;
             _viewSwitch = new StackPanel { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Center };
-
-            var header = new DockPanel { Margin = new Thickness(0, 0, 0, 10), Background = Brushes.Transparent };
-            DockPanel.SetDock(closeButton, Dock.Right);
-            DockPanel.SetDock(_viewSwitch, Dock.Right);
-            header.Children.Add(closeButton);
-            header.Children.Add(_viewSwitch);
-            header.Children.Add(_titleText);
+            var header = OverlayChrome.MakeHeader(_titleText, new Thickness(0, 0, 0, 10), closeButton, _viewSwitch);
             // 제목 줄을 잡고 옮긴다 (잠금과 무관). 그래프 영역은 마우스 올림에 쓰므로 제외.
             header.MouseLeftButtonDown += (_, e) => TryBeginDrag(e);
 
@@ -221,16 +202,10 @@ namespace TWChatOverlay.Views
             body.Children.Add(_chartCard);
             body.Children.Add(_tableCard);
 
-            var root = new Border
-            {
-                BorderThickness = new Thickness(1),
-                CornerRadius = new CornerRadius(12),
-                Padding = new Thickness(18, 14, 18, 16),
-                Child = body,
-            };
-            root.SetResourceReference(Border.BackgroundProperty, "OverlayWindowBackgroundBrush");
-            root.SetResourceReference(Border.BorderBrushProperty, "OverlayWindowBorderBrush");
-            Content = root;
+            Content = OverlayChrome.MakeRootBorder(body, new Thickness(18, 14, 18, 16));
+
+            // 저장된 자리가 있으면 거기서 열고(Manual), 없으면 화면 가운데(CenterScreen)
+            ApplyStoredBounds();
 
             // 기록이 더해질 때(실시간 클리어·과거 로그 추출) 몰아서 한 번만 다시 읽는다
             _reloadTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(600) };
@@ -251,7 +226,17 @@ namespace TWChatOverlay.Views
         protected override bool KeepBelowSettingsHost => false;
         protected override bool UseToolWindowStyle => true;
         protected override bool DragRequiresUnlock => false;
-        protected override bool PersistBoundsOnChange => false;
+        protected override bool PersistBoundsOnChange => false; // 드래그 끝·닫힘에 저장
+
+        protected override bool PersistBounds(ChatSettings settings)
+        {
+            settings.DungeonTimerDetailWindowLeft = Left;
+            settings.DungeonTimerDetailWindowTop = Top;
+            return true;
+        }
+
+        protected override (double? Left, double? Top, double? Width, double? Height)? StoredBounds(ChatSettings settings)
+            => (settings.DungeonTimerDetailWindowLeft, settings.DungeonTimerDetailWindowTop, null, null);
 
         private void OnArchiveChanged()
             => Dispatcher.BeginInvoke(new Action(() => { _reloadTimer.Stop(); _reloadTimer.Start(); }));
@@ -537,50 +522,11 @@ namespace TWChatOverlay.Views
             _tiles.Children.Add(MakeTile("최근 주 평균", FormatDuration(latest.Average), $"{latest.WeekStart:M.d} ~ {latest.WeekEnd:M.d} · {latest.Count}판", accent: false));
         }
 
-        /// <summary>수치 타일: 작은 이름 · 큰 값 · 작은 보조 설명. 강조 타일은 왼쪽에 민트 띠를 둔다 (글자 색은 그대로).</summary>
-        private FrameworkElement MakeTile(string label, string value, string sub, bool accent)
-        {
-            var labelText = new TextBlock { Text = label, FontSize = 11 };
-            labelText.SetResourceReference(TextBlock.ForegroundProperty, "OverlayHintTextBrush");
-            var valueText = new TextBlock { Text = value, FontSize = 21, FontWeight = FontWeights.SemiBold, Margin = new Thickness(0, 1, 0, 1) };
-            valueText.SetResourceReference(TextBlock.ForegroundProperty, "TextBrush");
-            var subText = new TextBlock { Text = sub, FontSize = 11, TextTrimming = TextTrimming.CharacterEllipsis };
-            subText.SetResourceReference(TextBlock.ForegroundProperty, "OverlayMutedTextBrush");
+        /// <summary>수치 타일 (공용 크롬). 이 창은 값 글자를 21로 조금 크게 쓴다.</summary>
+        private static FrameworkElement MakeTile(string label, string value, string sub, bool accent)
+            => OverlayChrome.MakeTile(label, value, sub, accent, valueFontSize: 21);
 
-            var stack = new StackPanel();
-            stack.Children.Add(labelText);
-            stack.Children.Add(valueText);
-            stack.Children.Add(subText);
-
-            var tile = new Border
-            {
-                Child = stack,
-                CornerRadius = new CornerRadius(8),
-                Padding = new Thickness(12, 8, 10, 9),
-                Margin = new Thickness(4, 0, 4, 0),
-                BorderThickness = accent ? new Thickness(3, 1, 1, 1) : new Thickness(1),
-            };
-            tile.SetResourceReference(Border.BackgroundProperty, "OverlayCardBackgroundBrush");
-            if (accent)
-                tile.BorderBrush = new SolidColorBrush(Mint);
-            else
-                tile.SetResourceReference(Border.BorderBrushProperty, "OverlayCardBorderBrush");
-            return tile;
-        }
-
-        private Border MakeCard(UIElement child, Thickness padding)
-        {
-            var card = new Border
-            {
-                Child = child,
-                CornerRadius = new CornerRadius(10),
-                Padding = padding,
-                BorderThickness = new Thickness(1),
-            };
-            card.SetResourceReference(Border.BackgroundProperty, "OverlayCardBackgroundBrush");
-            card.SetResourceReference(Border.BorderBrushProperty, "OverlayCardBorderBrush");
-            return card;
-        }
+        private static Border MakeCard(UIElement child, Thickness padding) => OverlayChrome.MakeCard(child, padding);
 
         /// <summary>그래프에서 누른 자리와 가장 가까운 주로 파고든다. 이미 파고든 상태면 아무것도 하지 않는다 (되돌리기는 왼쪽 위 알약).</summary>
         private void DrillIntoWeekAt(double pointerX)

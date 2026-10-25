@@ -541,24 +541,12 @@ namespace TWChatOverlay.Views
                 }
                 _lastLoggedTop = Top;
             }
-
-            PersistWindowPosition();
         }
 
 
         protected override void OnClosed(EventArgs e)
         {
             _resetTimer?.Stop();
-
-            try
-            {
-                PersistWindowPosition();
-            }
-            catch (Exception ex)
-            {
-                AppLogger.Warn("Failed to persist DailyWeekly window position on close.", ex);
-            }
-
             base.OnClosed(e);
         }
 
@@ -627,19 +615,24 @@ namespace TWChatOverlay.Views
                 Height = _expandedHeight;
         }
 
-        private void PersistWindowPosition()
+        /// <summary>위치·크기 저장(베이스 경로). 아직 화면에 뜨기 전(0,0이나 화면 가운데로 잡혀 있는 동안)의 자리는 저장하지 않는다.</summary>
+        protected override bool PersistBounds(ChatSettings settings)
         {
-            // 아직 화면에 뜨기 전(0,0이나 화면 가운데로 잡혀 있는 동안)의 자리는 저장하지 않는다
             if (!IsVisible)
-                return;
+                return false;
 
-            _settings.DailyWeeklyContentOverlayLeft = this.Left;
-            _settings.DailyWeeklyContentOverlayTop = this.Top;
-            _settings.DailyWeeklyContentOverlayWidth = this.Width;
+            settings.DailyWeeklyContentOverlayLeft = Left;
+            settings.DailyWeeklyContentOverlayTop = Top;
+            settings.DailyWeeklyContentOverlayWidth = Width;
             // 접힌 상태에서는 펼친 높이를 저장한다
-            _settings.DailyWeeklyContentOverlayHeight = _isBodyCollapsed ? _expandedHeight : this.Height;
-            ConfigService.SaveDeferred(_settings);
+            settings.DailyWeeklyContentOverlayHeight = _isBodyCollapsed ? _expandedHeight : Height;
+            return true;
         }
+
+        protected override (double? Left, double? Top, double? Width, double? Height)? StoredBounds(ChatSettings settings)
+            => (settings.DailyWeeklyContentOverlayLeft, settings.DailyWeeklyContentOverlayTop, null, null); // 크기는 XAML 바인딩이 복원한다
+
+        protected override ChatSettings? ResolveSettings() => _settings;
 
         private static (ObservableCollection<DailyWeeklyContentLog> TrackItems,
             ObservableCollection<DailyWeeklyContentLog> DailyItems,
@@ -1228,6 +1221,8 @@ namespace TWChatOverlay.Views
                         if (!File.Exists(filePath)) continue;
 
                         bool isDedicatedContentLog = IsDedicatedContentLogPath(filePath);
+                        if (isDedicatedContentLog)
+                            AppServices.Get<ReadableLogArchiveService>().FlushAll(); // 실시간 아카이브는 1초 모아 쓰므로 읽기 전에 내려 쓴다
                         Encoding encoding = isDedicatedContentLog ? Encoding.UTF8 : Encoding.GetEncoding(949);
                         using var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
                         using var reader = new StreamReader(stream, encoding);
@@ -1606,11 +1601,10 @@ namespace TWChatOverlay.Views
             }
         }
 
-        // 일간/주간 컨텐츠 창은 잠금 모드와 무관하게 항상 이동 가능. 폰트·z-순서·위치 저장은 기존대로 창 자체가 처리한다.
+        // 일간/주간 컨텐츠 창은 잠금 모드와 무관하게 항상 이동 가능. 폰트·z-순서는 창 자체가 처리하고, 위치·크기 저장은 베이스 경로(PersistBounds)를 쓴다.
         protected override bool KeepBelowSettingsHost => false;
         protected override bool ApplyAppFont => false;
         protected override bool DragRequiresUnlock => false;
-        protected override bool PersistBoundsOnChange => false;
 
         private void TitleBar_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
             => TryBeginDrag(e);
@@ -1624,21 +1618,11 @@ namespace TWChatOverlay.Views
         }
 
         private void ResizeGrip_DragCompleted(object sender, System.Windows.Controls.Primitives.DragCompletedEventArgs e)
-        {
-            try { PersistWindowPosition(); } catch { }
-        }
+            => PersistBoundsNow();
 
         private void Close_Click(object sender, RoutedEventArgs e)
         {
-            try
-            {
-                PersistWindowPosition();
-            }
-            catch (Exception ex)
-            {
-                AppLogger.Warn("Failed to persist DailyWeekly window position before hiding.", ex);
-            }
-
+            PersistBoundsNow();
             _settings.ShowDailyWeeklyContentOverlay = false;
         }
 

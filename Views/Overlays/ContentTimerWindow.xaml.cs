@@ -21,7 +21,7 @@ namespace TWChatOverlay.Views
     /// 진행 중에는 아무것도 보여주지 않고, 클리어되는 순간 결과를 지정한 시간 동안 남긴 뒤 저절로 닫힌다.
     /// 창 크기는 '타이머 글자 크기' 설정에 맞춰 잡히고, 잠금 해제 모드에서 끌어서 옮길 수 있다.
     /// </summary>
-    public partial class ContentTimerWindow : OverlayWindowBase
+    public partial class ContentTimerWindow : ToastWindowBase
     {
         private static readonly string[] ColumnHeaders = { "지난주", "직전 판", "최근 판" };
         private const int CurrentColumn = ContentTimerService.CurrentColumn;
@@ -70,7 +70,6 @@ namespace TWChatOverlay.Views
         /// <summary>표 글자 하나의 기준 크기(글자 크기 설정 16 기준). Tag에 넣어 두고 크기가 바뀌면 제자리에서 다시 계산한다.</summary>
         private sealed record TextStyle(double FontSize, double Left, double Top, double Bottom);
 
-        private readonly DispatcherTimer _lifetimeTimer;
         private readonly ChatSettings? _settings;
 
         private double _fontScale = 1.0;
@@ -84,7 +83,6 @@ namespace TWChatOverlay.Views
         private Border? _totalSeparator;
         private int _totalRowIndex = -1;
         private bool _isPreviewMode;
-        private bool _isClosing;
         /// <summary>작은 모드: 실시간 클리어 결과용. 던전 목록·화살표·지난주 평균 열을 숨긴다. 직접 열면(메뉴·미리보기) 전체 모드.</summary>
         private bool _compact;
         private const int HiddenColumnInCompact = 0; // 값 열 중 지난주 평균
@@ -93,13 +91,6 @@ namespace TWChatOverlay.Views
         {
             _settings = settings;
             InitializeComponent();
-
-            _lifetimeTimer = new DispatcherTimer();
-            _lifetimeTimer.Tick += (_, _) =>
-            {
-                _lifetimeTimer.Stop();
-                StartCloseAnimation();
-            };
 
             // 창 어디를 잡아도 옮길 수 있다 (잠금 상태와 무관).
             // 단 버튼(작게/크게·닫기·묶음 목록·화살표)과 눌러서 바꾸는 머리글은 그대로 눌려야 하므로 가로채지 않는다.
@@ -113,7 +104,6 @@ namespace TWChatOverlay.Views
                 }
                 TryBeginDrag(e, markHandled: true);
             };
-            LocationChanged += (_, _) => PersistPositionDeferred();
 
             BuildGroupList();
 
@@ -330,13 +320,9 @@ namespace TWChatOverlay.Views
         {
             _isPreviewMode = false;
             _compact = true; // 실시간 결과는 작은 모드: 던전 목록·화살표·지난주 평균 열 없이 직전 판과 최근 판만
-            _isClosing = false;
             Render(view);
             Reveal();
-
-            _lifetimeTimer.Stop();
-            _lifetimeTimer.Interval = TimeSpan.FromSeconds(Math.Max(1, Math.Min(300, holdSeconds)));
-            _lifetimeTimer.Start();
+            StartAutoClose(holdSeconds);
         }
 
         /// <summary>잠금 해제 모드에서 위치를 잡을 수 있게 띄운다. 마지막에 쓰던 모드 그대로 띄워야 자리를 제대로 잡는다. 저절로 닫히지 않는다.</summary>
@@ -344,7 +330,7 @@ namespace TWChatOverlay.Views
         {
             _isPreviewMode = true;
             _compact = compact;
-            _lifetimeTimer.Stop();
+            CancelAutoClose();
             Render(view);
             Reveal();
         }
@@ -357,8 +343,7 @@ namespace TWChatOverlay.Views
         {
             _isPreviewMode = false;
             _compact = compact;
-            _isClosing = false;
-            _lifetimeTimer.Stop();
+            CancelAutoClose();
             Render(view);
             Reveal();
         }
@@ -659,16 +644,16 @@ namespace TWChatOverlay.Views
 
         private void Reveal()
         {
-            BeginAnimation(OpacityProperty, null);
-            Opacity = 1;
+            ResetPresentation();
             if (!IsVisible)
                 Show();
-            TopmostWindowHelper.BringToTopmost(this);
+            BringToFront();
         }
 
-        private void StartCloseAnimation()
+        /// <summary>결과 표시 시간이 끝났을 때. 미리보기는 닫지 않고, 디버그 상시 표시(KeepOpen)면 대기 상태로 바꾼다.</summary>
+        protected override void OnAutoCloseElapsed()
         {
-            if (_isPreviewMode || _isClosing)
+            if (_isPreviewMode || IsFadingOut)
                 return;
 
             if (KeepOpen)
@@ -677,22 +662,29 @@ namespace TWChatOverlay.Views
                 return;
             }
 
-            _isClosing = true;
-            var fade = new DoubleAnimation
-            {
-                To = 0,
-                Duration = TimeSpan.FromMilliseconds(220),
-                EasingFunction = new QuadraticEase { EasingMode = EasingMode.EaseIn },
-            };
-            fade.Completed += (_, _) => Close();
-            BeginAnimation(OpacityProperty, fade);
+            CloseWithFade();
         }
 
         // ===== 이동 · 저장 =====
 
-        // 위치 저장은 이 창의 PersistPositionDeferred가 맡는다 (모드·크기 저장과 함께)
-        protected override bool PersistBoundsOnChange => false;
-        protected override void OnDragCompleted() => PersistPositionDeferred();
+        // 위치는 베이스 경로로 저장한다 (LocationChanged·드래그 끝·닫힘). 크기는 글자 크기에 맞춰 잡히므로(SizeToContent) 위치만.
+        // (알림 베이스의 기본은 꺼짐이지만 이 창은 자리를 사용자가 정한다)
+        protected override bool PersistBoundsOnChange => true;
+        protected override bool PersistBoundsOnClose => true;
+        protected override ChatSettings? ResolveSettings() => _settings;
+
+        protected override bool PersistBounds(ChatSettings settings)
+        {
+            if (!IsVisible)
+                return false;
+
+            settings.ContentTimerWindowLeft = Left;
+            settings.ContentTimerWindowTop = Top;
+            return true;
+        }
+
+        protected override (double? Left, double? Top, double? Width, double? Height)? StoredBounds(ChatSettings settings)
+            => (settings.ContentTimerWindowLeft, settings.ContentTimerWindowTop, null, null);
 
         private void TitleBar_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
             => TryBeginDrag(e);
@@ -732,42 +724,16 @@ namespace TWChatOverlay.Views
         private void CloseButton_Click(object sender, RoutedEventArgs e)
         {
             KeepOpen = false; // X는 디버그 상시 표시보다 우선한다
-            _lifetimeTimer.Stop();
+            CancelAutoClose();
             Close(); // 기록만 보는 창이므로 뒤에서 진행 중인 판은 건드리지 않는다
         }
 
         protected override void OnClosed(EventArgs e)
         {
-            _lifetimeTimer.Stop();
             if (_settings != null)
                 _settings.PropertyChanged -= Settings_PropertyChanged;
-            // 결과창은 판마다 자동으로 닫히므로 닫힐 때도 지연 저장만 건다. 종료 직전 대기분은 앱 종료 경로가 FlushPendingSave로 기록한다.
-            PersistPosition();
+            // 위치는 OnClosing에서 베이스가 지연 저장으로 썼다. 종료 직전 대기분은 앱 종료 경로가 FlushPendingSave로 기록한다.
             base.OnClosed(e);
-        }
-
-        private void PersistPositionDeferred()
-        {
-            if (!IsLoaded || !IsVisible)
-                return;
-            PersistPosition();
-        }
-
-        private void PersistPosition()
-        {
-            if (_settings == null)
-                return;
-
-            try
-            {
-                _settings.ContentTimerWindowLeft = Left;
-                _settings.ContentTimerWindowTop = Top;
-                ConfigService.SaveDeferred(_settings);
-            }
-            catch (Exception ex)
-            {
-                AppLogger.Warn("Failed to save dungeon timer window position.", ex);
-            }
         }
     }
 }

@@ -18,7 +18,7 @@ namespace TWChatOverlay.Views
     /// (창이 하나뿐이면 입장 가능 카운트다운 도중 다른 보스 알림이 오면서 카운트다운이 사라진다).
     /// 잠금 해제 모드에서 위치를 조정할 수 있고, 위치는 설정에 저장된다.
     /// </summary>
-    public sealed class BossAlertToastWindow : OverlayWindowBase
+    public sealed class BossAlertToastWindow : ToastWindowBase
     {
         private static readonly Dictionary<string, BossAlertToastWindow> Instances = new(StringComparer.Ordinal);
         private string _bossKey = string.Empty;
@@ -28,7 +28,6 @@ namespace TWChatOverlay.Views
         private readonly TextBlock _bodyText;
         /// <summary>문구 앞의 보스 이름 — 민트로 강조해 어느 보스인지 먼저 눈에 들어오게 한다.</summary>
         private string _bossName = string.Empty;
-        private readonly DispatcherTimer _closeTimer;
         private readonly DispatcherTimer _countdownTimer;
         private DateTime _countdownOccurrence;
         private string _countdownBossName = string.Empty;
@@ -80,13 +79,6 @@ namespace TWChatOverlay.Views
 
             // 잠금 해제 모드에서만 드래그로 이동 (크기는 설정에 저장, 위치는 알림 스택이 관리)
             root.MouseLeftButtonDown += RootBorder_MouseLeftButtonDown;
-
-            _closeTimer = new DispatcherTimer();
-            _closeTimer.Tick += (_, _) =>
-            {
-                _closeTimer.Stop();
-                try { Close(); } catch { }
-            };
 
             // 1초 간격 타이머는 UI가 잠깐 바쁘면 틱이 밀려 숫자가 2~3초씩 건너뛴다.
             // 200ms 간격 + Render 우선순위로 촘촘히 확인하되, 표시할 초가 바뀔 때만 텍스트를 갱신한다.
@@ -192,9 +184,14 @@ namespace TWChatOverlay.Views
             _bodyText.Inlines.Add(new System.Windows.Documents.Run(text));
         }
 
+        /// <summary>수명이 다하면 페이드 없이 바로 닫는다 (기존 동작).</summary>
+        protected override void OnAutoCloseElapsed()
+        {
+            try { Close(); } catch { }
+        }
+
         protected override void OnClosed(EventArgs e)
         {
-            try { _closeTimer.Stop(); } catch { }
             try { _countdownTimer.Stop(); } catch { }
             if (Instances.TryGetValue(_bossKey, out var mine) && ReferenceEquals(mine, this))
             {
@@ -269,9 +266,7 @@ namespace TWChatOverlay.Views
                         : occurrence.AddSeconds(5) - DateTime.Now;
                 if (lifetime < TimeSpan.FromSeconds(5))
                     lifetime = TimeSpan.FromSeconds(5);
-                window._closeTimer.Stop();
-                window._closeTimer.Interval = lifetime;
-                window._closeTimer.Start();
+                window.StartAutoClose(lifetime);
 
                 ShowAtStoredPosition(window, settings);
                 TopmostWindowHelper.BringToTopmost(window);
@@ -318,6 +313,7 @@ namespace TWChatOverlay.Views
 
             // 통합 알림 스택: 자리를 먼저 받고 그 자리에서 보인다 (Show 뒤에 붙이면 겹칠 수 있다)
             var (left, top) = AppServices.Get<ToastStackService>().Attach(window);
+            window.BeginAnimation(TopProperty, null); // 스택 재배치 애니메이션이 Top을 잡고 있으면 직접 대입이 무시된다
             window.Left = left;
             window.Top = top;
 

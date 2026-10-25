@@ -115,7 +115,7 @@ namespace TWChatOverlay.Views
             var buffHelper = BuffTrackerHelperWindow.Instance ?? CreateBuffTrackerHelperWindow();
             if (buffHelper != null)
             {
-                WindowPlacement.ApplyStored(buffHelper, _settings.BuffTrackerWindowLeft, _settings.BuffTrackerWindowTop);
+                buffHelper.ApplyStoredBounds(_settings);
                 if (!buffHelper.IsVisible)
                     buffHelper.Show();
             }
@@ -273,7 +273,7 @@ namespace TWChatOverlay.Views
                         var buffHelper = BuffTrackerHelperWindow.Instance ?? CreateBuffTrackerHelperWindow();
                         if (buffHelper != null)
                         {
-                            WindowPlacement.ApplyStored(buffHelper, _settings.BuffTrackerWindowLeft, _settings.BuffTrackerWindowTop);
+                            buffHelper.ApplyStoredBounds(_settings);
                             if (!buffHelper.IsVisible)
                                 buffHelper.Show();
                         }
@@ -287,20 +287,9 @@ namespace TWChatOverlay.Views
 
         private void CloseAddonPositionPreviewWindows(bool savePositions, bool restoreNormalWindows)
         {
+            // 어밴던로드 통계창 위치는 창이 닫히며 스스로 저장한다 (OverlayWindowBase.PersistBoundsOnClose)
             if (savePositions)
-            {
                 AppServices.Get<ToastStackService>().SaveCurrentPosition(_settings);
-
-                if (_AbandonRoadSummaryWindow != null)
-                {
-                    try
-                    {
-                        _settings.AbandonRoadSummaryWindowLeft = _AbandonRoadSummaryWindow.Left;
-                        _settings.AbandonRoadSummaryWindowTop = _AbandonRoadSummaryWindow.Top;
-                    }
-                    catch { }
-                }
-            }
 
             AppServices.Get<ToastStackService>().ClosePositionPreview();
             AppServices.Get<RecaptureSupplyAlertService>().ClosePositionPreview();
@@ -367,24 +356,21 @@ namespace TWChatOverlay.Views
 
             try
             {
-                if (_dailyWeeklyContentOverlay != null)
-                    WindowPlacement.ApplyStored(_dailyWeeklyContentOverlay, _settings.DailyWeeklyContentOverlayLeft, _settings.DailyWeeklyContentOverlayTop);
-                if (_itemCalendarWindow != null)
-                    WindowPlacement.ApplyStored(_itemCalendarWindow, _settings.ItemCalendarWindowLeft, _settings.ItemCalendarWindowTop);
-                if (_AbandonRoadSummaryWindow != null)
-                    WindowPlacement.ApplyStored(_AbandonRoadSummaryWindow, _settings.AbandonRoadSummaryWindowLeft, _settings.AbandonRoadSummaryWindowTop);
-                _expTrackerWindow?.ApplyStoredPosition(_settings.ExpTrackerWindowLeft, _settings.ExpTrackerWindowTop, _settings.ExpTrackerWindowRight);
+                _dailyWeeklyContentOverlay?.ApplyStoredBounds(_settings);
+                _itemCalendarWindow?.ApplyStoredBounds(_settings);
+                _AbandonRoadSummaryWindow?.ApplyStoredBounds(_settings);
+                _expTrackerWindow?.ApplyStoredBounds(_settings);
             }
             catch (Exception ex) { AppLogger.Warn("Failed to reapply overlay window positions.", ex); }
 
             try
             {
                 foreach (var clone in Application.Current.Windows.OfType<ChatCloneWindow>().ToList())
-                    clone.ReapplyStoredPosition();
+                    clone.ApplyStoredBounds(_settings);
                 foreach (var replay in Application.Current.Windows.OfType<ShoutReplayWindow>().ToList())
-                    replay.ApplyStoredBounds();
+                    replay.ApplyStoredBounds(_settings);
                 foreach (var memo in Application.Current.Windows.OfType<MemoOverlayWindow>().ToList())
-                    memo.ApplyStoredPosition();
+                    memo.ApplyStoredBounds(_settings);
                 DungeonAlertWindow.ApplyStoredPosition();
             }
             catch (Exception ex) { AppLogger.Warn("Failed to reapply sub window positions.", ex); }
@@ -512,7 +498,7 @@ namespace TWChatOverlay.Views
                 if (helper == null)
                     return;
 
-                WindowPlacement.ApplyStored(helper, _settings.ItemDropWindowLeft, _settings.ItemDropWindowTop);
+                helper.ApplyStoredBounds(_settings);
 
                 if (_isAddonPositionMode || _settings.ShowItemDropHelperWindow)
                 {
@@ -547,7 +533,7 @@ namespace TWChatOverlay.Views
                 if (window == null)
                     return;
 
-                WindowPlacement.ApplyStored(window, _settings.BuffTrackerWindowLeft, _settings.BuffTrackerWindowTop);
+                window.ApplyStoredBounds(_settings);
 
                 // Buff tracker visibility is managed independently from the main chat overlay.
                 window.ApplyVisibility();
@@ -653,7 +639,7 @@ namespace TWChatOverlay.Views
                 if (helper == null)
                     return;
 
-                WindowPlacement.ApplyStored(helper, _settings.BuffTrackerWindowLeft, _settings.BuffTrackerWindowTop);
+                helper.ApplyStoredBounds(_settings);
 
                 if (_isAddonPositionMode)
                 {

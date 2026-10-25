@@ -5,7 +5,6 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
-using System.Windows.Threading;
 using TWChatOverlay.Models;
 using TWChatOverlay.Services;
 
@@ -16,9 +15,11 @@ namespace TWChatOverlay.Views
     /// 어밴던로드 통계창과 같은 위치·크기 계열로 표시되며, 세션(입장 후 2분 30초)이 끝나고
     /// 잠시 뒤 자동으로 닫힌다.
     /// </summary>
-    public sealed class TreasurySummaryWindow : OverlayWindowBase
+    public sealed class TreasurySummaryWindow : ToastWindowBase
     {
         private const int MaxRuns = 7;
+        private const double DefaultWidth = 384;
+        private const double DefaultTop = 160;
         private const string SeedPouchIconUri = "pack://application:,,,/Data/images/Item/시드.png";
         private static readonly TimeSpan AutoCloseDelay = TimeSpan.FromSeconds(30); // 마지막 획득 후 30초 무획득이면 닫힘
 
@@ -29,7 +30,6 @@ namespace TWChatOverlay.Views
         private readonly Image[] _runIcons = new Image[MaxRuns];
         private readonly TextBlock _totalText;
         private readonly TextBlock _averageText;
-        private readonly DispatcherTimer _closeTimer;
         private readonly ChatSettings _settings;
         private bool _isPreview;
         private bool _isManual; // 바로가기 버튼으로 연 경우 — 자동 닫힘 없음
@@ -44,45 +44,14 @@ namespace TWChatOverlay.Views
             ShowActivated = false;
             Topmost = true;
             ResizeMode = ResizeMode.NoResize;
-            Width = 384;
+            Width = DefaultWidth;
             SizeToContent = SizeToContent.Height;
 
-            var title = new TextBlock
-            {
-                Text = "심연의 보물창고",
-                FontSize = 16,
-                FontWeight = FontWeights.SemiBold,
-            };
-            title.SetResourceReference(TextBlock.ForegroundProperty, "OverlayTitleAccentTextBrush");
-
-            var subtitle = new TextBlock
-            {
-                Text = "이번 주 금화 주머니 획득",
-                FontSize = 11,
-                Margin = new Thickness(0, 2, 0, 0),
-            };
-            subtitle.SetResourceReference(TextBlock.ForegroundProperty, "OverlayHintTextBrush");
-
-            var closeButton = new Button
-            {
-                Content = "닫기",
-                Height = 22,
-                MinWidth = 40,
-                Padding = new Thickness(8, 0, 8, 0),
-                FontSize = 11,
-                Cursor = System.Windows.Input.Cursors.Hand,
-                VerticalAlignment = VerticalAlignment.Top,
-            };
-            closeButton.SetResourceReference(StyleProperty, "SecondaryButtonStyle");
-            closeButton.Click += (_, _) => { try { Close(); } catch { } };
-
-            var header = new DockPanel { Margin = new Thickness(0, 0, 0, 8) };
-            DockPanel.SetDock(closeButton, Dock.Right);
-            header.Children.Add(closeButton);
             var titleStack = new StackPanel();
-            titleStack.Children.Add(title);
-            titleStack.Children.Add(subtitle);
-            header.Children.Add(titleStack);
+            titleStack.Children.Add(OverlayChrome.MakeTitle("심연의 보물창고"));
+            titleStack.Children.Add(OverlayChrome.MakeSubtitle("이번 주 금화 주머니 획득"));
+            var header = OverlayChrome.MakeHeader(titleStack, new Thickness(0, 0, 0, 8),
+                OverlayChrome.MakeCloseButton(() => Close()));
 
             var body = new StackPanel();
             body.Children.Add(header);
@@ -122,9 +91,7 @@ namespace TWChatOverlay.Views
                 body.Children.Add(row);
             }
 
-            var divider = new Border { Height = 1, Margin = new Thickness(0, 6, 0, 6) };
-            divider.SetResourceReference(Border.BackgroundProperty, "SeparatorBrush");
-            body.Children.Add(divider);
+            body.Children.Add(OverlayChrome.MakeDivider());
 
             var totalRow = new DockPanel { Margin = new Thickness(2, 1, 2, 1) };
             _totalText = new TextBlock { FontSize = 14, FontWeight = FontWeights.Bold };
@@ -146,44 +113,28 @@ namespace TWChatOverlay.Views
             avgRow.Children.Add(avgLabel);
             body.Children.Add(avgRow);
 
-            var root = new Border
-            {
-                BorderThickness = new Thickness(1),
-                CornerRadius = new CornerRadius(12),
-                Padding = new Thickness(16, 12, 16, 12),
-                Child = body,
-            };
-            root.SetResourceReference(Border.BackgroundProperty, "OverlayWindowBackgroundBrush");
-            root.SetResourceReference(Border.BorderBrushProperty, "OverlayWindowBorderBrush");
+            var root = OverlayChrome.MakeRootBorder(body, new Thickness(16, 12, 16, 12));
             Content = root;
 
             // 자체 저장 위치 → 없으면 어밴던로드 통계창 위치 → 없으면 화면 중앙 상단
-            var (left, top) = ToastPresentationHelper.ResolveBasePosition(
-                settings.TreasurySummaryWindowLeft ?? settings.AbandonRoadSummaryWindowLeft,
-                settings.TreasurySummaryWindowTop ?? settings.AbandonRoadSummaryWindowTop,
-                384, 160);
+            var (left, top) = ResolveDefaultPosition(settings);
             Left = left;
             Top = top;
 
             // 잠금 해제 모드에서 드래그로 이동 (자체 위치로 저장 — 어밴던 통계창과 독립)
             root.MouseLeftButtonDown += (_, e) => TryBeginDrag(e);
-
-            _closeTimer = new DispatcherTimer { Interval = AutoCloseDelay };
-            _closeTimer.Tick += (_, _) =>
-            {
-                _closeTimer.Stop();
-                try { Close(); } catch { }
-            };
         }
 
         protected override bool KeepBelowSettingsHost => false;
         protected override bool UseToolWindowStyle => true;
         protected override ChatSettings? ResolveSettings() => _settings;
+        // 자동으로 뜰 때의 위치는 기본 위치 계산 결과이므로, 사용자가 잠금 해제 중 옮긴 것만 저장한다
+        protected override bool PersistOnlyWhenUnlocked => true;
+        protected override bool PersistBoundsOnChange => true;
 
         protected override bool PersistBounds(ChatSettings settings)
         {
-            // 자동으로 뜰 때의 위치는 기본 위치 계산 결과이므로, 사용자가 잠금 해제 중 옮긴 것만 저장한다
-            if (!IsVisible || !AppServices.Get<UiLockService>().IsUnlocked)
+            if (!IsVisible)
                 return false;
 
             settings.TreasurySummaryWindowLeft = Left;
@@ -191,9 +142,27 @@ namespace TWChatOverlay.Views
             return true;
         }
 
+        protected override (double? Left, double? Top, double? Width, double? Height)? StoredBounds(ChatSettings settings)
+        {
+            var (left, top) = ResolveDefaultPosition(settings);
+            return (left, top, null, null);
+        }
+
+        /// <summary>자체 저장 위치 → 없으면 어밴던로드 통계창 위치 → 없으면 화면 중앙 상단.</summary>
+        private static (double Left, double Top) ResolveDefaultPosition(ChatSettings settings)
+            => ToastPresentationHelper.ResolveBasePosition(
+                settings.TreasurySummaryWindowLeft ?? settings.AbandonRoadSummaryWindowLeft,
+                settings.TreasurySummaryWindowTop ?? settings.AbandonRoadSummaryWindowTop,
+                DefaultWidth, DefaultTop);
+
+        /// <summary>30초 무획득이면 페이드 없이 닫는다 (기존 동작).</summary>
+        protected override void OnAutoCloseElapsed()
+        {
+            try { Close(); } catch { }
+        }
+
         protected override void OnClosed(EventArgs e)
         {
-            try { _closeTimer.Stop(); } catch { }
             if (ReferenceEquals(_instance, this))
                 _instance = null;
             base.OnClosed(e);
@@ -231,12 +200,13 @@ namespace TWChatOverlay.Views
                 _averageText.Text = "-";
             }
 
-            _closeTimer.Stop();
-            if (!_isPreview && !_isManual)
-                _closeTimer.Start();
+            // 미리보기·바로가기로 연 창은 저절로 닫히지 않는다
+            if (_isPreview || _isManual)
+                CancelAutoClose();
+            else
+                StartAutoClose(AutoCloseDelay);
         }
 
-        /// <summary>통계 창을 띄우거나 갱신한다 (UI 스레드 마샬링 포함).</summary>
         /// <summary>도움말/README 렌더 전용: 창을 띄우지 않고 샘플 데이터가 채워진 인스턴스를 만든다.</summary>
         internal static TreasurySummaryWindow CreateForRender(ChatSettings settings, IReadOnlyList<int> runCounts, int currentRun)
         {
@@ -245,11 +215,12 @@ namespace TWChatOverlay.Views
             return window;
         }
 
-        public static void ShowOrUpdate(ChatSettings settings, IReadOnlyList<int> runCounts, int currentRun)
+        /// <summary>
+        /// 세 공개 진입점이 함께 쓰는 블록: 인스턴스 확보 → 모드 설정 → 내용 채움 → Show → 최상위.
+        /// <paramref name="manual"/>이 null이면 직전 값을 그대로 둔다 (위치 미리보기는 바로가기 여부를 건드리지 않는다).
+        /// </summary>
+        private static void EnsureShown(ChatSettings settings, bool preview, bool? manual, Action<TreasurySummaryWindow> fill, string failureLog)
         {
-            if (AppServices.Get<TrayAllWindowsService>().IsTrayed)
-                return;
-
             Application.Current?.Dispatcher.BeginInvoke(new Action(() =>
             {
                 try
@@ -257,18 +228,30 @@ namespace TWChatOverlay.Views
                     if (_instance == null || !_instance.IsLoaded)
                         _instance = new TreasurySummaryWindow(settings);
 
-                    _instance._isPreview = false;
-                    _instance._isManual = false;
-                    _instance.UpdateState(runCounts, currentRun);
+                    _instance._isPreview = preview;
+                    if (manual.HasValue)
+                        _instance._isManual = manual.Value;
+                    fill(_instance);
                     if (!_instance.IsVisible)
                         _instance.Show();
-                    TopmostWindowHelper.BringToTopmost(_instance);
+                    _instance.BringToFront();
                 }
                 catch (Exception ex)
                 {
-                    AppLogger.Warn("Failed to show treasury summary window.", ex);
+                    AppLogger.Warn(failureLog, ex);
                 }
             }));
+        }
+
+        /// <summary>통계 창을 띄우거나 갱신한다 (UI 스레드 마샬링 포함).</summary>
+        public static void ShowOrUpdate(ChatSettings settings, IReadOnlyList<int> runCounts, int currentRun)
+        {
+            if (AppServices.Get<TrayAllWindowsService>().IsTrayed)
+                return;
+
+            EnsureShown(settings, preview: false, manual: false,
+                w => w.UpdateState(runCounts, currentRun),
+                "Failed to show treasury summary window.");
         }
 
         /// <summary>바로가기 버튼용: 저장된 이번 주 통계를 표시한다 (자동 닫힘 없음, 닫기 버튼으로 닫는다).</summary>
@@ -277,28 +260,14 @@ namespace TWChatOverlay.Views
             if (settings == null)
                 return;
 
-            Application.Current?.Dispatcher.BeginInvoke(new Action(() =>
-            {
-                try
+            EnsureShown(settings, preview: false, manual: true,
+                w =>
                 {
-                    if (_instance == null || !_instance.IsLoaded)
-                        _instance = new TreasurySummaryWindow(settings);
-
-                    _instance._isPreview = false;
-                    _instance._isManual = true;
-                    _instance.UpdateState(settings.Alerts.Dungeon.TreasuryRunCounts.ToArray(), currentRun: 0);
-                    if (!_instance.IsVisible)
-                        _instance.Show();
-                    TopmostWindowHelper.BringToTopmost(_instance);
-
+                    w.UpdateState(settings.Alerts.Dungeon.TreasuryRunCounts.ToArray(), currentRun: 0);
                     // 실시간 감지가 놓친 판(기능 꺼짐·앱 미실행)까지 이번 주 로그 아카이브로 복원
                     _ = RefreshFromLogArchiveAsync(settings);
-                }
-                catch (Exception ex)
-                {
-                    AppLogger.Warn("Failed to show stored treasury summary.", ex);
-                }
-            }));
+                },
+                "Failed to show stored treasury summary.");
         }
 
         /// <summary>이번 주 보물창고 이력을 로그 아카이브에서 재집계해 창과 저장값을 갱신한다.</summary>
@@ -342,27 +311,11 @@ namespace TWChatOverlay.Views
             if (settings == null || !settings.EnableTreasuryGoldCountAlert)
                 return; // 기능이 꺼져 있으면 배치할 창도 없다
 
-            Application.Current?.Dispatcher.BeginInvoke(new Action(() =>
-            {
-                try
-                {
-                    if (_instance == null || !_instance.IsLoaded)
-                        _instance = new TreasurySummaryWindow(settings);
-
-                    _instance._isPreview = true;
-                    _instance.UpdateState(new[] { 12, 9, 11 }, 3);
-                    if (!_instance.IsVisible)
-                        _instance.Show();
-                    TopmostWindowHelper.BringToTopmost(_instance);
-                }
-                catch (Exception ex)
-                {
-                    AppLogger.Warn("Failed to show treasury summary preview.", ex);
-                }
-            }));
+            EnsureShown(settings, preview: true, manual: null,
+                w => w.UpdateState(new[] { 12, 9, 11 }, 3),
+                "Failed to show treasury summary preview.");
         }
 
-        /// <summary>잠금 해제 종료 시 미리보기 창을 닫는다 (실제 세션 창은 유지).</summary>
         /// <summary>창이 떠 있으면 설정에 저장된 위치로 옮긴다. 설정 전체 교체(프로필 불러오기) 뒤에 쓴다.</summary>
         public static void ApplyStoredPosition(ChatSettings settings)
         {
@@ -374,15 +327,11 @@ namespace TWChatOverlay.Views
                 var window = _instance;
                 if (window == null || !window.IsLoaded)
                     return;
-
-                var (left, top) = ToastPresentationHelper.ResolveBasePosition(
-                    settings.TreasurySummaryWindowLeft ?? settings.AbandonRoadSummaryWindowLeft,
-                    settings.TreasurySummaryWindowTop ?? settings.AbandonRoadSummaryWindowTop,
-                    384, 160);
-                WindowPlacement.ApplyStored(window, left, top);
+                window.ApplyStoredBounds(settings);
             }));
         }
 
+        /// <summary>잠금 해제 종료 시 미리보기 창을 닫는다 (실제 세션 창은 유지).</summary>
         public static void ClosePositionPreview()
         {
             Application.Current?.Dispatcher.BeginInvoke(new Action(() =>

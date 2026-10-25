@@ -60,22 +60,8 @@ namespace TWChatOverlay.Views
             AppServices.Get<WeeklySeedRewardService>().Changed += OnSeedArchiveChanged;
             Closed += (_, _) => AppServices.Get<WeeklySeedRewardService>().Changed -= OnSeedArchiveChanged;
 
-            var title = new TextBlock
-            {
-                Text = "주간 득템 통계",
-                FontSize = 16,
-                FontWeight = FontWeights.SemiBold,
-            };
-            title.SetResourceReference(TextBlock.ForegroundProperty, "OverlayTitleAccentTextBrush");
-
-            _subtitleText = new TextBlock
-            {
-                Text = $"{weekStart:M.d(ddd)} ~ {weekEnd:M.d(ddd)}",
-                FontSize = 11,
-                VerticalAlignment = VerticalAlignment.Center,
-                Margin = new Thickness(4, 0, 4, 0),
-            };
-            _subtitleText.SetResourceReference(TextBlock.ForegroundProperty, "OverlayHintTextBrush");
+            var title = OverlayChrome.MakeTitle("주간 득템 통계");
+            _subtitleText = OverlayChrome.MakeSubtitle($"{weekStart:M.d(ddd)} ~ {weekEnd:M.d(ddd)}", new Thickness(4, 0, 4, 0));
 
             _prevWeekButton = CreateWeekNavButton("◀");
             _prevWeekButton.Click += (_, _) => ChangeWeek(-1);
@@ -92,26 +78,10 @@ namespace TWChatOverlay.Views
             subtitleRow.Children.Add(_subtitleText);
             subtitleRow.Children.Add(_nextWeekButton);
 
-            var closeButton = new Button
-            {
-                Content = "닫기",
-                Height = 22,
-                MinWidth = 40,
-                Padding = new Thickness(8, 0, 8, 0),
-                FontSize = 11,
-                Cursor = Cursors.Hand,
-                VerticalAlignment = VerticalAlignment.Top,
-            };
-            closeButton.SetResourceReference(StyleProperty, "SecondaryButtonStyle");
-            closeButton.Click += (_, _) => { try { Close(); } catch { } };
-
-            var header = new DockPanel { Margin = new Thickness(0, 0, 0, 8) };
-            DockPanel.SetDock(closeButton, Dock.Right);
-            header.Children.Add(closeButton);
             var titleStack = new StackPanel();
             titleStack.Children.Add(title);
             titleStack.Children.Add(subtitleRow);
-            header.Children.Add(titleStack);
+            var header = OverlayChrome.MakeHeader(titleStack, new Thickness(0, 0, 0, 8), OverlayChrome.MakeCloseButton(() => Close()));
 
             // 아이템 목록·경험의 정수는 창을 띄운 뒤 백그라운드에서 읽어 채운다 (LoadWeekItemsAsync)
             _listPanel = new StackPanel();
@@ -131,22 +101,19 @@ namespace TWChatOverlay.Views
             _seedOtherRow = BuildSeedRow("클리어 보상 시드 (기타)", new Thickness(2, 0, 2, 2), out _seedOtherText);
             _seedOtherRow.Visibility = Visibility.Collapsed;
             body.Children.Add(_seedOtherRow);
-            body.Children.Add(CreateDivider());
+            body.Children.Add(OverlayChrome.MakeDivider());
             body.Children.Add(scroll);
-            body.Children.Add(CreateDivider());
+            body.Children.Add(OverlayChrome.MakeDivider());
             body.Children.Add(BuildEssenceRow(out _essenceValueText));
             LoadWeekItemsAsync();
 
-            var root = new Border
-            {
-                BorderThickness = new Thickness(1),
-                CornerRadius = new CornerRadius(12),
-                Padding = new Thickness(16, 12, 16, 12),
-                Child = body,
-            };
-            root.SetResourceReference(Border.BackgroundProperty, "OverlayWindowBackgroundBrush");
-            root.SetResourceReference(Border.BorderBrushProperty, "OverlayWindowBorderBrush");
+            var root = OverlayChrome.MakeRootBorder(body, new Thickness(16, 12, 16, 12));
             Content = root;
+
+            // 저장된 자리가 있으면 거기서 열고(Manual), 없으면 화면 가운데(CenterScreen)
+            ApplyStoredBounds(ResolveSettings());
+            if (WindowStartupLocation == WindowStartupLocation.Manual)
+                _keepCenteredOnFirstFill = false;
 
             // 제목 영역 드래그로 이동 (잠금과 무관)
             root.MouseLeftButtonDown += (_, e) =>
@@ -159,7 +126,18 @@ namespace TWChatOverlay.Views
         protected override bool KeepBelowSettingsHost => false;
         protected override bool UseToolWindowStyle => true;
         protected override bool DragRequiresUnlock => false;
-        protected override bool PersistBoundsOnChange => false;
+        protected override bool PersistBoundsOnChange => false; // 드래그 끝·닫힘에 저장
+        protected override ChatSettings? ResolveSettings() => _settings ?? base.ResolveSettings();
+
+        protected override bool PersistBounds(ChatSettings settings)
+        {
+            settings.WeeklyItemSummaryWindowLeft = Left;
+            settings.WeeklyItemSummaryWindowTop = Top;
+            return true;
+        }
+
+        protected override (double? Left, double? Top, double? Width, double? Height)? StoredBounds(ChatSettings settings)
+            => (settings.WeeklyItemSummaryWindowLeft, settings.WeeklyItemSummaryWindowTop, null, null);
 
         private static Button CreateWeekNavButton(string glyph)
         {
@@ -473,13 +451,6 @@ namespace TWChatOverlay.Views
                 panel.Children.Add(row);
             }
 
-        }
-
-        private static Border CreateDivider()
-        {
-            var divider = new Border { Height = 1, Margin = new Thickness(0, 6, 0, 6) };
-            divider.SetResourceReference(Border.BackgroundProperty, "SeparatorBrush");
-            return divider;
         }
 
         /// <summary>경험의 정수 고정 행 (목록 아래 경계선 밑에 표시).</summary>

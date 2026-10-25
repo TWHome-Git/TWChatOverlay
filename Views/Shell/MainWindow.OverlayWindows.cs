@@ -106,8 +106,8 @@ namespace TWChatOverlay.Views
             if (!_dailyWeeklyContentOverlay!.IsVisible)
             {
                 _dailyWeeklyContentOverlay.Owner = this;
-                WindowPlacement.ApplyStored(_dailyWeeklyContentOverlay, _settings.DailyWeeklyContentOverlayLeft, _settings.DailyWeeklyContentOverlayTop);
                 _dailyWeeklyContentOverlay.WindowStartupLocation = WindowStartupLocation.Manual;
+                _dailyWeeklyContentOverlay.ApplyStoredBounds(_settings);
                 _dailyWeeklyContentOverlay.Show();
             }
 
@@ -155,9 +155,7 @@ namespace TWChatOverlay.Views
                 _itemCalendarWindow = new ItemCalendarWindow(_settings, _logAnalysisService);
                 _itemCalendarWindow.Closed += (_, _) =>
                 {
-                    _settings.ItemCalendarWindowLeft = _itemCalendarWindow?.Left;
-                    _settings.ItemCalendarWindowTop = _itemCalendarWindow?.Top;
-                    PersistSettings();
+                    // 위치는 창이 닫히며 스스로 저장한다 (OverlayWindowBase.PersistBoundsOnClose)
                     _itemCalendarWindow = null;
                     try { ItemCalendarVisibilityChanged?.Invoke(this, false); } catch { }
                 };
@@ -167,8 +165,8 @@ namespace TWChatOverlay.Views
             if (!_itemCalendarWindow.IsVisible)
             {
                 _itemCalendarWindow.Owner = this;
-                WindowPlacement.ApplyStored(_itemCalendarWindow, _settings.ItemCalendarWindowLeft, _settings.ItemCalendarWindowTop);
                 _itemCalendarWindow.WindowStartupLocation = WindowStartupLocation.Manual;
+                _itemCalendarWindow.ApplyStoredBounds(_settings);
                 _itemCalendarWindow.Show();
             }
 
@@ -222,9 +220,7 @@ namespace TWChatOverlay.Views
                 _AbandonRoadSummaryWindow = new AbandonRoadSummaryWindow();
                 _AbandonRoadSummaryWindow.Closed += (_, _) =>
                 {
-                    _settings.AbandonRoadSummaryWindowLeft = _AbandonRoadSummaryWindow?.Left;
-                    _settings.AbandonRoadSummaryWindowTop = _AbandonRoadSummaryWindow?.Top;
-                    PersistSettings();
+                    // 위치는 창이 닫히며 스스로 저장한다 (OverlayWindowBase.PersistBoundsOnClose)
                     _AbandonRoadSummaryWindow = null;
                 };
                 AppLogger.Info("Created AbandonRoad summary window instance.");
@@ -234,8 +230,8 @@ namespace TWChatOverlay.Views
             if (!wasVisible)
             {
                 _AbandonRoadSummaryWindow.Owner = this;
-                WindowPlacement.ApplyStored(_AbandonRoadSummaryWindow, _settings.AbandonRoadSummaryWindowLeft, _settings.AbandonRoadSummaryWindowTop);
                 _AbandonRoadSummaryWindow.WindowStartupLocation = WindowStartupLocation.Manual;
+                _AbandonRoadSummaryWindow.ApplyStoredBounds(_settings);
                 _AbandonRoadSummaryWindow.ShowActivated = activateWindow;
                 _AbandonRoadSummaryWindow.Show();
             }

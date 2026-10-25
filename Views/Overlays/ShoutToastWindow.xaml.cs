@@ -3,16 +3,13 @@ using System.Net;
 using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Input;
-using System.Windows.Interop;
 using System.Windows.Media;
-using System.Windows.Media.Animation;
-using System.Windows.Threading;
 using TWChatOverlay.Models;
 using TWChatOverlay.Services;
 
 namespace TWChatOverlay.Views
 {
-    public partial class ShoutToastWindow : OverlayWindowBase
+    public partial class ShoutToastWindow : ToastWindowBase
     {
         private static readonly Regex HtmlTagRegex = new("<[^>]+>", RegexOptions.Compiled);
         private static readonly Regex ShoutPrefixRegex = new(
@@ -28,10 +25,7 @@ namespace TWChatOverlay.Views
             RegexOptions.IgnoreCase | RegexOptions.Compiled);
         private const double ScreenEdgePadding = 16;
         private const double BaseToastWidth = 420;
-        private readonly DispatcherTimer _lifetimeTimer;
         private ChatSettings _settings;
-        private bool _isClosing;
-        private bool? _lastAppliedTopmostState;
 
         public ShoutToastWindow(string message, FontFamily fontFamily, ChatSettings settings)
         {
@@ -44,17 +38,6 @@ namespace TWChatOverlay.Views
             ApplyToastSettings();
             ToastText.Text = NormalizeMessage(message);
             ApplyLayoutConstraints();
-
-            _lifetimeTimer = new DispatcherTimer
-            {
-                Interval = TimeSpan.FromSeconds(5)
-            };
-            _lifetimeTimer.Tick += (_, _) =>
-            {
-                _lifetimeTimer.Stop();
-                StartCloseAnimation();
-            };
-
         }
 
         public void SetSettings(ChatSettings settings)
@@ -69,61 +52,28 @@ namespace TWChatOverlay.Views
             ToastText.FontSize = size;
         }
 
+        /// <summary>목표 자리에 슬라이드 등장. 폭(BaseToastWidth) 기준으로 가운데 맞추고 가상 데스크톱 안으로 Left를 클램프한다.</summary>
         public void ShowAnimated(double targetLeft, double targetTop, int durationSeconds = 5)
         {
-            RefreshMousePassthroughStyle();
-
             double centerX = targetLeft + (BaseToastWidth / 2.0);
-            Left = targetLeft;
-            Top = targetTop - 18;
-            Opacity = 0;
-            Show();
+            ShowSlideIn(targetLeft, targetTop, offset: 18);
             UpdateLayout();
             Left = ClampLeftToWorkArea(centerX - (ActualWidth / 2.0));
-            ApplyTopmostState(true);
+            BringToFront();
 
-            BeginAnimation(TopProperty, new DoubleAnimation
-            {
-                To = targetTop,
-                Duration = TimeSpan.FromMilliseconds(220),
-                EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut }
-            });
-
-            BeginAnimation(OpacityProperty, new DoubleAnimation
-            {
-                To = 1,
-                Duration = TimeSpan.FromMilliseconds(180)
-            });
-
-            _lifetimeTimer.Stop();
-            _lifetimeTimer.Interval = TimeSpan.FromSeconds(Math.Max(1, Math.Min(300, durationSeconds)));
-            _lifetimeTimer.Start();
+            StartAutoClose(durationSeconds);
         }
 
-        public void MoveTo(double targetTop)
-        {
-            BeginAnimation(TopProperty, new DoubleAnimation
-            {
-                To = targetTop,
-                Duration = TimeSpan.FromMilliseconds(180),
-                EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut }
-            });
-        }
+        protected override bool ApplyAppFont => false;          // 생성자 인자의 폰트를 쓴다
+        protected override bool UseToolWindowStyle => true;
+        // 알림 스택이 자리를 정하고 늘 설정 창 위에 떠 있던 창이라 설정 창 아래 배치 등록은 하지 않는다 (기존 z-순서 유지)
+        protected override bool KeepBelowSettingsHost => false;
 
         protected override void OnSourceInitialized(EventArgs e)
         {
             base.OnSourceInitialized(e);
-            RefreshMousePassthroughStyle();
+            SetMousePassthrough(true); // 늘 클릭 통과 — 선택 하이라이트만 받는다
         }
-
-        protected override void OnClosed(EventArgs e)
-        {
-            _lifetimeTimer.Stop();
-            base.OnClosed(e);
-        }
-
-        protected override bool ApplyAppFont => false;          // 생성자 인자의 폰트를 쓴다
-        protected override bool PersistBoundsOnChange => false; // 위치는 알림 스택이 정한다
 
         /// <summary>실제 알림은 스택이 배치하므로 끌 수 없다. 선택 하이라이트만 허용.</summary>
         private void RootBorder_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
@@ -131,64 +81,10 @@ namespace TWChatOverlay.Views
             AppServices.Get<UiLockService>().Select(this);
         }
 
-        private void StartCloseAnimation()
-        {
-            if (_isClosing)
-                return;
-
-            _isClosing = true;
-            var fade = new DoubleAnimation
-            {
-                To = 0,
-                Duration = TimeSpan.FromMilliseconds(220),
-                EasingFunction = new QuadraticEase { EasingMode = EasingMode.EaseIn }
-            };
-            fade.Completed += (_, _) => Close();
-            BeginAnimation(OpacityProperty, fade);
-        }
-
-        private void RefreshMousePassthroughStyle()
-        {
-            try
-            {
-                IntPtr hwnd = new WindowInteropHelper(this).EnsureHandle();
-                int exStyle = NativeMethods.GetWindowLong(hwnd, NativeMethods.GWL_EXSTYLE);
-                int nextStyle = exStyle | NativeMethods.WS_EX_TRANSPARENT | NativeMethods.WS_EX_TOOLWINDOW;
-                NativeMethods.SetWindowLong(hwnd, NativeMethods.GWL_EXSTYLE, nextStyle);
-            }
-            catch { }
-        }
-
         private void ApplyToastSettings()
         {
             ToastText.FontSize = _settings.ShoutToastFontSize;
             ApplyLayoutConstraints();
-        }
-
-        private void ApplyTopmostState(bool shouldTopmost)
-        {
-            if (_lastAppliedTopmostState == shouldTopmost)
-                return;
-
-            _lastAppliedTopmostState = shouldTopmost;
-
-            try
-            {
-                Topmost = shouldTopmost;
-                IntPtr hwnd = new WindowInteropHelper(this).EnsureHandle();
-                NativeMethods.SetWindowPos(
-                    hwnd,
-                    shouldTopmost ? NativeMethods.HWND_TOPMOST : NativeMethods.HWND_NOTOPMOST,
-                    0,
-                    0,
-                    0,
-                    0,
-                    NativeMethods.SWP_NOMOVE |
-                    NativeMethods.SWP_NOSIZE |
-                    NativeMethods.SWP_NOACTIVATE |
-                    NativeMethods.SWP_NOOWNERZORDER);
-            }
-            catch { }
         }
 
         private void ApplyLayoutConstraints()

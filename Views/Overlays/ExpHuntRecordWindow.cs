@@ -26,7 +26,7 @@ namespace TWChatOverlay.Views
     public sealed class ExpHuntRecordWindow : OverlayWindowBase
     {
         private static ExpHuntRecordWindow? _instance;
-        private static readonly Color Mint = Color.FromRgb(0x0C, 0xD2, 0x9D);
+        private static readonly Color Mint = OverlayChrome.Mint;
         private static readonly CultureInfo Korean = CultureInfo.GetCultureInfo("ko-KR");
 
         /// <summary>날짜 목록에 둘 날 수.</summary>
@@ -63,7 +63,18 @@ namespace TWChatOverlay.Views
         protected override bool UseToolWindowStyle => true;
         /// <summary>기록만 보는 창이라 잠금 상태에서도 끌어 옮길 수 있게 둔다.</summary>
         protected override bool DragRequiresUnlock => false;
-        protected override ChatSettings? ResolveSettings() => _settings;
+        protected override bool PersistBoundsOnChange => false; // 드래그 끝·닫힘에 저장
+        protected override ChatSettings? ResolveSettings() => _settings ?? base.ResolveSettings();
+
+        protected override bool PersistBounds(ChatSettings settings)
+        {
+            settings.ExpHuntRecordWindowLeft = Left;
+            settings.ExpHuntRecordWindowTop = Top;
+            return true;
+        }
+
+        protected override (double? Left, double? Top, double? Width, double? Height)? StoredBounds(ChatSettings settings)
+            => (settings.ExpHuntRecordWindowLeft, settings.ExpHuntRecordWindowTop, null, null);
 
         private ExpHuntRecordWindow(ExpHuntSessionService service, ChatSettings? settings)
         {
@@ -85,8 +96,7 @@ namespace TWChatOverlay.Views
             Title = "사냥 기록";
 
             // ── 제목 줄: 민트 제목 · 글자 크기 칩 · 닫기 ──
-            var titleText = new TextBlock { Text = "사냥 기록", FontSize = 16, FontWeight = FontWeights.SemiBold, VerticalAlignment = VerticalAlignment.Center };
-            titleText.SetResourceReference(TextBlock.ForegroundProperty, "OverlayTitleAccentTextBrush");
+            var titleText = OverlayChrome.MakeTitle("사냥 기록");
 
             var fontLabel = new TextBlock { Text = "글자", FontSize = 11, VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(0, 0, 6, 0) };
             fontLabel.SetResourceReference(TextBlock.ForegroundProperty, "OverlayHintTextBrush");
@@ -97,8 +107,8 @@ namespace TWChatOverlay.Views
             _fontSizeText = new TextBlock { FontSize = 11, Width = 30, VerticalAlignment = VerticalAlignment.Center };
             _fontSizeText.SetResourceReference(TextBlock.ForegroundProperty, "OverlayMutedTextBrush");
 
-            var closeButton = new Button { Style = (Style)FindResource("WindowCloseButtonStyle"), VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(10, 0, 0, 0) };
-            closeButton.Click += (_, _) => Close();
+            var closeButton = OverlayChrome.MakeCloseButton(() => Close(), new Thickness(10, 0, 0, 0));
+            closeButton.VerticalAlignment = VerticalAlignment.Center;
 
             var right = new StackPanel { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Center };
             right.Children.Add(fontLabel);
@@ -107,10 +117,7 @@ namespace TWChatOverlay.Views
             right.Children.Add(_fontSizeText);
             right.Children.Add(closeButton);
 
-            var header = new DockPanel { Margin = new Thickness(0, 0, 0, 10), Background = Brushes.Transparent };
-            DockPanel.SetDock(right, Dock.Right);
-            header.Children.Add(right);
-            header.Children.Add(titleText);
+            var header = OverlayChrome.MakeHeader(titleText, new Thickness(0, 0, 0, 10), right);
 
             // ── 날짜 줄: ◀ [날짜 ▾] ▶ — 날짜를 누르면 기록이 있는 날 목록 ──
             _prevButton = MakeChipButton("◀", "이전 기록 날짜", () => MoveDay(-1));
@@ -203,21 +210,15 @@ namespace TWChatOverlay.Views
             body.Children.Add(tableCard);
             body.Children.Add(footnote);
 
-            var root = new Border
-            {
-                BorderThickness = new Thickness(1),
-                CornerRadius = new CornerRadius(12),
-                Padding = new Thickness(18, 14, 18, 14),
-                Child = body,
-            };
-            root.SetResourceReference(Border.BackgroundProperty, "OverlayWindowBackgroundBrush");
-            root.SetResourceReference(Border.BorderBrushProperty, "OverlayWindowBorderBrush");
-            Content = root;
+            Content = OverlayChrome.MakeRootBorder(body, new Thickness(18, 14, 18, 14));
+
+            // 저장된 자리가 있으면 거기서 열고(Manual), 없으면 화면 가운데(CenterScreen)
+            ApplyStoredBounds(ResolveSettings());
 
             // 창 어디를 잡아도 옮길 수 있다. 버튼·목록·스크롤은 눌려야 하므로 가로채지 않는다
             PreviewMouseLeftButtonDown += (_, e) =>
             {
-                if (e.OriginalSource is DependencyObject source && IsOnControl(source))
+                if (OverlayChrome.IsOnInteractiveControl(e.OriginalSource as DependencyObject))
                     return;
                 TryBeginDrag(e, markHandled: true);
             };
@@ -244,58 +245,11 @@ namespace TWChatOverlay.Views
             return button;
         }
 
-        private Border MakeCard(UIElement child, Thickness padding)
-        {
-            var card = new Border { Child = child, CornerRadius = new CornerRadius(10), Padding = padding, BorderThickness = new Thickness(1) };
-            card.SetResourceReference(Border.BackgroundProperty, "OverlayCardBackgroundBrush");
-            card.SetResourceReference(Border.BorderBrushProperty, "OverlayCardBorderBrush");
-            return card;
-        }
+        private static Border MakeCard(UIElement child, Thickness padding) => OverlayChrome.MakeCard(child, padding);
 
-        /// <summary>수치 타일: 작은 이름 · 큰 값 · 작은 보조 설명. 강조 타일은 왼쪽에 민트 띠.</summary>
-        private FrameworkElement MakeTile(string label, string value, string sub, bool accent)
-        {
-            var labelText = new TextBlock { Text = label, FontSize = 11 };
-            labelText.SetResourceReference(TextBlock.ForegroundProperty, "OverlayHintTextBrush");
-            var valueText = new TextBlock { Text = value, FontSize = 20, FontWeight = FontWeights.SemiBold, Margin = new Thickness(0, 1, 0, 1), TextTrimming = TextTrimming.CharacterEllipsis };
-            valueText.SetResourceReference(TextBlock.ForegroundProperty, "TextBrush");
-            var subText = new TextBlock { Text = sub, FontSize = 11, TextTrimming = TextTrimming.CharacterEllipsis };
-            subText.SetResourceReference(TextBlock.ForegroundProperty, "OverlayMutedTextBrush");
-
-            var stack = new StackPanel();
-            stack.Children.Add(labelText);
-            stack.Children.Add(valueText);
-            stack.Children.Add(subText);
-
-            var tile = new Border
-            {
-                Child = stack,
-                CornerRadius = new CornerRadius(8),
-                Padding = new Thickness(12, 8, 10, 9),
-                Margin = new Thickness(4, 0, 4, 0),
-                BorderThickness = accent ? new Thickness(3, 1, 1, 1) : new Thickness(1),
-            };
-            tile.SetResourceReference(Border.BackgroundProperty, "OverlayCardBackgroundBrush");
-            if (accent)
-                tile.BorderBrush = new SolidColorBrush(Mint);
-            else
-                tile.SetResourceReference(Border.BorderBrushProperty, "OverlayCardBorderBrush");
-            return tile;
-        }
-
-        /// <summary>눌러 쓰는 것(버튼·목록·스크롤) 위인지 — 그 위에서는 창을 끌지 않는다.</summary>
-        private static bool IsOnControl(DependencyObject source)
-        {
-            for (DependencyObject? current = source; current != null;
-                 current = current is Visual || current is System.Windows.Media.Media3D.Visual3D
-                     ? VisualTreeHelper.GetParent(current)
-                     : LogicalTreeHelper.GetParent(current))
-            {
-                if (current is ButtonBase or ListBox or Slider or ScrollBar)
-                    return true;
-            }
-            return false;
-        }
+        /// <summary>수치 타일 (공용 크롬, 값 글자 20).</summary>
+        private static FrameworkElement MakeTile(string label, string value, string sub, bool accent)
+            => OverlayChrome.MakeTile(label, value, sub, accent);
 
         /// <summary>창이 열리거나 닫힐 때 (메뉴 바 버튼 표시용).</summary>
         public static event Action<bool>? VisibilityChanged;

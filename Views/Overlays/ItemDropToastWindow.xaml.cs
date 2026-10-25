@@ -1,16 +1,14 @@
 using System;
 using System.Windows;
 using System.Windows.Media;
-using System.Windows.Media.Animation;
-using System.Windows.Threading;
 using TWChatOverlay.Services;
 
 namespace TWChatOverlay.Views
 {
     /// <summary>아이템 획득 토스트. 클릭을 통과시키고 잠시 뒤 스스로 닫힌다. 위치는 알림 스택이 정한다.</summary>
-    public partial class ItemDropToastWindow : OverlayWindowBase
+    public partial class ItemDropToastWindow : ToastWindowBase
     {
-        private readonly DispatcherTimer _lifetimeTimer;
+        private static readonly TimeSpan Lifetime = TimeSpan.FromMilliseconds(2400);
 
         public ItemDropToastWindow(string itemName, ItemDropGrade grade, FontFamily fontFamily)
         {
@@ -35,21 +33,11 @@ namespace TWChatOverlay.Views
             }
             catch { }
             ItemNameText.Foreground = (Brush?)ChatBrushResolver.ForItemGrade(grade) ?? Brushes.White;
-
-            _lifetimeTimer = new DispatcherTimer
-            {
-                Interval = TimeSpan.FromMilliseconds(2400)
-            };
-            _lifetimeTimer.Tick += (_, _) =>
-            {
-                _lifetimeTimer.Stop();
-                StartCloseAnimation();
-            };
         }
 
         protected override bool ApplyAppFont => false;          // 생성자 인자의 폰트를 쓴다
         protected override bool UseToolWindowStyle => true;
-        protected override bool PersistBoundsOnChange => false; // 위치는 스택이 정한다
+        protected override TimeSpan FadeOutDuration => TimeSpan.FromMilliseconds(260);
 
         protected override void OnSourceInitialized(EventArgs e)
         {
@@ -59,55 +47,13 @@ namespace TWChatOverlay.Views
 
         public void ShowAnimated(double targetLeft, double targetTop)
         {
-            Left = targetLeft;
-            Top = targetTop - 24;
-            Opacity = 0;
-            Show();
-            BringToFront();
-
-            var topAnim = new DoubleAnimation
-            {
-                To = targetTop,
-                Duration = TimeSpan.FromMilliseconds(220),
-                EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut }
-            };
-            BeginAnimation(TopProperty, topAnim);
-
             // 페이드 인 목표를 창별 저장 투명도로 (잠금 해제 인스펙터에서 지정한 값)
             UiLockService.ApplyStoredOpacity(this);
             double targetOpacity = Opacity > 0 ? Opacity : 1.0;
-            Opacity = 0;
-            var opacityAnim = new DoubleAnimation
-            {
-                To = targetOpacity,
-                Duration = TimeSpan.FromMilliseconds(180)
-            };
-            BeginAnimation(OpacityProperty, opacityAnim);
 
-            _lifetimeTimer.Start();
-        }
-
-        public void MoveTo(double targetTop)
-        {
-            var topAnim = new DoubleAnimation
-            {
-                To = targetTop,
-                Duration = TimeSpan.FromMilliseconds(180),
-                EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut }
-            };
-            BeginAnimation(TopProperty, topAnim);
-        }
-
-        private void StartCloseAnimation()
-        {
-            var fade = new DoubleAnimation
-            {
-                To = 0,
-                Duration = TimeSpan.FromMilliseconds(260),
-                EasingFunction = new QuadraticEase { EasingMode = EasingMode.EaseIn }
-            };
-            fade.Completed += (_, _) => Close();
-            BeginAnimation(OpacityProperty, fade);
+            ShowSlideIn(targetLeft, targetTop, offset: 24, targetOpacity: targetOpacity);
+            BringToFront();
+            StartAutoClose(Lifetime);
         }
     }
 }

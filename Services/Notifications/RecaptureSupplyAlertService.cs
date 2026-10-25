@@ -131,33 +131,16 @@ namespace TWChatOverlay.Services
                 {
                     _window = new RecaptureSupplyWindow(CacheFilePath);
                     RecaptureSupplyWindow createdWindow = _window;
+                    // 위치·크기는 창이 닫히며 스스로 저장한다 (OverlayWindowBase.PersistBoundsOnClose)
                     _window.Closed += (_, _) =>
                     {
-                        try
-                        {
-                            if (settings != null)
-                            {
-                                settings.RecaptureSupplyWindowLeft = createdWindow.Left;
-                                settings.RecaptureSupplyWindowTop = createdWindow.Top;
-                                if (createdWindow.ActualWidth > 0)
-                                    settings.RecaptureSupplyWindowWidth = createdWindow.ActualWidth;
-                                if (createdWindow.ActualHeight > 0)
-                                    settings.RecaptureSupplyWindowHeight = createdWindow.ActualHeight;
-                                ConfigService.SaveDeferred(settings);
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-                            AppLogger.Warn("Failed to save Recapture supply window position on close.", ex);
-                        }
-
                         if (ReferenceEquals(_window, createdWindow))
                             _window = null;
                     };
                 }
 
                 if (settings != null)
-                    ApplyStoredBounds(_window, settings);
+                    _window.ApplyStoredBounds(settings);
 
                 if (!_window.IsVisible)
                 {
@@ -179,19 +162,8 @@ namespace TWChatOverlay.Services
                 var window = _window;
                 if (window == null || !window.IsLoaded)
                     return;
-                ApplyStoredBounds(window, settings);
+                window.ApplyStoredBounds(settings);
             }));
-        }
-
-        private void ApplyStoredBounds(RecaptureSupplyWindow window, ChatSettings settings)
-        {
-            bool hasStoredPosition = settings.RecaptureSupplyWindowLeft.HasValue && settings.RecaptureSupplyWindowTop.HasValue;
-            WindowPlacement.ApplyStoredBounds(window,
-                settings.RecaptureSupplyWindowLeft, settings.RecaptureSupplyWindowTop,
-                settings.RecaptureSupplyWindowWidth, settings.RecaptureSupplyWindowHeight);
-            window.WindowStartupLocation = hasStoredPosition
-                ? WindowStartupLocation.Manual
-                : WindowStartupLocation.CenterScreen;
         }
 
         private static ChatSettings? GetSharedSettings() => AppServices.TryGet<ChatSettings>();

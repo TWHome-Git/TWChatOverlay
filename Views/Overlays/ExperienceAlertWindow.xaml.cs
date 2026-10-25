@@ -19,6 +19,10 @@ namespace TWChatOverlay.Views
 
         protected override bool UseToolWindowStyle => true;
         protected override ChatSettings? ResolveSettings() => _settings;
+        // 자리는 알림 스택이 정한다. 스택이 준 좌표가 설정(분리 모드의 앵커)에 되쓰이면 다음 배치 때 전체가 밀리므로
+        // 잠금 해제 드래그(TryBeginDrag)로 옮긴 자리만 저장한다.
+        protected override bool PersistBoundsOnChange => false;
+        protected override bool PersistBoundsOnClose => false;
 
         public void SetSettings(ChatSettings settings)
         {
@@ -35,12 +39,6 @@ namespace TWChatOverlay.Views
         public void SetFontSize(double size)
         {
             MessageTextBlock.FontSize = size;
-        }
-
-        protected override void OnClosed(EventArgs e)
-        {
-            PersistBoundsNow();
-            base.OnClosed(e);
         }
 
         private void CloseButton_Click(object sender, RoutedEventArgs e)

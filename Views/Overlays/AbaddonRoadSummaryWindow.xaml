@@ -1,4 +1,4 @@
-﻿<ov:OverlayWindowBase x:Class="TWChatOverlay.Views.AbandonRoadSummaryWindow"
+﻿<ov:ToastWindowBase x:Class="TWChatOverlay.Views.AbandonRoadSummaryWindow"
         xmlns:ov="clr-namespace:TWChatOverlay.Views"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
@@ -120,4 +120,4 @@
             </ItemsControl>
         </Grid>
     </Border>
-</ov:OverlayWindowBase>
+</ov:ToastWindowBase>

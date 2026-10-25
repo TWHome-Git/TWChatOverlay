@@ -2,31 +2,19 @@ using System;
 using System.IO;
 using System.Windows;
 using System.Windows.Input;
-using System.Windows.Interop;
 using System.Windows.Media.Imaging;
 using TWChatOverlay.Models;
 using TWChatOverlay.Services;
 
 namespace TWChatOverlay.Views
 {
-    /// <summary>보급품 탈환 지도 창. 잠금 해제 모드에서 창 어디를 잡아도 이동하고, 가장자리로 크기를 조절한다.</summary>
+    /// <summary>보급품 탈환 지도 창. 잠금 해제 모드에서 창 어디를 잡아도 이동하고, 가장자리로 크기를 조절한다 (잠금 중에도 가능).</summary>
     public partial class RecaptureSupplyWindow : OverlayWindowBase
     {
-        private const int ResizeBorderThickness = 6;
-        private const int WM_NCHITTEST = 0x0084;
-        private const int HTLEFT = 10;
-        private const int HTRIGHT = 11;
-        private const int HTTOP = 12;
-        private const int HTTOPLEFT = 13;
-        private const int HTTOPRIGHT = 14;
-        private const int HTBOTTOM = 15;
-        private const int HTBOTTOMLEFT = 16;
-        private const int HTBOTTOMRIGHT = 17;
-
         public RecaptureSupplyWindow(string imagePath)
         {
             InitializeComponent();
-            SourceInitialized += RecaptureSupplyWindow_SourceInitialized;
+            EnableEdgeResize(thickness: 6); // 네이티브 테두리(CanResize)에 6px 히트 영역을 덧씌운다
             // 잠금 해제 모드에서는 창 어디를 잡아도 선택+드래그 가능
             PreviewMouseLeftButtonDown += (_, e) => TryBeginDrag(e, markHandled: true);
             LoadImage(imagePath);
@@ -46,13 +34,19 @@ namespace TWChatOverlay.Views
             return true;
         }
 
-        private void RecaptureSupplyWindow_SourceInitialized(object? sender, EventArgs e)
+        protected override (double? Left, double? Top, double? Width, double? Height)? StoredBounds(ChatSettings settings)
+            => (settings.RecaptureSupplyWindowLeft, settings.RecaptureSupplyWindowTop,
+                settings.RecaptureSupplyWindowWidth, settings.RecaptureSupplyWindowHeight);
+
+        /// <summary>저장된 자리가 없으면 화면 가운데에서 시작한다.</summary>
+        public override void ApplyStoredBounds(ChatSettings? settings = null)
         {
-            try
-            {
-                HwndSource.FromHwnd(new WindowInteropHelper(this).Handle)?.AddHook(WndProc);
-            }
-            catch { }
+            settings ??= ResolveSettings();
+            if (settings == null)
+                return;
+            base.ApplyStoredBounds(settings);
+            if (!(settings.RecaptureSupplyWindowLeft.HasValue && settings.RecaptureSupplyWindowTop.HasValue))
+                WindowStartupLocation = WindowStartupLocation.CenterScreen;
         }
 
         private void LoadImage(string imagePath)
@@ -83,41 +77,6 @@ namespace TWChatOverlay.Views
         private void CloseButton_Click(object sender, RoutedEventArgs e)
         {
             Close();
-        }
-
-        private IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
-        {
-            try
-            {
-                if (msg != WM_NCHITTEST)
-                    return IntPtr.Zero;
-
-                Point screenPoint = new(
-                    unchecked((short)(lParam.ToInt64() & 0xFFFF)),
-                    unchecked((short)((lParam.ToInt64() >> 16) & 0xFFFF)));
-
-                Point localPoint = PointFromScreen(screenPoint);
-
-                if (WindowState == WindowState.Maximized)
-                    return IntPtr.Zero;
-
-                bool left = localPoint.X <= ResizeBorderThickness;
-                bool right = localPoint.X >= ActualWidth - ResizeBorderThickness;
-                bool top = localPoint.Y <= ResizeBorderThickness;
-                bool bottom = localPoint.Y >= ActualHeight - ResizeBorderThickness;
-
-                if (left && top) { handled = true; return (IntPtr)HTTOPLEFT; }
-                if (right && top) { handled = true; return (IntPtr)HTTOPRIGHT; }
-                if (left && bottom) { handled = true; return (IntPtr)HTBOTTOMLEFT; }
-                if (right && bottom) { handled = true; return (IntPtr)HTBOTTOMRIGHT; }
-                if (left) { handled = true; return (IntPtr)HTLEFT; }
-                if (right) { handled = true; return (IntPtr)HTRIGHT; }
-                if (top) { handled = true; return (IntPtr)HTTOP; }
-                if (bottom) { handled = true; return (IntPtr)HTBOTTOM; }
-            }
-            catch { }
-
-            return IntPtr.Zero;
         }
     }
 }

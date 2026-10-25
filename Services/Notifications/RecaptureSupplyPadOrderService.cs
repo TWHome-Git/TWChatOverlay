@@ -107,7 +107,7 @@ namespace TWChatOverlay.Services
             };
 
             if (settings != null)
-                ApplyStoredBounds(window, settings);
+                window.ApplyStoredBounds(settings);
 
             return window;
         }
@@ -123,17 +123,8 @@ namespace TWChatOverlay.Services
                 var window = _window;
                 if (window == null || !window.IsLoaded)
                     return;
-                ApplyStoredBounds(window, settings);
+                window.ApplyStoredBounds(settings);
             }));
-        }
-
-        private void ApplyStoredBounds(RecaptureSupplyPadOrderWindow window, ChatSettings settings)
-        {
-            if (settings.RecaptureSupplyPadOrderWindowLeft.HasValue && settings.RecaptureSupplyPadOrderWindowTop.HasValue)
-                window.WindowStartupLocation = WindowStartupLocation.Manual;
-            WindowPlacement.ApplyStoredBounds(window,
-                settings.RecaptureSupplyPadOrderWindowLeft, settings.RecaptureSupplyPadOrderWindowTop,
-                settings.RecaptureSupplyPadOrderWindowWidth, settings.RecaptureSupplyPadOrderWindowHeight);
         }
 
         private static ChatSettings? GetSharedSettings() => AppServices.TryGet<ChatSettings>();

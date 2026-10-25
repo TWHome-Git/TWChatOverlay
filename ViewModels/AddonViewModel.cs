@@ -180,8 +180,9 @@ namespace TWChatOverlay.ViewModels
             _experienceAlertFontSize = _settings.ExperienceAlertFontSize;
             _itemDropToastFontSize = _settings.ItemDropToastFontSize;
             _bossAlertToastFontSize = _settings.BossAlertToastFontSize;
+            // 카드는 지금 로드돼 있는 보스 목록으로 한 번 만든다. 원격 목록 갱신(manifest 조회 포함)은
+            // 필드 보스 패널이 보일 때 RefreshBossAlarmCardsAsync가 하므로 여기서 한 번 더 만들지 않는다.
             ReplaceBossAlarmCards(_bossAlarmCardProvider.CreateCards());
-            _ = InitializeBossAlarmCardsAsync();
             _ = InitializeDropItemFilterListsAsync();
             RefreshExperienceLimitState();
 
@@ -342,12 +343,6 @@ namespace TWChatOverlay.ViewModels
             {
                 BossAlarmCards.Add(card);
             }
-        }
-
-        private async Task InitializeBossAlarmCardsAsync()
-        {
-            var cards = await _bossAlarmCardProvider.LoadCardsAsync();
-            Application.Current?.Dispatcher.BeginInvoke(new Action(() => ReplaceBossAlarmCards(cards)));
         }
 
         public async Task RefreshBossAlarmCardsAsync(bool forceRefresh = false)

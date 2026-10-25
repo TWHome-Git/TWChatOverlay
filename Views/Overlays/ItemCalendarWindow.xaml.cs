@@ -24,11 +24,6 @@ namespace TWChatOverlay.Views
         private static readonly string ExpDirectoryPath = LogStoragePaths.ExpDirectory;
         private static readonly string AbandonDirectoryPath = LogStoragePaths.AbandonDirectory;
 
-        private const string LowMagicStoneIconUri = "pack://application:,,,/Data/images/Item/하급마정석.png";
-        private const string MiddleMagicStoneIconUri = "pack://application:,,,/Data/images/Item/중급마정석.png";
-        private const string HighMagicStoneIconUri = "pack://application:,,,/Data/images/Item/상급마정석.png";
-        private const string TopMagicStoneIconUri = "pack://application:,,,/Data/images/Item/최상급마정석.png";
-
         private static readonly Regex ItemEntryRegex = new(
             "<div\\s+class=\"log\\s+item\"(?<attrs>[^>]*)>(?<text>.*?)</div>",
             RegexOptions.IgnoreCase | RegexOptions.Compiled);
@@ -446,7 +441,8 @@ namespace TWChatOverlay.Views
 
         private static IEnumerable<ContentEntry> ReadExpEntries(string path)
         {
-            foreach (string line in File.ReadLines(path))
+            // 실시간 아카이브는 1초 모아 쓰므로 공용 읽기 통로(먼저 FlushAll)를 쓴다
+            foreach (string line in AppServices.Get<ReadableLogArchiveService>().ReadArchiveLines(path))
             {
                 Match match = ExpEntryRegex.Match(line);
                 if (!match.Success)
@@ -476,7 +472,7 @@ namespace TWChatOverlay.Views
 
         private static IEnumerable<ItemEntry> ReadItemEntries(string path)
         {
-            foreach (string line in File.ReadLines(path))
+            foreach (string line in AppServices.Get<ReadableLogArchiveService>().ReadArchiveLines(path))
             {
                 Match match = ItemEntryRegex.Match(line);
                 if (!match.Success)
@@ -714,24 +710,7 @@ namespace TWChatOverlay.Views
         {
             MonthlyAbandonSeedText = $"어밴던로드 누적 합계: {FormatManAmount(summary.NetProfitMan)}";
 
-            MonthlyAbandonSummary.Clear();
-            MonthlyAbandonSummary.Add(new AbandonMonthlyStoneSummaryEntryViewModel("하급 마정석", LowMagicStoneIconUri, summary.Low));
-            MonthlyAbandonSummary.Add(new AbandonMonthlyStoneSummaryEntryViewModel("중급 마정석", MiddleMagicStoneIconUri, summary.Mid));
-            MonthlyAbandonSummary.Add(new AbandonMonthlyStoneSummaryEntryViewModel("상급 마정석", HighMagicStoneIconUri, summary.High));
-            MonthlyAbandonSummary.Add(new AbandonMonthlyStoneSummaryEntryViewModel("최상급 마정석", TopMagicStoneIconUri, summary.Top));
-            long lowLossCount = Math.Abs(summary.LowLoss);
-            long derivedLowLoss = Math.Max(0, summary.LowGain - summary.Low);
-            if (derivedLowLoss > 0 && lowLossCount != derivedLowLoss)
-                lowLossCount = derivedLowLoss;
-            else if (lowLossCount == 0 && summary.Low < 0)
-                lowLossCount = Math.Abs(summary.Low);
-            MonthlyAbandonSummary.Add(new AbandonMonthlyStoneSummaryEntryViewModel(
-                "누에게 빼앗긴 마정석",
-                LowMagicStoneIconUri,
-                lowLossCount,
-                "#FF6B6B",
-                "#FF6B6B",
-                $"{lowLossCount:N0}개"));
+            AbandonStoneRows.Fill(MonthlyAbandonSummary, summary.Low, summary.Mid, summary.High, summary.Top, summary.LowLoss, summary.LowGain);
         }
 
         private ItemCalendarDayViewModel BuildDay(DateTime date, bool isCurrentMonth, IReadOnlyCollection<ItemLogSnapshotEntry> snapshots, int experienceEssenceCount)
@@ -1010,10 +989,21 @@ namespace TWChatOverlay.Views
         private void Close_Click(object sender, RoutedEventArgs e)
             => Close();
 
-        // 달력 창은 잠금 모드와 무관하게 항상 이동 가능. 위치 저장은 MainWindow가 맡는다.
+        // 달력 창은 잠금 모드와 무관하게 항상 이동 가능. 위치는 드래그 끝·닫힘에 베이스 경로로 저장한다.
         protected override bool KeepBelowSettingsHost => false;
         protected override bool DragRequiresUnlock => false;
         protected override bool PersistBoundsOnChange => false;
+        protected override ChatSettings? ResolveSettings() => _settings;
+
+        protected override bool PersistBounds(ChatSettings settings)
+        {
+            settings.ItemCalendarWindowLeft = Left;
+            settings.ItemCalendarWindowTop = Top;
+            return true;
+        }
+
+        protected override (double? Left, double? Top, double? Width, double? Height)? StoredBounds(ChatSettings settings)
+            => (settings.ItemCalendarWindowLeft, settings.ItemCalendarWindowTop, null, null);
 
         private void TitleBar_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
             => TryBeginDrag(e);

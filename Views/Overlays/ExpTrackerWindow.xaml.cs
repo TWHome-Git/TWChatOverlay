@@ -56,14 +56,19 @@ namespace TWChatOverlay.Views
                 return;
 
             UpdateRightAnchorFromCurrentBounds();
-            PersistPosition();
+            PersistBoundsNow();
         }
 
-        public void ApplyStoredPosition(double? left, double? top, double? right)
+        /// <summary>복원 경로(베이스): 오른쪽 가장자리 고정(Right)이 있으면 그 기준으로 Left를 잡는다.</summary>
+        public override void ApplyStoredBounds(ChatSettings? settings = null)
         {
-            _storedLeft = left;
-            _storedTop = top;
-            _storedRight = right;
+            settings ??= ResolveSettings();
+            if (settings == null)
+                return;
+
+            _storedLeft = settings.ExpTrackerWindowLeft;
+            _storedTop = settings.ExpTrackerWindowTop;
+            _storedRight = settings.ExpTrackerWindowRight;
 
             if (_isReady)
                 ApplyStoredPositionInternal();
@@ -153,7 +158,7 @@ namespace TWChatOverlay.Views
             MaxWidth = maxWidth;
         }
 
-        // 오른쪽 앵커 기준 위치 로직이 따로 있어 베이스의 자동 영속화는 끄고, 드래그 끝에서 직접 저장한다
+        // 오른쪽 앵커 기준 위치 로직이 따로 있어 베이스의 자동 영속화는 끄고, 위 LocationChanged·드래그 끝·닫힘에서 저장한다
         protected override bool PersistBoundsOnChange => false;
         /// <summary>표시만 하는 창. 잠금 중엔 클릭이 아래 게임으로 간다.</summary>
         protected override bool PassthroughWhenLocked => true;
@@ -165,30 +170,18 @@ namespace TWChatOverlay.Views
         protected override void OnDragCompleted()
         {
             UpdateRightAnchorFromCurrentBounds();
-            PersistPosition();
+            PersistBoundsNow();
         }
 
-        /// <summary>
-        /// 앱 종료 시 현재 위치를 공유 설정에 확정 저장하기 위한 안전망 진입점.
-        /// </summary>
-        public void PersistPositionNow() => PersistPosition();
-
-        private void PersistPosition()
+        protected override bool PersistBounds(ChatSettings settings)
         {
             if (!_isReady || DataContext is not ExpTrackerViewModel)
-                return;
+                return false;
 
-            if (WindowState == WindowState.Minimized)
-                return;
-
-            ChatSettings? settings = ResolveSettings();
-            if (settings != null)
-            {
-                settings.ExpTrackerWindowLeft = Left;
-                settings.ExpTrackerWindowTop = Top;
-                settings.ExpTrackerWindowRight = _rightAnchor ?? (Left + ActualWidth);
-                ConfigService.SaveDeferred(settings);
-            }
+            settings.ExpTrackerWindowLeft = Left;
+            settings.ExpTrackerWindowTop = Top;
+            settings.ExpTrackerWindowRight = _rightAnchor ?? (Left + ActualWidth);
+            return true;
         }
 
     }

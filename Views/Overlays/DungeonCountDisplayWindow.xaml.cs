@@ -3,17 +3,15 @@ using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
-using System.Windows.Threading;
 using TWChatOverlay.Models;
 
 namespace TWChatOverlay.Views
 {
-    /// <summary>던전 카운트 알림창 (어밴던로드·갈망하는 즐거움 등). 일정 시간 뒤 스스로 닫힌다.</summary>
-    public partial class DungeonCountDisplayWindow : OverlayWindowBase
+    /// <summary>던전 카운트 알림창 (어밴던로드·갈망하는 즐거움 등). 일정 시간 뒤 스스로 닫힌다. 위치는 알림 스택이 정한다.</summary>
+    public partial class DungeonCountDisplayWindow : ToastWindowBase
     {
-        private readonly DispatcherTimer _closeTimer;
         private ChatSettings _settings;
-        private bool _isClosing;
+        private readonly TimeSpan _initialLifetime;
 
         public DungeonCountDisplayWindow(string message, FontFamily fontFamily, int durationSeconds, ChatSettings settings)
         {
@@ -23,18 +21,7 @@ namespace TWChatOverlay.Views
             MessageTextBlock.FontFamily = fontFamily;
             MessageTextBlock.FontSize = settings.DungeonCountDisplayFontSize;
             MessageTextBlock.Text = message;
-
-            _closeTimer = new DispatcherTimer
-            {
-                Interval = durationSeconds > 0
-                    ? TimeSpan.FromSeconds(Math.Max(1, Math.Min(300, durationSeconds)))
-                    : TimeSpan.Zero
-            };
-            _closeTimer.Tick += (_, _) =>
-            {
-                _closeTimer.Stop();
-                CloseAnimated();
-            };
+            _initialLifetime = ClampLifetime(durationSeconds);
         }
 
         // 폰트는 생성자 인자로 받은 것을 쓴다 (앱 공통 폰트 자동 적용 안 함)
@@ -43,6 +30,7 @@ namespace TWChatOverlay.Views
         protected override ChatSettings? ResolveSettings() => _settings;
         /// <summary>표시만 하는 창. 잠금 중엔 클릭이 아래 게임으로 가고, 잠금 해제 때만 클릭을 받아 편집된다.</summary>
         protected override bool PassthroughWhenLocked => true;
+        protected override TimeSpan FadeOutDuration => TimeSpan.FromMilliseconds(180);
 
         public void SetSettings(ChatSettings settings)
         {
@@ -81,16 +69,9 @@ namespace TWChatOverlay.Views
 
         public void UpdateDisplay(string message, int durationSeconds)
         {
-            _isClosing = false;
-            BeginAnimation(OpacityProperty, null);
-            Opacity = 1;
+            ResetPresentation();
             MessageTextBlock.Text = message;
-            _closeTimer.Stop();
-            if (durationSeconds > 0)
-            {
-                _closeTimer.Interval = TimeSpan.FromSeconds(Math.Max(1, Math.Min(300, durationSeconds)));
-                _closeTimer.Start();
-            }
+            StartAutoClose(durationSeconds);
             BringToFront();
         }
 
@@ -101,14 +82,7 @@ namespace TWChatOverlay.Views
             Show();
             BringToFront();
             BeginAnimation(OpacityProperty, new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(140)));
-            if (_closeTimer.Interval > TimeSpan.Zero)
-                _closeTimer.Start();
-        }
-
-        protected override void OnClosed(EventArgs e)
-        {
-            PersistBoundsNow();
-            base.OnClosed(e);
+            StartAutoClose(_initialLifetime);
         }
 
         private void RootBorder_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
@@ -117,6 +91,10 @@ namespace TWChatOverlay.Views
             TryBeginDrag(e);
         }
 
+        /// <summary>
+        /// 잠금 해제 중 끌어 옮긴 자리만 저장한다 (TryBeginDrag 경로). 스택이 배치한 좌표는 LocationChanged·닫힘에서 되쓰지 않는다 —
+        /// 분리 모드에서는 이 키가 그 그룹의 앵커라, 둘째 창의 자리가 저장되면 다음 배치 때 전체가 아래로 밀렸다.
+        /// </summary>
         protected override bool PersistBounds(ChatSettings settings)
         {
             if (!IsVisible)
@@ -125,17 +103,6 @@ namespace TWChatOverlay.Views
             settings.DungeonCountDisplayWindowLeft = Left;
             settings.DungeonCountDisplayWindowTop = Top;
             return true;
-        }
-
-        private void CloseAnimated()
-        {
-            if (_isClosing)
-                return;
-
-            _isClosing = true;
-            var animation = new DoubleAnimation(Opacity, 0, TimeSpan.FromMilliseconds(180));
-            animation.Completed += (_, _) => Close();
-            BeginAnimation(OpacityProperty, animation);
         }
     }
 }

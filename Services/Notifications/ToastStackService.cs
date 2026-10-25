@@ -197,8 +197,7 @@ namespace TWChatOverlay.Services
 
             if (Previews.TryGetValue(key, out var preview) && preview.IsVisible)
             {
-                preview.Left = left;
-                preview.Top = y;
+                preview.PlaceAt(left, y); // 배치로 옮긴 자리는 앵커에 되쓰지 않는다 (사용자 드래그·인스펙터 이동만 저장)
                 y += EffectiveHeight(preview) + Gap;
             }
 
@@ -241,15 +240,13 @@ namespace TWChatOverlay.Services
             return 72;
         }
 
-        private void MoveWindowTop(Window window, double top)
+        private static void MoveWindowTop(Window window, double top)
         {
-            // 이동 애니메이션이 있는 창은 그 경로로 (외치기/아이템)
-            switch (window)
-            {
-                case ShoutToastWindow shout: shout.MoveTo(top); break;
-                case ItemDropToastWindow item: item.MoveTo(top); break;
-                default: window.Top = top; break;
-            }
+            // 알림 베이스 창은 부드럽게 옮긴다. 종류별 분기를 두지 않아 새 알림 종류가 생겨도 여기를 고칠 일이 없다.
+            if (window is ToastWindowBase toast)
+                toast.AnimateTop(top);
+            else
+                window.Top = top;
         }
 
         // ===== 위치 미리보기(앵커) =====
@@ -308,8 +305,7 @@ namespace TWChatOverlay.Services
             var (left, top) = GetAnchorFor(key);
             if (!preview.IsVisible)
                 preview.Show();
-            preview.Left = left;
-            preview.Top = top;
+            preview.PlaceAt(left, top);
             TopmostWindowHelper.BringToTopmost(preview);
         }
 
@@ -360,6 +356,22 @@ namespace TWChatOverlay.Services
         {
             private readonly ChatSettings _settings;
             private readonly string _groupKey;
+            private int _placingDepth;
+
+            /// <summary>스택 서비스가 배치하느라 옮기는 것 — LocationChanged의 앵커 저장을 건너뛴다.</summary>
+            public void PlaceAt(double left, double top)
+            {
+                _placingDepth++;
+                try
+                {
+                    Left = left;
+                    Top = top;
+                }
+                finally
+                {
+                    _placingDepth--;
+                }
+            }
 
             public ToastStackPreviewWindow(ChatSettings settings, string groupKey, string title, string subtitle)
             {
@@ -423,7 +435,7 @@ namespace TWChatOverlay.Services
                 };
                 LocationChanged += (_, _) =>
                 {
-                    if (!IsVisible)
+                    if (!IsVisible || _placingDepth > 0)
                         return;
                     AppServices.Get<ToastStackService>().SetAnchorFor(_groupKey, _settings, Left, Top);
                     ConfigService.SaveDeferred(_settings); // 인스펙터(X/Y 입력·넛지) 이동도 저장되도록
