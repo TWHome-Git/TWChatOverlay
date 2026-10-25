@@ -58,31 +58,6 @@ namespace TWChatOverlay.Views
             IsAutoScrollEnabled = Math.Abs(_scrollViewer.VerticalOffset - _scrollViewer.ScrollableHeight) < 1.0;
         }
 
-        /// <summary>
-        /// 창이 클릭 통과 상태라 휠이 직접 들어오지 않을 때, 전역 훅이 받은 휠로 대신 스크롤한다.
-        /// delta는 120 단위(양수 = 위로). ScrollViewer가 휠을 직접 받을 때와 같은 양(시스템 휠 줄 수 × LineUp/LineDown)만큼 움직인다.
-        /// </summary>
-        public void ScrollByWheelDelta(int delta)
-        {
-            _scrollViewer ??= FindDescendant<ScrollViewer>(LogDisplay);
-            if (_scrollViewer == null || delta == 0)
-                return;
-
-            int lines = SystemParameters.WheelScrollLines;
-            if (lines <= 0)
-                lines = 3;
-
-            int notches = Math.Max(1, Math.Abs(delta) / 120);
-            int steps = notches * lines;
-            for (int i = 0; i < steps; i++)
-            {
-                if (delta > 0)
-                    _scrollViewer.LineUp();
-                else
-                    _scrollViewer.LineDown();
-            }
-        }
-
         private void ScrollToBottom_Click(object sender, RoutedEventArgs e)
         {
             LogDisplay.ScrollToEnd();

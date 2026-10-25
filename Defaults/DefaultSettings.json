@@ -500,8 +500,6 @@
   "Ui": {
     "OverlayOpacityPercent": 100,
     "OverlaysAlwaysOnTop": false,
-    "ChatPassthroughEnabled": true,
-    "ChatPassthroughIdleSeconds": 3,
     "TopmostGuardProcessNames": "InphaseNXD, Talesweaver",
     "OverlayOpacityByGroup": {
       "Calendar": 100,

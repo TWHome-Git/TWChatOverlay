@@ -1262,22 +1262,6 @@ namespace TWChatOverlay.Models
         /// <summary>오버레이 항상 위. 끄면 처음 실행 때만 위에 두고, 이후에는 일반 창처럼 동작.</summary>
         [JsonIgnore]
         public bool OverlaysAlwaysOnTop { get => Ui.OverlaysAlwaysOnTop; set { Ui.OverlaysAlwaysOnTop = value; OnPropertyChanged(); } }
-        /// <summary>잠금 중 채팅창 클릭 통과. 휠을 굴리면 잠시 마우스를 받고, 유휴 시간 뒤 다시 통과된다.</summary>
-        [JsonIgnore]
-        public bool ChatPassthroughEnabled { get => Ui.ChatPassthroughEnabled; set { if (Ui.ChatPassthroughEnabled == value) return; Ui.ChatPassthroughEnabled = value; OnPropertyChanged(); } }
-        /// <summary>휠로 깨어난 채팅창이 다시 통과로 돌아가기까지의 유휴 시간(초). 1~60.</summary>
-        [JsonIgnore]
-        public int ChatPassthroughIdleSeconds
-        {
-            get => Ui.ChatPassthroughIdleSeconds;
-            set
-            {
-                int clamped = Math.Max(1, Math.Min(60, value));
-                if (Ui.ChatPassthroughIdleSeconds == clamped) return;
-                Ui.ChatPassthroughIdleSeconds = clamped;
-                OnPropertyChanged();
-            }
-        }
         /// <summary>항상 위를 다시 올릴 대상 프로세스 이름(쉼표 구분). 이 앱이 전경일 때만 오버레이를 재승격한다.</summary>
         [JsonIgnore]
         public string TopmostGuardProcessNames { get => Ui.TopmostGuardProcessNames; set { Ui.TopmostGuardProcessNames = value ?? string.Empty; OnPropertyChanged(); } }

@@ -50,7 +50,7 @@ namespace TWChatOverlay.Services
         private const string LogsFolderResetMigrationKey = "logs-folder-reset-5x";
         // 컨텐츠 아카이브 판정 기준이 바뀐 뒤(어비스 입장·보상 줄 등 정규식 판정 포함) 예전 빌드가 쓴 주간 파일을 1회 재구축
         private const string ContentArchiveRebuildMigrationKey = "content-archive-rebuild";
-        private const int CurrentContentArchiveRebuildVersion = 1;
+        private const int CurrentContentArchiveRebuildVersion = 2;
         private const int CurrentLogsFolderResetVersion = 1;
         private const string AbandonDaySummarySuffix = ".summary.day.json";
         private readonly Dictionary<DateTime, AbandonMonthlySummarySnapshotEntry> _abandonDayBuffer = new();
@@ -437,14 +437,19 @@ namespace TWChatOverlay.Services
                         return;
 
                     _liveWrites.FlushAll();
-                    // 일일/주간 창이 같은 파일을 읽고 있으면 삭제가 공유 위반으로 막힌다 — 그때는 내용을 비워 '누락'으로 잡히게 한다
-                    foreach (string path in Directory.EnumerateFiles(_contentDirectory, "*.html", SearchOption.TopDirectoryOnly))
+                    string[] files = Directory.GetFiles(_contentDirectory, "*.html", SearchOption.TopDirectoryOnly);
+                    var failed = new List<string>();
+                    foreach (string path in files)
                     {
-                        try { File.Delete(path); }
-                        catch (IOException)
-                        {
-                            using var fs = new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.ReadWrite | FileShare.Delete);
-                        }
+                        if (!TryDeleteOrTruncate(path, out string outcome))
+                            failed.Add($"{Path.GetFileName(path)}: {outcome}");
+                    }
+
+                    if (failed.Count > 0)
+                    {
+                        // 비우지 못한 파일이 있으면 완료로 기록하지 않고 다음 시작에 다시 시도한다
+                        AppLogger.Warn($"[진단] 컨텐츠 아카이브 재구축 준비 실패 ({failed.Count}/{files.Length}): {string.Join(" | ", failed)}");
+                        return;
                     }
 
                     var state = LoadMigrationState();
@@ -455,13 +460,41 @@ namespace TWChatOverlay.Services
                     }
 
                     SaveMigrationVersion(ContentArchiveRebuildMigrationKey, CurrentContentArchiveRebuildVersion);
-                    AppLogger.Info("Content archive cleared for rebuild (migration v" + CurrentContentArchiveRebuildVersion + ").");
+                    AppLogger.Warn($"[진단] 컨텐츠 아카이브 {files.Length}개 비움 → 원본 로그에서 재구축 (dir={_contentDirectory})");
                 }
                 catch (Exception ex)
                 {
                     AppLogger.Warn("Failed to reset content archive for rebuild.", ex);
                 }
             }
+        }
+
+        /// <summary>파일을 지우고, 다른 창이 읽고 있어 못 지우면 내용을 비운다. 끝난 뒤 실제로 비었는지 확인한다.</summary>
+        private static bool TryDeleteOrTruncate(string path, out string outcome)
+        {
+            for (int attempt = 0; attempt < 5; attempt++)
+            {
+                try
+                {
+                    File.Delete(path);
+                    if (!File.Exists(path)) { outcome = "deleted"; return true; }
+                }
+                catch (Exception ex) { outcome = "delete: " + ex.GetType().Name; }
+
+                try
+                {
+                    using (var fs = new FileStream(path, FileMode.Open, FileAccess.Write, FileShare.ReadWrite | FileShare.Delete))
+                        fs.SetLength(0);
+                    if (!File.Exists(path) || new FileInfo(path).Length == 0) { outcome = "truncated"; return true; }
+                }
+                catch (Exception ex) { outcome = "truncate: " + ex.GetType().Name + " " + ex.Message; }
+
+                Thread.Sleep(200);
+            }
+
+            outcome = "still has content";
+            try { outcome = "still " + new FileInfo(path).Length + " bytes"; } catch { }
+            return false;
         }
 
         public void MigrateContentArchiveIfNeeded()

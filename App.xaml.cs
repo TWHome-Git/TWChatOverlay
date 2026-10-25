@@ -122,7 +122,6 @@ namespace TWChatOverlay
                 services.AddSingleton<ContentTimerService>();
                 services.AddSingleton<ForegroundTopmostGuard>();
                 services.AddSingleton<ScalerTopmostGuard>();
-                services.AddSingleton<ChatWheelPassthroughService>();
                 services.AddSingleton<ItemDropToastService>();
                 services.AddSingleton<NotificationService>();
                 services.AddSingleton<WeeklySeedRewardService>();
@@ -240,10 +239,10 @@ namespace TWChatOverlay
                 AppLogger.Warn("Failed to persist window positions during shutdown.", ex);
             }
 
-            AppServices.Get<ForegroundTopmostGuard>().Shutdown();
+            // 두 번째 인스턴스처럼 DI가 초기화되지 않은 채 종료될 수 있다
+            AppServices.TryGet<ForegroundTopmostGuard>()?.Shutdown();
             AppServices.TryGet<ScalerTopmostGuard>()?.Detach();
-            AppServices.TryGet<ChatWheelPassthroughService>()?.Shutdown();
-            AppServices.Get<NotificationService>().DeleteCachedAudioFiles();
+            AppServices.TryGet<NotificationService>()?.DeleteCachedAudioFiles();
             _mutex?.ReleaseMutex();
             _mutex?.Dispose();     
             AppLogger.Info("Application shutdown completed.");

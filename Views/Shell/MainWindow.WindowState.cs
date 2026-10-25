@@ -35,7 +35,6 @@ namespace TWChatOverlay.Views
             }
             ApplyPositionModeWindows();
             RefreshExpTrackerWindow();
-            RefreshChatPassthrough();
         }
 
         public void SetAddonPositionPreviewTabIndex(int tabIndex)

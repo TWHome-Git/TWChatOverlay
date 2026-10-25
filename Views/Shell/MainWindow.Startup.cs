@@ -79,7 +79,6 @@ namespace TWChatOverlay.Views
 
             _isInitialSetupWizardRunning = true;
             _pendingInitialSetupWizard = false;
-            RefreshChatPassthrough();
 
             try
             {
@@ -183,7 +182,6 @@ namespace TWChatOverlay.Views
         private void RevealMainUiAfterWizard()
         {
             _isInitialSetupWizardRunning = false;
-            RefreshChatPassthrough();
 
             if (!IsVisible)
             {
@@ -266,6 +264,8 @@ namespace TWChatOverlay.Views
                     return result;
                 }, cancellationToken).ConfigureAwait(false);
 
+                // 컨텐츠 아카이브가 방금 (재)구축됐을 수 있으니 열려 있는 일일/주간 창은 다시 센다
+                try { _ = Dispatcher.InvokeAsync(() => { _ = _dailyWeeklyContentOverlay?.ScanHistoricalLogsAsync(); }); } catch { }
                 _AbandonWeeklySummary = _readableLogArchiveService.LoadAbandonWeeklySummary(DateTime.Today);
                 _AbandonWeeklySummaryWeekKey = LogTextClassifier.GetIsoWeekKey(DateTime.Today);
                 _settings.StartupLogReadCanceled = false;
@@ -388,7 +388,9 @@ namespace TWChatOverlay.Views
                     {
                         try
                         {
-                            _AbandonWeeklySummary = _readableLogArchiveService.LoadAbandonWeeklySummary(DateTime.Today);
+                            // 컨텐츠 아카이브가 방금 (재)구축됐을 수 있으니 열려 있는 일일/주간 창은 다시 센다
+                try { _ = Dispatcher.InvokeAsync(() => { _ = _dailyWeeklyContentOverlay?.ScanHistoricalLogsAsync(); }); } catch { }
+                _AbandonWeeklySummary = _readableLogArchiveService.LoadAbandonWeeklySummary(DateTime.Today);
                             _AbandonWeeklySummaryWeekKey = LogTextClassifier.GetIsoWeekKey(DateTime.Today);
                         }
                         catch (Exception ex)

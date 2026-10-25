@@ -319,13 +319,6 @@ namespace TWChatOverlay.Models
         /// <summary>오버레이 항상 위. 끄면 처음 실행 때만 위에 두고, 이후에는 일반 창처럼 다른 앱 뒤로 내려간다.</summary>
         public bool OverlaysAlwaysOnTop { get; set; } = false;
         /// <summary>
-        /// 잠금 중 채팅창 클릭 통과. 켜면 메인·서브 채팅창이 평소엔 아래 게임으로 클릭을 넘기고,
-        /// 휠을 굴리면 잠시 마우스를 받다가 유휴 시간 뒤 다시 통과된다. 끄면 예전처럼 항상 마우스를 받는다.
-        /// </summary>
-        public bool ChatPassthroughEnabled { get; set; } = true;
-        /// <summary>휠로 깨어난 채팅창이 다시 클릭 통과로 돌아가기까지의 유휴 시간(초). 1~60.</summary>
-        public int ChatPassthroughIdleSeconds { get; set; } = 3;
-        /// <summary>
         /// 항상 위를 다시 올릴 대상 프로세스 이름(쉼표 구분, .exe 없이). 이 프로그램이 전경이 될 때만 오버레이를 최상단으로 재승격한다.
         /// 캡처 도구 같은 다른 앱이 전경이 될 때는 손대지 않아 그 위로 올라가지 않는다. 게임 클라이언트는 InphaseNXD로 뜬다.
         /// 설정 화면에는 내지 않는다. 게임 실행 파일 이름이 바뀌었을 때 settings.json에서만 고치는 값이다.
