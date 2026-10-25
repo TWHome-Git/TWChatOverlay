@@ -37,7 +37,7 @@ namespace TWChatOverlay.Services
                     string soundFile = grade == ItemDropGrade.Normal
                         ? "drop_low.mp3"
                         : "drop.mp3";
-                    AppServices.Get<NotificationService>().PlayAlert(soundFile);
+                    AppServices.Get<NotificationService>().PlayAlert(soundFile, AlertChannel.ItemDrop);
                 }
 
                 // 통합 알림 스택: 앵커 위치에서 다른 알림들 아래로 배치

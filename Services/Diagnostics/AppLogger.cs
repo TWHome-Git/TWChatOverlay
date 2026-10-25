@@ -57,6 +57,13 @@ namespace TWChatOverlay.Services
             set => _isEnabled = value;
         }
 
+        /// <summary>
+        /// 이 레벨의 메시지가 실제로 기록되는지. 핫패스에서 보간 문자열을 만들기 전에 확인해
+        /// 디버그 로깅이 꺼져 있을 때(기본) INFO/DEBUG 호출 비용을 없앤다. WARN 이상은 항상 true.
+        /// </summary>
+        public static bool IsLevelEnabled(LogLevel level)
+            => level >= LogLevel.WARN || (_isEnabled && level >= _minimumLevel);
+
         public static void Debug(string message, [CallerMemberName] string? caller = null) => Write(LogLevel.DEBUG, message, caller);
         public static void Info(string message, [CallerMemberName] string? caller = null) => Write(LogLevel.INFO, message, caller);
         public static void Warn(string message, [CallerMemberName] string? caller = null) => Write(LogLevel.WARN, message, caller);

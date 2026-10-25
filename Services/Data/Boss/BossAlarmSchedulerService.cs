@@ -121,7 +121,8 @@ namespace TWChatOverlay.Services
 
                 if (triggered)
                 {
-                    AppLogger.Debug("Boss alarm tick ended after highest-priority match.");
+                    if (AppLogger.IsLevelEnabled(LogLevel.DEBUG))
+                        AppLogger.Debug("Boss alarm tick ended after highest-priority match.");
                 }
 
                 CleanupFiredKeys(now.AddHours(-2));
@@ -151,7 +152,7 @@ namespace TWChatOverlay.Services
                     continue;
 
                 AppLogger.Info($"Boss alarm triggered. Boss='{boss.Name}', Trigger='{label}', Occurrence='{occurrence:yyyy-MM-dd HH:mm:ss}'");
-                AppServices.Get<NotificationService>().PlayAlert(BossTimerService.ResolveSoundFile(boss, offsetBefore));
+                AppServices.Get<NotificationService>().PlayAlert(BossTimerService.ResolveSoundFile(boss, offsetBefore), AlertChannel.Boss);
                 // 팝업 알림: 보스 출현 5초 후(입장 카운트다운은 종료 후) 자동으로 닫힌다
                 Views.BossAlertToastWindow.ShowAlert(boss.Name, label, occurrence, _settings, GetEntryWindow(boss.Id, _settings));
                 return true;
@@ -239,7 +240,7 @@ namespace TWChatOverlay.Services
             };
 
             AppLogger.Info($"Boss alarm TEST fired. Boss='{bossName}', Trigger='{label}'");
-            AppServices.Get<NotificationService>().PlayAlert(BossTimerService.ResolveSoundFile(BossTimerService.FindBoss(bossId), offset));
+            AppServices.Get<NotificationService>().PlayAlert(BossTimerService.ResolveSoundFile(BossTimerService.FindBoss(bossId), offset), AlertChannel.Boss);
             Views.BossAlertToastWindow.ShowAlert(bossName, label, DateTime.Now.Add(offset), settings, GetEntryWindow(bossId, settings));
         }
 

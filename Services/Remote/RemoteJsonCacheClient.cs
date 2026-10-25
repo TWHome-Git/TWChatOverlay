@@ -5,12 +5,15 @@ using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text.Json;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace TWChatOverlay.Services
 {
     /// <summary>
     /// 원격 JSON을 TTL + ETag + 로컬 fallback 전략으로 가져오는 공용 캐시 클라이언트.
+    /// 캐시는 리소스마다 Cache/remote/{name}.json(본문) + {name}.meta.json(ETag·시각)으로 나눠 두어
+    /// 작은 리소스를 읽을 때 큰 리소스(ETA 랭킹 1.7MB)를 함께 파싱하지 않고, 304 응답에서는 메타만 다시 쓴다.
     /// </summary>
     public sealed class RemoteJsonCacheClient
     {
@@ -20,14 +23,16 @@ namespace TWChatOverlay.Services
         private readonly HttpClient _httpClient;
         private readonly int _refreshAnchorHourLocal;
         private readonly bool _forceRemoteCheckOnFirstCall;
+        private readonly string _bodyPath;
+        private readonly string _metaPath;
         private bool _hasTriedRemoteInThisProcess;
         private DateTime _nextRemoteRetryUtc;
         private static readonly TimeSpan RemoteFailureBackoff = TimeSpan.FromMinutes(3);
         private static readonly object CacheFileLock = new();
-        private static readonly string SharedCacheFilePath = Path.Combine(
-            AppDomain.CurrentDomain.BaseDirectory,
-            "Cache",
-            "remote_json_cache.json");
+        private static readonly string CacheDirectory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Cache", "remote");
+        // 구버전: 모든 리소스를 한 파일에 담았다. 첫 접근 때 리소스별 파일로 나누고 지운다.
+        private static readonly string LegacySharedCacheFilePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Cache", "remote_json_cache.json");
+        private static int _legacyMigrated;
 
         public RemoteJsonCacheClient(
             string name,
@@ -43,6 +48,8 @@ namespace TWChatOverlay.Services
             _httpClient = httpClient;
             _refreshAnchorHourLocal = refreshAnchorHourLocal;
             _forceRemoteCheckOnFirstCall = forceRemoteCheckOnFirstCall;
+            _bodyPath = GetBodyPath(name);
+            _metaPath = GetMetaPath(name);
         }
 
         public async Task<string?> GetJsonAsync(bool forceRefresh = false)
@@ -71,7 +78,7 @@ namespace TWChatOverlay.Services
                     {
                         _nextRemoteRetryUtc = DateTime.MinValue;
                         cache.LastCheckedUtc = now;
-                        TryWriteCache(cache);
+                        TryWriteCache(cache, writeBody: false);
                         return cache.Json;
                     }
 
@@ -86,7 +93,7 @@ namespace TWChatOverlay.Services
                             LastFetchedUtc = now,
                             LastCheckedUtc = now
                         };
-                        TryWriteCache(next);
+                        TryWriteCache(next, writeBody: true);
                         return json;
                     }
 
@@ -106,25 +113,6 @@ namespace TWChatOverlay.Services
             }
 
             return null;
-        }
-
-        public void DeleteCache()
-        {
-            try
-            {
-                lock (CacheFileLock)
-                {
-                    var file = ReadSharedCacheFile();
-                    if (file.Entries.Remove(_name))
-                    {
-                        WriteSharedCacheFile(file);
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                AppLogger.Warn($"[{_name}] Cache delete failed.", ex);
-            }
         }
 
         private bool ShouldTryRemote(JsonCachePayload? cache, DateTime nowUtc)
@@ -165,15 +153,27 @@ namespace TWChatOverlay.Services
             {
                 lock (CacheFileLock)
                 {
-                    var file = ReadSharedCacheFile();
-                    if (file.Entries.TryGetValue(_name, out var sharedPayload) &&
-                        !string.IsNullOrWhiteSpace(sharedPayload.Json))
-                    {
-                        return sharedPayload;
-                    }
-                }
+                    MigrateLegacySharedFileIfNeeded();
 
-                return null;
+                    if (!File.Exists(_bodyPath))
+                        return null;
+
+                    string json = File.ReadAllText(_bodyPath);
+                    if (string.IsNullOrWhiteSpace(json))
+                        return null;
+
+                    var meta = File.Exists(_metaPath)
+                        ? JsonSerializer.Deserialize<CacheMeta>(File.ReadAllText(_metaPath))
+                        : null;
+
+                    return new JsonCachePayload
+                    {
+                        Json = json,
+                        ETag = meta?.ETag,
+                        LastFetchedUtc = meta?.LastFetchedUtc ?? default,
+                        LastCheckedUtc = meta?.LastCheckedUtc ?? default
+                    };
+                }
             }
             catch (Exception ex)
             {
@@ -182,15 +182,14 @@ namespace TWChatOverlay.Services
             }
         }
 
-        private void TryWriteCache(JsonCachePayload payload)
+        /// <param name="writeBody">false면 메타(ETag·시각)만 기록한다 — 304 Not Modified 경로.</param>
+        private void TryWriteCache(JsonCachePayload payload, bool writeBody)
         {
             try
             {
                 lock (CacheFileLock)
                 {
-                    var file = ReadSharedCacheFile();
-                    file.Entries[_name] = payload;
-                    WriteSharedCacheFile(file);
+                    WriteEntry(_bodyPath, _metaPath, payload, writeBody);
                 }
             }
             catch (Exception ex)
@@ -199,34 +198,95 @@ namespace TWChatOverlay.Services
             }
         }
 
-        private static SharedJsonCacheFile ReadSharedCacheFile()
+        private static void WriteEntry(string bodyPath, string metaPath, JsonCachePayload payload, bool writeBody)
         {
+            Directory.CreateDirectory(CacheDirectory);
+
+            if (writeBody)
+                WriteAtomic(bodyPath, payload.Json);
+
+            var meta = new CacheMeta
+            {
+                LastFetchedUtc = payload.LastFetchedUtc,
+                LastCheckedUtc = payload.LastCheckedUtc,
+                ETag = payload.ETag
+            };
+            WriteAtomic(metaPath, JsonSerializer.Serialize(meta));
+        }
+
+        private static void WriteAtomic(string path, string content)
+        {
+            string tempPath = path + ".tmp";
+            File.WriteAllText(tempPath, content);
+            File.Move(tempPath, path, overwrite: true);
+        }
+
+        /// <summary>
+        /// 구버전 공유 캐시 파일(remote_json_cache.json)을 리소스별 파일로 나눈다. 프로세스당 1회, CacheFileLock 안에서 호출.
+        /// 이미 리소스별 파일이 있는 항목은 건너뛰고, 끝나면 공유 파일을 지운다 (파싱 실패 시에도 — 어차피 쓸 수 없는 파일).
+        /// </summary>
+        private static void MigrateLegacySharedFileIfNeeded()
+        {
+            if (Interlocked.Exchange(ref _legacyMigrated, 1) != 0)
+                return;
+
             try
             {
-                if (!File.Exists(SharedCacheFilePath))
-                    return new SharedJsonCacheFile();
+                if (!File.Exists(LegacySharedCacheFilePath))
+                    return;
 
-                string text = File.ReadAllText(SharedCacheFilePath);
-                return JsonSerializer.Deserialize<SharedJsonCacheFile>(text) ?? new SharedJsonCacheFile();
+                var legacy = JsonSerializer.Deserialize<LegacySharedCacheFile>(File.ReadAllText(LegacySharedCacheFilePath));
+                int migrated = 0;
+                if (legacy?.Entries != null)
+                {
+                    foreach (var (name, payload) in legacy.Entries)
+                    {
+                        if (string.IsNullOrWhiteSpace(name) || string.IsNullOrWhiteSpace(payload?.Json))
+                            continue;
+
+                        string bodyPath = GetBodyPath(name);
+                        if (File.Exists(bodyPath))
+                            continue;
+
+                        WriteEntry(bodyPath, GetMetaPath(name), payload!, writeBody: true);
+                        migrated++;
+                    }
+                }
+
+                File.Delete(LegacySharedCacheFilePath);
+                AppLogger.Info($"Legacy shared remote cache split into per-resource files. Migrated={migrated}");
             }
-            catch
+            catch (Exception ex)
             {
-                return new SharedJsonCacheFile();
+                AppLogger.Warn("Legacy shared remote cache migration failed.", ex);
+                try { File.Delete(LegacySharedCacheFilePath); } catch { }
             }
         }
 
-        private static void WriteSharedCacheFile(SharedJsonCacheFile file)
+        private static string GetBodyPath(string name) => Path.Combine(CacheDirectory, SanitizeFileName(name) + ".json");
+        private static string GetMetaPath(string name) => Path.Combine(CacheDirectory, SanitizeFileName(name) + ".meta.json");
+
+        private static string SanitizeFileName(string name)
         {
-            string? directory = Path.GetDirectoryName(SharedCacheFilePath);
-            if (!string.IsNullOrWhiteSpace(directory))
+            char[] invalid = Path.GetInvalidFileNameChars();
+            var chars = name.ToCharArray();
+            for (int i = 0; i < chars.Length; i++)
             {
-                Directory.CreateDirectory(directory);
+                if (Array.IndexOf(invalid, chars[i]) >= 0)
+                    chars[i] = '_';
             }
 
-            File.WriteAllText(SharedCacheFilePath, JsonSerializer.Serialize(file));
+            return new string(chars);
         }
 
-        private sealed class SharedJsonCacheFile
+        private sealed class CacheMeta
+        {
+            public DateTime LastFetchedUtc { get; set; }
+            public DateTime LastCheckedUtc { get; set; }
+            public string? ETag { get; set; }
+        }
+
+        private sealed class LegacySharedCacheFile
         {
             public Dictionary<string, JsonCachePayload> Entries { get; set; } = new(StringComparer.Ordinal);
         }

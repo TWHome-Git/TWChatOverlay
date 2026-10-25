@@ -20,9 +20,6 @@ namespace TWChatOverlay.Services
         public static IReadOnlyList<EtaRankingEntry> GetRankings(string? characterName = null)
             => AppServices.Get<EtaRankingService>().GetRankings(characterName);
 
-        public static void DeleteCache()
-            => AppServices.Get<EtaRankingService>().DeleteCache();
-
         public readonly record struct EtaProfile(int Level, string CharacterName);
         public readonly record struct EtaRankingEntry(int CharacterCode, string CharacterName, string UserId, int Level, int Essence, int OriginalOrder);
     }

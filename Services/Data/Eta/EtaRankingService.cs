@@ -98,19 +98,6 @@ namespace TWChatOverlay.Services
             return _rankings.Where(x => x.CharacterName == characterName).ToList();
         }
 
-        public void DeleteCache()
-        {
-            try
-            {
-                CacheClient.DeleteCache();
-                AppLogger.Info("ETA cache deleted.");
-            }
-            catch (Exception ex)
-            {
-                AppLogger.Warn("ETA cache delete failed.", ex);
-            }
-        }
-
         private async Task LoadRankingsAsync()
         {
             try

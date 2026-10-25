@@ -22,16 +22,19 @@ namespace TWChatOverlay.Services
             "Cache",
             "resource_manifest_versions.json");
 
+        // 마지막으로 읽은 manifest. ShouldForceRefreshAsync 직후의 MarkResourceVersionAppliedAsync가 캐시 파일을 다시 읽지 않도록 넘겨 준다.
+        private static ResourceManifest? _lastManifest;
+
+        /// <summary>
+        /// 원격 manifest의 리소스 버전이 마지막으로 적용한 버전과 다른지. manifest는 캐시 TTL(10분)을 따르므로
+        /// (프로세스 첫 호출만 원격 확인) 원격 갱신은 최대 10분 늦게 감지된다.
+        /// </summary>
         public static async Task<bool> ShouldForceRefreshAsync(string resourceName)
         {
             if (string.IsNullOrWhiteSpace(resourceName))
                 return false;
 
-            string? json = await ManifestCacheClient.GetJsonAsync(forceRefresh: true).ConfigureAwait(false);
-            if (string.IsNullOrWhiteSpace(json))
-                return false;
-
-            var manifest = JsonSerializer.Deserialize<ResourceManifest>(json);
+            var manifest = await LoadManifestAsync().ConfigureAwait(false);
             if (manifest?.Resources == null || !manifest.Resources.TryGetValue(resourceName, out int remoteVersion))
                 return false;
 
@@ -45,17 +48,25 @@ namespace TWChatOverlay.Services
             if (string.IsNullOrWhiteSpace(resourceName))
                 return;
 
-            string? json = await ManifestCacheClient.GetJsonAsync(forceRefresh: false).ConfigureAwait(false);
-            if (string.IsNullOrWhiteSpace(json))
-                return;
-
-            var manifest = JsonSerializer.Deserialize<ResourceManifest>(json);
+            var manifest = _lastManifest ?? await LoadManifestAsync().ConfigureAwait(false);
             if (manifest?.Resources == null || !manifest.Resources.TryGetValue(resourceName, out int remoteVersion))
                 return;
 
             var local = ReadLocalVersions();
             local[resourceName] = remoteVersion;
             WriteLocalVersions(local);
+        }
+
+        private static async Task<ResourceManifest?> LoadManifestAsync()
+        {
+            string? json = await ManifestCacheClient.GetJsonAsync(forceRefresh: false).ConfigureAwait(false);
+            if (string.IsNullOrWhiteSpace(json))
+                return null;
+
+            var manifest = JsonSerializer.Deserialize<ResourceManifest>(json);
+            if (manifest != null)
+                _lastManifest = manifest;
+            return manifest;
         }
 
         private static Dictionary<string, int> ReadLocalVersions()

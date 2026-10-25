@@ -207,7 +207,8 @@ namespace TWChatOverlay.Services
             if (trackedItems.TryGetValue(itemName, out var mappedGrade))
             {
                 grade = mappedGrade;
-                AppLogger.Info($"Tracked item drop detected. Item='{itemName}', Count='{count}', Grade='{grade}', Message='{message}'");
+                if (AppLogger.IsLevelEnabled(LogLevel.INFO))
+                    AppLogger.Info($"Tracked item drop detected. Item='{itemName}', Count='{count}', Grade='{grade}', Message='{message}'");
                 return true;
             }
 
@@ -221,7 +222,8 @@ namespace TWChatOverlay.Services
             {
                 if (_trackedItems.Count > 0)
                 {
-                    AppLogger.Debug($"Tracked item list already loaded. Count={_trackedItems.Count}");
+                    if (AppLogger.IsLevelEnabled(LogLevel.DEBUG))
+                        AppLogger.Debug($"Tracked item list already loaded. Count={_trackedItems.Count}");
                     return;
                 }
 

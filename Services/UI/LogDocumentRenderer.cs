@@ -68,9 +68,9 @@ namespace TWChatOverlay.Services
                 if (isRealTime && canPlayAlertSound)
                 {
                     if (useMagicCircleAlert && log.IsMagicCircleAlert && settings.UseMagicCircleAlert)
-                        AppServices.Get<NotificationService>().PlayAlert("Wave.wav");
+                        AppServices.Get<NotificationService>().PlayAlert("Wave.mp3", AlertChannel.MagicCircle);
                     else if (settings.UseAlertSound)
-                        AppServices.Get<NotificationService>().PlayAlert("Highlight.wav");
+                        AppServices.Get<NotificationService>().PlayAlert("Highlight.mp3", AlertChannel.Highlight);
                 }
             }
 

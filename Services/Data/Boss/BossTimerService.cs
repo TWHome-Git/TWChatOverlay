@@ -321,9 +321,12 @@ namespace TWChatOverlay.Services
             return Array.Empty<BossTimerDefinition>();
         }
 
+        private const string SoundExtension = ".mp3";
+
         /// <summary>
         /// 알림 사운드 파일 이름. JSON의 sounds(알림별 파일)나 sound(기준 이름)에서 정하고,
-        /// 아무것도 없으면 보스 id에서 공백을 뺀 이름을 쓴다. 보스를 못 찾으면 공용 Highlight.wav.
+        /// 아무것도 없으면 보스 id에서 공백을 뺀 이름을 쓴다. 보스를 못 찾으면 공용 Highlight.mp3.
+        /// sounds 값에 확장자가 없으면 .mp3를 붙인다.
         /// </summary>
         public static string ResolveSoundFile(BossTimerDefinition? boss, TimeSpan offsetBefore)
         {
@@ -335,14 +338,14 @@ namespace TWChatOverlay.Services
             };
 
             if (boss?.Sounds != null && boss.Sounds.TryGetValue(key, out string? file) && !string.IsNullOrWhiteSpace(file))
-                return file!;
+                return System.IO.Path.HasExtension(file) ? file! : file! + SoundExtension;
 
             string baseName = !string.IsNullOrWhiteSpace(boss?.Sound)
                 ? boss!.Sound!
                 : (boss?.Id ?? string.Empty).Replace(" ", string.Empty);
 
             if (string.IsNullOrWhiteSpace(baseName))
-                return "Highlight.wav";
+                return "Highlight" + SoundExtension;
 
             string suffix = key switch
             {
@@ -351,7 +354,7 @@ namespace TWChatOverlay.Services
                 _ => string.Empty
             };
 
-            return $"{baseName}{suffix}.wav";
+            return $"{baseName}{suffix}{SoundExtension}";
         }
 
         public sealed class BossTimerDefinition
@@ -372,7 +375,7 @@ namespace TWChatOverlay.Services
             [JsonPropertyName("order")]
             public int? Order { get; set; }
 
-            /// <summary>알림 사운드 기준 이름 (예: ConfusedLand → ConfusedLand.wav, _before1, _before3). 없으면 id를 쓴다.</summary>
+            /// <summary>알림 사운드 기준 이름 (예: ConfusedLand → ConfusedLand.mp3, _before1, _before3). 없으면 id를 쓴다.</summary>
             [JsonPropertyName("sound")]
             public string? Sound { get; set; }
 

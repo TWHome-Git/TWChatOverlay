@@ -15,31 +15,25 @@
     <InformationalVersion>$(Version)</InformationalVersion>
   </PropertyGroup>
 
-  <!-- 디버그 전용 로그 주입 창은 Release 빌드에서 제외 (XAML은 #if를 못 쓰므로 빌드 조건으로) -->
+  <!-- 디버그 전용 코드는 Release 빌드에서 제외 (XAML은 #if를 못 쓰므로 빌드 조건으로) -->
   <ItemGroup Condition="'$(Configuration)' == 'Release'">
     <Page Remove="Views\Overlays\DebugLogTestWindow.xaml" />
     <Compile Remove="Views\Overlays\DebugLogTestWindow.xaml.cs" />
+    <!-- 도움말 예시 이미지 생성기(render-help-shots 인수)는 개발용. App.xaml.cs의 호출도 #if DEBUG 안에 있어야 한다 -->
+    <Compile Remove="Services\Diagnostics\HelpShotRenderer.cs" />
   </ItemGroup>
 
   <!-- Default None 항목에서 제외 (Resource로 재등록) -->
   <ItemGroup>
     <None Remove="Data\images\**\*" />
-    <None Remove="Sound\*.wav" />
-    <None Remove="Sound\drop.mp3" />
-    <None Remove="Sound\drop_low.mp3" />
+    <None Remove="Sound\*.mp3" />
   </ItemGroup>
 
   <!-- 이미지/사운드 리소스 (readme_*는 README 문서 전용 — exe에 임베드하지 않음) -->
   <ItemGroup>
     <Resource Include="Data\images\**\*" />
     <Resource Remove="Data\images\Help\readme_*.png" />
-    <Resource Include="Sound\*.wav" />
-    <Resource Include="Sound\drop.mp3">
-      <LogicalName>Sound/drop.mp3</LogicalName>
-    </Resource>
-    <Resource Include="Sound\drop_low.mp3">
-      <LogicalName>Sound/drop_low.mp3</LogicalName>
-    </Resource>
+    <Resource Include="Sound\*.mp3" />
   </ItemGroup>
 
   <ItemGroup>
