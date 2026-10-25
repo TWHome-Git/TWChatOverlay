@@ -150,8 +150,7 @@ namespace TWChatOverlay.Services
         /// </summary>
         private void CheckDateAndPath()
         {
-            string today = DateTime.Now.ToString("yyyy_MM_dd");
-            string expectedPath = Path.Combine(_settings.ChatLogFolderPath, $"TWChatLog_{today}.html");
+            string expectedPath = GetExpectedLogPath();
 
             if (_logPath != expectedPath)
             {
@@ -179,6 +178,28 @@ namespace TWChatOverlay.Services
 
                 UpdatePath(isInitialLoad: false);
             }
+        }
+
+        // 30ms 폴링마다 날짜 문자열·경로를 새로 만들지 않도록, 날짜와 로그 폴더 설정이 그대로면 직전 경로를 재사용한다.
+        // 폴더 설정 변경은 이 폴링이 감지하는 유일한 경로라 날짜와 함께 폴더 문자열도 비교한다.
+        private DateTime _expectedPathDay = DateTime.MinValue;
+        private string? _expectedPathFolder;
+        private string _expectedPath = string.Empty;
+
+        private string GetExpectedLogPath()
+        {
+            DateTime today = DateTime.Today;
+            string folder = _settings.ChatLogFolderPath;
+            if (today != _expectedPathDay ||
+                !string.Equals(folder, _expectedPathFolder, StringComparison.Ordinal) ||
+                _expectedPath.Length == 0)
+            {
+                _expectedPath = Path.Combine(folder, $"TWChatLog_{today.ToString("yyyy_MM_dd")}.html");
+                _expectedPathDay = today;
+                _expectedPathFolder = folder;
+            }
+
+            return _expectedPath;
         }
 
         /// <summary>
@@ -423,15 +444,22 @@ namespace TWChatOverlay.Services
         /// </summary>
         private void UpdateResyncAnchor(IReadOnlyList<string> lines)
         {
-            foreach (string raw in lines)
+            // 남는 건 마지막 ResyncAnchorCount개뿐이므로 뒤에서부터 그만큼만 찾는다 (앞에서부터 모두 넣고 앞을 버리는 것과 결과가 같다)
+            var found = new List<string>(ResyncAnchorCount);
+            for (int index = lines.Count - 1; index >= 0 && found.Count < ResyncAnchorCount; index--)
             {
-                string line = raw.Trim();
+                string line = lines[index].Trim();
                 int cut = line.IndexOf("</font>", StringComparison.OrdinalIgnoreCase);
                 string message = cut >= 0 ? line[(cut + 7)..].Trim() : line;
                 if (message.Length < 6)
                     continue;
 
-                _resyncAnchors.Add(message);
+                found.Add(message);
+            }
+
+            for (int index = found.Count - 1; index >= 0; index--)
+            {
+                _resyncAnchors.Add(found[index]);
                 if (_resyncAnchors.Count > ResyncAnchorCount)
                     _resyncAnchors.RemoveAt(0);
             }
@@ -696,6 +724,9 @@ namespace TWChatOverlay.Services
         /// <summary>
         /// ?쎌뼱???먮Ц HTML??<br> ?쒓렇 ?⑥쐞濡?遺꾨━???대깽?몃? 諛쒖깮?쒗궢?덈떎.
         /// </summary>
+        private static List<string> MergeWrappedLines(List<string> lines)
+            => SystemLineMergeHelper.MergeWrappedSystemLines(ShoutLineMergeHelper.MergeWrappedShoutLines(lines));
+
         private void ProcessRawContent(string content, bool isRealTime, int takeLastCount = -1, string sourcePath = "", long checkpointPosition = -1)
         {
             if (string.IsNullOrWhiteSpace(content)) return;
@@ -704,14 +735,29 @@ namespace TWChatOverlay.Services
                 .Where(l => !string.IsNullOrWhiteSpace(l))
                 .ToList();
 
+            // 앵커는 병합 전 원본 줄의 마지막 줄들로 채운다
             UpdateResyncAnchor(lines);
 
-            lines = ShoutLineMergeHelper.MergeWrappedShoutLines(lines);
-            lines = SystemLineMergeHelper.MergeWrappedSystemLines(lines);
+            // 마지막 N줄만 쓸 때(시작 tail 2MB)는 병합 전에 뒤쪽 원본 줄만 남겨 정규식 병합 비용을 줄인다.
+            // 병합은 인접 줄만 보므로(한 번에 최대 5줄) 잘린 앞머리 몇 줄만 결과가 다를 수 있고 그 줄들은 최종 N줄 밖으로 버려진다.
+            // 병합으로 줄이 많이 줄어 앞머리까지 N줄 안에 들어오게 되면 전체로 다시 병합한다.
+            const int BoundarySlack = 8;
+            List<string> source = lines;
+            if (takeLastCount > 0)
+            {
+                int keep = takeLastCount + Math.Max(200, takeLastCount / 5);
+                if (lines.Count > keep)
+                    source = lines.GetRange(lines.Count - keep, keep);
+            }
+
+            List<string> merged = MergeWrappedLines(source);
+            if (!ReferenceEquals(source, lines) && merged.Count < takeLastCount + BoundarySlack)
+                merged = MergeWrappedLines(lines);
+            lines = merged;
 
             if (takeLastCount > 0 && lines.Count > takeLastCount)
             {
-                lines = lines.Skip(lines.Count - takeLastCount).ToList();
+                lines = lines.GetRange(lines.Count - takeLastCount, takeLastCount);
             }
 
             foreach (string line in lines)

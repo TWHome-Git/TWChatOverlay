@@ -45,15 +45,16 @@ namespace TWChatOverlay.Services
             if (!analysis.IsSuccess)
                 return;
 
+            // 경험치 증감이 없는 줄(대부분)은 아래 어떤 처리도 하지 않으므로 룬 경험치 정규식보다 먼저 거른다
+            if (analysis.Parsed.GainedExp == 0)
+                return;
+
             string text = analysis.Parsed.FormattedText ?? string.Empty;
             if (IsRuneExperienceLog(text))
             {
                 AppLogger.Debug($"Experience essence tracker ignored rune EXP log. Message='{text}'");
                 return;
             }
-
-            if (analysis.Parsed.GainedExp == 0)
-                return;
 
             if (!_isTracking)
             {
@@ -66,7 +67,7 @@ namespace TWChatOverlay.Services
             if (_trackedExp < 0)
                 _trackedExp = 0;
 
-            AppLogger.Info($"Experience essence tracker accumulated EXP. Gain={gainedExp:N0}, Total={_trackedExp:N0}, Threshold={ThresholdExp:N0}");
+            AppLogger.Debug($"Experience essence tracker accumulated EXP. Gain={gainedExp:N0}, Total={_trackedExp:N0}, Threshold={ThresholdExp:N0}");
             SaveStateToSettings();
 
             if (_trackedExp >= ThresholdExp)

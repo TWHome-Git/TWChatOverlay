@@ -653,10 +653,49 @@ namespace TWChatOverlay.Services
                 return true;
             }
 
+            /// <summary>
+            /// Feed가 보는 모든 정규식(RunStart·RunEnd·HardMarker·Activity·구간 Start/End·변형 End)이 반드시 품는 리터럴 토큰.
+            /// 정규식마다(대안 '|'이 있으면 대안마다) 이 중 하나가 \s*·선택·그룹 밖의 고정 문자열로 들어 있다 —
+            /// 그래서 토큰이 하나도 없는 줄은 어떤 정규식도 맞을 수 없고 Feed가 아무 일도 하지 않는다.
+            /// 정의에 정규식을 새로 넣으면 그 필수 리터럴이 여기 토큰 중 하나를 포함하는지 확인해야 한다.
+            /// </summary>
+            private static readonly string[] GateTokens =
+            {
+                "클리어 횟수",      // 아페티리아(EX)·이클립스 토벌전/보스전/코어 마스터·렐릭 주간 클리어 줄 (Keyword)
+                "셀리니아코스",     // 아페티리아 1보스 시작/끝
+                "포탈",            // 아페티리아 석상 끝(포탈에 도달한), 최후의 결전 1단계 끝(포탈이 생성)
+                "고이티아",        // 아페티리아 2보스 시작/끝
+                "키시니크",        // 아페티리아 3보스 끝, 렐릭 Activity
+                "어비스",          // 어비스 RunStart, AbyssRunEnd 앞 두 대안
+                "크라운",          // AbyssRunEnd 세 번째 대안
+                "초기화가",        // 신조 보스 방 시작
+                "유마",            // 신조 1·2보스 끝
+                "신조 보상을",     // 신조 3보스 끝·판 끝 (Keyword)
+                "테스모폴로스에게", // 최후의 결전 1단계 시작
+                "차원의",          // 최후의 결전 2단계 끝
+                "목표",            // 환희의 잔상 1·2단계 시작, 렐릭 RunStart·석상 시작 3종·Activity 앞 두 대안
+                "레이티아",        // 환희의 잔상 끝, 추종하는 환희 RunStart·Activity·변형 End
+                "설계자",          // 응시하는 슬픔 RunStart·Activity·변형 End
+                "효과를",          // 렐릭 석상 끝 4종, Activity 세 번째 대안
+                "몬스터의",        // 렐릭 검의 석상 시작
+                "로카고스", "에토스", "체리아", "마티아", "티로로스", "라이코스", // 이클립스 보스 RunStart (티로로스는 최후의 결전 끝 문구도)
+            };
+
+            /// <summary>Feed가 반응할 수 있는 줄인지 (토큰 하나라도 있으면 true). false면 Feed는 아무 일도 하지 않는다.</summary>
+            public static bool MayMatch(string text)
+            {
+                foreach (string token in GateTokens)
+                {
+                    if (text.Contains(token, StringComparison.Ordinal))
+                        return true;
+                }
+                return false;
+            }
+
             /// <summary>로그 줄 하나를 넣는다. at은 로그에 찍힌 시각, now는 안전 한도 판단용 현재 시각.</summary>
             public void Feed(string text, DateTime at, DateTime now)
             {
-                if (string.IsNullOrWhiteSpace(text))
+                if (string.IsNullOrWhiteSpace(text) || !MayMatch(text))
                     return;
 
                 // 판 시작 문구 (있는 던전만). 같은 묶음의 진행 중이던 판은 버리고 새로 센다.
@@ -776,15 +815,17 @@ namespace TWChatOverlay.Services
                 }
 
                 // 진행 중인 판들의 난이도·구간 끝·판 끝 문구. 묶음마다 따로 본다.
-                var activeGroups = new HashSet<string>(StringComparer.Ordinal);
-                foreach (LiveRun run in _runs.Values.ToList())
+                // 진행 중인 판이 없으면(대부분의 줄) 목록 복사·집합을 만들지 않는다
+                HashSet<string>? activeGroups = _runs.Count == 0 ? null : new HashSet<string>(StringComparer.Ordinal);
+                IReadOnlyList<LiveRun> runsSnapshot = _runs.Count == 0 ? Array.Empty<LiveRun>() : _runs.Values.ToList();
+                foreach (LiveRun run in runsSnapshot)
                 {
                     // 앞 던전의 판 끝이 이 판을 버렸을 수 있다
                     if (!_runs.TryGetValue(run.Definition.GroupKey, out LiveRun? still) || !ReferenceEquals(still, run))
                         continue;
                     if (now - run.StartedAt >= RunSafetyLimit)
                         continue;
-                    activeGroups.Add(run.Definition.GroupKey);
+                    activeGroups!.Add(run.Definition.GroupKey);
                     DungeonDefinition active = run.Definition;
 
                     if (active.Activity != null && active.Activity.IsMatch(text))
@@ -827,7 +868,7 @@ namespace TWChatOverlay.Services
                 // 그런 판은 소요 시간이 보정 초 이하라는 것만 알 수 있으므로 상한 기록("30초 이하")으로 남긴다.
                 foreach (DungeonDefinition def in _definitions)
                 {
-                    if (def.StartOffsetSeconds >= 0 || activeGroups.Contains(def.GroupKey))
+                    if (def.StartOffsetSeconds >= 0 || (activeGroups != null && activeGroups.Contains(def.GroupKey)))
                         continue;
                     string? recordKey = null;
                     if (def.Variants is { Length: > 0 })
@@ -1148,7 +1189,8 @@ namespace TWChatOverlay.Services
 
         public void Observe(string formattedText)
         {
-            if (string.IsNullOrWhiteSpace(formattedText))
+            // 던전 문구 토큰이 없는 줄은 Feed가 아무 일도 하지 않으므로 시각 해석부터 건너뛴다
+            if (string.IsNullOrWhiteSpace(formattedText) || !RunTracker.MayMatch(formattedText))
                 return;
 
             DateTime now = DateTime.Now;

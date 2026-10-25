@@ -48,7 +48,8 @@ namespace TWChatOverlay.Services.LogAnalysis
 
         public void Analyze(LogLineContext context)
         {
-            long gained = ExtractGain(context.ChatContent, context.IsSystemLog);
+            // ChatContent는 ChatLogAnalyzer가 이미 공백을 정규화하고 Trim한 값이다
+            long gained = ExtractGain(context.ChatContent, context.IsSystemLog, isWhitespaceNormalized: true);
             if (gained != 0)
             {
                 context.Result.GainedExp = gained;
@@ -61,6 +62,12 @@ namespace TWChatOverlay.Services.LogAnalysis
         /// 지난 로그를 훑어 사냥 기록을 복원할 때도 같은 규칙을 쓰도록 여기로 모아 둔다.
         /// </summary>
         public static long ExtractGain(string? content, bool isSystemLog)
+            => ExtractGain(content, isSystemLog, isWhitespaceNormalized: false);
+
+        private static readonly Regex WhitespaceRunRegex = new(@"\s+", RegexOptions.Compiled);
+
+        /// <param name="isWhitespaceNormalized">입력이 이미 공백 연속을 한 칸으로 줄이고 Trim한 값이면 true — 다시 정규화하지 않는다.</param>
+        private static long ExtractGain(string? content, bool isSystemLog, bool isWhitespaceNormalized)
         {
             string chatContent = content ?? string.Empty;
 
@@ -70,15 +77,16 @@ namespace TWChatOverlay.Services.LogAnalysis
             if (!chatContent.Contains("경험치", StringComparison.Ordinal))
                 return 0;
 
-            string normalized = Regex.Replace(chatContent, @"\s+", " ").Trim();
+            string normalized = isWhitespaceNormalized
+                ? chatContent
+                : WhitespaceRunRegex.Replace(chatContent, " ").Trim();
             if (normalized.Contains(DetachedForceExpText, StringComparison.Ordinal))
                 return DetachedForceExpValue;
 
-            // 룬 경험치·소울링크(링크 캐릭터) 경험치는 내 캐릭터 경험치가 아니다
-            string compact = chatContent.Replace(" ", string.Empty);
-            if (compact.Contains("룬경험치", StringComparison.Ordinal) ||
-                compact.Contains("소울링크경험치", StringComparison.Ordinal) ||
-                compact.Contains("링크캐릭터경험치", StringComparison.Ordinal))
+            // 룬 경험치·소울링크(링크 캐릭터) 경험치는 내 캐릭터 경험치가 아니다 (' '는 무시하고 비교)
+            if (ContainsIgnoringSpaces(chatContent, "룬경험치") ||
+                ContainsIgnoringSpaces(chatContent, "소울링크경험치") ||
+                ContainsIgnoringSpaces(chatContent, "링크캐릭터경험치"))
             {
                 return 0;
             }
@@ -117,6 +125,35 @@ namespace TWChatOverlay.Services.LogAnalysis
             }
 
             return 0;
+        }
+
+        /// <summary>
+        /// <c>text.Replace(" ", "").Contains(needle, Ordinal)</c>과 같은 결과를 새 문자열 없이 낸다.
+        /// needle에는 ' '가 없어야 한다.
+        /// </summary>
+        private static bool ContainsIgnoringSpaces(string text, string needle)
+        {
+            for (int start = 0; start < text.Length; start++)
+            {
+                if (text[start] != needle[0])
+                    continue;
+
+                int matched = 1;
+                for (int i = start + 1; i < text.Length && matched < needle.Length; i++)
+                {
+                    char c = text[i];
+                    if (c == ' ')
+                        continue;
+                    if (c != needle[matched])
+                        break;
+                    matched++;
+                }
+
+                if (matched == needle.Length)
+                    return true;
+            }
+
+            return false;
         }
 
         /// <summary>"8억", "1조 2000억", "35000" 꼴의 수를 숫자로. 하나도 못 읽으면 false.</summary>

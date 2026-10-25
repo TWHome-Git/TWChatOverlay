@@ -53,7 +53,7 @@ namespace TWChatOverlay.Services
             {
                 if (settings.UseAlertColor && !isBlacklisted)
                 {
-                    paragraph.Background = new SolidColorBrush(Color.FromArgb(120, 255, 140, 0));
+                    paragraph.Background = ChatBrushResolver.HighlightBackgroundBrush;
                     paragraph.FontWeight = FontWeights.Bold;
                 }
 

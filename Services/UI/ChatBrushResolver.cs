@@ -14,6 +14,19 @@ namespace TWChatOverlay.Services
         // 설정에 등장하는 색상 문자열은 수십 종 수준이라 캐시가 무한히 자라지 않는다
         private static readonly ConcurrentDictionary<string, SolidColorBrush> Cache = new(StringComparer.OrdinalIgnoreCase);
 
+        /// <summary>키워드 하이라이트 줄 배경 (메인 채팅창·서브 채팅창 공용, Frozen).</summary>
+        public static readonly SolidColorBrush HighlightBackgroundBrush = CreateFrozen(Color.FromArgb(120, 255, 140, 0));
+
+        /// <summary>마법진 알림 줄 배경 (Frozen).</summary>
+        public static readonly SolidColorBrush MagicCircleBackgroundBrush = CreateFrozen(Color.FromArgb(140, 180, 60, 255));
+
+        private static SolidColorBrush CreateFrozen(Color color)
+        {
+            var brush = new SolidColorBrush(color);
+            brush.Freeze();
+            return brush;
+        }
+
         /// <summary>색상 문자열(#RRGGBB)을 고정(Frozen) 브러시로. 잘못된 값이면 흰색.</summary>
         public static SolidColorBrush ToBrush(string? hex)
         {

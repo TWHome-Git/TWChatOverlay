@@ -125,6 +125,28 @@ namespace TWChatOverlay.Views
         /// </summary>
         private static readonly TimeSpan ReflectionAlertLinger = TimeSpan.FromMilliseconds(150);
 
+        // 줄마다 쓰는 싱글턴 서비스 — DI 조회를 줄마다 하지 않도록 처음 쓸 때 한 번 꺼내 둔다
+        private ChatWindowHub? _chatWindowHubCache;
+        private BlacklistService? _blacklistServiceCache;
+        private NotificationService? _notificationServiceCache;
+        private RecaptureSupplyAlertService? _recaptureSupplyAlertServiceCache;
+        private RecaptureSupplyPadOrderService? _recaptureSupplyPadOrderServiceCache;
+        private ContentTimerService? _contentTimerServiceCache;
+        private ItemDropToastService? _itemDropToastServiceCache;
+        private ShoutToastService? _shoutToastServiceCache;
+
+        private ChatWindowHub ChatWindowHubService => _chatWindowHubCache ??= AppServices.Get<ChatWindowHub>();
+        private BlacklistService BlacklistServiceInstance => _blacklistServiceCache ??= AppServices.Get<BlacklistService>();
+        private NotificationService NotificationServiceInstance => _notificationServiceCache ??= AppServices.Get<NotificationService>();
+        private RecaptureSupplyAlertService RecaptureSupplyAlertServiceInstance => _recaptureSupplyAlertServiceCache ??= AppServices.Get<RecaptureSupplyAlertService>();
+        private RecaptureSupplyPadOrderService RecaptureSupplyPadOrderServiceInstance => _recaptureSupplyPadOrderServiceCache ??= AppServices.Get<RecaptureSupplyPadOrderService>();
+        private ContentTimerService ContentTimerServiceInstance => _contentTimerServiceCache ??= AppServices.Get<ContentTimerService>();
+        private ItemDropToastService ItemDropToastServiceInstance => _itemDropToastServiceCache ??= AppServices.Get<ItemDropToastService>();
+        private ShoutToastService ShoutToastServiceInstance => _shoutToastServiceCache ??= AppServices.Get<ShoutToastService>();
+
+        // 이번 배치에서 탭 버퍼에 줄이 들어갔는지 — 서브 창 알림은 배치 끝에 한 번만 보낸다
+        private bool _buffersChangedInBatch;
+
         private readonly object _reflectionEndAlertTimerLock = new();
         private readonly HashSet<DispatcherTimer> _reflectionEndAlertTimers = new();
 
@@ -184,6 +206,12 @@ namespace TWChatOverlay.Views
                     LogDisplay.EndChange();
                     if (shouldAutoScroll)
                         ScrollLogDisplayToEndAfterLayout();
+                }
+
+                if (_buffersChangedInBatch)
+                {
+                    _buffersChangedInBatch = false;
+                    GuardSideEffect("buffers-changed", () => ChatWindowHubService.NotifyBuffersChanged());
                 }
             }
         }
@@ -311,7 +339,7 @@ namespace TWChatOverlay.Views
                 {
                     GuardSideEffect("reflection-alert", () =>
                     {
-                        AppServices.Get<NotificationService>().PlayAlert("Reflection.wav");
+                        NotificationServiceInstance.PlayAlert("Reflection.wav");
                         // 패턴이 도는 동안 떠 있다가 종료 알림음이 난 직후 사라진다
                         DungeonAlertWindow.Flash(DungeonAlertSource.AbyssReflection, _settings, "반사", "반사 패턴",
                             ReflectionPatternDuration + ReflectionAlertLinger);
@@ -321,7 +349,7 @@ namespace TWChatOverlay.Views
 
                 if (pipelineAnalysis.Toast is { HasTrackedItemDrop: true, ShouldShowItemDropToast: true } toastAnalysis)
                 {
-                    GuardSideEffect("item-toast", () => AppServices.Get<ItemDropToastService>().Show(
+                    GuardSideEffect("item-toast", () => ItemDropToastServiceInstance.Show(
                         toastAnalysis.Parsed.TrackedItemName ?? "아이템",
                         toastAnalysis.Parsed.TrackedItemGrade,
                         withSound: true));
@@ -351,7 +379,7 @@ namespace TWChatOverlay.Views
                     // 표시를 꺼 둔 종류(무료/유료/공지)의 외치기는 토스트도 띄우지 않는다
                     if (_settings.ShowShoutToastPopup && isActualShout &&
                         LogParser.IsVisible(parseResult, _settings))
-                        AppServices.Get<ShoutToastService>().Show(parseResult, _settings);
+                        ShoutToastServiceInstance.Show(parseResult, _settings);
                 });
             }
 
@@ -370,8 +398,8 @@ namespace TWChatOverlay.Views
             {
                 GuardSideEffect("recapture-essence", () =>
                 {
-                    AppServices.Get<RecaptureSupplyAlertService>().Observe(parseResult.FormattedText);
-                    AppServices.Get<RecaptureSupplyPadOrderService>().Observe(parseResult.FormattedText);
+                    RecaptureSupplyAlertServiceInstance.Observe(parseResult.FormattedText);
+                    RecaptureSupplyPadOrderServiceInstance.Observe(parseResult.FormattedText);
                     if (IsExperienceEssenceExchangeLog(parseResult.FormattedText))
                         _itemCalendarWindow?.ApplyRealtimeExperienceEssenceLog(parseResult.FormattedText, DateTime.Today);
                 });
@@ -380,7 +408,7 @@ namespace TWChatOverlay.Views
             // 던전 타이머: 보스 대사(일반 흰 글)와 시스템 줄을 모두 보므로 종류를 가리지 않는다.
             // 실시간 줄만 본다 — 시작 시 과거 로그를 다시 읽으며 타이머가 도는 것을 막는다.
             if (shouldRunLiveUiEffects)
-                GuardSideEffect("dungeon-timer", () => AppServices.Get<ContentTimerService>().Observe(parseResult.FormattedText));
+                GuardSideEffect("dungeon-timer", () => ContentTimerServiceInstance.Observe(parseResult.FormattedText));
 
             if (analysis.ShouldRunDailyWeeklyContent || analysis.IsSystemLog)
             GuardSideEffect("abandon-summary", () =>
@@ -629,7 +657,7 @@ namespace TWChatOverlay.Views
 
                 if (!Dispatcher.HasShutdownStarted && !Dispatcher.HasShutdownFinished)
                 {
-                    AppServices.Get<NotificationService>().PlayAlert("ReflectionEnd.wav");
+                    NotificationServiceInstance.PlayAlert("ReflectionEnd.wav");
                 }
             };
 
@@ -769,7 +797,8 @@ namespace TWChatOverlay.Views
         private void AddToBuffer(string tabName, LogParser.ParseResult log)
         {
             _logTabBufferStore.Add(tabName, log);
-            AppServices.Get<ChatWindowHub>().NotifyBuffersChanged();
+            // 서브 창 알림은 ProcessUiLogBatch 끝에서 배치당 한 번 (허브도 50ms 타이머로 몰아 보내므로 보는 쪽 결과는 같다)
+            _buffersChangedInBatch = true;
         }
 
         /// <summary>문단 하나를 채팅 문서에 더한다. 스크롤은 하지 않는다 — 호출자가 배치 끝에서 <see cref="ScrollLogDisplayToEndAfterLayout"/>를 부른다.</summary>
@@ -777,7 +806,7 @@ namespace TWChatOverlay.Views
         {
             if (LogDisplay == null) return;
 
-            bool isBlacklisted = AppServices.Get<BlacklistService>().TryGetReason(log.SenderId, out string blacklistReason);
+            bool isBlacklisted = BlacklistServiceInstance.TryGetReason(log.SenderId, out string blacklistReason);
             Brush foreground = isBlacklisted ? BlacklistService.HighlightBrush : log.Brush;
             string displayText = isBlacklisted ? $"{log.FormattedText} [ {blacklistReason} ]" : log.FormattedText;
 
@@ -806,20 +835,20 @@ namespace TWChatOverlay.Views
             {
                 if (log.IsMagicCircleAlert)
                 {
-                    p.Background = new SolidColorBrush(Color.FromArgb(140, 180, 60, 255));
+                    p.Background = ChatBrushResolver.MagicCircleBackgroundBrush;
                     p.FontWeight = FontWeights.Bold;
                 }
                 if (_settings.UseAlertColor && !isBlacklisted)
                 {
-                    p.Background = new SolidColorBrush(Color.FromArgb(120, 255, 140, 0));
+                    p.Background = ChatBrushResolver.HighlightBackgroundBrush;
                     p.FontWeight = FontWeights.Bold;
                 }
                 if (isRealTime && _expService.IsReady)
                 {
                     if (log.IsMagicCircleAlert && _settings.UseMagicCircleAlert)
-                        AppServices.Get<NotificationService>().PlayAlert("Wave.wav");
+                        NotificationServiceInstance.PlayAlert("Wave.wav");
                     else if (_settings.UseAlertSound)
-                        AppServices.Get<NotificationService>().PlayAlert("Highlight.wav");
+                        NotificationServiceInstance.PlayAlert("Highlight.wav");
                 }
             }
 

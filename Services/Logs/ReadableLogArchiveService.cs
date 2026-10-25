@@ -641,10 +641,12 @@ namespace TWChatOverlay.Services
                 return;
 
             string text = parsed.FormattedText;
+            // 세 문구 모두 "보상 상자"를 품으므로 그 한 번으로 먼저 거른다
             bool isJoySorrowRewardLine =
-                text.Contains("레이티아 퇴치 보상으로 레이티아 보상 상자", StringComparison.Ordinal) ||
-                text.Contains("설계자 퇴치 보상으로 설계자 보상 상자", StringComparison.Ordinal) ||
-                text.Contains("[환희의 레이티아 보상 상자] 아이템을 1개 획득하였습니다.", StringComparison.Ordinal);
+                text.Contains("보상 상자", StringComparison.Ordinal) &&
+                (text.Contains("레이티아 퇴치 보상으로 레이티아 보상 상자", StringComparison.Ordinal) ||
+                 text.Contains("설계자 퇴치 보상으로 설계자 보상 상자", StringComparison.Ordinal) ||
+                 text.Contains("[환희의 레이티아 보상 상자] 아이템을 1개 획득하였습니다.", StringComparison.Ordinal));
 
             if (writeShout && parsed.Category == ChatCategory.Shout)
             {
@@ -754,7 +756,8 @@ namespace TWChatOverlay.Services
 
         private static bool IsExperienceDecreaseLog(string text)
         {
-            if (string.IsNullOrWhiteSpace(text))
+            // 정규식("경험치가 …")과 정수 교환 문구("경험치 100억이 …") 모두 "경험치"를 품는다
+            if (string.IsNullOrWhiteSpace(text) || !text.Contains("경험치", StringComparison.Ordinal))
                 return false;
 
             if (ExpDecreaseHundredBillionRegex.IsMatch(text))
@@ -765,7 +768,9 @@ namespace TWChatOverlay.Services
 
         private static bool IsAbandonRelevantLog(string text)
         {
-            if (string.IsNullOrWhiteSpace(text))
+            // 어밴던 판정 정규식은 "입장료"(입장료 줄) 또는 "마정석"(획득·빼앗김 줄)을 반드시 품는다
+            if (string.IsNullOrWhiteSpace(text) ||
+                (!text.Contains("입장료", StringComparison.Ordinal) && !text.Contains("마정석", StringComparison.Ordinal)))
                 return false;
 
             var summary = new AbandonSummaryValue();

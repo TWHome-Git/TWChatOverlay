@@ -56,20 +56,44 @@ namespace TWChatOverlay.Services.LogAnalysis
             if (context.MessageOnly.Contains("[클럽 보스]", StringComparison.Ordinal))
                 return;
 
-            var keywords = ParseKeywords(settings.KeywordInput);
-            if (keywords.Count == 0)
+            string[] keywords = GetCleanKeywords(settings.KeywordInput);
+            if (keywords.Length == 0)
                 return;
 
             string cleanContent = context.MessageOnly.Replace("@", string.Empty);
-            foreach (var keyword in keywords)
+            foreach (var cleanKeyword in keywords)
             {
-                string cleanKeyword = keyword.Replace("@", string.Empty).Trim();
-                if (!string.IsNullOrEmpty(cleanKeyword) && cleanContent.Contains(cleanKeyword))
+                if (cleanContent.Contains(cleanKeyword))
                 {
                     context.Result.IsHighlight = true;
                     break;
                 }
             }
+        }
+
+        // 키워드 입력은 설정 화면에서만 바뀌므로 마지막으로 파싱한 원본 문자열과 정제된 키워드('@' 제거·Trim, 빈 값 제외)를 함께 둔다.
+        // PropertyChanged가 뜨지 않는 경로(역직렬화·섹션 직접 대입)도 있어 원본 문자열 비교로 갱신을 판단한다.
+        private sealed record KeywordCache(string? Source, string[] Keywords);
+
+        private static volatile KeywordCache _keywordCache = new(null, Array.Empty<string>());
+
+        private static string[] GetCleanKeywords(string? keywordInput)
+        {
+            KeywordCache cache = _keywordCache;
+            if (ReferenceEquals(cache.Source, keywordInput) || string.Equals(cache.Source, keywordInput, StringComparison.Ordinal))
+                return cache.Keywords;
+
+            var clean = new List<string>();
+            foreach (var keyword in ParseKeywords(keywordInput))
+            {
+                string cleanKeyword = keyword.Replace("@", string.Empty).Trim();
+                if (!string.IsNullOrEmpty(cleanKeyword))
+                    clean.Add(cleanKeyword);
+            }
+
+            cache = new KeywordCache(keywordInput, clean.ToArray());
+            _keywordCache = cache;
+            return cache.Keywords;
         }
 
         public static List<string> ParseKeywords(string? keywordInput)

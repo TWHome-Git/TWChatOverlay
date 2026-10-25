@@ -33,7 +33,7 @@ namespace TWChatOverlay.Services
             int i = 0;
             while (i < lines.Count)
             {
-                var m = SystemLineRegex.Match(lines[i].Trim());
+                var m = MatchSystemLine(lines[i].Trim());
                 if (!m.Success)
                 {
                     merged.Add(lines[i].Trim());
@@ -52,7 +52,7 @@ namespace TWChatOverlay.Services
                        consumed < MaxMergeSegments &&
                        i + 1 + consumed < lines.Count)
                 {
-                    var next = SystemLineRegex.Match(lines[i + 1 + consumed].Trim());
+                    var next = MatchSystemLine(lines[i + 1 + consumed].Trim());
                     if (!next.Success)
                         break;
                     if (!string.Equals(color, next.Groups["color"].Value, StringComparison.OrdinalIgnoreCase))
@@ -90,7 +90,17 @@ namespace TWChatOverlay.Services
             return last is '.' or '!' or '?' or '…' or '"' or ')' or ']' or '」' or '』';
         }
 
+        private static readonly Regex WhitespaceRunRegex = new(@"\s+", RegexOptions.Compiled);
+
         private static string NormalizeWhitespace(string text)
-            => Regex.Replace(text ?? string.Empty, @"\s+", " ").Trim();
+            => WhitespaceRunRegex.Replace(text ?? string.Empty, " ").Trim();
+
+        // 시스템 색 3종(ff64ff/00ffff/ff6464) 중 하나도 없는 줄은 정규식이 맞을 수 없다 (IgnoreCase라 대소문자 무시로 찾는다)
+        private static Match MatchSystemLine(string line)
+            => line.Contains("ff64ff", StringComparison.OrdinalIgnoreCase) ||
+               line.Contains("00ffff", StringComparison.OrdinalIgnoreCase) ||
+               line.Contains("ff6464", StringComparison.OrdinalIgnoreCase)
+                ? SystemLineRegex.Match(line)
+                : Match.Empty;
     }
 }

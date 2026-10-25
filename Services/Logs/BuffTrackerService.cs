@@ -68,7 +68,8 @@ namespace TWChatOverlay.Services
         {
             _settings = settings;
             _suppressEndSound = suppressEndSound;
-            _definitions = CreateDefinitions();
+            // 정의는 불변이라 정적 목록을 같이 쓴다. 아이콘이 동결되지 않았으면(다른 스레드에서 만든 이미지를 UI에 못 씀) 따로 만든다.
+            _definitions = KnownDefinitions.TrueForAll(static d => d.IconSource.IsFrozen) ? KnownDefinitions : CreateDefinitions();
             _timer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
             _timer.Tick += (_, _) => RefreshActiveBuffs();
             LoadState();
@@ -84,6 +85,13 @@ namespace TWChatOverlay.Services
                 return;
             }
 
+            // 버프 문구 토큰이 하나도 없으면 아래 정규식·정의 어느 것도 맞을 수 없다 — 표시 갱신만 한다
+            if (!ContainsBuffToken(formattedText))
+            {
+                RefreshActiveBuffs();
+                return;
+            }
+
             DateTime? occurredAt = TryParseOccurredAt(formattedText);
             if (!occurredAt.HasValue)
             {
@@ -91,11 +99,7 @@ namespace TWChatOverlay.Services
                 return;
             }
 
-            bool matchedAny = false;
-            if (TryProcessMagicEye(formattedText, occurredAt.Value))
-            {
-                matchedAny = true;
-            }
+            TryProcessMagicEye(formattedText, occurredAt.Value);
 
             foreach (var definition in _definitions)
             {
@@ -105,7 +109,6 @@ namespace TWChatOverlay.Services
                 if (!definition.IsMatch(formattedText))
                     continue;
 
-                matchedAny = true;
                 DateTime expiresAt = occurredAt.Value.Add(definition.Duration);
                 if (_activeUntil.TryGetValue(definition.Key, out DateTime existing) && existing >= expiresAt)
                 {
@@ -116,11 +119,6 @@ namespace TWChatOverlay.Services
                 _activeUntil[definition.Key] = expiresAt;
                 _pausedRemaining.Remove(definition.Key);
                 AppLogger.Info($"Buff tracker matched '{definition.Key}'. OccurredAt={occurredAt:HH:mm:ss}, ExpiresAt={expiresAt:HH:mm:ss}");
-            }
-
-            if (!matchedAny)
-            {
-                AppLogger.Debug($"Buff tracker found no match in '{formattedText}'.");
             }
 
             RefreshActiveBuffs();
@@ -136,13 +134,36 @@ namespace TWChatOverlay.Services
 
         private static readonly List<BuffDefinition> KnownDefinitions = CreateDefinitions();
 
+        // 버프 줄이 반드시 품는 토큰. MagicEyeStart/Saved 정규식의 리터럴("마법의 눈을 …", "마법의 눈 유지시간…")과
+        // 각 정의의 Contains 문구가 이 중 하나를 부분 문자열로 갖는다 — 새 정의를 넣으면 여기도 맞춰야 한다.
+        private static readonly string[] BuffGateTokens =
+        {
+            "마법의 눈",       // MagicEyeStartRegex, MagicEyeSavedRegex
+            "심장",            // 레어의 심장 / 경험의 심장
+            "부적",            // 로토의 부적
+            "클럽 상점 버프",  // Type R-1·R-2·E-1·E-2
+            "에오스",          // 최상급 에오스의 파편
+            "부스터",          // 얼리버드 경험치 부스터
+            "군고구마",        // 전설의 군고구마
+        };
+
+        private static bool ContainsBuffToken(string text)
+        {
+            foreach (string token in BuffGateTokens)
+            {
+                if (text.Contains(token, StringComparison.Ordinal))
+                    return true;
+            }
+            return false;
+        }
+
         /// <summary>
         /// 버프 문구가 든 줄인지 — 화자(내 아이디)가 붙어 시스템 줄로 분류되지 않은 줄도 잡는다.
         /// 게임은 "드드해 : 마법의 눈을 사용하였습니다. [...]"처럼 내 아이디를 붙여 찍기도 해서, 시스템 줄만 보면 그 줄을 놓친다.
         /// </summary>
         public static bool LooksLikeBuffLog(string? formattedText)
         {
-            if (string.IsNullOrWhiteSpace(formattedText))
+            if (string.IsNullOrWhiteSpace(formattedText) || !ContainsBuffToken(formattedText))
                 return false;
             if (MagicEyeStartRegex.IsMatch(formattedText) || MagicEyeSavedRegex.IsMatch(formattedText))
                 return true;
