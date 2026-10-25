@@ -23,7 +23,8 @@ namespace TWChatOverlay.Services
             FontFamily fontFamily,
             double fontSize,
             bool isRealTime,
-            bool canPlayAlertSound)
+            bool canPlayAlertSound,
+            bool useMagicCircleAlert = false)
         {
             if (document == null) throw new ArgumentNullException(nameof(document));
             if (settings == null) throw new ArgumentNullException(nameof(settings));
@@ -51,14 +52,26 @@ namespace TWChatOverlay.Services
 
             if (log.IsHighlight)
             {
+                // 마법진 보라 배경을 먼저 칠하고, 하이라이트 색이 켜져 있으면 주황 배경이 덮어쓴다
+                if (useMagicCircleAlert && log.IsMagicCircleAlert)
+                {
+                    paragraph.Background = ChatBrushResolver.MagicCircleBackgroundBrush;
+                    paragraph.FontWeight = FontWeights.Bold;
+                }
+
                 if (settings.UseAlertColor && !isBlacklisted)
                 {
                     paragraph.Background = ChatBrushResolver.HighlightBackgroundBrush;
                     paragraph.FontWeight = FontWeights.Bold;
                 }
 
-                if (isRealTime && settings.UseAlertSound && canPlayAlertSound)
-                    AppServices.Get<NotificationService>().PlayAlert("Highlight.wav");
+                if (isRealTime && canPlayAlertSound)
+                {
+                    if (useMagicCircleAlert && log.IsMagicCircleAlert && settings.UseMagicCircleAlert)
+                        AppServices.Get<NotificationService>().PlayAlert("Wave.wav");
+                    else if (settings.UseAlertSound)
+                        AppServices.Get<NotificationService>().PlayAlert("Highlight.wav");
+                }
             }
 
             document.Blocks.Add(paragraph);

@@ -44,6 +44,9 @@ namespace TWChatOverlay
             public bool IsBossDialogueLine { get; set; } = false;
             /// <summary>일반(흰색) 줄 중 토글과 무관하게 늘 숨기는 안내문(상자 획득, 회복, 등장 안내 등).</summary>
             public bool IsIgnoredNoticeLine { get; set; } = false;
+
+            /// <summary>얕은 복사본. 참조 필드는 문자열과 Frozen 브러시뿐이라 얕은 복사로 원본과 독립된다.</summary>
+            public ParseResult Clone() => (ParseResult)MemberwiseClone();
         }
 
         public static bool IsMatchTab(ParseResult log, string tabTag, ChatSettings settings)

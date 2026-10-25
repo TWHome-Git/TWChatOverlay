@@ -127,7 +127,6 @@ namespace TWChatOverlay.Views
 
         // 줄마다 쓰는 싱글턴 서비스 — DI 조회를 줄마다 하지 않도록 처음 쓸 때 한 번 꺼내 둔다
         private ChatWindowHub? _chatWindowHubCache;
-        private BlacklistService? _blacklistServiceCache;
         private NotificationService? _notificationServiceCache;
         private RecaptureSupplyAlertService? _recaptureSupplyAlertServiceCache;
         private RecaptureSupplyPadOrderService? _recaptureSupplyPadOrderServiceCache;
@@ -136,7 +135,6 @@ namespace TWChatOverlay.Views
         private ShoutToastService? _shoutToastServiceCache;
 
         private ChatWindowHub ChatWindowHubService => _chatWindowHubCache ??= AppServices.Get<ChatWindowHub>();
-        private BlacklistService BlacklistServiceInstance => _blacklistServiceCache ??= AppServices.Get<BlacklistService>();
         private NotificationService NotificationServiceInstance => _notificationServiceCache ??= AppServices.Get<NotificationService>();
         private RecaptureSupplyAlertService RecaptureSupplyAlertServiceInstance => _recaptureSupplyAlertServiceCache ??= AppServices.Get<RecaptureSupplyAlertService>();
         private RecaptureSupplyPadOrderService RecaptureSupplyPadOrderServiceInstance => _recaptureSupplyPadOrderServiceCache ??= AppServices.Get<RecaptureSupplyPadOrderService>();
@@ -147,6 +145,7 @@ namespace TWChatOverlay.Views
         // 이번 배치에서 탭 버퍼에 줄이 들어갔는지 — 서브 창 알림은 배치 끝에 한 번만 보낸다
         private bool _buffersChangedInBatch;
 
+        private readonly LogDocumentRenderer _logDocumentRenderer = new(200);
         private readonly object _reflectionEndAlertTimerLock = new();
         private readonly HashSet<DispatcherTimer> _reflectionEndAlertTimers = new();
 
@@ -806,56 +805,20 @@ namespace TWChatOverlay.Views
         {
             if (LogDisplay == null) return;
 
-            bool isBlacklisted = BlacklistServiceInstance.TryGetReason(log.SenderId, out string blacklistReason);
-            Brush foreground = isBlacklisted ? BlacklistService.HighlightBrush : log.Brush;
-            string displayText = isBlacklisted ? $"{log.FormattedText} [ {blacklistReason} ]" : log.FormattedText;
-
             FontFamily safeFont = this.CurrentFont ?? FontService.GetFont(_settings.FontFamily);
             if (safeFont == null)
                 safeFont = new FontFamily("Malgun Gothic");
 
-            // 타임스탬프/에타레벨/캐릭터를 조각으로 나눠 색을 따로 칠할 수 있게 (ChatLineComposer — 서브 채팅창과 동일 규칙)
-            Paragraph p = new Paragraph()
-            {
-                Foreground = foreground,
-                FontSize = _settings.FontSize,
-                FontFamily = safeFont,
-                Margin = new Thickness(0, 0, 0, 1),
-                LineHeight = 1
-            };
-            ChatLineComposer.AppendRuns(p, ChatLineComposer.Compose(displayText, log, _settings), foreground, _settings);
-
-            if (isBlacklisted)
-            {
-                p.Background = BlacklistService.HighlightBackgroundBrush;
-                p.FontWeight = FontWeights.Bold;
-            }
-
-            if (log.IsHighlight)
-            {
-                if (log.IsMagicCircleAlert)
-                {
-                    p.Background = ChatBrushResolver.MagicCircleBackgroundBrush;
-                    p.FontWeight = FontWeights.Bold;
-                }
-                if (_settings.UseAlertColor && !isBlacklisted)
-                {
-                    p.Background = ChatBrushResolver.HighlightBackgroundBrush;
-                    p.FontWeight = FontWeights.Bold;
-                }
-                if (isRealTime && _expService.IsReady)
-                {
-                    if (log.IsMagicCircleAlert && _settings.UseMagicCircleAlert)
-                        NotificationServiceInstance.PlayAlert("Wave.wav");
-                    else if (_settings.UseAlertSound)
-                        NotificationServiceInstance.PlayAlert("Highlight.wav");
-                }
-            }
-
-            var blocks = LogDisplay.Document.Blocks;
-            blocks.Add(p);
-
-            if (blocks.Count > 200) blocks.Remove(blocks.FirstBlock);
+            // 서브 채팅창과 같은 렌더러 — 메인 창만 마법진 배경·Wave.wav를 쓰고, 소리는 경험치 서비스 준비 뒤에만
+            _logDocumentRenderer.AddLog(
+                LogDisplay.Document,
+                log,
+                _settings,
+                safeFont,
+                _settings.FontSize,
+                isRealTime,
+                canPlayAlertSound: _expService.IsReady,
+                useMagicCircleAlert: true);
         }
 
         private void ScrollLogDisplayToEndAfterLayout()

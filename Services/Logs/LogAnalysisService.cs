@@ -70,7 +70,48 @@ namespace TWChatOverlay.Services
                 ShouldShowEtosDirection: isRealTime &&
                                          _settings.ShowEtosDirectionAlert &&
                                          !string.IsNullOrWhiteSpace(parsed.EtosImagePath),
-                BufferTabs: ResolveBufferTabs(parsed));
+                BufferTabs: ResolveBufferTabs(parsed))
+            {
+                ChatContent = context.ChatContent
+            };
+        }
+
+        /// <summary>
+        /// 다른 아이템 필터 스냅샷으로 아이템 획득 판정만 다시 한 결과.
+        /// 스냅샷은 아이템 분석기에만 쓰이고 다른 분석기·색·탭 판정은 아이템 필드를 보지 않으므로,
+        /// 같은 줄을 <see cref="Analyze"/>로 다시 돌린 것과 같다 (ParseResult는 복사본이라 primary는 그대로).
+        /// </summary>
+        public LogAnalysisResult ReanalyzeItemDrop(
+            LogAnalysisResult primary,
+            DropItemResolver.DropItemFilterSnapshot? itemFilterSnapshot)
+        {
+            if (primary == null) throw new ArgumentNullException(nameof(primary));
+            if (!primary.IsSuccess)
+                return LogAnalysisResult.Empty(primary.RawHtml, primary.IsRealTime);
+
+            // primary의 아이템 필드는 기본 스냅샷(null) 판정 결과이므로, 아이템 분석기를 돌리기 전 상태로 되돌린다
+            var parsed = primary.Parsed.Clone();
+            parsed.IsTrackedItemDrop = false;
+            parsed.TrackedItemName = null;
+            parsed.TrackedItemGrade = ItemDropGrade.Normal;
+            parsed.TrackedItemCount = 1;
+
+            var context = new LogLineContext(primary.RawHtml, _settings, parsed)
+            {
+                ChatContent = primary.ChatContent
+            };
+
+            if (primary.IsSystemLog)
+            {
+                _itemDropLogAnalyzer.Analyze(context, itemFilterSnapshot);
+            }
+
+            return primary with
+            {
+                Parsed = parsed,
+                HasTrackedItemDrop = parsed.IsTrackedItemDrop,
+                ShouldShowItemDropToast = primary.IsRealTime && parsed.IsTrackedItemDrop && _settings.ShowItemDropAlert
+            };
         }
 
         public bool ShouldRenderToTab(LogParser.ParseResult parsed, string currentTabTag)
@@ -152,6 +193,9 @@ namespace TWChatOverlay.Services
         bool ShouldShowEtosDirection,
         IReadOnlyList<string> BufferTabs)
     {
+        /// <summary>ChatLogAnalyzer가 만든 정규화 본문 — <see cref="LogAnalysisService.ReanalyzeItemDrop"/>가 HTML을 다시 파싱하지 않으려고 보관.</summary>
+        public string ChatContent { get; init; } = string.Empty;
+
         public static LogAnalysisResult Empty(string rawHtml, bool isRealTime)
             => new(
                 RawHtml: rawHtml,

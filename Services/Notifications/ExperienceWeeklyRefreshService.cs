@@ -1,5 +1,4 @@
 using System;
-using System.Globalization;
 using TWChatOverlay.Models;
 
 namespace TWChatOverlay.Services
@@ -11,17 +10,10 @@ namespace TWChatOverlay.Services
             if (settings == null)
                 return;
 
-            string weekKey = GetIsoWeekKey(nowLocal.Date);
+            string weekKey = LogTextClassifier.GetIsoWeekKey(nowLocal.Date);
             settings.ExperienceLimitLastRefreshWeekKey = weekKey;
             settings.ExperienceLimitWeeklyPromptShownWeekKey = weekKey;
             ConfigService.SaveDeferred(settings);
-        }
-
-        private static string GetIsoWeekKey(DateTime date)
-        {
-            int isoYear = ISOWeek.GetYear(date);
-            int isoWeek = ISOWeek.GetWeekOfYear(date);
-            return $"{isoYear}-W{isoWeek:00}";
         }
     }
 }

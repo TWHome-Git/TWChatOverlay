@@ -1654,7 +1654,7 @@ namespace TWChatOverlay.Views
                 if (string.IsNullOrWhiteSpace(logDir) || !Directory.Exists(logDir))
                     return;
 
-                var parser = new LogAnalysisService(_settings);
+                var parser = AppServices.Get<LogAnalysisService>();
                 var lines = new List<string>();
 
                 for (DateTime day = weekStart; day <= weekEnd; day = day.AddDays(1))

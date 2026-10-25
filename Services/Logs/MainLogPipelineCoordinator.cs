@@ -38,13 +38,14 @@ namespace TWChatOverlay.Services
             // 아이템 필터 재분석은 시스템 획득 로그일 때만 — 일반 채팅까지 줄당 3회 분석하던 낭비 제거
             if (isRealTime && MayContainItemDrop(primaryAnalysis))
             {
-                defaultItemDropAnalysis = TryAnalyzeWithDefaultFilter(html, isRealTime);
+                // HTML 전체를 다시 분석하지 않고 아이템 판정만 필터 스냅샷으로 다시 한다
+                defaultItemDropAnalysis = TryAnalyzeWithDefaultFilter(primaryAnalysis);
                 toastAnalysis = defaultItemDropAnalysis;
 
                 var customFilterSnapshot = GetCustomFilterSnapshot();
                 if (_settings.UseCustomDropItemFilter && customFilterSnapshot != null)
                 {
-                    toastAnalysis = _logAnalysisService.Analyze(html, isRealTime, customFilterSnapshot);
+                    toastAnalysis = _logAnalysisService.ReanalyzeItemDrop(primaryAnalysis, customFilterSnapshot);
                 }
             }
 
@@ -61,7 +62,7 @@ namespace TWChatOverlay.Services
             return text.Contains("획득", StringComparison.Ordinal);
         }
 
-        private LogAnalysisResult? TryAnalyzeWithDefaultFilter(string html, bool isRealTime)
+        private LogAnalysisResult? TryAnalyzeWithDefaultFilter(LogAnalysisResult primaryAnalysis)
         {
             var snapshotTask = _defaultDropItemFilterSnapshotTask;
             if (snapshotTask == null)
@@ -76,7 +77,7 @@ namespace TWChatOverlay.Services
             if (!snapshotTask.IsCompletedSuccessfully)
                 return null;
 
-            return _logAnalysisService.Analyze(html, isRealTime, snapshotTask.Result);
+            return _logAnalysisService.ReanalyzeItemDrop(primaryAnalysis, snapshotTask.Result);
         }
 
         private void StartDefaultFilterSnapshotLoad()

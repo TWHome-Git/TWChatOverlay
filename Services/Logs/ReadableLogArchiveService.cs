@@ -130,7 +130,7 @@ namespace TWChatOverlay.Services
                         (hasCheckpoint && File.Exists(itemPath) && !HasUsableArchiveContent(itemPath)))
                         missingItemDays.Add(day);
 
-                    string weekKey = GetIsoWeekKey(day);
+                    string weekKey = LogTextClassifier.GetIsoWeekKey(day);
                     string contentPath = Path.Combine(_contentDirectory, $"{weekKey}.html");
                     if ((!hasCheckpoint && !HasUsableArchiveContent(contentPath)) ||
                         (hasCheckpoint && File.Exists(contentPath) && !HasUsableArchiveContent(contentPath)))
@@ -170,7 +170,7 @@ namespace TWChatOverlay.Services
                     if (missingContentWeeks.Count > 0)
                     {
                         DateTime contentMissingDate = allSourceFiles
-                            .Where(source => missingContentWeeks.Contains(GetIsoWeekKey(source.Date)))
+                            .Where(source => missingContentWeeks.Contains(LogTextClassifier.GetIsoWeekKey(source.Date)))
                             .Select(source => source.Date.Date)
                             .DefaultIfEmpty(DateTime.MaxValue)
                             .Min();
@@ -379,7 +379,7 @@ namespace TWChatOverlay.Services
                 bool writeShout = missingShoutDates.Contains(logDate);
                 bool writeExp = missingExpDates.Contains(logDate);
                 bool writeItem = missingItemDays.Contains(logDate);
-                string weekKey = GetIsoWeekKey(logDate);
+                string weekKey = LogTextClassifier.GetIsoWeekKey(logDate);
                 bool writeContent = missingContentWeeks.Contains(weekKey);
                 bool writeAbandon = missingAbandonDays.Contains(logDate);
                 bool rebuildAbandonSummary = missingAbandonSummaryDays.Contains(logDate);
@@ -724,7 +724,7 @@ namespace TWChatOverlay.Services
 
         private void AppendContentLog(DateTime logDate, string text, ArchiveWriteBatch? pendingArchiveWrites = null)
         {
-            string weekKey = GetIsoWeekKey(logDate);
+            string weekKey = LogTextClassifier.GetIsoWeekKey(logDate);
             string dateKey = logDate.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
             string path = Path.Combine(_contentDirectory, $"{weekKey}.html");
             string entry = $"<div class=\"log content\" data-date=\"{dateKey}\">{WebUtility.HtmlEncode(text)}</div>";
@@ -909,13 +909,6 @@ namespace TWChatOverlay.Services
 
         private static DateTime MinDate(DateTime left, DateTime right)
             => left <= right ? left : right;
-
-        private static string GetIsoWeekKey(DateTime date)
-        {
-            int isoYear = ISOWeek.GetYear(date);
-            int isoWeek = ISOWeek.GetWeekOfYear(date);
-            return $"{isoYear}-W{isoWeek:00}";
-        }
 
         private static bool TryExtractMagicStoneGain(string text, out string itemName, out int count)
         {
