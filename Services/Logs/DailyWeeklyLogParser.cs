@@ -1,4 +1,3 @@
-using System.Net;
 using System.Text.RegularExpressions;
 
 namespace TWChatOverlay.Services
@@ -9,7 +8,6 @@ namespace TWChatOverlay.Services
     /// </summary>
     public static class DailyWeeklyLogParser
     {
-        private static readonly Regex HtmlTagRegex = new("<[^>]+>", RegexOptions.Compiled);
         private static readonly Regex WhiteSpaceRegex = new(@"\s+", RegexOptions.Compiled);
         private static readonly Regex AbandonRoadCountRegex = new(
             @"이번\s*주\s*어밴던\s*로드\s*(?<region>필멸의\s*땅|카디프|오를란느)\s*지역의\s*도전\s*횟수는\s*(?<count>\d+)\s*번",
@@ -23,16 +21,9 @@ namespace TWChatOverlay.Services
         private const string CardiffItemName = "카디프";
         private const string OrlanneItemName = "오를란느";
 
-        /// <summary>HTML 태그/엔티티/공백을 정리한 순수 텍스트를 반환.</summary>
+        /// <summary>HTML 태그/엔티티/공백을 정리한 순수 텍스트를 반환 (원본 로그 공용 정규화 <see cref="RawChatLogReader.NormalizeText"/>).</summary>
         public static string NormalizeLogText(string rawLog)
-        {
-            if (string.IsNullOrWhiteSpace(rawLog))
-                return string.Empty;
-
-            string decoded = WebUtility.HtmlDecode(rawLog).Replace("&nbsp", " ");
-            decoded = HtmlTagRegex.Replace(decoded, " ");
-            return WhiteSpaceRegex.Replace(decoded, " ").Trim();
-        }
+            => RawChatLogReader.NormalizeText(rawLog);
 
         /// <summary>어밴던로드 도전 횟수 로그에서 지역명과 횟수를 추출.</summary>
         public static bool TryExtractAbandonRoadCount(string text, out string itemName, out int count)

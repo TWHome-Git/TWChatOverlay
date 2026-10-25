@@ -57,8 +57,8 @@ namespace TWChatOverlay.Services.LogAnalysis
             context.Result.Brush = brush;
             if (category == ChatCategory.Shout)
                 context.Result.ShoutKind = ResolveShoutKind(chatContent);
-            context.Result.SenderId = ExtractSenderId(chatContent, category);
-            context.Result.RawSenderId = ExtractRawSenderId(decodedContent, category);
+            context.Result.SenderId = ExtractSender(chatContent, category, trim: true);
+            context.Result.RawSenderId = ExtractSender(decodedContent, category, trim: false);
             context.Result.HasLeadingBodyWhitespace = !string.IsNullOrEmpty(decodedContent) && char.IsWhiteSpace(decodedContent[0]);
 
             context.ChatContent = chatContent;
@@ -81,7 +81,12 @@ namespace TWChatOverlay.Services.LogAnalysis
         }
 
 
-        private static string? ExtractSenderId(string chatContent, ChatCategory category)
+        /// <summary>
+        /// 화자 아이디. 외치기는 꼬리 "[아이디]", 그 외는 ':' 앞의 마지막 ']' 뒤 부분. 시스템 줄은 없다.
+        /// trim=true는 공백 정규화된 본문용(SenderId), false는 원문 공백을 남긴 RawSenderId용 —
+        /// 둘의 차이는 Trim 유무뿐이며, 아이디가 공백만이면 둘 다 null로 본다.
+        /// </summary>
+        private static string? ExtractSender(string chatContent, ChatCategory category, bool trim)
         {
             if (string.IsNullOrWhiteSpace(chatContent))
                 return null;
@@ -89,45 +94,13 @@ namespace TWChatOverlay.Services.LogAnalysis
             if (category == ChatCategory.Shout)
             {
                 var shoutMatch = ShoutTrailingUserIdRegex.Match(chatContent);
-                if (shoutMatch.Success)
-                {
-                    string shoutUserId = shoutMatch.Groups["userId"].Value.Trim();
-                    return string.IsNullOrWhiteSpace(shoutUserId) ? null : shoutUserId;
-                }
+                if (!shoutMatch.Success)
+                    return null;
 
-                return null;
-            }
-
-            if (category is ChatCategory.System or ChatCategory.System2 or ChatCategory.System3)
-                return null;
-
-            int colonIndex = chatContent.IndexOf(':');
-            if (colonIndex <= 0)
-                return null;
-
-            string leftPart = chatContent.Substring(0, colonIndex).TrimEnd();
-            int nameStart = leftPart.LastIndexOf(']');
-            nameStart = nameStart >= 0 ? nameStart + 1 : 0;
-
-            string userId = leftPart.Substring(nameStart).Trim();
-            return string.IsNullOrWhiteSpace(userId) ? null : userId;
-        }
-
-        private static string? ExtractRawSenderId(string chatContent, ChatCategory category)
-        {
-            if (string.IsNullOrEmpty(chatContent))
-                return null;
-
-            if (category == ChatCategory.Shout)
-            {
-                var shoutMatch = ShoutTrailingUserIdRegex.Match(chatContent);
-                if (shoutMatch.Success)
-                {
-                    string shoutUserId = shoutMatch.Groups["userId"].Value;
-                    return shoutUserId.Length == 0 ? null : shoutUserId;
-                }
-
-                return null;
+                string shoutUserId = shoutMatch.Groups["userId"].Value;
+                if (trim)
+                    shoutUserId = shoutUserId.Trim();
+                return string.IsNullOrWhiteSpace(shoutUserId) ? null : shoutUserId;
             }
 
             if (category is ChatCategory.System or ChatCategory.System2 or ChatCategory.System3)
@@ -142,6 +115,8 @@ namespace TWChatOverlay.Services.LogAnalysis
             nameStart = nameStart >= 0 ? nameStart + 1 : 0;
 
             string userId = leftPart.Substring(nameStart);
+            if (trim)
+                userId = userId.Trim();
             return string.IsNullOrWhiteSpace(userId) ? null : userId;
         }
 

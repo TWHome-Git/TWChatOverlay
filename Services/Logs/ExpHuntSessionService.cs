@@ -4,7 +4,6 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using TWChatOverlay.Models;
 using TWChatOverlay.Services.LogAnalysis;
@@ -30,10 +29,6 @@ namespace TWChatOverlay.Services
         /// <summary>남길 만한 판인지 (시간도 길고 번 것도 있는 판).</summary>
         private static bool IsWorthKeeping(ExpHuntSession session)
             => session.Duration >= MinimumDuration && session.TotalExp > MinimumTotalExp;
-
-        private static readonly Regex LogTimeRegex = new(@"^\[\s*(\d{1,2})시\s*(\d{1,2})분\s*(\d{1,2})초\s*\]", RegexOptions.Compiled);
-        private static readonly Regex HtmlTagRegex = new(@"<[^>]+>", RegexOptions.Compiled);
-        private static readonly Regex FileDateRegex = new(@"TWChatLog_(?<y>\d{4})_(?<m>\d{2})_(?<d>\d{2})\.html$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
         private readonly string _sessionFilePath;
         private readonly string _scanStateFilePath;
@@ -263,73 +258,267 @@ namespace TWChatOverlay.Services
 
         // ===== 지난 로그 훑기 =====
 
+        // 이번 실행에서 아직 읽지 않은 날짜(scannedUntil 이후 ~ 오늘). 시작 패스가 전경(최근분)·배경(나머지)으로 나뉘어도
+        // 여기서 이어지므로 "어디까지 읽었나"는 빈 날짜 없이 연속으로만 올라간다.
+        private HashSet<DateTime>? _pendingScanDates;
+        private DateTime _scannedUntil = DateTime.MinValue;
+        private DateTime _maxScannedPastDate = DateTime.MinValue;
+        private bool _legacyMaintenanceDone;
+
         /// <summary>
-        /// 아직 안 읽은 날짜의 채팅 로그에서 판을 뽑아 기록에 더한다.
+        /// 원본 로그 공용 패스에 올라타는 소비자. 아직 안 읽은 날짜의 채팅 로그에서 판을 뽑아 기록에 더한다.
         /// 오늘 로그도 읽는다 — 앱을 켜기 전에 사냥한 몫이 빠지면 안 되기 때문이다.
         /// 다만 오늘은 아직 이어지는 중이라 "읽은 날"로 적지 않고, 다음에 켤 때 다시 읽는다
-        /// (이미 있는 판은 시작 시각으로 걸러진다).
+        /// (이미 있는 판은 시간대 겹침으로 걸러진다).
         /// </summary>
-        public Task<int> BackfillAsync(string? chatLogFolder)
+        public IRawLogScanConsumer CreateScanConsumer(string? chatLogFolder)
+            => new ScanConsumer(this, ResolveFolder(chatLogFolder));
+
+        /// <summary>공용 패스 없이 혼자 훑을 때(테스트·수동). 시작 경로는 <see cref="CreateScanConsumer"/>를 쓴다.</summary>
+        public Task BackfillAsync(string? chatLogFolder)
         {
-            return Task.Run(() =>
-            {
-                string folder = string.IsNullOrWhiteSpace(chatLogFolder)
-                    ? @"C:\Nexon\TalesWeaver\ChatLog"
-                    : chatLogFolder!;
-                if (!Directory.Exists(folder))
-                    return 0;
-
-                lock (_syncRoot)
-                {
-                    RebuildIfOldVersionUnlocked();
-                    DedupeExistingUnlocked();
-                }
-
-                DateTime scannedUntil = ReadScannedUntil();
-                DateTime today = DateTime.Today;
-                var targets = new List<(string Path, DateTime Date)>();
-                foreach (string path in Directory.EnumerateFiles(folder, "TWChatLog_*.html"))
-                {
-                    if (TryReadFileDate(path) is not DateTime date)
-                        continue;
-                    if (date <= scannedUntil || date > today)
-                        continue;
-                    targets.Add((path, date));
-                }
-
-                if (targets.Count == 0)
-                    return 0;
-
-                targets.Sort((a, b) => a.Date.CompareTo(b.Date));
-                var found = new List<ExpHuntSession>();
-                DateTime lastDone = scannedUntil;
-                foreach (var (path, date) in targets)
-                {
-                    try
-                    {
-                        found.AddRange(ReadSessionsFromLog(path, date));
-                        if (date < today)
-                            lastDone = date;   // 오늘은 아직 안 끝났으니 읽은 날로 치지 않는다
-                    }
-                    catch (Exception ex)
-                    {
-                        AppLogger.Warn($"Failed to scan hunt sessions. File='{Path.GetFileName(path)}'", ex);
-                    }
-                }
-
-                lock (_syncRoot)
-                    AppendUnlocked(found);
-                WriteScannedUntil(lastDone);
-                AppLogger.Info($"Hunt session backfill done. Files={targets.Count}, Sessions={found.Count}");
-                return found.Count;
-            });
+            string folder = ResolveFolder(chatLogFolder);
+            if (!Directory.Exists(folder))
+                return Task.CompletedTask;
+            return RawLogScanService.RunAsync(folder, new[] { CreateScanConsumer(folder) });
         }
 
+        private static string ResolveFolder(string? chatLogFolder)
+            => string.IsNullOrWhiteSpace(chatLogFolder) ? @"C:\Nexon\TalesWeaver\ChatLog" : chatLogFolder!;
+
+        /// <summary>읽을 날짜 목록을 한 번만 만든다. _syncRoot 안에서 부른다.</summary>
+        private void EnsureScanPlanUnlocked(string folder)
+        {
+            if (_pendingScanDates != null)
+                return;
+
+            RunLegacyMaintenanceOnceUnlocked();
+
+            _scannedUntil = ReadScannedUntil();
+            _maxScannedPastDate = _scannedUntil;
+            DateTime today = DateTime.Today;
+            var pending = new HashSet<DateTime>();
+            foreach (RawLogFile file in RawChatLogReader.EnumerateFiles(folder))
+            {
+                if (file.Date <= _scannedUntil || file.Date > today)
+                    continue;
+                pending.Add(file.Date);
+            }
+            _pendingScanDates = pending;
+        }
+
+        /// <summary>날짜 하나를 다 읽었다. 그 앞 날짜가 전부 끝났을 때만 "읽은 날"을 올린다. _syncRoot 안에서 부른다.</summary>
+        private void MarkDateScannedUnlocked(DateTime date)
+        {
+            if (_pendingScanDates == null)
+                return;
+
+            _pendingScanDates.Remove(date);
+            DateTime today = DateTime.Today;
+            if (date >= today)
+                return; // 오늘은 아직 안 끝났으니 읽은 날로 치지 않는다
+
+            if (date > _maxScannedPastDate)
+                _maxScannedPastDate = date;
+
+            DateTime newUntil = _maxScannedPastDate;
+            foreach (DateTime pending in _pendingScanDates)
+            {
+                if (pending < today && pending.AddDays(-1) < newUntil)
+                    newUntil = pending.AddDays(-1);
+            }
+
+            if (newUntil > _scannedUntil)
+            {
+                _scannedUntil = newUntil;
+                WriteScannedUntil(newUntil);
+            }
+        }
+
+        private sealed class ScanConsumer : IRawLogTailConsumer
+        {
+            private readonly ExpHuntSessionService _owner;
+            private readonly string _folder;
+            private HuntDayScanner? _day;
+            private long _fileLength;
+            private int _files;
+            private int _sessions;
+
+            public (RawLogFile File, long Length)? ConsumedToday { get; private set; }
+
+            public ScanConsumer(ExpHuntSessionService owner, string folder)
+            {
+                _owner = owner;
+                _folder = folder;
+            }
+
+            public void BeginScan(IReadOnlyList<RawLogFile> files)
+            {
+                lock (_owner._syncRoot)
+                    _owner.EnsureScanPlanUnlocked(_folder);
+            }
+
+            public bool BeginFile(RawLogFile file, long fileLength)
+            {
+                lock (_owner._syncRoot)
+                {
+                    if (_owner._pendingScanDates == null || !_owner._pendingScanDates.Contains(file.Date))
+                        return false;
+                }
+
+                _day = new HuntDayScanner(file.Date);
+                _fileLength = fileLength;
+                return true;
+            }
+
+            public void OnLine(RawLogLine line) => _day?.Feed(line);
+
+            public void BeginTail(RawLogFile file) => _day = new HuntDayScanner(file.Date);
+
+            public void EndTail(RawLogFile file, long newLength)
+            {
+                HuntDayScanner? day = _day;
+                _day = null;
+                if (day == null)
+                    return;
+
+                // 틈 구간의 판은 시간대 겹침으로 기존 판과 합쳐진다 (AppendUnlocked)
+                List<ExpHuntSession> found = day.Complete();
+                lock (_owner._syncRoot)
+                    _owner.AppendUnlocked(found);
+                ConsumedToday = (file, newLength);
+            }
+
+            public void EndFile(RawLogFile file, RawLogReadOutcome outcome)
+            {
+                HuntDayScanner? day = _day;
+                _day = null;
+                if (day == null)
+                    return;
+
+                List<ExpHuntSession> found = day.Complete();
+                _files++;
+                _sessions += found.Count;
+                lock (_owner._syncRoot)
+                {
+                    _owner.AppendUnlocked(found);
+                    if (outcome == RawLogReadOutcome.Completed)
+                        _owner.MarkDateScannedUnlocked(file.Date);
+                }
+                if (outcome == RawLogReadOutcome.Completed && file.Date == DateTime.Today)
+                    ConsumedToday = (file, _fileLength);
+            }
+
+            public void EndScan(bool completed)
+            {
+                if (_files > 0)
+                    AppLogger.Info($"Hunt session backfill done. Files={_files}, Sessions={_sessions}");
+            }
+        }
+
+        /// <summary>로그 파일 하루치에서 판을 뽑는다 (공용 리더로 읽어 <see cref="HuntDayScanner"/>에 넣는다).</summary>
+        public static List<ExpHuntSession> ReadSessionsFromLog(string path, DateTime date)
+        {
+            var scanner = new HuntDayScanner(date);
+            foreach (string html in RawChatLogReader.ReadMergedLines(path))
+                scanner.Feed(html, null);
+            return scanner.Complete();
+        }
+
+        /// <summary>하루치 줄을 순서대로 받아 사냥 판으로 묶는다. 파일 스캔과 공용 패스가 같은 규칙을 쓴다.</summary>
+        public sealed class HuntDayScanner
+        {
+            private readonly DateTime _date;
+            private readonly List<ExpHuntSession> _sessions = new();
+            private DateTime? _startedAt;
+            private DateTime _lastGainAt;
+            private long _totalExp;
+            private int _gainCount;
+            private int _hourOffset;      // 자정을 넘겨 시각이 되돌아가면 하루를 더한다
+            private int _previousHour = -1;
+
+            public HuntDayScanner(DateTime date)
+            {
+                _date = date.Date;
+            }
+
+            public void Feed(RawLogLine line) => Feed(line.Html, line.PlainText);
+
+            /// <param name="html">줄 HTML. <paramref name="plainText"/>가 null이면 여기서 태그를 뗀다.</param>
+            public void Feed(string html, string? plainText)
+            {
+                // 경험치 줄만 본다 — 대부분의 줄을 여기서 걸러 비싼 처리를 건너뛴다
+                if (html.IndexOf("경험치", StringComparison.Ordinal) < 0)
+                    return;
+
+                string text = plainText ?? RawChatLogReader.StripTags(html);
+                if (!RawChatLogReader.TryParseLogTime(text, out TimeSpan time, out int matchLength))
+                    return;
+
+                int hour = time.Hours;
+                if (_previousHour >= 0 && hour < _previousHour)
+                    _hourOffset += 24;   // 00시로 되돌아갔다 = 다음 날
+                _previousHour = hour;
+
+                DateTime at = _date.AddHours(_hourOffset).Add(time);
+
+                string body = text.Substring(matchLength).Trim();
+                long gained = ExperienceLogAnalyzer.ExtractGain(body, isSystemLog: true);
+                if (gained <= 0 || !ExperienceLogAnalyzer.IsHuntingGain(body))
+                    return; // 보상 경험치는 판에 넣지 않는다
+
+                if (_startedAt.HasValue && at - _lastGainAt > SessionGap)
+                    Close();
+
+                _startedAt ??= at;
+                _lastGainAt = at;
+                _totalExp += gained;
+                _gainCount++;
+            }
+
+            /// <summary>파일 끝: 진행 중인 판을 닫고 남길 판 목록을 돌려준다.</summary>
+            public List<ExpHuntSession> Complete()
+            {
+                Close();
+                return _sessions;
+            }
+
+            private void Close()
+            {
+                if (_startedAt is not DateTime started)
+                    return;
+                var session = new ExpHuntSession
+                {
+                    StartedAt = started,
+                    EndedAt = _lastGainAt,
+                    TotalExp = _totalExp,
+                    GainCount = _gainCount,
+                };
+                if (IsWorthKeeping(session))
+                    _sessions.Add(session);
+                _startedAt = null;
+                _totalExp = 0;
+                _gainCount = 0;
+            }
+        }
+
+        #region 레거시 유지보수 (실행당 1회)
+
         /// <summary>
-        /// 기록 규칙 버전. 2: 보상 경험치를 판에서 뺐다 — 그 전에 쌓인 판은 보상이 섞여 있으므로
+        /// [레거시] 기록 규칙 버전. 2: 보상 경험치를 판에서 뺐다 — 그 전에 쌓인 판은 보상이 섞여 있으므로
         /// 옛 파일을 sessions.v1.csv로 옮기고 지난 로그 전체를 다시 읽어 새로 만든다 (한 번만).
         /// </summary>
         private const int RecordVersion = 2;
+
+        /// <summary>[레거시] 옛 버전 기록 재구축 + 예전에 두 번 들어간 판 정리. 실행당 한 번만 돈다.</summary>
+        private void RunLegacyMaintenanceOnceUnlocked()
+        {
+            if (_legacyMaintenanceDone)
+                return;
+            _legacyMaintenanceDone = true;
+            RebuildIfOldVersionUnlocked();
+            DedupeExistingUnlocked();
+        }
 
         private void RebuildIfOldVersionUnlocked()
         {
@@ -354,88 +543,7 @@ namespace TWChatOverlay.Services
             }
         }
 
-        /// <summary>로그 파일 하루치에서 판을 뽑는다.</summary>
-        private static List<ExpHuntSession> ReadSessionsFromLog(string path, DateTime date)
-        {
-            var sessions = new List<ExpHuntSession>();
-            DateTime? startedAt = null;
-            DateTime lastGainAt = default;
-            long totalExp = 0;
-            int gainCount = 0;
-            int hourOffset = 0;      // 자정을 넘겨 시각이 되돌아가면 하루를 더한다
-            int previousHour = -1;
-
-            void Close()
-            {
-                if (startedAt is not DateTime started)
-                    return;
-                var session = new ExpHuntSession
-                {
-                    StartedAt = started,
-                    EndedAt = lastGainAt,
-                    TotalExp = totalExp,
-                    GainCount = gainCount,
-                };
-                if (IsWorthKeeping(session))
-                    sessions.Add(session);
-                startedAt = null;
-                totalExp = 0;
-                gainCount = 0;
-            }
-
-            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance); // 채팅 로그는 CP949
-            Encoding encoding = Encoding.GetEncoding(949);
-            using var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
-            using var reader = new StreamReader(stream, encoding);
-            string? raw;
-            while ((raw = reader.ReadLine()) != null)
-            {
-                // 경험치 줄만 본다 — 대부분의 줄을 여기서 걸러 비싼 처리를 건너뛴다
-                if (raw.IndexOf("경험치", StringComparison.Ordinal) < 0)
-                    continue;
-
-                string text = HtmlTagRegex.Replace(raw, string.Empty).Trim();
-                Match time = LogTimeRegex.Match(text);
-                if (!time.Success)
-                    continue;
-
-                int hour = int.Parse(time.Groups[1].Value, CultureInfo.InvariantCulture);
-                if (previousHour >= 0 && hour < previousHour)
-                    hourOffset += 24;   // 00시로 되돌아갔다 = 다음 날
-                previousHour = hour;
-
-                DateTime at = date.AddHours(hour + hourOffset)
-                    .AddMinutes(int.Parse(time.Groups[2].Value, CultureInfo.InvariantCulture))
-                    .AddSeconds(int.Parse(time.Groups[3].Value, CultureInfo.InvariantCulture));
-
-                string body = text.Substring(time.Length).Trim();
-                long gained = ExperienceLogAnalyzer.ExtractGain(body, isSystemLog: true);
-                if (gained <= 0 || !ExperienceLogAnalyzer.IsHuntingGain(body))
-                    continue; // 보상 경험치는 판에 넣지 않는다
-
-                if (startedAt.HasValue && at - lastGainAt > SessionGap)
-                    Close();
-
-                startedAt ??= at;
-                lastGainAt = at;
-                totalExp += gained;
-                gainCount++;
-            }
-
-            Close();
-            return sessions;
-        }
-
-        private static DateTime? TryReadFileDate(string path)
-        {
-            Match match = FileDateRegex.Match(path);
-            if (!match.Success)
-                return null;
-            return new DateTime(
-                int.Parse(match.Groups["y"].Value, CultureInfo.InvariantCulture),
-                int.Parse(match.Groups["m"].Value, CultureInfo.InvariantCulture),
-                int.Parse(match.Groups["d"].Value, CultureInfo.InvariantCulture));
-        }
+        #endregion
 
         private DateTime ReadScannedUntil()
         {

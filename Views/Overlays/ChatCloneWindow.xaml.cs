@@ -16,12 +16,13 @@ namespace TWChatOverlay.Views
     {
         private readonly ChatSettings _settings;
         private readonly LogDocumentRenderer _renderer = new(200);
+        // 메인 창과 같은 숨김 규칙(보스 대사·클럽 보스 토글)을 표시 시점에 적용하기 위해
+        private readonly LogAnalysisService _logAnalysisService = AppServices.Get<LogAnalysisService>();
         private readonly int _slot;
         private MainWindow? _mainWindow;
         private string _currentTabTag = "General";
         private bool _isInitialized;
         private bool _isResizingWindow;
-        private bool _isApplyingStoredPosition;
         private readonly DispatcherTimer _tabAutoHideTimer = new() { Interval = TimeSpan.FromSeconds(2.5) };
 
         public int Slot => _slot;
@@ -146,7 +147,7 @@ namespace TWChatOverlay.Views
             ApplySizeFromMainWindow();
             ApplyDefaultFontSettings();
             ApplyEffectiveFont();
-            ApplyStoredPosition();
+            ApplyStoredBounds(_settings);
             ApplyDefaultPositionIfNeeded();
             ApplyTabState(_currentTabTag, persistSettings: false, refreshLogDisplay: false);
         }
@@ -202,13 +203,7 @@ namespace TWChatOverlay.Views
             {
             }
 
-            try
-            {
-                SavePositionToSettings();
-            }
-            catch
-            {
-            }
+            // 위치는 OnClosing에서 베이스가 썼다 (PersistBounds)
 
             try
             {
@@ -309,10 +304,10 @@ namespace TWChatOverlay.Views
 
         private void HandleLocationChanged()
         {
-            if (_isResizingWindow || _isApplyingStoredPosition)
+            if (_isResizingWindow)
                 return;
 
-            SyncPositionToSettings();
+            PersistBoundsNow(); // 복원 중(ApplyStoredBounds)에는 베이스가 억제한다
         }
 
         private void ChatWindowHub_BuffersChanged(object? sender, EventArgs e)
@@ -333,7 +328,7 @@ namespace TWChatOverlay.Views
             {
                 Dispatcher.BeginInvoke(new Action(() =>
                 {
-                    ApplyStoredPosition();
+                    ApplyStoredBounds(_settings);
                     string normalizedTag = NormalizeTabTag(GetStoredTabTag());
                     if (!string.Equals(_currentTabTag, normalizedTag, StringComparison.Ordinal))
                         ApplyTabState(normalizedTag, persistSettings: false, refreshLogDisplay: false);
@@ -472,6 +467,8 @@ namespace TWChatOverlay.Views
                 {
                     foreach (var log in delta)
                     {
+                        if (ShouldSuppress(log))
+                            continue;
                         _renderer.AddLog(logDisplay.Document, log, _settings, CurrentFont, CurrentFontSize, false, false);
                     }
 
@@ -491,6 +488,8 @@ namespace TWChatOverlay.Views
                     logDisplay.Document.Blocks.Clear();
                     foreach (var log in store.GetLogs(_currentTabTag))
                     {
+                        if (ShouldSuppress(log))
+                            continue;
                         _renderer.AddLog(logDisplay.Document, log, _settings, CurrentFont, CurrentFontSize, false, false);
                     }
                 }
@@ -506,6 +505,13 @@ namespace TWChatOverlay.Views
             _renderedGeneration = generation;
             _renderedTabTag = _currentTabTag;
         }
+
+        /// <summary>
+        /// 메인 창이 숨기는 줄은 서브 창에서도 숨긴다: 설정 무관 억제(반복 안내·에토스, 분석 시점 계산)와
+        /// 설정에 따르는 숨김(보스 대사·클럽 보스 토글, 표시 시점마다 현재 설정으로).
+        /// </summary>
+        private bool ShouldSuppress(LogParser.ParseResult log)
+            => log.IsDisplaySuppressed || _logAnalysisService.IsHiddenByChatFilter(log);
 
         private void Tab_Click(object sender, RoutedEventArgs e)
         {
@@ -612,15 +618,42 @@ namespace TWChatOverlay.Views
             Close();
         }
 
-        // 서브 채팅창: 폰트·z-순서·위치 저장은 기존 로직(ChatWindowHub·자체 핸들러)이 맡는다
+        // 서브 채팅창: 폰트·z-순서는 기존 로직(ChatWindowHub)이 맡고, 위치는 베이스 경로(PersistBounds, 잠금 해제 중만)로 저장한다.
+        // 크기 조절 중의 LocationChanged는 거르기 위해 베이스의 자동 저장 대신 HandleLocationChanged가 PersistBoundsNow를 부른다.
         protected override bool KeepBelowSettingsHost => false;
         protected override bool ApplyAppFont => false;
         protected override bool PersistBoundsOnChange => false;
+        protected override bool PersistOnlyWhenUnlocked => true;
+        protected override ChatSettings? ResolveSettings() => _settings;
+
+        protected override bool PersistBounds(ChatSettings settings)
+        {
+            if (_slot == 1)
+            {
+                settings.ChatCloneWindow1Left = Left;
+                settings.ChatCloneWindow1Top = Top;
+            }
+            else if (_slot == 2)
+            {
+                settings.ChatCloneWindow2Left = Left;
+                settings.ChatCloneWindow2Top = Top;
+            }
+            else
+            {
+                return false;
+            }
+            return true;
+        }
+
+        protected override (double? Left, double? Top, double? Width, double? Height)? StoredBounds(ChatSettings settings)
+            => _slot == 1
+                ? (settings.ChatCloneWindow1Left, settings.ChatCloneWindow1Top, null, null)
+                : (settings.ChatCloneWindow2Left, settings.ChatCloneWindow2Top, null, null);
 
         protected override void OnDragCompleted()
         {
             AppServices.Get<ChatWindowHub>().TryApplyMagneticSnap(this);
-            SyncPositionToSettings();
+            PersistBoundsNow(); // 스냅으로 옮겨진 자리까지 저장
         }
 
         /// <summary>잠금 해제 모드에서는 창의 아무 곳이나 잡고 드래그해 이동할 수 있다.</summary>
@@ -636,7 +669,7 @@ namespace TWChatOverlay.Views
                 Height -= e.VerticalChange;
                 Top += e.VerticalChange;
                 SaveSizeToSettings();
-                SyncPositionToSettings();
+                PersistBoundsNow();
             }
         }
 
@@ -647,7 +680,7 @@ namespace TWChatOverlay.Views
                 Width -= e.HorizontalChange;
                 Left += e.HorizontalChange;
                 SaveSizeToSettings();
-                SyncPositionToSettings();
+                PersistBoundsNow();
             }
         }
 
@@ -657,7 +690,7 @@ namespace TWChatOverlay.Views
             {
                 Width += e.HorizontalChange;
                 SaveSizeToSettings();
-                SyncPositionToSettings();
+                PersistBoundsNow();
             }
         }
 
@@ -670,26 +703,7 @@ namespace TWChatOverlay.Views
         {
             _isResizingWindow = false;
             AppServices.Get<ChatWindowHub>().TryApplyMagneticSnap(this);
-            SyncPositionToSettings();
-        }
-
-        /// <summary>설정에 저장된 위치로 옮긴다. 설정 전체 교체(프로필 불러오기)·위치 초기화 뒤에 쓴다.</summary>
-        public void ReapplyStoredPosition() => ApplyStoredPosition();
-
-        private void ApplyStoredPosition()
-        {
-            // 옮기는 동안의 LocationChanged 저장은 막는다 (중간 상태가 설정에 남지 않게)
-            _isApplyingStoredPosition = true;
-            try
-            {
-                WindowPlacement.ApplyStored(this,
-                    _slot == 1 ? _settings.ChatCloneWindow1Left : _settings.ChatCloneWindow2Left,
-                    _slot == 1 ? _settings.ChatCloneWindow1Top : _settings.ChatCloneWindow2Top);
-            }
-            finally
-            {
-                _isApplyingStoredPosition = false;
-            }
+            PersistBoundsNow();
         }
 
         private void ApplyDefaultPositionIfNeeded()
@@ -717,33 +731,6 @@ namespace TWChatOverlay.Views
 
             Left = left;
             Top = top;
-        }
-
-        private void SavePositionToSettings()
-        {
-            if (!AppServices.Get<UiLockService>().IsUnlocked)
-                return;
-
-            if (_slot == 1)
-            {
-                _settings.ChatCloneWindow1Left = Left;
-                _settings.ChatCloneWindow1Top = Top;
-            }
-            else if (_slot == 2)
-            {
-                _settings.ChatCloneWindow2Left = Left;
-                _settings.ChatCloneWindow2Top = Top;
-            }
-
-            ConfigService.SaveDeferred(_settings);
-        }
-
-        private void SyncPositionToSettings()
-        {
-            if (!AppServices.Get<UiLockService>().IsUnlocked)
-                return;
-
-            SavePositionToSettings();
         }
 
         private bool GetFollowMainFont()

@@ -24,77 +24,6 @@ namespace TWChatOverlay.Views
         private static readonly Regex OrlyRemainingAttackOneRegex = new(
             @"남은\s*공격\s*횟수\s*:\s*1(?!\d)",
             RegexOptions.Compiled);
-        private static readonly string[] DailyWeeklyContentArchiveKeywords =
-        {
-            "이클립스 보스전(로카고스) 클리어 횟수:",
-            "이클립스 보스전(에토스) 클리어 횟수:",
-            "이클립스 보스전(체리아) 클리어 횟수:",
-            "이클립스 보스전(마티아) 클리어 횟수:",
-            "이클립스 보스전(티로로스) 클리어 횟수:",
-            "이클립스 보스전(라이코스) 클리어 횟수:",
-            "이클립스 보스 토벌전 클리어 횟수:",
-            "보급품 탈환 클리어 횟수:",
-            "달여왕 군대 훈련소 클리어 횟수:",
-            "별동대 토벌 클리어 횟수:",
-            "혼란한 대지 미션에 성공하여",
-            "색을 잃은 땅 미션에 성공하여",
-            "보스 몬스터를 퇴치하세요.",
-            "던전을 클리어 하였습니다. 곧 마을로 돌아가게 됩니다.",
-            "모든 일반지역을 토벌하여",
-            "?고대 렐릭의 성소? - 주간 무료 클리어 횟수 :",
-            "숨겨진 구역으로 이동할 수 있는 포탈이 맵 중앙",
-            "지하요새의 망령 클리어 횟수:",
-            "심연의 보물창고 입장 횟수:",
-            "[이터널 플로어 보상 상자] 아이템을 획득하였습니다",
-            "청소 아르바이트 보상 조건을 달성하였습니다.",
-            "프라바 방어전 성공 보상으로 경험치 1000만을 획득",
-            "이번 주 사명의 계승자 닉스 보상을",
-            "이번 주 신조 보상을",
-            "아페티리아 클리어 횟수:",
-            "시오칸하임 - 보스 토벌전의 클리어 횟수 :",
-            "시오칸하임 - 오딘 전면전의 클리어 횟수 :",
-            "이번 주 어밴던로드 필멸의 땅 지역의 도전 횟수는",
-            "이번 주 어밴던로드 카디프 지역의 도전 횟수는",
-            "이번 주 어밴던로드 오를란느 지역의 도전 횟수는",
-            "어비스 - 심층Ⅰ(보스전) 플레이를 이번 주에 7회 중",
-            "어비스 - 심층Ⅱ(보스전) 플레이를 이번 주에 7회 중",
-            "어비스 - 심층Ⅲ(보스전) 플레이를 이번 주에 7회 중",
-            "어비스 보스전(EX) 클리어 횟수:",
-            "남은 에너지는",
-            "경험치 100억이 차감되고, 경험의 정수 1개를 획득 하였습니다."
-            ,"[경험의 정수] 아이템을 획득하였습니다."
-            ,"[성난 빅테디의 별사탕] 아이템을 획득하였습니다."
-            ,"레이티아 퇴치 보상으로 레이티아 보상 상자 (일반) 1개, 루비코나 코어 상자 20개를"
-            ,"설계자 퇴치 보상으로 설계자 보상 상자 (일반) 1개, 루비코나 코어 상자 20개를 획득"
-            ,"레이티아 퇴치 보상으로 레이티아 보상 상자 (어려움) 1개, 루비코나 코어 상자 30개"
-            ,"설계자 퇴치 보상으로 설계자 보상 상자 (어려움) 1개, 루비코나 코어 상자 30개"
-            ,"[환희의 레이티아 보상 상자] 아이템을 1개 획득하였습니다."
-            ,"[에타의 의지 레벨업 상자]을(를) 1개 습득했습니다."
-            ,"[루이나 및 제네로 일반 상자]을(를) 1개 습득했습니다."
-            ,"샐리온 클리어 횟수:"
-            ,"샐레아나 클리어 횟수:"
-            ,"실라이론 클리어 횟수:"
-            ,"실반 클리어 횟수:"
-            ,"루미너스 클리어 횟수:"
-            ,"루미너스(EX) 클리어 횟수:"
-            ,"샐리온 코어 마스터 던전 클리어 횟수:"
-            ,"샐레아나 코어 마스터 던전 클리어 횟수:"
-            ,"실라이론 코어 마스터 던전 클리어 횟수:"
-            ,"실반 코어 마스터 던전 클리어 횟수:"
-            ,"루미너스 코어 마스터 던전 클리어 횟수:"
-            ,"아페티리아(EX) 클리어 횟수:"
-            ,"로카고스 코어 마스터 클리어 횟수:"
-            ,"에토스 코어 마스터 클리어 횟수:"
-            ,"체리아 코어 마스터 클리어 횟수:"
-            ,"마티아 코어 마스터 클리어 횟수:"
-            ,"라이코스 코어 마스터 클리어 횟수:"
-            ,"티로로스 코어 마스터 클리어 횟수:"
-            ,"코어 마스터 - 심층Ⅰ 클리어 횟수:"
-            ,"코어 마스터 - 심층Ⅱ 클리어 횟수:"
-            ,"코어 마스터 - 심층Ⅲ 클리어 횟수:"
-            ,"티로로스의 계략을 막아내었습니다. 잠시 후 기억의 숲 전초기지로 이동됩니다."
-        };
-
         private enum HiddenChatContinuationFamily
         {
             None,
@@ -290,7 +219,8 @@ namespace TWChatOverlay.Views
 
             bool suppressChatLine = ShouldHideChatLine(parseResult);
 
-            if (!suppressChatLine)
+            // 설정과 무관하게 어느 창에도 그리지 않는 줄(반복 안내·에토스)은 버퍼에 넣지 않는다 — 서브 채팅창도 같은 규칙을 따른다
+            if (!suppressChatLine && !parseResult.IsDisplaySuppressed)
             {
                 foreach (string tabName in analysis.BufferTabs)
                     AddToBuffer(tabName, parseResult);
@@ -396,9 +326,10 @@ namespace TWChatOverlay.Views
                 });
             }
 
-            // 던전 타이머: 보스 대사(일반 흰 글)와 시스템 줄을 모두 보므로 종류를 가리지 않는다.
+            // 던전 타이머: 시스템 줄과 보스 대사(일반 흰 글, 분류표에 없는 색은 Unknown)만 본다 — 팀·클럽·외치기에 같은 말이 섞여도 반응하지 않는다.
             // 실시간 줄만 본다 — 시작 시 과거 로그를 다시 읽으며 타이머가 도는 것을 막는다.
-            if (shouldRunLiveUiEffects)
+            if (shouldRunLiveUiEffects &&
+                (analysis.IsSystemLog || parseResult.Category is ChatCategory.Normal or ChatCategory.NormalSelf or ChatCategory.Unknown))
                 GuardSideEffect("dungeon-timer", () => ContentTimerServiceInstance.Observe(parseResult.FormattedText));
 
             if (analysis.ShouldRunDailyWeeklyContent || analysis.IsSystemLog)
@@ -450,31 +381,6 @@ namespace TWChatOverlay.Views
         private static bool IsActualShoutSource(string? formattedText)
             => !string.IsNullOrWhiteSpace(formattedText) &&
                ShoutToastSourceRegex.IsMatch(formattedText);
-
-        private static bool ShouldSuppressEtosChatLine(LogParser.ParseResult parseResult)
-        {
-            if (parseResult == null || string.IsNullOrWhiteSpace(parseResult.FormattedText))
-                return false;
-
-            if (parseResult.Category is not (ChatCategory.Normal or ChatCategory.NormalSelf or ChatCategory.Team))
-                return false;
-
-            return IsEtosEtosSender(parseResult);
-        }
-
-        private static bool IsEtosEtosSender(LogParser.ParseResult parseResult)
-        {
-            if (parseResult == null)
-                return false;
-
-            string sender = parseResult.SenderId ?? parseResult.RawSenderId ?? string.Empty;
-            if (string.IsNullOrWhiteSpace(sender))
-                return false;
-
-            string lower = sender.ToLowerInvariant();
-            return lower.Contains("수색대장") &&
-                   lower.Contains("에토스");
-        }
 
         private void ResetHiddenChatContinuationState()
         {
@@ -599,14 +505,8 @@ namespace TWChatOverlay.Views
         }
 
         /// <summary>
-        /// 채팅을 덮기만 하는 반복 안내 줄은 남기지 않는다 (판정은 <see cref="NoisyNoticeFilter"/>).
-        /// 실시간으로 더할 때와 탭을 바꿔 다시 그릴 때 둘 다 같은 판정을 쓴다.
-        /// </summary>
-        private static bool IsHiddenDungeonNoticeLine(LogParser.ParseResult parseResult)
-            => NoisyNoticeFilter.IsNoise(parseResult?.FormattedText);
-
-        /// <summary>
         /// 메인 채팅 오버레이에 이 줄을 그리지 않을지. 실시간 추가와 탭 재표시가 같은 판정을 쓴다.
+        /// 설정과 무관한 억제(반복 안내·에토스 줄)는 분석 시점에 계산된 <see cref="LogParser.ParseResult.IsDisplaySuppressed"/>를 그대로 쓰고,
         /// 숨김 판정(<see cref="ShouldHideChatLine"/>)은 이어지는 줄 추적 상태를 바꾸므로 호출자가 줄마다 한 번만 계산해 넘긴다.
         /// 반사 패턴 알림 줄(심연의 제2사도 대사)은 보스 대사 판정(화자·문구 모두 일치)에 포함되므로 따로 보지 않는다.
         /// </summary>
@@ -615,17 +515,7 @@ namespace TWChatOverlay.Views
             if (parseResult == null || string.IsNullOrWhiteSpace(parseResult.FormattedText))
                 return false;
 
-            if (isHiddenChatLine)
-                return true;
-
-            if (IsHiddenDungeonNoticeLine(parseResult))
-                return true;
-
-            // 에토스 방향 알림 트리거 문구는 방향 오버레이만 표시하고 일반 채팅 오버레이에는 노출하지 않음.
-            if (!string.IsNullOrWhiteSpace(parseResult.EtosImagePath))
-                return true;
-
-            return ShouldSuppressEtosChatLine(parseResult);
+            return isHiddenChatLine || parseResult.IsDisplaySuppressed;
         }
 
         private void ScheduleReflectionEndAlert()
@@ -698,7 +588,7 @@ namespace TWChatOverlay.Views
                 return true;
             }
 
-            if (ContainsAnyContentArchiveKeyword(text))
+            if (DailyWeeklyContentArchiveKeywords.ContainsAny(text))
                 return true;
 
             if (OrlyRemainingAttackOneRegex.IsMatch(text))
@@ -773,17 +663,6 @@ namespace TWChatOverlay.Views
 
         private static bool IsExperienceEssenceExchangeLog(string text)
             => LogTextClassifier.IsExperienceEssenceExchange(text);
-
-        private static bool ContainsAnyContentArchiveKeyword(string text)
-        {
-            foreach (string keyword in DailyWeeklyContentArchiveKeywords)
-            {
-                if (text.Contains(keyword, StringComparison.Ordinal))
-                    return true;
-            }
-
-            return false;
-        }
 
         private void AddToBuffer(string tabName, LogParser.ParseResult log)
         {

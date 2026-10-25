@@ -62,6 +62,11 @@ namespace TWChatOverlay.Services
 
         public event Action<LogFeedItem>? OnNewLogRead;
         public event Action? InitialLogsLoaded;
+
+        /// <summary>지금 읽는 원본 로그 파일 경로. <see cref="InitialLogsLoaded"/> 시점에 확정된다.</summary>
+        public string? CurrentLogPath => _logPath;
+        /// <summary>실시간 읽기가 시작되는 파일 위치(바이트). 시작 패스가 그 앞까지 읽은 몫과의 틈을 메우는 데 쓴다.</summary>
+        public long RealtimeStartPosition => _lastPosition;
         private static readonly Regex LineSplitRegex = new(@"</?br\s*>|\r?\n", RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
         #endregion
@@ -725,7 +730,7 @@ namespace TWChatOverlay.Services
         /// ?쎌뼱???먮Ц HTML??<br> ?쒓렇 ?⑥쐞濡?遺꾨━???대깽?몃? 諛쒖깮?쒗궢?덈떎.
         /// </summary>
         private static List<string> MergeWrappedLines(List<string> lines)
-            => SystemLineMergeHelper.MergeWrappedSystemLines(ShoutLineMergeHelper.MergeWrappedShoutLines(lines));
+            => LineMerger.MergeAll(lines);
 
         private void ProcessRawContent(string content, bool isRealTime, int takeLastCount = -1, string sourcePath = "", long checkpointPosition = -1)
         {

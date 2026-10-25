@@ -28,8 +28,6 @@ namespace TWChatOverlay.Services
             @"\[\s*(?<h>\d+)시\s*(?<m>\d+)분\s*(?<s>\d+)초\]",
             RegexOptions.Compiled);
 
-        private static readonly Regex HtmlTagRegex = new("<[^>]+>", RegexOptions.Compiled);
-
         // 입장 후 이 시간 안의 금화 주머니 획득만 보물창고 몫으로 센다 (다른 컨텐츠 획득과 구분)
         private static readonly TimeSpan SessionDuration = TimeSpan.FromSeconds(150);
 
@@ -74,7 +72,7 @@ namespace TWChatOverlay.Services
                         {
                             string path = string.IsNullOrWhiteSpace(logDir)
                                 ? string.Empty
-                                : Path.Combine(logDir, $"TWChatLog_{day:yyyy_MM_dd}.html");
+                                : RawChatLogReader.GetFilePath(logDir, day);
                             events = path.Length > 0 && File.Exists(path)
                                 ? ScanDayFile(path)
                                 : new List<TreasuryEvent>();
@@ -110,60 +108,140 @@ namespace TWChatOverlay.Services
             }).ConfigureAwait(false);
         }
 
-        /// <summary>하루치 게임 로그에서 보물창고 입장/금화 획득 이벤트를 추출한다.</summary>
+        /// <summary>하루치 게임 로그에서 보물창고 입장/금화 획득 이벤트를 추출한다 (공용 리더).</summary>
         private static List<TreasuryEvent> ScanDayFile(string path)
         {
-            var events = new List<TreasuryEvent>();
+            var scanner = new DayScanner();
             try
             {
-                var encoding = Encoding.GetEncoding(949);
-                using var fs = new FileStream(path, FileMode.Open, FileAccess.Read,
-                    FileShare.ReadWrite | FileShare.Delete);
-                using var reader = new StreamReader(fs, encoding, detectEncodingFromByteOrderMarks: true);
-
-                int currentRun = 0;
-                TimeSpan sessionEnd = TimeSpan.MinValue;
-
-                string? line;
-                while ((line = reader.ReadLine()) != null)
-                {
-                    bool hasEntry = line.Contains("보물창고", StringComparison.Ordinal);
-                    bool hasGold = line.Contains("금화 주머니", StringComparison.Ordinal);
-                    if (!hasEntry && !hasGold)
-                        continue;
-
-                    string text = HtmlTagRegex.Replace(line, string.Empty).Trim();
-
-                    if (hasEntry)
-                    {
-                        Match entry = EntryRegex.Match(text);
-                        if (entry.Success && int.TryParse(entry.Groups["run"].Value, out int run))
-                        {
-                            currentRun = Math.Clamp(run, 1, MaxRuns);
-                            TimeSpan? time = ParseLineTime(text);
-                            sessionEnd = time.HasValue ? time.Value + SessionDuration : TimeSpan.MinValue;
-                            events.Add(new TreasuryEvent("entry", currentRun, text));
-                            continue;
-                        }
-                    }
-
-                    if (hasGold && text.Contains("금화 주머니를 획득", StringComparison.Ordinal))
-                    {
-                        if (currentRun <= 0)
-                            continue;
-                        TimeSpan? time = ParseLineTime(text);
-                        if (!time.HasValue || time.Value > sessionEnd)
-                            continue; // 세션 밖 획득(다른 컨텐츠)은 무시
-                        events.Add(new TreasuryEvent("gold", currentRun, text));
-                    }
-                }
+                foreach (string html in RawChatLogReader.ReadMergedLines(path))
+                    scanner.Feed(html, null);
             }
             catch (Exception ex)
             {
                 AppLogger.Warn($"Failed to scan treasury events from {path}.", ex);
             }
 
-            return events;
+            return scanner.Events;
+        }
+
+        /// <summary>회귀 비교·수동 점검용: 하루치 파일의 (종류, 회차, 원문) 목록.</summary>
+        public static List<(string Kind, int Run, string Text)> ScanDayFileForInspection(string path)
+            => ScanDayFile(path).Select(e => (e.Kind, e.Run, e.Text)).ToList();
+
+        /// <summary>하루치 줄을 순서대로 받아 입장/금화 이벤트로 바꾼다. 파일 스캔과 공용 패스가 같은 규칙을 쓴다.</summary>
+        private sealed class DayScanner
+        {
+            public List<TreasuryEvent> Events { get; } = new();
+            private int _currentRun;
+            private TimeSpan _sessionEnd = TimeSpan.MinValue;
+
+            /// <param name="html">줄 HTML. <paramref name="plainText"/>가 null이면 여기서 태그를 뗀다.</param>
+            public void Feed(string html, string? plainText)
+            {
+                bool hasEntry = html.Contains("보물창고", StringComparison.Ordinal);
+                bool hasGold = html.Contains("금화 주머니", StringComparison.Ordinal);
+                if (!hasEntry && !hasGold)
+                    return;
+
+                string text = plainText ?? RawChatLogReader.StripTags(html);
+
+                if (hasEntry)
+                {
+                    Match entry = EntryRegex.Match(text);
+                    if (entry.Success && int.TryParse(entry.Groups["run"].Value, out int run))
+                    {
+                        _currentRun = Math.Clamp(run, 1, MaxRuns);
+                        TimeSpan? time = ParseLineTime(text);
+                        _sessionEnd = time.HasValue ? time.Value + SessionDuration : TimeSpan.MinValue;
+                        Events.Add(new TreasuryEvent("entry", _currentRun, text));
+                        return;
+                    }
+                }
+
+                if (hasGold && text.Contains("금화 주머니를 획득", StringComparison.Ordinal))
+                {
+                    if (_currentRun <= 0)
+                        return;
+                    TimeSpan? time = ParseLineTime(text);
+                    if (!time.HasValue || time.Value > _sessionEnd)
+                        return; // 세션 밖 획득(다른 컨텐츠)은 무시
+                    Events.Add(new TreasuryEvent("gold", _currentRun, text));
+                }
+            }
+        }
+
+        /// <summary>
+        /// 원본 로그 공용 패스에 올라타는 소비자. 이번 주(월~오늘) 중 보관본에 없는 날짜(오늘 포함)를 읽어 보관본을 채운다.
+        /// 창을 열 때의 <see cref="GetWeekAsync"/>는 그대로 보관본을 쓰고 오늘만 다시 읽는다.
+        /// </summary>
+        public IRawLogScanConsumer CreateScanConsumer() => new ScanConsumer(this);
+
+        private sealed class ScanConsumer : IRawLogScanConsumer
+        {
+            private readonly TreasuryHistoryService _owner;
+            private DateTime _weekStart;
+            private DateTime _today;
+            private bool _dirty;
+            private DayScanner? _day;
+
+            public ScanConsumer(TreasuryHistoryService owner)
+            {
+                _owner = owner;
+            }
+
+            public void BeginScan(IReadOnlyList<RawLogFile> files)
+            {
+                _today = DateTime.Today;
+                _weekStart = GetWeekStartOf(_today);
+                lock (_owner.ArchiveLock)
+                    _owner.LoadArchive();
+            }
+
+            public bool BeginFile(RawLogFile file, long fileLength)
+            {
+                if (file.Date < _weekStart || file.Date > _today)
+                    return false;
+
+                string key = file.Date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+                lock (_owner.ArchiveLock)
+                {
+                    if (file.Date < _today && _owner.LoadArchive().ContainsKey(key))
+                        return false;
+                }
+
+                _day = new DayScanner();
+                return true;
+            }
+
+            public void OnLine(RawLogLine line) => _day?.Feed(line.Html, line.PlainText);
+
+            public void EndFile(RawLogFile file, RawLogReadOutcome outcome)
+            {
+                DayScanner? day = _day;
+                _day = null;
+                if (day == null || outcome != RawLogReadOutcome.Completed)
+                    return; // 끝까지 못 읽은 날은 보관하지 않는다 (창을 열 때 다시 읽는다)
+
+                string key = file.Date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+                lock (_owner.ArchiveLock)
+                {
+                    var archive = _owner.LoadArchive();
+                    archive.TryGetValue(key, out var previous);
+                    if (previous is null || previous.Count != day.Events.Count)
+                        _dirty = true;
+                    archive[key] = day.Events;
+                }
+            }
+
+            public void EndScan(bool completed)
+            {
+                if (!_dirty)
+                    return;
+                _dirty = false;
+                lock (_owner.ArchiveLock)
+                    _owner.SaveArchive(_owner.LoadArchive());
+            }
         }
 
         private static TimeSpan? ParseLineTime(string text)

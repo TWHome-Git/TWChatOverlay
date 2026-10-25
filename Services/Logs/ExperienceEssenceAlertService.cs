@@ -16,10 +16,16 @@ namespace TWChatOverlay.Services
             @"^\[[^\]]+\]\s*",
             RegexOptions.Compiled);
 
+        /// <summary>누적치를 설정에 옮겨 쓰는 주기. 경험치 줄마다 쓰면 설정 저장(250ms 디바운스)과 PropertyChanged 전파가 사냥 중 초당 수 회 돌았다.</summary>
+        private static readonly TimeSpan PersistInterval = TimeSpan.FromSeconds(10);
+
         private readonly ChatSettings _settings;
         private readonly DispatcherTimer _showDelayTimer;
+        private readonly DispatcherTimer _persistTimer;
         private bool _isTracking;
         private long _trackedExp;
+        // 메모리의 누적치가 설정에 아직 반영되지 않았는지
+        private bool _stateDirty;
 
         public ExperienceEssenceAlertService(ChatSettings settings)
         {
@@ -37,6 +43,13 @@ namespace TWChatOverlay.Services
                 {
                     ShowAlertWindow();
                 }
+            };
+            _persistTimer = new DispatcherTimer { Interval = PersistInterval };
+            _persistTimer.Tick += (_, _) =>
+            {
+                _persistTimer.Stop();
+                if (_stateDirty)
+                    SaveStateToSettings();
             };
         }
 
@@ -68,10 +81,14 @@ namespace TWChatOverlay.Services
                 _trackedExp = 0;
 
             AppLogger.Debug($"Experience essence tracker accumulated EXP. Gain={gainedExp:N0}, Total={_trackedExp:N0}, Threshold={ThresholdExp:N0}");
-            SaveStateToSettings();
+            // 누적치는 메모리에만 두고 임계치 도달·10초 주기·초기화·종료 때만 설정에 쓴다
+            _stateDirty = true;
+            if (!_persistTimer.IsEnabled)
+                _persistTimer.Start();
 
             if (_trackedExp >= ThresholdExp)
             {
+                SaveStateToSettings();
                 // 1초 뒤에 띄운다 (곧 이어질 차감 줄을 기다리는 여유).
                 // 이미 기다리는 중이면 다시 걸지 않는다 — 사냥 중에는 경험치가 0.1초 간격으로 들어와
                 // 매번 타이머를 다시 시작하면 사냥을 멈출 때까지 영영 뜨지 않았다.
@@ -87,6 +104,14 @@ namespace TWChatOverlay.Services
             }
 
             AppServices.Get<ExperienceAlertWindowService>().RefreshState(_settings);
+        }
+
+        /// <summary>아직 설정에 안 쓴 누적치를 지금 쓴다. 앱 종료(설정 저장 직전)에 부른다.</summary>
+        public void FlushState()
+        {
+            _persistTimer.Stop();
+            if (_stateDirty)
+                SaveStateToSettings();
         }
 
         public void Reset()
@@ -105,6 +130,7 @@ namespace TWChatOverlay.Services
             };
         }
 
+        /// <summary>사용자가 누적치를 직접 고쳤다 — 필드와 설정을 함께 갱신해 주기 저장이 수동 입력값을 덮지 않게 한다.</summary>
         public void ApplyStateSnapshot(ExperienceAlertStateSnapshot snapshot)
         {
             if (snapshot == null)
@@ -120,6 +146,7 @@ namespace TWChatOverlay.Services
 
         private void SaveStateToSettings()
         {
+            _stateDirty = false;
             _settings.ExperienceLimitTotalExp = _trackedExp;
             _settings.ExperienceLimitStateInitialized = true;
         }

@@ -44,6 +44,12 @@ namespace TWChatOverlay
             public bool IsBossDialogueLine { get; set; } = false;
             /// <summary>일반(흰색) 줄 중 토글과 무관하게 늘 숨기는 안내문(상자 획득, 회복, 등장 안내 등).</summary>
             public bool IsIgnoredNoticeLine { get; set; } = false;
+            /// <summary>
+            /// 설정과 무관하게 채팅 오버레이(메인·서브 창 모두)에 그리지 않는 줄 — 반복 안내(오를리 남은 공격 횟수·자동 퇴장),
+            /// 에토스 방향 암호 줄(방향 오버레이만 띄움), 수색대장 에토스 화자 대사. 분석 시점에 한 번 계산한다.
+            /// 설정에 따르는 숨김(보스 대사·클럽 보스)은 <see cref="LogAnalysisService.IsHiddenByChatFilter"/>가 표시 시점마다 따로 본다.
+            /// </summary>
+            public bool IsDisplaySuppressed { get; set; } = false;
 
             /// <summary>얕은 복사본. 참조 필드는 문자열과 Frozen 브러시뿐이라 얕은 복사로 원본과 독립된다.</summary>
             public ParseResult Clone() => (ParseResult)MemberwiseClone();

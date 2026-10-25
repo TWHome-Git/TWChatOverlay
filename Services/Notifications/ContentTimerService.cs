@@ -981,9 +981,6 @@ namespace TWChatOverlay.Services
         private static DateTime LastWeekStart(DateTime now) => ThisWeekStart(now).AddDays(-7);
 
         // FormattedText 앞의 로그 시각 "[ 6시 39분 58초]" — 실제 찍힌 시각으로 재야 초 단위가 정확하다
-        private static readonly Regex LogTimeRegex = new(@"^\[\s*(\d{1,2})시\s*(\d{1,2})분\s*(\d{1,2})초\s*\]", RegexOptions.Compiled);
-        private static readonly Regex HtmlTagRegex = new(@"<[^>]+>", RegexOptions.Compiled);
-        private static readonly Regex WhitespaceRunRegex = new(@"\s+", RegexOptions.Compiled);
 
         private static readonly string HistoryFilePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Config", "DungeonTimerHistory.json");
         // 최고 기록은 두 주만 남는 기록 파일과 따로 둔다 — 오래된 판이 지워져도 기록은 남아야 한다
@@ -1044,7 +1041,6 @@ namespace TWChatOverlay.Services
         private (DungeonDefinition Def, string Difficulty, string Status, int? Current, int? Max,
             DungeonRunRecord? InProgress, string? Highlight)? _lastViewArgs;
         private ContentTimerWindow? _window;
-        private bool _backfillStarted;
         // 대기·미리보기 때 보여줄 묶음 — 마지막으로 기록이 있었던 묶음
         private string _lastGroupKey = RecordDefinitions[0].GroupKey;
 
@@ -1183,9 +1179,8 @@ namespace TWChatOverlay.Services
         /// 오늘 로그 파일을 실시간 추적기에 순서대로 넣어, 앱을 켜기 전에 이미 진행 중이던 판의 구간 상태를 복원한다.
         /// 완료된 판은 기록에 들어가고(백필과 겹치면 같은 판으로 걸러진다), 30분 넘게 지난 판은 안전 한도에 걸려 무시된다.
         /// </summary>
-        private void PrimeLiveTracker(string path, DateTime day)
+        private void PrimeLiveTracker(IReadOnlyList<string> lines, DateTime day)
         {
-            List<string> lines = ReadLogLines(path).ToList();
             DateTime now = DateTime.Now;
             lock (SyncRoot)
             {
@@ -1206,8 +1201,12 @@ namespace TWChatOverlay.Services
                         if (at == lastAt)
                             lastSecond.Add(line);
                     }
-                    _primedUntil = lastAt;
-                    _primedLastSecondTexts = lastSecond;
+                    // 틈 구간을 이어 넣을 때 더 이른 시각으로 되돌리지 않는다
+                    if (lastAt >= _primedUntil)
+                    {
+                        _primedUntil = lastAt;
+                        _primedLastSecondTexts = lastSecond;
+                    }
                 }
                 finally
                 {
@@ -1416,146 +1415,234 @@ namespace TWChatOverlay.Services
         /// 과거 파일을 통째로 읽을 때는 false로 두어야 한다. 그때 fallback은 파일의 0시라, 이 보정을 켜면 0시 1분 이후 모든 줄이
         /// 하루 전으로 밀린다 (5.0.8~5.0.9의 기록 추출이 그래서 날짜를 하루 앞당겨 저장했다).
         /// </summary>
-        private DateTime ResolveLogTime(string text, DateTime date, DateTime fallback, bool yesterdayIfAfterFallback = true)
+        private static DateTime ResolveLogTime(string text, DateTime date, DateTime fallback, bool yesterdayIfAfterFallback = true)
         {
-            Match m = LogTimeRegex.Match(text);
-            if (!m.Success)
+            if (!RawChatLogReader.TryParseLogTime(text, out TimeSpan time, out _))
                 return fallback;
 
-            try
-            {
-                int h = int.Parse(m.Groups[1].Value);
-                int mi = int.Parse(m.Groups[2].Value);
-                int s = int.Parse(m.Groups[3].Value);
-                if (h > 23 || mi > 59 || s > 59)
-                    return fallback;
-                DateTime at = date.AddHours(h).AddMinutes(mi).AddSeconds(s);
-                if (yesterdayIfAfterFallback && at > fallback.AddMinutes(1) && date == fallback.Date)
-                    at = at.AddDays(-1); // 자정 직후 어제 시각
-                return at;
-            }
-            catch
-            {
-                return fallback;
-            }
+            DateTime at = date.Date.Add(time);
+            if (yesterdayIfAfterFallback && at > fallback.AddMinutes(1) && date == fallback.Date)
+                at = at.AddDays(-1); // 자정 직후 어제 시각
+            return at;
         }
 
         // ===== 과거 로그 파일에서 기록 복원 =====
 
+        /// <summary>이번 실행의 보충 스캔 계획. 시작 패스가 전경(최근분)·배경(나머지)으로 나뉘어 와도 여기서 이어진다.</summary>
+        private sealed class BackfillPlan
+        {
+            public bool FullScan;
+            public HashSet<DateTime> Pending = new();
+            public int FilesRead, FoundTotal, AddedTotal;
+            public bool Finished;
+        }
+
+        private BackfillPlan? _backfillPlan;
+
         /// <summary>
-        /// 지난주 월요일부터 오늘까지의 채팅 로그 파일(TWChatLog_yyyy_MM_dd.html)을 읽어 완료된 판을 기록에 합친다.
-        /// 이미 있는 판(시작 시각이 5초 안에 같은 것)은 건너뛴다. 앱 실행 중 한 번만 돈다.
+        /// 원본 로그 공용 패스에 올라타는 소비자. 지난주 월요일부터 오늘까지의 파일에서 완료된 판을 기록에 합친다
+        /// (이미 있는 판 — 시작 시각이 5초 안에 같은 것 — 은 건너뛴다). 오늘 파일은 같은 읽기에서 실시간 추적기에도 넣어
+        /// 앱을 판 도중에 켰어도 이미 지난 구간이 복원된다. 앱 실행 중 계획은 한 번만 세운다.
         /// </summary>
+        public IRawLogScanConsumer CreateScanConsumer(string? chatLogFolder)
+            => new ScanConsumer(this, chatLogFolder);
+
+        /// <summary>공용 패스 없이 혼자 훑는다 (사용자가 기록을 다시 뽑을 때). 시작 경로는 <see cref="CreateScanConsumer"/>를 쓴다.</summary>
         public Task BackfillFromLogsAsync(string? chatLogFolder)
         {
-            lock (SyncRoot)
-            {
-                if (_backfillStarted)
-                    return Task.CompletedTask;
-                _backfillStarted = true;
-            }
-
             if (string.IsNullOrWhiteSpace(chatLogFolder) || !Directory.Exists(chatLogFolder))
                 return Task.CompletedTask;
 
-            string folder = chatLogFolder;
-            return Task.Run(() =>
-            {
-                try
-                {
-                    // 평소에는 지난주 월요일부터만 읽는다 (앱이 꺼져 있던 동안의 판 복원).
-                    // 전체 기록 아카이브를 아직 만든 적이 없으면 이번 한 번만 남아 있는 로그 전부에서 기록을 뽑고, 끝나면 표시를 남겨 다시 읽지 않는다.
-                    bool fullScan = !IsArchiveFullScanDone();
-                    if (fullScan && File.Exists(ArchiveScanMarkerPath))
-                        ResetArchiveForRescan(); // 옛 버전 추출물 — 날짜가 틀려 다시 만든다
-                    IsArchiveScanRunning = fullScan;
-                    DateTime oldest = fullScan ? DateTime.MinValue : LastWeekStart(DateTime.Now);
-                    int foundTotal = 0, addedTotal = 0, filesRead = 0;
-                    var files = Directory.EnumerateFiles(folder, "TWChatLog_*.html")
-                        .Select(path => (Path: path, Day: ParseLogFileDate(path)))
-                        .Where(f => f.Day.HasValue && f.Day.Value >= oldest)
-                        .OrderBy(f => f.Day!.Value)
-                        .ToList();
-                    // 오늘 파일은 실시간 추적기에도 먼저 넣는다 — 앱을 판 도중에 켰어도 이미 지난 구간(1보스·석상 등)이 복원된다.
-                    // 넣는 동안은 화면에 띄우지 않고, 이미 넣은 줄이 실시간으로 또 들어오면 Observe에서 걸러낸다.
-                    var todayFile = files.FirstOrDefault(f => f.Day!.Value.Date == DateTime.Today);
-                    if (todayFile.Path != null)
-                        PrimeLiveTracker(todayFile.Path, todayFile.Day!.Value);
-
-                    foreach (var (path, dayNullable) in files)
-                    {
-                        DateTime day = dayNullable!.Value;
-
-                        // 파일 하나는 시간순으로 넣는다. 자정을 넘기는 판은 드물어 파일마다 추적기를 새로 쓴다.
-                        var found = new List<DungeonRunRecord>();
-                        var tracker = new RunTracker(Definitions);
-                        tracker.RunFinished += (_, record) => found.Add(record);
-                        DateTime last = day;
-                        foreach (string line in ReadLogLines(path))
-                        {
-                            DateTime at = ResolveLogTime(line, day, last, yesterdayIfAfterFallback: false);
-                            last = at;
-                            tracker.Feed(line, at, at);
-                        }
-                        filesRead++;
-                        foundTotal += found.Count;
-                        addedTotal += MergeHistory(found);
-                        NotifyArchiveChangedIfAppended();
-
-                        // 전체 추출은 파일이 많다 — 게임과 채팅 표시를 방해하지 않게 파일 사이에 숨을 돌린다
-                        if (fullScan)
-                            Thread.Sleep(20);
-                    }
-
-                    if (fullScan)
-                    {
-                        MarkArchiveFullScanDone(filesRead, foundTotal);
-                        IsArchiveScanRunning = false;
-                        try { ArchiveChanged?.Invoke(); } catch { }
-                    }
-
-                    AppLogger.Info($"Dungeon timer backfill finished. FullScan={fullScan}, Files={filesRead}, runs found={foundTotal}, added={addedTotal}.");
-                }
-                catch (Exception ex)
-                {
-                    IsArchiveScanRunning = false;
-                    AppLogger.Warn("Dungeon timer backfill failed.", ex);
-                }
-            });
+            return RawLogScanService.RunAsync(chatLogFolder, new[] { CreateScanConsumer(chatLogFolder) });
         }
 
-        /// <summary>"TWChatLog_2026_09_16.html" 파일 이름에서 날짜를 읽는다. 형식이 다르면 null.</summary>
-        private DateTime? ParseLogFileDate(string path)
+        /// <summary>읽을 파일 목록을 한 번만 정한다. SyncRoot 안에서 부른다.</summary>
+        private BackfillPlan EnsureBackfillPlanUnlocked(string? folder)
         {
-            string name = Path.GetFileNameWithoutExtension(path);
-            const string prefix = "TWChatLog_";
-            if (!name.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
-                return null;
-            return DateTime.TryParseExact(name.Substring(prefix.Length), "yyyy_MM_dd",
-                System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out DateTime day)
-                ? day
-                : null;
-        }
+            if (_backfillPlan != null)
+                return _backfillPlan;
 
-        /// <summary>게임 채팅 로그(CP949 HTML)를 태그 없는 줄로 읽는다. "[ 6시 39분 58초] 내용" 꼴.</summary>
-        private IEnumerable<string> ReadLogLines(string path)
-        {
-            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
-            Encoding encoding = Encoding.GetEncoding(949);
-
-            using var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
-            using var reader = new StreamReader(stream, encoding, detectEncodingFromByteOrderMarks: true);
-            string? raw;
-            while ((raw = reader.ReadLine()) != null)
+            var plan = new BackfillPlan();
+            // 평소에는 지난주 월요일부터만 읽는다 (앱이 꺼져 있던 동안의 판 복원).
+            // 전체 기록 아카이브를 아직 만든 적이 없으면 이번 한 번만 남아 있는 로그 전부에서 기록을 뽑고, 끝나면 표시를 남겨 다시 읽지 않는다.
+            plan.FullScan = !IsArchiveFullScanDone();
+            if (plan.FullScan)
+                ResetLegacyArchiveIfOutdated();
+            IsArchiveScanRunning = plan.FullScan;
+            DateTime oldest = plan.FullScan ? DateTime.MinValue : LastWeekStart(DateTime.Now);
+            foreach (RawLogFile file in RawChatLogReader.EnumerateFiles(folder))
             {
-                if (raw.Length == 0)
-                    continue;
-                string text = HtmlTagRegex.Replace(raw, " ");
-                text = WebUtility.HtmlDecode(text).Replace("&nbsp", " ");
-                text = WhitespaceRunRegex.Replace(text, " ").Trim();
-                if (text.Length > 0)
-                    yield return text;
+                if (file.Date >= oldest)
+                    plan.Pending.Add(file.Date);
             }
+            if (plan.Pending.Count == 0)
+                FinishBackfillUnlocked(plan);
+            _backfillPlan = plan;
+            return plan;
+        }
+
+        private void FinishBackfillUnlocked(BackfillPlan plan)
+        {
+            if (plan.Finished)
+                return;
+            plan.Finished = true;
+            if (plan.FullScan)
+            {
+                MarkArchiveFullScanDone(plan.FilesRead, plan.FoundTotal);
+                IsArchiveScanRunning = false;
+                try { ArchiveChanged?.Invoke(); } catch { }
+            }
+            AppLogger.Info($"Dungeon timer backfill finished. FullScan={plan.FullScan}, Files={plan.FilesRead}, runs found={plan.FoundTotal}, added={plan.AddedTotal}.");
+        }
+
+        private sealed class ScanConsumer : IRawLogTailConsumer
+        {
+            private readonly ContentTimerService _owner;
+            private readonly string? _folder;
+            private BackfillPlan? _plan;
+            private long _fileLength;
+
+            public (RawLogFile File, long Length)? ConsumedToday { get; private set; }
+
+            // 지금 읽는 파일
+            private DateTime _day;
+            private RunTracker? _tracker;
+            private List<DungeonRunRecord>? _found;
+            private DateTime _last;
+            private List<string>? _todayLines; // 오늘 파일은 같은 읽기로 실시간 추적기에도 넣는다 (두 번 읽지 않는다)
+
+            public ScanConsumer(ContentTimerService owner, string? folder)
+            {
+                _owner = owner;
+                _folder = folder;
+            }
+
+            public void BeginScan(IReadOnlyList<RawLogFile> files)
+            {
+                lock (_owner.SyncRoot)
+                    _plan = _owner.EnsureBackfillPlanUnlocked(_folder);
+            }
+
+            public bool BeginFile(RawLogFile file, long fileLength)
+            {
+                lock (_owner.SyncRoot)
+                {
+                    if (_plan == null || !_plan.Pending.Contains(file.Date))
+                        return false;
+                }
+
+                // 파일 하나는 시간순으로 넣는다. 자정을 넘기는 판은 드물어 파일마다 추적기를 새로 쓴다.
+                StartFile(file);
+                _fileLength = fileLength;
+                return true;
+            }
+
+            private void StartFile(RawLogFile file)
+            {
+                _day = file.Date;
+                _last = file.Date;
+                _found = new List<DungeonRunRecord>();
+                _tracker = new RunTracker(Definitions);
+                _tracker.RunFinished += (_, record) => _found.Add(record);
+                _todayLines = file.Date == DateTime.Today ? new List<string>() : null;
+            }
+
+            public void BeginTail(RawLogFile file) => StartFile(file);
+
+            /// <summary>틈 구간(패스가 읽은 끝 ~ 실시간 시작): 백필 추적기와 실시간 추적기 둘 다에 이어 넣는다.</summary>
+            public void EndTail(RawLogFile file, long newLength)
+            {
+                List<DungeonRunRecord>? found = _found;
+                List<string>? todayLines = _todayLines;
+                _tracker = null;
+                _found = null;
+                _todayLines = null;
+                if (found == null)
+                    return;
+
+                if (todayLines != null && todayLines.Count > 0)
+                    _owner.PrimeLiveTracker(todayLines, file.Date);
+                if (found.Count > 0)
+                {
+                    _owner.MergeHistory(found);
+                    _owner.NotifyArchiveChangedIfAppended();
+                }
+                ConsumedToday = (file, newLength);
+            }
+
+            public void OnLine(RawLogLine line)
+            {
+                if (_tracker == null)
+                    return;
+
+                string text = line.NormalizedText;
+                if (text.Length == 0)
+                    return;
+
+                DateTime at = ResolveLogTime(text, _day, _last, yesterdayIfAfterFallback: false);
+                _last = at;
+                _tracker.Feed(text, at, at);
+                _todayLines?.Add(text);
+            }
+
+            public void EndFile(RawLogFile file, RawLogReadOutcome outcome)
+            {
+                List<DungeonRunRecord>? found = _found;
+                List<string>? todayLines = _todayLines;
+                _tracker = null;
+                _found = null;
+                _todayLines = null;
+                if (found == null || _plan == null)
+                    return;
+
+                // 오늘 파일은 실시간 추적기에도 넣는다 — 넣는 동안은 화면에 띄우지 않고, 이미 넣은 줄이 실시간으로 또 들어오면 Observe에서 걸러낸다.
+                if (todayLines != null)
+                    _owner.PrimeLiveTracker(todayLines, file.Date);
+
+                int added = _owner.MergeHistory(found);
+                _owner.NotifyArchiveChangedIfAppended();
+                if (todayLines != null && outcome == RawLogReadOutcome.Completed)
+                    ConsumedToday = (file, _fileLength);
+
+                bool fullScan;
+                lock (_owner.SyncRoot)
+                {
+                    _plan.FilesRead++;
+                    _plan.FoundTotal += found.Count;
+                    _plan.AddedTotal += added;
+                    _plan.Pending.Remove(file.Date);
+                    fullScan = _plan.FullScan;
+                    if (_plan.Pending.Count == 0)
+                        _owner.FinishBackfillUnlocked(_plan);
+                }
+
+                // 전체 추출은 파일이 많다 — 게임과 채팅 표시를 방해하지 않게 파일 사이에 숨을 돌린다
+                if (fullScan)
+                    Thread.Sleep(20);
+            }
+
+            public void EndScan(bool completed)
+            {
+            }
+        }
+
+        /// <summary>로그 파일 하루치에서 완료된 판을 뽑는다 (공용 리더). 회귀 비교·수동 점검용.</summary>
+        public static List<DungeonRunRecord> ExtractRunsFromLog(string path, DateTime day)
+        {
+            var found = new List<DungeonRunRecord>();
+            var tracker = new RunTracker(Definitions);
+            tracker.RunFinished += (_, record) => found.Add(record);
+            DateTime last = day;
+            foreach (string html in RawChatLogReader.ReadMergedLines(path))
+            {
+                string text = RawChatLogReader.NormalizeText(html);
+                if (text.Length == 0)
+                    continue;
+                DateTime at = ResolveLogTime(text, day, last, yesterdayIfAfterFallback: false);
+                last = at;
+                tracker.Feed(text, at, at);
+            }
+            return found;
         }
 
         // ===== 기록 파일 =====
@@ -1838,6 +1925,42 @@ namespace TWChatOverlay.Services
             }
         }
 
+        #region 레거시 (옛 버전 추출물·기록 형식 보정 — 각 1회)
+
+        /// <summary>[레거시] 옛 버전(ArchiveScanVersion 미만) 추출물은 날짜가 틀려 backup으로 옮기고 전체를 다시 읽는다. 전체 추출을 결정할 때 한 번 부른다.</summary>
+        private void ResetLegacyArchiveIfOutdated()
+        {
+            if (File.Exists(ArchiveScanMarkerPath))
+                ResetArchiveForRescan();
+        }
+
+        /// <summary>[레거시] 옛 기록 형식 보정: 난이도 없는 던전의 난이도 비우기, "N페이지/N페이즈"→"N단계", '전체' 구간 채우기. 기록 파일을 읽을 때 판마다 한 번.</summary>
+        private void UpgradeLegacyRecord(DungeonRunRecord record, DungeonDefinition def)
+        {
+            // 난이도를 어려움 상자로만 구분하던 옛 기록: 그 던전이 이제 구분하지 않으면 한 묶음으로
+            if (!HasDifficulty(def))
+                record.Difficulty = string.Empty;
+            else
+                record.Difficulty ??= def.NormalLabel;
+            // 구간 이름이 바뀐 옛 기록("N페이지"·"N페이즈" → "N단계")을 현재 정의 이름으로 맞춘다
+            foreach (string oldName in record.Segments.Keys.Where(k => k.Contains("페이지") || k.Contains("페이즈")).ToList())
+            {
+                double value = record.Segments[oldName];
+                record.Segments.Remove(oldName);
+                record.Segments[oldName.Replace("페이지", "단계").Replace("페이즈", "단계")] = value;
+            }
+            // '전체' 구간이 생기기 전의 옛 기록(신조·최후의 결전·환희의 잔상): 판 시작~끝 시각으로 채운다
+            SegmentDefinition? whole = def.Segments.FirstOrDefault(s => s.WholeRun);
+            if (whole != null && !record.Segments.ContainsKey(whole.Name))
+            {
+                double wholeSeconds = Math.Max(0, (record.EndedAt - record.StartedAt).TotalSeconds);
+                record.Segments[whole.Name] = wholeSeconds;
+                record.TotalSeconds = wholeSeconds;
+            }
+        }
+
+        #endregion
+
         private bool IsArchiveFullScanDone()
         {
             try
@@ -1948,7 +2071,7 @@ namespace TWChatOverlay.Services
                 // 초기화로 걸어 둔 하한을 풀고 전체 추출을 다시 하게 만든다
                 _recordFloor = null;
                 _recordFloorLoaded = true;
-                _backfillStarted = false;
+                _backfillPlan = null;
             }
 
             AppLogger.Warn("Dungeon timer records rebuild requested by user.");
@@ -2213,25 +2336,7 @@ namespace TWChatOverlay.Services
                         DungeonDefinition? def = RecordDefinitionByKey(record.DungeonKey);
                         if (def == null)
                             continue; // 정의가 사라진 던전
-                        if (!HasDifficulty(def))
-                            record.Difficulty = string.Empty;
-                        else
-                            record.Difficulty ??= def.NormalLabel;
-                        // 구간 이름이 바뀐 옛 기록("N페이지"·"N페이즈" → "N단계")을 현재 정의 이름으로 맞춘다
-                        foreach (string oldName in record.Segments.Keys.Where(k => k.Contains("페이지") || k.Contains("페이즈")).ToList())
-                        {
-                            double value = record.Segments[oldName];
-                            record.Segments.Remove(oldName);
-                            record.Segments[oldName.Replace("페이지", "단계").Replace("페이즈", "단계")] = value;
-                        }
-                        // '전체' 구간이 생기기 전의 옛 기록(신조·최후의 결전·환희의 잔상): 판 시작~끝 시각으로 채운다
-                        SegmentDefinition? whole = def.Segments.FirstOrDefault(s => s.WholeRun);
-                        if (whole != null && !record.Segments.ContainsKey(whole.Name))
-                        {
-                            double wholeSeconds = Math.Max(0, (record.EndedAt - record.StartedAt).TotalSeconds);
-                            record.Segments[whole.Name] = wholeSeconds;
-                            record.TotalSeconds = wholeSeconds;
-                        }
+                        UpgradeLegacyRecord(record, def);
                         AddRecordUnlocked(record);
                     }
                 }
@@ -2460,7 +2565,7 @@ namespace TWChatOverlay.Services
             };
 
             if (settings != null)
-                ApplyStoredPosition(window, settings);
+                window.ApplyStoredBounds(settings);
 
             try { WindowVisibilityChanged?.Invoke(true); } catch { }
             return window;
@@ -2477,16 +2582,8 @@ namespace TWChatOverlay.Services
                 var window = _window;
                 if (window == null || !window.IsLoaded)
                     return;
-                ApplyStoredPosition(window, settings);
+                window.ApplyStoredBounds(settings); // 크기는 글자 크기에 맞춰 잡히므로(SizeToContent) 창이 위치만 복원한다
             }));
-        }
-
-        // 창 크기는 글자 크기 설정에 맞춰 내용대로 잡히므로(SizeToContent) 위치만 적용한다
-        private void ApplyStoredPosition(ContentTimerWindow window, ChatSettings settings)
-        {
-            if (settings.ContentTimerWindowLeft.HasValue && settings.ContentTimerWindowTop.HasValue)
-                window.WindowStartupLocation = WindowStartupLocation.Manual;
-            WindowPlacement.ApplyStored(window, settings.ContentTimerWindowLeft, settings.ContentTimerWindowTop);
         }
 
         private static ChatSettings? GetSharedSettings() => AppServices.TryGet<ChatSettings>();

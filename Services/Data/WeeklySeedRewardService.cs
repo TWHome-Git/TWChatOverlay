@@ -176,8 +176,6 @@ namespace TWChatOverlay.Services
             @"SEED 주간 획득 제한으로\s*(?:(?<eok>\d+)\s*억)?\s*(?:(?<man>\d+)\s*만)?\s*SEED만 획득되었",
             RegexOptions.Compiled);
 
-        private static readonly Regex HtmlTagRegex = new("<[^>]+>", RegexOptions.Compiled);
-
         private const string KindWeekly = "weekly";   // 주간 버킷
         private const string KindDaily = "daily";     // 일간 버킷 (루비코나 환희·슬픔)
         private const string KindPartial = "partial"; // 주간 한도 직전 부분 지급 (주간 버킷에 합산)
@@ -233,7 +231,7 @@ namespace TWChatOverlay.Services
                 if (!hasReward && !hasPartial && !hasApetiria)
                     return;
 
-                string text = HtmlTagRegex.Replace(line, string.Empty);
+                string text = RawChatLogReader.StripTags(line);
 
                 if (hasApetiria)
                 {
@@ -317,21 +315,16 @@ namespace TWChatOverlay.Services
             }
         }
 
-        /// <summary>하루치 게임 로그를 처음부터 읽어 시드 항목과 읽은 시점의 파일 길이를 돌려준다.</summary>
-        private (List<SeedEntry> Entries, long Length) ScanDayFile(string path)
+        /// <summary>하루치 게임 로그를 처음부터 읽어 시드 항목과 읽은 시점의 파일 길이를 돌려준다 (공용 리더).</summary>
+        private static (List<SeedEntry> Entries, long Length) ScanDayFile(string path)
         {
             var entries = new List<SeedEntry>();
             long length = 0;
             try
             {
-                var encoding = Encoding.GetEncoding(949);
-                using var fs = new FileStream(path, FileMode.Open, FileAccess.Read,
-                    FileShare.ReadWrite | FileShare.Delete);
-                length = fs.Length;
-                using var reader = new StreamReader(fs, encoding, detectEncodingFromByteOrderMarks: true);
+                length = new FileInfo(path).Length;
                 var collector = new DayCollector(entries.Add);
-                string? line;
-                while ((line = reader.ReadLine()) != null)
+                foreach (string line in RawChatLogReader.ReadMergedLines(path))
                     collector.Feed(line);
                 collector.Complete();
             }
@@ -342,6 +335,10 @@ namespace TWChatOverlay.Services
 
             return (entries, length);
         }
+
+        /// <summary>회귀 비교·수동 점검용: 하루치 파일의 (종류, 금액, 원문) 목록.</summary>
+        public static List<(string Kind, long Amount, string Text)> ScanDayFileForInspection(string path)
+            => ScanDayFile(path).Entries.Select(e => (e.Kind, e.Amount, e.Text)).ToList();
 
         // ───────────────────────── 보관본 ─────────────────────────
 
@@ -391,10 +388,6 @@ namespace TWChatOverlay.Services
             "class=\"day\" data-day=\"(?<date>\\d{4}-\\d{2}-\\d{2})\"(?: data-scan=\"(?<scan>\\d+)\")?(?: data-len=\"(?<len>\\d+)\")?",
             RegexOptions.Compiled);
 
-        private static readonly Regex LogFileDateRegex = new(
-            @"TWChatLog_(?<y>\d{4})_(?<m>\d{2})_(?<d>\d{2})\.html$",
-            RegexOptions.IgnoreCase | RegexOptions.Compiled);
-
         private DateTime ParseDateKey(string key)
             => DateTime.ParseExact(key, "yyyy-MM-dd", CultureInfo.InvariantCulture);
 
@@ -403,19 +396,11 @@ namespace TWChatOverlay.Services
         private static DateTime GetWeekStartOf(DateTime date)
             => LogTextClassifier.GetWeekStart(date);
 
-        private string GetLogPath(string logDir, DateTime day)
-            => Path.Combine(logDir, $"TWChatLog_{day:yyyy_MM_dd}.html");
+        private static string GetLogPath(string logDir, DateTime day)
+            => RawChatLogReader.GetFilePath(logDir, day);
 
-        private bool TryGetLogFileDate(string path, out DateTime date)
-        {
-            date = default;
-            var m = LogFileDateRegex.Match(Path.GetFileName(path));
-            if (!m.Success)
-                return false;
-            return DateTime.TryParseExact(
-                $"{m.Groups["y"].Value}-{m.Groups["m"].Value}-{m.Groups["d"].Value}",
-                "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out date);
-        }
+        private static bool TryGetLogFileDate(string path, out DateTime date)
+            => RawChatLogReader.TryParseFileDate(path, out date);
 
         private DayRecord GetOrCreateRecord(SortedDictionary<string, DayRecord> archive, string key)
         {
@@ -434,6 +419,12 @@ namespace TWChatOverlay.Services
         private void RescanDay(SortedDictionary<string, DayRecord> archive, string key, string path)
         {
             var (entries, length) = ScanDayFile(path);
+            ApplyDayScan(archive, key, entries, length);
+        }
+
+        /// <summary>하루치 스캔 결과로 그날 기록을 교체한다 (<see cref="RescanDay"/>와 공용 패스가 같은 규칙). ArchiveLock 안에서 부른다.</summary>
+        private void ApplyDayScan(SortedDictionary<string, DayRecord> archive, string key, List<SeedEntry> entries, long length)
+        {
             var record = GetOrCreateRecord(archive, key);
 
             var scannedTexts = new HashSet<string>(StringComparer.Ordinal);
@@ -454,6 +445,12 @@ namespace TWChatOverlay.Services
             record.ScanVersion = ScanVersion;
         }
 
+        /// <summary>파일이 자랐거나(앱이 못 본 줄) 구버전 규칙으로 읽은 날짜면 다시 읽어야 한다.</summary>
+        private bool IsDayStale(SortedDictionary<string, DayRecord> archive, string key, long length)
+            => !(archive.TryGetValue(key, out var record) &&
+                 record.ScanVersion >= ScanVersion &&
+                 record.CoveredLength == length);
+
         /// <summary>파일이 자랐거나(앱이 못 본 줄) 구버전 규칙으로 읽은 날짜면 다시 읽는다. 읽었으면 true.</summary>
         private bool RescanDayIfStale(SortedDictionary<string, DayRecord> archive, string key, string path)
         {
@@ -461,13 +458,98 @@ namespace TWChatOverlay.Services
             try { length = new FileInfo(path).Length; }
             catch { return false; }
 
-            if (archive.TryGetValue(key, out var record) &&
-                record.ScanVersion >= ScanVersion &&
-                record.CoveredLength == length)
+            if (!IsDayStale(archive, key, length))
                 return false;
 
             RescanDay(archive, key, path);
             return true;
+        }
+
+        /// <summary>
+        /// 원본 로그 공용 패스에 올라타는 소비자. 최근 CatchUpDays일 중 기록보다 길어진(또는 구버전 규칙으로 읽은) 지난 날짜 파일을 다시 읽는다.
+        /// 오늘 파일은 여기서 읽지 않는다 — 오늘은 LogService가 실시간 읽기 시작 위치를 정한 뒤 <see cref="CatchUpAsync"/>가 읽어야
+        /// 그 사이 줄이 빠지지 않기 때문이다(CoveredLength가 스캔 시점 길이로 고정되므로).
+        /// </summary>
+        public IRawLogScanConsumer CreateScanConsumer() => new ScanConsumer(this);
+
+        private sealed class ScanConsumer : IRawLogScanConsumer
+        {
+            private readonly WeeklySeedRewardService _owner;
+            private DateTime _from;
+            private DateTime _today;
+            private int _rescanned;
+
+            private string? _key;
+            private long _length;
+            private List<SeedEntry>? _entries;
+            private DayCollector? _collector;
+
+            public ScanConsumer(WeeklySeedRewardService owner)
+            {
+                _owner = owner;
+            }
+
+            public void BeginScan(IReadOnlyList<RawLogFile> files)
+            {
+                _today = DateTime.Today;
+                _from = _today.AddDays(-CatchUpDays);
+                lock (_owner.ArchiveLock)
+                    _owner.LoadArchive();
+            }
+
+            public bool BeginFile(RawLogFile file, long fileLength)
+            {
+                if (file.Date < _from || file.Date >= _today)
+                    return false;
+
+                string key = _owner.ToDateKey(file.Date);
+                lock (_owner.ArchiveLock)
+                {
+                    if (!_owner.IsDayStale(_owner.LoadArchive(), key, fileLength))
+                        return false;
+                }
+
+                _key = key;
+                _length = fileLength;
+                _entries = new List<SeedEntry>();
+                _collector = new DayCollector(_entries.Add);
+                return true;
+            }
+
+            public void OnLine(RawLogLine line) => _collector?.Feed(line.Html);
+
+            public void EndFile(RawLogFile file, RawLogReadOutcome outcome)
+            {
+                DayCollector? collector = _collector;
+                List<SeedEntry>? entries = _entries;
+                string? key = _key;
+                _collector = null;
+                _entries = null;
+                _key = null;
+                if (collector == null || entries == null || key == null)
+                    return;
+
+                collector.Complete();
+                // 뒷부분을 못 읽은 파일은 길이를 기록하지 않아 다음 시작에 다시 읽힌다
+                long coveredLength = outcome == RawLogReadOutcome.Completed ? _length : -1;
+                lock (_owner.ArchiveLock)
+                {
+                    _owner.ApplyDayScan(_owner.LoadArchive(), key, entries, coveredLength);
+                    _rescanned++;
+                }
+            }
+
+            public void EndScan(bool completed)
+            {
+                if (_rescanned == 0)
+                    return;
+
+                lock (_owner.ArchiveLock)
+                    _owner.SaveArchive(_owner.LoadArchive());
+                AppLogger.Info($"Seed archive catch-up rescanned {_rescanned} day file(s) in the shared log pass.");
+                _rescanned = 0;
+                _owner.RaiseChanged();
+            }
         }
 
         // ───────────────────────── 실시간 기록 ─────────────────────────
@@ -779,36 +861,8 @@ namespace TWChatOverlay.Services
                     return _archive = result;
                 }
 
-                // 데이터 파일이 아직 없다 — 예전 열람용 HTML에서 한 번만 옮겨 온다 (HTML은 지우지 않는다)
-                if (File.Exists(ArchivePath))
-                {
-                    foreach (string line in File.ReadLines(ArchivePath))
-                    {
-                        var dayMatch = ArchiveDayRegex.Match(line);
-                        if (dayMatch.Success)
-                        {
-                            var record = GetOrCreateRecord(result, dayMatch.Groups["date"].Value);
-                            if (dayMatch.Groups["scan"].Success)
-                                record.ScanVersion = int.Parse(dayMatch.Groups["scan"].Value);
-                            if (dayMatch.Groups["len"].Success)
-                                record.CoveredLength = long.Parse(dayMatch.Groups["len"].Value);
-                            continue;
-                        }
-
-                        var entryMatch = ArchiveEntryRegex.Match(line);
-                        if (!entryMatch.Success)
-                            continue;
-
-                        GetOrCreateRecord(result, entryMatch.Groups["date"].Value).Entries.Add(new SeedEntry(
-                            entryMatch.Groups["kind"].Value,
-                            long.Parse(entryMatch.Groups["amount"].Value),
-                            WebUtility.HtmlDecode(entryMatch.Groups["text"].Value)));
-                    }
-
-                    WriteDataFile(result);
-                    AppLogger.Info($"Seed history migrated to append-only data file. Days={result.Count}");
-                }
-
+                // 데이터 파일이 아직 없다 — 예전 열람용 HTML에서 한 번만 옮겨 온다
+                MigrateLegacyHtmlArchive(result);
                 DeleteLegacySeedCache();
             }
             catch (Exception ex)
@@ -830,6 +884,42 @@ namespace TWChatOverlay.Services
             return (weekly, daily);
         }
 
+        #region 레거시 (옛 보관 형식 → 데이터 파일, 각 1회)
+
+        /// <summary>[레거시] 데이터 파일이 생기기 전의 열람용 HTML에서 기록을 한 번만 옮겨 온다 (HTML은 지우지 않는다).</summary>
+        private void MigrateLegacyHtmlArchive(SortedDictionary<string, DayRecord> result)
+        {
+            if (!File.Exists(ArchivePath))
+                return;
+
+            foreach (string line in File.ReadLines(ArchivePath))
+            {
+                var dayMatch = ArchiveDayRegex.Match(line);
+                if (dayMatch.Success)
+                {
+                    var record = GetOrCreateRecord(result, dayMatch.Groups["date"].Value);
+                    if (dayMatch.Groups["scan"].Success)
+                        record.ScanVersion = int.Parse(dayMatch.Groups["scan"].Value);
+                    if (dayMatch.Groups["len"].Success)
+                        record.CoveredLength = long.Parse(dayMatch.Groups["len"].Value);
+                    continue;
+                }
+
+                var entryMatch = ArchiveEntryRegex.Match(line);
+                if (!entryMatch.Success)
+                    continue;
+
+                GetOrCreateRecord(result, entryMatch.Groups["date"].Value).Entries.Add(new SeedEntry(
+                    entryMatch.Groups["kind"].Value,
+                    long.Parse(entryMatch.Groups["amount"].Value),
+                    WebUtility.HtmlDecode(entryMatch.Groups["text"].Value)));
+            }
+
+            WriteDataFile(result);
+            AppLogger.Info($"Seed history migrated to append-only data file. Days={result.Count}");
+        }
+
+        /// <summary>[레거시] 구버전 합계 캐시(seed_daily.json)는 아카이브로 대체되었으므로 정리한다.</summary>
         private static void DeleteLegacySeedCache()
         {
             try
@@ -840,6 +930,8 @@ namespace TWChatOverlay.Services
             }
             catch { /* 지우지 못해도 동작에는 지장이 없다 */ }
         }
+
+        #endregion
 
         // ── 데이터 파일: 한 줄이 기록 하나 ──
         //   D|날짜|스캔판|반영한 파일 길이

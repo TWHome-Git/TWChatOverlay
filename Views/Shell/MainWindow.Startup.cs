@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -257,8 +258,10 @@ namespace TWChatOverlay.Views
                         },
                         dateFilter,
                         cancellationToken,
-                        updateCheckpoint: false).ConfigureAwait(false);
+                        updateCheckpoint: false,
+                        extraConsumers: GetStartupScanConsumers()).ConfigureAwait(false);
 
+                    // 4.x → 5.x: 컨텐츠 아카이브의 경험치 줄 제거(1회)
                     _readableLogArchiveService.MigrateContentArchiveIfNeeded();
                     return result;
                 }, cancellationToken).ConfigureAwait(false);
@@ -308,6 +311,54 @@ namespace TWChatOverlay.Views
         }
 
         private bool _backgroundLogBackfillStarted;
+        private IReadOnlyList<IRawLogScanConsumer>? _startupScanConsumers;
+
+        /// <summary>
+        /// 시작 시 원본 로그 패스에 함께 올라타는 소비자들 — 사냥 기록·던전 타이머·시드·보물창고.
+        /// 전경(최근분)과 배경(나머지) 두 패스가 같은 인스턴스를 쓰므로 "어디까지 읽었나"가 두 패스에 걸쳐 이어진다.
+        /// 예전에는 각 서비스가 같은 파일을 따로 열어 읽었다.
+        /// </summary>
+        private IReadOnlyList<IRawLogScanConsumer> GetStartupScanConsumers()
+        {
+            if (_startupScanConsumers != null)
+                return _startupScanConsumers;
+
+            string folder = _settings.ChatLogFolderPath;
+            _startupScanConsumers = new IRawLogScanConsumer[]
+            {
+                // 지난 로그의 사냥 판은 처음 한 번만 훑는다 (이후에는 새 날짜만)
+                _huntSessionService.CreateScanConsumer(folder),
+                // 던전 타이머: 지난주 월요일부터의 판 복원 + 오늘 파일로 실시간 추적기 복원 (최초 1회는 전체)
+                AppServices.Get<ContentTimerService>().CreateScanConsumer(folder),
+                // 클리어 보상 시드: 최근 14일 중 앱이 못 본 지난 날짜 (오늘은 LogService 시작 뒤 CatchUpAsync가 읽는다)
+                AppServices.Get<WeeklySeedRewardService>().CreateScanConsumer(),
+                // 보물창고: 이번 주 중 보관본에 없는 날짜
+                AppServices.Get<TreasuryHistoryService>().CreateScanConsumer(),
+            };
+            return _startupScanConsumers;
+        }
+
+        private bool _startupLogTailFed;
+
+        /// <summary>
+        /// 시작 패스가 오늘 파일을 읽은 끝과 LogService 실시간 시작 위치 사이에 쌓인 줄을 한 번 이어 넣는다.
+        /// LogService.Initialize 안(InitialLogsLoaded, Start 전)에서 동기로 돌아 실시간 줄보다 먼저 들어간다.
+        /// </summary>
+        private void FeedStartupLogTailOnce()
+        {
+            if (_startupLogTailFed || _startupScanConsumers == null || _logService == null)
+                return;
+            _startupLogTailFed = true;
+
+            try
+            {
+                RawLogScanService.FeedTail(_startupScanConsumers, _logService.CurrentLogPath, _logService.RealtimeStartPosition);
+            }
+            catch (Exception ex)
+            {
+                AppLogger.Warn("Failed to feed the startup log tail to scan consumers.", ex);
+            }
+        }
 
         /// <summary>1주일 이전 과거 로그를 백그라운드에서 아카이브한다. (시작 시 최근 로그만 전경 처리)</summary>
         private void StartBackgroundLogBackfill()
@@ -328,7 +379,8 @@ namespace TWChatOverlay.Views
                         onProgressText: null,
                         sourceDateFilter: null,
                         cancellationToken: CancellationToken.None,
-                        updateCheckpoint: true).ConfigureAwait(false);
+                        updateCheckpoint: true,
+                        extraConsumers: GetStartupScanConsumers()).ConfigureAwait(false);
                     AppLogger.Info("Background log backfill completed.");
 
                     // 과거 데이터가 채워졌으니 어밴던 주간 합계 등을 최신 상태로 갱신
@@ -359,12 +411,8 @@ namespace TWChatOverlay.Views
                 await Dispatcher.Yield(DispatcherPriority.ApplicationIdle);
                 UpdateStartupLoadingProgress(10, "업데이트를 확인하는 중입니다.");
                 AppLogger.Info("Startup data initialization: beginning update check.");
-                var updateResult = await AppServices.Get<IUpdateService>().CheckForUpdateAsync(forceInstallLatest: false, showNoUpdateMessage: false);
-                AppLogger.Info($"Startup data initialization: update check completed with result={updateResult}.");
-                if (updateResult == UpdateCheckResult.UpdateApplied)
-                {
-                    return;
-                }
+                // 업데이트 확인(네트워크, 최대 8초)은 창 초기화를 막지 않도록 병렬로 돌리고, 로그 초기화 직전에만 결과를 기다린다
+                Task<UpdateCheckResult> updateTask = AppServices.Get<IUpdateService>().CheckForUpdateAsync(forceInstallLatest: false, showNoUpdateMessage: false);
 
                 bool needsWizardLogPath = _pendingInitialSetupWizard;
                 bool shouldRunStartupLogInitialization = !needsWizardLogPath || _settings.StartupLogReadCanceled;
@@ -383,6 +431,13 @@ namespace TWChatOverlay.Views
                     AppServices.Get<ContentTimerService>().EnsureVisibleForDebug(_settings); // 디버그: 던전 타이머 창을 항상 표시
 #endif
                 }, DispatcherPriority.Background);
+
+                var updateResult = await updateTask;
+                AppLogger.Info($"Startup data initialization: update check completed with result={updateResult}.");
+                if (updateResult == UpdateCheckResult.UpdateApplied)
+                {
+                    return;
+                }
 
                 if (shouldRunStartupLogInitialization)
                 {
@@ -481,9 +536,7 @@ namespace TWChatOverlay.Views
                     _settings.StartupTodayOnlyBootstrapCompleted = true;
                     ConfigService.SaveDeferred(_settings);
                 }
-
-                // 던전 타이머: 최근 며칠치 로그 파일에서 지난 판 기록을 복원한다 (백그라운드, 실패해도 시작에 영향 없음)
-                _ = AppServices.Get<ContentTimerService>().BackfillFromLogsAsync(_settings.ChatLogFolderPath);
+                // 던전 타이머·사냥 기록·시드·보물창고의 과거 로그 복원은 위 아카이브 패스(전경·배경)에 함께 올라탄다 — 파일마다 한 번만 읽는다
             }
             catch (OperationCanceledException)
             {

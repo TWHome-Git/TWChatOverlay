@@ -53,6 +53,7 @@ namespace TWChatOverlay.Services
                 parsed.IsBossDialogueLine = IgnoredChatMessageService.MatchesBossDialogue(messageOnly, parsed.SenderId);
                 parsed.IsIgnoredNoticeLine = IgnoredChatMessageService.MatchesIgnoredNotice(messageOnly, parsed.SenderId);
             }
+            parsed.IsDisplaySuppressed = ComputeDisplaySuppressed(parsed);
             parsed.Brush = ChatBrushResolver.Resolve(_settings, parsed);
 
             return new LogAnalysisResult(
@@ -161,6 +162,36 @@ namespace TWChatOverlay.Services
                 (parsed.IsIgnoredNoticeLine || (parsed.IsBossDialogueLine && !_settings.ShowBossDialogue)))
             {
                 return true;
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// 설정과 무관한 표시 억제: 반복 안내(NoisyNoticeFilter), 에토스 방향 트리거 줄, 수색대장 에토스 화자(일반·팀 줄).
+        /// 메인 창과 서브 채팅창이 같은 값을 쓴다.
+        /// </summary>
+        private static bool ComputeDisplaySuppressed(LogParser.ParseResult parsed)
+        {
+            if (string.IsNullOrWhiteSpace(parsed.FormattedText))
+                return false;
+
+            if (NoisyNoticeFilter.IsNoise(parsed.FormattedText))
+                return true;
+
+            // 에토스 방향 알림 트리거 문구는 방향 오버레이만 표시하고 일반 채팅 오버레이에는 노출하지 않음
+            if (!string.IsNullOrWhiteSpace(parsed.EtosImagePath))
+                return true;
+
+            if (parsed.Category is ChatCategory.Normal or ChatCategory.NormalSelf or ChatCategory.Team)
+            {
+                string sender = parsed.SenderId ?? parsed.RawSenderId ?? string.Empty;
+                if (sender.Length > 0)
+                {
+                    string lower = sender.ToLowerInvariant();
+                    if (lower.Contains("수색대장") && lower.Contains("에토스"))
+                        return true;
+                }
             }
 
             return false;

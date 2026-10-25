@@ -13,10 +13,8 @@ using TWChatOverlay.Models;
 
 namespace TWChatOverlay.Services
 {
-    public sealed class ReadableLogArchiveService
+    public sealed class ReadableLogArchiveService : IDisposable
     {
-        private sealed record SourceLogFile(string Path, DateTime Date);
-
         public sealed record LogArchiveInitializationResult(IReadOnlyList<string> TimedOutFiles)
         {
             public static LogArchiveInitializationResult Empty { get; } =
@@ -34,9 +32,6 @@ namespace TWChatOverlay.Services
         private static readonly Regex MagicStoneGainRegex = new(
             @"(?<grade>하급|중급|상급|최상급)\s*마정석(?:\s*(?:\[(?<countBracket>[\d,]+)\]|(?<countPlain>[\d,]+))\s*개)?(?:\s*(?:을|를))?\s*획득",
             RegexOptions.Compiled);
-        private static readonly Regex DateFromFileNameRegex = new(
-            @"TWChatLog_(?<y>\d{4})_(?<m>\d{2})_(?<d>\d{2})\.html$",
-            RegexOptions.IgnoreCase | RegexOptions.Compiled);
         private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.General);
 
         private readonly object _syncRoot = new();
@@ -54,9 +49,16 @@ namespace TWChatOverlay.Services
         private const string RawLogRebuildCheckpointKey = "raw-log-rebuild";
         private const string LogsFolderResetMigrationKey = "logs-folder-reset-5x";
         private const int CurrentLogsFolderResetVersion = 1;
-        private static readonly TimeSpan SourceLogFileReadTimeout = TimeSpan.FromMinutes(1);
         private const string AbandonDaySummarySuffix = ".summary.day.json";
         private readonly Dictionary<DateTime, AbandonMonthlySummarySnapshotEntry> _abandonDayBuffer = new();
+
+        // 실시간 아카이브 쓰기는 줄마다 파일을 열지 않고 모아 두었다가 1초 뒤(또는 FlushAll)에 한 번 쓴다.
+        // 파일 핸들은 플러시마다 열고 닫아 아카이브를 지우거나 읽는 다른 코드와 충돌하지 않게 한다.
+        private static readonly TimeSpan LiveFlushDelay = TimeSpan.FromSeconds(1);
+        private readonly ArchiveWriteBatch _liveWrites = new(keepWritersOpen: false);
+        private readonly Timer _liveFlushTimer;
+        private bool _liveFlushScheduled;
+        private DateTime _liveWriteDate = DateTime.MinValue;
 
         public ReadableLogArchiveService(string? rootDirectory = null)
         {
@@ -69,8 +71,14 @@ namespace TWChatOverlay.Services
             _contentDirectory = Path.Combine(_rootDirectory, "Content");
             _AbandonDirectory = Path.Combine(_rootDirectory, "Abandon");
             _stateDirectory = Path.Combine(_rootDirectory, "_state");
+            _liveFlushTimer = new Timer(_ => FlushLiveWrites(), null, Timeout.InfiniteTimeSpan, Timeout.InfiniteTimeSpan);
         }
 
+        /// <summary>
+        /// 원본 채팅 로그에서 아카이브(외치기·아이템·경험치·컨텐츠·어밴던)가 없는 날짜를 채운다.
+        /// 파일 한 번 읽기에 <paramref name="extraConsumers"/>(사냥 기록·던전 타이머·시드·보물창고)도 함께 올라타므로
+        /// 같은 파일을 서비스마다 따로 열지 않는다. 아카이브 쪽이 이미 다 있는 날짜라도 다른 소비자가 원하면 파일은 읽힌다.
+        /// </summary>
         public async Task<LogArchiveInitializationResult> EnsureInitializedFromRawLogsAsync(
             string chatLogFolderPath,
             LogAnalysisService logAnalysisService,
@@ -78,7 +86,8 @@ namespace TWChatOverlay.Services
             Action<string, int, int>? onProgressText = null,
             Func<DateTime, bool>? sourceDateFilter = null,
             CancellationToken cancellationToken = default,
-            bool updateCheckpoint = true)
+            bool updateCheckpoint = true,
+            IReadOnlyList<IRawLogScanConsumer>? extraConsumers = null)
         {
             if (string.IsNullOrWhiteSpace(chatLogFolderPath) || !Directory.Exists(chatLogFolderPath))
                 return LogArchiveInitializationResult.Empty;
@@ -90,7 +99,9 @@ namespace TWChatOverlay.Services
             try
             {
                 cancellationToken.ThrowIfCancellationRequested();
-                var allSourceFiles = DiscoverSourceLogFiles(chatLogFolderPath, sourceDateFilter);
+                List<RawLogFile> allSourceFiles = RawChatLogReader.EnumerateFiles(chatLogFolderPath);
+                if (sourceDateFilter != null)
+                    allSourceFiles.RemoveAll(f => !sourceDateFilter(f.Date));
                 if (allSourceFiles.Count == 0)
                     return LogArchiveInitializationResult.Empty;
 
@@ -111,7 +122,7 @@ namespace TWChatOverlay.Services
                 var missingAbandonSummaryDays = new HashSet<DateTime>();
 
                 bool hasCheckpoint = lastCompletedDate.HasValue;
-                foreach (SourceLogFile source in allSourceFiles)
+                foreach (RawLogFile source in allSourceFiles)
                 {
                     DateTime day = source.Date.Date;
                     string dayKey = day.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
@@ -181,24 +192,38 @@ namespace TWChatOverlay.Services
 
                     sourceFiles = earliestMissingDate.HasValue
                         ? allSourceFiles.Where(source => source.Date.Date >= earliestMissingDate.Value.Date).ToList()
-                        : new List<SourceLogFile>();
+                        : new List<RawLogFile>();
                 }
 
                 EnsureArchiveDirectoriesExist();
 
-                return await BuildFromRawLogsAsync(
-                    sourceFiles,
+                DropItemResolver.DropItemFilterSnapshot filterSnapshot = await AppServices.Get<DropItemResolver>().LoadDefaultFilterSnapshotAsync().ConfigureAwait(false);
+                var archiveConsumer = new ArchiveScanConsumer(
+                    this,
                     logAnalysisService,
                     isContentRelevant,
-                    onProgressText,
-                    cancellationToken,
+                    filterSnapshot,
+                    new HashSet<DateTime>(sourceFiles.Select(f => f.Date)),
                     missingShoutDates,
                     missingExpDates,
                     missingItemDays,
                     missingContentWeeks,
                     missingAbandonDays,
                     missingAbandonSummaryDays,
-                    updateCheckpoint).ConfigureAwait(false);
+                    updateCheckpoint);
+
+                var consumers = new List<IRawLogScanConsumer> { archiveConsumer };
+                if (extraConsumers != null)
+                    consumers.AddRange(extraConsumers);
+
+                RawLogScanResult scan = await RawLogScanService.RunAsync(
+                    chatLogFolderPath,
+                    consumers,
+                    sourceDateFilter,
+                    onProgressText,
+                    cancellationToken).ConfigureAwait(false);
+
+                return new LogArchiveInitializationResult(scan.TimedOutFiles);
             }
             finally
             {
@@ -207,7 +232,142 @@ namespace TWChatOverlay.Services
         }
 
         /// <summary>
-        /// 4.x → 5.x 업그레이드 1회 마이그레이션: 구버전 형식의 Logs 폴더를 통째로 삭제해
+        /// 아카이브 재구축 소비자: 패스가 넘기는 줄을 분석해 빠진 아카이브 파일에만 쓴다.
+        /// 어디까지 끝냈는지(raw-log-rebuild 체크포인트)는 패스가 끝날 때 올린다.
+        /// </summary>
+        private sealed class ArchiveScanConsumer : IRawLogScanConsumer
+        {
+            private readonly ReadableLogArchiveService _owner;
+            private readonly LogAnalysisService _logAnalysisService;
+            private readonly Func<string, bool> _isContentRelevant;
+            private readonly DropItemResolver.DropItemFilterSnapshot _filterSnapshot;
+            private readonly HashSet<DateTime> _sourceDates;
+            private readonly HashSet<DateTime> _missingShoutDates;
+            private readonly HashSet<DateTime> _missingExpDates;
+            private readonly HashSet<DateTime> _missingItemDays;
+            private readonly HashSet<string> _missingContentWeeks;
+            private readonly HashSet<DateTime> _missingAbandonDays;
+            private readonly HashSet<DateTime> _missingAbandonSummaryDays;
+            private readonly bool _updateCheckpoint;
+            private readonly ArchiveWriteBatch _pendingWrites = new(keepWritersOpen: true);
+            private DateTime? _lastProcessedDate;
+
+            // 지금 읽는 파일에 무엇을 써야 하는지
+            private DateTime _logDate;
+            private bool _writeShout, _writeExp, _writeItem, _writeContent, _writeAbandon, _rebuildAbandonSummary, _hasArchiveWriteTarget;
+
+            public ArchiveScanConsumer(
+                ReadableLogArchiveService owner,
+                LogAnalysisService logAnalysisService,
+                Func<string, bool> isContentRelevant,
+                DropItemResolver.DropItemFilterSnapshot filterSnapshot,
+                HashSet<DateTime> sourceDates,
+                HashSet<DateTime> missingShoutDates,
+                HashSet<DateTime> missingExpDates,
+                HashSet<DateTime> missingItemDays,
+                HashSet<string> missingContentWeeks,
+                HashSet<DateTime> missingAbandonDays,
+                HashSet<DateTime> missingAbandonSummaryDays,
+                bool updateCheckpoint)
+            {
+                _owner = owner;
+                _logAnalysisService = logAnalysisService;
+                _isContentRelevant = isContentRelevant;
+                _filterSnapshot = filterSnapshot;
+                _sourceDates = sourceDates;
+                _missingShoutDates = missingShoutDates;
+                _missingExpDates = missingExpDates;
+                _missingItemDays = missingItemDays;
+                _missingContentWeeks = missingContentWeeks;
+                _missingAbandonDays = missingAbandonDays;
+                _missingAbandonSummaryDays = missingAbandonSummaryDays;
+                _updateCheckpoint = updateCheckpoint;
+            }
+
+            public void BeginScan(IReadOnlyList<RawLogFile> files)
+            {
+                lock (_owner._syncRoot)
+                    _owner._abandonDayBuffer.Clear();
+            }
+
+            public bool BeginFile(RawLogFile file, long fileLength)
+            {
+                DateTime logDate = file.Date.Date;
+                if (!_sourceDates.Contains(logDate))
+                    return false;
+
+                _logDate = logDate;
+                string weekKey = LogTextClassifier.GetIsoWeekKey(logDate);
+                _writeShout = _missingShoutDates.Contains(logDate);
+                _writeExp = _missingExpDates.Contains(logDate);
+                _writeItem = _missingItemDays.Contains(logDate);
+                _writeContent = _missingContentWeeks.Contains(weekKey);
+                _writeAbandon = _missingAbandonDays.Contains(logDate);
+                _rebuildAbandonSummary = _missingAbandonSummaryDays.Contains(logDate);
+                _hasArchiveWriteTarget = _writeShout || _writeExp || _writeItem || _writeContent || _writeAbandon;
+
+                // 이미 모든 아카이브가 있는 날짜는 파싱 자체를 건너뛴다 (재시작·백필 시 최근 구간 무료 통과)
+                if (!_hasArchiveWriteTarget && !_rebuildAbandonSummary)
+                {
+                    _lastProcessedDate = logDate;
+                    return false;
+                }
+
+                return true;
+            }
+
+            public void OnLine(RawLogLine line)
+            {
+                var analysis = _logAnalysisService.Analyze(line.Html, isRealTime: false, _filterSnapshot);
+                if (!analysis.IsSuccess)
+                    return;
+
+                string formattedText = analysis.Parsed.FormattedText;
+                lock (_owner._syncRoot)
+                {
+                    if (_rebuildAbandonSummary && !_writeAbandon && TryBuildAbandonDelta(formattedText, out AbandonMonthlySummarySnapshotEntry summaryDelta))
+                        _owner.UpdateAbandonDailySummary(_logDate, summaryDelta);
+
+                    if (_hasArchiveWriteTarget)
+                    {
+                        _owner.AppendFromAnalysisSelective(
+                            _logDate,
+                            analysis,
+                            _isContentRelevant(formattedText),
+                            _writeShout,
+                            _writeItem,
+                            _writeExp,
+                            _writeContent,
+                            _writeAbandon,
+                            _pendingWrites,
+                            flushSummaryImmediately: false);
+                    }
+                }
+            }
+
+            public void EndFile(RawLogFile file, RawLogReadOutcome outcome)
+            {
+                _lastProcessedDate = file.Date.Date;
+            }
+
+            public void EndScan(bool completed)
+            {
+                lock (_owner._syncRoot)
+                {
+                    _pendingWrites.Dispose();
+                    _owner.FlushAbandonDayBuffer();
+                }
+                // 부분 범위(최근 로그만) 초기화 시에는 체크포인트를 올리지 않아
+                // 과거 로그 백필이 건너뛰어지지 않게 한다
+                if (completed && _updateCheckpoint && _lastProcessedDate.HasValue)
+                    _owner.SaveRawLogRebuildCheckpoint(_lastProcessedDate.Value);
+            }
+        }
+
+        #region 레거시 마이그레이션 (4.x → 5.x, 시작 시 각 1회 호출 — 구버전 사용자가 남아 있는 동안 유지)
+
+        /// <summary>
+        /// [레거시] 4.x → 5.x 업그레이드 1회 마이그레이션: 구버전 형식의 Logs 폴더를 통째로 삭제해
         /// 원본 채팅 로그에서 새로 재구축되게 한다. 적용 여부는 Logs\_state\migration.json에 기록되어
         /// 이후 실행(신규 설치 포함)에서는 아무것도 하지 않는다.
         /// </summary>
@@ -254,6 +414,10 @@ namespace TWChatOverlay.Services
             }
         }
 
+        /// <summary>
+        /// [레거시] 컨텐츠 아카이브에 섞여 있던 경험치 줄 제거(버전 1). 시작 시 전경 패스 뒤에 한 번 부른다.
+        /// 적용 뒤에는 옛 상태 파일 정리만 한다.
+        /// </summary>
         public void MigrateContentArchiveIfNeeded()
         {
             lock (_syncRoot)
@@ -268,10 +432,12 @@ namespace TWChatOverlay.Services
 
                 RemoveExperienceLinesFromContentArchive();
 
+                // SaveMigrationVersion이 옛 상태 파일 정리까지 한다
                 SaveMigrationVersion(ContentArchiveMigrationKey, CurrentContentArchiveMigrationVersion);
-                DeleteLegacyStateFiles();
             }
         }
+
+        #endregion
 
         public void ClearArchiveLogsAndResetCheckpoint()
         {
@@ -281,6 +447,7 @@ namespace TWChatOverlay.Services
                 {
                     EnsureArchiveDirectoriesExist();
                     _abandonDayBuffer.Clear();
+                    _liveWrites.DiscardAll(); // 아직 안 쓴 실시간 줄이 지운 파일을 되살리지 않게
 
                     DeleteFilesByPattern(_shoutDirectory, "*.html");
                     DeleteFilesByPattern(_itemDirectory, "*.html");
@@ -317,6 +484,13 @@ namespace TWChatOverlay.Services
 
             lock (_syncRoot)
             {
+                // 날짜가 바뀌면 전날 몫을 먼저 내려 쓴다
+                if (_liveWriteDate != logDate.Date)
+                {
+                    _liveWrites.FlushAll();
+                    _liveWriteDate = logDate.Date;
+                }
+
                 AppendFromAnalysisSelective(
                     logDate,
                     analysis,
@@ -325,8 +499,42 @@ namespace TWChatOverlay.Services
                     writeItem: true,
                     writeExp: true,
                     writeContent: true,
-                    writeAbandon: true);
+                    writeAbandon: true,
+                    _liveWrites,
+                    flushSummaryImmediately: true);
+
+                if (!_liveFlushScheduled)
+                {
+                    _liveFlushScheduled = true;
+                    _liveFlushTimer.Change(LiveFlushDelay, Timeout.InfiniteTimeSpan);
+                }
             }
+        }
+
+        private void FlushLiveWrites()
+        {
+            lock (_syncRoot)
+            {
+                _liveFlushScheduled = false;
+                try { _liveWrites.FlushAll(); }
+                catch (Exception ex) { AppLogger.Warn("Failed to flush pending realtime archive writes.", ex); }
+            }
+        }
+
+        /// <summary>모아 둔 실시간 아카이브 줄을 지금 파일에 쓴다. 아카이브 파일을 읽는 쪽은 읽기 전에 이걸 불러 마지막 1초 줄을 놓치지 않게 한다.</summary>
+        public void FlushAll() => FlushLiveWrites();
+
+        /// <summary>아카이브 파일을 읽는 공용 통로 — 대기 중인 실시간 줄을 먼저 내려 쓴 뒤 줄을 돌려준다. 파일이 없으면 빈 열거.</summary>
+        public IEnumerable<string> ReadArchiveLines(string path)
+        {
+            FlushAll();
+            return File.Exists(path) ? File.ReadLines(path, Encoding.UTF8) : Array.Empty<string>();
+        }
+
+        public void Dispose()
+        {
+            try { _liveFlushTimer.Dispose(); } catch { }
+            FlushLiveWrites();
         }
 
         public AbandonSummaryValue LoadAbandonWeeklySummary(DateTime date)
@@ -347,113 +555,6 @@ namespace TWChatOverlay.Services
 
                 return AbandonSummaryCalculator.FromMonthly(weekly);
             }
-        }
-
-        private async Task<LogArchiveInitializationResult> BuildFromRawLogsAsync(
-            IReadOnlyList<SourceLogFile> sourceFiles,
-            LogAnalysisService logAnalysisService,
-            Func<string, bool> isContentRelevant,
-            Action<string, int, int>? onProgressText,
-            CancellationToken cancellationToken,
-            HashSet<DateTime> missingShoutDates,
-            HashSet<DateTime> missingExpDates,
-            HashSet<DateTime> missingItemDays,
-            HashSet<string> missingContentWeeks,
-            HashSet<DateTime> missingAbandonDays,
-            HashSet<DateTime> missingAbandonSummaryDays,
-            bool updateCheckpoint = true)
-        {
-            DropItemResolver.DropItemFilterSnapshot filterSnapshot = await AppServices.Get<DropItemResolver>().LoadDefaultFilterSnapshotAsync().ConfigureAwait(false);
-            _abandonDayBuffer.Clear();
-            using var pendingArchiveWrites = new ArchiveWriteBatch();
-            var timedOutFiles = new List<string>();
-            int total = sourceFiles.Count;
-            DateTime? lastProcessedDate = null;
-            for (int i = 0; i < sourceFiles.Count; i++)
-            {
-                cancellationToken.ThrowIfCancellationRequested();
-                SourceLogFile source = sourceFiles[i];
-                DateTime logDate = source.Date.Date;
-                onProgressText?.Invoke($"{logDate:yyyy-MM-dd} 처리 중...", i + 1, total);
-                string dayKey = logDate.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
-                bool writeShout = missingShoutDates.Contains(logDate);
-                bool writeExp = missingExpDates.Contains(logDate);
-                bool writeItem = missingItemDays.Contains(logDate);
-                string weekKey = LogTextClassifier.GetIsoWeekKey(logDate);
-                bool writeContent = missingContentWeeks.Contains(weekKey);
-                bool writeAbandon = missingAbandonDays.Contains(logDate);
-                bool rebuildAbandonSummary = missingAbandonSummaryDays.Contains(logDate);
-
-                bool hasArchiveWriteTarget = writeShout || writeExp || writeItem || writeContent || writeAbandon;
-
-                // 이미 모든 아카이브가 있는 날짜는 파싱 자체를 건너뛴다 (재시작·백필 시 최근 구간 무료 통과)
-                if (!hasArchiveWriteTarget && !rebuildAbandonSummary)
-                {
-                    lastProcessedDate = logDate;
-                    continue;
-                }
-
-                SourceFileReadOutcome outcome = await ProcessSourceLinesMergedAsync(source.Path, cancellationToken, line =>
-                {
-                    cancellationToken.ThrowIfCancellationRequested();
-                    var analysis = logAnalysisService.Analyze(line, isRealTime: false, filterSnapshot);
-                    if (!analysis.IsSuccess)
-                        return;
-
-                    string formattedText = analysis.Parsed.FormattedText;
-
-                    if (rebuildAbandonSummary && !writeAbandon && TryBuildAbandonDelta(formattedText, out AbandonMonthlySummarySnapshotEntry summaryDelta))
-                    {
-                        UpdateAbandonDailySummary(logDate, summaryDelta);
-                    }
-
-                    bool contentRelevant = isContentRelevant(formattedText);
-                    if (hasArchiveWriteTarget)
-                    {
-                        lock (_syncRoot)
-                        {
-                            AppendFromAnalysisSelective(
-                                logDate,
-                                analysis,
-                                contentRelevant,
-                                writeShout,
-                                writeItem,
-                                writeExp,
-                                writeContent,
-                                writeAbandon,
-                                pendingArchiveWrites);
-                        }
-                    }
-                }).ConfigureAwait(false);
-
-                if (outcome == SourceFileReadOutcome.TimedOut)
-                {
-                    timedOutFiles.Add(source.Path);
-                    onProgressText?.Invoke($"{logDate:yyyy-MM-dd} 처리 시간이 1분을 넘겨 다음 파일로 넘어갑니다...", i + 1, total);
-                }
-
-                lastProcessedDate = logDate;
-            }
-            pendingArchiveWrites.FlushAll();
-            FlushAbandonDayBuffer();
-            // 부분 범위(최근 로그만) 초기화 시에는 체크포인트를 올리지 않아
-            // 과거 로그 백필이 건너뛰어지지 않게 한다
-            if (updateCheckpoint && lastProcessedDate.HasValue)
-                SaveRawLogRebuildCheckpoint(lastProcessedDate.Value);
-
-            return new LogArchiveInitializationResult(timedOutFiles);
-        }
-
-        private static List<SourceLogFile> DiscoverSourceLogFiles(string chatLogFolderPath, Func<DateTime, bool>? sourceDateFilter)
-        {
-            return Directory.EnumerateFiles(chatLogFolderPath, "TWChatLog_*.html")
-                .Select(path => new { Path = path, DateFound = TryExtractDateFromPath(path, out DateTime date), Date = date })
-                .Where(x => x.DateFound)
-                .Where(x => sourceDateFilter == null || sourceDateFilter(x.Date.Date))
-                .Select(x => new SourceLogFile(x.Path, x.Date.Date))
-                .OrderBy(x => x.Date)
-                .ThenBy(x => x.Path, StringComparer.OrdinalIgnoreCase)
-                .ToList();
         }
 
         private void EnsureArchiveDirectoriesExist()
@@ -634,7 +735,8 @@ namespace TWChatOverlay.Services
             bool writeExp,
             bool writeContent,
             bool writeAbandon,
-            ArchiveWriteBatch? pendingArchiveWrites = null)
+            ArchiveWriteBatch pendingArchiveWrites,
+            bool flushSummaryImmediately)
         {
             var parsed = analysis.Parsed;
             if (parsed == null || string.IsNullOrWhiteSpace(parsed.FormattedText))
@@ -683,8 +785,7 @@ namespace TWChatOverlay.Services
                                 break;
                         }
                         NormalizeStoneConsistency(gainDelta);
-                        bool flushSummaryNow = pendingArchiveWrites == null;
-                        UpdateAbandonDailySummary(logDate, gainDelta, flushImmediately: flushSummaryNow);
+                        UpdateAbandonDailySummary(logDate, gainDelta, flushImmediately: flushSummaryImmediately);
                         return;
                     }
                 }
@@ -702,11 +803,11 @@ namespace TWChatOverlay.Services
 
             if (writeAbandon && IsAbandonRelevantLog(text))
             {
-                AppendAbandonLog(logDate, text, pendingArchiveWrites);
+                AppendAbandonLog(logDate, text, pendingArchiveWrites, flushSummaryImmediately);
             }
         }
 
-        private void AppendShoutLog(DateTime logDate, string text, ArchiveWriteBatch? pendingArchiveWrites = null)
+        private void AppendShoutLog(DateTime logDate, string text, ArchiveWriteBatch pendingArchiveWrites)
         {
             string dateKey = logDate.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
             string path = Path.Combine(_shoutDirectory, $"{dateKey}.html");
@@ -714,7 +815,7 @@ namespace TWChatOverlay.Services
             AppendHtmlLine(path, $"Shout {dateKey}", entry, pendingArchiveWrites);
         }
 
-        private void AppendItemLog(DateTime logDate, string text, string itemName, string itemGrade, int itemCount, ArchiveWriteBatch? pendingArchiveWrites = null)
+        private void AppendItemLog(DateTime logDate, string text, string itemName, string itemGrade, int itemCount, ArchiveWriteBatch pendingArchiveWrites)
         {
             string dateKey = logDate.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
             string path = Path.Combine(_itemDirectory, $"{dateKey}.html");
@@ -722,7 +823,7 @@ namespace TWChatOverlay.Services
             AppendHtmlLine(path, $"Item {dateKey}", entry, pendingArchiveWrites);
         }
 
-        private void AppendContentLog(DateTime logDate, string text, ArchiveWriteBatch? pendingArchiveWrites = null)
+        private void AppendContentLog(DateTime logDate, string text, ArchiveWriteBatch pendingArchiveWrites)
         {
             string weekKey = LogTextClassifier.GetIsoWeekKey(logDate);
             string dateKey = logDate.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
@@ -731,7 +832,7 @@ namespace TWChatOverlay.Services
             AppendHtmlLine(path, $"Content {weekKey}", entry, pendingArchiveWrites);
         }
 
-        private void AppendExpLog(DateTime logDate, string text, ArchiveWriteBatch? pendingArchiveWrites = null)
+        private void AppendExpLog(DateTime logDate, string text, ArchiveWriteBatch pendingArchiveWrites)
         {
             string dateKey = logDate.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
             string path = Path.Combine(_expDirectory, $"{dateKey}.html");
@@ -740,7 +841,7 @@ namespace TWChatOverlay.Services
             AppendHtmlLine(path, $"Exp {dateKey}", entry, pendingArchiveWrites);
         }
 
-        private void AppendAbandonLog(DateTime logDate, string text, ArchiveWriteBatch? pendingArchiveWrites = null)
+        private void AppendAbandonLog(DateTime logDate, string text, ArchiveWriteBatch pendingArchiveWrites, bool flushSummaryImmediately)
         {
             string dateKey = logDate.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
             string path = Path.Combine(_AbandonDirectory, $"{dateKey}.html");
@@ -748,10 +849,7 @@ namespace TWChatOverlay.Services
             AppendHtmlLine(path, $"Abandon {dateKey}", entry, pendingArchiveWrites);
 
             if (TryBuildAbandonDelta(text, out AbandonMonthlySummarySnapshotEntry delta))
-            {
-                bool flushSummaryNow = pendingArchiveWrites == null;
-                UpdateAbandonDailySummary(logDate, delta, flushImmediately: flushSummaryNow);
-            }
+                UpdateAbandonDailySummary(logDate, delta, flushImmediately: flushSummaryImmediately);
         }
 
         private static bool IsExperienceDecreaseLog(string text)
@@ -941,126 +1039,6 @@ namespace TWChatOverlay.Services
         }
 
 
-        private enum SourceFileReadOutcome
-        {
-            Completed,
-            TimedOut,
-            Failed
-        }
-
-        private static async Task<SourceFileReadOutcome> ProcessSourceLinesMergedAsync(string path, CancellationToken cancellationToken, Action<string> onLine)
-        {
-            Encoding encoding = Encoding.GetEncoding(949);
-            const int maxAttempts = 5;
-            const int streamBufferSize = 1 << 20; // 1MB
-
-            for (int attempt = 1; attempt <= maxAttempts; attempt++)
-            {
-                try
-                {
-                    DateTime deadlineUtc = DateTime.UtcNow.Add(SourceLogFileReadTimeout);
-                    using var stream = new FileStream(
-                        path,
-                        FileMode.Open,
-                        FileAccess.Read,
-                        FileShare.ReadWrite,
-                        bufferSize: streamBufferSize,
-                        FileOptions.SequentialScan | FileOptions.Asynchronous);
-                    using var reader = new StreamReader(stream, encoding, detectEncodingFromByteOrderMarks: true, bufferSize: streamBufferSize);
-
-                    string? pending = null;
-                    while (true)
-                    {
-                        cancellationToken.ThrowIfCancellationRequested();
-
-                        string? raw = await ReadLineWithTimeoutAsync(reader, cancellationToken, deadlineUtc).ConfigureAwait(false);
-                        if (raw == null)
-                            break;
-
-                        if (string.IsNullOrWhiteSpace(raw))
-                            continue;
-
-                        string current = raw.Trim();
-                        if (pending == null)
-                        {
-                            pending = current;
-                            continue;
-                        }
-
-                        var mergedPair = ShoutLineMergeHelper.MergeWrappedShoutLines(new[] { pending, current });
-                        if (mergedPair.Count == 1)
-                        {
-                            pending = mergedPair[0];
-                            continue;
-                        }
-
-                        // 시스템 메시지 줄바꿈(예: 더블 리워드 "...획득하였" + "습니다.")도 병합해야
-                        // 과거 로그 스캔에서 더블 리워드 아이템 획득이 정상 집계된다.
-                        var systemMergedPair = SystemLineMergeHelper.MergeWrappedSystemLines(new[] { pending, current });
-                        if (systemMergedPair.Count == 1)
-                        {
-                            pending = systemMergedPair[0];
-                            continue;
-                        }
-
-                        onLine(pending);
-                        if (DateTime.UtcNow >= deadlineUtc)
-                            throw new TimeoutException();
-                        pending = current;
-                    }
-
-                    if (!string.IsNullOrWhiteSpace(pending))
-                    {
-                        onLine(pending);
-                        if (DateTime.UtcNow >= deadlineUtc)
-                            throw new TimeoutException();
-                    }
-                    return SourceFileReadOutcome.Completed;
-                }
-                catch (TimeoutException)
-                {
-                    AppLogger.Warn($"Failed to stream source chat log '{path}' because reading it took more than {SourceLogFileReadTimeout.TotalMinutes:0} minute(s). Skipping the rest of the file.");
-                    return SourceFileReadOutcome.TimedOut;
-                }
-                catch (IOException ex)
-                {
-                    if (attempt == maxAttempts)
-                    {
-                        AppLogger.Warn($"Failed to stream source chat log '{path}' after {maxAttempts} attempts.", ex);
-                        return SourceFileReadOutcome.Failed;
-                    }
-
-                    await Task.Delay(120 * attempt, cancellationToken).ConfigureAwait(false);
-                }
-                catch (Exception ex)
-                {
-                    AppLogger.Warn($"Failed to stream source chat log '{path}'.", ex);
-                    return SourceFileReadOutcome.Failed;
-                }
-            }
-
-            return SourceFileReadOutcome.Failed;
-        }
-
-        private static async Task<string?> ReadLineWithTimeoutAsync(
-            StreamReader reader,
-            CancellationToken cancellationToken,
-            DateTime deadlineUtc)
-        {
-            TimeSpan remaining = deadlineUtc - DateTime.UtcNow;
-            if (remaining <= TimeSpan.Zero)
-                throw new TimeoutException();
-
-            Task<string?> readTask = reader.ReadLineAsync();
-            _ = readTask.ContinueWith(
-                t => _ = t.Exception,
-                CancellationToken.None,
-                TaskContinuationOptions.OnlyOnFaulted | TaskContinuationOptions.ExecuteSynchronously,
-                TaskScheduler.Default);
-
-            return await readTask.WaitAsync(remaining, cancellationToken).ConfigureAwait(false);
-        }
-
         private static bool HasUsableArchiveContent(string path)
         {
             if (!File.Exists(path))
@@ -1100,49 +1078,27 @@ namespace TWChatOverlay.Services
             }
         }
 
-        private static bool TryExtractDateFromPath(string path, out DateTime date)
-        {
-            date = DateTime.MinValue;
-            string fileName = Path.GetFileName(path);
-            Match match = DateFromFileNameRegex.Match(fileName);
-            if (!match.Success)
-                return false;
+        private static void AppendHtmlLine(string path, string title, string htmlLine, ArchiveWriteBatch pendingArchiveWrites)
+            => pendingArchiveWrites.Enqueue(path, title, htmlLine);
 
-            if (!int.TryParse(match.Groups["y"].Value, out int y) ||
-                !int.TryParse(match.Groups["m"].Value, out int m) ||
-                !int.TryParse(match.Groups["d"].Value, out int d))
-                return false;
-
-            try
-            {
-                date = new DateTime(y, m, d);
-                return true;
-            }
-            catch
-            {
-                return false;
-            }
-        }
-
-
-        private static void AppendHtmlLine(string path, string title, string htmlLine, ArchiveWriteBatch? pendingArchiveWrites = null)
-        {
-            if (pendingArchiveWrites != null)
-            {
-                pendingArchiveWrites.Enqueue(path, title, htmlLine);
-                return;
-            }
-
-            EnsureInitialized(path, title);
-            using var writer = new StreamWriter(path, append: true, Utf8NoBomEncoding);
-            writer.WriteLine(htmlLine);
-        }
-
+        /// <summary>
+        /// 경로별로 줄을 모아 한 번에 쓴다. 재구축(keepWritersOpen=true)은 파일을 열어 둔 채 큰 덩어리로 쓰고,
+        /// 실시간(keepWritersOpen=false)은 플러시마다 열고 닫아 다른 코드가 파일을 지우거나 읽는 데 걸리지 않게 한다.
+        /// </summary>
         private sealed class ArchiveWriteBatch : IDisposable
         {
             private const int FlushThresholdChars = 256 * 1024;
+            private readonly bool _keepWritersOpen;
             private readonly Dictionary<string, StringBuilder> _bufferByPath = new(StringComparer.OrdinalIgnoreCase);
             private readonly Dictionary<string, StreamWriter> _writerByPath = new(StringComparer.OrdinalIgnoreCase);
+
+            public ArchiveWriteBatch(bool keepWritersOpen)
+            {
+                _keepWritersOpen = keepWritersOpen;
+            }
+
+            /// <summary>아직 안 쓴 줄을 버린다 (아카이브를 비울 때).</summary>
+            public void DiscardAll() => _bufferByPath.Clear();
 
             public void Enqueue(string path, string title, string htmlLine)
             {
@@ -1173,6 +1129,15 @@ namespace TWChatOverlay.Services
             {
                 if (!_bufferByPath.TryGetValue(path, out StringBuilder? buffer) || buffer.Length == 0)
                     return;
+
+                if (!_keepWritersOpen)
+                {
+                    EnsureInitialized(path, title);
+                    using var oneShot = new StreamWriter(path, append: true, Utf8NoBomEncoding);
+                    oneShot.Write(buffer.ToString());
+                    buffer.Clear();
+                    return;
+                }
 
                 if (!_writerByPath.TryGetValue(path, out StreamWriter? writer))
                 {

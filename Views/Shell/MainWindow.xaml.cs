@@ -144,6 +144,8 @@ namespace TWChatOverlay.Views
             _logService.OnNewLogRead += (logItem) => _logAnalysisPipeline?.Enqueue(logItem);
             _logService.InitialLogsLoaded += () =>
             {
+                // 실시간 읽기 위치가 정해졌으니(Start 전) 시작 패스가 읽은 끝 ~ 그 위치 사이 줄을 던전 타이머·사냥 기록에 이어 넣는다
+                FeedStartupLogTailOnce();
                 Dispatcher.BeginInvoke(new Action(() => RequestRefreshLogDisplay()), DispatcherPriority.ApplicationIdle);
                 // 시작·날짜 전환 시점: 앱이 못 본 구간(꺼져 있던 동안, 오늘 켜기 전)의 시드 줄을 한 번 보충한다.
                 // LogService가 실시간 읽기 시작 위치를 정한 뒤에 돌아야 그 사이 줄이 빠지지 않는다.
@@ -223,6 +225,9 @@ namespace TWChatOverlay.Views
             try { _messengerLogWatcherService?.Dispose(); } catch { }
             try { _hotKeyService?.Dispose(); } catch { }
             try { AppServices.Get<ScalerTopmostGuard>().Detach(); } catch { }
+            // 모아 둔 것을 내려 쓴 뒤 설정을 저장한다: 경험의 정수 누적치(메모리) → 설정, 실시간 아카이브 줄 → 파일
+            try { _experienceEssenceAlertService.FlushState(); } catch { }
+            try { _readableLogArchiveService.Dispose(); } catch { }
             try { ConfigService.Save(_settings); } catch { }
         }
 
@@ -295,7 +300,7 @@ namespace TWChatOverlay.Views
                 _expTrackerWindow.Closed += (_, _) => _expTrackerWindow = null;
             }
 
-            _expTrackerWindow.ApplyStoredPosition(_settings.ExpTrackerWindowLeft, _settings.ExpTrackerWindowTop, _settings.ExpTrackerWindowRight);
+            _expTrackerWindow.ApplyStoredBounds(_settings);
 
             if (!_expTrackerWindow.IsVisible)
                 _expTrackerWindow.Show();
@@ -422,8 +427,7 @@ namespace TWChatOverlay.Views
                 _expService.Reset();
                 _expService.Start();
                 _huntSessionService.Start();
-                // 지난 로그의 사냥 판은 처음 한 번만 훑는다 (이후에는 새 날짜만)
-                _ = _huntSessionService.BackfillAsync(_settings.ChatLogFolderPath);
+                // 지난 로그의 사냥 판 복원은 시작 시 원본 로그 패스(MainWindow.Startup)에 함께 올라탄다
                 StartLogServiceWhenReady();
 
                 _settings.PropertyChanged += OnSettingsPropertyChanged;
