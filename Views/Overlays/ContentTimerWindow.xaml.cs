@@ -741,7 +741,8 @@ namespace TWChatOverlay.Views
             _lifetimeTimer.Stop();
             if (_settings != null)
                 _settings.PropertyChanged -= Settings_PropertyChanged;
-            PersistPosition(saveImmediately: true);
+            // 결과창은 판마다 자동으로 닫히므로 닫힐 때도 지연 저장만 건다. 종료 직전 대기분은 앱 종료 경로가 FlushPendingSave로 기록한다.
+            PersistPosition();
             base.OnClosed(e);
         }
 
@@ -749,10 +750,10 @@ namespace TWChatOverlay.Views
         {
             if (!IsLoaded || !IsVisible)
                 return;
-            PersistPosition(saveImmediately: false);
+            PersistPosition();
         }
 
-        private void PersistPosition(bool saveImmediately)
+        private void PersistPosition()
         {
             if (_settings == null)
                 return;
@@ -761,10 +762,7 @@ namespace TWChatOverlay.Views
             {
                 _settings.ContentTimerWindowLeft = Left;
                 _settings.ContentTimerWindowTop = Top;
-                if (saveImmediately)
-                    ConfigService.Save(_settings);
-                else
-                    ConfigService.SaveDeferred(_settings);
+                ConfigService.SaveDeferred(_settings);
             }
             catch (Exception ex)
             {

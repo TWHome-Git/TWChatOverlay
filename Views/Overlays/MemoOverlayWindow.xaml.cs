@@ -41,7 +41,7 @@ namespace TWChatOverlay.Views
 
         private void CloseButton_Click(object sender, RoutedEventArgs e)
         {
-            PersistState();
+            PersistState(immediate: true);
             try { _textOnly?.Close(); } catch { }
             Close();
         }
@@ -93,7 +93,7 @@ namespace TWChatOverlay.Views
 
         private void MemoOverlayWindow_Closing(object? sender, System.ComponentModel.CancelEventArgs e)
         {
-            PersistState();
+            PersistState(immediate: true);
         }
         private void MemoOverlayWindow_Closed(object? sender, EventArgs e)
         {
@@ -105,7 +105,7 @@ namespace TWChatOverlay.Views
             try { Closing -= MemoOverlayWindow_Closing; } catch { }
             try { Closed -= MemoOverlayWindow_Closed; } catch { }
         }
-        private void Current_Exit(object? sender, ExitEventArgs e) => PersistState();
+        private void Current_Exit(object? sender, ExitEventArgs e) => PersistState(immediate: true);
 
         private void MemoOverlayWindow_LocationChanged(object? sender, System.EventArgs e) => PersistState();
         private void MemoOverlayWindow_SizeChanged(object sender, SizeChangedEventArgs e) => PersistState();
@@ -209,7 +209,11 @@ namespace TWChatOverlay.Views
             OverlayMode_Click(this, new RoutedEventArgs());
         }
 
-        private void PersistState()
+        /// <summary>
+        /// 메모 상태를 설정에 반영한다. 글자 입력·드래그처럼 잦은 변경은 지연 저장으로 모으고,
+        /// 창 닫기·앱 종료처럼 마지막 기회인 경로만 <paramref name="immediate"/>로 즉시 저장한다.
+        /// </summary>
+        private void PersistState(bool immediate = false)
         {
             if (!_isStateReady || _isApplyingLoadedState)
                 return;
@@ -229,7 +233,10 @@ namespace TWChatOverlay.Views
             _settings.MemoOverlayBold = MemoTextBox?.FontWeight == FontWeights.Bold;
             _settings.MemoOverlayItalic = MemoTextBox?.FontStyle == FontStyles.Italic;
             _settings.MemoOverlayColorKey = _selectedColorKey;
-            ConfigService.Save(_settings);
+            if (immediate)
+                ConfigService.Save(_settings);
+            else
+                ConfigService.SaveDeferred(_settings);
         }
 
         private static ChatSettings ResolveSharedSettings()

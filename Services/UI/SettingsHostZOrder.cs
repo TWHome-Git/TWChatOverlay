@@ -47,6 +47,10 @@ namespace TWChatOverlay.Services
 
         private static void SchedulePlaceBelowHost(Window window)
         {
+            // 설정 창이 닫혀 있으면 PlaceBelowHost가 할 일이 없으므로 예약하지 않는다
+            if (FindVisibleHost() == null)
+                return;
+
             // Show/활성화 직후 WPF의 자체 z-순서 처리가 끝난 뒤 두 번에 걸쳐 확정한다
             window.Dispatcher.BeginInvoke(new Action(() => PlaceBelowHost(window)), DispatcherPriority.Loaded);
             window.Dispatcher.BeginInvoke(new Action(() => PlaceBelowHost(window)), DispatcherPriority.ApplicationIdle);

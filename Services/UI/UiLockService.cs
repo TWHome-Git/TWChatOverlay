@@ -112,6 +112,9 @@ namespace TWChatOverlay.Services
                 _inspector ??= new InspectorWindow();
                 _inspector.SetTarget(window);
                 _inspector.Show();
+                // 선택할 때 한 번만 맨 위로 올린다 (Show 전에는 핸들이 없어 SetTarget 안에서는 올릴 수 없다).
+                // 이후 다른 창이 덮으면 ReassertZOrder가 BringToFront로 다시 올린다.
+                _inspector.BringToFront();
 
                 AppLogger.Info($"Unlock select -> {GetFriendlyName(window)}.");
             }
@@ -641,6 +644,14 @@ namespace TWChatOverlay.Services
             }
         }
 
+        /// <summary>하이라이트·인스펙터 창이 공유하는 Freeze된 브러시를 만든다. (두 창은 선택할 때마다 새로 만들어진다)</summary>
+        private static SolidColorBrush Frozen(Color color)
+        {
+            var brush = new SolidColorBrush(color);
+            brush.Freeze();
+            return brush;
+        }
+
         /// <summary>
         /// 선택된 창 위에 겹쳐 표시되는 하이라이트 테두리(클릭 통과).
         /// 대상보다 4px 크게 그려서 z-order 다툼과 무관하게 테두리가 항상 보인다.
@@ -648,6 +659,8 @@ namespace TWChatOverlay.Services
         private sealed class HighlightWindow : Window
         {
             private const double Inflate = 4;
+            private static readonly SolidColorBrush HighlightBorderBrush = Frozen(Color.FromRgb(0x0C, 0xD2, 0x9D));
+            private static readonly SolidColorBrush HighlightFillBrush = Frozen(Color.FromArgb(0x16, 0x0C, 0xD2, 0x9D));
 
             public HighlightWindow()
             {
@@ -663,10 +676,10 @@ namespace TWChatOverlay.Services
 
                 Content = new Border
                 {
-                    BorderBrush = new SolidColorBrush(Color.FromRgb(0x0C, 0xD2, 0x9D)),
+                    BorderBrush = HighlightBorderBrush,
                     BorderThickness = new Thickness(2),
                     CornerRadius = new CornerRadius(5),
-                    Background = new SolidColorBrush(Color.FromArgb(0x16, 0x0C, 0xD2, 0x9D)),
+                    Background = HighlightFillBrush,
                 };
 
                 SourceInitialized += (_, _) => ApplyClickThrough(this);
@@ -725,6 +738,14 @@ namespace TWChatOverlay.Services
             private static readonly Color SubTextCol = Color.FromRgb(0x8C, 0x91, 0x97);
             private static readonly Color Mint = Color.FromRgb(0x0C, 0xD2, 0x9D);
 
+            // 선택할 때마다 창이 새로 만들어지므로 브러시는 Freeze해 공유한다
+            private static readonly SolidColorBrush PanelBgBrush = Frozen(Color.FromArgb(0xF2, PanelBg.R, PanelBg.G, PanelBg.B));
+            private static readonly SolidColorBrush FieldBgBrush = Frozen(FieldBg);
+            private static readonly SolidColorBrush BorderBrushShared = Frozen(BorderCol);
+            private static readonly SolidColorBrush TextBrush = Frozen(TextCol);
+            private static readonly SolidColorBrush SubTextBrush = Frozen(SubTextCol);
+            private static readonly SolidColorBrush MintBrush = Frozen(Mint);
+
             public InspectorWindow()
             {
                 WindowStyle = WindowStyle.None;
@@ -775,7 +796,7 @@ namespace TWChatOverlay.Services
                     FontSize = 11,
                     Width = 36,
                     TextAlignment = TextAlignment.Right,
-                    Foreground = new SolidColorBrush(TextCol),
+                    Foreground = TextBrush,
                     VerticalAlignment = VerticalAlignment.Center,
                 };
                 _opacitySlider.ValueChanged += (_, e) =>
@@ -795,7 +816,7 @@ namespace TWChatOverlay.Services
                 {
                     Text = "투명도",
                     FontSize = 11,
-                    Foreground = new SolidColorBrush(SubTextCol),
+                    Foreground = SubTextBrush,
                     VerticalAlignment = VerticalAlignment.Center,
                 });
                 opacityRow.Children.Add(_opacitySlider);
@@ -820,7 +841,7 @@ namespace TWChatOverlay.Services
                     FontSize = 11,
                     Width = 36,
                     TextAlignment = TextAlignment.Right,
-                    Foreground = new SolidColorBrush(TextCol),
+                    Foreground = TextBrush,
                     VerticalAlignment = VerticalAlignment.Center,
                 };
                 _fontSlider.ValueChanged += (_, e) =>
@@ -840,7 +861,7 @@ namespace TWChatOverlay.Services
                 {
                     Text = "폰트",
                     FontSize = 11,
-                    Foreground = new SolidColorBrush(SubTextCol),
+                    Foreground = SubTextBrush,
                     VerticalAlignment = VerticalAlignment.Center,
                     Margin = new Thickness(9, 0, 0, 0),
                 });
@@ -858,8 +879,8 @@ namespace TWChatOverlay.Services
                     Padding = new Thickness(12, 8, 12, 9),
                     CornerRadius = new CornerRadius(4),
                     BorderThickness = new Thickness(1),
-                    Background = new SolidColorBrush(Color.FromArgb(0xF2, PanelBg.R, PanelBg.G, PanelBg.B)),
-                    BorderBrush = new SolidColorBrush(BorderCol),
+                    Background = PanelBgBrush,
+                    BorderBrush = BorderBrushShared,
                     Child = root,
                 };
 
@@ -894,9 +915,9 @@ namespace TWChatOverlay.Services
                     Focusable = false,
                     Delay = 400,
                     Interval = 45,
-                    Foreground = new SolidColorBrush(TextCol),
-                    Background = new SolidColorBrush(FieldBg),
-                    BorderBrush = new SolidColorBrush(BorderCol),
+                    Foreground = TextBrush,
+                    Background = FieldBgBrush,
+                    BorderBrush = BorderBrushShared,
                     ToolTip = "1px 이동 (길게 누르면 반복)",
                 };
                 button.Click += (_, _) => AppServices.Get<UiLockService>().NudgeSelected(dx, dy);
@@ -909,7 +930,7 @@ namespace TWChatOverlay.Services
                 {
                     Text = text,
                     FontSize = 11,
-                    Foreground = new SolidColorBrush(SubTextCol),
+                    Foreground = SubTextBrush,
                     VerticalAlignment = VerticalAlignment.Center,
                     Margin = new Thickness(leftMargin, 0, 8, 0),
                 };
@@ -933,10 +954,10 @@ namespace TWChatOverlay.Services
                     FontSize = 11,
                     TextAlignment = TextAlignment.Center,
                     VerticalContentAlignment = VerticalAlignment.Center,
-                    Foreground = new SolidColorBrush(TextCol),
-                    Background = new SolidColorBrush(FieldBg),
-                    BorderBrush = new SolidColorBrush(BorderCol),
-                    CaretBrush = new SolidColorBrush(Mint),
+                    Foreground = TextBrush,
+                    Background = FieldBgBrush,
+                    BorderBrush = BorderBrushShared,
+                    CaretBrush = MintBrush,
                 };
                 box.KeyDown += (_, e) =>
                 {
@@ -1055,8 +1076,6 @@ namespace TWChatOverlay.Services
                 Canvas.SetTop(_panel, showBelow
                     ? VertZone + th + 4 + ButtonH + Gap
                     : VertZone - ButtonH - 4 - Gap - panelHeight);
-
-                RaiseToTop();
             }
 
             /// <summary>다른 창이 덮었을 때 밖에서 다시 맨 위로 올린다 (UiLockService.ReassertZOrder).</summary>

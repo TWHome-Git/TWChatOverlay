@@ -838,10 +838,27 @@ namespace TWChatOverlay.Views
 
         private void ReorderItems()
         {
-            _completedItems.Clear();
+            // IsHidden 갱신은 매번 하고, 완료 목록은 순서·항목이 바뀐 경우에만 교체한다 (Reset 알림으로 템플릿 재생성 방지)
             var added = new HashSet<DailyWeeklyContentLog>(ReferenceEqualityComparer.Instance);
-            AddCompletedFrom(DailyContentItems, added);
-            AddCompletedFrom(WeeklyContentItems, added);
+            var completed = new List<DailyWeeklyContentLog>();
+            AddCompletedFrom(DailyContentItems, added, completed);
+            AddCompletedFrom(WeeklyContentItems, added, completed);
+
+            bool changed = completed.Count != _completedItems.Count;
+            if (!changed)
+            {
+                for (int i = 0; i < completed.Count; i++)
+                {
+                    if (!ReferenceEquals(completed[i], _completedItems[i])) { changed = true; break; }
+                }
+            }
+
+            if (changed)
+            {
+                _completedItems.Clear();
+                foreach (var item in completed) _completedItems.Add(item);
+            }
+
             OnPropertyChanged(nameof(HasCompletedItems));
             RefreshInProgressItems();
         }
@@ -901,9 +918,10 @@ namespace TWChatOverlay.Views
         private static bool IsInProgressLeaf(DailyWeeklyContentLog item)
             => item.HasCount && item.CurrentCount > 0 && !item.IsCleared;
 
-        private void AddCompletedFrom(
+        private static void AddCompletedFrom(
             ObservableCollection<DailyWeeklyContentLog> source,
-            HashSet<DailyWeeklyContentLog> added)
+            HashSet<DailyWeeklyContentLog> added,
+            List<DailyWeeklyContentLog> completed)
         {
             foreach (var item in source)
             {
@@ -916,7 +934,7 @@ namespace TWChatOverlay.Views
                 if (item.IsCleared)
                 {
                     item.IsHidden = true;
-                    TryAddCompletedItem(item, added);
+                    TryAddCompletedItem(item, added, completed);
                     if (item.HasChildren)
                         foreach (var child in item.Children!)
                         {
@@ -926,7 +944,7 @@ namespace TWChatOverlay.Views
                                 continue;
                             }
                             child.IsHidden = true;
-                            TryAddCompletedItem(child, added);
+                            TryAddCompletedItem(child, added, completed);
                         }
                 }
                 else
@@ -946,10 +964,13 @@ namespace TWChatOverlay.Views
             }
         }
 
-        private void TryAddCompletedItem(DailyWeeklyContentLog item, HashSet<DailyWeeklyContentLog> added)
+        private static void TryAddCompletedItem(
+            DailyWeeklyContentLog item,
+            HashSet<DailyWeeklyContentLog> added,
+            List<DailyWeeklyContentLog> completed)
         {
             if (added.Add(item))
-                _completedItems.Add(item);
+                completed.Add(item);
         }
 
         private void ApplySettings()

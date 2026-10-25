@@ -33,6 +33,8 @@ namespace TWChatOverlay.Services
         private static Timer? _saveTimer;
         private static ChatSettings? _pendingSettings;
         private static string? _lastSavedJson;
+        // 이 프로세스에서 마지막으로 item.json에 쓴 내용. null이면 아직 쓴 적이 없다.
+        private static string? _lastSavedItemJson;
 
         static ConfigService()
         {
@@ -117,12 +119,17 @@ namespace TWChatOverlay.Services
             }
         }
 
-        private static void FlushPendingSave()
+        /// <summary>
+        /// 대기 중인 지연 저장(SaveDeferred)이 있으면 지금 바로 기록한다. 없으면 아무것도 하지 않는다.
+        /// 종료 직전처럼 디바운스 타이머를 기다릴 수 없는 경로에서 쓴다.
+        /// </summary>
+        public static void FlushPendingSave()
         {
             lock (_saveLock)
             {
                 ChatSettings? pending = _pendingSettings;
                 _pendingSettings = null;
+                _saveTimer?.Change(Timeout.InfiniteTimeSpan, Timeout.InfiniteTimeSpan);
                 if (pending != null)
                 {
                     SaveInternal(pending);
@@ -187,7 +194,10 @@ namespace TWChatOverlay.Services
                 try
                 {
                     WriteJsonFile(FilePath, settingsJson);
-                    WriteJsonFile(ItemFilePath, itemJson);
+                    // 아이템 설정이 직전에 쓴 내용과 같으면 item.json은 다시 쓰지 않는다
+                    if (!string.Equals(_lastSavedItemJson, itemJson, StringComparison.Ordinal) || !File.Exists(ItemFilePath))
+                        WriteJsonFile(ItemFilePath, itemJson);
+                    _lastSavedItemJson = itemJson;
                     _lastSavedJson = json;
                     _saveFailureNotified = false;
                     AppLogger.Info($"Settings saved to {FilePath}.");
@@ -332,7 +342,8 @@ namespace TWChatOverlay.Services
                     }
 
                     string normalizedJson = JsonSerializer.Serialize(settings, _options);
-                    bool removedObsoleteKeys = TryRemoveObsoleteKeys(json, normalizedJson, out string? cleanedJson);
+                    // rootObj는 json과 같은 내용(item.json 병합 시 json을 rootObj에서 다시 만들었다)이므로 다시 파싱하지 않고 쓴다.
+                    bool removedObsoleteKeys = TryRemoveObsoleteKeys(rootObj, normalizedJson, out string? cleanedJson);
                     if (removedObsoleteKeys && cleanedJson != null)
                     {
                         settings = JsonSerializer.Deserialize<ChatSettings>(cleanedJson, _options) ?? settings;
@@ -462,14 +473,14 @@ namespace TWChatOverlay.Services
             }
         }
 
-        private static bool TryRemoveObsoleteKeys(string currentJson, string normalizedJson, out string? cleanedJson)
+        /// <param name="currentObj">파일에서 읽은 설정 루트. 폐기 키가 있으면 제자리에서 지운다.</param>
+        private static bool TryRemoveObsoleteKeys(JsonObject? currentObj, string normalizedJson, out string? cleanedJson)
         {
             cleanedJson = null;
             try
             {
-                JsonNode? current = JsonNode.Parse(currentJson);
                 JsonNode? normalized = JsonNode.Parse(normalizedJson);
-                if (current is not JsonObject currentObj || normalized is not JsonObject normalizedObj)
+                if (currentObj == null || normalized is not JsonObject normalizedObj)
                     return false;
 
                 bool changed = RemoveObsoleteKeysRecursive(currentObj, normalizedObj);

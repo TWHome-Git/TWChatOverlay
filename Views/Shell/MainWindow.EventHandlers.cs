@@ -82,8 +82,8 @@ namespace TWChatOverlay.Views
                     ApplyAllSettingsToWindows();
                 else if (SettingsChangeRoutes.TryGetValue(e.PropertyName!, out Action? handler))
                     handler();
-                else if (e.PropertyName!.StartsWith("Show"))
-                    RequestRefreshLogDisplay(); // 그 밖의 Show* (채팅 표시 필터류)는 채팅 표시만 다시 그린다
+                else if (ChatDisplayFilterNames.Contains(e.PropertyName!))
+                    RequestRefreshLogDisplay(); // 채팅 표시 필터류는 채팅 표시만 다시 그린다
 
                 PersistSettings();
             });
@@ -159,8 +159,33 @@ namespace TWChatOverlay.Views
             nameof(ChatSettings.ShowAbandonRoadSummaryWindow),
             nameof(ChatSettings.ShowEtosDirectionAlert),
             nameof(ChatSettings.ShowRecaptureSupplyMap),
+            nameof(ChatSettings.ShowRecaptureSupplyPadOrder),
+            nameof(ChatSettings.ShowContentTimer),
             nameof(ChatSettings.ShowItemDropAlert),
             nameof(ChatSettings.EnableBuffTrackerAlert),
+        };
+
+        /// <summary>
+        /// 채팅 표시 결과(보이는 줄·접두·아이디 표시)를 바꾸는 설정. 라우트 표에 없으면서 이 목록에 있는 것만 채팅을 다시 그린다.
+        /// 외치기 토스트·리캡쳐 보급·던전 타이머·아이템 획득 알림 같은 그 밖의 Show* 토글은 채팅 표시와 무관하다.
+        /// </summary>
+        private static readonly HashSet<string> ChatDisplayFilterNames = new(StringComparer.Ordinal)
+        {
+            nameof(ChatSettings.ShowNormal),
+            nameof(ChatSettings.ShowTeam),
+            nameof(ChatSettings.ShowClub),
+            nameof(ChatSettings.ShowClubBoss),
+            nameof(ChatSettings.ShowBossDialogue),
+            nameof(ChatSettings.ShowShout),
+            nameof(ChatSettings.ShowFreeShout),
+            nameof(ChatSettings.ShowPaidShout),
+            nameof(ChatSettings.ShowNoticeShout),
+            nameof(ChatSettings.ShowSystem),
+            nameof(ChatSettings.ShowEtaLevel),
+            nameof(ChatSettings.ShowEtaCharacter),
+            nameof(ChatSettings.ShowIdTag),
+            nameof(ChatSettings.ShowTimestamp),
+            nameof(ChatSettings.ShowCategoryPrefix),
         };
 
         private Dictionary<string, Action>? _settingsChangeRoutes;

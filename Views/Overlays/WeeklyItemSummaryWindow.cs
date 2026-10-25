@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -32,6 +33,10 @@ namespace TWChatOverlay.Views
         private DateTime _weekStart;
         private DateTime _weekEnd;
         private int _loadVersion;
+        // 아이템 목록 읽기용. 시드 행(_loadVersion)과 따로 세어 시드 갱신이 목록 결과를 무효로 만들지 않게 한다.
+        private int _itemLoadVersion;
+        private bool _keepCenteredOnFirstFill = true;
+        private bool _isClosed;
 
         private WeeklyItemSummaryWindow(ChatSettings? settings)
         {
@@ -109,8 +114,8 @@ namespace TWChatOverlay.Views
             titleStack.Children.Add(subtitleRow);
             header.Children.Add(titleStack);
 
+            // 아이템 목록·경험의 정수는 창을 띄운 뒤 백그라운드에서 읽어 채운다 (LoadWeekItemsAsync)
             _listPanel = new StackPanel();
-            BuildRows(_listPanel, weekStart, weekEnd);
 
             var scroll = new ScrollViewer
             {
@@ -131,7 +136,7 @@ namespace TWChatOverlay.Views
             body.Children.Add(scroll);
             body.Children.Add(CreateDivider());
             body.Children.Add(BuildEssenceRow(out _essenceValueText));
-            RefreshEssenceCount();
+            LoadWeekItemsAsync();
 
             var root = new Border
             {
@@ -145,7 +150,11 @@ namespace TWChatOverlay.Views
             Content = root;
 
             // 제목 영역 드래그로 이동 (잠금과 무관)
-            root.MouseLeftButtonDown += (_, e) => TryBeginDrag(e);
+            root.MouseLeftButtonDown += (_, e) =>
+            {
+                _keepCenteredOnFirstFill = false; // 사용자가 옮긴 위치는 건드리지 않는다
+                TryBeginDrag(e);
+            };
         }
 
         protected override bool KeepBelowSettingsHost => false;
@@ -188,9 +197,8 @@ namespace TWChatOverlay.Views
             _subtitleText.Text = $"{_weekStart:M.d(ddd)} ~ {_weekEnd:M.d(ddd)}";
             _nextWeekButton.IsEnabled = _weekStart < currentWeekStart;
 
-            _listPanel.Children.Clear();
-            BuildRows(_listPanel, _weekStart, _weekEnd);
-            RefreshEssenceCount();
+            _keepCenteredOnFirstFill = false; // 주 이동 때는 지금처럼 위쪽 고정으로 늘어나고 줄어든다
+            LoadWeekItemsAsync();
 
             _seedGeneralText.Text = "계산 중…";
             _seedRubiconaText.Text = "계산 중…";
@@ -304,7 +312,84 @@ namespace TWChatOverlay.Views
             }
         }
 
-        private static void BuildRows(StackPanel panel, DateTime weekStart, DateTime weekEnd)
+        /// <summary>
+        /// 표시 주의 아이템 목록과 경험의 정수 합계를 백그라운드에서 읽어 채운다.
+        /// 읽는 동안 '계산 중…'을 보여 주고, 그 사이 주를 옮기거나 창을 닫으면 결과를 버린다.
+        /// </summary>
+        private async void LoadWeekItemsAsync()
+        {
+            int version = ++_itemLoadVersion;
+            DateTime weekStart = _weekStart;
+            DateTime weekEnd = _weekEnd;
+
+            _listPanel.Children.Clear();
+            _listPanel.Children.Add(CreateHintText("계산 중…"));
+            _essenceValueText.Text = "계산 중…";
+
+            List<(string Name, ItemDropGrade Grade, int Count)> aggregated;
+            long essenceCount;
+            try
+            {
+                (aggregated, essenceCount) = await Task.Run(() =>
+                    (AggregateWeekItems(weekStart, weekEnd), ReadEssenceCount(weekStart, weekEnd)));
+            }
+            catch (Exception ex)
+            {
+                AppLogger.Warn("Failed to load weekly item summary.", ex);
+                aggregated = new List<(string Name, ItemDropGrade Grade, int Count)>();
+                essenceCount = 0;
+            }
+
+            if (_isClosed || version != _itemLoadVersion)
+                return;
+
+            double heightBefore = ActualHeight;
+            _listPanel.Children.Clear();
+            BuildRows(_listPanel, aggregated);
+            _essenceValueText.Text = $"x{essenceCount:N0}";
+
+            // 처음 채울 때는 내용이 늘어난 만큼 위로 올려 화면 가운데 배치를 유지한다 (CenterScreen은 표시 시점 크기 기준)
+            if (_keepCenteredOnFirstFill)
+            {
+                _keepCenteredOnFirstFill = false;
+                try
+                {
+                    UpdateLayout();
+                    double grown = ActualHeight - heightBefore;
+                    if (grown != 0 && heightBefore > 0)
+                        Top -= grown / 2;
+                }
+                catch { }
+            }
+        }
+
+        private static long ReadEssenceCount(DateTime weekStart, DateTime weekEnd)
+        {
+            try
+            {
+                return ItemCalendarWindow.ReadExperienceEssenceCountForRange(weekStart, weekEnd);
+            }
+            catch (Exception ex)
+            {
+                AppLogger.Warn("Failed to read weekly experience essence count.", ex);
+                return 0;
+            }
+        }
+
+        private static TextBlock CreateHintText(string text)
+        {
+            var hint = new TextBlock
+            {
+                Text = text,
+                FontSize = 12,
+                Margin = new Thickness(2, 4, 2, 4),
+            };
+            hint.SetResourceReference(TextBlock.ForegroundProperty, "OverlayHintTextBrush");
+            return hint;
+        }
+
+        /// <summary>기간 내 아이템 스냅샷을 이름·등급별로 합산해 표시 순서대로 돌려준다. (UI 요소를 만들지 않으므로 백그라운드에서 호출)</summary>
+        private static List<(string Name, ItemDropGrade Grade, int Count)> AggregateWeekItems(DateTime weekStart, DateTime weekEnd)
         {
             List<ItemLogSnapshotEntry> snapshots;
             try
@@ -317,7 +402,7 @@ namespace TWChatOverlay.Views
                 snapshots = new List<ItemLogSnapshotEntry>();
             }
 
-            var aggregated = snapshots
+            return snapshots
                 .Where(s => !string.IsNullOrWhiteSpace(s.ItemName))
                 .GroupBy(s => (Name: ItemCalendarEntryViewModel.ApplyDisplayNameAlias(s.DisplayName ?? s.ItemName ?? string.Empty), s.Grade))
                 .Select(g => (g.Key.Name, g.Key.Grade, Count: g.Sum(s => Math.Max(1, s.Count))))
@@ -330,17 +415,13 @@ namespace TWChatOverlay.Views
                 .ThenByDescending(x => x.Count)
                 .ThenBy(x => x.Name, StringComparer.Ordinal)
                 .ToList();
+        }
 
+        private static void BuildRows(StackPanel panel, List<(string Name, ItemDropGrade Grade, int Count)> aggregated)
+        {
             if (aggregated.Count == 0)
             {
-                var empty = new TextBlock
-                {
-                    Text = "해당 주의 획득 기록이 없습니다.",
-                    FontSize = 12,
-                    Margin = new Thickness(2, 4, 2, 4),
-                };
-                empty.SetResourceReference(TextBlock.ForegroundProperty, "OverlayHintTextBrush");
-                panel.Children.Add(empty);
+                panel.Children.Add(CreateHintText("해당 주의 획득 기록이 없습니다."));
                 return;
             }
 
@@ -446,23 +527,9 @@ namespace TWChatOverlay.Views
             return row;
         }
 
-        /// <summary>표시 중인 주의 경험의 정수 합계를 다시 읽는다 (달력과 같은 Exp 아카이브 소스).</summary>
-        private void RefreshEssenceCount()
-        {
-            long essenceCount = 0;
-            try
-            {
-                essenceCount = ItemCalendarWindow.ReadExperienceEssenceCountForRange(_weekStart, _weekEnd);
-            }
-            catch (Exception ex)
-            {
-                AppLogger.Warn("Failed to read weekly experience essence count.", ex);
-            }
-            _essenceValueText.Text = $"x{essenceCount:N0}";
-        }
-
         protected override void OnClosed(EventArgs e)
         {
+            _isClosed = true;
             if (ReferenceEquals(_instance, this))
                 _instance = null;
             base.OnClosed(e);

@@ -18,6 +18,14 @@ namespace TWChatOverlay.Views
         private static readonly Regex ShoutPrefixRegex = new(
             @"^(?:\[\s*(?:\d{1,2}:\d{2}(?::\d{2})?|\d{1,2}\s*시\s*\d{1,2}\s*분(?:\s*\d{1,2}\s*초)?)\s*\]\s*)?(?:외치기|shout)\s*:\s*",
             RegexOptions.IgnoreCase | RegexOptions.Compiled);
+        private static readonly Regex WhitespaceRunRegex = new(@"\s+", RegexOptions.Compiled);
+        // ShoutPrefixRegex와 달리 '외치기:'가 뒤따르지 않아도 맨 앞의 시각 괄호를 여러 개까지 지운다
+        private static readonly Regex LeadingTimeBracketsRegex = new(
+            @"^(?:\[\s*(?:\d{1,2}:\d{2}(?::\d{2})?|\d{1,2}\s*시\s*\d{1,2}\s*분(?:\s*\d{1,2}\s*초)?)\s*\]\s*)+",
+            RegexOptions.IgnoreCase | RegexOptions.Compiled);
+        private static readonly Regex RepeatedShoutLabelRegex = new(
+            @"^\s*(?:외치기|shout)\s*:\s*",
+            RegexOptions.IgnoreCase | RegexOptions.Compiled);
         private const double ScreenEdgePadding = 16;
         private const double BaseToastWidth = 420;
         private readonly DispatcherTimer _lifetimeTimer;
@@ -211,14 +219,10 @@ namespace TWChatOverlay.Views
 
             string decoded = WebUtility.HtmlDecode(text).Replace("&nbsp;", " ");
             decoded = HtmlTagRegex.Replace(decoded, " ");
-            decoded = Regex.Replace(decoded, @"\s+", " ").Trim();
-            decoded = Regex.Replace(
-                decoded,
-                @"^(?:\[\s*(?:\d{1,2}:\d{2}(?::\d{2})?|\d{1,2}\s*시\s*\d{1,2}\s*분(?:\s*\d{1,2}\s*초)?)\s*\]\s*)+",
-                string.Empty,
-                RegexOptions.IgnoreCase);
+            decoded = WhitespaceRunRegex.Replace(decoded, " ").Trim();
+            decoded = LeadingTimeBracketsRegex.Replace(decoded, string.Empty);
             decoded = ShoutPrefixRegex.Replace(decoded, string.Empty).Trim();
-            decoded = Regex.Replace(decoded, @"^\s*(?:외치기|shout)\s*:\s*", string.Empty, RegexOptions.IgnoreCase).Trim();
+            decoded = RepeatedShoutLabelRegex.Replace(decoded, string.Empty).Trim();
             return decoded;
         }
     }

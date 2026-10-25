@@ -1069,15 +1069,9 @@ namespace TWChatOverlay.ViewModels
         /// </summary>
         private void SaveSettings()
         {
-            try
-            {
-                ConfigService.SaveDeferred(_settings);
-            }
-            catch
-            {
-                try { ConfigService.SaveDeferred(_settings); }
-                catch (Exception ex) { AppLogger.Warn("Fallback settings save failed.", ex); }
-            }
+            // 같은 호출을 다시 해 봐야 결과가 같으므로 재시도하지 않는다 (SaveDeferred는 타이머만 다시 건다)
+            try { ConfigService.SaveDeferred(_settings); }
+            catch (Exception ex) { AppLogger.Warn("Deferred settings save failed.", ex); }
         }
 
         /// <summary>

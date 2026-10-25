@@ -199,6 +199,8 @@ namespace TWChatOverlay
         protected override void OnExit(ExitEventArgs e)
         {
             AppLogger.Info("Application shutdown initiated.");
+            // 창들이 닫히며 걸어 둔 지연 저장(SaveDeferred)을 디스크 사본을 다시 읽기 전에 먼저 기록한다
+            try { TWChatOverlay.Services.ConfigService.FlushPendingSave(); } catch { }
             try
             {
                 Models.ChatSettings? cfg = null;

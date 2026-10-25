@@ -40,7 +40,8 @@ namespace TWChatOverlay.Views
         {
             InitializeComponent();
             DataContext = this;
-            _autoCloseTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(250) };
+            // 1회성: StartAutoClose가 마감까지 남은 시간으로 Interval을 정해 건다
+            _autoCloseTimer = new DispatcherTimer();
             _autoCloseTimer.Tick += AutoCloseTimer_Tick;
             _displayWeekStart = GetCurrentWeekRange().WeekStart;
             UpdateHeaderText(GetCurrentWeekRange());
@@ -111,6 +112,14 @@ namespace TWChatOverlay.Views
 
             int clampedSeconds = Math.Max(1, Math.Min(300, durationSeconds));
             _autoCloseAtUtc = DateTime.UtcNow.AddSeconds(clampedSeconds);
+            ArmAutoCloseTimer(TimeSpan.FromSeconds(clampedSeconds));
+        }
+
+        /// <summary>마감까지 남은 시간으로 1회성 타이머를 다시 건다. 이미 돌던 타이머는 멈추고 새 마감 기준으로 시작한다.</summary>
+        private void ArmAutoCloseTimer(TimeSpan delay)
+        {
+            _autoCloseTimer.Stop();
+            _autoCloseTimer.Interval = delay > TimeSpan.Zero ? delay : TimeSpan.FromMilliseconds(1);
             _autoCloseTimer.Start();
         }
 
@@ -298,14 +307,19 @@ namespace TWChatOverlay.Views
 
         private void AutoCloseTimer_Tick(object? sender, EventArgs e)
         {
-            if (_isPreviewMode)
+            if (_isPreviewMode || _autoCloseAtUtc == DateTime.MinValue)
+            {
+                _autoCloseTimer.Stop();
                 return;
+            }
 
-            if (_autoCloseAtUtc == DateTime.MinValue)
+            TimeSpan remaining = _autoCloseAtUtc - DateTime.UtcNow;
+            if (remaining > TimeSpan.Zero)
+            {
+                // 타이머가 마감보다 조금 일찍 깨어난 경우 남은 만큼만 다시 기다린다
+                ArmAutoCloseTimer(remaining);
                 return;
-
-            if (DateTime.UtcNow < _autoCloseAtUtc)
-                return;
+            }
 
             _autoCloseTimer.Stop();
             Close();
