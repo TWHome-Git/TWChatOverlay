@@ -30,7 +30,7 @@ namespace TWChatOverlay.Services
                 return false;
             }
 
-            snapshot = GetCurrentSnapshot(settings);
+            snapshot = GetCurrentSnapshot();
             return true;
         }
 
@@ -140,7 +140,7 @@ namespace TWChatOverlay.Services
         public void SaveCurrentPosition(ChatSettings settings)
             => AppServices.Get<ToastStackService>().SaveCurrentPosition(settings);
 
-        private ExperienceAlertStateSnapshot GetCurrentSnapshot(ChatSettings settings)
+        private ExperienceAlertStateSnapshot GetCurrentSnapshot()
         {
             var snapshot = _stateSnapshotProvider?.Invoke();
             if (snapshot != null)

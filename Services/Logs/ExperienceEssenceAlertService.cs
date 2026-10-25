@@ -101,8 +101,7 @@ namespace TWChatOverlay.Services
         {
             return new ExperienceAlertStateSnapshot
             {
-                TotalExp = _trackedExp,
-                IsVisible = _trackedExp >= ThresholdExp
+                TotalExp = _trackedExp
             };
         }
 

@@ -22,11 +22,6 @@ namespace TWChatOverlay.Services
         {
             try
             {
-                string assemblyName = System.Reflection.Assembly.GetExecutingAssembly().GetName().Name
-                    ?? "TWChatOverlay";
-
-                Uri uri = new Uri($"/{assemblyName};component/Sound/{fileName}", UriKind.Relative);
-
                 PlayAudioResource(fileName);
             }
             catch (Exception ex)

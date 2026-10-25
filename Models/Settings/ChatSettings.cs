@@ -807,28 +807,6 @@ namespace TWChatOverlay.Models
             }
         }
         [JsonIgnore]
-        public bool BossAlertConfusedLandEntryCountdown
-        {
-            get => Alerts.Boss.ConfusedLandEntryCountdown;
-            set
-            {
-                if (Alerts.Boss.ConfusedLandEntryCountdown == value) return;
-                Alerts.Boss.ConfusedLandEntryCountdown = value;
-                OnPropertyChanged();
-            }
-        }
-        [JsonIgnore]
-        public bool BossAlertOriginOfDoomEntryCountdown
-        {
-            get => Alerts.Boss.OriginOfDoomEntryCountdown;
-            set
-            {
-                if (Alerts.Boss.OriginOfDoomEntryCountdown == value) return;
-                Alerts.Boss.OriginOfDoomEntryCountdown = value;
-                OnPropertyChanged();
-            }
-        }
-        [JsonIgnore]
         public Dictionary<string, BossAlertConfig> BossAlertConfigs
         {
             get => Alerts.Boss.Configs;
@@ -1036,18 +1014,6 @@ namespace TWChatOverlay.Models
             get => Windows.ContentTimer.Top;
             set { if (Windows.ContentTimer.Top == value) return; Windows.ContentTimer.Top = value; OnPropertyChanged(); }
         }
-        [JsonIgnore]
-        public double? ContentTimerWindowWidth
-        {
-            get => Windows.ContentTimer.Width;
-            set { if (Windows.ContentTimer.Width == value) return; Windows.ContentTimer.Width = value; OnPropertyChanged(); }
-        }
-        [JsonIgnore]
-        public double? ContentTimerWindowHeight
-        {
-            get => Windows.ContentTimer.Height;
-            set { if (Windows.ContentTimer.Height == value) return; Windows.ContentTimer.Height = value; OnPropertyChanged(); }
-        }
 
         [JsonIgnore]
         public double? ExperienceLimitAlertWindowLeft
@@ -1077,6 +1043,7 @@ namespace TWChatOverlay.Models
             set { if (Windows.PatternAlert.Top == value) return; Windows.PatternAlert.Top = value; OnPropertyChanged(); }
         }
 
+        [JsonIgnore]
         public double? BossAlertToastWindowLeft
         {
             get => Windows.BossAlertToast.Left;
@@ -1107,19 +1074,6 @@ namespace TWChatOverlay.Models
         {
             get => Windows.UnifiedToastStack;
             set { if (Windows.UnifiedToastStack == value) return; Windows.UnifiedToastStack = value; OnPropertyChanged(); }
-        }
-
-        [JsonIgnore]
-        public double? BossAlertToastWindowWidth
-        {
-            get => Windows.BossAlertToast.Width;
-            set { if (Windows.BossAlertToast.Width == value) return; Windows.BossAlertToast.Width = value; OnPropertyChanged(); }
-        }
-        [JsonIgnore]
-        public double? BossAlertToastWindowHeight
-        {
-            get => Windows.BossAlertToast.Height;
-            set { if (Windows.BossAlertToast.Height == value) return; Windows.BossAlertToast.Height = value; OnPropertyChanged(); }
         }
 
         [JsonIgnore]

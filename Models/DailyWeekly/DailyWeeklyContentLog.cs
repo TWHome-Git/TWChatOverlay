@@ -23,7 +23,6 @@ namespace TWChatOverlay.Models
         public bool IsWeekly { get; init; } = false;
         public bool AllowCountOverMax { get; init; } = false;
         public int DefaultMaxCount { get; init; } = 0;
-        public int ClearThreshold { get; init; } = 0;
         public string? LogKeyword { get; init; }
         public string? LogKeyword2 { get; init; }
 
@@ -73,7 +72,6 @@ namespace TWChatOverlay.Models
                 OnPropertyChanged(nameof(HasCount));
                 OnPropertyChanged(nameof(EffectiveRequiredCount));
                 OnPropertyChanged(nameof(IsCleared));
-                OnPropertyChanged(nameof(CountDisplay));
                 OnPropertyChanged(nameof(VisualCountDisplay));
                 OnPropertyChanged(nameof(ProgressForeground));
             }
@@ -125,8 +123,7 @@ namespace TWChatOverlay.Models
                     return _children!.Where(c => c.IsEnabled).All(c => c.IsCleared);
                 if (HasCount)
                 {
-                    int threshold = ClearThreshold > 0 ? ClearThreshold : MaxCount;
-                    return _currentCount >= threshold;
+                    return _currentCount >= MaxCount;
                 }
                 return _isCleared;
             }
@@ -156,7 +153,6 @@ namespace TWChatOverlay.Models
                 _currentCount = value;
                 OnPropertyChanged();
                 OnPropertyChanged(nameof(IsCleared));
-                OnPropertyChanged(nameof(CountDisplay));
                 OnPropertyChanged(nameof(VisualCountDisplay));
                 OnPropertyChanged(nameof(ProgressForeground));
             }
@@ -196,7 +192,7 @@ namespace TWChatOverlay.Models
             return string.Join(' ', p.Take(p.Length - shared));
         }
 
-        public string CountDisplay => $"{_currentCount}/{MaxCount}";
+        private string CountDisplay => $"{_currentCount}/{MaxCount}";
 
         public string VisualCountDisplay => HasCount ? CountDisplay : (IsCleared ? "1/1" : "0/1");
 
@@ -215,8 +211,7 @@ namespace TWChatOverlay.Models
                 double ratio;
                 if (HasCount)
                 {
-                    int threshold = ClearThreshold > 0 ? ClearThreshold : Math.Max(1, MaxCount);
-                    ratio = Math.Clamp((double)_currentCount / threshold, 0d, 1d);
+                    ratio = Math.Clamp((double)_currentCount / Math.Max(1, MaxCount), 0d, 1d);
                 }
                 else
                 {
@@ -257,7 +252,6 @@ namespace TWChatOverlay.Models
                 _currentCount = 0;
                 OnPropertyChanged(nameof(IsCleared));
                 OnPropertyChanged(nameof(CurrentCount));
-                OnPropertyChanged(nameof(CountDisplay));
                 OnPropertyChanged(nameof(VisualCountDisplay));
                 OnPropertyChanged(nameof(ProgressForeground));
             }

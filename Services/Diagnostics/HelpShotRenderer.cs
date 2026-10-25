@@ -30,7 +30,6 @@ namespace TWChatOverlay.Services
         private static readonly Color ClubCol = Color.FromRgb(0x00, 0xFF, 0x00);
         private static readonly Color ShoutCol = Color.FromRgb(0xFF, 0x80, 0x00);
         private static readonly Color SystemCol = Color.FromRgb(0xFF, 0xFF, 0x00);
-        private static readonly Color GoldCol = Color.FromRgb(0xFF, 0xD8, 0x4A);
         private static readonly Color SkyCol = Color.FromRgb(0x5A, 0xC8, 0xE8);
         // 에타 레벨 구간별 기본 색 (IdDisplaySettings 기본값과 동일)
         private static readonly Color Range1Col = Color.FromRgb(0xC8, 0xCD, 0xD2);
@@ -45,11 +44,11 @@ namespace TWChatOverlay.Services
 
             // ── 기본 채팅 필터: 종류별 색 한눈에 ──
             Save(outDir, "chat_filter.png", Panel("채팅 종류별 색",
-                Line(NormalCol, ("[일반] 아나이스 : 아페티리아 가실 분?", NormalCol)),
-                Line(TeamCol, ("[팀] 벤야 : 입구로 와주세요", TeamCol)),
-                Line(ClubCol, ("[클럽] 리체 : 클럽 보스 하실 분?", ClubCol)),
-                Line(ShoutCol, ("[외치기] 티치엘 : 훈장 50개 삽니다", ShoutCol)),
-                Line(SystemCol, ("[시스템] : [에오니스 라피스] 아이템을 획득하였습니다.",SystemCol))));
+                Line(("[일반] 아나이스 : 아페티리아 가실 분?", NormalCol)),
+                Line(("[팀] 벤야 : 입구로 와주세요", TeamCol)),
+                Line(("[클럽] 리체 : 클럽 보스 하실 분?", ClubCol)),
+                Line(("[외치기] 티치엘 : 훈장 50개 삽니다", ShoutCol)),
+                Line(("[시스템] : [에오니스 라피스] 아이템을 획득하였습니다.",SystemCol))));
 
             // ── 색상 동기화·색 지정 (설정 UI 목업으로 사용법을 그림으로) ──
             Save(outDir, "chat_id_sender_sync_on.png", SyncGuideMock(syncOn: true));
@@ -57,48 +56,48 @@ namespace TWChatOverlay.Services
 
             // ── 에타 레벨 ──
             Save(outDir, "chat_id_eta_level_off.png", PanelToggle(false,
-                Line(NormalCol, ("아나이스", NormalCol), (" : 어비스 가실 분?", NormalCol))));
+                Line(("아나이스", NormalCol), (" : 어비스 가실 분?", NormalCol))));
             Save(outDir, "chat_id_eta_level_on.png", PanelToggle(true,
-                Line(NormalCol, ("아나이스", NormalCol), ("[72]", NormalCol), (" : 어비스 가실 분?", NormalCol))));
+                Line(("아나이스", NormalCol), ("[72]", NormalCol), (" : 어비스 가실 분?", NormalCol))));
 
             // ── 에타 레벨별 색상 ──
             Save(outDir, "chat_id_eta_range_off.png", PanelToggle(false,
-                Line(NormalCol, ("보리스", NormalCol), ("[15]", NormalCol), (" : 반가워요", NormalCol)),
-                Line(NormalCol, ("벤야", NormalCol), ("[55]", NormalCol), (" : 어비스 가실 분?", NormalCol)),
-                Line(NormalCol, ("아나이스", NormalCol), ("[92]", NormalCol), (" : 클럽 보스 5초 후 잡아요", NormalCol))));
+                Line(("보리스", NormalCol), ("[15]", NormalCol), (" : 반가워요", NormalCol)),
+                Line(("벤야", NormalCol), ("[55]", NormalCol), (" : 어비스 가실 분?", NormalCol)),
+                Line(("아나이스", NormalCol), ("[92]", NormalCol), (" : 클럽 보스 5초 후 잡아요", NormalCol))));
             Save(outDir, "chat_id_eta_range_on.png", PanelToggle(true,
-                Line(NormalCol, ("보리스", NormalCol), ("[15]", Range1Col), (" : ㅎㅇ", NormalCol)),
-                Line(NormalCol, ("루시안", NormalCol), ("[33]", Range2Col), (" : 에오니스 라피스 팝니다", NormalCol)),
-                Line(NormalCol, ("벤야", NormalCol), ("[55]", Range3Col), (" : 어비스 가실 분?", NormalCol)),
-                Line(NormalCol, ("로아미니", NormalCol), ("[71]", Range4Col), (" : 상실의 섬으로 와주세요", NormalCol)),
-                Line(NormalCol, ("아나이스", NormalCol), ("[92]", Range5Col), (" : 클럽 보스 5초 후 잡아요", NormalCol))));
+                Line(("보리스", NormalCol), ("[15]", Range1Col), (" : ㅎㅇ", NormalCol)),
+                Line(("루시안", NormalCol), ("[33]", Range2Col), (" : 에오니스 라피스 팝니다", NormalCol)),
+                Line(("벤야", NormalCol), ("[55]", Range3Col), (" : 어비스 가실 분?", NormalCol)),
+                Line(("로아미니", NormalCol), ("[71]", Range4Col), (" : 상실의 섬으로 와주세요", NormalCol)),
+                Line(("아나이스", NormalCol), ("[92]", Range5Col), (" : 클럽 보스 5초 후 잡아요", NormalCol))));
 
             // ── 캐릭터 ──
             Save(outDir, "chat_id_character_off.png", PanelToggle(false,
-                Line(NormalCol, ("비호", NormalCol), ("[72]", NormalCol), (" : 어비스 가실 분?", NormalCol))));
+                Line(("비호", NormalCol), ("[72]", NormalCol), (" : 어비스 가실 분?", NormalCol))));
             Save(outDir, "chat_id_character_on.png", PanelToggle(true,
-                Line(NormalCol, ("비호", NormalCol), ("[72]", NormalCol), ("[아나이스]", SkyCol), (" : 어비스 가실 분?", NormalCol))));
+                Line(("비호", NormalCol), ("[72]", NormalCol), ("[아나이스]", SkyCol), (" : 어비스 가실 분?", NormalCol))));
 
             // ── 아이디 태그 ──
             Save(outDir, "chat_id_tag_off.png", PanelToggle(false,
-                Line(NormalCol, ("아나이스", NormalCol), (" : 에오니스 라피스 팝니다", NormalCol))));
+                Line(("아나이스", NormalCol), (" : 에오니스 라피스 팝니다", NormalCol))));
             Save(outDir, "chat_id_tag_on.png", PanelToggle(true,
-                Line(NormalCol, ("아나이스", NormalCol), ("[혐사]", SkyCol), (" : 에오니스 라피스 팝니다", NormalCol)),
+                Line(("아나이스", NormalCol), ("[혐사]", SkyCol), (" : 에오니스 라피스 팝니다", NormalCol)),
                 DimLine("(idtag.txt: 아나이스 = 혐사)")));
 
             // ── 클럽 보스 ──
             Save(outDir, "chat_id_club_boss_on.png", PanelToggle(true,
-                Line(ClubCol, ("[클럽] 벤야 : 클럽 보스 갑니다", ClubCol)),
-                Line(SystemCol, ("클럽 공지 : '[클럽 보스] 그람존' 에 '벤야' 님이 참가하셨습니다.", SystemCol))));
+                Line(("[클럽] 벤야 : 클럽 보스 갑니다", ClubCol)),
+                Line(("클럽 공지 : '[클럽 보스] 그람존' 에 '벤야' 님이 참가하셨습니다.", SystemCol))));
             Save(outDir, "chat_id_club_boss_off.png", PanelToggle(false,
-                Line(ClubCol, ("[클럽] 벤야 : 클럽 보스 갑니다", ClubCol)),
+                Line(("[클럽] 벤야 : 클럽 보스 갑니다", ClubCol)),
                 DimLine("(클럽 보스 공지는 표시되지 않음)")));
 
             // ── 타임 스탬프 ──
             Save(outDir, "chat_id_timestamp_off.png", PanelToggle(false,
-                Line(NormalCol, ("아나이스 : 안녕하세요", NormalCol))));
+                Line(("아나이스 : 안녕하세요", NormalCol))));
             Save(outDir, "chat_id_timestamp_on.png", PanelToggle(true,
-                Line(NormalCol, ("[7시 15분 18초] ", SubText), ("아나이스 : 안녕하세요", NormalCol))));
+                Line(("[7시 15분 18초] ", SubText), ("아나이스 : 안녕하세요", NormalCol))));
 
             // ── 폰트 크기 ──
             Save(outDir, "chat_font_13.png", Panel("크기 13",
@@ -109,15 +108,15 @@ namespace TWChatOverlay.Services
             // ── 종류 말머리 ──
 
             Save(outDir, "chat_category_prefix_off.png", PanelToggle(false,
-                Line(NormalCol, ("아나이스 : 어비스 가실 분?", NormalCol)),
-                Line(TeamCol, ("로아미니 : 상실의 섬으로 와주세요", TeamCol)),
-                Line(ClubCol, ("벤야 : 클럽 보스 5초 후 잡아요", ClubCol)),
-                Line(ShoutCol, ("외치기 : 훈장 50개 삽니다 [티치엘]", ShoutCol))));
+                Line(("아나이스 : 어비스 가실 분?", NormalCol)),
+                Line(("로아미니 : 상실의 섬으로 와주세요", TeamCol)),
+                Line(("벤야 : 클럽 보스 5초 후 잡아요", ClubCol)),
+                Line(("외치기 : 훈장 50개 삽니다 [티치엘]", ShoutCol))));
             Save(outDir, "chat_category_prefix_on.png", PanelToggle(true,
-                Line(NormalCol, ("[일반] ", NormalCol), ("아나이스 : 어비스 가실 분?", NormalCol)),
-                Line(TeamCol, ("[팀] ", TeamCol), ("로아미니 : 상실의 섬으로 와주세요", TeamCol)),
-                Line(ClubCol, ("[클럽] ", ClubCol), ("벤야 : 클럽 보스 5초 후 잡아요", ClubCol)),
-                Line(ShoutCol, ("[외치기] ", ShoutCol), ("티치엘", ShoutCol), (" : 훈장 50개 삽니다", ShoutCol))));
+                Line(("[일반] ", NormalCol), ("아나이스 : 어비스 가실 분?", NormalCol)),
+                Line(("[팀] ", TeamCol), ("로아미니 : 상실의 섬으로 와주세요", TeamCol)),
+                Line(("[클럽] ", ClubCol), ("벤야 : 클럽 보스 5초 후 잡아요", ClubCol)),
+                Line(("[외치기] ", ShoutCol), ("티치엘", ShoutCol), (" : 훈장 50개 삽니다", ShoutCol))));
 
             // ── 서브 채팅창: 탭 전환 ──
             Save(outDir, "chat_clone_basic.png", CloneMock(activeShout: false));
@@ -125,10 +124,10 @@ namespace TWChatOverlay.Services
 
             // ── 외치기: 토스트 팝업 (실제 창) ──
             Save(outDir, "shout_toast_off.png", PanelToggle(false,
-                Line(ShoutCol, ("외치기 : 훈장 50개 삽니다 [티치엘]", ShoutCol)),
+                Line(("외치기 : 훈장 50개 삽니다 [티치엘]", ShoutCol)),
                 DimLine("(채팅창에만 표시 — 팝업 없음)")));
             Save(outDir, "shout_toast_on.png", PanelToggle(true,
-                Line(ShoutCol, ("외치기 : 훈장 50개 삽니다 [티치엘]", ShoutCol)),
+                Line(("외치기 : 훈장 50개 삽니다 [티치엘]", ShoutCol)),
                 RealShoutToast("훈장 50개 삽니다 [티치엘]")));
 
             // ── 외치기: 닉네임 자동복사 (실제 창) ──
@@ -163,11 +162,11 @@ namespace TWChatOverlay.Services
 
             // ── 키워드: 색상 강조 ──
             Save(outDir, "keyword_color_off.png", PanelToggle(false,
-                Line(ShoutCol, ("외치기 : 세크리드 주화 주머니 팝니다 [김주화]", ShoutCol)),
-                Line(ShoutCol, ("외치기 : 클럽원 모집 [김클럽]", ShoutCol))));
+                Line(("외치기 : 세크리드 주화 주머니 팝니다 [김주화]", ShoutCol)),
+                Line(("외치기 : 클럽원 모집 [김클럽]", ShoutCol))));
             Save(outDir, "keyword_color_on.png", PanelToggle(true,
-                Line(ShoutCol, ("외치기 : ", ShoutCol), ("세크리드 주화 주머니", Color.FromRgb(0xFF, 0x5A, 0x5A)), (" 팝니다 [김주화]", ShoutCol)),
-                Line(ShoutCol, ("외치기 : 클럽원 모집 [김클럽]", ShoutCol)),
+                Line(("외치기 : ", ShoutCol), ("세크리드 주화 주머니", Color.FromRgb(0xFF, 0x5A, 0x5A)), (" 팝니다 [김주화]", ShoutCol)),
+                Line(("외치기 : 클럽원 모집 [김클럽]", ShoutCol)),
                 DimLine("(키워드: @세크리드 주화 주머니)")));
             
             // ── 경험치 추적 (실제 뷰) ──
@@ -183,18 +182,18 @@ namespace TWChatOverlay.Services
 
             // ── 저효율 알림 (소리 알림) ──
             Save(outDir, "exp_loweff_off.png", PanelToggle(false,
-                Line(SystemCol, ("경험치가 [1200000] 상승했습니다.", SystemCol)),
+                Line(("경험치가 [1200000] 상승했습니다.", SystemCol)),
                 DimLine("(기준치 미만이어도 조용함)")));
             Save(outDir, "exp_loweff_on.png", PanelToggle(true,
-                Line(SystemCol, ("경험치가 [1200000] 상승했습니다.", SystemCol)),
+                Line(("경험치가 [1200000] 상승했습니다.", SystemCol)),
                 Chip("♪ 기준치 미만 — 알림 소리 재생")));
 
             // ── 아이템 획득 알림 (실제 창) ──
             Save(outDir, "item_drop_off.png", PanelToggle(false,
-                Line(SystemCol, ("[설계자의 반지] 을 획득하였습니다.", SystemCol)),
+                Line(("[설계자의 반지] 을 획득하였습니다.", SystemCol)),
                 DimLine("(알림 없음)")));
             Save(outDir, "item_drop_on.png", PanelToggle(true,
-                Line(SystemCol, ("[설계자의 반지] 을 획득하였습니다.", SystemCol)),
+                Line(("[설계자의 반지] 을 획득하였습니다.", SystemCol)),
                 RealItemToast("설계자의 반지", ItemDropGrade.Rare)));
 
             // ── 버프 추적 (실제 창) ──
@@ -209,10 +208,10 @@ namespace TWChatOverlay.Services
             // ── 던전 도우미 알림들 ──
             // 웨이브 종료·반사 패턴은 소리 알림, 입장 횟수는 실제 '던전 도우미' 창(N/최대)
             Save(outDir, "dungeon_wave_off.png", PanelToggle(false,
-                Line(SystemCol, ("몬스터가 남아있으면 다음 웨이브로 넘어가지 않습니다.", SystemCol)),
+                Line(("몬스터가 남아있으면 다음 웨이브로 넘어가지 않습니다.", SystemCol)),
                 DimLine("(알림 없음)")));
             Save(outDir, "dungeon_wave_on.png", PanelToggle(true,
-                Line(SystemCol, ("몬스터가 남아있으면 다음 웨이브로 넘어가지 않습니다.", SystemCol)),
+                Line(("몬스터가 남아있으면 다음 웨이브로 넘어가지 않습니다.", SystemCol)),
                 Chip("♪ 웨이브 종료 알림 소리 재생")));
             Save(outDir, "dungeon_reflect_off.png", PanelToggle(false,
                 DimLine("(반사 패턴이 시작돼도 조용함)")));
@@ -236,25 +235,25 @@ namespace TWChatOverlay.Services
         private static void RenderReadmeShots(string outDir)
         {
             Save(outDir, "readme_category_prefix.png", PanelPlain(
-                Line(NormalCol, ("[일반] ", NormalCol), ("아나이스 : 어비스 가실 분?", NormalCol)),
-                Line(TeamCol, ("[팀] ", TeamCol), ("로아미니 : 상실의 섬으로 와주세요", TeamCol)),
-                Line(ClubCol, ("[클럽] ", ClubCol), ("벤야 : 클럽 보스 5초 후 잡아요", ClubCol)),
-                Line(ShoutCol, ("[외치기] ", ShoutCol), ("티치엘", ShoutCol), (" : 훈장 50개 삽니다", ShoutCol))));
+                Line(("[일반] ", NormalCol), ("아나이스 : 어비스 가실 분?", NormalCol)),
+                Line(("[팀] ", TeamCol), ("로아미니 : 상실의 섬으로 와주세요", TeamCol)),
+                Line(("[클럽] ", ClubCol), ("벤야 : 클럽 보스 5초 후 잡아요", ClubCol)),
+                Line(("[외치기] ", ShoutCol), ("티치엘", ShoutCol), (" : 훈장 50개 삽니다", ShoutCol))));
 
             Save(outDir, "readme_eta_range.png", PanelPlain(
-                Line(NormalCol, ("보리스", NormalCol), ("[15]", Range1Col), (" : ㅎㅇ", NormalCol)),
-                Line(NormalCol, ("루시안", NormalCol), ("[33]", Range2Col), (" : 에오니스 라피스 팝니다", NormalCol)),
-                Line(NormalCol, ("벤야", NormalCol), ("[55]", Range3Col), (" : 어비스 가실 분?", NormalCol)),
-                Line(NormalCol, ("로아미니", NormalCol), ("[71]", Range4Col), (" : 상실의 섬으로 와주세요", NormalCol)),
-                Line(NormalCol, ("아나이스", NormalCol), ("[92]", Range5Col), (" : 클럽 보스 5초 후 잡아요", NormalCol))));
+                Line(("보리스", NormalCol), ("[15]", Range1Col), (" : ㅎㅇ", NormalCol)),
+                Line(("루시안", NormalCol), ("[33]", Range2Col), (" : 에오니스 라피스 팝니다", NormalCol)),
+                Line(("벤야", NormalCol), ("[55]", Range3Col), (" : 어비스 가실 분?", NormalCol)),
+                Line(("로아미니", NormalCol), ("[71]", Range4Col), (" : 상실의 섬으로 와주세요", NormalCol)),
+                Line(("아나이스", NormalCol), ("[92]", Range5Col), (" : 클럽 보스 5초 후 잡아요", NormalCol))));
 
             Save(outDir, "readme_shout_toast.png", PanelPlain(
-                Line(ShoutCol, ("외치기 : 훈장 50개 삽니다 [티치엘]", ShoutCol)),
+                Line(("외치기 : 훈장 50개 삽니다 [티치엘]", ShoutCol)),
                 RealShoutToast("훈장 50개 삽니다 [티치엘]")));
 
             Save(outDir, "readme_keyword_color.png", PanelPlain(
-                Line(ShoutCol, ("외치기 : ", ShoutCol), ("세크리드 주화 주머니", Color.FromRgb(0xFF, 0x5A, 0x5A)), (" 팝니다 [김주화]", ShoutCol)),
-                Line(ShoutCol, ("외치기 : 클럽원 모집 [김클럽]", ShoutCol)),
+                Line(("외치기 : ", ShoutCol), ("세크리드 주화 주머니", Color.FromRgb(0xFF, 0x5A, 0x5A)), (" 팝니다 [김주화]", ShoutCol)),
+                Line(("외치기 : 클럽원 모집 [김클럽]", ShoutCol)),
                 DimLine("(키워드: @세크리드 주화 주머니)")));
 
             Save(outDir, "readme_exp_tracker.png", PanelPlain(RealExpTracker()));
@@ -263,7 +262,7 @@ namespace TWChatOverlay.Services
             Save(outDir, "readme_abandon_gold.png", PanelPlain(RealAbandonSummary()));
 
             Save(outDir, "readme_item_drop.png", PanelPlain(
-                Line(SystemCol, ("[설계자의 반지] 을 획득하였습니다.", SystemCol)),
+                Line(("[설계자의 반지] 을 획득하였습니다.", SystemCol)),
                 RealItemToast("설계자의 반지", ItemDropGrade.Rare)));
 
             Save(outDir, "readme_buff_tracker.png", PanelPlain(RealBuffTracker()));
@@ -412,7 +411,7 @@ namespace TWChatOverlay.Services
             };
         }
 
-        private static TextBlock Line(Color baseColor, params (string Text, Color Color)[] parts)
+        private static TextBlock Line(params (string Text, Color Color)[] parts)
             => LineSized(13, parts);
 
         private static TextBlock LineSized(double size, params (string Text, Color Color)[] parts)
@@ -602,43 +601,6 @@ namespace TWChatOverlay.Services
             };
         }
 
-        /// <summary>알림 토스트 목업: 민트 테두리 작은 창 + 제목/본문.</summary>
-        private static FrameworkElement ToastMock(string title, string body, Color bodyColor)
-            => ToastMockSized(12, title, body, bodyColor);
-
-        private static FrameworkElement ToastMockSized(double bodySize, string title, string body, Color bodyColor)
-        {
-            var stack = new StackPanel();
-            stack.Children.Add(new TextBlock
-            {
-                Text = title,
-                FontSize = 10,
-                FontWeight = FontWeights.Bold,
-                Foreground = new SolidColorBrush(Mint),
-                FontFamily = new FontFamily("Malgun Gothic"),
-                Margin = new Thickness(0, 0, 0, 3),
-            });
-            stack.Children.Add(new TextBlock
-            {
-                Text = body,
-                FontSize = bodySize,
-                TextWrapping = TextWrapping.Wrap,
-                Foreground = new SolidColorBrush(bodyColor),
-                FontFamily = new FontFamily("Malgun Gothic"),
-            });
-            return new Border
-            {
-                Background = new SolidColorBrush(Color.FromRgb(0x10, 0x16, 0x14)),
-                BorderBrush = new SolidColorBrush(Mint),
-                BorderThickness = new Thickness(1),
-                CornerRadius = new CornerRadius(4),
-                Padding = new Thickness(10, 6, 10, 7),
-                Margin = new Thickness(0, 4, 0, 1),
-                HorizontalAlignment = HorizontalAlignment.Left,
-                Child = stack,
-            };
-        }
-
         /// <summary>작은 상태 칩 (예: 클립보드 복사됨).</summary>
         private static FrameworkElement Chip(string text)
         {
@@ -665,8 +627,8 @@ namespace TWChatOverlay.Services
         private static FrameworkElement OpacityMock(byte panelAlpha, string badge)
         {
             var chat = new StackPanel { Margin = new Thickness(10, 8, 10, 8) };
-            chat.Children.Add(Line(NormalCol, ("[일반] 아나이스 : 어비스 가실 분?", NormalCol)));
-            chat.Children.Add(Line(TeamCol, ("[팀] 로아미니 : 상실의 섬으로 와주세요", TeamCol)));
+            chat.Children.Add(Line(("[일반] 아나이스 : 어비스 가실 분?", NormalCol)));
+            chat.Children.Add(Line(("[팀] 로아미니 : 상실의 섬으로 와주세요", TeamCol)));
 
             var panel = new Border
             {
@@ -706,7 +668,7 @@ namespace TWChatOverlay.Services
         private static FrameworkElement UnlockMock(bool unlocked)
         {
             var chat = new StackPanel { Margin = new Thickness(10, 6, 10, 6) };
-            chat.Children.Add(Line(NormalCol, ("아나이스 : 어비스 가실 분?", NormalCol)));
+            chat.Children.Add(Line(("아나이스 : 어비스 가실 분?", NormalCol)));
 
             var windowStack = new StackPanel
             {
@@ -954,105 +916,6 @@ namespace TWChatOverlay.Services
             return stack;
         }
 
-        /// <summary>경험치 추적 창 목업: 2x2 지표 + 중지/리셋.</summary>
-        private static FrameworkElement TrackerMock()
-        {
-            var grid = new Grid { HorizontalAlignment = HorizontalAlignment.Left };
-            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(130) });
-            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(130) });
-            grid.RowDefinitions.Add(new RowDefinition());
-            grid.RowDefinitions.Add(new RowDefinition());
-
-            void Cell(int r, int c, string label, string value, Color valueColor)
-            {
-                var cell = new StackPanel { Margin = new Thickness(0, 2, 0, 2) };
-                cell.Children.Add(new TextBlock
-                {
-                    Text = label,
-                    FontSize = 9,
-                    Foreground = new SolidColorBrush(SubText),
-                    FontFamily = new FontFamily("Malgun Gothic"),
-                });
-                cell.Children.Add(new TextBlock
-                {
-                    Text = value,
-                    FontSize = 13,
-                    FontWeight = FontWeights.Bold,
-                    Foreground = new SolidColorBrush(valueColor),
-                    FontFamily = new FontFamily("Malgun Gothic"),
-                });
-                Grid.SetRow(cell, r);
-                Grid.SetColumn(cell, c);
-                grid.Children.Add(cell);
-            }
-
-            Cell(0, 0, "누적 경험치", "1,234.5억", Colors.White);
-            Cell(0, 1, "1시간 예상", "82.3억", Colors.White);
-            Cell(1, 0, "획득 경험치", "+1,520만", Color.FromRgb(0x7E, 0xE0, 0x81));
-            Cell(1, 1, "처치 수", "128마리", Colors.White);
-
-            var buttons = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 4, 0, 0) };
-            buttons.Children.Add(Chip("중지"));
-            buttons.Children.Add(new Border { Width = 6 });
-            buttons.Children.Add(Chip("리셋"));
-
-            var stack = new StackPanel();
-            stack.Children.Add(grid);
-            stack.Children.Add(buttons);
-            return new Border
-            {
-                Background = new SolidColorBrush(Color.FromRgb(0x10, 0x16, 0x14)),
-                BorderBrush = new SolidColorBrush(BorderCol),
-                BorderThickness = new Thickness(1),
-                CornerRadius = new CornerRadius(5),
-                Padding = new Thickness(10, 6, 10, 8),
-                HorizontalAlignment = HorizontalAlignment.Left,
-                Child = stack,
-            };
-        }
-
-        /// <summary>버프 추적 창 목업: 버프 이름 + 남은 시간 (임박한 버프는 붉게).</summary>
-        private static FrameworkElement BuffMock()
-        {
-            var stack = new StackPanel();
-            void Row(string name, string time, Color timeColor)
-            {
-                var row = new DockPanel { Margin = new Thickness(0, 2, 0, 2), Width = 190 };
-                var timeText = new TextBlock
-                {
-                    Text = time,
-                    FontSize = 12,
-                    FontWeight = FontWeights.Bold,
-                    Foreground = new SolidColorBrush(timeColor),
-                    FontFamily = new FontFamily("Malgun Gothic"),
-                };
-                DockPanel.SetDock(timeText, Dock.Right);
-                row.Children.Add(timeText);
-                row.Children.Add(new TextBlock
-                {
-                    Text = name,
-                    FontSize = 12,
-                    Foreground = new SolidColorBrush(Colors.White),
-                    FontFamily = new FontFamily("Malgun Gothic"),
-                });
-                stack.Children.Add(row);
-            }
-            Row("축복의 노래", "14:32", Mint);
-            Row("가속", "02:05", Mint);
-            Row("집중", "00:08", Color.FromRgb(0xFF, 0x5A, 0x5A));
-
-            return new Border
-            {
-                Background = new SolidColorBrush(Color.FromRgb(0x10, 0x16, 0x14)),
-                BorderBrush = new SolidColorBrush(BorderCol),
-                BorderThickness = new Thickness(1),
-                CornerRadius = new CornerRadius(5),
-                Padding = new Thickness(10, 6, 10, 8),
-                HorizontalAlignment = HorizontalAlignment.Left,
-                Child = stack,
-            };
-        }
-
         /// <summary>
         /// 색상 동기화 사용법 목업: 실제 설정 행(동기화 링크 + 색 버튼)을 그려서
         /// "동기화를 끄면 색 버튼이 켜지고, 눌러 고른 색이 채팅에 적용된다"를 그림으로 보여준다.
@@ -1118,8 +981,8 @@ namespace TWChatOverlay.Services
 
             // 적용 결과 채팅 줄
             var result = syncOn
-                ? Line(NormalCol, ("아나이스", NormalCol), (" : 어비스 가실 분?", NormalCol))
-                : Line(NormalCol, ("아나이스", SkyCol), (" : 어비스 가실 분?", NormalCol));
+                ? Line(("아나이스", NormalCol), (" : 어비스 가실 분?", NormalCol))
+                : Line(("아나이스", SkyCol), (" : 어비스 가실 분?", NormalCol));
 
             var stack = new StackPanel { Margin = new Thickness(10, 8, 10, 8) };
             stack.Children.Add(rowBox);
@@ -1167,15 +1030,15 @@ namespace TWChatOverlay.Services
             var lines = new StackPanel { Margin = new Thickness(10, 2, 10, 8) };
             if (activeShout)
             {
-                lines.Children.Add(Line(ShoutCol, ("외치기 : 훈장 50개 삽니다 [티치엘]", ShoutCol)));
-                lines.Children.Add(Line(ShoutCol, ("외치기 : 세크리드 주화 주머니 팝니다 [김주화]", ShoutCol)));
-                lines.Children.Add(Line(ShoutCol, ("외치기 : 클럽원 모집합니다 [리체]", ShoutCol)));
+                lines.Children.Add(Line(("외치기 : 훈장 50개 삽니다 [티치엘]", ShoutCol)));
+                lines.Children.Add(Line(("외치기 : 세크리드 주화 주머니 팝니다 [김주화]", ShoutCol)));
+                lines.Children.Add(Line(("외치기 : 클럽원 모집합니다 [리체]", ShoutCol)));
             }
             else
             {
-                lines.Children.Add(Line(NormalCol, ("아나이스 : 아페티리아 가실 분?", NormalCol)));
-                lines.Children.Add(Line(TeamCol, ("[팀] 벤야 : 입구로 와주세요", TeamCol)));
-                lines.Children.Add(Line(SystemCol, ("[경험의 심장] 아이템을 사용하였습니다.", SystemCol)));
+                lines.Children.Add(Line(("아나이스 : 아페티리아 가실 분?", NormalCol)));
+                lines.Children.Add(Line(("[팀] 벤야 : 입구로 와주세요", TeamCol)));
+                lines.Children.Add(Line(("[경험의 심장] 아이템을 사용하였습니다.", SystemCol)));
             }
 
             var stack = new StackPanel();

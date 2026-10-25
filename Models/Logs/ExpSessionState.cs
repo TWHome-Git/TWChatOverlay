@@ -116,7 +116,7 @@ namespace TWChatOverlay.Models
         /// 측정을 시작한 뒤 지난 시간. 멈춘 뒤에는 멈춘 시각에서 더 가지 않는다 (1시간 예상과 같은 기준 시각).
         /// 경험치가 한 번도 안 들어왔으면 0 — 리셋을 누르고 사냥을 안 해도 시간이 가는 일이 없다.
         /// </summary>
-        public TimeSpan Elapsed
+        private TimeSpan Elapsed
         {
             get
             {
@@ -143,7 +143,7 @@ namespace TWChatOverlay.Models
         public string TotalExpDisplay => $"{TotalExpValueDisplay} | {ExpPerHourDisplay}/h";
 
         /// <summary>측정 시작 시각을 비운다. 다음 경험치가 들어올 때 다시 잡는다.</summary>
-        public void ResetStartTime() => _startedAt = null;
+        private void ResetStartTime() => _startedAt = null;
 
         /// <summary>경험치가 들어왔다 — 아직 시작 전이면 지금을 시작 시각으로 잡는다.</summary>
         public void MarkStarted() => _startedAt ??= DateTime.Now;

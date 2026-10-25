@@ -14,9 +14,6 @@ namespace TWChatOverlay.Services
         public static Task EnsureLoadedAsync()
             => AppServices.Get<EtaRankingService>().EnsureLoadedAsync();
 
-        public static Task<bool> ForceRefreshAsync()
-            => AppServices.Get<EtaRankingService>().ForceRefreshAsync();
-
         public static bool TryGetProfile(string userId, out EtaProfile profile)
             => AppServices.Get<EtaRankingService>().TryGetProfile(userId, out profile);
 

@@ -642,17 +642,6 @@ namespace TWChatOverlay.Services
                 }
             }
 
-            public bool CancelAll(string reason)
-            {
-                if (_runs.Count == 0)
-                    return false;
-                var cancelled = _runs.Values.ToList();
-                _runs.Clear();
-                foreach (LiveRun run in cancelled)
-                    RunDiscarded?.Invoke(run, reason);
-                return true;
-            }
-
             /// <summary>
             /// Feed가 보는 모든 정규식(RunStart·RunEnd·HardMarker·Activity·구간 Start/End·변형 End)이 반드시 품는 리터럴 토큰.
             /// 정규식마다(대안 '|'이 있으면 대안마다) 이 중 하나가 \s*·선택·그룹 밖의 고정 문자열로 들어 있다 —
@@ -984,7 +973,7 @@ namespace TWChatOverlay.Services
 
         private const int DefaultResultSeconds = 30;
         /// <summary>던전·난이도마다 한 주에 보관하는 완료 판 수. 이번 주와 지난주만 남긴다.</summary>
-        public const int PerWeekDepth = 7;
+        private const int PerWeekDepth = 7;
 
         /// <summary>이번 주 시작(월요일 0시). 일일/주간 창과 같은 기준.</summary>
         private static DateTime ThisWeekStart(DateTime now) => DailyWeeklyContentWindow.GetWeeklyResetKey(now);
@@ -1164,25 +1153,6 @@ namespace TWChatOverlay.Services
                 }));
             };
             return tracker;
-        }
-
-        public bool IsRunning
-        {
-            get
-            {
-                lock (SyncRoot)
-                    return LiveTracker.HasActiveRun(DateTime.Now);
-            }
-        }
-
-        /// <summary>사용자가 타이머 창을 닫았다 — 진행 중이던 판은 기록 없이 버린다.</summary>
-        public void CancelCurrentRun()
-        {
-            bool cancelled;
-            lock (SyncRoot)
-                cancelled = LiveTracker.CancelAll("창 닫음");
-            if (cancelled)
-                AppLogger.Info("Dungeon timer runs cancelled by closing the window.");
         }
 
         // ===== 실시간 로그 =====
@@ -1696,9 +1666,6 @@ namespace TWChatOverlay.Services
         }
 
         // ===== 전체 기록 아카이브 =====
-
-        /// <summary>난이도를 구분하는 던전인지 (기록 추이 창의 난이도 선택용).</summary>
-        public bool DefinitionHasDifficulty(DungeonDefinition def) => HasDifficulty(def);
 
         /// <summary>묶음에 속한 기록 정의들 (어비스 심층Ⅰ·Ⅱ·Ⅲ, 이클립스 보스 6종 등).</summary>
         public IReadOnlyList<DungeonDefinition> GetGroupMembers(string groupKey)

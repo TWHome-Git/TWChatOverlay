@@ -13,7 +13,6 @@ namespace TWChatOverlay.Services
     {
         public const int EXIT_HOTKEY_ID = 9001;
         public const int TOGGLE_OVERLAY_ID = 9002;
-        public const int TOGGLE_ALWAYS_VISIBLE_ID = 9004;
         public const int TOGGLE_DAILY_WEEKLY_CONTENT_ID = 9005;
         public const int TOGGLE_SETTINGS_ID = 9010;
         public const int TOGGLE_TRAY_ALL_ID = 9011;
@@ -23,15 +22,6 @@ namespace TWChatOverlay.Services
         public const uint MOD_CONTROL = 0x0002;
         public const uint MOD_SHIFT = 0x0004;
         public const uint MOD_WIN = 0x0008;
-        public const uint VK_F1 = 0x70;
-        public const uint VK_F2 = 0x71;
-        public const uint VK_F3 = 0x72;
-        public const uint VK_F4 = 0x73;
-        public const uint VK_F5 = 0x74;
-        public const uint VK_F6 = 0x75;
-        public const uint VK_F7 = 0x76;
-        public const uint VK_F8 = 0x77;
-        public const uint VK_F9 = 0x78;
 
         private readonly IntPtr _handle;
         private readonly HwndSource _source;

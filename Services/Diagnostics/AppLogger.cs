@@ -24,8 +24,9 @@ namespace TWChatOverlay.Services
         private static readonly string LegacyLogFilePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Debug.log");
         private static readonly object _lock = new object();
         private static readonly ConcurrentQueue<string> _pendingLines = new();
+        // 읽는 곳은 없지만 지우면 안 된다: 플러시 타이머가 GC에 수거되지 않도록 참조를 붙잡아 둔다.
         private static readonly Timer _flushTimer;
-        private static LogLevel _minimumLevel = LogLevel.DEBUG;
+        private static readonly LogLevel _minimumLevel = LogLevel.DEBUG;
         private static bool _isEnabled = true;
         private const long MaxFileSizeBytes = 5 * 1024 * 1024;
         private const int MaxPendingLines = 20000;
@@ -50,19 +51,12 @@ namespace TWChatOverlay.Services
             }
         }
 
-        public static LogLevel MinimumLevel
-        {
-            get => _minimumLevel;
-            set => _minimumLevel = value;
-        }
-
         public static bool IsEnabled
         {
             get => _isEnabled;
             set => _isEnabled = value;
         }
 
-        public static void Trace(string message, [CallerMemberName] string? caller = null) => Write(LogLevel.TRACE, message, caller);
         public static void Debug(string message, [CallerMemberName] string? caller = null) => Write(LogLevel.DEBUG, message, caller);
         public static void Info(string message, [CallerMemberName] string? caller = null) => Write(LogLevel.INFO, message, caller);
         public static void Warn(string message, [CallerMemberName] string? caller = null) => Write(LogLevel.WARN, message, caller);

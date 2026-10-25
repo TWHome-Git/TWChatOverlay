@@ -33,9 +33,6 @@ namespace TWChatOverlay.Services
         public static Version GetCurrentVersion()
             => Assembly.GetExecutingAssembly().GetName().Version ?? new Version(0, 0, 0);
 
-        public static Task<UpdateCheckResult> CheckForUpdateAsync()
-            => CheckForUpdateAsync(forceInstallLatest: false, showNoUpdateMessage: false);
-
         public static async Task<UpdateCheckResult> CheckForUpdateAsync(bool forceInstallLatest, bool showNoUpdateMessage)
         {
             var stopwatch = Stopwatch.StartNew();

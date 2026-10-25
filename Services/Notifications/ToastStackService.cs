@@ -86,9 +86,6 @@ namespace TWChatOverlay.Services
             }
         }
 
-        /// <summary>통합 모드용 앵커 (호환 유지).</summary>
-        public (double Left, double Top) GetAnchor() => GetAnchorFor(UnifiedKey);
-
         /// <summary>
         /// 알림 창을 스택에 등록하고 배치될 (Left, Top)을 돌려준다.
         /// 통합 모드는 하나의 스택, 분리 모드는 종류별 스택에 쌓인다. 닫히면 자동으로 재정렬.

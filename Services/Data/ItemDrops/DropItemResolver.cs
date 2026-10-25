@@ -78,9 +78,6 @@ namespace TWChatOverlay.Services
 
             public IReadOnlyDictionary<string, string> DisplayNames { get; }
 
-            public bool TryGetGrade(string itemName, out ItemDropGrade grade)
-                => Items.TryGetValue(itemName, out grade);
-
             public string ResolveDisplayName(string itemName)
             {
                 if (string.IsNullOrWhiteSpace(itemName))
@@ -125,14 +122,6 @@ namespace TWChatOverlay.Services
             await EnsureLoadedAsync().ConfigureAwait(false);
         }
 
-        public bool TryApplyJsonForSession(string json)
-        {
-            if (string.IsNullOrWhiteSpace(json))
-                return false;
-
-            return TryApplyJson(json);
-        }
-
         public bool TryCreateFilterSnapshot(string json, out DropItemFilterSnapshot snapshot)
         {
             snapshot = DropItemFilterSnapshot.Empty;
@@ -146,21 +135,6 @@ namespace TWChatOverlay.Services
             snapshot = BuildSnapshot(rows.Select(item => (item.Name, item.Grade, item.Abbreviation)));
             return true;
         }
-
-        public bool TryExtractTrackedItem(string message, out string itemName)
-        {
-            int ignoredCount;
-            return TryExtractTrackedItem(message, out itemName, out _, out ignoredCount);
-        }
-
-        public bool TryExtractTrackedItem(string message, out string itemName, out int count)
-            => TryExtractTrackedItem(message, out itemName, out _, out count);
-
-        public IReadOnlyList<(string Name, ItemDropGrade Grade, string? Abbreviation)> GetTrackedItemsSnapshot()
-            => _trackedItemList;
-
-        public DropItemFilterSnapshot GetSessionFilterSnapshot()
-            => new(_trackedItems, _trackedItemDisplayNames);
 
         public async Task<DropItemFilterSnapshot> LoadDefaultFilterSnapshotAsync()
         {
@@ -184,12 +158,6 @@ namespace TWChatOverlay.Services
                 ? displayName
                 : itemName;
         }
-
-        public bool TryExtractTrackedItem(string message, out string itemName, out ItemDropGrade grade)
-            => TryExtractTrackedItem(message, out itemName, out grade, out _);
-
-        public bool TryExtractTrackedItem(string message, out string itemName, out ItemDropGrade grade, out int count)
-            => TryExtractTrackedItem(message, null, out itemName, out grade, out count);
 
         public bool TryExtractTrackedItem(
             string message,

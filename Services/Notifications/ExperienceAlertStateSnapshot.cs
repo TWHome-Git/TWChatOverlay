@@ -6,7 +6,5 @@ namespace TWChatOverlay.Services
     public sealed class ExperienceAlertStateSnapshot
     {
         public long TotalExp { get; set; }
-
-        public bool IsVisible { get; set; }
     }
 }

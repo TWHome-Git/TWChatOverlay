@@ -14,7 +14,6 @@ namespace TWChatOverlay.Models
         private readonly List<ItemCalendarEntryViewModel> _entries = new();
         private readonly ObservableCollection<ItemCalendarEntryViewModel> _observableEntries = new();
         private int _totalCount;
-        private int _distinctCount;
         private int _experienceEssenceCount;
 
         public ItemCalendarDayViewModel(DateTime date, bool isCurrentMonth, IEnumerable<ItemCalendarEntryViewModel> entries)
@@ -27,7 +26,6 @@ namespace TWChatOverlay.Models
 
         public DateTime Date { get; }
         public bool IsCurrentMonth { get; }
-        public string DayLabel => Date.ToString("ddd", CultureInfo.GetCultureInfo("ko-KR"));
         public string DateLabel => Date.Day.ToString(CultureInfo.InvariantCulture);
         public ObservableCollection<ItemCalendarEntryViewModel> Entries => _observableEntries;
 
@@ -39,22 +37,6 @@ namespace TWChatOverlay.Models
                 if (_totalCount == value) return;
                 _totalCount = value;
                 OnPropertyChanged(nameof(TotalCount));
-                OnPropertyChanged(nameof(SummaryText));
-                OnPropertyChanged(nameof(IsHighlighted));
-                OnPropertyChanged(nameof(DayAccentBrush));
-                OnPropertyChanged(nameof(DayBadgeBorderBrush));
-                OnPropertyChanged(nameof(DayBadgeForeground));
-            }
-        }
-
-        public int DistinctCount
-        {
-            get => _distinctCount;
-            private set
-            {
-                if (_distinctCount == value) return;
-                _distinctCount = value;
-                OnPropertyChanged(nameof(DistinctCount));
             }
         }
 
@@ -73,12 +55,7 @@ namespace TWChatOverlay.Models
 
         public bool HasExperienceEssence => ExperienceEssenceCount > 0;
         public string ExperienceEssenceText => $"경험의 정수 {ExperienceEssenceCount:N0}개";
-        public bool IsHighlighted => TotalCount >= 5;
-        public string SummaryText => TotalCount > 0 ? $"총 {TotalCount:N0}개" : "기록 없음";
         public double CellOpacity => IsCurrentMonth ? 1.0 : 0.45;
-        public Brush DayAccentBrush => IsHighlighted ? new SolidColorBrush(Color.FromArgb(0x2A, 0xFF, 0xD8, 0x4A)) : Brushes.Transparent;
-        public Brush DayBadgeBorderBrush => IsHighlighted ? new SolidColorBrush(Color.FromRgb(0xFF, 0xD8, 0x4A)) : new SolidColorBrush(Color.FromRgb(0x45, 0x4E, 0x57));
-        public Brush DayBadgeForeground => IsHighlighted ? Brushes.White : Brushes.WhiteSmoke;
 
         public event PropertyChangedEventHandler? PropertyChanged;
 
@@ -108,7 +85,6 @@ namespace TWChatOverlay.Models
                 _observableEntries.Add(entry);
 
             TotalCount = _observableEntries.Sum(entry => entry.Count);
-            DistinctCount = _observableEntries.Count;
         }
 
         private void OnPropertyChanged(string propertyName) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
