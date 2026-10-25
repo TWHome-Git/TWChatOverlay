@@ -60,7 +60,7 @@ namespace TWChatOverlay.Services
             AppServices.Get<ToastStackService>().ShowPositionPreview(settings);
         }
 
-        private void ShowWindow(string message, ChatSettings settings, bool requireAlertEnabled, bool isPreview = false)
+        private void ShowWindow(string message, ChatSettings settings, bool requireAlertEnabled)
         {
             if (string.IsNullOrWhiteSpace(message))
                 return;
@@ -80,7 +80,6 @@ namespace TWChatOverlay.Services
                 }
 
                 _window.SetMessage(message);
-                _window.SetPreviewMode(isPreview);
 
                 // 통합 알림 스택: 자리를 먼저 받고 그 자리에서 보인다.
                 // Show 뒤에 붙이면 옛 위치에서 잠깐 보이는 사이 다른 알림이 같은 칸을 잡아 겹쳤다.

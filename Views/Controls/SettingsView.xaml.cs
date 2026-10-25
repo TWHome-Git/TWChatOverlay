@@ -12,16 +12,6 @@ namespace TWChatOverlay.Views
     /// </summary>
     public partial class SettingsView : UserControl
     {
-        public static readonly DependencyProperty OnlyChatModeProperty =
-            DependencyProperty.Register(nameof(OnlyChatMode), typeof(bool), typeof(SettingsView),
-                new PropertyMetadata(false, (d, _) => ((SettingsView)d).ApplyPanelVisibility()));
-
-        public bool OnlyChatMode
-        {
-            get => (bool)GetValue(OnlyChatModeProperty);
-            set => SetValue(OnlyChatModeProperty, value);
-        }
-
         public SettingsView()
         {
             InitializeComponent();
@@ -42,7 +32,7 @@ namespace TWChatOverlay.Views
         /// 단축키 화면이 실제로 보이며 선택된 상태인지. (이때만 전역 단축키를 억제)
         /// 창이 숨겨진 상태(트레이 등)에서는 억제하지 않아야 트레이 복원 단축키가 동작한다.
         /// </summary>
-        public bool IsHotkeyInteractionActive => IsLoaded && IsVisible && NavHotkeys.IsChecked == true && !OnlyChatMode;
+        public bool IsHotkeyInteractionActive => IsLoaded && IsVisible && NavHotkeys.IsChecked == true;
 
         private void Nav_Checked(object sender, RoutedEventArgs e)
         {
@@ -143,12 +133,9 @@ namespace TWChatOverlay.Views
         private void UnlockMode_Click(object sender, RoutedEventArgs e)
         {
             // 설정에서 들어간 잠금 해제는 종료 시 설정 창으로 복귀한다
-            Services.AppServices.Get<Services.UiLockService>().ReturnToSettingsOnLock = !OnlyChatMode;
+            Services.AppServices.Get<Services.UiLockService>().ReturnToSettingsOnLock = true;
             Services.AppServices.Get<Services.UiLockService>().Set(true);
-            if (!OnlyChatMode)
-            {
-                try { Window.GetWindow(this)?.Close(); } catch { }
-            }
+            try { Window.GetWindow(this)?.Close(); } catch { }
         }
 
         /// <summary>설정 마법사를 다시 실행한다. 마법사가 화면을 정리하므로 설정 창은 먼저 닫는다.</summary>
@@ -296,31 +283,10 @@ namespace TWChatOverlay.Views
 
         /// <summary>
         /// 선택된 내비게이션 항목의 패널만 표시한다.
-        /// 컴팩트 모드(OnlyChatMode)에서는 내비게이션을 숨기고 채팅+외치기 패널을 함께 보여준다.
         /// </summary>
         private void ApplyPanelVisibility()
         {
             if (ChatPanel == null) return;
-
-            if (OnlyChatMode)
-            {
-                NavColumn.Visibility = Visibility.Collapsed;
-                NavToolsColumn.Visibility = Visibility.Collapsed;
-                AppHeader.Visibility = Visibility.Collapsed;
-                ChatPanel.Visibility = Visibility.Visible;
-                ShoutPanel.Visibility = Visibility.Visible;
-                DisplayPanel.Visibility = Visibility.Collapsed;
-                HotkeyPanel.Visibility = Visibility.Collapsed;
-                SystemPanel.Visibility = Visibility.Collapsed;
-                PresetPanel.Visibility = Visibility.Collapsed;
-                AddonKeywordPanel.Visibility = Visibility.Collapsed;
-                AddonExpPanel.Visibility = Visibility.Collapsed;
-                AddonDungeonPanel.Visibility = Visibility.Collapsed;
-                AddonItemPanel.Visibility = Visibility.Collapsed;
-                AddonBuffPanel.Visibility = Visibility.Collapsed;
-                AddonBossPanel.Visibility = Visibility.Collapsed;
-                return;
-            }
 
             // 설정 마법사 임베드 모드: 내비/도구/헤더 없이 선택된 패널만 보여준다
             NavColumn.Visibility = _wizardSingleMode ? Visibility.Collapsed : Visibility.Visible;
@@ -671,14 +637,15 @@ namespace TWChatOverlay.Views
             }
         }
 
-        public void SetCompactMode(bool compact)
+        /// <summary>설정 창(SubMenuWindow)에 올릴 때의 여백·글자 크기. 마법사 임베드는 XAML 기본값을 쓴다.</summary>
+        public void ApplyHostLayout()
         {
             try
             {
                 if (RootBorder != null)
                 {
-                    RootBorder.Padding = new Thickness(compact ? 4 : 12);
-                    FontSize = compact ? 12 : 13;
+                    RootBorder.Padding = new Thickness(12);
+                    FontSize = 13;
                 }
             }
             catch { }
@@ -828,17 +795,7 @@ namespace TWChatOverlay.Views
         {
             if (sender is not TextBox textBox) return;
 
-            if (e.Key == Key.Escape)
-            {
-                textBox.Text = string.Empty;
-                textBox.GetBindingExpression(TextBox.TextProperty)?.UpdateSource();
-                if (this.DataContext is ViewModels.SettingsViewModel svm2)
-                {
-                    try { svm2.ApplyHotkeysCommand.Execute(null); } catch { }
-                }
-                e.Handled = true;
-                return;
-            }
+            // Escape(비우고 즉시 적용)는 상위 SettingsView_PreviewKeyDown이 터널링 단계에서 먼저 처리한다
 
             if (e.Key is Key.Back or Key.Delete)
             {

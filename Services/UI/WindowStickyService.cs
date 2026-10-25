@@ -6,7 +6,7 @@ using TWChatOverlay.Models;
 namespace TWChatOverlay.Services
 {
     /// <summary>
-    /// 오버레이 창의 표시/위치/최상단 상태를 제어합니다.
+    /// 오버레이 창의 표시/위치 상태를 제어합니다.
     /// 게임 창 감지 없이 설정 좌표 기준으로 동작합니다.
     /// </summary>
     public class WindowStickyService
@@ -16,7 +16,6 @@ namespace TWChatOverlay.Services
         private readonly DispatcherTimer _stickyTimer;
 
         private bool _forceHidden;
-        private bool _positionTrackingEnabled = true;
         private bool? _lastCanShowAuxiliaryWindows;
 
         public event Action<bool>? AuxiliaryWindowVisibilityChanged;
@@ -62,12 +61,6 @@ namespace TWChatOverlay.Services
             UpdatePositionImmediately();
         }
 
-        public void SetPositionTrackingEnabled(bool enabled)
-        {
-            _positionTrackingEnabled = enabled;
-            UpdatePositionImmediately();
-        }
-
         private void UpdatePosition()
         {
             // 모든 창 트레이 중에는 어떤 모드(설정 모드 포함)에서도 자동으로 다시 띄우지 않는다
@@ -79,7 +72,6 @@ namespace TWChatOverlay.Services
             if (_overlayWindow is Views.MainWindow mainWindow && mainWindow.IsSettingsPositionMode)
             {
                 ShowOverlay();
-                ApplyTopmost();
                 NotifyAuxiliaryWindowVisibilityChanged(true);
                 return;
             }
@@ -92,7 +84,6 @@ namespace TWChatOverlay.Services
             }
 
             ShowOverlay();
-            ApplyTopmost();
 
             // 잠금 해제 모드에서는 드래그 중인 창을 저장 좌표로 되돌리지 않는다.
             if (AppServices.Get<UiLockService>().IsUnlocked)
@@ -101,20 +92,17 @@ namespace TWChatOverlay.Services
                 return;
             }
 
-            if (_positionTrackingEnabled)
+            double targetLeft = _settings.LineMarginLeft;
+            double targetTop = _settings.LineMargin;
+
+            if (Math.Abs(_overlayWindow.Left - targetLeft) > 0.1)
             {
-                double targetLeft = _settings.LineMarginLeft;
-                double targetTop = _settings.LineMargin;
+                _overlayWindow.Left = targetLeft;
+            }
 
-                if (Math.Abs(_overlayWindow.Left - targetLeft) > 0.1)
-                {
-                    _overlayWindow.Left = targetLeft;
-                }
-
-                if (Math.Abs(_overlayWindow.Top - targetTop) > 0.1)
-                {
-                    _overlayWindow.Top = targetTop;
-                }
+            if (Math.Abs(_overlayWindow.Top - targetTop) > 0.1)
+            {
+                _overlayWindow.Top = targetTop;
             }
 
             NotifyAuxiliaryWindowVisibilityChanged(true);
@@ -154,11 +142,6 @@ namespace TWChatOverlay.Services
             {
                 _overlayWindow.Opacity = 0;
             }
-        }
-
-        private void ApplyTopmost()
-        {
-            TopmostWindowHelper.EnsureTopmost(_overlayWindow);
         }
 
         private void NotifyAuxiliaryWindowVisibilityChanged(bool canShow)

@@ -131,16 +131,11 @@ namespace TWChatOverlay.Views
 
                 if (view is SettingsView settingsView)
                 {
-                    settingsView.SetCompactMode(false);
+                    settingsView.ApplyHostLayout();
                 }
 
                 HostContent.Child = view;
             });
-        }
-
-        public void ClearHostContent()
-        {
-            Dispatcher.Invoke(() => HostContent.Child = null);
         }
     }
 }

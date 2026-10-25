@@ -1,36 +1,19 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Text.Json;
-using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Controls.Primitives;
-using System.Windows.Documents;
 using System.Windows.Input;
-using System.Windows.Interop;
 using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Threading;
-using TWChatOverlay.Models;
 using TWChatOverlay.Services;
-using TWChatOverlay.Services.LogAnalysis;
-using TWChatOverlay.ViewModels;
 
 namespace TWChatOverlay.Views
 {
-    /// <summary>채팅 표시 갱신·폰트·아이템 필터 스냅샷 등 화면 도우미</summary>
+    /// <summary>채팅 표시 갱신·폰트 등 화면 도우미</summary>
     public partial class MainWindow
     {
         // ── 이 부분 클래스가 주로 쓰는 상태 ──
-        private readonly object _defaultDropItemFilterLock = new();
-        private DropItemResolver.DropItemFilterSnapshot? _defaultDropItemFilterSnapshot;
         private static readonly Regex HtmlFontTagRegex = new(
             @"<font\b",
             RegexOptions.IgnoreCase | RegexOptions.Compiled);
@@ -71,9 +54,6 @@ namespace TWChatOverlay.Views
 
             UiLockService.ApplyStoredOpacity(this);
         }
-
-        public void InjectDebugLogText(string rawText)
-            => InjectDebugLogText(rawText, DebugLogCategory.System);
 
         public void InjectDebugLogText(string rawText, DebugLogCategory category)
             => InjectDebugLogText(rawText, category, forceRealTime: true);
@@ -187,31 +167,6 @@ namespace TWChatOverlay.Views
 
                     System.Threading.Thread.Sleep(20);
                 }
-            }
-        }
-
-        private void WarmUpDefaultDropItemFilterSnapshot()
-        {
-            try
-            {
-                _ = GetDefaultDropItemFilterSnapshot();
-            }
-            catch (Exception ex)
-            {
-                AppLogger.Warn("Failed to warm up default drop item filter snapshot.", ex);
-            }
-        }
-
-        private DropItemResolver.DropItemFilterSnapshot GetDefaultDropItemFilterSnapshot()
-        {
-            if (_defaultDropItemFilterSnapshot != null)
-                return _defaultDropItemFilterSnapshot;
-
-            var snapshot = AppServices.Get<DropItemResolver>().LoadDefaultFilterSnapshotAsync().GetAwaiter().GetResult();
-            lock (_defaultDropItemFilterLock)
-            {
-                _defaultDropItemFilterSnapshot ??= snapshot;
-                return _defaultDropItemFilterSnapshot;
             }
         }
 

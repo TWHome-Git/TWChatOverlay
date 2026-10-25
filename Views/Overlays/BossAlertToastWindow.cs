@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
-using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Threading;
 using TWChatOverlay.Models;
@@ -24,13 +23,11 @@ namespace TWChatOverlay.Views
         private static readonly Dictionary<string, BossAlertToastWindow> Instances = new(StringComparer.Ordinal);
         private string _bossKey = string.Empty;
 
-        private static readonly Color DangerCol = Color.FromRgb(0xFF, 0x5A, 0x5A);
+        private static readonly SolidColorBrush DangerBrush = CreateFrozenBrush(Color.FromRgb(0xFF, 0x5A, 0x5A));
 
-        private readonly Grid _normalContent;
         private readonly TextBlock _bodyText;
         /// <summary>문구 앞의 보스 이름 — 민트로 강조해 어느 보스인지 먼저 눈에 들어오게 한다.</summary>
         private string _bossName = string.Empty;
-        private readonly TextBlock _previewLabel;
         private readonly DispatcherTimer _closeTimer;
         private readonly DispatcherTimer _countdownTimer;
         private DateTime _countdownOccurrence;
@@ -67,24 +64,8 @@ namespace TWChatOverlay.Views
             var stack = new StackPanel { VerticalAlignment = VerticalAlignment.Center };
             stack.Children.Add(_bodyText);
 
-            _normalContent = new Grid();
-            _normalContent.Children.Add(stack);
-
-            // 잠금 해제(위치 미리보기) 공통 라벨
-            _previewLabel = new TextBlock
-            {
-                Text = "필드 보스 알림창",
-                FontSize = 15,
-                FontWeight = FontWeights.SemiBold,
-                HorizontalAlignment = HorizontalAlignment.Center,
-                VerticalAlignment = VerticalAlignment.Center,
-                Visibility = Visibility.Collapsed,
-            };
-            _previewLabel.SetResourceReference(TextBlock.ForegroundProperty, "TextBrush");
-
             var rootGrid = new Grid();
-            rootGrid.Children.Add(_normalContent);
-            rootGrid.Children.Add(_previewLabel);
+            rootGrid.Children.Add(stack);
 
             var root = new Border
             {
@@ -111,6 +92,13 @@ namespace TWChatOverlay.Views
             // 200ms 간격 + Render 우선순위로 촘촘히 확인하되, 표시할 초가 바뀔 때만 텍스트를 갱신한다.
             _countdownTimer = new DispatcherTimer(DispatcherPriority.Render) { Interval = TimeSpan.FromMilliseconds(200) };
             _countdownTimer.Tick += (_, _) => UpdateCountdownText();
+        }
+
+        private static SolidColorBrush CreateFrozenBrush(Color color)
+        {
+            var brush = new SolidColorBrush(color);
+            brush.Freeze();
+            return brush;
         }
 
         /// <summary>
@@ -156,7 +144,7 @@ namespace TWChatOverlay.Views
 
                 _countdownTimer.Stop();
                 SetCountdownText($"{_countdownBossName} 등장!", highlightName: false); // 줄 전체가 붉은색
-                _bodyText.Foreground = new SolidColorBrush(DangerCol);
+                _bodyText.Foreground = DangerBrush;
                 return;
             }
 
@@ -165,7 +153,7 @@ namespace TWChatOverlay.Views
             {
                 // 등장 임박: "곧 등장!" + 초 카운트다운 (5초 → 1초)
                 if (SetCountdownText($"{_countdownBossName} 곧 등장! {totalSeconds}초", highlightName: false))
-                    _bodyText.Foreground = new SolidColorBrush(DangerCol);
+                    _bodyText.Foreground = DangerBrush;
             }
             else
             {
@@ -208,7 +196,6 @@ namespace TWChatOverlay.Views
         {
             try { _closeTimer.Stop(); } catch { }
             try { _countdownTimer.Stop(); } catch { }
-            PersistBoundsNow();
             if (Instances.TryGetValue(_bossKey, out var mine) && ReferenceEquals(mine, this))
             {
                 Instances.Remove(_bossKey);
@@ -239,7 +226,7 @@ namespace TWChatOverlay.Views
             _bossName = bossName ?? string.Empty;
             SetBody(imminent ? $"{bossName} 곧 등장!" : $"{bossName} 등장 {label}", highlightName: !imminent);
             if (imminent)
-                _bodyText.Foreground = new SolidColorBrush(DangerCol);
+                _bodyText.Foreground = DangerBrush;
             else
                 _bodyText.SetResourceReference(TextBlock.ForegroundProperty, "TextBrush");
         }
@@ -248,14 +235,6 @@ namespace TWChatOverlay.Views
         public void SetFontSize(double size)
         {
             _bodyText.FontSize = size;
-            _previewLabel.FontSize = size;
-        }
-
-        /// <summary>위치 미리보기: 통일 라벨("필드 보스 알림창")만 표시.</summary>
-        public void SetPreviewMode(bool isPreview)
-        {
-            _normalContent.Visibility = isPreview ? Visibility.Collapsed : Visibility.Visible;
-            _previewLabel.Visibility = isPreview ? Visibility.Visible : Visibility.Collapsed;
         }
 
         /// <summary>
@@ -281,7 +260,6 @@ namespace TWChatOverlay.Views
                 {
                     window.StartCountdown(bossName, occurrence, entryWindow);
                 }
-                window.SetPreviewMode(false);
 
                 // 닫힘 시각: 3분 전은 5초 뒤, 입장 카운트다운은 입장 종료 후 3초, 그 외는 출현 5초 후
                 TimeSpan lifetime = isThreeMinute
@@ -304,10 +282,6 @@ namespace TWChatOverlay.Views
             }
         }
 
-        /// <summary>통합 알림 스택 앵커 미리보기로 위임.</summary>
-        public static void ShowPositionPreview(ChatSettings settings)
-            => AppServices.Get<ToastStackService>().ShowPositionPreview(settings);
-
         /// <summary>설정 슬라이더 변경을 열려 있는 알림 창에 즉시 반영한다.</summary>
         public static void ApplyFontSize(double size)
         {
@@ -318,10 +292,6 @@ namespace TWChatOverlay.Views
             }
             catch { }
         }
-
-        /// <summary>통합 알림 스택 앵커 미리보기로 위임.</summary>
-        public static void ClosePositionPreview()
-            => AppServices.Get<ToastStackService>().ClosePositionPreview();
 
         /// <summary>보스마다 창 하나. 같은 보스의 다음 단계 알림은 그 창을 다시 쓰고, 다른 보스는 새 창을 얻는다.</summary>
         private static BossAlertToastWindow EnsureInstance(string bossName, ChatSettings? settings)

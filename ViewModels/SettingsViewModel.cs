@@ -6,7 +6,6 @@ using System.Windows.Input;
 using System.Windows.Media;
 using TWChatOverlay.Models;
 using TWChatOverlay.Services;
-using TWChatOverlay.Views;
 
 namespace TWChatOverlay.ViewModels
 {
@@ -31,8 +30,6 @@ namespace TWChatOverlay.ViewModels
         public ICommand ManualUpdateCommand { get; }
         public ICommand ManualLogReloadCommand { get; }
         public ICommand ApplyHotkeysCommand { get; }
-        public ICommand CancelHotkeysCommand { get; }
-        public ICommand ResetHotkeysToDefaultCommand { get; }
 
         #region Properties
 
@@ -134,20 +131,6 @@ namespace TWChatOverlay.ViewModels
                     _settings.ShowCategoryPrefix = value;
                     OnPropertyChanged();
                     _onColorsUpdated?.Invoke("CategoryPrefix"); // 열린 채팅창 즉시 다시 그리기
-                    SaveSettings();
-                }
-            }
-        }
-
-        public bool ShowShout
-        {
-            get => _settings.ShowShout;
-            set
-            {
-                if (_settings.ShowShout != value)
-                {
-                    _settings.ShowShout = value;
-                    OnPropertyChanged();
                     SaveSettings();
                 }
             }
@@ -471,11 +454,6 @@ namespace TWChatOverlay.ViewModels
             get => StringToBrush(_settings.ClubColor);
         }
 
-        public Brush ShoutColor
-        {
-            get => StringToBrush(_settings.ShoutColor);
-        }
-
         public Brush FreeShoutColor
         {
             get => StringToBrush(_settings.FreeShoutColor);
@@ -518,34 +496,6 @@ namespace TWChatOverlay.ViewModels
                 if (_settings.FontFamily != value)
                 {
                     _settings.FontFamily = value;
-                    OnPropertyChanged();
-                    SaveSettings();
-                }
-            }
-        }
-
-        public double LineMargin
-        {
-            get => _settings.LineMargin;
-            set
-            {
-                if (!_settings.LineMargin.Equals(value))
-                {
-                    _settings.LineMargin = value;
-                    OnPropertyChanged();
-                    SaveSettings();
-                }
-            }
-        }
-
-        public double LineMarginLeft
-        {
-            get => _settings.LineMarginLeft;
-            set
-            {
-                if (!_settings.LineMarginLeft.Equals(value))
-                {
-                    _settings.LineMarginLeft = value;
                     OnPropertyChanged();
                     SaveSettings();
                 }
@@ -784,8 +734,6 @@ namespace TWChatOverlay.ViewModels
             ManualUpdateCommand = new RelayCommand<object?>(async _ => await ExecuteManualUpdateAsync(), _ => !_isManualUpdateRunning);
             ManualLogReloadCommand = new RelayCommand<object?>(async _ => await ExecuteManualLogReloadAsync());
             ApplyHotkeysCommand = new RelayCommand<object?>(_ => ExecuteApplyHotkeys());
-            CancelHotkeysCommand = new RelayCommand<object?>(_ => ExecuteCancelHotkeys());
-            ResetHotkeysToDefaultCommand = new RelayCommand<object?>(_ => ExecuteResetHotkeysToDefault());
 
             AvailableFonts = new ObservableCollection<string>(FontService.GetAvailableFonts());
             _settings.PropertyChanged += SettingsOnPropertyChanged;
@@ -801,24 +749,11 @@ namespace TWChatOverlay.ViewModels
             // 이름이 비어 있으면 설정이 통째로 바뀐 것(프로필 불러오기·초기화)이다. 화면 값을 전부 다시 읽는다.
             if (string.IsNullOrEmpty(e.PropertyName))
             {
-                OnPropertyChanged(nameof(LineMarginLeft));
-                OnPropertyChanged(nameof(LineMargin));
                 OnPropertyChanged(nameof(ShoutToastFontSize));
                 OnPropertyChanged(nameof(Clone1Enabled));
                 OnPropertyChanged(nameof(Clone2Enabled));
                 RebuildWindowPositions();
                 NotifyAllSettingsChanged();
-            }
-            else if (e.PropertyName == nameof(ChatSettings.LineMarginLeft))
-            {
-                OnPropertyChanged(nameof(LineMarginLeft));
-                OnPropertyChanged(nameof(ExitHotKey));
-                OnPropertyChanged(nameof(ToggleOverlayHotKey));
-                OnPropertyChanged(nameof(ToggleDailyWeeklyContentHotKey));
-            }
-            else if (e.PropertyName == nameof(ChatSettings.LineMargin))
-            {
-                OnPropertyChanged(nameof(LineMargin));
             }
             else if (e.PropertyName == nameof(ChatSettings.ShoutToastFontSize))
             {
@@ -847,7 +782,6 @@ namespace TWChatOverlay.ViewModels
                 "Normal" => NormalColor,
                 "Team" => TeamColor,
                 "Club" => ClubColor,
-                "Shout" => ShoutColor,
                 "ShoutFree" => FreeShoutColor,
                 "ShoutPaid" => PaidShoutColor,
                 "ShoutNotice" => NoticeShoutColor,
@@ -876,7 +810,6 @@ namespace TWChatOverlay.ViewModels
                 OnPropertyChanged(nameof(NormalColor));
                 OnPropertyChanged(nameof(TeamColor));
                 OnPropertyChanged(nameof(ClubColor));
-                OnPropertyChanged(nameof(ShoutColor));
                 OnPropertyChanged(nameof(FreeShoutColor));
                 OnPropertyChanged(nameof(PaidShoutColor));
                 OnPropertyChanged(nameof(NoticeShoutColor));
@@ -986,7 +919,6 @@ namespace TWChatOverlay.ViewModels
             OnPropertyChanged(nameof(ShowClub));
             OnPropertyChanged(nameof(ShowClubBoss));
             OnPropertyChanged(nameof(ShowBossDialogue));
-            OnPropertyChanged(nameof(ShowShout));
             OnPropertyChanged(nameof(ShowFreeShout));
             OnPropertyChanged(nameof(ShowPaidShout));
             OnPropertyChanged(nameof(ShowNoticeShout));
@@ -1026,15 +958,12 @@ namespace TWChatOverlay.ViewModels
             OnPropertyChanged(nameof(NormalColor));
             OnPropertyChanged(nameof(TeamColor));
             OnPropertyChanged(nameof(ClubColor));
-            OnPropertyChanged(nameof(ShoutColor));
             OnPropertyChanged(nameof(FreeShoutColor));
             OnPropertyChanged(nameof(PaidShoutColor));
             OnPropertyChanged(nameof(NoticeShoutColor));
             OnPropertyChanged(nameof(SystemColor));
             OnPropertyChanged(nameof(FontSize));
             OnPropertyChanged(nameof(FontFamily));
-            OnPropertyChanged(nameof(LineMargin));
-            OnPropertyChanged(nameof(LineMarginLeft));
             OnPropertyChanged(nameof(ExitHotKey));
             OnPropertyChanged(nameof(ToggleOverlayHotKey));
             OnPropertyChanged(nameof(ToggleDailyWeeklyContentHotKey));
@@ -1065,42 +994,6 @@ namespace TWChatOverlay.ViewModels
             catch (Exception ex) { AppLogger.Warn("Applying hotkeys from settings view failed.", ex); }
 
             AppLogger.Info("Hotkey settings applied.");
-        }
-
-        private void ExecuteCancelHotkeys()
-        {
-            try
-            {
-                var saved = ConfigService.Load();
-                if (saved == null) return;
-
-                _settings.ExitHotKey = saved.ExitHotKey;
-                _settings.ToggleOverlayHotKey = saved.ToggleOverlayHotKey;
-                _settings.ToggleDailyWeeklyContentHotKey = saved.ToggleDailyWeeklyContentHotKey;
-                _settings.ToggleSettingsHotKey = saved.ToggleSettingsHotKey;
-                _settings.ToggleUnlockHotKey = saved.ToggleUnlockHotKey;
-
-                OnPropertyChanged(nameof(ExitHotKey));
-                OnPropertyChanged(nameof(ToggleOverlayHotKey));
-                OnPropertyChanged(nameof(ToggleDailyWeeklyContentHotKey));
-                OnPropertyChanged(nameof(ToggleSettingsHotKey));
-                AppLogger.Info("Hotkey settings reverted to last saved values.");
-            }
-            catch (Exception ex) { AppLogger.Warn("Cancelling hotkey edits failed.", ex); }
-        }
-
-        private void ExecuteResetHotkeysToDefault()
-        {
-            HotKeySettingsService.ClearAll(_settings, OnPropertyChanged);
-
-            SaveSettings();
-            try
-            {
-                _onHotKeysChanged?.Invoke();
-            }
-            catch (Exception ex) { AppLogger.Warn("Applying default hotkeys failed.", ex); }
-
-            AppLogger.Info("Hotkeys reset to default values.");
         }
 
         /// <summary>

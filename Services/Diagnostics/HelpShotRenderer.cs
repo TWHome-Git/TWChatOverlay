@@ -581,8 +581,7 @@ namespace TWChatOverlay.Services
         /// <summary>실제 어밴던로드 상황판(통계) 창 + 견본 주간 데이터.</summary>
         private static FrameworkElement RealAbandonSummary()
         {
-            var settings = new ChatSettings();
-            var root = WindowRoot(new Views.AbandonRoadSummaryWindow(settings, new LogAnalysisService(settings)));
+            var root = WindowRoot(new Views.AbandonRoadSummaryWindow());
             root.DataContext = new AbandonSummarySample();
             root.Width = 400;
             return root;

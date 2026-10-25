@@ -48,7 +48,14 @@ namespace TWChatOverlay.Views
         /// <summary>쌓을 때 창 사이 간격.</summary>
         private const double StackGap = 6;
 
-        private static readonly Color DangerColor = Color.FromRgb(0xFF, 0x5A, 0x5A);
+        private static readonly SolidColorBrush DangerBrush = CreateFrozenBrush(Color.FromRgb(0xFF, 0x5A, 0x5A));
+
+        private static SolidColorBrush CreateFrozenBrush(Color color)
+        {
+            var brush = new SolidColorBrush(color);
+            brush.Freeze();
+            return brush;
+        }
 
         private readonly ChatSettings? _settings;
         private readonly TextBlock _titleText;
@@ -94,7 +101,7 @@ namespace TWChatOverlay.Views
                 Margin = new Thickness(0, 4, 0, 0),
             };
 
-            _bodyText.Foreground = new SolidColorBrush(DangerColor);
+            _bodyText.Foreground = DangerBrush;
 
             var stack = new StackPanel { VerticalAlignment = VerticalAlignment.Center };
             stack.Children.Add(_titleText);
@@ -251,7 +258,7 @@ namespace TWChatOverlay.Views
             else if (source is DungeonAlertSource.OrlyAttack or DungeonAlertSource.TreasuryExit)
                 window._bodyText.SetResourceReference(TextBlock.ForegroundProperty, "OverlayRareAccentBrush");
             else
-                window._bodyText.Foreground = new SolidColorBrush(DangerColor);
+                window._bodyText.Foreground = DangerBrush;
         }
 
         /// <summary>그 종류의 알림만 내린다 (감전이 풀렸을 때, 빅테디를 잡았을 때, 보물창고에 다시 들어갔을 때).</summary>

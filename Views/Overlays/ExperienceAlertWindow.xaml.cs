@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Windows;
-using System.Windows.Interop;
 using System.Windows.Input;
 using TWChatOverlay.Models;
 using TWChatOverlay.Services;
@@ -36,14 +35,6 @@ namespace TWChatOverlay.Views
         public void SetFontSize(double size)
         {
             MessageTextBlock.FontSize = size;
-            PreviewLabel.FontSize = size;
-        }
-
-        /// <summary>위치 미리보기: 통일 라벨("경험치 누적 알림창")만 표시.</summary>
-        public void SetPreviewMode(bool isPreview)
-        {
-            NormalContent.Visibility = isPreview ? Visibility.Collapsed : Visibility.Visible;
-            PreviewLabel.Visibility = isPreview ? Visibility.Visible : Visibility.Collapsed;
         }
 
         protected override void OnClosed(EventArgs e)

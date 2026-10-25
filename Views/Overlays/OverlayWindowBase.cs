@@ -24,7 +24,6 @@ namespace TWChatOverlay.Views
     {
         private bool _commonSetupDone;
         private bool _hasLoadedOnce;
-        private bool _isDragging;
         private int _suppressPersistDepth;
 
         public OverlayWindowBase()
@@ -131,9 +130,6 @@ namespace TWChatOverlay.Views
 
         #region 드래그
 
-        /// <summary>드래그 중인지 (LocationChanged 처리에서 드래그 여부를 구분할 때).</summary>
-        protected bool IsDragging => _isDragging;
-
         /// <summary>
         /// 마우스 왼쪽 버튼 핸들러에서 호출한다. 잠금 정책을 확인하고, 잠금 해제 중이면 창을 선택한 뒤 드래그한다.
         /// 드래그가 끝나면 위치를 저장하고 <see cref="OnDragCompleted"/>를 부른다.
@@ -148,7 +144,6 @@ namespace TWChatOverlay.Views
             if (e.ButtonState != MouseButtonState.Pressed || e.LeftButton != MouseButtonState.Pressed)
                 return false;
 
-            _isDragging = true;
             try
             {
                 DragMove();
@@ -156,10 +151,6 @@ namespace TWChatOverlay.Views
             catch (InvalidOperationException)
             {
                 // DragMove는 왼쪽 버튼 다운 처리 중에만 유효하다. 그 외 상황이면 무시.
-            }
-            finally
-            {
-                _isDragging = false;
             }
 
             PersistBoundsNow();

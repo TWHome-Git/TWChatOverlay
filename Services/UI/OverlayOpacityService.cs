@@ -21,7 +21,6 @@ namespace TWChatOverlay.Services
         void SetGroupOpacity(string groupKey, double opacityPercent);
         void ApplyToOpenWindows(string? groupKey = null);
         void Apply(double opacityPercent);
-        void ApplyToWindow(Window window, double opacityPercent);
     }
 
     /// <summary>
@@ -33,7 +32,7 @@ namespace TWChatOverlay.Services
     ///   앱 전역 리소스에 적용합니다.
     ///
     /// 텍스트/아이콘/테두리는 영향을 받지 않아 가독성이 유지됩니다.
-    /// 그룹 정의·표시명 같은 상수 데이터는 정적으로 두고, 설정 연결·원색 캐시·이벤트는 인스턴스 상태다.
+    /// 그룹 정의 같은 상수 데이터는 정적으로 두고, 설정 연결·원색 캐시·이벤트는 인스턴스 상태다.
     /// </summary>
     public sealed class OverlayOpacityService : IOverlayOpacityService
     {
@@ -43,11 +42,10 @@ namespace TWChatOverlay.Services
         public const string GroupCalendar = "Calendar";
         public const string GroupAbaddon = "Abaddon";
 
-        /// <summary>그룹 정의: 키, 표시명, 해당 창 타입 이름 목록.</summary>
+        /// <summary>그룹 정의: 키, 해당 창 타입 이름 목록.</summary>
         private sealed class GroupDefinition
         {
             public string Key = string.Empty;
-            public string DisplayName = string.Empty;
             public string[] WindowTypes = Array.Empty<string>();
         }
 
@@ -56,17 +54,17 @@ namespace TWChatOverlay.Services
         {
             new GroupDefinition
             {
-                Key = GroupContent, DisplayName = "컨텐츠",
+                Key = GroupContent,
                 WindowTypes = new[] { "DailyWeeklyContentWindow" },
             },
             new GroupDefinition
             {
-                Key = GroupCalendar, DisplayName = "달력",
+                Key = GroupCalendar,
                 WindowTypes = new[] { "ItemCalendarWindow" },
             },
             new GroupDefinition
             {
-                Key = GroupAbaddon, DisplayName = "어밴던",
+                Key = GroupAbaddon,
                 WindowTypes = new[] { "AbandonRoadSummaryWindow" },
             },
         };
@@ -118,10 +116,6 @@ namespace TWChatOverlay.Services
 
             ApplyToOpenWindows();
         }
-
-        /// <summary>그룹 표시명. 알 수 없는 키면 키를 그대로 돌려준다.</summary>
-        public static string GetDisplayName(string groupKey)
-            => Groups.FirstOrDefault(g => g.Key == groupKey)?.DisplayName ?? groupKey;
 
         /// <summary>그룹에 저장된 불투명도(%). 저장값이 없으면 통합 값을 따른다.</summary>
         public double GetGroupOpacity(string groupKey)
@@ -194,7 +188,7 @@ namespace TWChatOverlay.Services
         }
 
         /// <summary>지정한 창에만 적용한다. Window.Resources가 앱 전역 리소스를 가린다.</summary>
-        public void ApplyToWindow(Window window, double opacityPercent)
+        private void ApplyToWindow(Window window, double opacityPercent)
         {
             if (window == null) return;
 
@@ -216,9 +210,6 @@ namespace TWChatOverlay.Services
                 AppLogger.Warn($"Failed to apply overlay opacity to {window.GetType().Name} ({opacityPercent}%).", ex);
             }
         }
-
-        /// <summary>창 타입으로 그룹 키를 찾는다. 없으면 null.</summary>
-        public static string? ResolveGroupKey(Window window) => ResolveGroup(window)?.Key;
 
         private static GroupDefinition? ResolveGroup(Window? window)
         {

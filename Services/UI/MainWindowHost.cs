@@ -11,7 +11,6 @@ namespace TWChatOverlay.Services
     {
         FontFamily CurrentFont { get; }
         ChatSettings? HostSettings { get; }
-        void RequestTopmostRefresh();
     }
 
     /// <summary>

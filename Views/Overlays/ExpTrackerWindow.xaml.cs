@@ -59,9 +59,6 @@ namespace TWChatOverlay.Views
             PersistPosition();
         }
 
-        public void ApplyStoredPosition(double? left, double? top)
-            => ApplyStoredPosition(left, top, null);
-
         public void ApplyStoredPosition(double? left, double? top, double? right)
         {
             _storedLeft = left;

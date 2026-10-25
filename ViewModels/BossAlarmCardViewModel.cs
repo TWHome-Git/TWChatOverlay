@@ -1,5 +1,4 @@
-﻿using System;
-using TWChatOverlay.Models;
+﻿using TWChatOverlay.Models;
 using TWChatOverlay.Services;
 
 namespace TWChatOverlay.ViewModels
@@ -23,7 +22,7 @@ namespace TWChatOverlay.ViewModels
 
         public string Name { get; }
 
-        public string ScheduleText { get; private set; }
+        public string ScheduleText { get; }
 
         public bool Alert3MinutesBefore
         {
@@ -90,15 +89,6 @@ namespace TWChatOverlay.ViewModels
                 OnPropertyChanged();
                 SaveSettings();
             }
-        }
-
-        public void UpdateScheduleText(string value)
-        {
-            if (string.Equals(ScheduleText, value, StringComparison.Ordinal))
-                return;
-
-            ScheduleText = value;
-            OnPropertyChanged(nameof(ScheduleText));
         }
 
         private void SaveSettings()

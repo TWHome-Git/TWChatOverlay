@@ -121,7 +121,6 @@ namespace TWChatOverlay
                 services.AddSingleton<ForegroundTopmostGuard>();
                 services.AddSingleton<ScalerTopmostGuard>();
                 services.AddSingleton<ChatWheelPassthroughService>();
-                services.AddSingleton<SecondaryWindowTopmostRefreshService>();
                 services.AddSingleton<ItemDropToastService>();
                 services.AddSingleton<NotificationService>();
                 services.AddSingleton<WeeklySeedRewardService>();
@@ -142,7 +141,6 @@ namespace TWChatOverlay
             AppServices.Get<BlacklistService>().Initialize();
             AppServices.Get<IIdTagService>().Initialize();
             _ = AppServices.Get<RecaptureSupplyAlertService>().PreloadAsync();
-            AppServices.Get<SecondaryWindowTopmostRefreshService>().Initialize();
             AppServices.Get<ForegroundTopmostGuard>().Initialize();
             base.OnStartup(e);
             AppLogger.Info("Core services initialized.");

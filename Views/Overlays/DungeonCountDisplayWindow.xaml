@@ -21,7 +21,7 @@
             MouseLeftButtonDown="RootBorder_MouseLeftButtonDown">
         <Grid>
             <!-- 문구("어밴던로드 3단계" 등)와 아이콘만 보여준다 — "던전 도우미" 제목은 두지 않고, 크기는 문구에 맞춘다 -->
-            <Grid x:Name="NormalContent">
+            <Grid>
                 <StackPanel Orientation="Horizontal"
                             HorizontalAlignment="Center"
                             VerticalAlignment="Center">
@@ -40,16 +40,6 @@
                                TextTrimming="CharacterEllipsis"/>
                 </StackPanel>
             </Grid>
-
-            <!-- 잠금 해제(위치 미리보기) 공통 라벨 -->
-            <TextBlock x:Name="PreviewLabel"
-                       Text="던전 도우미 알림창"
-                       Foreground="{DynamicResource TextBrush}"
-                       FontSize="15"
-                       FontWeight="SemiBold"
-                       HorizontalAlignment="Center"
-                       VerticalAlignment="Center"
-                       Visibility="Collapsed"/>
         </Grid>
     </Border>
 </ov:OverlayWindowBase>

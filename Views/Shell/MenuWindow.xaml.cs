@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Diagnostics;
-using System.IO;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
@@ -366,8 +364,7 @@ namespace TWChatOverlay.Views
         {
             if (sender is not Button btn)
             {
-                AppLogger.Warn("OpenChild_Click received a non-button sender. Falling back to submenu.");
-                OpenSubMenuFallback();
+                AppLogger.Warn("OpenChild_Click received a non-button sender.");
                 return;
             }
 
@@ -447,17 +444,9 @@ namespace TWChatOverlay.Views
                     Application.Current.Shutdown();
                     break;
                 default:
-                    OpenSubMenuFallback();
+                    AppLogger.Warn($"Unknown menu button '{btn.Name}'.");
                     break;
             }
-        }
-
-        private void OpenSubMenuFallback()
-        {
-            var child = new SubMenuWindow();
-            child.Owner = (Window?)GetMainWindow() ?? this;
-            child.Show();
-            AppLogger.Info("Opened fallback submenu window.");
         }
 
         /// <summary>
@@ -498,9 +487,6 @@ namespace TWChatOverlay.Views
                 }
             }
             catch (Exception ex) { AppLogger.Warn("Failed to find main window for chat toggle.", ex); }
-
-            var chat = new ChatView();
-            ShowAddonViewWindow(chat, "Chat", BtnChat);
         }
 
 
@@ -605,34 +591,22 @@ namespace TWChatOverlay.Views
                 SubMenuWindow? existingHost = FindSubMenuHost();
                 if (existingHost != null && existingHost.IsVisible && string.Equals(existingHost.Title, "설정", StringComparison.Ordinal))
                 {
-                    SetMainSettingsPositionMode(false);
                     SetMainAddonPositionMode(false);
                     existingHost.Close();
                     return;
                 }
 
                 var settingsView = new SettingsView();
-                try
-                {
-                    foreach (Window win2 in Application.Current.Windows)
-                    {
-                        if (win2 is MainWindow main)
-                        {
-                            settingsView.DataContext = main.SettingsViewModelInstance;
-                            settingsView.OnlyChatMode = false;
-                            break;
-                        }
-                    }
-                }
-                catch { }
+                MainWindow? mainWindow = GetMainWindow();
+                if (mainWindow != null)
+                    settingsView.DataContext = mainWindow.SettingsViewModelInstance;
 
                 SubMenuWindow? host = existingHost;
 
                 if (host == null)
                 {
                     host = new SubMenuWindow();
-                    host.Owner = (Window?)GetMainWindow() ?? this;
-                    host.Show();
+                    host.Owner = (Window?)mainWindow ?? this;
                 }
 
                 host.Show();
@@ -640,85 +614,16 @@ namespace TWChatOverlay.Views
                 // 설정 콘텐츠 폭(내비 168 + 본문 620 + 여백/스크롤바)에 맞춰 잘림 없이 폭 고정
                 host.Width = 892;
                 SetMainAddonPositionMode(false);
-                SetMainSettingsPositionMode(false);
 
                 try { if (_activeSubmenuButton != null) SetButtonActive(_activeSubmenuButton, false); } catch { }
                 SetButtonActive(BtnSettings, true);
                 _activeSubmenuButton = BtnSettings;
 
                 AttachHostClosedHandler(host);
-
-                try
-                {
-                    if (settingsView is SettingsView sv)
-                        sv.SetCompactMode(false);
-                }
-                catch { }
             }
-            catch
+            catch (Exception ex)
             {
-                foreach (Window win in Application.Current.Windows)
-                {
-                    if (win is MainWindow main)
-                    {
-                        break;
-                    }
-                }
-            }
-        }
-
-        private void ShowAddonViewWindow(FrameworkElement content, string title, Button? buttonToActivate)
-        {
-            SubMenuWindow? host = FindSubMenuHost();
-
-            if (host != null && host.IsVisible && string.Equals(host.Title, title, StringComparison.Ordinal))
-            {
-                AppLogger.Info($"Closing hosted view '{title}' from repeated command.");
-                host.Close();
-                return;
-            }
-
-            if (host == null)
-            {
-                host = new SubMenuWindow();
-                host.Owner = (Window?)GetMainWindow() ?? this;
-                host.Show();
-            }
-
-            try
-            {
-                host.Show();
-                host.ShowHostContent(content, title);
-                host.Width = 1100; // 설정(892)에서 재사용될 수 있으므로 기본 폭 복원
-                bool isAddonSettingsView = false; // 추가 기능은 설정 창으로 통합됨
-                SetMainAddonPositionMode(isAddonSettingsView);
-                SetMainSettingsPositionMode(false);
-
-                try { if (_activeSubmenuButton != null) SetButtonActive(_activeSubmenuButton, false); } catch { }
-
-                if (buttonToActivate != null)
-                {
-                    SetButtonActive(buttonToActivate, true);
-                    _activeSubmenuButton = buttonToActivate;
-                }
-
-                AttachHostClosedHandler(host);
-            }
-            catch
-            {
-                AppLogger.Warn($"Primary host window unavailable for '{title}'. Falling back to standalone window.");
-                var window = new Window()
-                {
-                    Title = title,
-                    Content = content,
-                    Width = 560,
-                    Height = 420,
-                    Owner = (Window?)GetMainWindow() ?? this,
-                    WindowStartupLocation = WindowStartupLocation.CenterOwner
-                };
-                WindowFontService.Apply(window);
-                WindowFontService.Apply(content);
-                window.Show();
+                AppLogger.Warn("Failed to open settings window.", ex);
             }
         }
 
@@ -743,22 +648,9 @@ namespace TWChatOverlay.Views
 
         private void Host_Closed(object? sender, EventArgs e)
         {
-            try { SetMainSettingsPositionMode(false); } catch { }
             try { SetMainAddonPositionMode(false); } catch { }
             try { if (_activeSubmenuButton != null) SetButtonActive(_activeSubmenuButton, false); } catch { }
             _activeSubmenuButton = null;
-        }
-
-        private static void SetMainSettingsPositionMode(bool isEnabled)
-        {
-            foreach (Window window in Application.Current.Windows)
-            {
-                if (window is MainWindow main)
-                {
-                    main.SetSettingsPositionMode(isEnabled);
-                    return;
-                }
-            }
         }
 
         private static void SetMainAddonPositionMode(bool isEnabled)
@@ -786,11 +678,6 @@ namespace TWChatOverlay.Views
                     btn.BorderBrush = Brushes.Transparent;
             }
             catch { }
-        }
-
-        private void Close_Click(object sender, RoutedEventArgs e)
-        {
-            Close();
         }
 
         private TrayIconService CreateNotifyIcon()

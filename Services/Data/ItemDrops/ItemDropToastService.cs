@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Windows;
 using System.Windows.Media;
-using TWChatOverlay.Models;
 using TWChatOverlay.Views;
 
 namespace TWChatOverlay.Services
@@ -18,10 +16,6 @@ namespace TWChatOverlay.Services
     public sealed class ItemDropToastService
     {
         private readonly List<ItemDropToastWindow> ActiveToasts = new();
-        private const double ToastWidth = 420;
-        private const double DefaultBaseTop = 42;
-        private const double Gap = 6;
-        private const double ToastHeight = 56;
 
         public void Show(string itemName, ItemDropGrade grade = ItemDropGrade.Normal, bool withSound = true)
         {

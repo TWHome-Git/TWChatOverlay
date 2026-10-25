@@ -12,7 +12,6 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
-using System.Windows.Media;
 using System.Windows.Threading;
 using TWChatOverlay.Models;
 using TWChatOverlay.Services;
@@ -21,7 +20,6 @@ namespace TWChatOverlay.Views
 {
     public partial class ItemCalendarWindow : OverlayWindowBase, INotifyPropertyChanged
     {
-        private static readonly string LogsRootDirectoryPath = LogStoragePaths.RootDirectory;
         private static readonly string ItemDirectoryPath = LogStoragePaths.ItemDirectory;
         private static readonly string ExpDirectoryPath = LogStoragePaths.ExpDirectory;
         private static readonly string AbandonDirectoryPath = LogStoragePaths.AbandonDirectory;
@@ -34,15 +32,9 @@ namespace TWChatOverlay.Views
         private static readonly Regex ItemEntryRegex = new(
             "<div\\s+class=\"log\\s+item\"(?<attrs>[^>]*)>(?<text>.*?)</div>",
             RegexOptions.IgnoreCase | RegexOptions.Compiled);
-        private static readonly Regex AbandonEntryRegex = new(
-            "<div\\s+class=\"log\\s+Abandon\"(?<attrs>[^>]*)>(?<text>.*?)</div>",
-            RegexOptions.IgnoreCase | RegexOptions.Compiled);
         private static readonly Regex AttrRegex = new(
             "(?<name>data-[a-z0-9\\-]+)=\"(?<value>[^\"]*)\"",
             RegexOptions.IgnoreCase | RegexOptions.Compiled);
-        private static readonly Regex WeekKeyRegex = new(
-            @"^(?<year>\d{4})-W(?<week>\d{2})$",
-            RegexOptions.Compiled);
         private static readonly Regex ExpEntryRegex = new(
             "<div\\s+class=\"log\\s+exp\"(?<attrs>[^>]*)>(?<text>.*?)</div>",
             RegexOptions.IgnoreCase | RegexOptions.Compiled);
@@ -259,18 +251,14 @@ namespace TWChatOverlay.Views
         public Task LoadCurrentMonthAsync()
             => LoadMonthAsync(_currentMonthStart);
 
-        public Task LoadCurrentWeekAsync()
-            => LoadCurrentMonthAsync();
-
         public Task RefreshCurrentMonthAsync()
-            => LoadMonthAsync(_currentMonthStart, forceReload: true);
+            => LoadMonthAsync(_currentMonthStart);
 
         public bool IsMonthLoaded(DateTime monthStart)
             => _hasLoadedMonth && _loadedMonthStart == GetMonthStart(monthStart);
 
-        private async Task LoadMonthAsync(DateTime monthStart, bool forceReload = false)
+        private async Task LoadMonthAsync(DateTime monthStart)
         {
-            _ = forceReload;
             int version = ++_loadVersion;
             monthStart = GetMonthStart(monthStart);
             UpdateHeaderText(monthStart);
@@ -501,8 +489,7 @@ namespace TWChatOverlay.Views
                     continue;
 
                 string gradeRaw = attrs.TryGetValue("data-item-grade", out string? g) ? g : "Normal";
-                ItemDropGrade grade = ItemDropGrade.Normal;
-                _ = Enum.TryParse(gradeRaw, ignoreCase: true, out grade);
+                _ = Enum.TryParse(gradeRaw, ignoreCase: true, out ItemDropGrade grade);
 
                 int count = 1;
                 if (attrs.TryGetValue("data-item-count", out string? c) &&
@@ -516,29 +503,6 @@ namespace TWChatOverlay.Views
                 yield return new ItemEntry(date, text, itemName.Trim(), grade, count);
             }
         }
-
-        private static IEnumerable<ContentEntry> ReadContentEntries(string path)
-        {
-            foreach (string line in File.ReadLines(path))
-            {
-                Match match = AbandonEntryRegex.Match(line);
-                if (!match.Success)
-                    continue;
-
-                var attrs = ParseAttributes(match.Groups["attrs"].Value);
-                if (!TryGetLogDate(attrs, out DateTime date))
-                    continue;
-
-                string text = WebUtility.HtmlDecode(match.Groups["text"].Value).Trim();
-                if (string.IsNullOrWhiteSpace(text))
-                    continue;
-
-                yield return new ContentEntry(date, text);
-            }
-        }
-
-        private static IEnumerable<ContentEntry> ReadAbandonEntries(string path)
-            => ReadContentEntries(path);
 
         private static Dictionary<string, string> ParseAttributes(string attrsRaw)
         {
@@ -669,19 +633,13 @@ namespace TWChatOverlay.Views
                 allSnapshots = _currentMonthSnapshots.ToList();
             }
 
-            var filtered = FilterSnapshotsForCurrentView(allSnapshots);
-            var days = BuildMonthDays(monthStart, filtered);
+            var days = BuildMonthDays(monthStart, allSnapshots);
 
             Days.Clear();
             foreach (var day in days)
                 Days.Add(day);
 
-            UpdateMonthlySummary(filtered);
-        }
-
-        private List<ItemLogSnapshotEntry> FilterSnapshotsForCurrentView(IEnumerable<ItemLogSnapshotEntry> snapshots)
-        {
-            return snapshots.ToList();
+            UpdateMonthlySummary(allSnapshots);
         }
 
         private IReadOnlyList<ItemCalendarDayViewModel> BuildMonthDays(DateTime monthStart, IReadOnlyList<ItemLogSnapshotEntry> snapshots)
@@ -848,7 +806,7 @@ namespace TWChatOverlay.Views
                     monthSnapshots = _currentMonthSnapshots.ToList();
                 }
 
-                UpdateMonthlySummary(FilterSnapshotsForCurrentView(monthSnapshots));
+                UpdateMonthlySummary(monthSnapshots);
                 UpdateStatusForToday();
             }), DispatcherPriority.Background);
         }
@@ -919,39 +877,6 @@ namespace TWChatOverlay.Views
                 ? $"{GetMonthSummaryLabel(_currentMonthStart)} 총 {totalCount:N0}개 획득"
                 : $"{GetMonthSummaryLabel(_currentMonthStart)} 로그가 없어 Logs\\Abandon에 일별 요약이 생성되면 표시됩니다.";
             SetLoadingState(false, status);
-        }
-
-        private static bool TryGetWeekKeyFromPath(string path, out string weekKey)
-        {
-            weekKey = Path.GetFileNameWithoutExtension(path);
-            return WeekKeyRegex.IsMatch(weekKey);
-        }
-
-        private static bool TryGetWeekDateRange(string weekKey, out DateTime weekStart, out DateTime weekEnd)
-        {
-            weekStart = DateTime.MinValue;
-            weekEnd = DateTime.MinValue;
-
-            Match match = WeekKeyRegex.Match(weekKey);
-            if (!match.Success)
-                return false;
-
-            if (!int.TryParse(match.Groups["year"].Value, out int year) ||
-                !int.TryParse(match.Groups["week"].Value, out int week))
-            {
-                return false;
-            }
-
-            try
-            {
-                weekStart = ISOWeek.ToDateTime(year, week, DayOfWeek.Monday).Date;
-                weekEnd = weekStart.AddDays(6);
-                return true;
-            }
-            catch
-            {
-                return false;
-            }
         }
 
         private static bool TryLoadAbandonWeeklySummarySnapshot(string path, out AbandonMonthlySummarySnapshotEntry summary)

@@ -12,11 +12,8 @@ namespace TWChatOverlay.Views
     /// <summary>보급품 탈환 지도 창. 잠금 해제 모드에서 창 어디를 잡아도 이동하고, 가장자리로 크기를 조절한다.</summary>
     public partial class RecaptureSupplyWindow : OverlayWindowBase
     {
-        private const double MinimumWindowWidth = 240;
-        private const double MinimumWindowHeight = 180;
         private const int ResizeBorderThickness = 6;
         private const int WM_NCHITTEST = 0x0084;
-        private const int HTCLIENT = 1;
         private const int HTLEFT = 10;
         private const int HTRIGHT = 11;
         private const int HTTOP = 12;

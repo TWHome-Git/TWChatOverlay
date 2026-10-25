@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Windows;
-using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Interop;
 using System.Windows.Threading;
@@ -39,17 +38,12 @@ namespace TWChatOverlay.Views
             RefreshMousePassthroughStyle();
         }
 
-        public void ShowAddonContent(FrameworkElement? view, string? title = null)
+        private void ShowAddonContent(FrameworkElement? view, string? title = null)
         {
             if (title != null)
                 Title = title;
 
             HostContent.Child = view;
-        }
-
-        public void ClearAddonContent()
-        {
-            HostContent.Child = null;
         }
 
         public void ShowEtosDirection(string? imagePath)

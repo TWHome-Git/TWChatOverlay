@@ -1,28 +1,13 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics;
-using System.Globalization;
-using System.IO;
 using System.Linq;
-using System.Security.Cryptography;
-using System.Text;
-using System.Text.RegularExpressions;
-using System.Text.Json;
-using System.Threading;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Controls.Primitives;
-using System.Windows.Documents;
-using System.Windows.Input;
 using System.Windows.Interop;
 using System.Windows.Media;
-using System.Windows.Media.Imaging;
 using System.Windows.Threading;
 using TWChatOverlay.Models;
 using TWChatOverlay.Services;
-using TWChatOverlay.Services.LogAnalysis;
 using TWChatOverlay.ViewModels;
 
 namespace TWChatOverlay.Views
@@ -52,7 +37,6 @@ namespace TWChatOverlay.Views
         private string _currentTabTag = "Basic";
         private LogAnalysisPipeline? _logAnalysisPipeline;
         private readonly LogTabBufferStore _logTabBufferStore;
-        private readonly TabDisplayStateResolver _tabDisplayStateResolver;
 
         public static readonly DependencyProperty CurrentFontProperty =
             DependencyProperty.Register("CurrentFont", typeof(FontFamily), typeof(MainWindow));
@@ -65,7 +49,6 @@ namespace TWChatOverlay.Views
 
         // IMainWindowHost: Services 계층이 View 타입 대신 인터페이스로 접근하도록 노출.
         ChatSettings? IMainWindowHost.HostSettings => DataContext as ChatSettings;
-        void IMainWindowHost.RequestTopmostRefresh() => RequestTopmostRefresh();
 
         public static readonly DependencyProperty CurrentFontSizeProperty =
             DependencyProperty.Register("CurrentFontSize", typeof(double), typeof(MainWindow));
@@ -88,7 +71,6 @@ namespace TWChatOverlay.Views
             _settingsFileMissingOnStartup = AppServices.Get<StartupState>().SettingsFileMissing;
             _pendingInitialSetupWizard = _settingsFileMissingOnStartup;
             _logTabBufferStore = AppServices.Get<ChatWindowHub>().SharedLogBuffers;
-            _tabDisplayStateResolver = new TabDisplayStateResolver();
             _mainTabAutoHideTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(3) };
             _mainTabAutoHideTimer.Tick += (_, _) => HideMainTabs();
 
@@ -138,7 +120,7 @@ namespace TWChatOverlay.Views
 
             _expService = AppServices.Get<ExperienceService>();
             _huntSessionService = AppServices.Get<ExpHuntSessionService>();
-            _expTrackerViewModel = new ExpTrackerViewModel(_expService, _settings);
+            _expTrackerViewModel = new ExpTrackerViewModel(_expService);
             _expService.SessionState.PropertyChanged += ExpSessionState_PropertyChanged;
             // 창을 띄우고/닫는 전환은 한 판에 한 번뿐이라 보통 우선순위로 바로 처리한다.
             // (사냥 중에는 경험치 줄이 초당 십수 개씩 들어와 Background 큐가 밀리므로 창이 늦게 떴다)
@@ -175,11 +157,7 @@ namespace TWChatOverlay.Views
             };
             this.Deactivated += (s, e) => ReleaseMouseForce();
             this.Activated += (s, e) => ReleaseMouseForce();
-            this.Activated += (_, _) => Dispatcher.BeginInvoke(new Action(EnsureMainWindowTopmost), DispatcherPriority.Background);
-            this.Deactivated += (_, _) => Dispatcher.BeginInvoke(new Action(EnsureMainWindowTopmost), DispatcherPriority.Background);
             this.StateChanged += MainWindow_StateChanged;
-            this.StateChanged += (_, _) => Dispatcher.BeginInvoke(new Action(EnsureMainWindowTopmost), DispatcherPriority.Background);
-            this.IsVisibleChanged += (_, _) => Dispatcher.BeginInvoke(new Action(EnsureMainWindowTopmost), DispatcherPriority.Background);
             // Owned 창(서브 채팅창)은 메인 창의 Closed보다 먼저 닫히므로,
             // Closing 시점에 종료를 표시해야 "사용자가 닫음"으로 오인해 IsOpen=false를 저장하지 않는다
             this.Closing += (_, _) => AppServices.Get<ChatWindowHub>().BeginShutdown();
@@ -249,7 +227,7 @@ namespace TWChatOverlay.Views
         public SettingsViewModel SettingsViewModelInstance => _settingsViewModel;
         public bool IsDailyWeeklyVisible => _dailyWeeklyContentOverlay?.IsVisible == true;
         public bool IsItemCalendarVisible => _itemCalendarWindow?.IsVisible == true;
-        public bool IsSettingsPositionMode => _isSettingsPositionMode || _isAddonPositionMode;
+        public bool IsSettingsPositionMode => _isAddonPositionMode;
 
         private void ExpSessionState_PropertyChanged(object? sender, PropertyChangedEventArgs e)
         {
@@ -448,18 +426,6 @@ namespace TWChatOverlay.Views
 
                 _settings.PropertyChanged += OnSettingsPropertyChanged;
 
-                foreach (Window w in Application.Current.Windows)
-                {
-                    if (w is SubMenuWindow sub)
-                    {
-                        var settingsView = new SettingsView();
-                        settingsView.DataContext = _settingsViewModel;
-                        sub.ShowHostContent(settingsView, "설정");
-                        sub.Hide();
-                        break;
-                    }
-                }
-
                 if (_settings.ShowDailyWeeklyContentOverlay)
                     ShowDailyWeeklyWindow();
 
@@ -484,36 +450,5 @@ namespace TWChatOverlay.Views
                 ApplyAbandonRoadSummaryWindowVisibility();
             }), DispatcherPriority.Background);
         }
-
-        internal void RequestTopmostRefresh()
-        {
-            if (Dispatcher.HasShutdownStarted || Dispatcher.HasShutdownFinished)
-                return;
-
-            try
-            {
-                Dispatcher.BeginInvoke(new Action(EnsureMainWindowTopmost), DispatcherPriority.Background);
-            }
-            catch
-            {
-            }
-        }
-
-        private void EnsureMainWindowTopmost()
-        {
-            if (!IsVisible || WindowState == WindowState.Minimized)
-                return;
-
-            try
-            {
-                TopmostWindowHelper.EnsureTopmost(this);
-            }
-            catch (Exception ex)
-            {
-                AppLogger.Warn("Failed to reassert main window topmost state.", ex);
-            }
-        }
-
-
     }
 }

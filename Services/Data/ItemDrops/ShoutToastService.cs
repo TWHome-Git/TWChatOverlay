@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Media;
@@ -65,9 +64,6 @@ namespace TWChatOverlay.Services
 
         public void SaveCurrentPosition(ChatSettings settings)
             => AppServices.Get<ToastStackService>().SaveCurrentPosition(settings);
-
-        public void NotifyPreviewPositionChanged()
-            => Application.Current.Dispatcher.BeginInvoke(new Action(AppServices.Get<ToastStackService>().Reflow));
 
         public ShoutToastWindow? GetOrCreatePreviewWindow(ChatSettings settings)
         {

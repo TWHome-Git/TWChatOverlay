@@ -74,17 +74,6 @@ namespace TWChatOverlay.Services
             }
         }
 
-        public static void ClearAll(ChatSettings settings, Action<string>? onPropertyChanged)
-        {
-            if (settings == null) throw new ArgumentNullException(nameof(settings));
-
-            foreach (var propertyName in PropertyNames)
-            {
-                SetValue(settings, propertyName, string.Empty);
-                onPropertyChanged?.Invoke(propertyName);
-            }
-        }
-
         private static string GetValue(ChatSettings settings, string propertyName) => propertyName switch
         {
             nameof(ChatSettings.ExitHotKey) => settings.ExitHotKey,

@@ -1,27 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Globalization;
-using System.IO;
 using System.Linq;
-using System.Security.Cryptography;
-using System.Text;
-using System.Text.RegularExpressions;
-using System.Text.Json;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Controls.Primitives;
-using System.Windows.Documents;
 using System.Windows.Input;
-using System.Windows.Interop;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
 using System.Windows.Threading;
 using TWChatOverlay.Models;
 using TWChatOverlay.Services;
-using TWChatOverlay.Services.LogAnalysis;
-using TWChatOverlay.ViewModels;
 
 namespace TWChatOverlay.Views
 {
@@ -72,21 +57,6 @@ namespace TWChatOverlay.Views
         private void MainBorder_MouseMove(object sender, MouseEventArgs e)
         {
             ShowMainTabsTemporarily();
-        }
-
-        private void DragBar_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
-        {
-            if (e.ButtonState == MouseButtonState.Pressed)
-            {
-                DragMove();
-                AppServices.Get<ChatWindowHub>().TryApplyMagneticSnap(this);
-                PersistCurrentMainWindowPosition();
-            }
-        }
-
-        private void ResetExp_Click(object sender, RoutedEventArgs e)
-        {
-            _expService.Reset();
         }
 
         private void OnSettingsPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
@@ -352,36 +322,13 @@ namespace TWChatOverlay.Views
 
             UpdateMainTabSelection(normalizedTabTag);
 
-            var displayState = _tabDisplayStateResolver.Resolve(normalizedTabTag);
             var logDisplay = LogDisplay;
-
             if (logDisplay != null)
-            {
-                logDisplay.Visibility = displayState.IsLogVisible ? Visibility.Visible : Visibility.Collapsed;
-            }
+                logDisplay.Visibility = Visibility.Visible;
 
-            bool isSettingsTab = displayState.IsSettingsTab;
-            if (DragBar != null)
-                DragBar.Visibility = isSettingsTab ? Visibility.Visible : Visibility.Collapsed;
-            if (DragBarRow != null)
-                DragBarRow.Height = isSettingsTab ? new GridLength(25) : new GridLength(0);
+            _stickyService?.UpdatePositionImmediately();
 
-            SetSettingsPositionMode(isSettingsTab);
-
-            if (_stickyService != null)
-            {
-                if (isSettingsTab)
-                {
-                    _stickyService.SetPositionTrackingEnabled(false);
-                }
-                else
-                {
-                    _stickyService.SetPositionTrackingEnabled(true);
-                    _stickyService.UpdatePositionImmediately();
-                }
-            }
-
-            if (refreshLogDisplay && logDisplay?.Visibility == Visibility.Visible)
+            if (refreshLogDisplay && logDisplay != null)
                 RequestRefreshLogDisplay();
         }
 

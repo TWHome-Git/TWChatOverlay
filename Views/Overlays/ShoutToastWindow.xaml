@@ -20,39 +20,27 @@
             Padding="12,9,14,10"
             MouseLeftButtonDown="RootBorder_MouseLeftButtonDown">
         <Grid>
-            <Grid x:Name="NormalContent">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="*"/>
-                </Grid.ColumnDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
 
-                <Border Width="6"
-                        CornerRadius="3"
-                        Background="{DynamicResource OverlayShoutFillBrush}"
-                        VerticalAlignment="Stretch"
-                        Margin="0,0,10,0"/>
+            <Border Width="6"
+                    CornerRadius="3"
+                    Background="{DynamicResource OverlayShoutFillBrush}"
+                    VerticalAlignment="Stretch"
+                    Margin="0,0,10,0"/>
 
-                <!-- 주황 테두리·막대가 외치기임을 알려 주므로 "외치기" 제목은 두지 않는다 -->
-                <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                    <TextBlock x:Name="ToastText"
-                               Foreground="{DynamicResource TextBrush}"
-                               FontSize="15"
-                               FontWeight="SemiBold"
-                               TextWrapping="NoWrap"
-                               TextTrimming="CharacterEllipsis"
-                               VerticalAlignment="Center"/>
-                </StackPanel>
-            </Grid>
-
-            <!-- 잠금 해제(위치 미리보기) 공통 라벨 -->
-            <TextBlock x:Name="PreviewLabel"
-                       Text="외치기 알림창"
-                       Foreground="{DynamicResource TextBrush}"
-                       FontSize="15"
-                       FontWeight="SemiBold"
-                       HorizontalAlignment="Center"
-                       VerticalAlignment="Center"
-                       Visibility="Collapsed"/>
+            <!-- 주황 테두리·막대가 외치기임을 알려 주므로 "외치기" 제목은 두지 않는다 -->
+            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                <TextBlock x:Name="ToastText"
+                           Foreground="{DynamicResource TextBrush}"
+                           FontSize="15"
+                           FontWeight="SemiBold"
+                           TextWrapping="NoWrap"
+                           TextTrimming="CharacterEllipsis"
+                           VerticalAlignment="Center"/>
+            </StackPanel>
         </Grid>
     </Border>
 </ov:OverlayWindowBase>

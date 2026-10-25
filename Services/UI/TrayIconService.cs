@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
-using System.Windows;
 using System.Windows.Interop;
 
 namespace TWChatOverlay.Services
@@ -26,7 +25,6 @@ namespace TWChatOverlay.Services
         private const int WM_NULL = 0x0000;
 
         private const uint NIM_ADD = 0x0;
-        private const uint NIM_MODIFY = 0x1;
         private const uint NIM_DELETE = 0x2;
         private const uint NIF_MESSAGE = 0x1;
         private const uint NIF_ICON = 0x2;

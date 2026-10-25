@@ -1,13 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Globalization;
 using System.IO;
-using System.Net;
 using System.Text;
 using System.Text.Json;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
@@ -20,12 +17,6 @@ namespace TWChatOverlay.Views
     public partial class AbandonRoadSummaryWindow : OverlayWindowBase, INotifyPropertyChanged
     {
         private static readonly string AbandonDirectoryPath = LogStoragePaths.AbandonDirectory;
-        private static readonly Regex AbandonEntryRegex = new(
-            "<div\\s+class=\"log\\s+Abandon\"(?<attrs>[^>]*)>(?<text>.*?)</div>",
-            RegexOptions.IgnoreCase | RegexOptions.Compiled);
-        private static readonly Regex AttrRegex = new(
-            "(?<name>data-[a-z0-9\\-]+)=\"(?<value>[^\"]*)\"",
-            RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
         private const string LowMagicStoneIconUri = "pack://application:,,,/Data/images/Item/하급마정석.png";
         private const string MiddleMagicStoneIconUri = "pack://application:,,,/Data/images/Item/중급마정석.png";
@@ -45,11 +36,8 @@ namespace TWChatOverlay.Views
 
         public event PropertyChangedEventHandler? PropertyChanged;
 
-        public AbandonRoadSummaryWindow(ChatSettings settings, LogAnalysisService logAnalysisService)
+        public AbandonRoadSummaryWindow()
         {
-            _ = settings ?? throw new ArgumentNullException(nameof(settings));
-            _ = logAnalysisService ?? throw new ArgumentNullException(nameof(logAnalysisService));
-
             InitializeComponent();
             DataContext = this;
             _autoCloseTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(250) };
@@ -222,19 +210,6 @@ namespace TWChatOverlay.Views
             }
         }
 
-        private static void SaveSummarySnapshot(string path, AbandonMonthlySummarySnapshotEntry summary)
-        {
-            try
-            {
-                string json = JsonSerializer.Serialize(summary);
-                File.WriteAllText(path, json, new UTF8Encoding(encoderShouldEmitUTF8Identifier: true));
-            }
-            catch (Exception ex)
-            {
-                AppLogger.Warn($"Failed to write Abandon weekly summary snapshot '{path}'.", ex);
-            }
-        }
-
         public void UpdateSummary(AbandonMonthlySummarySnapshotEntry summary)
         {
             SummaryText = $"어밴던로드 주간 합계: {FormatManAmount(summary.NetProfitMan)}";
@@ -279,40 +254,6 @@ namespace TWChatOverlay.Views
                 "#FF6B6B",
                 "#FF6B6B",
                 $"{lowLossCount:N0}개"));
-        }
-
-        private static bool TryParseAbandonEntry(string line, out DateTime logDate, out string text)
-        {
-            logDate = DateTime.MinValue;
-            text = string.Empty;
-            Match match = AbandonEntryRegex.Match(line);
-            if (!match.Success)
-                return false;
-
-            var attrs = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-            foreach (Match attrMatch in AttrRegex.Matches(match.Groups["attrs"].Value))
-            {
-                string key = attrMatch.Groups["name"].Value.Trim();
-                string value = WebUtility.HtmlDecode(attrMatch.Groups["value"].Value).Trim();
-                if (!string.IsNullOrWhiteSpace(key))
-                    attrs[key] = value;
-            }
-
-            if (!attrs.TryGetValue("data-date", out string? dateRaw) ||
-                !DateTime.TryParseExact(dateRaw, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out logDate))
-            {
-                return false;
-            }
-
-            text = WebUtility.HtmlDecode(match.Groups["text"].Value).Trim();
-            return !string.IsNullOrWhiteSpace(text);
-        }
-
-        private static string GetIsoWeekKey(DateTime date)
-        {
-            int isoYear = ISOWeek.GetYear(date);
-            int isoWeek = ISOWeek.GetWeekOfYear(date);
-            return $"{isoYear}-W{isoWeek:00}";
         }
 
         private static (DateTime WeekStart, DateTime WeekEnd) GetCurrentWeekRange(DateTime? now = null)

@@ -9,10 +9,8 @@ namespace TWChatOverlay.Views
     public partial class MainWindow
     {
         // ── 이 부분 클래스가 주로 쓰는 상태 ──
-        private bool _isSettingsPositionMode;
         private bool _isAddonPositionMode;
         private int _addonPositionPreviewTabIndex = -1;
-        private bool _isWizardChatPositionMode;
 
         private void PersistSettings()
         {
@@ -23,17 +21,6 @@ namespace TWChatOverlay.Views
         {
             SyncMarginsFromWindowPosition(this.Left, this.Top);
             PersistSettings();
-        }
-
-        public void SetSettingsPositionMode(bool isEnabled)
-        {
-            if (_isSettingsPositionMode == isEnabled)
-                return;
-
-            _isSettingsPositionMode = isEnabled;
-            ApplyPositionModeWindows();
-            RefreshExpTrackerWindow();
-            RefreshChatPassthrough();
         }
 
         public void SetAddonPositionMode(bool isEnabled)
@@ -59,7 +46,7 @@ namespace TWChatOverlay.Views
 
             _addonPositionPreviewTabIndex = normalized;
 
-            if (_isAddonPositionMode && !_isWizardChatPositionMode)
+            if (_isAddonPositionMode)
             {
                 ShowSettingsPositionWindows();
             }
@@ -187,7 +174,7 @@ namespace TWChatOverlay.Views
 
         private void ApplyPositionModeWindows()
         {
-            if (_isSettingsPositionMode || _isAddonPositionMode)
+            if (_isAddonPositionMode)
             {
                 ShowSettingsPositionWindows();
             }
@@ -197,78 +184,9 @@ namespace TWChatOverlay.Views
             }
         }
 
-        public void SetWizardChatPositionMode(bool isEnabled)
-        {
-            _isWizardChatPositionMode = isEnabled;
-            SetSettingsPositionMode(isEnabled);
-            ApplyWizardChatPositionUi(isEnabled);
-            RefreshChatPassthrough();
-        }
-
-        private void ApplyWizardChatPositionUi(bool enabled)
-        {
-            if (enabled)
-            {
-                try
-                {
-                    if (!IsVisible)
-                        Show();
-
-                    Opacity = 1;
-                    IsHitTestVisible = true;
-                    Visibility = Visibility.Visible;
-
-                    if (LogDisplay != null)
-                        LogDisplay.Visibility = Visibility.Visible;
-
-                    DragBar.Visibility = Visibility.Visible;
-                    DragBarRow.Height = new GridLength(25);
-
-                    _stickyService?.SetPositionTrackingEnabled(false);
-                }
-                catch { }
-            }
-            else
-            {
-                try
-                {
-                    DragBar.Visibility = Visibility.Collapsed;
-                    DragBarRow.Height = new GridLength(0);
-                    _stickyService?.SetPositionTrackingEnabled(true);
-                    _stickyService?.UpdatePositionImmediately();
-                }
-                catch { }
-            }
-        }
-
         private void ShowSettingsPositionWindows()
         {
-            if (_isWizardChatPositionMode)
-            {
-                try
-                {
-                    AppServices.Get<ExperienceAlertWindowService>().Close();
-                    AppServices.Get<DungeonCountDisplayWindowService>().ClosePositionPreview(_settings);
-                    AppServices.Get<ShoutToastService>().ClosePositionPreview(_settings);
-                    AppServices.Get<MessengerEtaToastService>().ClosePositionPreview(_settings);
-                    SubAddonWindow.Instance?.Hide();
-                    ItemDropHelperWindow.Instance?.Close();
-                    BuffTrackerHelperWindow.Instance?.Close();
-                    try { _AbandonRoadSummaryWindow?.Close(); } catch { }
-                }
-                catch { }
-                return;
-            }
-
-            if (_isSettingsPositionMode)
-            {
-                AppServices.Get<ShoutToastService>().ShowPositionPreview(_settings, force: true);
-                AppServices.Get<MessengerEtaToastService>().ShowPositionPreview(_settings, force: true);
-            }
-            else
-            {
-                CloseNonAddonPositionPreviewWindows(savePositions: true);
-            }
+            CloseNonAddonPositionPreviewWindows(savePositions: true);
 
             if (_isAddonPositionMode)
             {
@@ -278,12 +196,6 @@ namespace TWChatOverlay.Views
 
         private void HideSettingsPositionWindows()
         {
-            if (_isWizardChatPositionMode)
-            {
-                _isWizardChatPositionMode = false;
-                return;
-            }
-
             CloseNonAddonPositionPreviewWindows(savePositions: true);
             CloseAddonPositionPreviewWindows(savePositions: true, restoreNormalWindows: true);
         }

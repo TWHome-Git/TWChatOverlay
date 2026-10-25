@@ -5,7 +5,6 @@ using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Threading;
 using TWChatOverlay.Models;
-using TWChatOverlay.Services;
 
 namespace TWChatOverlay.Views
 {
@@ -57,7 +56,6 @@ namespace TWChatOverlay.Views
         public void SetFontSize(double size)
         {
             MessageTextBlock.FontSize = size;
-            PreviewLabel.FontSize = size;
         }
 
         /// <summary>메시지 왼쪽 아이콘 (금화 주머니 카운트 등). null이면 숨김.</summary>
@@ -79,13 +77,6 @@ namespace TWChatOverlay.Views
             {
                 MessageIcon.Visibility = Visibility.Collapsed;
             }
-        }
-
-        /// <summary>위치 미리보기: 통일 라벨("던전 카운트 알림창")만 표시.</summary>
-        public void SetPreviewMode(bool isPreview)
-        {
-            NormalContent.Visibility = isPreview ? Visibility.Collapsed : Visibility.Visible;
-            PreviewLabel.Visibility = isPreview ? Visibility.Visible : Visibility.Collapsed;
         }
 
         public void UpdateDisplay(string message, int durationSeconds)
@@ -112,14 +103,6 @@ namespace TWChatOverlay.Views
             BeginAnimation(OpacityProperty, new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(140)));
             if (_closeTimer.Interval > TimeSpan.Zero)
                 _closeTimer.Start();
-        }
-
-        public void MoveTo(double top)
-        {
-            BeginAnimation(TopProperty, new DoubleAnimation(Top, top, TimeSpan.FromMilliseconds(160))
-            {
-                EasingFunction = new QuadraticEase { EasingMode = EasingMode.EaseOut }
-            });
         }
 
         protected override void OnClosed(EventArgs e)

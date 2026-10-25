@@ -1,27 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Globalization;
-using System.IO;
 using System.Linq;
-using System.Security.Cryptography;
-using System.Text;
-using System.Text.RegularExpressions;
-using System.Text.Json;
-using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Controls.Primitives;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Interop;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Threading;
-using TWChatOverlay.Models;
 using TWChatOverlay.Services;
-using TWChatOverlay.Services.LogAnalysis;
-using TWChatOverlay.ViewModels;
 
 namespace TWChatOverlay.Views
 {
@@ -239,7 +219,7 @@ namespace TWChatOverlay.Views
 
             if (_AbandonRoadSummaryWindow == null || !_AbandonRoadSummaryWindow.IsLoaded)
             {
-                _AbandonRoadSummaryWindow = new AbandonRoadSummaryWindow(_settings, _logAnalysisService);
+                _AbandonRoadSummaryWindow = new AbandonRoadSummaryWindow();
                 _AbandonRoadSummaryWindow.Closed += (_, _) =>
                 {
                     _settings.AbandonRoadSummaryWindowLeft = _AbandonRoadSummaryWindow?.Left;
@@ -277,17 +257,6 @@ namespace TWChatOverlay.Views
             // Realtime pipeline already pushes in-memory weekly deltas to this window.
             if (!wasVisible)
                 _ = _AbandonRoadSummaryWindow.LoadCurrentWeekAsync();
-        }
-
-        public void RefreshAbandonRoadSummaryWindow()
-        {
-            if (!_settings.ShowAbandonRoadSummaryWindow)
-                return;
-
-            if (_AbandonRoadSummaryWindow?.IsVisible != true)
-                return;
-
-            _ = _AbandonRoadSummaryWindow.LoadCurrentWeekAsync();
         }
 
         private void MainWindow_StateChanged(object? sender, EventArgs e)

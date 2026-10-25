@@ -32,9 +32,6 @@ namespace TWChatOverlay.Services
         public static bool IsUnlockChrome(Window window)
             => window is BackdropWindow or BannerWindow or HighlightWindow or InspectorWindow;
 
-        /// <summary>현재 선택된(편집 중인) 창. 잠금 해제 모드에서만 값이 있다.</summary>
-        public Window? SelectedWindow => _selected;
-
         /// <summary>모드 변경 시 발생. 인자 = 새 잠금 해제 상태.</summary>
         public event Action<bool>? UnlockChanged;
 
@@ -396,7 +393,7 @@ namespace TWChatOverlay.Services
             return window.GetType().Name switch
             {
                 "MainWindow" => "채팅창",
-                "AbaddonRoadSummaryWindow" => "어밴던로드 통계",
+                "AbandonRoadSummaryWindow" => "어밴던로드 통계",
                 "BossAlertToastWindow" => "필드 보스 알림창",
                 "ExpTrackerWindow" => "경험치 추적창",
                 "ExperienceAlertWindow" => "경험치 누적 알림",
@@ -1138,18 +1135,6 @@ namespace TWChatOverlay.Services
 
             [System.Runtime.InteropServices.DllImport("user32.dll")]
             public static extern bool SetWindowPos(IntPtr hWnd, IntPtr hWndInsertAfter, int x, int y, int cx, int cy, int flags);
-
-            [System.Runtime.InteropServices.StructLayout(System.Runtime.InteropServices.LayoutKind.Sequential)]
-            public struct WINDOWPOS
-            {
-                public IntPtr hwnd;
-                public IntPtr hwndInsertAfter;
-                public int x;
-                public int y;
-                public int cx;
-                public int cy;
-                public int flags;
-            }
         }
     }
 }

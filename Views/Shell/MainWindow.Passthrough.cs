@@ -13,7 +13,7 @@ namespace TWChatOverlay.Views
         Window IWheelPassthroughTarget.Window => this;
 
         /// <summary>
-        /// 설정이 켜져 있고, 잠금 상태이고, 위치 편집(설정 탭·추가 기능 미리보기·초기 마법사)이 아닐 때만 자동 통과한다.
+        /// 설정이 켜져 있고, 잠금 상태이고, 위치 편집(추가 기능 미리보기·초기 마법사)이 아닐 때만 자동 통과한다.
         /// 서브 채팅창도 같은 기준을 쓴다.
         /// </summary>
         public bool IsChatAutoPassthroughAllowed
@@ -24,7 +24,7 @@ namespace TWChatOverlay.Views
                     return false;
                 if (AppServices.Get<UiLockService>().IsUnlocked)
                     return false;
-                if (_isSettingsPositionMode || _isAddonPositionMode || _isWizardChatPositionMode || _isInitialSetupWizardRunning)
+                if (_isAddonPositionMode || _isInitialSetupWizardRunning)
                     return false;
                 return true;
             }

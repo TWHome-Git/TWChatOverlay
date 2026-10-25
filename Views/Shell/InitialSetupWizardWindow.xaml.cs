@@ -1,11 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
 using TWChatOverlay.Models;
@@ -16,27 +13,26 @@ namespace TWChatOverlay.Views
 {
     public partial class InitialSetupWizardWindow : Window
     {
-        private sealed record WizardStep(string Title, string Description, bool SupportsPositionPreview);
+        private sealed record WizardStep(string Title);
 
         // 채팅창 위치 설정 단계는 잠금 해제 모드(창 편집)로 대체되어 제거됨
         private readonly List<WizardStep> _steps = new()
         {
-            new("1. 채팅 로그 위치 설정", "채팅 로그 폴더를 지정합니다.", false),
-            new("2. 채팅창 설정", "", false),
-            new("3. 외치기 설정", "외치기 팝업/위치/자동복사/유지시간/텍스트 크기를 설정합니다.", true),
-            new("4. 키워드 알림 설정", "키워드 알림 기능을 설정합니다.", false),
-            new("5. 경험치 추적 설정", "경험치 추적 및 누적 알림을 설정합니다.", true),
-            new("6. 던전 도우미 설정", "던전 도우미 알림 항목을 설정합니다.", true),
-            new("7. 아이템 획득 알림 설정", "아이템 획득 알림 및 필터를 설정합니다.", true),
-            new("8. 버프 추적 설정", "버프 추적 알림 및 종료 사운드를 설정합니다.", true),
-            new("9. 필드 보스 알림 설정", "필드 보스 알림을 설정합니다.", false),
-            new("10. 일일/주간 컨텐츠 추적 설정", "일일/주간 컨텐츠 체크 항목을 설정합니다.", false)
+            new("1. 채팅 로그 위치 설정"),
+            new("2. 채팅창 설정"),
+            new("3. 외치기 설정"),
+            new("4. 키워드 알림 설정"),
+            new("5. 경험치 추적 설정"),
+            new("6. 던전 도우미 설정"),
+            new("7. 아이템 획득 알림 설정"),
+            new("8. 버프 추적 설정"),
+            new("9. 필드 보스 알림 설정"),
+            new("10. 일일/주간 컨텐츠 추적 설정")
         };
 
         private int _stepIndex;
         private readonly ChatSettings _settings;
         private readonly MainWindow? _mainWindow;
-        private bool _positionPreviewEnabled;
         private bool _shoutPreviewEnabled;
 
         private UIElement? _dailyWeeklyStepContent;
@@ -94,10 +90,6 @@ namespace TWChatOverlay.Views
             WizardStep step = _steps[_stepIndex];
 
             StepTitleText.Text = step.Title;
-            StepDescText.Text = string.Empty;
-            StepDescText.Visibility = Visibility.Collapsed;
-            StepDetailText.Text = string.Empty;
-            StepDetailText.Visibility = Visibility.Collapsed;
             ProgressText.Text = $"{_stepIndex + 1} / {_steps.Count}";
             PrevButton.IsEnabled = _stepIndex > 0;
             NextButton.Visibility = _stepIndex == _steps.Count - 1 ? Visibility.Collapsed : Visibility.Visible;
@@ -336,15 +328,14 @@ namespace TWChatOverlay.Views
         {
             foreach (var (label, key) in items)
             {
-                string resolvedKey = ResolveDungeonConfigKey(key);
-                if (!_settings.DungeonItemConfigs.TryGetValue(resolvedKey, out var cfg))
+                if (!_settings.DungeonItemConfigs.TryGetValue(key, out var cfg))
                 {
                     cfg = new DungeonItemConfig { IsEnabled = true };
-                    _settings.DungeonItemConfigs[resolvedKey] = cfg;
+                    _settings.DungeonItemConfigs[key] = cfg;
                 }
 
                 parent.Children.Add(CreateToggleListRow(label, indent, cfg.IsEnabled,
-                    v => SetDungeonItemEnabled(resolvedKey, v)));
+                    v => SetDungeonItemEnabled(key, v)));
             }
         }
 
@@ -377,17 +368,16 @@ namespace TWChatOverlay.Views
 
         private void SetDungeonItemEnabledRecursive(string key, bool enabled, HashSet<string> visited)
         {
-            string resolvedKey = ResolveDungeonConfigKey(key);
-            if (!visited.Add(resolvedKey))
+            if (!visited.Add(key))
                 return;
 
-            if (_settings.DungeonItemConfigs.TryGetValue(resolvedKey, out var cfg))
+            if (_settings.DungeonItemConfigs.TryGetValue(key, out var cfg))
             {
                 cfg.IsEnabled = enabled;
-                _settings.DungeonItemConfigs[resolvedKey] = cfg;
+                _settings.DungeonItemConfigs[key] = cfg;
             }
 
-            foreach (string child in GetDungeonChildKeys(resolvedKey))
+            foreach (string child in GetDungeonChildKeys(key))
             {
                 SetDungeonItemEnabledRecursive(child, enabled, visited);
             }
@@ -405,20 +395,6 @@ namespace TWChatOverlay.Views
                 "머큐리얼 코어 마스터" => new[] { "샐리온 코어 마스터 던전", "샐레아나 코어 마스터 던전", "실라이론 코어 마스터 던전", "실반 코어 마스터 던전", "루미너스 코어 마스터 던전" },
                 "머큐리얼 주간" => new[] { "샐리온", "샐레아나", "실라이론", "실반", "루미너스", "루미너스(EX)" },
                 _ => Array.Empty<string>()
-            };
-        }
-
-        private string ResolveDungeonConfigKey(string key)
-        {
-            if (_settings.DungeonItemConfigs.ContainsKey(key))
-                return key;
-
-            return key switch
-            {
-                "아페티리아" => _settings.DungeonItemConfigs.ContainsKey("아페티리아") ? "아페티리아" : key,
-                "아페티리아 어려움" => _settings.DungeonItemConfigs.ContainsKey("아페티리아") ? "아페티리아" : key,
-                "아페티리아 일반" => _settings.DungeonItemConfigs.ContainsKey("아페티리아") ? "아페티리아" : key,
-                _ => key
             };
         }
 
@@ -485,53 +461,11 @@ namespace TWChatOverlay.Views
             RenderStep();
         }
 
-        private void SetPositionPreview(bool enabled)
-        {
-            _positionPreviewEnabled = enabled;
-            try
-            {
-                _mainWindow?.SetWizardChatPositionMode(false);
-                _mainWindow?.SetSettingsPositionMode(enabled);
-            }
-            catch (Exception ex)
-            {
-                AppLogger.Warn("Failed to toggle settings position mode from setup wizard.", ex);
-            }
-
-            if (enabled)
-            {
-                try
-                {
-                    _mainWindow?.Show();
-                    if (_mainWindow != null)
-                    {
-                        _mainWindow.Opacity = 1;
-                        _mainWindow.IsHitTestVisible = true;
-                        _mainWindow.Visibility = Visibility.Visible;
-                    }
-                }
-                catch { }
-            }
-        }
-
-        private void SaveMainWindowPositionToPreset1()
-        {
-            // 위치는 LineMargin 값으로 이미 저장된다 (프리셋 시스템은 프로필로 대체되어 제거됨)
-            try
-            {
-                ConfigService.SaveDeferred(_settings);
-            }
-            catch (Exception ex)
-            {
-                AppLogger.Warn("Failed to save settings from setup wizard.", ex);
-            }
-        }
 
         private void SkipButton_Click(object sender, RoutedEventArgs e)
         {
             try { AppServices.Get<ShoutToastService>().ClosePositionPreview(_settings); } catch { }
             try { _embeddedSettings?.EndWizardPanelMode(); } catch { }
-            SetPositionPreview(false);
             ConfigService.Save(_settings);
             WizardFinished?.Invoke(this, false);
             Close();
@@ -543,8 +477,6 @@ namespace TWChatOverlay.Views
             {
                 AppServices.Get<ShoutToastService>().ClosePositionPreview(_settings);
                 _embeddedSettings?.EndWizardPanelMode();
-                SetPositionPreview(false);
-                SaveMainWindowPositionToPreset1();
                 ApplyExperienceLimitStateFromWizard();
                 ConfigService.Save(_settings);
             }
@@ -575,7 +507,6 @@ namespace TWChatOverlay.Views
         {
             try { AppServices.Get<ShoutToastService>().ClosePositionPreview(_settings); } catch { }
             try { _embeddedSettings?.EndWizardPanelMode(); } catch { }
-            try { SetPositionPreview(false); } catch { }
             base.OnClosed(e);
         }
     }

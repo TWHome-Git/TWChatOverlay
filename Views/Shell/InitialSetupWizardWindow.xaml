@@ -120,10 +120,7 @@
                 </Grid.RowDefinitions>
 
                 <StackPanel Grid.Row="0">
-                    <TextBlock x:Name="StepTitleText" Text="1. 채팅 로그 위치 설정" Foreground="{DynamicResource TextBrush}" FontSize="18" FontWeight="SemiBold"/>
-                    <TextBlock x:Name="StepDescText" Text="" Foreground="{DynamicResource OverlayInfoTextBrush}" FontSize="13" Margin="0,0,0,0" TextWrapping="Wrap" Visibility="Collapsed"/>
-                    <TextBlock x:Name="StepDetailText" Text="" Foreground="{DynamicResource OverlaySubtleTextBrush}" FontSize="12" TextWrapping="Wrap" Visibility="Collapsed"/>
-                </StackPanel>
+                    <TextBlock x:Name="StepTitleText" Text="1. 채팅 로그 위치 설정" Foreground="{DynamicResource TextBrush}" FontSize="18" FontWeight="SemiBold"/>                </StackPanel>
 
                 <ContentControl x:Name="StepContentHost" Grid.Row="1" Margin="0,6,0,0"/>
             </Grid>

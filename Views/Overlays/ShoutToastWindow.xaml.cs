@@ -23,7 +23,6 @@ namespace TWChatOverlay.Views
         private readonly DispatcherTimer _lifetimeTimer;
         private ChatSettings _settings;
         private bool _isClosing;
-        private bool _isPreviewMode;
         private bool? _lastAppliedTopmostState;
 
         public ShoutToastWindow(string message, FontFamily fontFamily, ChatSettings settings)
@@ -56,46 +55,15 @@ namespace TWChatOverlay.Views
             ApplyToastSettings();
         }
 
-        public void SetPreviewMode(bool isPreview)
-        {
-            _isPreviewMode = isPreview;
-            ApplyPreviewVisual(isPreview);
-            RefreshMousePassthroughStyle(forceInteractive: isPreview);
-            if (isPreview)
-            {
-                ApplyTopmostState(true);
-            }
-            else if (IsVisible)
-            {
-                ApplyTopmostState(true);
-            }
-        }
-
-        public void SetMessage(string message)
-        {
-            ToastText.Text = NormalizeMessage(message);
-            ApplyLayoutConstraints();
-        }
-
         /// <summary>잠금 해제 인스펙터에서 폰트 크기 변경 시 즉시 반영.</summary>
         public void SetFontSize(double size)
         {
             ToastText.FontSize = size;
-            PreviewLabel.FontSize = size;
-        }
-
-        // 미리보기 = 통일 라벨("외치기 알림창")만, 실제 토스트 = 기존 레이아웃
-        private void ApplyPreviewVisual(bool isPreview)
-        {
-            NormalContent.Visibility = isPreview ? Visibility.Collapsed : Visibility.Visible;
-            PreviewLabel.Visibility = isPreview ? Visibility.Visible : Visibility.Collapsed;
         }
 
         public void ShowAnimated(double targetLeft, double targetTop, int durationSeconds = 5)
         {
-            _isPreviewMode = false;
-            ApplyPreviewVisual(false);
-            RefreshMousePassthroughStyle(forceInteractive: false);
+            RefreshMousePassthroughStyle();
 
             double centerX = targetLeft + (BaseToastWidth / 2.0);
             Left = targetLeft;
@@ -124,36 +92,8 @@ namespace TWChatOverlay.Views
             _lifetimeTimer.Start();
         }
 
-        public void ShowPreview(double targetLeft, double targetTop)
-        {
-            _isPreviewMode = true;
-            ApplyPreviewVisual(true);
-            RefreshMousePassthroughStyle(forceInteractive: true);
-            BeginAnimation(TopProperty, null);
-            BeginAnimation(LeftProperty, null);
-
-            double centerX = targetLeft + (BaseToastWidth / 2.0);
-            Left = targetLeft;
-            Top = targetTop;
-            Opacity = 1;
-            if (!IsVisible)
-                Show();
-
-            Visibility = Visibility.Visible;
-            UpdateLayout();
-            Left = ClampLeftToWorkArea(centerX - (ActualWidth / 2.0));
-            ApplyTopmostState(true);
-        }
-
         public void MoveTo(double targetTop)
         {
-            if (_isPreviewMode)
-            {
-                BeginAnimation(TopProperty, null);
-                Top = targetTop;
-                return;
-            }
-
             BeginAnimation(TopProperty, new DoubleAnimation
             {
                 To = targetTop,
@@ -165,37 +105,27 @@ namespace TWChatOverlay.Views
         protected override void OnSourceInitialized(EventArgs e)
         {
             base.OnSourceInitialized(e);
-            RefreshMousePassthroughStyle(forceInteractive: _isPreviewMode);
+            RefreshMousePassthroughStyle();
         }
 
         protected override void OnClosed(EventArgs e)
         {
             _lifetimeTimer.Stop();
-            SyncPositionToSettings(saveImmediately: true);
             base.OnClosed(e);
         }
 
         protected override bool ApplyAppFont => false;          // 생성자 인자의 폰트를 쓴다
         protected override bool PersistBoundsOnChange => false; // 위치는 알림 스택이 정한다
 
-        /// <summary>실제 알림은 스택이 배치하므로 미리보기일 때만 끌 수 있다. 선택 하이라이트는 항상 허용.</summary>
+        /// <summary>실제 알림은 스택이 배치하므로 끌 수 없다. 선택 하이라이트만 허용.</summary>
         private void RootBorder_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
-            if (!_isPreviewMode)
-            {
-                AppServices.Get<UiLockService>().Select(this);
-                return;
-            }
-
-            BeginAnimation(TopProperty, null);
-            BeginAnimation(LeftProperty, null);
-            if (TryBeginDrag(e))
-                SyncPositionToSettings(saveImmediately: true);
+            AppServices.Get<UiLockService>().Select(this);
         }
 
         private void StartCloseAnimation()
         {
-            if (_isPreviewMode || _isClosing)
+            if (_isClosing)
                 return;
 
             _isClosing = true;
@@ -209,39 +139,13 @@ namespace TWChatOverlay.Views
             BeginAnimation(OpacityProperty, fade);
         }
 
-        public void SaveCurrentPosition()
-        {
-            SyncPositionToSettings(saveImmediately: true);
-        }
-
-        private void SyncPositionToSettings(bool saveImmediately)
-        {
-            if (!_isPreviewMode)
-                return;
-
-            try
-            {
-                _settings.ShoutToastWindowLeft = Left;
-                _settings.ShoutToastWindowTop = Top;
-                if (saveImmediately)
-                    ConfigService.Save(_settings);
-                else
-                    ConfigService.SaveDeferred(_settings);
-
-                AppServices.Get<ShoutToastService>().NotifyPreviewPositionChanged();
-            }
-            catch { }
-        }
-
-        private void RefreshMousePassthroughStyle(bool forceInteractive = false)
+        private void RefreshMousePassthroughStyle()
         {
             try
             {
                 IntPtr hwnd = new WindowInteropHelper(this).EnsureHandle();
                 int exStyle = NativeMethods.GetWindowLong(hwnd, NativeMethods.GWL_EXSTYLE);
-                int nextStyle = forceInteractive
-                    ? (exStyle & ~NativeMethods.WS_EX_TRANSPARENT) | NativeMethods.WS_EX_TOOLWINDOW
-                    : exStyle | NativeMethods.WS_EX_TRANSPARENT | NativeMethods.WS_EX_TOOLWINDOW;
+                int nextStyle = exStyle | NativeMethods.WS_EX_TRANSPARENT | NativeMethods.WS_EX_TOOLWINDOW;
                 NativeMethods.SetWindowLong(hwnd, NativeMethods.GWL_EXSTYLE, nextStyle);
             }
             catch { }

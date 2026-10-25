@@ -2,7 +2,6 @@
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
-using System.Windows.Interop;
 using System.Windows.Input;
 using TWChatOverlay.Services;
 using TWChatOverlay.Models;
@@ -202,27 +201,12 @@ namespace TWChatOverlay.Views
 
         public bool IsEditorModeVisible => IsVisible && !_isOverlayMode;
         public bool IsOverlayMode => _isOverlayMode;
-        public bool IsAnyModeVisible => IsVisible || (_textOnly?.IsVisible == true);
 
         public void ToggleModeFromMenu()
         {
             if (_isApplyingLoadedState)
                 return;
             OverlayMode_Click(this, new RoutedEventArgs());
-        }
-
-        public void ShowCurrentModeFromMenu()
-        {
-            if (_isOverlayMode)
-            {
-                ShowTextOnly();
-                if (BtnOverlayMode != null)
-                    BtnOverlayMode.Content = "편집 모드";
-            }
-            else
-            {
-                ShowEditorMode();
-            }
         }
 
         private void PersistState()
