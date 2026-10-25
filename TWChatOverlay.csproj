@@ -15,21 +15,6 @@
     <InformationalVersion>$(Version)</InformationalVersion>
   </PropertyGroup>
 
-  <ItemGroup>
-    <Compile Remove=".github\**" />
-    <EmbeddedResource Remove=".github\**" />
-    <None Remove=".github\**" />
-    <Page Remove=".github\**" />
-  </ItemGroup>
-
-  <!-- 테스트 프로젝트는 별도 어셈블리이므로 앱 빌드에서 제외 -->
-  <ItemGroup>
-    <Compile Remove="Tests\**" />
-    <EmbeddedResource Remove="Tests\**" />
-    <None Remove="Tests\**" />
-    <Page Remove="Tests\**" />
-  </ItemGroup>
-
   <!-- 디버그 전용 로그 주입 창은 Release 빌드에서 제외 (XAML은 #if를 못 쓰므로 빌드 조건으로) -->
   <ItemGroup Condition="'$(Configuration)' == 'Release'">
     <Page Remove="Views\Overlays\DebugLogTestWindow.xaml" />
@@ -40,8 +25,8 @@
   <ItemGroup>
     <None Remove="Data\images\**\*" />
     <None Remove="Sound\*.wav" />
-    <None Remove="sound\drop.mp3" />
-    <None Remove="sound\drop_low.mp3" />
+    <None Remove="Sound\drop.mp3" />
+    <None Remove="Sound\drop_low.mp3" />
   </ItemGroup>
 
   <!-- 이미지/사운드 리소스 (readme_*는 README 문서 전용 — exe에 임베드하지 않음) -->
@@ -49,10 +34,10 @@
     <Resource Include="Data\images\**\*" />
     <Resource Remove="Data\images\Help\readme_*.png" />
     <Resource Include="Sound\*.wav" />
-    <Resource Include="sound\drop.mp3">
+    <Resource Include="Sound\drop.mp3">
       <LogicalName>Sound/drop.mp3</LogicalName>
     </Resource>
-    <Resource Include="sound\drop_low.mp3">
+    <Resource Include="Sound\drop_low.mp3">
       <LogicalName>Sound/drop_low.mp3</LogicalName>
     </Resource>
   </ItemGroup>

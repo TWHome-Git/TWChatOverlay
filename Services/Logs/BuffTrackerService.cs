@@ -476,7 +476,7 @@ namespace TWChatOverlay.Services
                 new("rare-r1", BuffCategory.Rare, "클럽 버프 R-1", TimeSpan.FromMinutes(30), "클럽 상점 버프 Type R-1", "pack://application:,,,/Data/images/Buff/Club.png", 99, "아이템을 사용하셨습니다"),
 
                 new("exp-heart", BuffCategory.Exp, "경험의 심장", TimeSpan.FromMinutes(20), "경험의 심장를 사용하였습니다.", "pack://application:,,,/Data/images/Buff/ExpHeart.png", 0),
-                new("exp-eos", BuffCategory.Exp, "최상급 에오스", TimeSpan.FromMinutes(30), "최상급 에오스의 파편", "pack://application:,,,/Data/images/Buff/Eos.png", 1, "아이템을 사용하셨습니다"),
+                new("exp-eos", BuffCategory.Exp, "최상급 에오스", TimeSpan.FromMinutes(30), "최상급 에오스의 파편", "pack://application:,,,/Data/images/Buff/EOS.png", 1, "아이템을 사용하셨습니다"),
                 new("exp-earlybird", BuffCategory.Exp, "얼리버드 부스터", TimeSpan.FromMinutes(30), "얼리버드 경험치 부스터", "pack://application:,,,/Data/images/Buff/Bird.png", 2, "아이템을 사용하셨습니다"),
                 new("exp-sweetpotato", BuffCategory.Exp, "전설의 군고구마", TimeSpan.FromMinutes(30), "전설의 군고구마", "pack://application:,,,/Data/images/Buff/Sweet.png", 3, "아이템을 사용하셨습니다"),
                 new("exp-e2", BuffCategory.Exp, "클럽 버프 E-2", TimeSpan.FromMinutes(30), "클럽 상점 버프 Type E-2", "pack://application:,,,/Data/images/Buff/Club.png", 99, "아이템을 사용하셨습니다"),

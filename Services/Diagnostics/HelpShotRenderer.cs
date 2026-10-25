@@ -224,9 +224,7 @@ namespace TWChatOverlay.Services
                 RealDungeonAlert("어밴던로드 - 필멸의 땅 3/10")));
             Save(outDir, "dungeon_abandon_gold_off.png", PanelToggle(false, DimLine("(통계 창 표시 안 함)")));
             Save(outDir, "dungeon_abandon_gold_on.png", PanelToggle(true, RealAbandonSummary()));
-            Save(outDir, "dungeon_treasury_gold_off.png", PanelToggle(false, DimLine("(통계 창 표시 안 함)")));
             Save(outDir, "dungeon_treasury_gold_on.png", PanelToggle(true, RealTreasurySummary()));
-            Save(outDir, "dungeon_craving_count_off.png", PanelToggle(false, DimLine("(입장해도 알림 없음)")));
             Save(outDir, "dungeon_craving_count_on.png", PanelToggle(true,
                 RealDungeonAlert("갈망하는 즐거움 2/20")));
 

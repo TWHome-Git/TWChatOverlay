@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using System.Windows;
@@ -76,13 +77,32 @@ namespace TWChatOverlay.Views.Addons
             };
         }
 
+        // 방향 이미지는 8장뿐이고 표시 크기는 72 DIP 고정 — 2배 DPI까지 대비해 144px로 디코딩해 재사용
+        private const int DecodePixelWidth = 144;
+        private static readonly Dictionary<string, BitmapImage> BitmapCache = new(StringComparer.OrdinalIgnoreCase);
+        private static readonly object BitmapCacheLock = new();
+
         private static BitmapImage CreateBitmap(Uri uri)
         {
+            string key = uri.AbsoluteUri;
+            lock (BitmapCacheLock)
+            {
+                if (BitmapCache.TryGetValue(key, out var cached))
+                    return cached;
+            }
+
             var bitmap = new BitmapImage();
             bitmap.BeginInit();
             bitmap.UriSource = uri;
+            bitmap.DecodePixelWidth = DecodePixelWidth;
             bitmap.CacheOption = BitmapCacheOption.OnLoad;
             bitmap.EndInit();
+            bitmap.Freeze();
+
+            lock (BitmapCacheLock)
+            {
+                BitmapCache[key] = bitmap;
+            }
             return bitmap;
         }
     }

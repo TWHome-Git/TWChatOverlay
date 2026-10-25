@@ -121,7 +121,7 @@ namespace TWChatOverlay.Services
                 "이번 주 1~7회차의 획득 개수와 합계·회차 평균이 갱신됩니다.\n" +
                 "주가 바뀌면 자동으로 새로 집계하며,\n" +
                 "일일/주간 컨텐츠 창의 '보물창고 통계' 버튼으로 언제든 다시 볼 수 있습니다.",
-                new[] { "dungeon_treasury_gold_off.png", "dungeon_treasury_gold_on.png" }),
+                new[] { "dungeon_abandon_gold_off.png","dungeon_treasury_gold_on.png" }),
 
             // ===== 외치기 =====
 
@@ -312,7 +312,7 @@ namespace TWChatOverlay.Services
                 "갈망하는 즐거움 입장 횟수",
                 "남은 에너지 안내를 감지해 사용 횟수를\n" +
                 "'던전 도우미' 창(예: 갈망하는 즐거움 2/20)으로 보여줍니다.",
-                new[] { "dungeon_craving_count_off.png", "dungeon_craving_count_on.png" }),
+                new[] { "dungeon_abandon_count_off.png","dungeon_craving_count_on.png" }),
 
             // ===== 아이템 알림 =====
 
