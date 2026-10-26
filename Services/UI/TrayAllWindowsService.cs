@@ -34,6 +34,9 @@ namespace TWChatOverlay.Services
             {
                 lock (_lock)
                 {
+                    // 창을 숨기기 전에 먼저 트레이 상태로 둔다 — 메인 창이 숨겨지는 순간 IsVisibleChanged로 깨어나는
+                    // 창 고정 서비스가 "트레이 아님"으로 보고 메인 창을 도로 띄우고 서브 채팅창까지 따라 나오게 한다
+                    IsTrayed = true;
                     _hiddenWindows.Clear();
                     foreach (Window w in app.Windows.Cast<Window>().ToList())
                     {
@@ -53,7 +56,6 @@ namespace TWChatOverlay.Services
                             AppLogger.Warn($"Failed to hide window '{w.GetType().Name}' for tray.", ex);
                         }
                     }
-                    IsTrayed = true;
                 }
 
                 // 메뉴 바까지 모두 숨는 대신, 작업 표시줄에 복원용 버튼을 남긴다
