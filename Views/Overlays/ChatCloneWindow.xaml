@@ -10,7 +10,7 @@
         Title="TW Chat Overlay"
         Height="230"
         Width="538"
-        MinHeight="180"
+        MinHeight="100"
         MinWidth="300"
         WindowStyle="None"
         AllowsTransparency="True"
