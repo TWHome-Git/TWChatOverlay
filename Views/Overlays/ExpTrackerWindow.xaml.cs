@@ -160,8 +160,7 @@ namespace TWChatOverlay.Views
 
         // 오른쪽 앵커 기준 위치 로직이 따로 있어 베이스의 자동 영속화는 끄고, 위 LocationChanged·드래그 끝·닫힘에서 저장한다
         protected override bool PersistBoundsOnChange => false;
-        /// <summary>표시만 하는 창. 잠금 중엔 클릭이 아래 게임으로 간다.</summary>
-        protected override bool PassthroughWhenLocked => true;
+        // 잠금 중에도 클릭을 받는다 — 리셋 버튼을 눌러야 하므로 다른 알림 창과 달리 클릭 통과(PassthroughWhenLocked)를 쓰지 않는다
 
         // 잠금 해제 모드에서는 창 어디를 잡아도 선택+드래그 가능 (창 전체 Preview에서 받는다)
         private void UnlockDrag_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
