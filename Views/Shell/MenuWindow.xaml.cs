@@ -526,21 +526,7 @@ namespace TWChatOverlay.Views
 
             if (_memoWindow == null || !_memoWindow.IsLoaded)
             {
-                _memoWindow = new MemoOverlayWindow(GetSharedSettings())
-                {
-                    Owner = (Window?)GetMainWindow() ?? this,
-                    WindowStartupLocation = WindowStartupLocation.CenterOwner
-                };
-                _memoWindow.EditorModeChanged += MemoWindow_EditorModeChanged;
-                _memoWindow.IsVisibleChanged += MemoWindow_IsVisibleChanged;
-                _memoWindow.Closed += (_, _) =>
-                {
-                    _memoWindow = null;
-                    SetButtonActive(BtnMemo, false);
-                };
-                _memoWindow.Show();
-                _memoWindow.Activate();
-                SetButtonActive(BtnMemo, _memoWindow.IsEditorModeVisible);
+                CreateAndShowMemo(restoreSavedMode: false);
                 return;
             }
 
@@ -552,6 +538,42 @@ namespace TWChatOverlay.Views
             {
                 _memoWindow.ToggleModeFromMenu();
             }
+            SetButtonActive(BtnMemo, _memoWindow.IsEditorModeVisible);
+        }
+
+        /// <summary>앱을 끌 때 메모가 열려 있었으면 마지막 모드(글만 보기/편집)로 다시 띄운다. 시작 때 한 번 부른다.</summary>
+        internal void RestoreMemoIfWasOpen()
+        {
+            if (!GetSharedSettings().MemoOverlayIsOpen)
+                return;
+            if (_memoWindow != null && _memoWindow.IsLoaded)
+                return;
+            if (Application.Current.Windows.OfType<MemoOverlayWindow>().Any(w => w.IsLoaded))
+                return;
+
+            try { CreateAndShowMemo(restoreSavedMode: true); }
+            catch (Exception ex) { AppLogger.Warn("Failed to restore memo window.", ex); }
+        }
+
+        private void CreateAndShowMemo(bool restoreSavedMode)
+        {
+            var settings = GetSharedSettings();
+            _memoWindow = new MemoOverlayWindow(settings, restoreSavedMode)
+            {
+                Owner = (Window?)GetMainWindow() ?? this,
+                WindowStartupLocation = WindowStartupLocation.CenterOwner
+            };
+            _memoWindow.EditorModeChanged += MemoWindow_EditorModeChanged;
+            _memoWindow.IsVisibleChanged += MemoWindow_IsVisibleChanged;
+            _memoWindow.Closed += (_, _) =>
+            {
+                _memoWindow = null;
+                SetButtonActive(BtnMemo, false);
+            };
+            _memoWindow.Show();
+            // 글만 보기로 복원할 때는 편집 창을 앞으로 끌어오지 않는다 (곧 숨는다)
+            if (!(restoreSavedMode && settings.MemoOverlayTextOnlyMode))
+                _memoWindow.Activate();
             SetButtonActive(BtnMemo, _memoWindow.IsEditorModeVisible);
         }
 

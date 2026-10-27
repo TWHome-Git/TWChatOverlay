@@ -13,6 +13,7 @@ namespace TWChatOverlay.Views
         private ItemCalendarWindow? _itemCalendarWindow;
         private AbandonRoadSummaryWindow? _AbandonRoadSummaryWindow;
         private bool _hasRestoredChatCloneWindows;
+        private bool _hasRestoredMemoWindow;
         private bool _isOverlayVisible = true;
         /// <summary>
         /// Public read-only view of overlay visibility for other windows to subscribe to.

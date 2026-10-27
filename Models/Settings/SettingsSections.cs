@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Text.Json.Serialization;
 
@@ -310,6 +310,10 @@ namespace TWChatOverlay.Models
         public bool Bold { get; set; } = false;
         public bool Italic { get; set; } = false;
         public string ColorKey { get; set; } = "White";
+        /// <summary>글만 보기 배경 불투명도(%). 0~100.</summary>
+        public double BackgroundOpacity { get; set; } = 0.0;
+        /// <summary>앱을 끌 때 메모가 열려 있었는지 — 다음 실행 때 저장된 모드로 다시 띄운다.</summary>
+        public bool IsOpen { get; set; } = false;
     }
 
     public class UiSection

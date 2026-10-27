@@ -16,12 +16,17 @@ namespace TWChatOverlay.Views
         private bool _isStateReady;
         private bool _isApplyingLoadedState;
         private string _selectedColorKey = "White";
+        private readonly bool _restoreSavedMode;
+        // 글 전용 창은 편집 창의 글 상자 자리에 뜬다. 그 차이(편집 창 기준)를 기억해 두고 위치는 늘 편집 창 기준으로 저장한다.
+        private Vector _textOnlyOffset;
         public event EventHandler? EditorModeChanged;
 
-        public MemoOverlayWindow(ChatSettings? sharedSettings = null)
+        /// <param name="restoreSavedMode">true면 앱 시작 복원 — 마지막으로 쓰던 모드(글만 보기/편집)로 띄운다. 메뉴로 열면 편집 모드.</param>
+        public MemoOverlayWindow(ChatSettings? sharedSettings = null, bool restoreSavedMode = false)
         {
             InitializeComponent();
             _settings = sharedSettings;
+            _restoreSavedMode = restoreSavedMode;
             Loaded += MemoOverlayWindow_Loaded;
             Closing += MemoOverlayWindow_Closing;
             MemoTextBox.TextChanged += MemoTextBox_TextChanged;
@@ -34,15 +39,17 @@ namespace TWChatOverlay.Views
         protected override bool DragRequiresUnlock => false;
         protected override ChatSettings? ResolveSettings() => _settings ??= ResolveSharedSettings();
 
-        /// <summary>글만 보기 모드면 실제로 보이는 글 전용 창의 자리를 저장한다.</summary>
+        /// <summary>
+        /// 편집 창 자리를 저장한다. 글만 보기 중에도 숨은 편집 창이 글 전용 창을 따라 움직이므로 같은 값이다.
+        /// (예전에는 모드에 따라 글 전용 창 자리를 저장해, 다음에 편집 창이 그 자리에 뜨며 제목줄 높이만큼씩 밀렸다.)
+        /// </summary>
         protected override bool PersistBounds(ChatSettings settings)
         {
             if (!_isStateReady || _isApplyingLoadedState)
                 return false;
 
-            bool textOnlyShown = _isOverlayMode && _textOnly?.IsVisible == true;
-            settings.MemoOverlayWindowLeft = textOnlyShown ? _textOnly!.Left : Left;
-            settings.MemoOverlayWindowTop = textOnlyShown ? _textOnly!.Top : Top;
+            settings.MemoOverlayWindowLeft = Left;
+            settings.MemoOverlayWindowTop = Top;
             return true;
         }
 
@@ -54,13 +61,12 @@ namespace TWChatOverlay.Views
 
         private void CloseButton_Click(object sender, RoutedEventArgs e)
         {
-            PersistState(immediate: true);
             try { _textOnly?.Close(); } catch { }
             Close();
         }
 
         /// <summary>
-        /// 설정에 저장된 위치로 옮긴다 (복원 경로). 글만 보기 모드면 실제로 보이는 글 전용 창을 옮긴다.
+        /// 설정에 저장된 위치로 옮긴다 (복원 경로). 글만 보기 모드면 글 전용 창도 편집 창 기준 같은 차이만큼 옮긴다.
         /// </summary>
         public override void ApplyStoredBounds(ChatSettings? settings = null)
         {
@@ -68,14 +74,13 @@ namespace TWChatOverlay.Views
             if (settings == null)
                 return;
 
+            base.ApplyStoredBounds(settings);
+
             if (_isOverlayMode && _textOnly?.IsVisible == true)
             {
-                using (SuppressBoundsPersist())
-                    WindowPlacement.ApplyStored(_textOnly, settings.MemoOverlayWindowLeft, settings.MemoOverlayWindowTop);
-                return;
+                _textOnly.Left = Left + _textOnlyOffset.X;
+                _textOnly.Top = Top + _textOnlyOffset.Y;
             }
-
-            base.ApplyStoredBounds(settings);
         }
 
         private void MemoOverlayWindow_Loaded(object sender, RoutedEventArgs e)
@@ -90,18 +95,31 @@ namespace TWChatOverlay.Views
             _selectedColorKey = string.IsNullOrWhiteSpace(_settings.MemoOverlayColorKey) ? "White" : _settings.MemoOverlayColorKey;
             ApplyColorByKey(_selectedColorKey);
             SelectColorCombo(_selectedColorKey);
+            OpacitySlider.Value = _settings.MemoOverlayBackgroundOpacity;
             _isOverlayMode = false;
             ShowEditorMode();
-            if (BtnOverlayMode != null)
-                BtnOverlayMode.Content = "편집 모드";
 
             _isApplyingLoadedState = false;
             _isStateReady = true;
+            _settings.MemoOverlayIsOpen = true;
             EditorModeChanged?.Invoke(this, EventArgs.Empty);
+
+            // 시작 복원: 글만 보기로 끝냈으면 글 상자 배치가 끝난 뒤 글 전용 창으로 바꾼다
+            if (_restoreSavedMode && _settings.MemoOverlayTextOnlyMode)
+            {
+                Dispatcher.BeginInvoke(new Action(() =>
+                {
+                    if (IsLoaded && !_isOverlayMode)
+                        OverlayMode_Click(this, new RoutedEventArgs());
+                }), System.Windows.Threading.DispatcherPriority.Loaded);
+            }
         }
 
         private void MemoOverlayWindow_Closing(object? sender, System.ComponentModel.CancelEventArgs e)
         {
+            // 사용자가 닫은 것만 '꺼짐'으로 남긴다. 앱 종료로 닫히면 열린 상태 그대로 두어 다음 실행 때 다시 뜬다.
+            if (_isStateReady && _settings != null && !AppServices.Get<ChatWindowHub>().IsShuttingDown)
+                _settings.MemoOverlayIsOpen = false;
             PersistState(immediate: true);
         }
         private void MemoOverlayWindow_Closed(object? sender, EventArgs e)
@@ -121,6 +139,8 @@ namespace TWChatOverlay.Views
             _textOnly?.SetBackgroundOpacity(e.NewValue);
             PersistState();
         }
+
+        private void MemoStyle_Changed() => PersistState();
 
         private void OverlayMode_Click(object sender, RoutedEventArgs e)
         {
@@ -154,11 +174,11 @@ namespace TWChatOverlay.Views
                 _textOnly = new MemoTextOnlyWindow();
                 _textOnly.LocationChanged += (_, _) =>
                 {
-                    // 숨은 편집 창의 Left/Top을 따라 바꾸면 베이스의 LocationChanged 저장 경로가 글 전용 창 자리를 저장한다
-                    if (_isOverlayMode && _textOnly.IsVisible)
+                    // 숨은 편집 창이 같은 차이를 두고 따라가면 베이스의 LocationChanged 저장 경로가 편집 창 자리를 저장한다
+                    if (_isOverlayMode && _textOnly?.IsVisible == true)
                     {
-                        Left = _textOnly.Left;
-                        Top = _textOnly.Top;
+                        Left = _textOnly.Left - _textOnlyOffset.X;
+                        Top = _textOnly.Top - _textOnlyOffset.Y;
                     }
                 };
                 _textOnly.Closed += (_, _) =>
@@ -182,6 +202,7 @@ namespace TWChatOverlay.Views
             if (PresentationSource.FromVisual(this)?.CompositionTarget is CompositionTarget target)
                 toDip = target.TransformFromDevice;
             Point dipPoint = toDip.Transform(devicePoint);
+            _textOnlyOffset = new Vector(dipPoint.X - Left, dipPoint.Y - Top);
 
             _textOnly.Left = dipPoint.X;
             _textOnly.Top = dipPoint.Y;
@@ -235,6 +256,7 @@ namespace TWChatOverlay.Views
             _settings.MemoOverlayBold = MemoTextBox?.FontWeight == FontWeights.Bold;
             _settings.MemoOverlayItalic = MemoTextBox?.FontStyle == FontStyles.Italic;
             _settings.MemoOverlayColorKey = _selectedColorKey;
+            _settings.MemoOverlayBackgroundOpacity = OpacitySlider?.Value ?? 0;
             if (immediate)
                 ConfigService.Save(_settings);
             else
@@ -247,18 +269,21 @@ namespace TWChatOverlay.Views
         {
             if (MemoTextBox == null) return;
             MemoTextBox.FontSize = e.NewValue;
+            MemoStyle_Changed();
         }
 
         private void BtnBold_Click(object sender, RoutedEventArgs e)
         {
             if (MemoTextBox == null) return;
             MemoTextBox.FontWeight = MemoTextBox.FontWeight == FontWeights.Bold ? FontWeights.Normal : FontWeights.Bold;
+            MemoStyle_Changed();
         }
 
         private void BtnItalic_Click(object sender, RoutedEventArgs e)
         {
             if (MemoTextBox == null) return;
             MemoTextBox.FontStyle = MemoTextBox.FontStyle == FontStyles.Italic ? FontStyles.Normal : FontStyles.Italic;
+            MemoStyle_Changed();
         }
 
         private void ColorCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -268,6 +293,7 @@ namespace TWChatOverlay.Views
 
             _selectedColorKey = (ColorCombo.SelectedItem as ComboBoxItem)?.Content?.ToString() ?? "White";
             ApplyColorByKey(_selectedColorKey);
+            MemoStyle_Changed();
         }
 
         private void ApplyColorByKey(string key)

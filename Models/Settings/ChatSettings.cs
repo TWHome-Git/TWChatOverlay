@@ -1434,6 +1434,24 @@ namespace TWChatOverlay.Models
                 OnPropertyChanged();
             }
         }
+        [JsonIgnore]
+        public double MemoOverlayBackgroundOpacity
+        {
+            get => Ui.Memo.BackgroundOpacity;
+            set
+            {
+                double clamped = Math.Max(0.0, Math.Min(100.0, value));
+                if (Math.Abs(Ui.Memo.BackgroundOpacity - clamped) < 0.0001) return;
+                Ui.Memo.BackgroundOpacity = clamped;
+                OnPropertyChanged();
+            }
+        }
+        [JsonIgnore]
+        public bool MemoOverlayIsOpen
+        {
+            get => Ui.Memo.IsOpen;
+            set { if (Ui.Memo.IsOpen == value) return; Ui.Memo.IsOpen = value; OnPropertyChanged(); }
+        }
 
         /// <summary>1:1 채팅 에타레벨 확인 창 본문 폰트 크기.</summary>
         [JsonIgnore]

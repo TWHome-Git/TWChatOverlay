@@ -211,6 +211,12 @@ namespace TWChatOverlay.Views
                 {
                     menu.Show();
                 }
+
+                if (!_hasRestoredMemoWindow)
+                {
+                    _hasRestoredMemoWindow = true;
+                    menu.RestoreMemoIfWasOpen();
+                }
             }
             catch (Exception ex)
             {
