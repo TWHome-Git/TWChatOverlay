@@ -316,7 +316,10 @@ namespace TWChatOverlay.Views
             StartBackgroundLogBackfill();
         }
 
-        private bool _backgroundLogBackfillStarted;
+        // 배경 패스가 도는 중인지 / 도는 중에 다시 요청됐는지(로그 다시 읽기). 예전에는 '한 번 시작됨' 플래그라
+        // 로그 다시 읽기가 아카이브를 비운 뒤 전경(최근 1주일) 패스만 돌아 그 이전 기록이 모두 빠졌다.
+        private bool _backgroundLogBackfillRunning;
+        private bool _backgroundLogBackfillPending;
         private IReadOnlyList<IRawLogScanConsumer>? _startupScanConsumers;
 
         /// <summary>
@@ -366,12 +369,21 @@ namespace TWChatOverlay.Views
             }
         }
 
-        /// <summary>1주일 이전 과거 로그를 백그라운드에서 아카이브한다. (시작 시 최근 로그만 전경 처리)</summary>
+        /// <summary>
+        /// 1주일 이전 과거 로그를 백그라운드에서 아카이브한다. (시작 시 최근 로그만 전경 처리)
+        /// 시작과 로그 다시 읽기 때마다 부른다. 이미 도는 중이면 끝난 뒤 한 번 더 돈다.
+        /// </summary>
         private void StartBackgroundLogBackfill()
         {
-            if (_backgroundLogBackfillStarted)
-                return;
-            _backgroundLogBackfillStarted = true;
+            lock (_backgroundLogBackfillLock)
+            {
+                if (_backgroundLogBackfillRunning)
+                {
+                    _backgroundLogBackfillPending = true;
+                    return;
+                }
+                _backgroundLogBackfillRunning = true;
+            }
 
             _ = Task.Run(async () =>
             {
@@ -409,8 +421,22 @@ namespace TWChatOverlay.Views
                 {
                     AppLogger.Warn("Background log backfill failed.", ex);
                 }
+                finally
+                {
+                    bool rerun;
+                    lock (_backgroundLogBackfillLock)
+                    {
+                        _backgroundLogBackfillRunning = false;
+                        rerun = _backgroundLogBackfillPending;
+                        _backgroundLogBackfillPending = false;
+                    }
+                    if (rerun)
+                        StartBackgroundLogBackfill();
+                }
             });
         }
+
+        private readonly object _backgroundLogBackfillLock = new();
 
         private async Task InitializeStartupDataAsync()
         {
