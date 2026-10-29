@@ -174,7 +174,7 @@ namespace TWChatOverlay.Views
                 if (_isLogServiceInitialized || _startupLogInitRunning)
                     return;
 
-                _readableLogArchiveService.ClearArchiveLogsAndResetCheckpoint();
+                _readableLogArchiveService.ClearArchiveLogsAndResetCheckpoint(selectedPath);
                 _ = RunDeferredLogInitializationAsync(isFirstRun: false);
             }), DispatcherPriority.Background);
         }
@@ -695,7 +695,7 @@ namespace TWChatOverlay.Views
                     _logService.Stop();
                 }
 
-                _readableLogArchiveService.ClearArchiveLogsAndResetCheckpoint();
+                _readableLogArchiveService.ClearArchiveLogsAndResetCheckpoint(_settings.ChatLogFolderPath);
                 await RunDeferredLogInitializationAsync(isFirstRun: false, force: true).ConfigureAwait(true);
                 return !_settings.StartupLogReadCanceled;
             }

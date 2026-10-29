@@ -55,6 +55,7 @@ namespace TWChatOverlay.Services
         private const int CurrentContentArchiveRebuildVersion = 3;
         private const int CurrentLogsFolderResetVersion = 1;
         private const string AbandonDaySummarySuffix = ".summary.day.json";
+        private static readonly Regex ArchiveDataDateRegex = new("data-date=\"(\\d{4}-\\d{2}-\\d{2})\"", RegexOptions.Compiled);
         private readonly Dictionary<DateTime, AbandonMonthlySummarySnapshotEntry> _abandonDayBuffer = new();
 
         // 실시간 아카이브 쓰기는 줄마다 파일을 열지 않고 모아 두었다가 1초 뒤(또는 FlushAll)에 한 번 쓴다.
@@ -580,7 +581,12 @@ namespace TWChatOverlay.Services
 
         #endregion
 
-        public void ClearArchiveLogsAndResetCheckpoint()
+        /// <summary>
+        /// 다시 읽기 전에 아카이브를 비운다. 원본 채팅 로그가 남아 있는 날짜의 파일만 지운다 —
+        /// 원본이 지워진 날짜는 다시 만들 수 없으므로 그 기록은 그대로 둔다. 주 단위 컨텐츠 파일은
+        /// 담긴 날짜가 모두 원본이 있을 때만 지운다(하나라도 없으면 그 주 파일을 통째로 둔다).
+        /// </summary>
+        public void ClearArchiveLogsAndResetCheckpoint(string chatLogFolderPath)
         {
             lock (_syncRoot)
             {
@@ -590,12 +596,44 @@ namespace TWChatOverlay.Services
                     _abandonDayBuffer.Clear();
                     _liveWrites.DiscardAll(); // 아직 안 쓴 실시간 줄이 지운 파일을 되살리지 않게
 
-                    DeleteFilesByPattern(_shoutDirectory, "*.html");
-                    DeleteFilesByPattern(_itemDirectory, "*.html");
-                    DeleteFilesByPattern(_expDirectory, "*.html");
-                    DeleteFilesByPattern(_contentDirectory, "*.html");
-                    DeleteFilesByPattern(_AbandonDirectory, "*.html");
-                    DeleteFilesByPattern(_AbandonDirectory, $"*{AbandonDaySummarySuffix}");
+                    var rawDays = new HashSet<string>(
+                        RawChatLogReader.EnumerateFiles(chatLogFolderPath).Select(f => f.Date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)),
+                        StringComparer.Ordinal);
+
+                    int deleted = 0, kept = 0;
+                    void ClearDaily(string directory, string suffix)
+                    {
+                        foreach (string path in Directory.GetFiles(directory, "*" + suffix, SearchOption.TopDirectoryOnly))
+                        {
+                            string name = Path.GetFileName(path);
+                            string dayKey = name.Length > suffix.Length ? name[..^suffix.Length] : string.Empty;
+                            // 날짜 이름(yyyy-MM-dd)이 아닌 파일은 손대지 않는다 (요약 파일이 .html 패턴에 걸리지 않게 이름 전체로 본다)
+                            if (!DateTime.TryParseExact(dayKey, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out _))
+                                continue;
+                            if (!rawDays.Contains(dayKey)) { kept++; continue; }
+                            try { File.Delete(path); deleted++; } catch { }
+                        }
+                    }
+
+                    ClearDaily(_shoutDirectory, ".html");
+                    ClearDaily(_itemDirectory, ".html");
+                    ClearDaily(_expDirectory, ".html");
+                    ClearDaily(_AbandonDirectory, ".html");
+                    ClearDaily(_AbandonDirectory, AbandonDaySummarySuffix);
+
+                    foreach (string path in Directory.GetFiles(_contentDirectory, "*.html", SearchOption.TopDirectoryOnly))
+                    {
+                        bool allDaysHaveRaw = true;
+                        foreach (string line in File.ReadLines(path, Encoding.UTF8))
+                        {
+                            Match m = ArchiveDataDateRegex.Match(line);
+                            if (m.Success && !rawDays.Contains(m.Groups[1].Value)) { allDaysHaveRaw = false; break; }
+                        }
+                        if (!allDaysHaveRaw) { kept++; continue; }
+                        try { File.Delete(path); deleted++; } catch { }
+                    }
+
+                    AppLogger.Info($"Archive cleared for reload: {deleted} file(s) deleted, {kept} kept (no source chat log).");
 
                     var state = LoadMigrationState();
                     if (state.Checkpoints.Remove(RawLogRebuildCheckpointKey))
