@@ -169,12 +169,12 @@ namespace TWChatOverlay.Views
 
         private void InitialSetupWizardWindow_LogPathConfirmed(object? sender, string selectedPath)
         {
-            _ = Dispatcher.BeginInvoke(new Action(() =>
+            _ = Dispatcher.BeginInvoke(new Action(async () =>
             {
                 if (_isLogServiceInitialized || _startupLogInitRunning)
                     return;
 
-                _readableLogArchiveService.ClearArchiveLogsAndResetCheckpoint(selectedPath);
+                await _readableLogArchiveService.ClearArchiveLogsAndResetCheckpointAsync(selectedPath).ConfigureAwait(true);
                 _ = RunDeferredLogInitializationAsync(isFirstRun: false);
             }), DispatcherPriority.Background);
         }
@@ -383,9 +383,12 @@ namespace TWChatOverlay.Views
                     return;
                 }
                 _backgroundLogBackfillRunning = true;
+                _backgroundLogBackfillCts?.Dispose();
+                _backgroundLogBackfillCts = new CancellationTokenSource();
             }
 
-            _ = Task.Run(async () =>
+            CancellationToken token = _backgroundLogBackfillCts.Token;
+            _backgroundLogBackfillTask = Task.Run(async () =>
             {
                 try
                 {
@@ -396,7 +399,7 @@ namespace TWChatOverlay.Views
                         IsContentCompletionRelevantLog,
                         onProgressText: null,
                         sourceDateFilter: null,
-                        cancellationToken: CancellationToken.None,
+                        cancellationToken: token,
                         updateCheckpoint: true,
                         extraConsumers: GetStartupScanConsumers()).ConfigureAwait(false);
                     AppLogger.Info("Background log backfill completed.");
@@ -416,6 +419,10 @@ namespace TWChatOverlay.Views
                             AppLogger.Warn("Failed to refresh abandon summary after backfill.", ex);
                         }
                     });
+                }
+                catch (OperationCanceledException)
+                {
+                    AppLogger.Info("Background log backfill canceled.");
                 }
                 catch (Exception ex)
                 {
@@ -437,6 +444,28 @@ namespace TWChatOverlay.Views
         }
 
         private readonly object _backgroundLogBackfillLock = new();
+        private CancellationTokenSource? _backgroundLogBackfillCts;
+        private Task _backgroundLogBackfillTask = Task.CompletedTask;
+
+        /// <summary>
+        /// 도는 중인 배경 패스를 멈추고 끝날 때까지 기다린다. 로그 다시 읽기가 아카이브를 비우기 전에 부른다 —
+        /// 배경 패스가 아카이브 잠금을 쥔 채 과거 로그 전체를 읽는 동안 다시 읽기의 최근 로그 단계가 그 끝을 기다리며 멈춰 있었다.
+        /// 멈춘 패스는 다시 읽기가 끝날 때 처음부터 다시 돈다.
+        /// </summary>
+        private async Task CancelBackgroundLogBackfillAsync()
+        {
+            Task running;
+            lock (_backgroundLogBackfillLock)
+            {
+                if (!_backgroundLogBackfillRunning)
+                    return;
+                _backgroundLogBackfillPending = false; // 다시 읽기 끝에서 새로 시작한다
+                _backgroundLogBackfillCts?.Cancel();
+                running = _backgroundLogBackfillTask;
+            }
+
+            try { await running.ConfigureAwait(true); } catch { }
+        }
 
         private async Task InitializeStartupDataAsync()
         {
@@ -695,7 +724,8 @@ namespace TWChatOverlay.Views
                     _logService.Stop();
                 }
 
-                _readableLogArchiveService.ClearArchiveLogsAndResetCheckpoint(_settings.ChatLogFolderPath);
+                await CancelBackgroundLogBackfillAsync().ConfigureAwait(true);
+                await _readableLogArchiveService.ClearArchiveLogsAndResetCheckpointAsync(_settings.ChatLogFolderPath).ConfigureAwait(true);
                 await RunDeferredLogInitializationAsync(isFirstRun: false, force: true).ConfigureAwait(true);
                 return !_settings.StartupLogReadCanceled;
             }

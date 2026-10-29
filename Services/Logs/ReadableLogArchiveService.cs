@@ -265,6 +265,7 @@ namespace TWChatOverlay.Services
             // 예전에는 다른 아카이브를 채우려고 그날을 다시 읽을 때마다 마정석 획득·입장료가 기존 요약에 또 더해져 부풀었다.
             private readonly Dictionary<DateTime, AbandonMonthlySummarySnapshotEntry> _rebuiltSummaries = new();
             private readonly HashSet<DateTime> _incompleteSummaryDays = new();
+            private readonly HashSet<DateTime> _completedSummaryDays = new();
 
             // 지금 읽는 파일에 무엇을 써야 하는지
             private DateTime _logDate;
@@ -365,8 +366,12 @@ namespace TWChatOverlay.Services
             public void EndFile(RawLogFile file, RawLogReadOutcome outcome)
             {
                 _lastProcessedDate = file.Date.Date;
-                if (outcome != RawLogReadOutcome.Completed)
-                    _incompleteSummaryDays.Add(file.Date.Date); // 끝까지 못 읽은 날은 요약을 쓰지 않아 다음 시작에 다시 센다
+                // 끝까지 못 읽은 날은 요약을 쓰지 않아 다음 시작에 다시 센다. 읽는 도중 취소되면 EndFile 자체가 오지 않으므로
+                // '끝까지 읽음'을 받은 날만 쓴다.
+                if (outcome == RawLogReadOutcome.Completed)
+                    _completedSummaryDays.Add(file.Date.Date);
+                else
+                    _incompleteSummaryDays.Add(file.Date.Date);
             }
 
             public void EndScan(bool completed)
@@ -377,7 +382,7 @@ namespace TWChatOverlay.Services
                     _owner.FlushAbandonDayBuffer();
                     foreach (var (day, summary) in _rebuiltSummaries)
                     {
-                        if (_incompleteSummaryDays.Contains(day))
+                        if (_incompleteSummaryDays.Contains(day) || !_completedSummaryDays.Contains(day))
                             continue;
                         // 다시 세는 동안 실시간 기록이 요약을 먼저 만들었으면 그쪽을 둔다
                         string path = Path.Combine(_owner._AbandonDirectory, day.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture) + AbandonDaySummarySuffix);
@@ -586,7 +591,24 @@ namespace TWChatOverlay.Services
         /// 원본이 지워진 날짜는 다시 만들 수 없으므로 그 기록은 그대로 둔다. 주 단위 컨텐츠 파일은
         /// 담긴 날짜가 모두 원본이 있을 때만 지운다(하나라도 없으면 그 주 파일을 통째로 둔다).
         /// </summary>
-        public void ClearArchiveLogsAndResetCheckpoint(string chatLogFolderPath)
+        /// <remarks>
+        /// 도는 패스가 끝날 때까지 기다린 뒤 비운다. 패스 도중에 비우면 그 패스가 끝에 체크포인트를 '오늘까지 완료'로 올려,
+        /// 이어지는 다시 읽기가 방금 지운 날짜를 빠진 것으로 보지 못하고 건너뛰었다(최근 1주일이 비던 원인).
+        /// </remarks>
+        public async Task ClearArchiveLogsAndResetCheckpointAsync(string chatLogFolderPath)
+        {
+            await _buildGate.WaitAsync().ConfigureAwait(false);
+            try
+            {
+                ClearArchiveLogsAndResetCheckpoint(chatLogFolderPath);
+            }
+            finally
+            {
+                _buildGate.Release();
+            }
+        }
+
+        private void ClearArchiveLogsAndResetCheckpoint(string chatLogFolderPath)
         {
             lock (_syncRoot)
             {
