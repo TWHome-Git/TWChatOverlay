@@ -224,11 +224,8 @@ namespace TWChatOverlay.Views
             }
         }
 
-        /// <param name="fullRead">
-        /// true면 1주일로 나누지 않고 원본 로그 전체를 로딩 창에서 끝까지 읽는다 (로그 다시 읽기).
-        /// 나눠 읽으면 로딩 창이 최근 1주일만 읽고 닫혀, 이전 기록이 배경에서 채워질 때까지 비어 보였다.
-        /// </param>
-        private async Task InitializeLogServiceAfterEtaProfilesAsync(bool onlyToday, CancellationToken cancellationToken, bool fullRead = false)
+        /// <param name="silent">true면 로딩 창 대신 메뉴 아이콘 아래 표시로 진행을 보인다 (로그 다시 읽기).</param>
+        private async Task InitializeLogServiceAfterEtaProfilesAsync(bool onlyToday, CancellationToken cancellationToken, bool silent = false)
         {
             UpdateStartupLoadingProgress(15, "외부 설정을 준비하는 중입니다.");
             try
@@ -245,18 +242,17 @@ namespace TWChatOverlay.Views
                 // 1단계(전경): 최근 1주일 로그만 즉시 처리해 빠르게 시작한다.
                 // 그보다 과거 로그는 시작 완료 후 백그라운드에서 이어서 처리한다.
                 DateTime recentCutoff = DateTime.Today.AddDays(-7);
-                string readingText = fullRead ? "로그를 다시 읽는 중입니다." : "최근 로그를 읽는 중입니다.";
-                UpdateStartupLoadingProgress(35, readingText);
+                UpdateStartupLoadingProgress(35, "최근 로그를 읽는 중입니다.");
+                if (silent)
+                    BeginLogReadProgress();
                 ReadableLogArchiveService.LogArchiveInitializationResult archiveResult = await Task.Run(async () =>
                 {
                     // 4.x → 5.x 업그레이드: 구버전 Logs 폴더를 1회 삭제하고 아래에서 새로 재구축한다
                     _readableLogArchiveService.ResetLogsFolderForV5IfNeeded();
 
-                    Func<DateTime, bool>? dateFilter = fullRead
-                        ? null
-                        : onlyToday
-                            ? (d => d.Date == DateTime.Today)
-                            : (d => d.Date >= recentCutoff);
+                    Func<DateTime, bool> dateFilter = onlyToday
+                        ? (d => d.Date == DateTime.Today)
+                        : (d => d.Date >= recentCutoff);
                     ReadableLogArchiveService.LogArchiveInitializationResult result = await _readableLogArchiveService.EnsureInitializedFromRawLogsAsync(
                         _settings.ChatLogFolderPath,
                         _logAnalysisService,
@@ -265,11 +261,13 @@ namespace TWChatOverlay.Views
                         {
                             double ratio = total <= 0 ? 0 : (double)current / total;
                             double progress = 35 + (ratio * 50.0);
-                            UpdateStartupLoadingProgress(progress, readingText, dateText);
+                            UpdateStartupLoadingProgress(progress, "최근 로그를 읽는 중입니다.", dateText);
+                            if (silent)
+                                ReportLogReadProgress(dateText, current, total);
                         },
                         dateFilter,
                         cancellationToken,
-                        updateCheckpoint: fullRead, // 전체를 읽었으면 체크포인트를 올려 뒤이은 배경 패스가 바로 끝난다
+                        updateCheckpoint: false,
                         extraConsumers: GetStartupScanConsumers()).ConfigureAwait(false);
 
                     // 4.x → 5.x: 컨텐츠 아카이브의 경험치 줄 제거(1회)
@@ -400,11 +398,12 @@ namespace TWChatOverlay.Views
                 try
                 {
                     AppLogger.Info("Background log backfill started (older than 7 days).");
+                    BeginLogReadProgress();
                     await _readableLogArchiveService.EnsureInitializedFromRawLogsAsync(
                         _settings.ChatLogFolderPath,
                         _logAnalysisService,
                         IsContentCompletionRelevantLog,
-                        onProgressText: null,
+                        onProgressText: ReportLogReadProgress,
                         sourceDateFilter: null,
                         cancellationToken: token,
                         updateCheckpoint: true,
@@ -446,11 +445,70 @@ namespace TWChatOverlay.Views
                     }
                     if (rerun)
                         StartBackgroundLogBackfill();
+                    else
+                        EndLogReadProgress();
                 }
             });
         }
 
         private readonly object _backgroundLogBackfillLock = new();
+
+        // ===== 뒤에서 로그 읽는 표시 (메뉴 아이콘 아래) =====
+        // 할 일이 없는 패스(체크포인트가 최신)도 파일 목록을 한 바퀴 돌며 진행을 알리므로, 잠깐 넘게 걸릴 때만 보인다.
+        private static readonly TimeSpan LogReadIndicatorDelay = TimeSpan.FromMilliseconds(700);
+        private readonly object _logReadProgressLock = new();
+        private DateTime _logReadStartedAt;
+        private (string Date, int Current, int Total)? _pendingLogReadProgress;
+        private bool _logReadProgressPosted;
+        private bool _logReadIndicatorActive;
+
+        private void BeginLogReadProgress()
+        {
+            lock (_logReadProgressLock)
+            {
+                _logReadStartedAt = DateTime.UtcNow;
+                _logReadIndicatorActive = true;
+            }
+        }
+
+        /// <summary>스캔 진행 콜백(백그라운드 스레드). 최신 값만 남겨 UI에는 한 번에 하나씩 올린다.</summary>
+        private void ReportLogReadProgress(string dateText, int current, int total)
+        {
+            lock (_logReadProgressLock)
+            {
+                if (!_logReadIndicatorActive || DateTime.UtcNow - _logReadStartedAt < LogReadIndicatorDelay)
+                    return;
+                string date = dateText.Length >= 10 ? dateText[..10] : dateText;
+                _pendingLogReadProgress = (date, current, total);
+                if (_logReadProgressPosted)
+                    return;
+                _logReadProgressPosted = true;
+            }
+
+            Dispatcher.BeginInvoke(new Action(() =>
+            {
+                (string Date, int Current, int Total)? progress;
+                lock (_logReadProgressLock)
+                {
+                    progress = _logReadIndicatorActive ? _pendingLogReadProgress : null;
+                    _logReadProgressPosted = false;
+                }
+                if (progress is { } p)
+                    Application.Current.Windows.OfType<MenuWindow>().FirstOrDefault()?.SetLogReadProgress(p.Current, p.Total, p.Date);
+            }), DispatcherPriority.Background);
+        }
+
+        private void EndLogReadProgress()
+        {
+            lock (_logReadProgressLock)
+            {
+                _logReadIndicatorActive = false;
+                _pendingLogReadProgress = null;
+            }
+
+            Dispatcher.BeginInvoke(new Action(() =>
+                Application.Current.Windows.OfType<MenuWindow>().FirstOrDefault()?.SetLogReadProgress(0, 0, string.Empty)));
+        }
         private CancellationTokenSource? _backgroundLogBackfillCts;
         private Task _backgroundLogBackfillTask = Task.CompletedTask;
 
@@ -585,7 +643,7 @@ namespace TWChatOverlay.Views
             _startupLoadingWindow = null;
         }
 
-        private async Task RunDeferredLogInitializationAsync(bool isFirstRun, bool force = false, bool fullRead = false)
+        private async Task RunDeferredLogInitializationAsync(bool isFirstRun, bool force = false, bool silent = false)
         {
             if (_startupLogInitRunning || (_isLogServiceInitialized && !force))
                 return;
@@ -594,13 +652,14 @@ namespace TWChatOverlay.Views
             _startupLogInitCts?.Dispose();
             _startupLogInitCts = new CancellationTokenSource();
 
-            ShowStartupLoadingWindow();
+            if (!silent)
+                ShowStartupLoadingWindow();
             UpdateStartupLoadingProgress(12, "로그 초기화를 준비하는 중입니다.");
 
             try
             {
                 bool onlyToday = isFirstRun && !_settings.StartupLogReadCanceled;
-                await InitializeLogServiceAfterEtaProfilesAsync(onlyToday, _startupLogInitCts.Token, fullRead).ConfigureAwait(false);
+                await InitializeLogServiceAfterEtaProfilesAsync(onlyToday, _startupLogInitCts.Token, silent).ConfigureAwait(false);
                 if (onlyToday)
                 {
                     _settings.StartupTodayOnlyBootstrapCompleted = true;
@@ -733,7 +792,8 @@ namespace TWChatOverlay.Views
 
                 await CancelBackgroundLogBackfillAsync().ConfigureAwait(true);
                 await _readableLogArchiveService.ClearArchiveLogsAndResetCheckpointAsync(_settings.ChatLogFolderPath).ConfigureAwait(true);
-                await RunDeferredLogInitializationAsync(isFirstRun: false, force: true, fullRead: true).ConfigureAwait(true);
+                // 로딩 창 없이 다시 읽는다 — 진행은 메뉴 아이콘 아래 표시(최근 1주일 → 이어서 지난 로그 전체)
+                await RunDeferredLogInitializationAsync(isFirstRun: false, force: true, silent: true).ConfigureAwait(true);
                 return !_settings.StartupLogReadCanceled;
             }
             catch (Exception ex)

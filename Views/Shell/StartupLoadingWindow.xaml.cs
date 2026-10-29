@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Windows;
+using TWChatOverlay.Services;
 
 namespace TWChatOverlay.Views
 {
@@ -10,6 +11,7 @@ namespace TWChatOverlay.Views
         public StartupLoadingWindow()
         {
             InitializeComponent();
+            WindowFontService.Apply(this); // 다른 창과 같은 앱 글꼴 (빠져 있어 시스템 기본 글꼴로 보였다)
         }
 
         public void UpdateProgress(double value, string statusText)

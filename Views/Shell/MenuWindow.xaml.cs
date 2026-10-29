@@ -577,6 +577,40 @@ namespace TWChatOverlay.Views
             SetButtonActive(BtnMemo, _memoWindow.IsEditorModeVisible);
         }
 
+        /// <summary>
+        /// 뒤에서 로그를 읽는 진행 상황을 메뉴 아이콘 아래에 보인다. <paramref name="total"/>이 0 이하면 숨긴다.
+        /// 고리가 돌아 작업 중임을 알리고, 마우스를 올리면 읽는 날짜와 파일 수를 보여 준다.
+        /// </summary>
+        internal void SetLogReadProgress(int current, int total, string dateText)
+        {
+            if (total <= 0)
+            {
+                if (LogReadIndicator.Visibility != Visibility.Collapsed)
+                {
+                    LogReadIndicator.Visibility = Visibility.Collapsed;
+                    LogReadSpinnerRotate.BeginAnimation(System.Windows.Media.RotateTransform.AngleProperty, null);
+                }
+                return;
+            }
+
+            if (LogReadIndicator.Visibility != Visibility.Visible)
+            {
+                LogReadIndicator.Visibility = Visibility.Visible;
+                LogReadSpinnerRotate.BeginAnimation(
+                    System.Windows.Media.RotateTransform.AngleProperty,
+                    new System.Windows.Media.Animation.DoubleAnimation(0, 360, TimeSpan.FromSeconds(0.9))
+                    {
+                        RepeatBehavior = System.Windows.Media.Animation.RepeatBehavior.Forever,
+                    });
+            }
+
+            int percent = (int)Math.Clamp(Math.Round(current * 100.0 / total), 0, 99); // 끝나면 사라지므로 100%는 보이지 않는다
+            LogReadPercentText.Text = $"{percent}%";
+            LogReadIndicator.ToolTip =
+                $"지난 로그를 읽는 중입니다 · {dateText} ({current}/{total})\n" +
+                "끝나면 달력·통계에 지난 기록이 채워집니다.";
+        }
+
         private void MemoWindow_EditorModeChanged(object? sender, EventArgs e)
         {
             if (sender is MemoOverlayWindow memo)

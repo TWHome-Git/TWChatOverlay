@@ -57,6 +57,33 @@
                        VerticalAlignment="Center"/>
             </Border>
 
+            <!-- 뒤에서 로그를 읽는 동안만 보인다: 도는 고리 + 진행률. 메뉴를 접어도 보이도록 MenuBody 밖에 둔다 -->
+            <StackPanel x:Name="LogReadIndicator"
+                        Visibility="Collapsed"
+                        Background="Transparent"
+                        HorizontalAlignment="Center"
+                        Margin="0,2,0,4">
+                <Grid Width="18" Height="18" HorizontalAlignment="Center">
+                    <Ellipse Stroke="{DynamicResource ControlBorderBrush}" StrokeThickness="2"/>
+                    <Path Stroke="{DynamicResource AccentBrush}"
+                          StrokeThickness="2"
+                          StrokeStartLineCap="Round"
+                          StrokeEndLineCap="Round"
+                          Data="M 9,1 A 8,8 0 0 1 17,9"
+                          RenderTransformOrigin="0.5,0.5">
+                        <Path.RenderTransform>
+                            <RotateTransform x:Name="LogReadSpinnerRotate"/>
+                        </Path.RenderTransform>
+                    </Path>
+                </Grid>
+                <TextBlock x:Name="LogReadPercentText"
+                           Text="0%"
+                           FontSize="9.5"
+                           Foreground="{DynamicResource AccentBrush}"
+                           HorizontalAlignment="Center"
+                           Margin="0,2,0,0"/>
+            </StackPanel>
+
             <StackPanel x:Name="MenuBody">
 
             <!-- 트레이 최소화: 한글 텍스트 버튼 (리셋/닫기 버튼과 같은 시각 언어, 세로 낮게) -->
