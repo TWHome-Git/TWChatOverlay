@@ -50,6 +50,8 @@ namespace TWChatOverlay.Services
         private const string LogsFolderResetMigrationKey = "logs-folder-reset-5x";
         // 컨텐츠 아카이브 판정 기준이 바뀐 뒤(어비스 입장·보상 줄 등 정규식 판정 포함) 예전 빌드가 쓴 주간 파일을 1회 재구축
         private const string ContentArchiveRebuildMigrationKey = "content-archive-rebuild";
+        private const string AbandonSummaryRebuildMigrationKey = "abandon-summary-rebuild";
+        private const int CurrentAbandonSummaryRebuildVersion = 1;
         private const int CurrentContentArchiveRebuildVersion = 3;
         private const int CurrentLogsFolderResetVersion = 1;
         private const string AbandonDaySummarySuffix = ".summary.day.json";
@@ -104,6 +106,7 @@ namespace TWChatOverlay.Services
                 cancellationToken.ThrowIfCancellationRequested();
                 RebuildContentArchiveIfNeeded();
                 List<RawLogFile> allSourceFiles = RawChatLogReader.EnumerateFiles(chatLogFolderPath);
+                RebuildAbandonSummariesIfNeeded(allSourceFiles); // 날짜 필터 전 — 원본 로그가 있는 모든 날짜가 대상
                 if (sourceDateFilter != null)
                     allSourceFiles.RemoveAll(f => !sourceDateFilter(f.Date));
                 if (allSourceFiles.Count == 0)
@@ -181,6 +184,8 @@ namespace TWChatOverlay.Services
                         earliestMissingDate = !earliestMissingDate.HasValue ? missingItemDays.Min() : MinDate(earliestMissingDate.Value, missingItemDays.Min());
                     if (missingAbandonDays.Count > 0)
                         earliestMissingDate = !earliestMissingDate.HasValue ? missingAbandonDays.Min() : MinDate(earliestMissingDate.Value, missingAbandonDays.Min());
+                    if (missingAbandonSummaryDays.Count > 0)
+                        earliestMissingDate = !earliestMissingDate.HasValue ? missingAbandonSummaryDays.Min() : MinDate(earliestMissingDate.Value, missingAbandonSummaryDays.Min());
 
                     if (missingContentWeeks.Count > 0)
                     {
@@ -255,6 +260,10 @@ namespace TWChatOverlay.Services
             private readonly bool _updateCheckpoint;
             private readonly ArchiveWriteBatch _pendingWrites = new(keepWritersOpen: true);
             private DateTime? _lastProcessedDate;
+            // 요약이 없는 날은 그날 원본 로그 전체로 처음부터 다시 센다. 이미 있는 요약에는 더하지 않는다 —
+            // 예전에는 다른 아카이브를 채우려고 그날을 다시 읽을 때마다 마정석 획득·입장료가 기존 요약에 또 더해져 부풀었다.
+            private readonly Dictionary<DateTime, AbandonMonthlySummarySnapshotEntry> _rebuiltSummaries = new();
+            private readonly HashSet<DateTime> _incompleteSummaryDays = new();
 
             // 지금 읽는 파일에 무엇을 써야 하는지
             private DateTime _logDate;
@@ -308,6 +317,8 @@ namespace TWChatOverlay.Services
                 _writeContent = _missingContentWeeks.Contains(weekKey);
                 _writeAbandon = _missingAbandonDays.Contains(logDate);
                 _rebuildAbandonSummary = _missingAbandonSummaryDays.Contains(logDate);
+                if (_rebuildAbandonSummary && !_rebuiltSummaries.ContainsKey(logDate))
+                    _rebuiltSummaries[logDate] = new AbandonMonthlySummarySnapshotEntry { MonthStart = logDate };
                 _hasArchiveWriteTarget = _writeShout || _writeExp || _writeItem || _writeContent || _writeAbandon;
 
                 // 이미 모든 아카이브가 있는 날짜는 파싱 자체를 건너뛴다 (재시작·백필 시 최근 구간 무료 통과)
@@ -329,8 +340,8 @@ namespace TWChatOverlay.Services
                 string formattedText = analysis.Parsed.FormattedText;
                 lock (_owner._syncRoot)
                 {
-                    if (_rebuildAbandonSummary && !_writeAbandon && TryBuildAbandonDelta(formattedText, out AbandonMonthlySummarySnapshotEntry summaryDelta))
-                        _owner.UpdateAbandonDailySummary(_logDate, summaryDelta);
+                    if (_rebuildAbandonSummary)
+                        CollectAbandonSummaryDelta(analysis, _rebuiltSummaries[_logDate]);
 
                     if (_hasArchiveWriteTarget)
                     {
@@ -344,7 +355,8 @@ namespace TWChatOverlay.Services
                             _writeContent,
                             _writeAbandon,
                             _pendingWrites,
-                            flushSummaryImmediately: false);
+                            flushSummaryImmediately: false,
+                            updateAbandonSummary: false);
                     }
                 }
             }
@@ -352,6 +364,8 @@ namespace TWChatOverlay.Services
             public void EndFile(RawLogFile file, RawLogReadOutcome outcome)
             {
                 _lastProcessedDate = file.Date.Date;
+                if (outcome != RawLogReadOutcome.Completed)
+                    _incompleteSummaryDays.Add(file.Date.Date); // 끝까지 못 읽은 날은 요약을 쓰지 않아 다음 시작에 다시 센다
             }
 
             public void EndScan(bool completed)
@@ -360,6 +374,19 @@ namespace TWChatOverlay.Services
                 {
                     _pendingWrites.Dispose();
                     _owner.FlushAbandonDayBuffer();
+                    foreach (var (day, summary) in _rebuiltSummaries)
+                    {
+                        if (_incompleteSummaryDays.Contains(day))
+                            continue;
+                        // 다시 세는 동안 실시간 기록이 요약을 먼저 만들었으면 그쪽을 둔다
+                        string path = Path.Combine(_owner._AbandonDirectory, day.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture) + AbandonDaySummarySuffix);
+                        if (File.Exists(path))
+                            continue;
+                        // 활동이 없던 날도 빈 요약을 남겨 다음 시작에 다시 세지 않게 한다
+                        NormalizeStoneConsistency(summary);
+                        File.WriteAllText(path, JsonSerializer.Serialize(summary, JsonOptions), Utf8BomEncoding);
+                    }
+                    _rebuiltSummaries.Clear();
                 }
                 // 부분 범위(최근 로그만) 초기화 시에는 체크포인트를 올리지 않아
                 // 과거 로그 백필이 건너뛰어지지 않게 한다
@@ -426,6 +453,41 @@ namespace TWChatOverlay.Services
         /// 컨텐츠 아카이브를 예전 빌드가 썼다면(어비스 입장·보상 줄이 빠진 채) 주간 파일을 모두 지워
         /// 다음 패스가 원본 로그에서 다시 만들게 한다. 체크포인트도 함께 지워 지운 주가 '누락'으로 잡히게 한다. 1회만.
         /// </summary>
+        /// <summary>
+        /// 어밴던로드 일별 요약을 다시 세게 한다(1회): 원본 로그가 남아 있는 날의 요약 파일을 지워 다음 패스가 처음부터 다시 만든다.
+        /// 같은 날을 다시 읽을 때 기존 요약에 또 더하던 버그로 부푼 값을 바로잡는다. 원본 로그가 없는 날의 요약은 다시 셀 수 없어 둔다.
+        /// </summary>
+        private void RebuildAbandonSummariesIfNeeded(IReadOnlyList<RawLogFile> allSourceFiles)
+        {
+            lock (_syncRoot)
+            {
+                try
+                {
+                    EnsureArchiveDirectoriesExist();
+                    if (LoadMigrationVersion(AbandonSummaryRebuildMigrationKey) >= CurrentAbandonSummaryRebuildVersion)
+                        return;
+
+                    _abandonDayBuffer.Clear();
+                    int deleted = 0;
+                    foreach (DateTime day in allSourceFiles.Select(f => f.Date.Date).Distinct())
+                    {
+                        string path = Path.Combine(_AbandonDirectory, day.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture) + AbandonDaySummarySuffix);
+                        if (!File.Exists(path))
+                            continue;
+                        File.Delete(path);
+                        deleted++;
+                    }
+
+                    SaveMigrationVersion(AbandonSummaryRebuildMigrationKey, CurrentAbandonSummaryRebuildVersion);
+                    AppLogger.Info($"Abandon day summaries reset for rebuild: {deleted} file(s).");
+                }
+                catch (Exception ex)
+                {
+                    AppLogger.Warn("Failed to reset abandon day summaries for rebuild.", ex);
+                }
+            }
+        }
+
         private void RebuildContentArchiveIfNeeded()
         {
             lock (_syncRoot)
@@ -815,19 +877,15 @@ namespace TWChatOverlay.Services
             bool writeContent,
             bool writeAbandon,
             ArchiveWriteBatch pendingArchiveWrites,
-            bool flushSummaryImmediately)
+            bool flushSummaryImmediately,
+            bool updateAbandonSummary = true)
         {
             var parsed = analysis.Parsed;
             if (parsed == null || string.IsNullOrWhiteSpace(parsed.FormattedText))
                 return;
 
             string text = parsed.FormattedText;
-            // 세 문구 모두 "보상 상자"를 품으므로 그 한 번으로 먼저 거른다
-            bool isJoySorrowRewardLine =
-                text.Contains("보상 상자", StringComparison.Ordinal) &&
-                (text.Contains("레이티아 퇴치 보상으로 레이티아 보상 상자", StringComparison.Ordinal) ||
-                 text.Contains("설계자 퇴치 보상으로 설계자 보상 상자", StringComparison.Ordinal) ||
-                 text.Contains("[환희의 레이티아 보상 상자] 아이템을 1개 획득하였습니다.", StringComparison.Ordinal));
+            bool isJoySorrowRewardLine = IsJoySorrowRewardLine(text);
 
             if (writeShout && parsed.Category == ChatCategory.Shout)
             {
@@ -864,7 +922,8 @@ namespace TWChatOverlay.Services
                                 break;
                         }
                         NormalizeStoneConsistency(gainDelta);
-                        UpdateAbandonDailySummary(logDate, gainDelta, flushImmediately: flushSummaryImmediately);
+                        if (updateAbandonSummary)
+                            UpdateAbandonDailySummary(logDate, gainDelta, flushImmediately: flushSummaryImmediately);
                         return;
                     }
                 }
@@ -882,8 +941,43 @@ namespace TWChatOverlay.Services
 
             if (writeAbandon && IsAbandonRelevantLog(text))
             {
-                AppendAbandonLog(logDate, text, pendingArchiveWrites, flushSummaryImmediately);
+                AppendAbandonLog(logDate, text, pendingArchiveWrites, flushSummaryImmediately, updateAbandonSummary);
             }
+        }
+
+        // 세 문구 모두 "보상 상자"를 품으므로 그 한 번으로 먼저 거른다
+        private static bool IsJoySorrowRewardLine(string text)
+            => text.Contains("보상 상자", StringComparison.Ordinal) &&
+               (text.Contains("레이티아 퇴치 보상으로 레이티아 보상 상자", StringComparison.Ordinal) ||
+                text.Contains("설계자 퇴치 보상으로 설계자 보상 상자", StringComparison.Ordinal) ||
+                text.Contains("[환희의 레이티아 보상 상자] 아이템을 1개 획득하였습니다.", StringComparison.Ordinal));
+
+        /// <summary>
+        /// 한 줄이 어밴던로드 일별 요약에 더할 몫을 <paramref name="target"/>에 더한다. 실시간 경로(<see cref="AppendFromAnalysisSelective"/>)와
+        /// 같은 규칙: 추적 아이템이 아닌 마정석 4종 획득은 획득량, 어밴던 관련 줄은 입장료·마정석 소모.
+        /// </summary>
+        private static void CollectAbandonSummaryDelta(LogAnalysisResult analysis, AbandonMonthlySummarySnapshotEntry target)
+        {
+            var parsed = analysis.Parsed;
+            if (parsed == null || string.IsNullOrWhiteSpace(parsed.FormattedText))
+                return;
+
+            string text = parsed.FormattedText;
+            if (!IsJoySorrowRewardLine(text) &&
+                !(analysis.HasTrackedItemDrop && !string.IsNullOrWhiteSpace(parsed.TrackedItemName)) &&
+                TryExtractMagicStoneGain(text, out string stoneName, out int stoneCount))
+            {
+                switch (stoneName)
+                {
+                    case "하급 마정석": target.LowGain += stoneCount; return;
+                    case "중급 마정석": target.MidGain += stoneCount; return;
+                    case "상급 마정석": target.HighGain += stoneCount; return;
+                    case "최상급 마정석": target.TopGain += stoneCount; return;
+                }
+            }
+
+            if (IsAbandonRelevantLog(text))
+                AbandonSummaryCalculator.TryAccumulate(text, target);
         }
 
         private void AppendShoutLog(DateTime logDate, string text, ArchiveWriteBatch pendingArchiveWrites)
@@ -920,14 +1014,14 @@ namespace TWChatOverlay.Services
             AppendHtmlLine(path, $"Exp {dateKey}", entry, pendingArchiveWrites);
         }
 
-        private void AppendAbandonLog(DateTime logDate, string text, ArchiveWriteBatch pendingArchiveWrites, bool flushSummaryImmediately)
+        private void AppendAbandonLog(DateTime logDate, string text, ArchiveWriteBatch pendingArchiveWrites, bool flushSummaryImmediately, bool updateAbandonSummary = true)
         {
             string dateKey = logDate.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
             string path = Path.Combine(_AbandonDirectory, $"{dateKey}.html");
             string entry = $"<div class=\"log Abandon\" data-date=\"{dateKey}\">{WebUtility.HtmlEncode(text)}</div>";
             AppendHtmlLine(path, $"Abandon {dateKey}", entry, pendingArchiveWrites);
 
-            if (TryBuildAbandonDelta(text, out AbandonMonthlySummarySnapshotEntry delta))
+            if (updateAbandonSummary && TryBuildAbandonDelta(text, out AbandonMonthlySummarySnapshotEntry delta))
                 UpdateAbandonDailySummary(logDate, delta, flushImmediately: flushSummaryImmediately);
         }
 
