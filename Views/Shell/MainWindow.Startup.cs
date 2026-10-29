@@ -224,7 +224,11 @@ namespace TWChatOverlay.Views
             }
         }
 
-        private async Task InitializeLogServiceAfterEtaProfilesAsync(bool onlyToday, CancellationToken cancellationToken)
+        /// <param name="fullRead">
+        /// true면 1주일로 나누지 않고 원본 로그 전체를 로딩 창에서 끝까지 읽는다 (로그 다시 읽기).
+        /// 나눠 읽으면 로딩 창이 최근 1주일만 읽고 닫혀, 이전 기록이 배경에서 채워질 때까지 비어 보였다.
+        /// </param>
+        private async Task InitializeLogServiceAfterEtaProfilesAsync(bool onlyToday, CancellationToken cancellationToken, bool fullRead = false)
         {
             UpdateStartupLoadingProgress(15, "외부 설정을 준비하는 중입니다.");
             try
@@ -241,15 +245,18 @@ namespace TWChatOverlay.Views
                 // 1단계(전경): 최근 1주일 로그만 즉시 처리해 빠르게 시작한다.
                 // 그보다 과거 로그는 시작 완료 후 백그라운드에서 이어서 처리한다.
                 DateTime recentCutoff = DateTime.Today.AddDays(-7);
-                UpdateStartupLoadingProgress(35, "최근 로그를 읽는 중입니다.");
+                string readingText = fullRead ? "로그를 다시 읽는 중입니다." : "최근 로그를 읽는 중입니다.";
+                UpdateStartupLoadingProgress(35, readingText);
                 ReadableLogArchiveService.LogArchiveInitializationResult archiveResult = await Task.Run(async () =>
                 {
                     // 4.x → 5.x 업그레이드: 구버전 Logs 폴더를 1회 삭제하고 아래에서 새로 재구축한다
                     _readableLogArchiveService.ResetLogsFolderForV5IfNeeded();
 
-                    Func<DateTime, bool> dateFilter = onlyToday
-                        ? (d => d.Date == DateTime.Today)
-                        : (d => d.Date >= recentCutoff);
+                    Func<DateTime, bool>? dateFilter = fullRead
+                        ? null
+                        : onlyToday
+                            ? (d => d.Date == DateTime.Today)
+                            : (d => d.Date >= recentCutoff);
                     ReadableLogArchiveService.LogArchiveInitializationResult result = await _readableLogArchiveService.EnsureInitializedFromRawLogsAsync(
                         _settings.ChatLogFolderPath,
                         _logAnalysisService,
@@ -258,11 +265,11 @@ namespace TWChatOverlay.Views
                         {
                             double ratio = total <= 0 ? 0 : (double)current / total;
                             double progress = 35 + (ratio * 50.0);
-                            UpdateStartupLoadingProgress(progress, "최근 로그를 읽는 중입니다.", dateText);
+                            UpdateStartupLoadingProgress(progress, readingText, dateText);
                         },
                         dateFilter,
                         cancellationToken,
-                        updateCheckpoint: false,
+                        updateCheckpoint: fullRead, // 전체를 읽었으면 체크포인트를 올려 뒤이은 배경 패스가 바로 끝난다
                         extraConsumers: GetStartupScanConsumers()).ConfigureAwait(false);
 
                     // 4.x → 5.x: 컨텐츠 아카이브의 경험치 줄 제거(1회)
@@ -578,7 +585,7 @@ namespace TWChatOverlay.Views
             _startupLoadingWindow = null;
         }
 
-        private async Task RunDeferredLogInitializationAsync(bool isFirstRun, bool force = false)
+        private async Task RunDeferredLogInitializationAsync(bool isFirstRun, bool force = false, bool fullRead = false)
         {
             if (_startupLogInitRunning || (_isLogServiceInitialized && !force))
                 return;
@@ -593,7 +600,7 @@ namespace TWChatOverlay.Views
             try
             {
                 bool onlyToday = isFirstRun && !_settings.StartupLogReadCanceled;
-                await InitializeLogServiceAfterEtaProfilesAsync(onlyToday, _startupLogInitCts.Token).ConfigureAwait(false);
+                await InitializeLogServiceAfterEtaProfilesAsync(onlyToday, _startupLogInitCts.Token, fullRead).ConfigureAwait(false);
                 if (onlyToday)
                 {
                     _settings.StartupTodayOnlyBootstrapCompleted = true;
@@ -726,7 +733,7 @@ namespace TWChatOverlay.Views
 
                 await CancelBackgroundLogBackfillAsync().ConfigureAwait(true);
                 await _readableLogArchiveService.ClearArchiveLogsAndResetCheckpointAsync(_settings.ChatLogFolderPath).ConfigureAwait(true);
-                await RunDeferredLogInitializationAsync(isFirstRun: false, force: true).ConfigureAwait(true);
+                await RunDeferredLogInitializationAsync(isFirstRun: false, force: true, fullRead: true).ConfigureAwait(true);
                 return !_settings.StartupLogReadCanceled;
             }
             catch (Exception ex)
