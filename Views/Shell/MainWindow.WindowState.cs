@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Windows;
+using System.Windows.Threading;
 using TWChatOverlay.Services;
 
 namespace TWChatOverlay.Views
@@ -327,6 +328,32 @@ namespace TWChatOverlay.Views
         {
             try { _stickyService?.UpdatePositionImmediately(); }
             catch (Exception ex) { AppLogger.Warn("Failed to sync sticky position after external move.", ex); }
+        }
+
+        private DispatcherTimer? _displayChangeReapplyTimer;
+
+        /// <summary>
+        /// 디스플레이 구성이 바뀐 뒤(모니터 절전 해제·보조 모니터 연결·배율 변경) Windows가 옮겨 둔 창들을 저장된 자리로 되돌린다.
+        /// 변경 이벤트는 연달아 여러 번 오므로 1.5초 조용해진 뒤 한 번만 적용한다. 트레이 중이면 복귀할 때 따로 적용한다.
+        /// </summary>
+        private void OnDisplaySettingsChanged(object? sender, EventArgs e)
+        {
+            Dispatcher.BeginInvoke(new Action(() =>
+            {
+                _displayChangeReapplyTimer ??= new DispatcherTimer { Interval = TimeSpan.FromSeconds(1.5) };
+                _displayChangeReapplyTimer.Stop();
+                _displayChangeReapplyTimer.Tick -= DisplayChangeReapplyTimer_Tick;
+                _displayChangeReapplyTimer.Tick += DisplayChangeReapplyTimer_Tick;
+                _displayChangeReapplyTimer.Start();
+            }));
+        }
+
+        private void DisplayChangeReapplyTimer_Tick(object? sender, EventArgs e)
+        {
+            _displayChangeReapplyTimer?.Stop();
+            if (AppServices.Get<TrayAllWindowsService>().IsTrayed)
+                return;
+            ReapplyStoredWindowPositions();
         }
 
         private void ReapplyStoredWindowPositions()

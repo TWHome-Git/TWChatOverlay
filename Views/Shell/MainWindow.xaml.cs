@@ -179,6 +179,7 @@ namespace TWChatOverlay.Views
         private void MainWindow_Closed(object? sender, EventArgs e)
         {
 
+            try { Microsoft.Win32.SystemEvents.DisplaySettingsChanged -= OnDisplaySettingsChanged; } catch { }
             try { AppServices.Get<UiLockService>().UnlockChanged -= OnUiUnlockChanged; } catch { }
             try { AppServices.Get<UiLockService>().WindowAdjusted -= OnUnlockWindowAdjusted; } catch { }
             try { _mainTabAutoHideTimer.Stop(); } catch { }
@@ -410,8 +411,14 @@ namespace TWChatOverlay.Views
                     // 트레이로 숨은 동안에는 버프 창이 스스로 표시를 바꾸지 않으므로,
                     // 복원 시점에 지금 버프 상태로 다시 판단한다 (숨을 때 닫혀 있었거나 그 사이 버프가 바뀐 경우).
                     if (!trayed)
+                    {
                         Dispatcher.BeginInvoke(new Action(ApplyBuffTrackerWindowSettings), DispatcherPriority.Background);
+                        // 숨어 있는 동안 모니터 절전·해상도 변경으로 Windows가 창을 옮겨 두었을 수 있다 — 저장된 자리로 되돌린다
+                        Dispatcher.BeginInvoke(new Action(ReapplyStoredWindowPositions), DispatcherPriority.Background);
+                    }
                 };
+                // 모니터가 절전에서 깨거나 해상도·배율이 바뀌면 Windows가 창을 임의로 옮긴다 — 잠시 뒤 저장된 자리로 되돌린다
+                Microsoft.Win32.SystemEvents.DisplaySettingsChanged += OnDisplaySettingsChanged;
                 _stickyService.Start();
                 _stickyService.UpdatePositionImmediately();
 
