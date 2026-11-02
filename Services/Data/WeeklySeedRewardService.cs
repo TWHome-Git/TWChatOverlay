@@ -74,15 +74,7 @@ namespace TWChatOverlay.Services
                 new("실반 코어 마스터 던전", 210L * Man * 100),
                 new("루미너스 코어 마스터 던전", 210L * Man * 100),
             }),
-            // 머큐리얼 주간
-            new(525L * Man * 100, new Entry[]
-            {
-                new("샐리온", 105L * Man * 100),
-                new("샐레아나", 105L * Man * 100),
-                new("실라이론", 105L * Man * 100),
-                new("실반", 105L * Man * 100),
-                new("루미너스", 105L * Man * 100),
-            }),
+            // 머큐리얼 주간(샐리온~루미너스)·카타콤 지옥은 이제 시드를 주지 않아 뺐다 (2026-11)
             // 어비스 지옥
             new(735L * Man * 100, new Entry[]
             {
@@ -96,7 +88,6 @@ namespace TWChatOverlay.Services
                 new("차원의 틈", 210L * Man * 100),      // 지하요새의 망령
                 new("신조의 둥지 어려움", 735L * Man * 100),
                 new("오를리 방어전 지옥", 210L * Man * 100),
-                new("카타콤 지옥", 50L * Man * 100),
             }),
         };
 
