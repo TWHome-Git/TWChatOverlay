@@ -1010,6 +1010,10 @@ namespace TWChatOverlay.Services
         // 기록이 수만 건이 돼도 판이 끝날 때 쓰는 양은 한 줄이다.
         private static readonly string ArchiveDirectoryPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Config", "DungeonTimerArchive");
         private static readonly string ArchiveScanMarkerPath = Path.Combine(ArchiveDirectoryPath, "_fullscan.json");
+        // 지난 날짜 파일을 어디까지(바이트) 끝까지 읽었는지. 평소 시작 때 지난주 월요일부터의 파일 중 이미 다 읽은 날은 건너뛴다 —
+        // 예전에는 시작할 때마다 그 파일들을 모두 다시 읽어, 주 후반일수록 배경에서 며칠치 큰 로그를 매번 다시 읽었다.
+        private static readonly string ScanCoveragePath = Path.Combine(ArchiveDirectoryPath, "_covered.json");
+        private Dictionary<string, long>? _scanCoverage;
         /// <summary>던전 정의가 크게 바뀌어 과거 로그를 다시 뽑아야 할 때만 올린다.</summary>
         // 2: 5.0.8~5.0.9의 추출이 판 날짜를 하루 앞당겨 저장했다 → 옛 아카이브·기록·최고 기록을 backup으로 옮기고 로그 전체를 다시 읽는다
         private const int ArchiveScanVersion = 2;
@@ -1472,8 +1476,11 @@ namespace TWChatOverlay.Services
             DateTime oldest = plan.FullScan ? DateTime.MinValue : LastWeekStart(DateTime.Now);
             foreach (RawLogFile file in RawChatLogReader.EnumerateFiles(folder))
             {
-                if (file.Date >= oldest)
-                    plan.Pending.Add(file.Date);
+                if (file.Date < oldest)
+                    continue;
+                if (!plan.FullScan && IsPastDayFullyScannedUnlocked(file))
+                    continue;
+                plan.Pending.Add(file.Date);
             }
             if (plan.Pending.Count == 0)
                 FinishBackfillUnlocked(plan);
@@ -1603,6 +1610,11 @@ namespace TWChatOverlay.Services
                 _owner.NotifyArchiveChangedIfAppended();
                 if (todayLines != null && outcome == RawLogReadOutcome.Completed)
                     ConsumedToday = (file, _fileLength);
+                if (outcome == RawLogReadOutcome.Completed && file.Date < DateTime.Today)
+                {
+                    lock (_owner.SyncRoot)
+                        _owner.RecordPastDayScannedUnlocked(file.Date, _fileLength);
+                }
 
                 bool fullScan;
                 lock (_owner.SyncRoot)
@@ -1960,6 +1972,68 @@ namespace TWChatOverlay.Services
         }
 
         #endregion
+
+        // ===== 지난 날짜 읽음 기록 (SyncRoot 안에서 부른다) =====
+
+        private Dictionary<string, long> LoadScanCoverageUnlocked()
+        {
+            if (_scanCoverage != null)
+                return _scanCoverage;
+
+            _scanCoverage = new Dictionary<string, long>(StringComparer.Ordinal);
+            try
+            {
+                if (File.Exists(ScanCoveragePath))
+                {
+                    var loaded = JsonSerializer.Deserialize<Dictionary<string, long>>(File.ReadAllText(ScanCoveragePath));
+                    if (loaded != null)
+                        _scanCoverage = new Dictionary<string, long>(loaded, StringComparer.Ordinal);
+                }
+            }
+            catch (Exception ex)
+            {
+                AppLogger.Warn("Failed to load dungeon timer scan coverage; past days will be read again.", ex);
+            }
+            return _scanCoverage;
+        }
+
+        /// <summary>오늘 이전 파일을 지난번에 끝까지 읽었고 그 뒤로 자라지 않았으면 true.</summary>
+        private bool IsPastDayFullyScannedUnlocked(RawLogFile file)
+        {
+            if (file.Date >= DateTime.Today)
+                return false;
+
+            string key = file.Date.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture);
+            if (!LoadScanCoverageUnlocked().TryGetValue(key, out long covered))
+                return false;
+
+            long length;
+            try { length = new FileInfo(file.Path).Length; }
+            catch { return false; }
+            // 패스는 마지막 줄 경계까지 읽으므로 같은 기준으로 비교한다
+            return covered >= RawChatLogReader.FindLineBoundary(file.Path, length);
+        }
+
+        private void RecordPastDayScannedUnlocked(DateTime day, long coveredLength)
+        {
+            var coverage = LoadScanCoverageUnlocked();
+            coverage[day.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture)] = coveredLength;
+
+            // 평소 시작은 지난주 월요일부터만 보므로 그보다 오래된 날짜는 남길 필요가 없다
+            string oldestKey = LastWeekStart(DateTime.Now).AddDays(-7).ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture);
+            foreach (string stale in coverage.Keys.Where(k => string.CompareOrdinal(k, oldestKey) < 0).ToList())
+                coverage.Remove(stale);
+
+            try
+            {
+                Directory.CreateDirectory(ArchiveDirectoryPath);
+                File.WriteAllText(ScanCoveragePath, JsonSerializer.Serialize(coverage));
+            }
+            catch (Exception ex)
+            {
+                AppLogger.Warn("Failed to save dungeon timer scan coverage.", ex);
+            }
+        }
 
         private bool IsArchiveFullScanDone()
         {
