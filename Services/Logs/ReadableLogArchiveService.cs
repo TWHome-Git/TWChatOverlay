@@ -108,6 +108,7 @@ namespace TWChatOverlay.Services
                 RebuildContentArchiveIfNeeded();
                 List<RawLogFile> allSourceFiles = RawChatLogReader.EnumerateFiles(chatLogFolderPath);
                 RebuildAbandonSummariesIfNeeded(allSourceFiles); // 날짜 필터 전 — 원본 로그가 있는 모든 날짜가 대상
+                RecoverInterruptedDays();
                 if (sourceDateFilter != null)
                     allSourceFiles.RemoveAll(f => !sourceDateFilter(f.Date));
                 if (allSourceFiles.Count == 0)
@@ -125,7 +126,8 @@ namespace TWChatOverlay.Services
                 var missingShoutDates = new HashSet<DateTime>();
                 var missingExpDates = new HashSet<DateTime>();
                 var missingItemDays = new HashSet<DateTime>();
-                var missingContentWeeks = new HashSet<string>(StringComparer.Ordinal);
+                var missingContentDays = new HashSet<DateTime>();
+                var contentDaysByWeek = new Dictionary<string, HashSet<string>>(StringComparer.Ordinal);
                 var missingAbandonDays = new HashSet<DateTime>();
                 var missingAbandonSummaryDays = new HashSet<DateTime>();
 
@@ -134,30 +136,38 @@ namespace TWChatOverlay.Services
                 {
                     DateTime day = source.Date.Date;
                     string dayKey = day.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+                    // 체크포인트 이전 날짜는 활동이 없어 파일이 없을 수 있으므로 '있는데 비어 있으면'만 빠진 것으로 본다.
+                    // 체크포인트 뒤 날짜(앱이 꺼진 채 쌓인 로그, 끝나기 전에 끊긴 패스의 남은 날짜)는 아직 만든 적이 없으니
+                    // 파일이 없어도 빠진 것이다 — 예전에는 이것도 '없으면 정상'으로 봐서 그 날짜의 기록이 영영 만들어지지 않았다.
+                    bool afterCheckpoint = !hasCheckpoint || day > lastCompletedDate!.Value.Date;
+                    bool IsMissing(string archivePath)
+                        => afterCheckpoint
+                            ? !HasUsableArchiveContent(archivePath)
+                            : File.Exists(archivePath) && !HasUsableArchiveContent(archivePath);
                     string shoutPath = Path.Combine(_shoutDirectory, $"{dayKey}.html");
-                    if ((!hasCheckpoint && !HasUsableArchiveContent(shoutPath)) ||
-                        (hasCheckpoint && File.Exists(shoutPath) && !HasUsableArchiveContent(shoutPath)))
+                    if (IsMissing(shoutPath))
                         missingShoutDates.Add(day);
 
                     string expPath = Path.Combine(_expDirectory, $"{dayKey}.html");
-                    if ((!hasCheckpoint && !HasUsableArchiveContent(expPath)) ||
-                        (hasCheckpoint && File.Exists(expPath) && !HasUsableArchiveContent(expPath)))
+                    if (IsMissing(expPath))
                         missingExpDates.Add(day);
 
                     string itemPath = Path.Combine(_itemDirectory, $"{dayKey}.html");
-                    if ((!hasCheckpoint && !HasUsableArchiveContent(itemPath)) ||
-                        (hasCheckpoint && File.Exists(itemPath) && !HasUsableArchiveContent(itemPath)))
+                    if (IsMissing(itemPath))
                         missingItemDays.Add(day);
 
+                    // 컨텐츠는 주 단위 파일이라 날짜별로 본다: 체크포인트 뒤 날짜는 그 주 파일에 그날 줄이 없으면 빠진 것
+                    // (예전에는 주 파일이 있으면 그 주의 다른 날짜가 모두 정상으로 보여, 앱이 꺼져 있던 날의 줄이 채워지지 않았다)
                     string weekKey = LogTextClassifier.GetIsoWeekKey(day);
                     string contentPath = Path.Combine(_contentDirectory, $"{weekKey}.html");
-                    if ((!hasCheckpoint && !HasUsableArchiveContent(contentPath)) ||
-                        (hasCheckpoint && File.Exists(contentPath) && !HasUsableArchiveContent(contentPath)))
-                        missingContentWeeks.Add(weekKey);
+                    bool contentMissing = afterCheckpoint
+                        ? !ContentWeekDays(contentDaysByWeek, weekKey, contentPath).Contains(dayKey)
+                        : File.Exists(contentPath) && !HasUsableArchiveContent(contentPath);
+                    if (contentMissing)
+                        missingContentDays.Add(day);
 
                     string AbandonPath = Path.Combine(_AbandonDirectory, $"{dayKey}.html");
-                    if ((!hasCheckpoint && !HasUsableArchiveContent(AbandonPath)) ||
-                        (hasCheckpoint && File.Exists(AbandonPath) && !HasUsableArchiveContent(AbandonPath)))
+                    if (IsMissing(AbandonPath))
                         missingAbandonDays.Add(day);
                     string abandonSummaryPath = Path.Combine(_AbandonDirectory, $"{dayKey}{AbandonDaySummarySuffix}");
                     if (!File.Exists(abandonSummaryPath))
@@ -168,7 +178,7 @@ namespace TWChatOverlay.Services
                     missingShoutDates.Count > 0 ||
                     missingExpDates.Count > 0 ||
                     missingItemDays.Count > 0 ||
-                    missingContentWeeks.Count > 0 ||
+                    missingContentDays.Count > 0 ||
                     missingAbandonDays.Count > 0 ||
                     missingAbandonSummaryDays.Count > 0;
 
@@ -188,17 +198,8 @@ namespace TWChatOverlay.Services
                     if (missingAbandonSummaryDays.Count > 0)
                         earliestMissingDate = !earliestMissingDate.HasValue ? missingAbandonSummaryDays.Min() : MinDate(earliestMissingDate.Value, missingAbandonSummaryDays.Min());
 
-                    if (missingContentWeeks.Count > 0)
-                    {
-                        DateTime contentMissingDate = allSourceFiles
-                            .Where(source => missingContentWeeks.Contains(LogTextClassifier.GetIsoWeekKey(source.Date)))
-                            .Select(source => source.Date.Date)
-                            .DefaultIfEmpty(DateTime.MaxValue)
-                            .Min();
-
-                        if (contentMissingDate != DateTime.MaxValue)
-                            earliestMissingDate = !earliestMissingDate.HasValue ? contentMissingDate : MinDate(earliestMissingDate.Value, contentMissingDate);
-                    }
+                    if (missingContentDays.Count > 0)
+                        earliestMissingDate = !earliestMissingDate.HasValue ? missingContentDays.Min() : MinDate(earliestMissingDate.Value, missingContentDays.Min());
 
                     sourceFiles = earliestMissingDate.HasValue
                         ? allSourceFiles.Where(source => source.Date.Date >= earliestMissingDate.Value.Date).ToList()
@@ -217,7 +218,7 @@ namespace TWChatOverlay.Services
                     missingShoutDates,
                     missingExpDates,
                     missingItemDays,
-                    missingContentWeeks,
+                    missingContentDays,
                     missingAbandonDays,
                     missingAbandonSummaryDays,
                     updateCheckpoint);
@@ -255,7 +256,7 @@ namespace TWChatOverlay.Services
             private readonly HashSet<DateTime> _missingShoutDates;
             private readonly HashSet<DateTime> _missingExpDates;
             private readonly HashSet<DateTime> _missingItemDays;
-            private readonly HashSet<string> _missingContentWeeks;
+            private readonly HashSet<DateTime> _missingContentDays;
             private readonly HashSet<DateTime> _missingAbandonDays;
             private readonly HashSet<DateTime> _missingAbandonSummaryDays;
             private readonly bool _updateCheckpoint;
@@ -266,6 +267,11 @@ namespace TWChatOverlay.Services
             private readonly Dictionary<DateTime, AbandonMonthlySummarySnapshotEntry> _rebuiltSummaries = new();
             private readonly HashSet<DateTime> _incompleteSummaryDays = new();
             private readonly HashSet<DateTime> _completedSummaryDays = new();
+            // 긴 패스(전체 다시 읽기)가 끝나기 전에 앱이 꺼지면 다음 실행이 처음부터 다시 읽었다 — 끝낸 날짜까지 몇 초마다 체크포인트를 올려 이어서 읽게 한다.
+            // 끝까지 못 읽은 파일이 나오면 그 뒤로는 올리지 않는다(그 날짜를 다음에 다시 읽도록).
+            private static readonly TimeSpan ProgressSaveInterval = TimeSpan.FromSeconds(3);
+            private DateTime _lastProgressSaveUtc = DateTime.UtcNow;
+            private bool _progressBlocked;
 
             // 지금 읽는 파일에 무엇을 써야 하는지
             private DateTime _logDate;
@@ -280,7 +286,7 @@ namespace TWChatOverlay.Services
                 HashSet<DateTime> missingShoutDates,
                 HashSet<DateTime> missingExpDates,
                 HashSet<DateTime> missingItemDays,
-                HashSet<string> missingContentWeeks,
+                HashSet<DateTime> missingContentDays,
                 HashSet<DateTime> missingAbandonDays,
                 HashSet<DateTime> missingAbandonSummaryDays,
                 bool updateCheckpoint)
@@ -293,7 +299,7 @@ namespace TWChatOverlay.Services
                 _missingShoutDates = missingShoutDates;
                 _missingExpDates = missingExpDates;
                 _missingItemDays = missingItemDays;
-                _missingContentWeeks = missingContentWeeks;
+                _missingContentDays = missingContentDays;
                 _missingAbandonDays = missingAbandonDays;
                 _missingAbandonSummaryDays = missingAbandonSummaryDays;
                 _updateCheckpoint = updateCheckpoint;
@@ -316,7 +322,7 @@ namespace TWChatOverlay.Services
                 _writeShout = _missingShoutDates.Contains(logDate);
                 _writeExp = _missingExpDates.Contains(logDate);
                 _writeItem = _missingItemDays.Contains(logDate);
-                _writeContent = _missingContentWeeks.Contains(weekKey);
+                _writeContent = _missingContentDays.Contains(logDate);
                 _writeAbandon = _missingAbandonDays.Contains(logDate);
                 _rebuildAbandonSummary = _missingAbandonSummaryDays.Contains(logDate);
                 if (_rebuildAbandonSummary && !_rebuiltSummaries.ContainsKey(logDate))
@@ -326,9 +332,13 @@ namespace TWChatOverlay.Services
                 // 이미 모든 아카이브가 있는 날짜는 파싱 자체를 건너뛴다 (재시작·백필 시 최근 구간 무료 통과)
                 if (!_hasArchiveWriteTarget && !_rebuildAbandonSummary)
                 {
-                    _lastProcessedDate = logDate;
+                    MarkDayDone(logDate);
                     return false;
                 }
+
+                // 쓰는 도중 앱이 꺼지면 반쯤 쓴 파일이 '있음'으로 보여 다시 채워지지 않는다 — 쓰는 중인 날짜를 남겨 두고 끝나면 지운다
+                if (_hasArchiveWriteTarget)
+                    _owner.SetDayInProgress(logDate, inProgress: true);
 
                 return true;
             }
@@ -365,13 +375,38 @@ namespace TWChatOverlay.Services
 
             public void EndFile(RawLogFile file, RawLogReadOutcome outcome)
             {
-                _lastProcessedDate = file.Date.Date;
                 // 끝까지 못 읽은 날은 요약을 쓰지 않아 다음 시작에 다시 센다. 읽는 도중 취소되면 EndFile 자체가 오지 않으므로
                 // '끝까지 읽음'을 받은 날만 쓴다.
                 if (outcome == RawLogReadOutcome.Completed)
+                {
                     _completedSummaryDays.Add(file.Date.Date);
+                    if (_hasArchiveWriteTarget)
+                    {
+                        lock (_owner._syncRoot)
+                            _pendingWrites.FlushAll(); // 디스크에 다 쓴 뒤에 '쓰는 중' 표시를 지운다
+                        _owner.SetDayInProgress(file.Date.Date, inProgress: false);
+                    }
+                    MarkDayDone(file.Date.Date);
+                }
                 else
+                {
                     _incompleteSummaryDays.Add(file.Date.Date);
+                    _progressBlocked = true;
+                    _lastProcessedDate = file.Date.Date;
+                }
+            }
+
+            private void MarkDayDone(DateTime day)
+            {
+                _lastProcessedDate = day;
+                if (!_updateCheckpoint || _progressBlocked || DateTime.UtcNow - _lastProgressSaveUtc < ProgressSaveInterval)
+                    return;
+
+                // 체크포인트는 '그 날짜까지 아카이브가 디스크에 있다'는 뜻이므로 모아 둔 줄을 먼저 쓴다
+                lock (_owner._syncRoot)
+                    _pendingWrites.FlushAll();
+                _owner.SaveRawLogRebuildCheckpoint(day);
+                _lastProgressSaveUtc = DateTime.UtcNow;
             }
 
             public void EndScan(bool completed)
@@ -459,6 +494,122 @@ namespace TWChatOverlay.Services
         /// 컨텐츠 아카이브를 예전 빌드가 썼다면(어비스 입장·보상 줄이 빠진 채) 주간 파일을 모두 지워
         /// 다음 패스가 원본 로그에서 다시 만들게 한다. 체크포인트도 함께 지워 지운 주가 '누락'으로 잡히게 한다. 1회만.
         /// </summary>
+        private const string InProgressDaysFileName = "scan-inprogress.json";
+
+        private string InProgressDaysPath => Path.Combine(_stateDirectory, InProgressDaysFileName);
+
+        private HashSet<string> LoadInProgressDays()
+        {
+            try
+            {
+                if (File.Exists(InProgressDaysPath))
+                    return new HashSet<string>(JsonSerializer.Deserialize<string[]>(File.ReadAllText(InProgressDaysPath)) ?? Array.Empty<string>(), StringComparer.Ordinal);
+            }
+            catch (Exception ex)
+            {
+                AppLogger.Warn("Failed to read in-progress scan days.", ex);
+            }
+            return new HashSet<string>(StringComparer.Ordinal);
+        }
+
+        /// <summary>아카이브를 쓰는 중인 날짜 표시를 켜고 끈다. 끝까지 못 쓴 날짜는 다음 시작 때 <see cref="RecoverInterruptedDays"/>가 비운다.</summary>
+        private void SetDayInProgress(DateTime day, bool inProgress)
+        {
+            lock (_syncRoot)
+            {
+                try
+                {
+                    var days = LoadInProgressDays();
+                    string key = day.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+                    bool changed = inProgress ? days.Add(key) : days.Remove(key);
+                    if (!changed)
+                        return;
+                    Directory.CreateDirectory(_stateDirectory);
+                    if (days.Count == 0)
+                        File.Delete(InProgressDaysPath);
+                    else
+                        File.WriteAllText(InProgressDaysPath, JsonSerializer.Serialize(days.OrderBy(d => d, StringComparer.Ordinal).ToArray()));
+                }
+                catch (Exception ex)
+                {
+                    AppLogger.Warn($"Failed to update in-progress scan day {day:yyyy-MM-dd}.", ex);
+                }
+            }
+        }
+
+        /// <summary>
+        /// 지난번 패스가 쓰다 만 날짜(앱 종료·취소·시간 초과)의 아카이브를 비워 이번 패스가 처음부터 다시 쓰게 한다.
+        /// 일별 파일은 지우고, 주 단위 컨텐츠 파일에서는 그날 줄만 걷어 낸다.
+        /// </summary>
+        private void RecoverInterruptedDays()
+        {
+            lock (_syncRoot)
+            {
+                var days = LoadInProgressDays();
+                if (days.Count == 0)
+                    return;
+
+                foreach (string dayKey in days)
+                {
+                    try
+                    {
+                        foreach (string dir in new[] { _shoutDirectory, _itemDirectory, _expDirectory, _AbandonDirectory })
+                        {
+                            string dayPath = Path.Combine(dir, $"{dayKey}.html");
+                            if (File.Exists(dayPath))
+                                File.Delete(dayPath);
+                        }
+                        string summaryPath = Path.Combine(_AbandonDirectory, dayKey + AbandonDaySummarySuffix);
+                        if (File.Exists(summaryPath))
+                            File.Delete(summaryPath);
+
+                        if (DateTime.TryParseExact(dayKey, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime day))
+                        {
+                            string weekPath = Path.Combine(_contentDirectory, $"{LogTextClassifier.GetIsoWeekKey(day)}.html");
+                            if (File.Exists(weekPath))
+                            {
+                                string marker = $"data-date=\"{dayKey}\"";
+                                var kept = File.ReadAllLines(weekPath, Encoding.UTF8).Where(l => !l.Contains(marker, StringComparison.Ordinal)).ToArray();
+                                File.WriteAllLines(weekPath, kept, Utf8BomEncoding);
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        AppLogger.Warn($"Failed to clean interrupted archive day {dayKey}.", ex);
+                        return; // 표시를 남겨 다음에 다시 시도한다
+                    }
+                }
+
+                try { File.Delete(InProgressDaysPath); } catch { }
+                AppLogger.Info($"Cleaned interrupted archive day(s): {string.Join(", ", days)}.");
+            }
+        }
+
+        /// <summary>주 단위 컨텐츠 파일에 줄이 있는 날짜들(yyyy-MM-dd). 시작 판정 동안만 쓰는 캐시.</summary>
+        private static HashSet<string> ContentWeekDays(Dictionary<string, HashSet<string>> cache, string weekKey, string path)
+        {
+            if (cache.TryGetValue(weekKey, out var days))
+                return days;
+
+            days = new HashSet<string>(StringComparer.Ordinal);
+            try
+            {
+                if (File.Exists(path))
+                {
+                    foreach (string line in File.ReadLines(path, Encoding.UTF8))
+                    {
+                        Match m = ArchiveDataDateRegex.Match(line);
+                        if (m.Success)
+                            days.Add(m.Groups[1].Value);
+                    }
+                }
+            }
+            catch { }
+            cache[weekKey] = days;
+            return days;
+        }
+
         /// <summary>
         /// 어밴던로드 일별 요약을 다시 세게 한다(1회): 원본 로그가 남아 있는 날의 요약 파일을 지워 다음 패스가 처음부터 다시 만든다.
         /// 같은 날을 다시 읽을 때 기존 요약에 또 더하던 버그로 부푼 값을 바로잡는다. 원본 로그가 없는 날의 요약은 다시 셀 수 없어 둔다.
