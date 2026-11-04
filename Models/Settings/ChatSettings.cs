@@ -1467,6 +1467,20 @@ namespace TWChatOverlay.Models
             }
         }
 
+        /// <summary>설정 창 배율(%). 100~200. 설정 창만 키우고 오버레이에는 영향이 없다.</summary>
+        [JsonIgnore]
+        public double SettingsWindowScalePercent
+        {
+            get => Ui.SettingsWindowScalePercent;
+            set
+            {
+                double clamped = Math.Clamp(value, 100.0, 200.0);
+                if (Math.Abs(Ui.SettingsWindowScalePercent - clamped) < 0.0001) return;
+                Ui.SettingsWindowScalePercent = clamped;
+                OnPropertyChanged();
+            }
+        }
+
         #endregion
 
         #region 단축키 (facade)

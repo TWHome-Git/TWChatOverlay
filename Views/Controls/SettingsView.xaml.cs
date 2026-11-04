@@ -724,6 +724,59 @@ namespace TWChatOverlay.Views
             catch { }
         }
 
+        /// <summary>설정 창 호스트의 배율 100% 기준 크기. 내비 168 + 본문 620 + 여백/스크롤바에 맞춰 잘림 없는 폭.</summary>
+        public const double HostBaseWidth = 892;
+        public const double HostBaseHeight = 750;
+
+        private Window? _scaleHost;
+        private Models.ChatSettings? _scaleSettings;
+
+        /// <summary>
+        /// 설정의 '설정 창 배율'을 이 화면과 호스트 창에 적용한다. 글자 크기가 XAML 에 고정돼 있어
+        /// 화면 전체에 LayoutTransform 을 걸고 창도 같은 비율로 키운다. 슬라이더를 움직이면 바로 따라간다.
+        /// 마법사 임베드에서는 부르지 않는다 (호스트 창이 없다).
+        /// </summary>
+        public void ApplyHostScale(Window host)
+        {
+            if (host == null) return;
+
+            if (_scaleHost == null)
+            {
+                _scaleHost = host;
+                _scaleSettings = Services.AppServices.TryGet<Models.ChatSettings>();
+                if (_scaleSettings != null)
+                    _scaleSettings.PropertyChanged += ScaleSettings_PropertyChanged;
+            }
+
+            try
+            {
+                double percent = _scaleSettings?.SettingsWindowScalePercent ?? 100.0;
+                double scale = System.Math.Clamp(percent, 100.0, 200.0) / 100.0;
+                LayoutTransform = scale > 1.0001 ? new System.Windows.Media.ScaleTransform(scale, scale) : null;
+
+                host.Width = System.Math.Round(HostBaseWidth * scale);
+                host.Height = System.Math.Round(HostBaseHeight * scale);
+
+                // 키운 창이 화면 밖으로 나가지 않게 위치를 보정한다 (여백 = 창 크기 → 창 전체가 보이도록)
+                var area = Services.ScreenBoundsHelper.GetVirtualDesktop();
+                host.Left = Services.ScreenBoundsHelper.ClampAxis(host.Left, area.Left, area.Width, host.Width, visibleMargin: host.Width);
+                host.Top = Services.ScreenBoundsHelper.ClampAxis(host.Top, area.Top, area.Height, host.Height, visibleMargin: host.Height);
+            }
+            catch (System.Exception ex)
+            {
+                Services.AppLogger.Warn("Failed to apply settings window scale.", ex);
+            }
+        }
+
+        private void ScaleSettings_PropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+        {
+            // 빈 이름 = 설정 통째 교체(프로필 불러오기·초기화)
+            if (!string.IsNullOrEmpty(e.PropertyName) && e.PropertyName != nameof(Models.ChatSettings.SettingsWindowScalePercent))
+                return;
+            if (_scaleHost != null)
+                ApplyHostScale(_scaleHost);
+        }
+
         private void NumberOnly_PreviewTextInput(object sender, TextCompositionEventArgs e)
         {
             if (sender is not TextBox textBox) return;
@@ -746,6 +799,12 @@ namespace TWChatOverlay.Views
             _itemDropPreviewTimer?.Stop();
             // ChatSettings는 앱 수명 내내 살아 있으므로 구독을 남기면 VM 전체가 누수된다
             _addonViewModel?.Detach();
+            if (_scaleSettings != null)
+            {
+                _scaleSettings.PropertyChanged -= ScaleSettings_PropertyChanged;
+                _scaleSettings = null;
+            }
+            _scaleHost = null;
             if (_addonPreviewActive)
             {
                 _addonPreviewActive = false;

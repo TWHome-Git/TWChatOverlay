@@ -336,6 +336,8 @@ namespace TWChatOverlay.Models
         public CalendarUiSettings Calendar { get; set; } = new();
         public MemoUiSettings Memo { get; set; } = new();
         public double MessengerEtaFontSize { get; set; } = 18.0;
+        /// <summary>설정 창 배율(%). 100~200. 설정 창(글자·칸)만 키우고 오버레이에는 영향이 없다. 모니터 배율이 100%인 큰 화면용.</summary>
+        public double SettingsWindowScalePercent { get; set; } = 100.0;
     }
 
     // ----------------------------- Hotkeys / System / Presets -----------------------------

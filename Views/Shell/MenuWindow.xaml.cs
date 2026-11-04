@@ -653,8 +653,8 @@ namespace TWChatOverlay.Views
 
                 host.Show();
                 host.ShowHostContent(settingsView, "설정");
-                // 설정 콘텐츠 폭(내비 168 + 본문 620 + 여백/스크롤바)에 맞춰 잘림 없이 폭 고정
-                host.Width = 892;
+                // 설정 콘텐츠 폭(내비 168 + 본문 620 + 여백/스크롤바)에 맞춘 크기에 '설정 창 배율'을 곱해 창을 고정한다
+                settingsView.ApplyHostScale(host);
                 SetMainAddonPositionMode(false);
 
                 try { if (_activeSubmenuButton != null) SetButtonActive(_activeSubmenuButton, false); } catch { }

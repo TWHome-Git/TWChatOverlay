@@ -712,6 +712,18 @@
                     <Border Style="{StaticResource SettingsRowStyle}">
                         <DockPanel>
                             <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                                <Slider Minimum="100" Maximum="200" Value="{Binding Settings.SettingsWindowScalePercent, Mode=TwoWay, FallbackValue=100}" TickFrequency="5" IsSnapToTickEnabled="True" VerticalAlignment="Center" Width="140"/>
+                                <TextBlock Text="{Binding Settings.SettingsWindowScalePercent, StringFormat={}{0:F0}%}" Foreground="{DynamicResource TextBrush}" Width="34" TextAlignment="Right" VerticalAlignment="Center" FontSize="12"/>
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                <TextBlock Text="설정 창 배율" Style="{StaticResource SettingsRowLabelStyle}"
+                                           ToolTip="이 설정 창의 글자와 칸을 함께 키웁니다. 오버레이·채팅창에는 영향이 없습니다 (모니터 배율이 100%인 큰 화면용)"/>
+                            </StackPanel>
+                        </DockPanel>
+                    </Border>
+                    <Border Style="{StaticResource SettingsRowStyle}">
+                        <DockPanel>
+                            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
                                 <Slider Minimum="20" Maximum="100" Value="{Binding OverlayOpacityPercent, Mode=TwoWay, FallbackValue=96}" TickFrequency="5" IsSnapToTickEnabled="True" VerticalAlignment="Center" Width="140"/>
                                 <TextBlock Text="{Binding OverlayOpacityPercent, StringFormat={}{0:F0}%}" Foreground="{DynamicResource TextBrush}" Width="34" TextAlignment="Right" VerticalAlignment="Center" FontSize="12"/>
                             </StackPanel>
