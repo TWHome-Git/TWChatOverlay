@@ -712,7 +712,9 @@
                     <Border Style="{StaticResource SettingsRowStyle}">
                         <DockPanel>
                             <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
-                                <Slider Minimum="100" Maximum="200" Value="{Binding Settings.SettingsWindowScalePercent, Mode=TwoWay, FallbackValue=100}" TickFrequency="5" IsSnapToTickEnabled="True" VerticalAlignment="Center" Width="140"/>
+                                <!-- 배율은 끌기가 끝난 뒤에만 적용한다: 끄는 중에 화면과 창이 커지면 썸이 마우스 밑에서 밀려 값이 튄다 -->
+                                <Slider Minimum="100" Maximum="200" Value="{Binding Settings.SettingsWindowScalePercent, Mode=TwoWay, FallbackValue=100}" TickFrequency="5" IsSnapToTickEnabled="True" VerticalAlignment="Center" Width="140"
+                                        Thumb.DragStarted="ScaleSlider_DragStarted" Thumb.DragCompleted="ScaleSlider_DragCompleted"/>
                                 <TextBlock Text="{Binding Settings.SettingsWindowScalePercent, StringFormat={}{0:F0}%}" Foreground="{DynamicResource TextBrush}" Width="34" TextAlignment="Right" VerticalAlignment="Center" FontSize="12"/>
                             </StackPanel>
                             <StackPanel Orientation="Horizontal" VerticalAlignment="Center">

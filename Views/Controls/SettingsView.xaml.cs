@@ -773,6 +773,35 @@ namespace TWChatOverlay.Views
             // 빈 이름 = 설정 통째 교체(프로필 불러오기·초기화)
             if (!string.IsNullOrEmpty(e.PropertyName) && e.PropertyName != nameof(Models.ChatSettings.SettingsWindowScalePercent))
                 return;
+
+            // 슬라이더를 끄는 중에는 적용을 미룬다. 이 화면 전체가 배율로 커지면서 창도 바뀌면
+            // 끌고 있는 썸이 마우스 밑에서 밀려 값이 튀고, 그 값으로 다시 커지는 되먹임이 생긴다.
+            if (_scaleSliderDragging)
+            {
+                _scaleApplyPending = true;
+                return;
+            }
+
+            if (_scaleHost != null)
+                ApplyHostScale(_scaleHost);
+        }
+
+        private bool _scaleSliderDragging;
+        private bool _scaleApplyPending;
+
+        private void ScaleSlider_DragStarted(object sender, System.Windows.Controls.Primitives.DragStartedEventArgs e)
+        {
+            _scaleSliderDragging = true;
+            _scaleApplyPending = false;
+        }
+
+        private void ScaleSlider_DragCompleted(object sender, System.Windows.Controls.Primitives.DragCompletedEventArgs e)
+        {
+            _scaleSliderDragging = false;
+            if (!_scaleApplyPending)
+                return;
+
+            _scaleApplyPending = false;
             if (_scaleHost != null)
                 ApplyHostScale(_scaleHost);
         }
