@@ -134,6 +134,9 @@ namespace TWChatOverlay.Views
             AppServices.Get<ChatWindowHub>().BuffersChanged += ChatWindowHub_BuffersChanged;
             AppServices.Get<IIdTagService>().IdTagsChanged += IdTagService_Changed;
             AppServices.Get<BlacklistService>().BlacklistChanged += IdTagService_Changed;
+            // 잠금 해제 인스펙터의 가로/세로 입력·넛지로 이 창이 바뀌면 즉시 설정에 쓴다.
+            // 안 쓰면 메인 창 활성/비활성 때마다 도는 ApplySizeFromMainWindow가 저장값(옛 크기)으로 되돌린다.
+            AppServices.Get<UiLockService>().WindowAdjusted += UiLock_WindowAdjusted;
             AttachToMainWindow();
             Activated += (_, _) => Dispatcher.BeginInvoke(new Action(EnsureCloneTopmost), DispatcherPriority.Background);
             Deactivated += (_, _) => Dispatcher.BeginInvoke(new Action(EnsureCloneTopmost), DispatcherPriority.Background);
@@ -185,6 +188,7 @@ namespace TWChatOverlay.Views
             AppServices.Get<ChatWindowHub>().BuffersChanged -= ChatWindowHub_BuffersChanged;
             AppServices.Get<IIdTagService>().IdTagsChanged -= IdTagService_Changed;
             AppServices.Get<BlacklistService>().BlacklistChanged -= IdTagService_Changed;
+            try { AppServices.Get<UiLockService>().WindowAdjusted -= UiLock_WindowAdjusted; } catch { }
             _settings.PropertyChanged -= Settings_PropertyChanged;
             DetachFromMainWindow();
             AppServices.Get<ChatWindowHub>().UnregisterClone(_slot);
@@ -238,7 +242,8 @@ namespace TWChatOverlay.Views
                 return;
 
             bool wasVisible = IsVisible;
-            ApplySizeFromMainWindow();
+            // 크기는 생성·Loaded 때 한 번만 저장값에서 가져온다. 여기(메인 창 활성/비활성·상태 변경마다)서 다시 적용하면
+            // 인스펙터로 바꾼 뒤 아직 저장되지 않은 크기가 매번 옛 값으로 되돌아갔다.
 
             bool shouldBeVisible =
                 _mainWindow.IsOverlayVisible &&
@@ -276,6 +281,23 @@ namespace TWChatOverlay.Views
                 return;
 
             PersistBoundsNow(); // 복원 중(ApplyStoredBounds)에는 베이스가 억제한다
+        }
+
+        /// <summary>잠금 해제 인스펙터(가로/세로 입력·X/Y 입력·넛지)로 이 창이 조정되면 크기와 위치를 바로 저장한다.</summary>
+        private void UiLock_WindowAdjusted(Window window)
+        {
+            if (!ReferenceEquals(window, this))
+                return;
+
+            try
+            {
+                SaveSizeToSettings();
+                PersistBoundsNow(); // 인스펙터는 잠금 해제 중에만 있으므로 위치도 함께 저장된다
+            }
+            catch (Exception ex)
+            {
+                AppLogger.Warn($"Failed to persist chat clone window bounds after unlock adjustment. Slot={_slot}", ex);
+            }
         }
 
         private void ChatWindowHub_BuffersChanged(object? sender, EventArgs e)
@@ -637,7 +659,7 @@ namespace TWChatOverlay.Views
                 Height -= e.VerticalChange;
                 Top += e.VerticalChange;
                 SaveSizeToSettings();
-                PersistBoundsNow();
+                SaveResizedPositionToSettings();
             }
         }
 
@@ -648,7 +670,7 @@ namespace TWChatOverlay.Views
                 Width -= e.HorizontalChange;
                 Left += e.HorizontalChange;
                 SaveSizeToSettings();
-                PersistBoundsNow();
+                SaveResizedPositionToSettings();
             }
         }
 
@@ -658,7 +680,6 @@ namespace TWChatOverlay.Views
             {
                 Width += e.HorizontalChange;
                 SaveSizeToSettings();
-                PersistBoundsNow();
             }
         }
 
@@ -671,7 +692,31 @@ namespace TWChatOverlay.Views
         {
             _isResizingWindow = false;
             AppServices.Get<ChatWindowHub>().TryApplyMagneticSnap(this);
-            PersistBoundsNow();
+            SaveResizedPositionToSettings(); // 스냅으로 옮겨진 자리까지
+        }
+
+        /// <summary>
+        /// 가장자리 끌기로 크기를 바꾸면 위/왼쪽 가장자리를 잡은 경우 Top/Left도 같이 움직인다.
+        /// 위치 저장(PersistBoundsNow)은 잠금 해제 중에만 하도록 되어 있어, 잠긴 상태에서 끌면 높이만 저장되고
+        /// 위치는 옛 값으로 남아 다음 복원 때 창이 어긋났다. 사용자가 직접 끈 것이므로 잠금과 무관하게 저장한다.
+        /// </summary>
+        private void SaveResizedPositionToSettings()
+        {
+            if (!double.IsFinite(Left) || !double.IsFinite(Top))
+                return;
+
+            if (_slot == 1)
+            {
+                _settings.ChatCloneWindow1Left = Left;
+                _settings.ChatCloneWindow1Top = Top;
+            }
+            else if (_slot == 2)
+            {
+                _settings.ChatCloneWindow2Left = Left;
+                _settings.ChatCloneWindow2Top = Top;
+            }
+
+            ConfigService.SaveDeferred(_settings);
         }
 
         private void ApplyDefaultPositionIfNeeded()
