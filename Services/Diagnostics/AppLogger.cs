@@ -126,6 +126,31 @@ namespace TWChatOverlay.Services
             {
                 count = Interlocked.Decrement(ref _pendingLineCount);
             }
+
+            // 치명적 오류는 바로 파일에 쓴다 — 프로그램이 곧 죽으면 모아 쓰는 타이머가 돌 기회가 없다
+            if (level >= LogLevel.FATAL)
+                Flush();
+        }
+
+        /// <summary>
+        /// 쌓여 있는 줄을 지금 파일에 쓴다. 평소에는 타이머가 120ms마다 모아 쓰지만,
+        /// 프로그램이 죽거나 멈추기 직전의 기록은 기다리지 않고 남겨야 한다.
+        /// </summary>
+        public static void Flush()
+        {
+            // 타이머가 쓰는 중이면 잠깐 기다렸다가 남은 줄을 쓴다 (최대 약 0.5초)
+            for (int attempt = 0; attempt < 50; attempt++)
+            {
+                if (_pendingLines.IsEmpty && Volatile.Read(ref _flushInProgress) == 0)
+                    return;
+                if (Volatile.Read(ref _flushInProgress) == 0)
+                {
+                    FlushPending(force: true);
+                    if (_pendingLines.IsEmpty)
+                        return;
+                }
+                Thread.Sleep(10);
+            }
         }
 
         private static void FlushPending(bool force = false)
