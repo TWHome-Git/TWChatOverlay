@@ -1,11 +1,15 @@
 ﻿using System;
-using System.Windows;
-using System.Windows.Documents;
+using System.Collections.Generic;
 using System.Windows.Media;
 using TWChatOverlay.Models;
+using TWChatOverlay.Views;
 
 namespace TWChatOverlay.Services
 {
+    /// <summary>
+    /// 채팅 한 줄을 표시 영역(<see cref="ChatLineDisplay"/>)에 그릴 내용으로 만든다. 메인 채팅창과 서브 채팅창이 같이 쓴다.
+    /// 줄 색·배경·굵기 규칙과 강조 알림음이 여기 있다.
+    /// </summary>
     public sealed class LogDocumentRenderer
     {
 
@@ -17,7 +21,7 @@ namespace TWChatOverlay.Services
         }
 
         public void AddLog(
-            FlowDocument document,
+            ChatLineDisplay display,
             LogParser.ParseResult log,
             ChatSettings settings,
             FontFamily fontFamily,
@@ -26,7 +30,7 @@ namespace TWChatOverlay.Services
             bool canPlayAlertSound,
             bool useMagicCircleAlert = false)
         {
-            if (document == null) throw new ArgumentNullException(nameof(document));
+            if (display == null) throw new ArgumentNullException(nameof(display));
             if (settings == null) throw new ArgumentNullException(nameof(settings));
 
             bool isBlacklisted = AppServices.Get<BlacklistService>().TryGetReason(log.SenderId, out string blacklistReason);
@@ -34,20 +38,22 @@ namespace TWChatOverlay.Services
             string displayText = isBlacklisted ? $"{log.FormattedText} [ {blacklistReason} ]" : log.FormattedText;
 
             // 타임스탬프/에타레벨/캐릭터를 조각으로 나눠 색을 따로 칠할 수 있게 (ChatLineComposer)
-            Paragraph paragraph = new()
+            List<ChatSegment> segments = ChatLineComposer.Compose(displayText, log, settings);
+            var parts = new List<(string Text, Brush? Brush)>(segments.Count);
+            foreach (ChatSegment segment in segments)
             {
-                Foreground = foreground,
-                FontSize = fontSize,
-                FontFamily = fontFamily,
-                Margin = new Thickness(0, 0, 0, 1),
-                LineHeight = 1
-            };
-            ChatLineComposer.AppendRuns(paragraph, ChatLineComposer.Compose(displayText, log, settings), foreground, settings);
+                if (segment.Text.Length == 0)
+                    continue;
+                parts.Add((segment.Text, ChatLineComposer.ResolveSegmentBrush(segment, settings)));
+            }
+
+            Brush? background = null;
+            bool bold = false;
 
             if (isBlacklisted)
             {
-                paragraph.Background = BlacklistService.HighlightBackgroundBrush;
-                paragraph.FontWeight = FontWeights.Bold;
+                background = BlacklistService.HighlightBackgroundBrush;
+                bold = true;
             }
 
             if (log.IsHighlight)
@@ -55,14 +61,14 @@ namespace TWChatOverlay.Services
                 // 마법진 보라 배경을 먼저 칠하고, 하이라이트 색이 켜져 있으면 주황 배경이 덮어쓴다
                 if (useMagicCircleAlert && log.IsMagicCircleAlert)
                 {
-                    paragraph.Background = ChatBrushResolver.MagicCircleBackgroundBrush;
-                    paragraph.FontWeight = FontWeights.Bold;
+                    background = ChatBrushResolver.MagicCircleBackgroundBrush;
+                    bold = true;
                 }
 
                 if (settings.UseAlertColor && !isBlacklisted)
                 {
-                    paragraph.Background = ChatBrushResolver.HighlightBackgroundBrush;
-                    paragraph.FontWeight = FontWeights.Bold;
+                    background = ChatBrushResolver.HighlightBackgroundBrush;
+                    bold = true;
                 }
 
                 if (isRealTime && canPlayAlertSound)
@@ -74,10 +80,12 @@ namespace TWChatOverlay.Services
                 }
             }
 
-            document.Blocks.Add(paragraph);
-            if (document.Blocks.Count > _maxBlocks)
-                document.Blocks.Remove(document.Blocks.FirstBlock);
+            display.AddLine(new ChatLineContent(parts, foreground, fontFamily, fontSize)
+            {
+                Background = background,
+                Bold = bold,
+            });
+            display.TrimTo(_maxBlocks);
         }
-
     }
 }

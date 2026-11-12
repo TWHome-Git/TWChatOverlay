@@ -59,7 +59,7 @@ namespace TWChatOverlay.Views
             set => SetValue(CurrentFontSizeProperty, value);
         }
 
-        private RichTextBox? LogDisplay => ChatDisplay?.LogDisplayControl;
+        private ChatLineDisplay? LogDisplay => ChatDisplay?.LogDisplayControl;
         #endregion
 
         public MainWindow()

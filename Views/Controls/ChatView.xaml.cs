@@ -10,7 +10,7 @@ namespace TWChatOverlay.Views
     /// </summary>
     public partial class ChatView : UserControl
     {
-        private ScrollViewer? _scrollViewer;
+        private bool _isSyncingScrollBar;
 
         public static readonly DependencyProperty IsAutoScrollEnabledProperty =
             DependencyProperty.Register(nameof(IsAutoScrollEnabled), typeof(bool), typeof(ChatView), new PropertyMetadata(true));
@@ -18,67 +18,53 @@ namespace TWChatOverlay.Views
         public ChatView()
         {
             InitializeComponent();
-            Loaded += ChatView_Loaded;
+            LogDisplay.ScrollMetricsChanged += (_, _) => SyncScrollState();
         }
 
+        /// <summary>맨 아래를 보고 있는지. 위로 올려 보는 중이면 새 줄이 와도 따라 내려가지 않는다.</summary>
         public bool IsAutoScrollEnabled
         {
             get => (bool)GetValue(IsAutoScrollEnabledProperty);
             private set => SetValue(IsAutoScrollEnabledProperty, value);
         }
 
-        public RichTextBox LogDisplayControl => LogDisplay;
+        public ChatLineDisplay LogDisplayControl => LogDisplay;
 
-        private void ChatView_Loaded(object sender, RoutedEventArgs e)
+        /// <summary>표시 영역의 스크롤 범위·위치를 스크롤 막대와 자동 스크롤 표시에 옮긴다.</summary>
+        private void SyncScrollState()
         {
-            if (_scrollViewer != null) return;
-
-            _scrollViewer = FindDescendant<ScrollViewer>(LogDisplay);
-            if (_scrollViewer == null) return;
-
-            _scrollViewer.ScrollChanged += ScrollViewer_ScrollChanged;
-            UpdateAutoScrollState();
-        }
-
-        private void ScrollViewer_ScrollChanged(object sender, ScrollChangedEventArgs e)
-        {
-            UpdateAutoScrollState();
-        }
-
-        private void UpdateAutoScrollState()
-        {
-            if (_scrollViewer == null) return;
-
-            if (_scrollViewer.ScrollableHeight <= 0)
+            double scrollable = LogDisplay.ScrollableHeight;
+            _isSyncingScrollBar = true;
+            try
             {
-                IsAutoScrollEnabled = true;
-                return;
+                LogScrollBar.Maximum = scrollable;
+                LogScrollBar.ViewportSize = LogDisplay.ViewportHeight;
+                LogScrollBar.LargeChange = Math.Max(1, LogDisplay.ViewportHeight);
+                LogScrollBar.SmallChange = 16;
+                LogScrollBar.Value = LogDisplay.VerticalOffset;
+                // 막대가 나타나면 표시 영역이 좁아져 줄바꿈을 다시 잡는다 — 넘칠 때 한 번만 일어난다
+                LogScrollBar.Visibility = scrollable > 0 ? Visibility.Visible : Visibility.Collapsed;
+            }
+            finally
+            {
+                _isSyncingScrollBar = false;
             }
 
-            IsAutoScrollEnabled = Math.Abs(_scrollViewer.VerticalOffset - _scrollViewer.ScrollableHeight) < 1.0;
+            bool atEnd = LogDisplay.IsAtEnd;
+            if (IsAutoScrollEnabled != atEnd)
+                IsAutoScrollEnabled = atEnd;
+        }
+
+        private void LogScrollBar_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        {
+            if (_isSyncingScrollBar)
+                return;
+            LogDisplay.ScrollToVerticalOffset(e.NewValue);
         }
 
         private void ScrollToBottom_Click(object sender, RoutedEventArgs e)
         {
             LogDisplay.ScrollToEnd();
-            UpdateAutoScrollState();
-        }
-
-        private static T? FindDescendant<T>(DependencyObject root) where T : DependencyObject
-        {
-            int count = VisualTreeHelper.GetChildrenCount(root);
-            for (int i = 0; i < count; i++)
-            {
-                var child = VisualTreeHelper.GetChild(root, i);
-                if (child is T typed)
-                    return typed;
-
-                var result = FindDescendant<T>(child);
-                if (result != null)
-                    return result;
-            }
-
-            return null;
         }
     }
 }

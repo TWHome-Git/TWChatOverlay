@@ -34,11 +34,7 @@ namespace TWChatOverlay.Views
             this.CurrentFont = nextFont;
             this.CurrentFontSize = _settings.FontSize;
 
-            if (LogDisplay != null)
-            {
-                LogDisplay.FontFamily = nextFont;
-                LogDisplay.FontSize = _settings.FontSize;
-            }
+            // 글꼴은 줄마다 들고 있다 — 바뀌면 채팅 표시를 다시 그릴 때(RequestRefreshLogDisplay) 반영된다
 
             foreach (Window window in Application.Current.Windows)
             {

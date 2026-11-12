@@ -78,10 +78,8 @@ namespace TWChatOverlay.Views
 
             bool shouldAutoScroll = ChatDisplay?.IsAutoScrollEnabled == true;
 
-            if (LogDisplay != null)
-            {
-                LogDisplay.BeginChange();
-            }
+            // 배치 동안 스크롤 계산을 한 번으로 모은다
+            LogDisplay?.BeginUpdate();
 
             try
             {
@@ -122,8 +120,7 @@ namespace TWChatOverlay.Views
             {
                 if (LogDisplay != null)
                 {
-                    // EndChange 이후 레이아웃은 WPF가 다음 렌더 틱에 알아서 수행한다 — 동기 강제 패스 불필요
-                    LogDisplay.EndChange();
+                    LogDisplay.EndUpdate();
                     if (shouldAutoScroll)
                         ScrollLogDisplayToEndAfterLayout();
                 }
@@ -647,7 +644,7 @@ namespace TWChatOverlay.Views
 
             // 서브 채팅창과 같은 렌더러 — 메인 창만 마법진 배경·Wave.wav를 쓰고, 소리는 경험치 서비스 준비 뒤에만
             _logDocumentRenderer.AddLog(
-                LogDisplay.Document,
+                LogDisplay,
                 log,
                 _settings,
                 safeFont,
@@ -659,16 +656,8 @@ namespace TWChatOverlay.Views
 
         private void ScrollLogDisplayToEndAfterLayout()
         {
-            var logDisplay = LogDisplay;
-            if (logDisplay == null) return;
-
-            logDisplay.ScrollToEnd();
-
-            // 새 문단의 레이아웃이 끝난 뒤(ContextIdle) 진짜 끝으로 한 번 더 — UpdateLayout 강제는 불필요
-            Dispatcher.BeginInvoke(new Action(() =>
-            {
-                LogDisplay?.ScrollToEnd();
-            }), DispatcherPriority.ContextIdle);
+            // 줄을 넣는 순간 높이가 정해지므로 바로 맨 아래로 간다 (예전 RichTextBox는 배치가 끝난 뒤 한 번 더 내려야 했다)
+            LogDisplay?.ScrollToEnd();
         }
 
         private void RequestRefreshLogDisplay(bool force = false)
@@ -692,10 +681,10 @@ namespace TWChatOverlay.Views
                 bool shouldAutoScroll = ChatDisplay?.IsAutoScrollEnabled == true;
 
                 ResetHiddenChatContinuationState();
-                LogDisplay.BeginChange();
+                LogDisplay.BeginUpdate();
                 try
                 {
-                    LogDisplay.Document.Blocks.Clear();
+                    LogDisplay.Clear();
 
                     var logs = _logTabBufferStore.GetLogs(_currentTabTag);
                     foreach (var log in logs)
@@ -709,10 +698,7 @@ namespace TWChatOverlay.Views
                 }
                 finally
                 {
-                    LogDisplay.EndChange();
-                    LogDisplay.InvalidateMeasure();
-                    LogDisplay.InvalidateVisual();
-                    LogDisplay.UpdateLayout();
+                    LogDisplay.EndUpdate();
                     if (shouldAutoScroll)
                         ScrollLogDisplayToEndAfterLayout();
                 }

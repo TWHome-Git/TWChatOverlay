@@ -450,7 +450,7 @@ namespace TWChatOverlay.Views
             }
 
             bool shouldAutoScroll = ChatDisplay.IsAutoScrollEnabled;
-            logDisplay.BeginChange();
+            logDisplay.BeginUpdate();
             try
             {
                 if (delta != null)
@@ -459,34 +459,27 @@ namespace TWChatOverlay.Views
                     {
                         if (ShouldSuppress(log))
                             continue;
-                        _renderer.AddLog(logDisplay.Document, log, _settings, CurrentFont, CurrentFontSize, false, false);
+                        _renderer.AddLog(logDisplay, log, _settings, CurrentFont, CurrentFontSize, false, false);
                     }
 
-                    // 버퍼 상한만큼만 유지 — 오래된 문단은 앞에서 제거 (Count는 O(n)이라 한 번만 센다)
-                    var blocks = logDisplay.Document.Blocks;
-                    int maxBlocks = store.MaxCountPerTab;
-                    int blockCount = blocks.Count;
-                    while (blockCount > maxBlocks && blocks.FirstBlock != null)
-                    {
-                        blocks.Remove(blocks.FirstBlock);
-                        blockCount--;
-                    }
+                    // 버퍼 상한만큼만 유지 — 오래된 줄은 앞에서 제거
+                    logDisplay.TrimTo(store.MaxCountPerTab);
                 }
                 else
                 {
                     (totalAppended, generation) = store.GetVersion(_currentTabTag);
-                    logDisplay.Document.Blocks.Clear();
+                    logDisplay.Clear();
                     foreach (var log in store.GetLogs(_currentTabTag))
                     {
                         if (ShouldSuppress(log))
                             continue;
-                        _renderer.AddLog(logDisplay.Document, log, _settings, CurrentFont, CurrentFontSize, false, false);
+                        _renderer.AddLog(logDisplay, log, _settings, CurrentFont, CurrentFontSize, false, false);
                     }
                 }
             }
             finally
             {
-                logDisplay.EndChange();
+                logDisplay.EndUpdate();
                 if (shouldAutoScroll)
                     logDisplay.ScrollToEnd();
             }
