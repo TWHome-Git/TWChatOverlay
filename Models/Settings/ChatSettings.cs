@@ -662,6 +662,20 @@ namespace TWChatOverlay.Models
                 OnPropertyChanged();
             }
         }
+        /// <summary>잘라 낸 그림을 보여 주는 배율(%, 50~300). 100이면 찍힌 픽셀 그대로의 크기.</summary>
+        [JsonIgnore]
+        public int DoomSentenceCaptureScalePercent
+        {
+            // 옛 설정 파일에는 이 값이 없어 0으로 읽힌다 — 그때는 100%
+            get => Alerts.Dungeon.DoomSentenceCaptureScalePercent < 1 ? 100 : Math.Max(50, Math.Min(300, Alerts.Dungeon.DoomSentenceCaptureScalePercent));
+            set
+            {
+                int clamped = Math.Max(50, Math.Min(300, value));
+                if (Alerts.Dungeon.DoomSentenceCaptureScalePercent == clamped) return;
+                Alerts.Dungeon.DoomSentenceCaptureScalePercent = clamped;
+                OnPropertyChanged();
+            }
+        }
         /// <summary>찍은 원본 화면을 Logs/DoomSentence 에 PNG로 남길지.</summary>
         [JsonIgnore]
         public bool SaveDoomSentenceCapture { get => Alerts.Dungeon.SaveDoomSentenceCapture; set { if (Alerts.Dungeon.SaveDoomSentenceCapture == value) return; Alerts.Dungeon.SaveDoomSentenceCapture = value; OnPropertyChanged(); } }

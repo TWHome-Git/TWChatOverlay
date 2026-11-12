@@ -15,7 +15,7 @@ namespace TWChatOverlay.Services
     ///
     /// 순서 공지는 화면에 3초쯤만 뜨고 채팅 로그에는 남지 않는다 (로그에는 "▶ 운명 선고 N회차 : 발판 K개 (제한 시간 S초)"만).
     /// 로그 줄과 화면 공지는 서버에서 같은 순간에 오므로, 그 줄을 본 직후(설정한 지연 뒤) 화면을 찍으면 공지가 담긴다.
-    /// 찍은 그림은 설정한 영역(퍼센트)만 잘라 보여 주고, 원본은 Logs/DoomSentence 에 남겨 영역을 맞출 때 쓴다.
+    /// 찍은 그림은 설정한 영역(퍼센트)만 잘라 찍힌 크기 그대로(표시 배율 100%) 보여 주고, 원본은 Logs/DoomSentence 에 남겨 영역을 맞출 때 쓴다.
     ///
     /// 줄 판독은 <see cref="DoomSentenceLogParser"/>, 화면 찍기는 <see cref="ScreenCaptureHelper"/>가 한다.
     /// 실시간 줄만 넘겨받는다 (MainWindow.LogProcessing) — 시작할 때 지난 로그를 다시 읽으며 찍지 않게.
@@ -116,7 +116,7 @@ namespace TWChatOverlay.Services
 
                 ChatSettings? settings = GetSharedSettings();
                 DateTime deadlineUtc = startedUtc.AddSeconds(Math.Max(1, seconds));
-                EnsureWindow(settings).ShowCapture(shown, round, total, deadlineUtc, note);
+                EnsureWindow(settings).ShowCapture(shown, round, total, deadlineUtc, note, settings?.DoomSentenceCaptureScalePercent ?? 100);
             }));
         }
 

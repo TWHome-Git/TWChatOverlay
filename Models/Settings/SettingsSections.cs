@@ -188,6 +188,8 @@ namespace TWChatOverlay.Models
         public int DoomSentenceCaptureDelayMilliseconds { get; set; } = 250;
         /// <summary>찍은 게임 화면에서 잘라 보여 줄 자리: 왼쪽,위,너비,높이 (게임 화면 크기에 대한 %).</summary>
         public string DoomSentenceCaptureRegion { get; set; } = "34,17,32,15";
+        /// <summary>잘라 낸 그림을 보여 주는 배율(%). 100이면 찍힌 픽셀 그대로의 크기이고 창이 거기에 맞춰진다.</summary>
+        public int DoomSentenceCaptureScalePercent { get; set; } = 100;
         /// <summary>찍은 원본 화면을 Logs/DoomSentence 에 PNG로 남길지 (최근 20장). 자를 자리를 맞출 때 본다.</summary>
         public bool SaveDoomSentenceCapture { get; set; } = true;
         /// <summary>컨텐츠 타이머 창 표시 (아페티리아 입장~클리어 소요 시간).</summary>
