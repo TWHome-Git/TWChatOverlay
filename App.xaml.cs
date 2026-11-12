@@ -140,6 +140,7 @@ namespace TWChatOverlay
                 services.AddSingleton<ShoutToastService>();
                 services.AddSingleton<DungeonCountDisplayWindowService>();
                 services.AddSingleton<MessengerEtaToastService>();
+                services.AddSingleton<UiHangWatchdog>();
             });
 
             EtaProfileResolver.InitializeAsync();
@@ -147,6 +148,8 @@ namespace TWChatOverlay
             AppServices.Get<IIdTagService>().Initialize();
             _ = AppServices.Get<RecaptureSupplyAlertService>().PreloadAsync();
             AppServices.Get<ForegroundTopmostGuard>().Initialize();
+            // 화면이 오래 응답하지 않으면 그 순간의 상태를 덤프로 남긴다 (Config\HangDumps)
+            AppServices.Get<UiHangWatchdog>().Start(Dispatcher);
             base.OnStartup(e);
             AppLogger.Info("Core services initialized.");
 
