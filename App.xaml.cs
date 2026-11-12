@@ -38,15 +38,19 @@ namespace TWChatOverlay
             }
 #endif
 
-            // 렌더링 모드: 기본은 소프트웨어. 작은 오버레이 창들이라 GPU 가속의 이점이 없는 반면,
-            // 하드웨어 경로는 D3D 드라이버가 창마다 잡는 네이티브 메모리가 커서(측정상 Private Bytes 약 -130MB)
-            // 소프트웨어 렌더링을 기본으로 한다. 되돌리려면 --hardware-render 인자 또는 TWCHAT_HARDWARE_RENDER=1.
-            bool hardwareRender = Array.Exists(e.Args, a => string.Equals(a, "--hardware-render", StringComparison.OrdinalIgnoreCase))
-                || string.Equals(Environment.GetEnvironmentVariable("TWCHAT_HARDWARE_RENDER"), "1", StringComparison.Ordinal);
-            if (!hardwareRender)
+            // 렌더링 모드: 기본은 하드웨어(GPU). 채팅 표시를 직접 그리는 방식으로 바꾼 뒤 남은 비용은 창을 화면에 그려 넣는 쪽인데,
+            // 하드웨어 경로가 그 CPU 비용을 더 줄인다(측정: 갱신당 3.4ms → 2.3ms). 대신 D3D 드라이버가 창마다 잡는 네이티브 메모리가 늘어난다.
+            // 소프트웨어로 돌리려면 --software-render 인자 또는 TWCHAT_SOFTWARE_RENDER=1.
+            bool softwareRender = Array.Exists(e.Args, a => string.Equals(a, "--software-render", StringComparison.OrdinalIgnoreCase))
+                || string.Equals(Environment.GetEnvironmentVariable("TWCHAT_SOFTWARE_RENDER"), "1", StringComparison.Ordinal);
+            if (softwareRender)
             {
                 System.Windows.Media.RenderOptions.ProcessRenderMode = System.Windows.Interop.RenderMode.SoftwareOnly;
-                AppLogger.Info("Render mode: SoftwareOnly (default).");
+                AppLogger.Info("Render mode: SoftwareOnly (requested).");
+            }
+            else
+            {
+                AppLogger.Info("Render mode: hardware (default).");
             }
 
             _mutex = new Mutex(true, "TWChatOverlay_SingleInstance", out bool isNewInstance);
