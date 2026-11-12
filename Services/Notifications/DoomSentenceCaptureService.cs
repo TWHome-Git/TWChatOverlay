@@ -31,6 +31,7 @@ namespace TWChatOverlay.Services
     /// 찍은 그림은 읽고 나면 버린다. 설정에서 '캡처 원본 저장'을 켰을 때만(영역을 맞추거나 인식이 틀릴 때 살펴보는 용도)
     /// 원본 한 장 · 잘라 낸 장들 · 합친 그림과 인식 기록(_ocr.txt)을 Logs/DoomSentence 에 남긴다 (2026-11-12 사용자: 실제 동작에서는 저장하지 않는다).
     /// 줄 판독은 <see cref="DoomSentenceLogParser"/>, 화면 찍기는 <see cref="ScreenCaptureHelper"/>가 한다.
+    /// 디버그 빌드에서는 순서를 읽은 뒤 화살표가 뜬 게임 화면을 한 장(_shot.png) 남긴다 — 릴리스 빌드에는 그 코드가 없다.
     /// 실시간 줄만 넘겨받는다 (MainWindow.LogProcessing) — 시작할 때 지난 로그를 다시 읽으며 찍지 않게.
     /// </summary>
     public sealed class DoomSentenceCaptureService
@@ -212,7 +213,60 @@ namespace TWChatOverlay.Services
             }
 
             await RestoreCaptureAsync().ConfigureAwait(false);
+
+#if DEBUG
+            // 디버그 빌드: 화살표가 뜬 화면을 한 장 남긴다 (2026-11-12 사용자: 디버그 모드에선 화살표 나올 때 스샷 찍어서 보관)
+            if (recognition.LastValid != null)
+                await SaveDebugShotAsync(generation, round, options).ConfigureAwait(false);
+#endif
         }
+
+#if DEBUG
+        /// <summary>
+        /// 디버그 빌드 전용: 순서 창이 다시 캡처에 나오기를 잠깐 기다렸다가 게임 화면(순서 창이 그 밖에 걸쳐 있으면 그만큼 넓혀서)을
+        /// 찍어 Logs/DoomSentence/…_shot.png 로 남긴다. 실제로 어떻게 보였는지 나중에 보려는 것이라 '캡처 원본 저장' 설정과 상관없이 남긴다.
+        /// 릴리스 빌드에는 이 코드가 들어가지 않는다.
+        /// </summary>
+        private async Task SaveDebugShotAsync(int generation, int round, CaptureOptions options)
+        {
+            try
+            {
+                ScreenCaptureHelper.PixelRect? windowRect = null;
+                await Application.Current.Dispatcher.BeginInvoke(new Action(() =>
+                {
+                    var window = _window;
+                    if (window != null && window.IsLoaded && IsCurrent(generation))
+                        windowRect = window.GetScreenRect();
+                }));
+                if (windowRect == null)
+                    return;
+
+                // 창이 다시 찍히기 시작할 때까지 화면이 한두 번 갱신되기를 기다린다
+                await Task.Delay(400).ConfigureAwait(false);
+                if (!IsCurrent(generation))
+                    return;
+
+                ScreenCaptureHelper.PixelRect own = windowRect.Value;
+                await Task.Run(() =>
+                {
+                    ScreenCaptureHelper.PixelRect area = ScreenCaptureHelper.ResolveGameArea(options.ProcessNames, ScalerTopmostGuard.MagpieWindowClass) ?? own;
+                    int left = Math.Min(area.X, own.X);
+                    int top = Math.Min(area.Y, own.Y);
+                    int right = Math.Max(area.X + area.Width, own.X + own.Width);
+                    int bottom = Math.Max(area.Y + area.Height, own.Y + own.Height);
+                    BitmapSource shot = ScreenCaptureHelper.Capture(new ScreenCaptureHelper.PixelRect(left, top, right - left, bottom - top));
+
+                    string directory = LogStoragePaths.DoomSentenceDirectory;
+                    TrySave(shot, Path.Combine(directory, $"{DateTime.Now:yyyyMMdd-HHmmss}_r{round}_shot.png"));
+                    PruneOldCaptures(directory);
+                }).ConfigureAwait(false);
+            }
+            catch (Exception ex)
+            {
+                AppLogger.Warn("Failed to save doom sentence debug shot.", ex);
+            }
+        }
+#endif
 
         /// <summary>
         /// 이어 찍기가 끝났다: 순서 창을 다시 화면 캡처에 나오게 돌려놓는다. 빼 둔 채로 두면 스크린샷 · 녹화에 화살표가 안 찍힌다.

@@ -91,6 +91,15 @@ namespace TWChatOverlay.Views
                 AppLogger.Debug("Doom sentence window could not be excluded from capture; burst capture runs only when it does not cover the notice.");
         }
 
+        /// <summary>이 창이 화면에서 차지하는 자리(픽셀). 안 보이면 null.</summary>
+        public ScreenCaptureHelper.PixelRect? GetScreenRect()
+        {
+            IntPtr hwnd = new WindowInteropHelper(this).Handle;
+            if (hwnd == IntPtr.Zero || !IsVisible || !NativeMethods.GetWindowRect(hwnd, out NativeMethods.RECT own))
+                return null;
+            return new ScreenCaptureHelper.PixelRect(own.Left, own.Top, own.Right - own.Left, own.Bottom - own.Top);
+        }
+
         /// <summary>이 창이 화면의 그 자리(픽셀)와 겹치는지. 겹치면 그 자리를 찍을 때 이 창이 같이 찍힌다.</summary>
         public bool OverlapsScreenRect(ScreenCaptureHelper.PixelRect rect)
         {
