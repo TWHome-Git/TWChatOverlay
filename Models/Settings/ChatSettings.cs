@@ -633,6 +633,38 @@ namespace TWChatOverlay.Models
                 OnPropertyChanged();
             }
         }
+        /// <summary>설계자의 잔재 운명 선고가 시작되면 게임 화면의 발판 순서 공지를 찍어 창에 표시.</summary>
+        [JsonIgnore]
+        public bool ShowDoomSentenceCapture { get => Alerts.Dungeon.ShowDoomSentenceCapture; set { if (Alerts.Dungeon.ShowDoomSentenceCapture == value) return; Alerts.Dungeon.ShowDoomSentenceCapture = value; OnPropertyChanged(); } }
+        /// <summary>운명 선고 로그 줄을 본 뒤 화면을 찍기까지 기다리는 시간(ms, 0~2500).</summary>
+        [JsonIgnore]
+        public int DoomSentenceCaptureDelayMilliseconds
+        {
+            get => Math.Max(0, Math.Min(2500, Alerts.Dungeon.DoomSentenceCaptureDelayMilliseconds));
+            set
+            {
+                int clamped = Math.Max(0, Math.Min(2500, value));
+                if (Alerts.Dungeon.DoomSentenceCaptureDelayMilliseconds == clamped) return;
+                Alerts.Dungeon.DoomSentenceCaptureDelayMilliseconds = clamped;
+                OnPropertyChanged();
+            }
+        }
+        /// <summary>찍은 게임 화면에서 잘라 보여 줄 자리: "왼쪽,위,너비,높이" (%). 잘못 적히면 서비스가 기본값으로 자른다.</summary>
+        [JsonIgnore]
+        public string DoomSentenceCaptureRegion
+        {
+            get => string.IsNullOrWhiteSpace(Alerts.Dungeon.DoomSentenceCaptureRegion) ? "20,10,60,35" : Alerts.Dungeon.DoomSentenceCaptureRegion;
+            set
+            {
+                string text = (value ?? string.Empty).Trim();
+                if (Alerts.Dungeon.DoomSentenceCaptureRegion == text) return;
+                Alerts.Dungeon.DoomSentenceCaptureRegion = text;
+                OnPropertyChanged();
+            }
+        }
+        /// <summary>찍은 원본 화면을 Logs/DoomSentence 에 PNG로 남길지.</summary>
+        [JsonIgnore]
+        public bool SaveDoomSentenceCapture { get => Alerts.Dungeon.SaveDoomSentenceCapture; set { if (Alerts.Dungeon.SaveDoomSentenceCapture == value) return; Alerts.Dungeon.SaveDoomSentenceCapture = value; OnPropertyChanged(); } }
         /// <summary>컨텐츠 타이머 창 표시 (아페티리아 입장~클리어 소요 시간).</summary>
         [JsonIgnore]
         public bool ShowContentTimer { get => Alerts.Dungeon.ShowContentTimer; set { if (Alerts.Dungeon.ShowContentTimer == value) return; Alerts.Dungeon.ShowContentTimer = value; OnPropertyChanged(); } }
@@ -998,6 +1030,30 @@ namespace TWChatOverlay.Models
         {
             get => Windows.RecaptureSupplyPadOrder.Height;
             set { if (Windows.RecaptureSupplyPadOrder.Height == value) return; Windows.RecaptureSupplyPadOrder.Height = value; OnPropertyChanged(); }
+        }
+        [JsonIgnore]
+        public double? DoomSentenceCaptureWindowLeft
+        {
+            get => Windows.DoomSentenceCapture.Left;
+            set { if (Windows.DoomSentenceCapture.Left == value) return; Windows.DoomSentenceCapture.Left = value; OnPropertyChanged(); }
+        }
+        [JsonIgnore]
+        public double? DoomSentenceCaptureWindowTop
+        {
+            get => Windows.DoomSentenceCapture.Top;
+            set { if (Windows.DoomSentenceCapture.Top == value) return; Windows.DoomSentenceCapture.Top = value; OnPropertyChanged(); }
+        }
+        [JsonIgnore]
+        public double? DoomSentenceCaptureWindowWidth
+        {
+            get => Windows.DoomSentenceCapture.Width;
+            set { if (Windows.DoomSentenceCapture.Width == value) return; Windows.DoomSentenceCapture.Width = value; OnPropertyChanged(); }
+        }
+        [JsonIgnore]
+        public double? DoomSentenceCaptureWindowHeight
+        {
+            get => Windows.DoomSentenceCapture.Height;
+            set { if (Windows.DoomSentenceCapture.Height == value) return; Windows.DoomSentenceCapture.Height = value; OnPropertyChanged(); }
         }
         [JsonIgnore]
         public double? ContentTimerWindowLeft

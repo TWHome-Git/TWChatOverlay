@@ -15,6 +15,8 @@ namespace TWChatOverlay.Services
         public static string AbandonDirectory => Path.Combine(Root, "Abandon");
         public static string SeedDirectory => Path.Combine(Root, "Seed");
         public static string TreasuryDirectory => Path.Combine(Root, "Treasury");
+        /// <summary>운명 선고 때 찍은 게임 화면 원본 (DoomSentenceCaptureService, 최근 것만 남긴다).</summary>
+        public static string DoomSentenceDirectory => Path.Combine(Root, "DoomSentence");
         public static string StateDirectory => Path.Combine(Root, "_state");
     }
 }

@@ -182,6 +182,14 @@ namespace TWChatOverlay.Models
         public bool ShowRecaptureSupplyPadOrder { get; set; } = true;
         /// <summary>발판 순서 창 지속 시간(초).</summary>
         public int RecaptureSupplyPadOrderDurationSeconds { get; set; } = 10;
+        /// <summary>설계자의 잔재 운명 선고가 시작되면 게임 화면의 발판 순서 공지를 찍어 창에 표시.</summary>
+        public bool ShowDoomSentenceCapture { get; set; } = true;
+        /// <summary>운명 선고 로그 줄을 본 뒤 화면을 찍기까지 기다리는 시간(ms). 공지가 다 그려진 뒤 찍히게 한다.</summary>
+        public int DoomSentenceCaptureDelayMilliseconds { get; set; } = 250;
+        /// <summary>찍은 게임 화면에서 잘라 보여 줄 자리: 왼쪽,위,너비,높이 (게임 화면 크기에 대한 %).</summary>
+        public string DoomSentenceCaptureRegion { get; set; } = "20,10,60,35";
+        /// <summary>찍은 원본 화면을 Logs/DoomSentence 에 PNG로 남길지 (최근 20장). 자를 자리를 맞출 때 본다.</summary>
+        public bool SaveDoomSentenceCapture { get; set; } = true;
         /// <summary>컨텐츠 타이머 창 표시 (아페티리아 입장~클리어 소요 시간).</summary>
         public bool ShowContentTimer { get; set; } = true;
         /// <summary>컨텐츠 타이머 클리어 결과를 남겨 두는 시간(초). 지나면 창이 닫힌다.</summary>
@@ -251,6 +259,8 @@ namespace TWChatOverlay.Models
         public WindowRect RecaptureSupply { get; set; } = new();
         /// <summary>보급품 탈환 발판 순서 창 위치 (미설정 시 화면 가운데).</summary>
         public WindowRect RecaptureSupplyPadOrder { get; set; } = new();
+        /// <summary>운명 선고 캡처 창 위치/크기 (미설정 시 화면 가운데).</summary>
+        public WindowRect DoomSentenceCapture { get; set; } = new();
         /// <summary>컨텐츠 타이머 창 위치/크기 (미설정 시 화면 가운데).</summary>
         public WindowRect ContentTimer { get; set; } = new();
         public WindowRect ExperienceLimitAlert { get; set; } = new();

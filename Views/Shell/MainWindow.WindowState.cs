@@ -129,6 +129,9 @@ namespace TWChatOverlay.Views
             // 보급품 탈환 발판 순서 창 위치
             AppServices.Get<RecaptureSupplyPadOrderService>().ShowPositionPreview(_settings);
 
+            // 운명 선고 캡처 창 위치/크기
+            AppServices.Get<DoomSentenceCaptureService>().ShowPositionPreview(_settings);
+
             // 심연의 보물창고 주간 통계 (기능 켜짐 시)
             TreasurySummaryWindow.ShowPositionPreview(_settings);
 
@@ -165,6 +168,7 @@ namespace TWChatOverlay.Views
             AppServices.Get<MessengerEtaToastService>().ClosePositionPreview(_settings);
             AppServices.Get<RecaptureSupplyAlertService>().ClosePositionPreview();
             AppServices.Get<RecaptureSupplyPadOrderService>().ClosePositionPreview();
+            AppServices.Get<DoomSentenceCaptureService>().ClosePositionPreview();
             TreasurySummaryWindow.ClosePositionPreview();
             DungeonAlertWindow.ClosePositionPreview();
             AppServices.Get<ContentTimerService>().ClosePositionPreview();
@@ -241,6 +245,8 @@ namespace TWChatOverlay.Views
                                 AppServices.Get<RecaptureSupplyAlertService>().ShowPositionPreview(_settings, force: true);
                             if (_settings.ShowRecaptureSupplyPadOrder)
                                 AppServices.Get<RecaptureSupplyPadOrderService>().ShowPositionPreview(_settings);
+                            if (_settings.ShowDoomSentenceCapture)
+                                AppServices.Get<DoomSentenceCaptureService>().ShowPositionPreview(_settings);
                             break;
                         case 5: // 던전 타이머: 기록 창
                             if (_settings.ShowContentTimer)
@@ -294,6 +300,7 @@ namespace TWChatOverlay.Views
             AppServices.Get<ToastStackService>().ClosePositionPreview();
             AppServices.Get<RecaptureSupplyAlertService>().ClosePositionPreview();
             AppServices.Get<RecaptureSupplyPadOrderService>().ClosePositionPreview();
+            AppServices.Get<DoomSentenceCaptureService>().ClosePositionPreview();
             AppServices.Get<ContentTimerService>().ClosePositionPreview();
             SubAddonWindow.Instance?.Hide();
             ItemDropHelperWindow.Instance?.Close();
@@ -407,6 +414,7 @@ namespace TWChatOverlay.Views
                 TreasurySummaryWindow.ApplyStoredPosition(_settings);
                 AppServices.Get<RecaptureSupplyAlertService>().ApplyStoredBounds(_settings);
                 AppServices.Get<RecaptureSupplyPadOrderService>().ApplyStoredBounds(_settings);
+                AppServices.Get<DoomSentenceCaptureService>().ApplyStoredBounds(_settings);
                 AppServices.Get<ContentTimerService>().ApplyStoredBounds(_settings);
                 AppServices.Get<MessengerEtaToastService>().ReapplyPreviewPosition(_settings);
             }

@@ -1,0 +1,89 @@
+﻿<ov:ToastWindowBase x:Class="TWChatOverlay.Views.DoomSentenceCaptureWindow"
+        xmlns:ov="clr-namespace:TWChatOverlay.Views"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="운명 선고 캡처"
+        Width="560"
+        Height="240"
+        MinWidth="220"
+        MinHeight="110"
+        WindowStyle="None"
+        AllowsTransparency="True"
+        Background="Transparent"
+        ResizeMode="CanResize"
+        ShowInTaskbar="False"
+        ShowActivated="False"
+        Topmost="True"
+        WindowStartupLocation="CenterScreen">
+    <Border x:Name="RootBorder"
+            Background="{DynamicResource OverlayWindowBackgroundBrush}"
+            BorderBrush="{DynamicResource OverlayAccentBorderBrush}"
+            BorderThickness="1.4"
+            CornerRadius="12"
+            Padding="8,5,8,8">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <!-- 제목줄: 회차 · 진행 · 남은 시간. 잠금 해제 모드에서 잡고 끌 수 있다 -->
+            <Grid x:Name="TitleBar"
+                  Grid.Row="0"
+                  MinHeight="22"
+                  Margin="2,0,2,4"
+                  Background="Transparent"
+                  MouseLeftButtonDown="TitleBar_MouseLeftButtonDown">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <TextBlock x:Name="TitleText"
+                           Grid.Column="0"
+                           Foreground="{DynamicResource TextBrush}"
+                           Opacity="0.8"
+                           FontSize="12"
+                           VerticalAlignment="Center"
+                           TextTrimming="CharacterEllipsis"/>
+                <!-- 밟은 수 / 전체. 로그의 "발판을 밟았습니다. (1 / 6)" 줄로 올린다 -->
+                <TextBlock x:Name="ProgressText"
+                           Grid.Column="1"
+                           Foreground="{DynamicResource TextBrush}"
+                           FontSize="14"
+                           FontWeight="Bold"
+                           VerticalAlignment="Center"
+                           Margin="10,0,0,0"/>
+                <TextBlock x:Name="RemainText"
+                           Grid.Column="2"
+                           Foreground="{DynamicResource TextBrush}"
+                           FontSize="14"
+                           FontWeight="Bold"
+                           VerticalAlignment="Center"
+                           MinWidth="38"
+                           TextAlignment="Right"
+                           Margin="10,0,0,0"/>
+            </Grid>
+
+            <!-- 찍은 화면 (설정한 영역만 잘라 낸 것). 창 크기에 맞춰 늘고 준다 -->
+            <Image x:Name="CaptureImage"
+                   Grid.Row="1"
+                   Stretch="Uniform"
+                   SnapsToDevicePixels="True"
+                   RenderOptions.BitmapScalingMode="HighQuality"/>
+
+            <!-- 그림이 없을 때(미리보기 · 게임 창을 못 찾음) 대신 보이는 글 -->
+            <TextBlock x:Name="EmptyText"
+                       Grid.Row="1"
+                       Foreground="{DynamicResource TextBrush}"
+                       Opacity="0.7"
+                       FontSize="12"
+                       TextWrapping="Wrap"
+                       TextAlignment="Center"
+                       HorizontalAlignment="Center"
+                       VerticalAlignment="Center"
+                       Visibility="Collapsed"/>
+        </Grid>
+    </Border>
+</ov:ToastWindowBase>

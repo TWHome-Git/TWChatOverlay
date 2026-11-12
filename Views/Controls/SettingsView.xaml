@@ -1255,6 +1255,34 @@
                     </Border>
                     <Border Style="{StaticResource SettingsRowStyle}">
                         <DockPanel>
+                            <CheckBox DockPanel.Dock="Right" IsChecked="{Binding Settings.ShowDoomSentenceCapture, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                <TextBlock Text="운명 선고 화면 캡처" Style="{StaticResource SettingsRowLabelStyle}"/>
+                                <Button Style="{StaticResource HelpButtonStyle}" Tag="dungeon.doom_sentence_capture" Click="Help_Click"/>
+                            </StackPanel>
+                        </DockPanel>
+                    </Border>
+                    <Border Style="{StaticResource SettingsRowStyle}">
+                        <DockPanel>
+                            <TextBox DockPanel.Dock="Right" Width="70" Text="{Binding Settings.DoomSentenceCaptureDelayMilliseconds, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource SettingsRowInputStyle}"/>
+                            <TextBlock Text="운명 선고 캡처 지연(ms)" Style="{StaticResource SettingsRowLabelStyle}" ToolTip="로그 줄을 본 뒤 화면을 찍기까지 기다리는 시간. 0~2500, 기본 250"/>
+                        </DockPanel>
+                    </Border>
+                    <Border Style="{StaticResource SettingsRowStyle}">
+                        <DockPanel>
+                            <TextBox DockPanel.Dock="Right" Width="110" Text="{Binding Settings.DoomSentenceCaptureRegion, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource SettingsRowInputStyle}"/>
+                            <TextBlock Text="운명 선고 자를 영역(%)" Style="{StaticResource SettingsRowLabelStyle}" ToolTip="찍은 게임 화면에서 보여 줄 자리: 왼쪽,위,너비,높이 (게임 화면 크기에 대한 %). 기본 20,10,60,35"/>
+                        </DockPanel>
+                    </Border>
+                    <Border Style="{StaticResource SettingsRowStyle}">
+                        <DockPanel>
+                            <CheckBox DockPanel.Dock="Right" IsChecked="{Binding Settings.SaveDoomSentenceCapture, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
+                            <TextBlock Text="운명 선고 캡처 원본 저장" Style="{StaticResource SettingsRowLabelStyle}"
+                                       ToolTip="찍은 게임 화면 전체를 Logs\DoomSentence 폴더에 PNG로 남깁니다 (최근 20장). 자를 영역을 맞출 때 봅니다"/>
+                        </DockPanel>
+                    </Border>
+                    <Border Style="{StaticResource SettingsRowStyle}">
+                        <DockPanel>
                             <CheckBox DockPanel.Dock="Right" IsChecked="{Binding Settings.ShowRecaptureSupplyMap, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
                             <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                                 <TextBlock Text="보급품 탈환 미니 지도" Style="{StaticResource SettingsRowLabelStyle}"/>
