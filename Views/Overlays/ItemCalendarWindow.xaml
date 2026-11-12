@@ -336,7 +336,7 @@
                                                                         <Image x:Name="EntryIcon"
                                                                                Source="{Binding IconUri}"
                                                                                Stretch="Uniform"
-                                                                               Height="24"
+                                                                               Height="20"
                                                                                RenderOptions.BitmapScalingMode="HighQuality"
                                                                                VerticalAlignment="Center">
                                                                             <Image.Style>
@@ -356,7 +356,7 @@
                                                                         <TextBlock x:Name="EntryGlyph"
                                                                                    Text="{Binding FallbackGlyph}"
                                                                                    Foreground="{DynamicResource TextBrush}"
-                                                                                   FontSize="16"
+                                                                                   FontSize="14"
                                                                                    FontWeight="Bold"
                                                                                    HorizontalAlignment="Center"
                                                                                    VerticalAlignment="Center">
