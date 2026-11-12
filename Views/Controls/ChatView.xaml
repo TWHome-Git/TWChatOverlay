@@ -5,10 +5,14 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              mc:Ignorable="d">
     <Grid>
+        <!-- 읽기 전용 표시 창이라 실행 취소 기록과 입력기(IME) 연동을 끈다 — 줄이 들어올 때마다 실행 취소 단위가 쌓이고
+             입력기 쪽에 변경을 알리는 비용이 들었다. 선택·복사는 그대로 된다. -->
         <RichTextBox x:Name="LogDisplay"
                      FontSize="{Binding CurrentFontSize, RelativeSource={RelativeSource AncestorType=Window}}"
                      FontFamily="{Binding CurrentFont, RelativeSource={RelativeSource AncestorType=Window}}"
                      IsReadOnly="True"
+                     IsUndoEnabled="False"
+                     InputMethod.IsInputMethodEnabled="False"
                      Background="Transparent"
                      BorderThickness="0"
                      VerticalScrollBarVisibility="Auto"
