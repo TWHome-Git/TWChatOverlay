@@ -123,6 +123,9 @@ namespace TWChatOverlay
                 services.AddSingleton<ToastStackService>();
                 services.AddSingleton<ChatWindowHub>();
                 services.AddSingleton<RecaptureSupplyPadOrderService>();
+                services.AddSingleton<DoomSentenceCaptureService>();
+                services.AddSingleton<MaskGimmickService>();
+                services.AddSingleton<EmotionRoomVoiceAlertService>();
                 services.AddSingleton<RecaptureSupplyAlertService>();
                 services.AddSingleton<ExperienceAlertWindowService>();
                 services.AddSingleton<TrayAllWindowsService>();

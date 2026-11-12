@@ -156,6 +156,14 @@ namespace TWChatOverlay.Models
         public bool EtosDirectionAlert { get; set; } = true;
         public bool ShowEtosHelperWindow { get; set; } = false;
         public bool ReflectionPatternAlert { get; set; } = true;
+        /// <summary>감정 격리실 · 신뢰의 격리실: 배신(반사) 구간이 시작되면 "광선 피해" 음성.</summary>
+        public bool TrustReflectionAlert { get; set; } = true;
+        /// <summary>감정 격리실 레이저 패턴(보스 대사 "그대들의 영혼까지 절단시켜주마!"): "전방 조심해" 음성.</summary>
+        public bool EmotionLaserAlert { get; set; } = true;
+        /// <summary>감정 격리실 자리 이동 패턴(보스 대사 "공간의 저편에 너의 죽음이 기다리고 있다!"): "바닥 조심해" 음성.</summary>
+        public bool EmotionFloorAlert { get; set; } = true;
+        /// <summary>감정 격리실 음성 볼륨 (0~1).</summary>
+        public double EmotionRoomVolume { get; set; } = 1.0;
         /// <summary>감전 패턴: 방전에 걸린 동안 알림 창을 띄운다.</summary>
         public bool DischargeAlert { get; set; } = true;
         /// <summary>사냥 기록 창 글자 크기.</summary>
@@ -182,6 +190,35 @@ namespace TWChatOverlay.Models
         public bool ShowRecaptureSupplyPadOrder { get; set; } = true;
         /// <summary>발판 순서 창 지속 시간(초).</summary>
         public int RecaptureSupplyPadOrderDurationSeconds { get; set; } = 10;
+        /// <summary>설계자의 잔재 운명 선고가 시작되면 게임 화면의 발판 순서 공지를 찍어 창에 표시.</summary>
+        public bool ShowDoomSentenceCapture { get; set; } = true;
+        /// <summary>운명 선고 로그 줄을 본 뒤 화면을 찍기까지 기다리는 시간(ms). 공지가 다 그려진 뒤 찍히게 한다.</summary>
+        public int DoomSentenceCaptureDelayMilliseconds { get; set; } = 250;
+        /// <summary>
+        /// 순서 공지가 뜨는 자리: 너비,위,높이 (게임 해상도 픽셀, 가로 가운데 기준). 확대 프로그램을 쓰면 배율만큼 늘려 찍는다.
+        /// 옛 판의 퍼센트 설정(DoomSentenceCaptureRegion)은 더 쓰지 않는다 — 1024x768 에서 순서 줄이 잘렸다.
+        /// </summary>
+        public string DoomSentenceNoticeBox { get; set; } = "500,200,105";
+        /// <summary>잘라 낸 그림을 보여 주는 배율(%). 100이면 찍힌 픽셀 그대로의 크기이고 창이 거기에 맞춰진다.</summary>
+        public int DoomSentenceCaptureScalePercent { get; set; } = 100;
+        /// <summary>
+        /// 공지가 떠 있는 동안 이어 찍을 장 수 (첫 장 포함, 1이면 한 장만). 여러 장을 픽셀별 중앙값으로 합쳐
+        /// 공지 글을 덮는 대미지 숫자를 덜어 낸다 (시험 중 — 설정 화면에는 없고 설정 파일에서만 바꾼다).
+        /// </summary>
+        public int DoomSentenceCaptureBurstFrames { get; set; } = 6;
+        /// <summary>이어 찍는 간격(ms). 공지는 3초쯤 떠 있으니 지연 + (장 수 - 1) × 간격이 그 안에 들어야 한다.</summary>
+        public int DoomSentenceCaptureBurstIntervalMilliseconds { get; set; } = 350;
+        /// <summary>
+        /// 찍은 화면과 인식 기록을 Logs/DoomSentence 에 남길지. 기본은 끔 — 평소에는 읽고 버린다 (2026-11-12 사용자).
+        /// 자를 자리를 맞추거나 인식이 틀릴 때만 켜서 살펴본다.
+        /// </summary>
+        public bool SaveDoomSentenceCapture { get; set; } = false;
+        /// <summary>놀라움의 격리실 가면 기믹: 보스가 감정 가면을 쓰면 부술 상성 가면을 그림으로 표시.</summary>
+        public bool ShowMaskGimmickAlert { get; set; } = true;
+        /// <summary>가면 창 유지 시간(초). "파훼 성공" 줄이 오면 그 전에 닫힌다.</summary>
+        public int MaskGimmickDurationSeconds { get; set; } = 20;
+        /// <summary>가면 그림 · 글자 표시 배율(%).</summary>
+        public int MaskGimmickScalePercent { get; set; } = 100;
         /// <summary>컨텐츠 타이머 창 표시 (아페티리아 입장~클리어 소요 시간).</summary>
         public bool ShowContentTimer { get; set; } = true;
         /// <summary>컨텐츠 타이머 클리어 결과를 남겨 두는 시간(초). 지나면 창이 닫힌다.</summary>
@@ -251,6 +288,10 @@ namespace TWChatOverlay.Models
         public WindowRect RecaptureSupply { get; set; } = new();
         /// <summary>보급품 탈환 발판 순서 창 위치 (미설정 시 화면 가운데).</summary>
         public WindowRect RecaptureSupplyPadOrder { get; set; } = new();
+        /// <summary>운명 선고 캡처 창 위치/크기 (미설정 시 화면 가운데).</summary>
+        public WindowRect DoomSentenceCapture { get; set; } = new();
+        /// <summary>격리실 가면 창 위치 (미설정 시 화면 가운데). 크기는 표시 배율이 정한다.</summary>
+        public WindowRect MaskGimmick { get; set; } = new();
         /// <summary>컨텐츠 타이머 창 위치/크기 (미설정 시 화면 가운데).</summary>
         public WindowRect ContentTimer { get; set; } = new();
         public WindowRect ExperienceLimitAlert { get; set; } = new();

@@ -2,7 +2,8 @@
 
   <!-- 직접 그리는 채팅 표시(ChatLineDisplay)의 동작 테스트. 실행: dotnet test (저장소 맨 위에서) -->
   <PropertyGroup>
-    <TargetFramework>net8.0-windows</TargetFramework>
+    <!-- 앱이 Windows 글자 인식(Windows.Media.Ocr)을 쓰느라 Windows 10 SDK 대상이라 테스트도 같은 대상이어야 참조된다 -->
+    <TargetFramework>net8.0-windows10.0.19041.0</TargetFramework>
     <UseWPF>true</UseWPF>
     <Nullable>enable</Nullable>
     <ImplicitUsings>disable</ImplicitUsings>

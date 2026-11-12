@@ -531,6 +531,35 @@ namespace TWChatOverlay.Models
         public bool ShowEtosHelperWindow { get => Alerts.Dungeon.ShowEtosHelperWindow; set { Alerts.Dungeon.ShowEtosHelperWindow = value; OnPropertyChanged(); } }
         [JsonIgnore]
         public bool EnableReflectionPatternAlert { get => Alerts.Dungeon.ReflectionPatternAlert; set { Alerts.Dungeon.ReflectionPatternAlert = value; OnPropertyChanged(); } }
+        /// <summary>감정 격리실 · 신뢰의 격리실: 배신(반사) 구간이 시작되면 "광선 피해" 음성.</summary>
+        [JsonIgnore]
+        public bool EnableTrustReflectionAlert { get => Alerts.Dungeon.TrustReflectionAlert; set { if (Alerts.Dungeon.TrustReflectionAlert == value) return; Alerts.Dungeon.TrustReflectionAlert = value; OnPropertyChanged(); } }
+        /// <summary>감정 격리실 레이저 패턴: "전방 조심해" 음성.</summary>
+        [JsonIgnore]
+        public bool EnableEmotionLaserAlert { get => Alerts.Dungeon.EmotionLaserAlert; set { if (Alerts.Dungeon.EmotionLaserAlert == value) return; Alerts.Dungeon.EmotionLaserAlert = value; OnPropertyChanged(); } }
+        /// <summary>감정 격리실 자리 이동 패턴: "바닥 조심해" 음성.</summary>
+        [JsonIgnore]
+        public bool EnableEmotionFloorAlert { get => Alerts.Dungeon.EmotionFloorAlert; set { if (Alerts.Dungeon.EmotionFloorAlert == value) return; Alerts.Dungeon.EmotionFloorAlert = value; OnPropertyChanged(); } }
+        /// <summary>감정 격리실 음성 볼륨 (0~1).</summary>
+        [JsonIgnore]
+        public double EmotionRoomAlertVolume
+        {
+            get => Alerts.Dungeon.EmotionRoomVolume;
+            set
+            {
+                double clamped = ClampVolume(value);
+                if (Math.Abs(Alerts.Dungeon.EmotionRoomVolume - clamped) < 0.0001) return;
+                Alerts.Dungeon.EmotionRoomVolume = clamped;
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(EmotionRoomAlertVolumePercent));
+            }
+        }
+        [JsonIgnore]
+        public double EmotionRoomAlertVolumePercent
+        {
+            get => Math.Round(Alerts.Dungeon.EmotionRoomVolume * 100.0, 0);
+            set => EmotionRoomAlertVolume = Math.Max(0.0, Math.Min(100.0, value)) / 100.0;
+        }
         [JsonIgnore]
         public bool EnableDischargeAlert { get => Alerts.Dungeon.DischargeAlert; set { Alerts.Dungeon.DischargeAlert = value; OnPropertyChanged(); } }
         [JsonIgnore]
@@ -633,6 +662,107 @@ namespace TWChatOverlay.Models
                 OnPropertyChanged();
             }
         }
+        /// <summary>설계자의 잔재 운명 선고가 시작되면 게임 화면의 발판 순서 공지를 찍어 창에 표시.</summary>
+        [JsonIgnore]
+        public bool ShowDoomSentenceCapture { get => Alerts.Dungeon.ShowDoomSentenceCapture; set { if (Alerts.Dungeon.ShowDoomSentenceCapture == value) return; Alerts.Dungeon.ShowDoomSentenceCapture = value; OnPropertyChanged(); } }
+        /// <summary>운명 선고 로그 줄을 본 뒤 화면을 찍기까지 기다리는 시간(ms, 0~2500).</summary>
+        [JsonIgnore]
+        public int DoomSentenceCaptureDelayMilliseconds
+        {
+            get => Math.Max(0, Math.Min(2500, Alerts.Dungeon.DoomSentenceCaptureDelayMilliseconds));
+            set
+            {
+                int clamped = Math.Max(0, Math.Min(2500, value));
+                if (Alerts.Dungeon.DoomSentenceCaptureDelayMilliseconds == clamped) return;
+                Alerts.Dungeon.DoomSentenceCaptureDelayMilliseconds = clamped;
+                OnPropertyChanged();
+            }
+        }
+        /// <summary>순서 공지가 뜨는 자리: "너비,위,높이" (게임 해상도 픽셀, 가로 가운데 기준). 잘못 적히면 서비스가 기본값을 쓴다.</summary>
+        [JsonIgnore]
+        public string DoomSentenceNoticeBox
+        {
+            get => string.IsNullOrWhiteSpace(Alerts.Dungeon.DoomSentenceNoticeBox) ? "500,200,105" : Alerts.Dungeon.DoomSentenceNoticeBox;
+            set
+            {
+                string text = (value ?? string.Empty).Trim();
+                if (Alerts.Dungeon.DoomSentenceNoticeBox == text) return;
+                Alerts.Dungeon.DoomSentenceNoticeBox = text;
+                OnPropertyChanged();
+            }
+        }
+        /// <summary>잘라 낸 그림을 보여 주는 배율(%, 50~300). 100이면 찍힌 픽셀 그대로의 크기.</summary>
+        [JsonIgnore]
+        public int DoomSentenceCaptureScalePercent
+        {
+            // 옛 설정 파일에는 이 값이 없어 0으로 읽힌다 — 그때는 100%
+            get => Alerts.Dungeon.DoomSentenceCaptureScalePercent < 1 ? 100 : Math.Max(50, Math.Min(300, Alerts.Dungeon.DoomSentenceCaptureScalePercent));
+            set
+            {
+                int clamped = Math.Max(50, Math.Min(300, value));
+                if (Alerts.Dungeon.DoomSentenceCaptureScalePercent == clamped) return;
+                Alerts.Dungeon.DoomSentenceCaptureScalePercent = clamped;
+                OnPropertyChanged();
+            }
+        }
+        /// <summary>공지가 떠 있는 동안 이어 찍을 장 수 (1~12, 1이면 한 장만). 옛 설정 파일에 없으면 6.</summary>
+        [JsonIgnore]
+        public int DoomSentenceCaptureBurstFrames
+        {
+            get => Alerts.Dungeon.DoomSentenceCaptureBurstFrames < 1 ? 6 : Math.Min(12, Alerts.Dungeon.DoomSentenceCaptureBurstFrames);
+            set
+            {
+                int clamped = Math.Max(1, Math.Min(12, value));
+                if (Alerts.Dungeon.DoomSentenceCaptureBurstFrames == clamped) return;
+                Alerts.Dungeon.DoomSentenceCaptureBurstFrames = clamped;
+                OnPropertyChanged();
+            }
+        }
+        /// <summary>이어 찍는 간격(ms, 100~1000). 옛 설정 파일에 없으면 350.</summary>
+        [JsonIgnore]
+        public int DoomSentenceCaptureBurstIntervalMilliseconds
+        {
+            get => Alerts.Dungeon.DoomSentenceCaptureBurstIntervalMilliseconds < 1 ? 350 : Math.Max(100, Math.Min(1000, Alerts.Dungeon.DoomSentenceCaptureBurstIntervalMilliseconds));
+            set
+            {
+                int clamped = Math.Max(100, Math.Min(1000, value));
+                if (Alerts.Dungeon.DoomSentenceCaptureBurstIntervalMilliseconds == clamped) return;
+                Alerts.Dungeon.DoomSentenceCaptureBurstIntervalMilliseconds = clamped;
+                OnPropertyChanged();
+            }
+        }
+        /// <summary>놀라움의 격리실 가면 기믹: 부술 상성 가면을 그림으로 표시.</summary>
+        [JsonIgnore]
+        public bool ShowMaskGimmickAlert { get => Alerts.Dungeon.ShowMaskGimmickAlert; set { if (Alerts.Dungeon.ShowMaskGimmickAlert == value) return; Alerts.Dungeon.ShowMaskGimmickAlert = value; OnPropertyChanged(); } }
+        /// <summary>가면 창 유지 시간(초, 1~300). 옛 설정 파일에 없으면 20.</summary>
+        [JsonIgnore]
+        public int MaskGimmickDurationSeconds
+        {
+            get => Alerts.Dungeon.MaskGimmickDurationSeconds < 1 ? 20 : Math.Min(300, Alerts.Dungeon.MaskGimmickDurationSeconds);
+            set
+            {
+                int clamped = Math.Max(1, Math.Min(300, value));
+                if (Alerts.Dungeon.MaskGimmickDurationSeconds == clamped) return;
+                Alerts.Dungeon.MaskGimmickDurationSeconds = clamped;
+                OnPropertyChanged();
+            }
+        }
+        /// <summary>가면 그림 · 글자 표시 배율(%, 50~300). 옛 설정 파일에 없으면 100.</summary>
+        [JsonIgnore]
+        public int MaskGimmickScalePercent
+        {
+            get => Alerts.Dungeon.MaskGimmickScalePercent < 1 ? 100 : Math.Max(50, Math.Min(300, Alerts.Dungeon.MaskGimmickScalePercent));
+            set
+            {
+                int clamped = Math.Max(50, Math.Min(300, value));
+                if (Alerts.Dungeon.MaskGimmickScalePercent == clamped) return;
+                Alerts.Dungeon.MaskGimmickScalePercent = clamped;
+                OnPropertyChanged();
+            }
+        }
+        /// <summary>찍은 원본 화면을 Logs/DoomSentence 에 PNG로 남길지.</summary>
+        [JsonIgnore]
+        public bool SaveDoomSentenceCapture { get => Alerts.Dungeon.SaveDoomSentenceCapture; set { if (Alerts.Dungeon.SaveDoomSentenceCapture == value) return; Alerts.Dungeon.SaveDoomSentenceCapture = value; OnPropertyChanged(); } }
         /// <summary>컨텐츠 타이머 창 표시 (아페티리아 입장~클리어 소요 시간).</summary>
         [JsonIgnore]
         public bool ShowContentTimer { get => Alerts.Dungeon.ShowContentTimer; set { if (Alerts.Dungeon.ShowContentTimer == value) return; Alerts.Dungeon.ShowContentTimer = value; OnPropertyChanged(); } }
@@ -998,6 +1128,42 @@ namespace TWChatOverlay.Models
         {
             get => Windows.RecaptureSupplyPadOrder.Height;
             set { if (Windows.RecaptureSupplyPadOrder.Height == value) return; Windows.RecaptureSupplyPadOrder.Height = value; OnPropertyChanged(); }
+        }
+        [JsonIgnore]
+        public double? MaskGimmickWindowLeft
+        {
+            get => Windows.MaskGimmick.Left;
+            set { if (Windows.MaskGimmick.Left == value) return; Windows.MaskGimmick.Left = value; OnPropertyChanged(); }
+        }
+        [JsonIgnore]
+        public double? MaskGimmickWindowTop
+        {
+            get => Windows.MaskGimmick.Top;
+            set { if (Windows.MaskGimmick.Top == value) return; Windows.MaskGimmick.Top = value; OnPropertyChanged(); }
+        }
+        [JsonIgnore]
+        public double? DoomSentenceCaptureWindowLeft
+        {
+            get => Windows.DoomSentenceCapture.Left;
+            set { if (Windows.DoomSentenceCapture.Left == value) return; Windows.DoomSentenceCapture.Left = value; OnPropertyChanged(); }
+        }
+        [JsonIgnore]
+        public double? DoomSentenceCaptureWindowTop
+        {
+            get => Windows.DoomSentenceCapture.Top;
+            set { if (Windows.DoomSentenceCapture.Top == value) return; Windows.DoomSentenceCapture.Top = value; OnPropertyChanged(); }
+        }
+        [JsonIgnore]
+        public double? DoomSentenceCaptureWindowWidth
+        {
+            get => Windows.DoomSentenceCapture.Width;
+            set { if (Windows.DoomSentenceCapture.Width == value) return; Windows.DoomSentenceCapture.Width = value; OnPropertyChanged(); }
+        }
+        [JsonIgnore]
+        public double? DoomSentenceCaptureWindowHeight
+        {
+            get => Windows.DoomSentenceCapture.Height;
+            set { if (Windows.DoomSentenceCapture.Height == value) return; Windows.DoomSentenceCapture.Height = value; OnPropertyChanged(); }
         }
         [JsonIgnore]
         public double? ContentTimerWindowLeft

@@ -163,6 +163,8 @@ namespace TWChatOverlay.Views
             nameof(ChatSettings.ShowEtosDirectionAlert),
             nameof(ChatSettings.ShowRecaptureSupplyMap),
             nameof(ChatSettings.ShowRecaptureSupplyPadOrder),
+            nameof(ChatSettings.ShowDoomSentenceCapture),
+            nameof(ChatSettings.ShowMaskGimmickAlert),
             nameof(ChatSettings.ShowContentTimer),
             nameof(ChatSettings.ShowItemDropAlert),
             nameof(ChatSettings.EnableBuffTrackerAlert),
