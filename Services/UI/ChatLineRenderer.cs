@@ -7,25 +7,15 @@ using TWChatOverlay.Views;
 namespace TWChatOverlay.Services
 {
     /// <summary>
-    /// 채팅 한 줄을 표시 영역(<see cref="ChatLineDisplay"/>)에 그릴 내용으로 만든다. 메인 채팅창과 서브 채팅창이 같이 쓴다.
-    /// 줄 색·배경·굵기 규칙과 강조 알림음이 여기 있다.
+    /// 채팅 한 줄을 표시 영역(<see cref="ChatLineDisplay"/>)에 그릴 내용으로 만들어 넣는다. 메인 채팅창과 서브 채팅창이 같이 쓴다.
+    /// 줄 색·배경·굵기 규칙과 강조 알림음이 여기 있다. 글꼴과 남길 줄 수는 표시 영역이 정한다.
     /// </summary>
-    public sealed class LogDocumentRenderer
+    public static class ChatLineRenderer
     {
-
-        private readonly int _maxBlocks;
-
-        public LogDocumentRenderer(int maxBlocks = 200)
-        {
-            _maxBlocks = maxBlocks > 0 ? maxBlocks : 200;
-        }
-
-        public void AddLog(
+        public static void AddLog(
             ChatLineDisplay display,
             LogParser.ParseResult log,
             ChatSettings settings,
-            FontFamily fontFamily,
-            double fontSize,
             bool isRealTime,
             bool canPlayAlertSound,
             bool useMagicCircleAlert = false)
@@ -80,12 +70,11 @@ namespace TWChatOverlay.Services
                 }
             }
 
-            display.AddLine(new ChatLineContent(parts, foreground, fontFamily, fontSize)
+            display.AddLine(new ChatLineContent(parts, foreground)
             {
                 Background = background,
                 Bold = bold,
             });
-            display.TrimTo(_maxBlocks);
         }
     }
 }

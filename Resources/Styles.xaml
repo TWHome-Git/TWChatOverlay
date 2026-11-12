@@ -576,6 +576,62 @@
         </Setter>
     </Style>
 
+    <!-- 오른쪽 메뉴 (채팅 표시의 복사·전체 선택) — 어두운 배경에 민트 강조 -->
+    <Style x:Key="OverlayContextMenuStyle" TargetType="ContextMenu">
+        <Setter Property="OverridesDefaultStyle" Value="True"/>
+        <Setter Property="HasDropShadow" Value="False"/>
+        <Setter Property="SnapsToDevicePixels" Value="True"/>
+        <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+        <Setter Property="FontSize" Value="13"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ContextMenu">
+                    <Border Background="{DynamicResource OverlaySurfaceBackgroundBrush}"
+                            BorderBrush="{DynamicResource OverlayStrongBorderBrush}"
+                            BorderThickness="1"
+                            CornerRadius="6"
+                            Padding="4"
+                            MinWidth="150">
+                        <StackPanel IsItemsHost="True" KeyboardNavigation.DirectionalNavigation="Cycle"/>
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style x:Key="OverlayMenuItemStyle" TargetType="MenuItem">
+        <Setter Property="OverridesDefaultStyle" Value="True"/>
+        <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="MenuItem">
+                    <Border x:Name="ItemBorder" Background="Transparent" CornerRadius="4" Padding="10,6" SnapsToDevicePixels="True">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <ContentPresenter Grid.Column="0" ContentSource="Header" RecognizesAccessKey="True" VerticalAlignment="Center"/>
+                            <TextBlock x:Name="GestureText" Grid.Column="1" Text="{TemplateBinding InputGestureText}"
+                                       Margin="28,0,0,0" VerticalAlignment="Center"
+                                       Foreground="{DynamicResource OverlayHintTextBrush}"/>
+                        </Grid>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsHighlighted" Value="True">
+                            <Setter TargetName="ItemBorder" Property="Background" Value="{DynamicResource OverlayTabSelectedBrush}"/>
+                            <Setter Property="Foreground" Value="{DynamicResource OverlayAccentTextBrush}"/>
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter Property="Foreground" Value="{DynamicResource OverlayHintTextBrush}"/>
+                            <Setter TargetName="ItemBorder" Property="Opacity" Value="0.55"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
     <!-- Overlay Scroll Styles -->
     <Style TargetType="Thumb" x:Key="OverlayScrollBarThumbStyle">
         <Setter Property="OverridesDefaultStyle" Value="True"/>

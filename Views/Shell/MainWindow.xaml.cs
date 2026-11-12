@@ -71,6 +71,8 @@ namespace TWChatOverlay.Views
             _settingsFileMissingOnStartup = AppServices.Get<StartupState>().SettingsFileMissing;
             _pendingInitialSetupWizard = _settingsFileMissingOnStartup;
             _logTabBufferStore = AppServices.Get<ChatWindowHub>().SharedLogBuffers;
+            // 채팅 표시에 남길 줄 수는 탭 버퍼 상한을 따른다
+            ChatDisplay.LogDisplayControl.MaxLines = _logTabBufferStore.MaxCountPerTab;
             _mainTabAutoHideTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(3) };
             _mainTabAutoHideTimer.Tick += (_, _) => HideMainTabs();
 

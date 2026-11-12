@@ -66,7 +66,6 @@ namespace TWChatOverlay.Views
         // 이번 배치에서 탭 버퍼에 줄이 들어갔는지 — 서브 창 알림은 배치 끝에 한 번만 보낸다
         private bool _buffersChangedInBatch;
 
-        private readonly LogDocumentRenderer _logDocumentRenderer = new(200);
         private readonly object _reflectionEndAlertTimerLock = new();
         private readonly HashSet<DispatcherTimer> _reflectionEndAlertTimers = new();
 
@@ -122,7 +121,7 @@ namespace TWChatOverlay.Views
                 {
                     LogDisplay.EndUpdate();
                     if (shouldAutoScroll)
-                        ScrollLogDisplayToEndAfterLayout();
+                        LogDisplay.ScrollToEnd();
                 }
 
                 if (_buffersChangedInBatch)
@@ -633,31 +632,19 @@ namespace TWChatOverlay.Views
             _buffersChangedInBatch = true;
         }
 
-        /// <summary>문단 하나를 채팅 문서에 더한다. 스크롤은 하지 않는다 — 호출자가 배치 끝에서 <see cref="ScrollLogDisplayToEndAfterLayout"/>를 부른다.</summary>
+        /// <summary>줄 하나를 채팅 표시에 더한다. 스크롤은 하지 않는다 — 호출자가 배치 끝에서 맨 아래로 내린다.</summary>
         private void AddToUI(LogParser.ParseResult log, bool isRealTime = false)
         {
             if (LogDisplay == null) return;
 
-            FontFamily safeFont = this.CurrentFont ?? FontService.GetFont(_settings.FontFamily);
-            if (safeFont == null)
-                safeFont = new FontFamily("Malgun Gothic");
-
-            // 서브 채팅창과 같은 렌더러 — 메인 창만 마법진 배경·Wave.wav를 쓰고, 소리는 경험치 서비스 준비 뒤에만
-            _logDocumentRenderer.AddLog(
+            // 서브 채팅창과 같은 규칙으로 그린다 — 메인 창만 마법진 배경·Wave.wav를 쓰고, 소리는 경험치 서비스 준비 뒤에만
+            ChatLineRenderer.AddLog(
                 LogDisplay,
                 log,
                 _settings,
-                safeFont,
-                _settings.FontSize,
                 isRealTime,
                 canPlayAlertSound: _expService.IsReady,
                 useMagicCircleAlert: true);
-        }
-
-        private void ScrollLogDisplayToEndAfterLayout()
-        {
-            // 줄을 넣는 순간 높이가 정해지므로 바로 맨 아래로 간다 (예전 RichTextBox는 배치가 끝난 뒤 한 번 더 내려야 했다)
-            LogDisplay?.ScrollToEnd();
         }
 
         private void RequestRefreshLogDisplay(bool force = false)
@@ -700,7 +687,7 @@ namespace TWChatOverlay.Views
                 {
                     LogDisplay.EndUpdate();
                     if (shouldAutoScroll)
-                        ScrollLogDisplayToEndAfterLayout();
+                        LogDisplay.ScrollToEnd();
                 }
             }), DispatcherPriority.Background);
         }

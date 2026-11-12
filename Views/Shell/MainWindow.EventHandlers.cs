@@ -201,8 +201,7 @@ namespace TWChatOverlay.Views
             }
 
             // 채팅 표시
-            Map(() => { ApplyInitialSettings(); RequestRefreshLogDisplay(); },
-                nameof(ChatSettings.FontFamily), nameof(ChatSettings.FontSize));
+            Map(ApplyInitialSettings, nameof(ChatSettings.FontFamily), nameof(ChatSettings.FontSize));
             Map(() => _stickyService?.UpdatePositionImmediately(),
                 nameof(ChatSettings.LineMargin), nameof(ChatSettings.LineMarginLeft));
             Map(OnMainWindowChatTabTagChanged, nameof(ChatSettings.MainWindowChatTabTag));

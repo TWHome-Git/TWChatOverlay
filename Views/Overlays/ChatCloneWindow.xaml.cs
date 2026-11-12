@@ -15,7 +15,6 @@ namespace TWChatOverlay.Views
     public partial class ChatCloneWindow : OverlayWindowBase
     {
         private readonly ChatSettings _settings;
-        private readonly LogDocumentRenderer _renderer = new(200);
         // 메인 창과 같은 숨김 규칙(보스 대사·클럽 보스 토글)을 표시 시점에 적용하기 위해
         private readonly LogAnalysisService _logAnalysisService = AppServices.Get<LogAnalysisService>();
         private readonly int _slot;
@@ -150,6 +149,8 @@ namespace TWChatOverlay.Views
             ApplySizeFromMainWindow();
             ApplyDefaultFontSettings();
             ApplyEffectiveFont();
+            // 남길 줄 수는 탭 버퍼 상한을 따른다
+            ChatDisplay.LogDisplayControl.MaxLines = AppServices.Get<ChatWindowHub>().SharedLogBuffers.MaxCountPerTab;
             ApplyStoredBounds(_settings);
             ApplyDefaultPositionIfNeeded();
             ApplyTabState(_currentTabTag, persistSettings: false, refreshLogDisplay: false);
@@ -313,7 +314,7 @@ namespace TWChatOverlay.Views
 
         private void Settings_PropertyChanged(object? sender, PropertyChangedEventArgs e)
         {
-            // 빈 이름 = 설정 전체 교체(프로필/초기화/마법사) — 위치·폰트·탭·문서를 모두 다시 맞춘다
+            // 빈 이름 = 설정 전체 교체(프로필/초기화/마법사) — 위치·폰트·탭·채팅 표시를 모두 다시 맞춘다
             if (string.IsNullOrEmpty(e.PropertyName))
             {
                 Dispatcher.BeginInvoke(new Action(() =>
@@ -322,7 +323,9 @@ namespace TWChatOverlay.Views
                     string normalizedTag = NormalizeTabTag(GetStoredTabTag());
                     if (!string.Equals(_currentTabTag, normalizedTag, StringComparison.Ordinal))
                         ApplyTabState(normalizedTag, persistSettings: false, refreshLogDisplay: false);
-                    ApplyEffectiveFont(); // 초기화 후엔 RefreshLogDisplay(forceRebuild)까지 수행
+                    ApplyEffectiveFont();
+                    if (_isInitialized)
+                        RefreshLogDisplay(forceRebuild: true);
                 }), System.Windows.Threading.DispatcherPriority.Background);
                 return;
             }
@@ -384,11 +387,9 @@ namespace TWChatOverlay.Views
                 effectiveSize = SelectedFontSize > 0 ? SelectedFontSize : ResolveMainFontSize();
             }
 
+            // 채팅 표시가 이 값에 묶여 있어 글꼴이 바뀌면 스스로 다시 배치한다
             CurrentFont = effectiveFont;
             CurrentFontSize = effectiveSize;
-
-            if (_isInitialized)
-                RefreshLogDisplay(forceRebuild: true);
         }
 
         private FontFamily ResolveMainFont()
@@ -416,7 +417,7 @@ namespace TWChatOverlay.Views
 
         /// <summary>
         /// 평상시(버퍼에 줄 추가)에는 새 줄만 덧붙이고, 탭/폰트/필터 변경이나
-        /// 버퍼 전체 교체 시에만 문서를 전체 재구축한다.
+        /// 버퍼 전체 교체 시에만 채팅 표시를 전부 다시 그린다.
         /// </summary>
         private void RefreshLogDisplay(bool forceRebuild = false)
         {
@@ -459,11 +460,8 @@ namespace TWChatOverlay.Views
                     {
                         if (ShouldSuppress(log))
                             continue;
-                        _renderer.AddLog(logDisplay, log, _settings, CurrentFont, CurrentFontSize, false, false);
+                        ChatLineRenderer.AddLog(logDisplay, log, _settings, isRealTime: false, canPlayAlertSound: false);
                     }
-
-                    // 버퍼 상한만큼만 유지 — 오래된 줄은 앞에서 제거
-                    logDisplay.TrimTo(store.MaxCountPerTab);
                 }
                 else
                 {
@@ -473,7 +471,7 @@ namespace TWChatOverlay.Views
                     {
                         if (ShouldSuppress(log))
                             continue;
-                        _renderer.AddLog(logDisplay, log, _settings, CurrentFont, CurrentFontSize, false, false);
+                        ChatLineRenderer.AddLog(logDisplay, log, _settings, isRealTime: false, canPlayAlertSound: false);
                     }
                 }
             }

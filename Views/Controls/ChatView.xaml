@@ -6,21 +6,40 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              mc:Ignorable="d">
     <Grid>
-        <!-- 채팅 줄을 직접 그리는 표시 영역 + 스크롤 막대. 예전 RichTextBox는 줄 하나가 바뀔 때마다 문서 전체 배치를 다시 했다 -->
-        <Grid Margin="5,5,5,5">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="Auto"/>
-            </Grid.ColumnDefinitions>
-            <!-- 좌우 5px 안쪽 여백: 예전 RichTextBox의 글 영역과 같은 자리·같은 줄바꿈 너비 -->
-            <local:ChatLineDisplay x:Name="LogDisplay" Grid.Column="0" Margin="5,0,5,0"/>
-            <ScrollBar x:Name="LogScrollBar"
-                       Grid.Column="1"
-                       Orientation="Vertical"
-                       Style="{StaticResource OverlayScrollBarStyle}"
-                       Visibility="Collapsed"
-                       ValueChanged="LogScrollBar_ValueChanged"/>
-        </Grid>
+        <!-- 채팅 줄을 직접 그리는 표시 영역. 스크롤 막대는 스크롤 뷰어가 맡고,
+             표시 영역이 범위와 위치를 알려 준다 (CanContentScroll + IScrollInfo). -->
+        <ScrollViewer Margin="5,5,5,5"
+                      CanContentScroll="True"
+                      Focusable="False"
+                      VerticalScrollBarVisibility="Auto"
+                      HorizontalScrollBarVisibility="Disabled">
+            <ScrollViewer.Template>
+                <ControlTemplate TargetType="ScrollViewer">
+                    <Grid Background="Transparent">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <ScrollContentPresenter x:Name="PART_ScrollContentPresenter"
+                                                Grid.Column="0"
+                                                CanContentScroll="{TemplateBinding CanContentScroll}"/>
+                        <ScrollBar x:Name="PART_VerticalScrollBar"
+                                   Grid.Column="1"
+                                   Orientation="Vertical"
+                                   Style="{StaticResource OverlayScrollBarStyle}"
+                                   Value="{Binding VerticalOffset, Mode=OneWay, RelativeSource={RelativeSource TemplatedParent}}"
+                                   Maximum="{TemplateBinding ScrollableHeight}"
+                                   ViewportSize="{TemplateBinding ViewportHeight}"
+                                   Visibility="{TemplateBinding ComputedVerticalScrollBarVisibility}"/>
+                    </Grid>
+                </ControlTemplate>
+            </ScrollViewer.Template>
+            <!-- 좌우 5px 안쪽 여백: 예전 채팅창의 글 영역과 같은 자리·같은 줄바꿈 너비 -->
+            <local:ChatLineDisplay x:Name="LogDisplay"
+                                   Margin="5,0,5,0"
+                                   FontFamily="{Binding CurrentFont, RelativeSource={RelativeSource AncestorType=Window}}"
+                                   FontSize="{Binding CurrentFontSize, RelativeSource={RelativeSource AncestorType=Window}}"/>
+        </ScrollViewer>
 
         <StackPanel HorizontalAlignment="Right"
                     VerticalAlignment="Bottom"
