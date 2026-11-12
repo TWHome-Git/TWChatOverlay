@@ -192,14 +192,14 @@ namespace TWChatOverlay.Services
         internal readonly record struct ListedWindow(string Key, string Name, bool IsHidden, bool IsSelected);
 
         /// <summary>
-        /// 창 목록에 올릴 창인지: 지금 떠 있고, 잠금 해제 모드에서 옮길 수 있는 오버레이 창.
-        /// 일일/주간 컨텐츠 창과 디버그 로그 테스트 창은 뺀다 (디버그 창은 Release 빌드에 없어 이름으로 가린다).
+        /// 창 목록에 올릴 창인지: 지금 떠 있고, 잠금 해제 모드에서만 옮길 수 있는 오버레이 창.
+        /// 잠금 상태에서도 언제든 끌 수 있는 창(달력·메모·일일/주간 컨텐츠·외치기 다시 보기·사냥 기록·주간 득템 통계·
+        /// 던전 타이머·디버그 로그 테스트)은 배치하려고 잠금을 풀 필요가 없으므로 뺀다.
         /// </summary>
         private static bool IsListable(Window window)
             => window.IsVisible
                && !IsUnlockChrome(window)
-               && window.GetType().Name is not ("DailyWeeklyContentWindow" or "DebugLogTestWindow")
-               && (window is TWChatOverlay.Views.OverlayWindowBase
+               && (window is TWChatOverlay.Views.OverlayWindowBase { MovesOnlyWhenUnlocked: true }
                    || window is TWChatOverlay.Views.MainWindow
                    || window is TWChatOverlay.Views.SubAddonWindow
                    || window.GetType().Name == "ToastStackPreviewWindow");
