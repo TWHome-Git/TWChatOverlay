@@ -331,9 +331,6 @@ namespace TWChatOverlay.Models
         /// <summary>따로 여는 창(달력·컨텐츠·어밴던)의 배경 불투명도(%). 키는 OverlayOpacityService의 그룹 키.</summary>
         public Dictionary<string, double> OverlayOpacityByGroup { get; set; } = new(StringComparer.OrdinalIgnoreCase);
         public bool WindowSnapEnabled { get; set; } = false;
-        /// <summary>잠금 해제 모드 창 목록의 자리. 끌어 옮긴 자리를 기억한다 (없으면 주 모니터 왼쪽 위).</summary>
-        public double? UnlockWindowListLeft { get; set; }
-        public double? UnlockWindowListTop { get; set; }
         public MenuBarSettings MenuBar { get; set; } = new();
         public DailyWeeklyUiSettings DailyWeekly { get; set; } = new();
         public CalendarUiSettings Calendar { get; set; } = new();
