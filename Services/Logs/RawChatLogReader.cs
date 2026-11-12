@@ -159,6 +159,8 @@ namespace TWChatOverlay.Services
         /// <paramref name="limit"/> 바이트 이하에서 마지막 줄바꿈('\n') 바로 뒤 위치. 게임이 쓰는 중인 파일을 줄 경계에서 끊어 읽기 위한 것이다.
         /// CP949의 둘째 바이트는 0x41~0xFE라 0x0A가 글자 안에 나올 수 없어 바이트만 보고 찾아도 안전하다. 못 찾으면 limit 그대로.
         /// </summary>
+        private static readonly int[] TailWindows = { 4 * 1024, 64 * 1024 };
+
         public static long FindLineBoundary(string path, long limit)
         {
             if (limit <= 0)
@@ -166,26 +168,43 @@ namespace TWChatOverlay.Services
 
             try
             {
-                using FileStream stream = OpenShared(path);
-                const int window = 64 * 1024;
-                long start = Math.Max(0, limit - window);
-                int count = (int)(limit - start);
-                byte[] buffer = new byte[count];
-                stream.Seek(start, SeekOrigin.Begin);
-                int read = 0;
-                while (read < count)
+                // 시작 패스가 로그 파일마다 한 번씩 부른다. OpenShared의 1MB 버퍼를 쓰면 파일 수만큼 큰 버퍼가 잡혀
+                // (285개 파일에 285MB, 전체 GC 수십 번) 꼬리 몇 KB를 읽는 데 낭비가 컸다 — 버퍼 없이 열고 배열은 빌려 쓴다.
+                using var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete, bufferSize: 1);
+                // 끝난 파일은 보통 줄바꿈으로 끝나므로 꼬리 4KB에서 대부분 찾는다. 못 찾으면(아주 긴 줄) 64KB까지 넓힌다.
+                foreach (int window in TailWindows)
                 {
-                    int n = stream.Read(buffer, read, count - read);
-                    if (n <= 0)
-                        break;
-                    read += n;
+                    long start = Math.Max(0, limit - window);
+                    int count = (int)(limit - start);
+                    byte[] buffer = System.Buffers.ArrayPool<byte>.Shared.Rent(count);
+                    try
+                    {
+                        stream.Seek(start, SeekOrigin.Begin);
+                        int read = 0;
+                        while (read < count)
+                        {
+                            int n = stream.Read(buffer, read, count - read);
+                            if (n <= 0)
+                                break;
+                            read += n;
+                        }
+
+                        if (read <= 0)
+                            return limit;
+
+                        int lastNewline = Array.LastIndexOf(buffer, (byte)'\n', read - 1, read);
+                        if (lastNewline >= 0)
+                            return start + lastNewline + 1;
+                        if (start == 0)
+                            break; // 파일 전체를 봤는데도 없다
+                    }
+                    finally
+                    {
+                        System.Buffers.ArrayPool<byte>.Shared.Return(buffer);
+                    }
                 }
 
-                if (read <= 0)
-                    return limit;
-
-                int lastNewline = Array.LastIndexOf(buffer, (byte)'\n', read - 1);
-                return lastNewline >= 0 ? start + lastNewline + 1 : limit;
+                return limit;
             }
             catch
             {
