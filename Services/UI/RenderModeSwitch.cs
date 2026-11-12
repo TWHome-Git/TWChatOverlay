@@ -4,7 +4,7 @@ using System.Windows.Media;
 namespace TWChatOverlay.Services
 {
     /// <summary>
-    /// 창을 그리는 방식(그래픽 카드 / CPU)을 정한다. 설정(화면 > 오버레이 > 그래픽 카드로 그리기)이 바뀌거나 앱이 시작할 때 부른다.
+    /// 창을 그리는 방식(그래픽 카드 / CPU)을 정한다. 설정(화면 > 오버레이 > 하드웨어 렌더링)이 바뀌거나 앱이 시작할 때 부른다.
     /// 프로세스 전체에 적용되고, 실행 중에 바꿔도 떠 있는 창이 바로 새 방식으로 그려진다.
     /// </summary>
     public static class RenderModeSwitch

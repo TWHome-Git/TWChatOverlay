@@ -38,7 +38,7 @@ namespace TWChatOverlay
             }
 #endif
 
-            // 렌더링 방식은 설정(화면 > 오버레이 > 그래픽 카드로 그리기)에서 고른다 — 설정을 읽은 뒤 아래에서 적용한다.
+            // 렌더링 방식은 설정(화면 > 오버레이 > 하드웨어 렌더링)에서 고른다 — 설정을 읽은 뒤 아래에서 적용한다.
             // 실행 인자 --software-render 또는 환경 변수 TWCHAT_SOFTWARE_RENDER=1 은 설정과 상관없이 소프트웨어로 돌린다 (화면이 안 나올 때의 비상구).
             bool softwareRenderForced = Array.Exists(e.Args, a => string.Equals(a, "--software-render", StringComparison.OrdinalIgnoreCase))
                 || string.Equals(Environment.GetEnvironmentVariable("TWCHAT_SOFTWARE_RENDER"), "1", StringComparison.Ordinal);
