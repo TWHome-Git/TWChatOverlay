@@ -190,7 +190,7 @@ namespace TWChatOverlay.Services
                 new[] { "display_ontop_off.png", "display_ontop_on.png" }),
 
             ["display.hardware_render"] = (
-                "그래픽 카드로 그리기",
+                "하드웨어 렌더링",
                 "창을 그리는 방식을 고릅니다. 바꾸면 떠 있는 창에도 바로 적용됩니다.\n" +
                 "켜면 그래픽 카드(GPU)로, 끄면 CPU로만 그립니다.\n" +
                 "컴퓨터에 따라 어느 쪽이 가벼운지 다릅니다 — 켜면 메모리를 수십 MB 더 쓰고, 움직이는 표시가 많을 때는 CPU도 더 쓸 수 있습니다.\n" +

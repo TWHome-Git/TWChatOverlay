@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -13,6 +14,7 @@ namespace TWChatOverlay.Services
     ///
     ///  - 감시 스레드가 1초마다 UI 스레드에 "살아 있나" 신호를 보내고, 연속 <see cref="HangChecks"/>번 답이 없으면 멈춘 것으로 본다.
     ///  - 덤프는 .NET 런타임에 들어 있는 createdump로 쓴다 (Config\HangDumps\ui-hang-날짜-시각.dmp). 평소에는 아무 일도 하지 않는다.
+    ///    단일 파일 실행본에는 그 도구가 빠지므로 프로젝트 파일이 묶음에 다시 넣는다 (TWChatOverlay.csproj 의 BundleCreateDumpForSingleFile).
     ///  - 한 번 멈출 때 한 번만, 한 실행에 <see cref="MaxDumpsPerRun"/>번까지만 쓰고, 파일은 최근 <see cref="KeepFiles"/>개만 남긴다.
     /// </summary>
     public sealed class UiHangWatchdog : IDisposable
@@ -111,10 +113,10 @@ namespace TWChatOverlay.Services
             try
             {
                 Directory.CreateDirectory(Path.GetDirectoryName(path)!);
-                string createDump = Path.Combine(Path.GetDirectoryName(typeof(object).Assembly.Location) ?? string.Empty, "createdump.exe");
-                if (!File.Exists(createDump))
+                string? createDump = FindCreateDump(out string searched);
+                if (createDump == null)
                 {
-                    AppLogger.Error($"Dump tool not found: {createDump}", "UiHangWatchdog");
+                    AppLogger.Error($"Dump tool (createdump.exe) not found. Looked in: {searched}", "UiHangWatchdog");
                     AppLogger.Flush();
                     return;
                 }
@@ -143,6 +145,55 @@ namespace TWChatOverlay.Services
                 AppLogger.Error("Writing the UI hang dump failed.", ex, "UiHangWatchdog");
             }
             AppLogger.Flush();
+        }
+
+        /// <summary>
+        /// 런타임의 덤프 도구(createdump.exe)를 찾는다. 없으면 null — <paramref name="searched"/>에 찾아본 폴더가 담긴다.
+        ///
+        /// 실행 방식에 따라 있는 곳이 다르다:
+        ///  - 폴더로 푼 실행본 · 디버그 실행: 런타임 라이브러리 옆 (typeof(object) 가 든 폴더).
+        ///  - 단일 파일 실행본: 런타임이 실행 파일 안에 들어 있어 그 위치가 빈 문자열이다 (예전 코드는 여기서 도구를 못 찾았다).
+        ///    도구는 다른 네이티브 파일과 함께 임시 폴더(%TEMP%\.net\앱\…)에 풀리고, 그 폴더는 네이티브 DLL 탐색 폴더 목록에 들어 있다.
+        /// </summary>
+        internal static string? FindCreateDump(out string searched)
+        {
+            var directories = new List<string>();
+            void Add(string? directory)
+            {
+                if (string.IsNullOrWhiteSpace(directory))
+                    return;
+                directory = directory.Trim();
+                if (!directories.Contains(directory, StringComparer.OrdinalIgnoreCase))
+                    directories.Add(directory);
+            }
+
+#pragma warning disable IL3000 // 단일 파일에서는 빈 문자열이다 — 그 경우를 아래 폴더들로 받는다
+            string runtimeLibrary = typeof(object).Assembly.Location;
+#pragma warning restore IL3000
+            if (!string.IsNullOrEmpty(runtimeLibrary))
+                Add(Path.GetDirectoryName(runtimeLibrary));
+            Add(AppContext.BaseDirectory);
+            if (AppContext.GetData("NATIVE_DLL_SEARCH_DIRECTORIES") is string nativeDirectories)
+            {
+                foreach (string directory in nativeDirectories.Split(Path.PathSeparator, StringSplitOptions.RemoveEmptyEntries))
+                    Add(directory);
+            }
+
+            searched = string.Join(" | ", directories);
+            foreach (string directory in directories)
+            {
+                try
+                {
+                    string candidate = Path.Combine(directory, "createdump.exe");
+                    if (File.Exists(candidate))
+                        return candidate;
+                }
+                catch (Exception)
+                {
+                    // 경로로 쓸 수 없는 항목은 건너뛴다
+                }
+            }
+            return null;
         }
 
         /// <summary>덤프 도구를 한 번 돌린다. 파일이 생겼으면 true, 아니면 도구가 남긴 말을 함께 돌려준다.</summary>
