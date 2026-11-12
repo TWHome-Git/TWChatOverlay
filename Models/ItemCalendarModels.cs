@@ -355,8 +355,15 @@ namespace TWChatOverlay.Models
         public string? FallbackGlyph { get; }
         public bool HasGlyph => !HasIcon && FallbackGlyph != null;
 
-        public bool ShowCountBadge => HasIcon || HasGlyph;
-        public string CountBadgeText => $"x{Count:N0}";
+        /// <summary>그림 모드의 네모 칸에 아이콘 대신 쓸 글자. 이미지가 없는 아이템은 이름 첫 글자.</summary>
+        public string SlotGlyph => FallbackGlyph ?? (DisplayName.Length > 0 ? DisplayName.Substring(0, char.IsSurrogatePair(DisplayName, 0) ? 2 : 1) : "?");
+
+        /// <summary>그림 모드에서 개수를 아이콘 위에 겹쳐 보일지 — 2개 이상일 때만.</summary>
+        public bool ShowStackCount => Count >= 2;
+        // 작은 칸에 들어가게 1000 이상은 천 단위로 줄인다 (정확한 수는 도구 설명에 나온다)
+        public string StackCountText => Count >= 1000
+            ? (Count / 1000).ToString(CultureInfo.InvariantCulture) + "k"
+            : Count.ToString(CultureInfo.InvariantCulture);
 
         private static string? ResolveFallbackGlyph(string displayName)
         {
