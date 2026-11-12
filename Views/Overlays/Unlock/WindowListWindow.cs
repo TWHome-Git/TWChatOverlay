@@ -14,8 +14,8 @@ namespace TWChatOverlay.Views.Unlock
 {
     /// <summary>
     /// 잠금 해제 모드의 창 목록. 지금 떠 있는 창을 이름으로 보여 주고,
-    ///  - 체크를 풀면 그 창을 배치하는 동안만 숨긴다 (설정은 바뀌지 않고, 잠그면 전부 다시 보인다)
-    ///  - 이름을 누르면 그 창을 선택한다 (다른 창 밑에 깔렸거나 화면 밖으로 나간 창도 잡을 수 있다)
+    ///  - 줄을 누르면 그 창을 보이게 하고 선택한다 (다른 창 밑에 깔렸거나 화면 밖으로 나간 창도 잡을 수 있다)
+    ///  - 선택된 줄을 한 번 더 누르면 그 창을 배치하는 동안만 숨긴다 (설정은 바뀌지 않고, 잠그면 전부 다시 보인다)
     /// 머리 부분을 끌어 옮길 수 있고, 옮긴 자리는 기억한다.
     /// </summary>
     internal sealed class WindowListWindow : Window
@@ -105,7 +105,7 @@ namespace TWChatOverlay.Views.Unlock
 
             var hint = new TextBlock
             {
-                Text = "체크를 풀면 배치하는 동안만 숨깁니다. 이름을 누르면 그 창을 선택합니다.",
+                Text = "누르면 그 창을 보이게 하고 선택합니다. 선택된 줄을 한 번 더 누르면 배치하는 동안만 숨깁니다.",
                 FontSize = 10.5,
                 Foreground = SubTextBrush,
                 TextWrapping = TextWrapping.Wrap,
@@ -182,20 +182,22 @@ namespace TWChatOverlay.Views.Unlock
             }
         }
 
+        /// <summary>
+        /// 목록의 한 줄. 줄 전체가 하나의 누름 대상이다: 누르면 그 창을 보이게 하고 선택하며,
+        /// 이미 선택된 줄을 한 번 더 누르면 배치하는 동안 숨긴다. 체크 표시는 보이는지만 나타낸다.
+        /// </summary>
         private FrameworkElement CreateRow(UiLockService.ListedWindow row)
         {
             var check = new Border
             {
                 Width = 16,
                 Height = 16,
-                Margin = new Thickness(2, 0, 4, 0),
+                Margin = new Thickness(4, 0, 8, 0),
                 CornerRadius = new CornerRadius(3),
                 BorderThickness = new Thickness(1),
                 BorderBrush = row.IsHidden ? CheckBorderBrush : MintBrush,
                 Background = FieldBgBrush,
-                Cursor = Cursors.Hand,
                 VerticalAlignment = VerticalAlignment.Center,
-                ToolTip = row.IsHidden ? "다시 보이기" : "배치하는 동안 숨기기",
                 Child = new Path
                 {
                     Data = CheckMark,
@@ -207,49 +209,50 @@ namespace TWChatOverlay.Views.Unlock
                     Visibility = row.IsHidden ? Visibility.Collapsed : Visibility.Visible,
                 },
             };
-            check.MouseLeftButtonDown += (_, e) =>
+
+            var name = new TextBlock
             {
-                Service.SetListedHidden(row.Key, !row.IsHidden);
-                Refresh();
-                e.Handled = true;
+                Text = row.Name,
+                FontSize = 12,
+                FontWeight = row.IsSelected ? FontWeights.Bold : FontWeights.Normal,
+                Foreground = row.IsSelected ? MintBrush : row.IsHidden ? SubTextBrush : TextBrush,
+                TextTrimming = TextTrimming.CharacterEllipsis,
+                VerticalAlignment = VerticalAlignment.Center,
             };
 
-            var name = new Border
-            {
-                Background = row.IsSelected ? RowSelectedBrush : Brushes.Transparent,
-                CornerRadius = new CornerRadius(3),
-                Padding = new Thickness(6, 4, 6, 4),
-                Cursor = Cursors.Hand,
-                ToolTip = row.IsHidden ? $"{row.Name} — 눌러서 다시 보이고 선택" : $"{row.Name} — 눌러서 선택",
-                Child = new TextBlock
-                {
-                    Text = row.Name,
-                    FontSize = 12,
-                    FontWeight = row.IsSelected ? FontWeights.Bold : FontWeights.Normal,
-                    Foreground = row.IsSelected ? MintBrush : row.IsHidden ? SubTextBrush : TextBrush,
-                    TextTrimming = TextTrimming.CharacterEllipsis,
-                },
-            };
-            if (!row.IsSelected)
-            {
-                name.MouseEnter += (_, _) => name.Background = RowHoverBrush;
-                name.MouseLeave += (_, _) => name.Background = Brushes.Transparent;
-            }
-            name.MouseLeftButtonDown += (_, e) =>
-            {
-                Service.SelectListed(row.Key);
-                Refresh();
-                e.Handled = true;
-            };
-
-            var grid = new Grid { Margin = new Thickness(0, 1, 0, 1) };
+            var grid = new Grid();
             grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
             grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
             Grid.SetColumn(check, 0);
             Grid.SetColumn(name, 1);
             grid.Children.Add(check);
             grid.Children.Add(name);
-            return grid;
+
+            var host = new Border
+            {
+                Background = row.IsSelected ? RowSelectedBrush : Brushes.Transparent,
+                CornerRadius = new CornerRadius(3),
+                Padding = new Thickness(0, 4, 6, 4),
+                Margin = new Thickness(0, 1, 0, 1),
+                Cursor = Cursors.Hand,
+                Tag = row.Key,
+                ToolTip = row.IsHidden ? $"{row.Name} — 눌러서 다시 보이고 선택"
+                    : row.IsSelected ? $"{row.Name} — 한 번 더 누르면 배치하는 동안 숨김"
+                    : $"{row.Name} — 눌러서 선택",
+                Child = grid,
+            };
+            if (!row.IsSelected)
+            {
+                host.MouseEnter += (_, _) => host.Background = RowHoverBrush;
+                host.MouseLeave += (_, _) => host.Background = Brushes.Transparent;
+            }
+            host.MouseLeftButtonDown += (_, e) =>
+            {
+                Service.ToggleListed(row.Key);
+                Refresh();
+                e.Handled = true;
+            };
+            return host;
         }
 
         private static Button CreateButton(string text)
