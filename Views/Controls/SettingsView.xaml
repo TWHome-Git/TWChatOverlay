@@ -1270,6 +1270,8 @@
                 <!-- 루비코나: 감정 격리실 (설계자의 잔재) — 운명 선고 순서 · 가면 안내 · 신뢰 반사 알림 -->
                 <StackPanel Visibility="{Binding IsChecked, ElementName=DungeonTabRubicona, Converter={StaticResource BooleanToVisibilityConverter}}">
                 <TextBlock Text="감정 격리실" Style="{StaticResource SettingsSectionLabelStyle}" Margin="0,0,0,6"/>
+                <!-- 조정용 값(캡처 지연 · 공지 영역 · 표시 배율 · 원본 저장 · 가면 유지 시간 · 가면 배율)은 디버그 빌드에서만 보인다.
+                     일반 빌드에서는 켜고 끄는 것과 볼륨만 보이고, 값은 설정 파일의 것(없으면 기본값)을 그대로 쓴다 -->
                 <WrapPanel>
                     <Border Style="{StaticResource SettingsRowStyle}">
                         <DockPanel>
@@ -1280,25 +1282,25 @@
                             </StackPanel>
                         </DockPanel>
                     </Border>
-                    <Border Style="{StaticResource SettingsRowStyle}">
+                    <Border Loaded="DebugOnlyRow_Loaded" Style="{StaticResource SettingsRowStyle}" Visibility="Collapsed">
                         <DockPanel>
                             <TextBox DockPanel.Dock="Right" Width="70" Text="{Binding Settings.DoomSentenceCaptureDelayMilliseconds, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource SettingsRowInputStyle}"/>
                             <TextBlock Text="운명 선고 캡처 지연(ms)" Style="{StaticResource SettingsRowLabelStyle}" ToolTip="로그 줄을 본 뒤 화면을 찍기까지 기다리는 시간. 0~2500, 기본 250"/>
                         </DockPanel>
                     </Border>
-                    <Border Style="{StaticResource SettingsRowStyle}">
+                    <Border Loaded="DebugOnlyRow_Loaded" Style="{StaticResource SettingsRowStyle}" Visibility="Collapsed">
                         <DockPanel>
                             <TextBox DockPanel.Dock="Right" Width="110" Text="{Binding Settings.DoomSentenceNoticeBox, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource SettingsRowInputStyle}"/>
                             <TextBlock Text="운명 선고 공지 영역(px)" Style="{StaticResource SettingsRowLabelStyle}" ToolTip="순서 공지가 뜨는 자리(글자 인식에 쓸 부분): 너비,위,높이 — 게임 해상도 픽셀, 가로 가운데 기준. 확대 프로그램을 쓰면 배율만큼 늘려 찍습니다. 기본 500,200,105"/>
                         </DockPanel>
                     </Border>
-                    <Border Style="{StaticResource SettingsRowStyle}">
+                    <Border Loaded="DebugOnlyRow_Loaded" Style="{StaticResource SettingsRowStyle}" Visibility="Collapsed">
                         <DockPanel>
                             <TextBox DockPanel.Dock="Right" Width="70" Text="{Binding Settings.DoomSentenceCaptureScalePercent, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" Style="{StaticResource SettingsRowInputStyle}"/>
                             <TextBlock Text="운명 선고 표시 배율(%)" Style="{StaticResource SettingsRowLabelStyle}" ToolTip="화살표 크기. 100이 기본이고 50~300. 창 크기는 화살표에 맞춰집니다"/>
                         </DockPanel>
                     </Border>
-                    <Border Style="{StaticResource SettingsRowStyle}">
+                    <Border Loaded="DebugOnlyRow_Loaded" Style="{StaticResource SettingsRowStyle}" Visibility="Collapsed">
                         <DockPanel>
                             <CheckBox DockPanel.Dock="Right" IsChecked="{Binding Settings.SaveDoomSentenceCapture, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
                             <TextBlock Text="운명 선고 캡처 원본 저장" Style="{StaticResource SettingsRowLabelStyle}"
@@ -1314,13 +1316,13 @@
                             </StackPanel>
                         </DockPanel>
                     </Border>
-                    <Border Style="{StaticResource SettingsRowStyle}">
+                    <Border Loaded="DebugOnlyRow_Loaded" Style="{StaticResource SettingsRowStyle}" Visibility="Collapsed">
                         <DockPanel>
                             <TextBox DockPanel.Dock="Right" Width="70" Text="{Binding Settings.MaskGimmickDurationSeconds, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource SettingsRowInputStyle}"/>
                             <TextBlock Text="가면 창 유지 시간(초)" Style="{StaticResource SettingsRowLabelStyle}" ToolTip="1~300초. 파훼 성공 줄이 오면 그 전에 닫힙니다"/>
                         </DockPanel>
                     </Border>
-                    <Border Style="{StaticResource SettingsRowStyle}">
+                    <Border Loaded="DebugOnlyRow_Loaded" Style="{StaticResource SettingsRowStyle}" Visibility="Collapsed">
                         <DockPanel>
                             <TextBox DockPanel.Dock="Right" Width="70" Text="{Binding Settings.MaskGimmickScalePercent, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" Style="{StaticResource SettingsRowInputStyle}"/>
                             <TextBlock Text="가면 표시 배율(%)" Style="{StaticResource SettingsRowLabelStyle}" ToolTip="가면 그림과 글자 크기. 100이 기본이고 50~300"/>
