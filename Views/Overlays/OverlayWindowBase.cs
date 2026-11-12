@@ -53,6 +53,9 @@ namespace TWChatOverlay.Views
         /// <summary>true면 잠금 해제 모드에서만 드래그·선택된다. 달력·메모처럼 항상 끌 수 있는 창은 false.</summary>
         protected virtual bool DragRequiresUnlock => true;
 
+        /// <summary>잠금 해제 모드에서만 옮길 수 있는 창인지 (잠금 해제 모드의 창 목록은 이런 창만 보여 준다).</summary>
+        internal bool MovesOnlyWhenUnlocked => DragRequiresUnlock;
+
         /// <summary>LocationChanged/SizeChanged마다 <see cref="PersistBounds"/>를 부를지. false면 드래그 종료·닫힘·명시 호출 때만.</summary>
         protected virtual bool PersistBoundsOnChange => true;
 
