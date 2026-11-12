@@ -47,7 +47,7 @@ namespace TWChatOverlay.Views
         /// <summary>
         /// 이 창이 지금 화면 캡처에서 빠져 있는지. 빠져 있으면 공지 자리 위에 놓여 있어도 이어 찍는 장에 이 창이 찍히지 않는다.
         /// 빠져 있는 동안에는 다른 캡처 도구(녹화·스크린샷)에도 안 나오므로, 서비스가 순서를 읽는 2초쯤만 빼고 다시 돌려놓는다
-        /// (2026-11-12 사용자: 화살표가 왜 스샷에 안 찍히나).
+        /// (2026-11-12 사용자: 화살표가 왜 스샷에 안 찍히나). 위치 미리보기는 읽는 것이 없으니 띄우자마자 돌려놓는다.
         /// </summary>
         public bool IsExcludedFromCapture { get; private set; }
 
@@ -220,6 +220,9 @@ namespace TWChatOverlay.Views
             BuildOrderIcons();
             SetStatus("위치 조정 미리보기 (크기는 설정의 표시 배율)");
             Reveal();
+            // 창은 만들어질 때 캡처에서 빠진다 (OnSourceInitialized). 미리보기는 화면을 읽지 않으니 바로 돌려놓는다 —
+            // 그대로 두면 캡처 도구를 누르는 순간 이 창만 화면에서 사라진다 (2026-11-13 사용자: 왜 캡쳐를 누르면 화살표 창이 사라지나)
+            SetCaptureExcluded(false);
         }
 
         private void SetStatus(string? text)
