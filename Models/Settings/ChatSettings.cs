@@ -653,7 +653,7 @@ namespace TWChatOverlay.Models
         [JsonIgnore]
         public string DoomSentenceCaptureRegion
         {
-            get => string.IsNullOrWhiteSpace(Alerts.Dungeon.DoomSentenceCaptureRegion) ? "20,10,60,35" : Alerts.Dungeon.DoomSentenceCaptureRegion;
+            get => string.IsNullOrWhiteSpace(Alerts.Dungeon.DoomSentenceCaptureRegion) ? "34,17,32,15" : Alerts.Dungeon.DoomSentenceCaptureRegion;
             set
             {
                 string text = (value ?? string.Empty).Trim();

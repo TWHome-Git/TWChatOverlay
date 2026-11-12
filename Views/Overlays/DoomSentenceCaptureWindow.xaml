@@ -4,7 +4,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="운명 선고 캡처"
         Width="560"
-        Height="240"
+        Height="190"
         MinWidth="220"
         MinHeight="110"
         WindowStyle="None"

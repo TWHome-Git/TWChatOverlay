@@ -29,7 +29,7 @@ namespace TWChatOverlay.Services
         /// <summary>찍은 그림에서 잘라 낼 자리. 왼쪽·위·너비·높이를 그림 크기에 대한 퍼센트로 적는다.</summary>
         public readonly record struct PercentRegion(double Left, double Top, double Width, double Height)
         {
-            /// <summary>"20,10,60,35" 같은 글을 읽는다. 숫자 넷이 아니거나 범위를 벗어나면 false.</summary>
+            /// <summary>"34,17,32,15" 같은 글을 읽는다. 숫자 넷이 아니거나 범위를 벗어나면 false.</summary>
             public static bool TryParse(string? text, out PercentRegion region)
             {
                 region = default;

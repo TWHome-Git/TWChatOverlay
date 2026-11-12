@@ -22,8 +22,12 @@ namespace TWChatOverlay.Services
     /// </summary>
     public sealed class DoomSentenceCaptureService
     {
-        /// <summary>자를 영역 기본값 (왼쪽,위,너비,높이 %). 설정이 비었거나 잘못 적혔을 때도 이 값을 쓴다.</summary>
-        public const string DefaultRegionText = "20,10,60,35";
+        /// <summary>
+        /// 자를 영역 기본값 (왼쪽,위,너비,높이 %). 설정이 비었거나 잘못 적혔을 때도 이 값을 쓴다.
+        /// 2026-11-12 실제 1회차 캡처(게임 1920x1080, 확대 화면 2576x1449)로 잰 자리: 공지 글은 가로 40~60% · 세로 20~25%에 뜬다.
+        /// 발판 8개일 때는 순서가 두 줄이라 아래로 여유를 뒀다.
+        /// </summary>
+        public const string DefaultRegionText = "34,17,32,15";
         public const int DefaultDelayMilliseconds = 250;
 
         // 다 밟았을 때 창을 조금 더 보여 준 뒤 닫는다

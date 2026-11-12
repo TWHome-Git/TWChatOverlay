@@ -187,7 +187,7 @@ namespace TWChatOverlay.Models
         /// <summary>운명 선고 로그 줄을 본 뒤 화면을 찍기까지 기다리는 시간(ms). 공지가 다 그려진 뒤 찍히게 한다.</summary>
         public int DoomSentenceCaptureDelayMilliseconds { get; set; } = 250;
         /// <summary>찍은 게임 화면에서 잘라 보여 줄 자리: 왼쪽,위,너비,높이 (게임 화면 크기에 대한 %).</summary>
-        public string DoomSentenceCaptureRegion { get; set; } = "20,10,60,35";
+        public string DoomSentenceCaptureRegion { get; set; } = "34,17,32,15";
         /// <summary>찍은 원본 화면을 Logs/DoomSentence 에 PNG로 남길지 (최근 20장). 자를 자리를 맞출 때 본다.</summary>
         public bool SaveDoomSentenceCapture { get; set; } = true;
         /// <summary>컨텐츠 타이머 창 표시 (아페티리아 입장~클리어 소요 시간).</summary>
