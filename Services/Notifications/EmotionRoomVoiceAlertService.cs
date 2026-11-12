@@ -10,7 +10,7 @@ namespace TWChatOverlay.Services
     ///
     ///   레이저   설계자(의 잔재) : 그대들의 영혼까지 절단시켜주마!              → 전방 조심해 (EmotionFront.mp3)
     ///   자리 이동 설계자(의 잔재) : 공간의 저편에 너의 죽음이 기다리고 있다!      → 바닥 조심해 (EmotionFloor.mp3)
-    ///   반사     ▶ 배신 : 받는 피해가 약 90% 줄고, 공격할 때마다 피해를 되돌려 받습니다.   → 광선 피해 (EmotionBeam.mp3)
+    ///   배신     ▶ 배신 : 받는 피해가 약 90% 줄고, 공격할 때마다 피해를 되돌려 받습니다.   → 광선 피해 (EmotionBeam.mp3)
     ///            (신뢰의 격리실. 같은 순간 "▶ 섬광 5줄기가 날아오니…"도 오지만 소리는 위 줄에서 한 번만.
     ///             처음엔 반사 끝("신뢰 상태가 되었습니다")에도 소리를 냈으나 사용자가 뺐다.)
     ///
@@ -47,7 +47,7 @@ namespace TWChatOverlay.Services
         private static readonly TimeSpan RepeatGuard = TimeSpan.FromSeconds(3);
         private readonly DateTime[] _lastPlayedUtc = new DateTime[4];
 
-        /// <summary>줄이 어느 패턴인지. <paramref name="isSystemLog"/>가 true면 시스템 줄(반사), false면 채팅 줄(보스 대사)로 본다.</summary>
+        /// <summary>줄이 어느 패턴인지. <paramref name="isSystemLog"/>가 true면 시스템 줄(배신), false면 채팅 줄(보스 대사)로 본다.</summary>
         public static Pattern Parse(string? text, bool isSystemLog)
         {
             if (string.IsNullOrEmpty(text))

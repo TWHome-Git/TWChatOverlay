@@ -1267,7 +1267,7 @@
                 </WrapPanel>
                 </StackPanel>
 
-                <!-- 루비코나: 감정 격리실 (설계자의 잔재) — 운명 선고 순서 · 가면 안내 · 신뢰 반사 알림 -->
+                <!-- 루비코나: 감정 격리실 (설계자의 잔재) — 운명 선고 순서 · 가면 안내 · 패턴 음성(레이저 · 자리 이동 · 배신) -->
                 <StackPanel Visibility="{Binding IsChecked, ElementName=DungeonTabRubicona, Converter={StaticResource BooleanToVisibilityConverter}}">
                 <TextBlock Text="감정 격리실" Style="{StaticResource SettingsSectionLabelStyle}" Margin="0,0,0,6"/>
                 <!-- 조정용 값(캡처 지연 · 공지 영역 · 표시 배율 · 원본 저장 · 가면 유지 시간 · 가면 배율)은 디버그 빌드에서만 보인다.
@@ -1332,7 +1332,7 @@
                         <DockPanel>
                             <CheckBox DockPanel.Dock="Right" IsChecked="{Binding Settings.EnableEmotionLaserAlert, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
                             <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                <TextBlock Text="레이저 패턴 음성 (전방 조심해)" Style="{StaticResource SettingsRowLabelStyle}"/>
+                                <TextBlock Text="설계자 레이저 패턴 음성 (전방 조심해)" Style="{StaticResource SettingsRowLabelStyle}"/>
                                 <Button Style="{StaticResource HelpButtonStyle}" Tag="dungeon.emotion_voice" Click="Help_Click"/>
                             </StackPanel>
                         </DockPanel>
@@ -1340,13 +1340,13 @@
                     <Border Style="{StaticResource SettingsRowStyle}">
                         <DockPanel>
                             <CheckBox DockPanel.Dock="Right" IsChecked="{Binding Settings.EnableEmotionFloorAlert, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
-                            <TextBlock Text="자리 이동 패턴 음성 (바닥 조심해)" Style="{StaticResource SettingsRowLabelStyle}"/>
+                            <TextBlock Text="설계자 자리 이동 패턴 음성 (바닥 조심해)" Style="{StaticResource SettingsRowLabelStyle}"/>
                         </DockPanel>
                     </Border>
                     <Border Style="{StaticResource SettingsRowStyle}">
                         <DockPanel>
                             <CheckBox DockPanel.Dock="Right" IsChecked="{Binding Settings.EnableTrustReflectionAlert, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
-                            <TextBlock Text="반사 패턴 음성 (광선 피해)" Style="{StaticResource SettingsRowLabelStyle}" ToolTip="신뢰의 격리실에서 배신 구간이 시작될 때"/>
+                            <TextBlock Text="배신 패턴 음성 (광선 피해)" Style="{StaticResource SettingsRowLabelStyle}" ToolTip="신뢰의 격리실에서 배신 구간이 시작될 때"/>
                         </DockPanel>
                     </Border>
                     <Border Style="{StaticResource SettingsRowStyle}">
