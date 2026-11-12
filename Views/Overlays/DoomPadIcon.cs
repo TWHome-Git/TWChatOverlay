@@ -9,8 +9,8 @@ using TWChatOverlay.Services;
 namespace TWChatOverlay.Views
 {
     /// <summary>
-    /// 운명 선고 발판 하나를 나타내는 그림: 흰 둥근 바탕 위에 모서리가 둥근 색 화살표, 아래에 차례 번호
-    /// (2026-11-12 사용자: 게임의 둥근 버튼 느낌으로 시작해, 화살표에 색을 칠하고 바탕은 흰색 · 화살표는 둥글게).
+    /// 운명 선고 발판 하나를 나타내는 그림: 바탕 없이(창 배경 그대로) 모서리가 둥근 색 화살표, 아래에 차례 번호
+    /// (2026-11-12 사용자: 둥근 색 버튼 → 흰 바탕에 색 화살표 → 흰 바탕은 별로, 배경과 같게 투명하게).
     /// 방향과 색(게임의 가면 색): 기쁨 ← 핑크 · 슬픔 ↑ 보라 · 즐거움 ↓ 파랑 · 분노 → 빨강.
     /// 밟은 것은 흐리게, 다음에 밟을 것은 금색 테로 빛나게 그린다. <see cref="DoomSentenceCaptureWindow"/>가 순서대로 늘어놓는다.
     /// </summary>
@@ -53,42 +53,28 @@ namespace TWChatOverlay.Views
 
             var button = new Grid { Width = size, Height = size };
 
-            // 다음에 밟을 것만 금색 테가 빛난다
+            // 바탕은 따로 칠하지 않는다 — 창 배경이 그대로 비친다 (2026-11-12 사용자: 흰 바탕은 별로, 배경과 같게 · 투명하게).
+            // 다음에 밟을 것만 금색 고리가 빛난다
             if (current)
             {
                 button.Children.Add(new Ellipse
                 {
-                    Fill = new SolidColorBrush(Color.FromRgb(0xFF, 0xD8, 0x3A)),
+                    Stroke = new SolidColorBrush(Color.FromRgb(0xFF, 0xD8, 0x3A)),
+                    StrokeThickness = Math.Max(2, size * 0.055),
                     Effect = new DropShadowEffect
                     {
                         Color = Color.FromRgb(0xFF, 0xE0, 0x60),
-                        BlurRadius = size * 0.28,
+                        BlurRadius = size * 0.22,
                         ShadowDepth = 0,
-                        Opacity = 0.95,
+                        Opacity = 0.9,
                     },
                 });
             }
 
-            // 흰 바탕 (2026-11-12 사용자: 화살표에 색을 칠하고 바탕은 그냥 흰색으로). 어두운 게임 화면 위에서 떠 보이게 그림자만 준다
-            button.Children.Add(new Ellipse
-            {
-                Margin = new Thickness(current ? size * 0.07 : 0),
-                Fill = Brushes.White,
-                Stroke = new SolidColorBrush(Color.FromArgb(0x40, 0, 0, 0)),
-                StrokeThickness = 1,
-                Effect = current ? null : new DropShadowEffect
-                {
-                    Color = Colors.Black,
-                    BlurRadius = size * 0.12,
-                    ShadowDepth = size * 0.03,
-                    Opacity = 0.55,
-                },
-            });
-
             // 색 화살표. 같은 색의 굵은 둥근 테를 둘러 모서리를 둥글린다 (테 두께만큼 도형이 커지므로 여백을 그만큼 더 준다)
             var arrowBrush = new SolidColorBrush(color);
             arrowBrush.Freeze();
-            double round = size * 0.085;
+            double round = size * 0.1;
             button.Children.Add(new Path
             {
                 Data = ArrowGeometry,
@@ -99,9 +85,17 @@ namespace TWChatOverlay.Views
                 StrokeStartLineCap = PenLineCap.Round,
                 StrokeEndLineCap = PenLineCap.Round,
                 Stretch = Stretch.Uniform,
-                Margin = new Thickness(size * (current ? 0.24 : 0.2)),
+                Margin = new Thickness(size * 0.17),
                 RenderTransformOrigin = new Point(0.5, 0.5),
                 RenderTransform = new RotateTransform(angle),
+                // 어두운 그림자를 깔아 창 배경이 밝거나 반투명해도 화살표가 묻히지 않게 한다
+                Effect = new DropShadowEffect
+                {
+                    Color = Colors.Black,
+                    BlurRadius = size * 0.1,
+                    ShadowDepth = size * 0.02,
+                    Opacity = 0.6,
+                },
             });
 
             // 아래에 차례 번호
