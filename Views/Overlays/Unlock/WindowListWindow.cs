@@ -7,7 +7,6 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Shapes;
 using System.Windows.Threading;
-using TWChatOverlay.Models;
 using TWChatOverlay.Services;
 
 namespace TWChatOverlay.Views.Unlock
@@ -16,12 +15,14 @@ namespace TWChatOverlay.Views.Unlock
     /// 잠금 해제 모드의 창 목록. 지금 떠 있는 창을 이름으로 보여 주고,
     ///  - 줄을 누르면 그 창을 보이게 하고 선택한다 (다른 창 밑에 깔렸거나 화면 밖으로 나간 창도 잡을 수 있다)
     ///  - 선택된 줄을 한 번 더 누르면 그 창을 배치하는 동안만 숨긴다 (설정은 바뀌지 않고, 잠그면 전부 다시 보인다)
-    /// 머리 부분을 끌어 옮길 수 있고, 옮긴 자리는 기억한다.
+    /// 메뉴바 옆에 뜬다 — 세로 메뉴바면 오른쪽, 가로 메뉴바면 아래쪽. 머리 부분을 끌어 옮길 수 있다 (잠금 해제 동안만).
     /// </summary>
     internal sealed class WindowListWindow : Window
     {
         private const double PanelWidth = 220;
         private const double DefaultMargin = 12;
+        /// <summary>메뉴바와의 간격.</summary>
+        private const double MenuBarGap = 6;
 
         private static readonly SolidColorBrush PanelBgBrush = UnlockWindowStyle.Frozen(Color.FromArgb(0xF2, 0x10, 0x16, 0x14));
         private static readonly SolidColorBrush HeaderBgBrush = UnlockWindowStyle.Frozen(Color.FromRgb(0x19, 0x21, 0x1D));
@@ -38,6 +39,9 @@ namespace TWChatOverlay.Views.Unlock
         private readonly TextBlock _title;
         private readonly StackPanel _rows;
         private readonly DispatcherTimer _refreshTimer;
+        private MenuWindow? _menuBar;
+        // 끌어 옮긴 뒤에는 메뉴바를 따라가지 않는다 (다음에 잠금 해제할 때는 다시 메뉴바 옆에 뜬다)
+        private bool _movedByUser;
         // 목록 내용이 그대로면 줄을 다시 만들지 않는다 (마우스를 올려 둔 줄이 깜빡이지 않게)
         private string _signature = "\0";
 
@@ -122,7 +126,7 @@ namespace TWChatOverlay.Views.Unlock
                 Child = new StackPanel { Children = { header, buttons, scroll, hint } },
             };
 
-            ApplyStoredPosition();
+            PositionNextToMenuBar();
 
             // 창이 새로 뜨거나 닫히는 것을 따라가고, 숨겨 둔 종류의 창이 다시 만들어지면 그것도 가린다
             _refreshTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(400) };
@@ -134,15 +138,31 @@ namespace TWChatOverlay.Views.Unlock
 
             Loaded += (_, _) =>
             {
-                KeepOnScreen();
                 Service.SelectionChanged += Refresh;
                 Refresh();
                 _refreshTimer.Start();
+
+                // 메뉴바를 옮기거나 가로·세로를 바꾸면 따라간다
+                _menuBar = FindMenuBar();
+                if (_menuBar != null)
+                {
+                    _menuBar.LocationChanged += MenuBar_BoundsChanged;
+                    _menuBar.SizeChanged += MenuBar_SizeChanged;
+                }
+                PositionNextToMenuBar();
             };
+            // 줄 수에 따라 높이가 바뀌면 자리를 다시 잡는다 (화면 아래로 넘치지 않게)
+            SizeChanged += (_, _) => PositionNextToMenuBar();
             Closed += (_, _) =>
             {
                 _refreshTimer.Stop();
                 Service.SelectionChanged -= Refresh;
+                if (_menuBar != null)
+                {
+                    _menuBar.LocationChanged -= MenuBar_BoundsChanged;
+                    _menuBar.SizeChanged -= MenuBar_SizeChanged;
+                    _menuBar = null;
+                }
             };
 
             PreviewKeyDown += (_, e) =>
@@ -278,7 +298,7 @@ namespace TWChatOverlay.Views.Unlock
             return geometry;
         }
 
-        #region 자리 (끌어 옮기기, 기억하기)
+        #region 자리 (메뉴바 옆, 끌어 옮기기)
 
         private void Header_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
@@ -294,42 +314,80 @@ namespace TWChatOverlay.Views.Unlock
                 // DragMove는 왼쪽 버튼을 누르고 있는 동안에만 된다
             }
 
-            KeepOnScreen();
-            SavePosition();
-            e.Handled = true;
-        }
-
-        private void ApplyStoredPosition()
-        {
-            UiSection? ui = ToastPresentationHelper.FindSharedSettings()?.Ui;
-            Left = ui?.UnlockWindowListLeft ?? DefaultMargin;
-            Top = ui?.UnlockWindowListTop ?? DefaultMargin;
-        }
-
-        /// <summary>모니터 구성이 바뀌어 기억한 자리가 화면 밖이면 보이는 곳으로 끌어온다.</summary>
-        private void KeepOnScreen()
-        {
+            _movedByUser = true;
             var (left, top) = ScreenBoundsHelper.ClampToVirtualScreen(Left, Top, ActualWidth, ActualHeight);
             Left = left;
             Top = top;
+            e.Handled = true;
         }
 
-        private void SavePosition()
-        {
-            try
-            {
-                ChatSettings? settings = ToastPresentationHelper.FindSharedSettings();
-                if (settings == null)
-                    return;
+        private void MenuBar_BoundsChanged(object? sender, EventArgs e) => PositionNextToMenuBar();
 
-                settings.Ui.UnlockWindowListLeft = Left;
-                settings.Ui.UnlockWindowListTop = Top;
-                ConfigService.SaveDeferred(settings);
-            }
-            catch (Exception ex)
+        private void MenuBar_SizeChanged(object sender, SizeChangedEventArgs e) => PositionNextToMenuBar();
+
+        private static MenuWindow? FindMenuBar()
+            => Application.Current?.Windows.OfType<MenuWindow>().FirstOrDefault(window => window.IsVisible && window.ActualWidth > 0);
+
+        /// <summary>메뉴바 옆에 놓는다. 메뉴바가 없으면 주 모니터 왼쪽 위.</summary>
+        private void PositionNextToMenuBar()
+        {
+            if (_movedByUser)
+                return;
+
+            MenuWindow? menu = _menuBar ?? FindMenuBar();
+            if (menu == null)
             {
-                AppLogger.Warn("Failed to save unlock window list position.", ex);
+                Left = DefaultMargin;
+                Top = DefaultMargin;
+                return;
             }
+
+            var menuBounds = new Rect(menu.Left, menu.Top, menu.ActualWidth, menu.ActualHeight);
+            bool horizontal = ToastPresentationHelper.FindSharedSettings()?.MenuWindowHorizontal ?? menuBounds.Width > menuBounds.Height;
+            var size = new Size(ActualWidth > 0 ? ActualWidth : PanelWidth, ActualHeight > 0 ? ActualHeight : 200);
+            Point place = PlaceNextToMenuBar(menuBounds, horizontal, size, FindScreen(menuBounds));
+            Left = place.X;
+            Top = place.Y;
+        }
+
+        /// <summary>메뉴바가 놓인 모니터의 작업 영역. 못 찾으면 화면 전체.</summary>
+        private static Rect FindScreen(Rect menuBounds)
+        {
+            var center = new Point(menuBounds.Left + menuBounds.Width / 2, menuBounds.Top + menuBounds.Height / 2);
+            foreach (Rect area in ScreenBoundsHelper.GetMonitorWorkAreas())
+            {
+                if (area.Contains(center))
+                    return area;
+            }
+            return ScreenBoundsHelper.GetVirtualDesktop();
+        }
+
+        /// <summary>
+        /// 메뉴바 옆의 목록 자리. 세로 메뉴바면 오른쪽에(자리가 없으면 왼쪽), 가로 메뉴바면 아래쪽에(자리가 없으면 위쪽),
+        /// 메뉴바와 같은 줄에 맞춰 놓는다. 화면 밖으로 나가지 않게 마지막에 한 번 더 보정한다.
+        /// </summary>
+        internal static Point PlaceNextToMenuBar(Rect menu, bool horizontal, Size list, Rect screen)
+        {
+            double left;
+            double top;
+            if (horizontal)
+            {
+                left = menu.Left;
+                top = menu.Bottom + MenuBarGap;
+                if (top + list.Height > screen.Bottom && menu.Top - MenuBarGap - list.Height >= screen.Top)
+                    top = menu.Top - MenuBarGap - list.Height;
+            }
+            else
+            {
+                left = menu.Right + MenuBarGap;
+                top = menu.Top;
+                if (left + list.Width > screen.Right && menu.Left - MenuBarGap - list.Width >= screen.Left)
+                    left = menu.Left - MenuBarGap - list.Width;
+            }
+
+            left = Math.Max(screen.Left, Math.Min(left, screen.Right - list.Width));
+            top = Math.Max(screen.Top, Math.Min(top, screen.Bottom - list.Height));
+            return new Point(left, top);
         }
 
         #endregion
