@@ -14,9 +14,11 @@ namespace TWChatOverlay.Services
     ///   ▶ 분노의 가면은 즐거움 가면을 파괴하면 해제됩니다.                             ← 즐거움
     ///   ▶ 즐거움의 감정이 20초 뒤 폭발합니다.                                          ← 즐거움은 "가면으로" 줄 없이 폭발 예고가 온다
     ///   ▶ 분노의 가면을 파괴하거나, 안전지대로 대피하십시오.                           ← 분노
-    ///   ▶ 파훼 성공! 설계자의 잔재의 슬픔 상태가 해제되고 3초간 그로기에 빠집니다.     ← 끝
+    ///   ▶ 파훼 성공! 설계자의 잔재의 슬픔 상태가 해제되고 3초간 그로기에 빠집니다.     ← 끝 (맞는 가면)
+    ///   ▶ 잘못된 가면을 파괴하여 다음 상태 전환까지 슬픔 상태가 유지됩니다.            ← 끝 (오답 — 남은 가면이 사라져 더 부술 것이 없다)
     ///
-    /// 방 안내 줄("[파훼] 상성 가면을 파괴하면…", "[오답] 잘못된 가면을 파괴하면…")은 감정 이름이 "가면을 파괴" 바로 앞에 없어 걸리지 않는다.
+    /// 방 안내 줄("[파훼] 상성 가면을 파괴하면…", "[오답] 잘못된 가면을 파괴하면 남은 가면이 사라지고…")은
+    /// 감정 이름이 "가면을 파괴" 바로 앞에 없고 "파괴하여"도 아니라 어느 쪽에도 걸리지 않는다.
     /// </summary>
     public static class MaskGimmickLogParser
     {
@@ -29,7 +31,7 @@ namespace TWChatOverlay.Services
             Explosion,
             /// <summary>부숴야 할 가면 (Pad).</summary>
             Target,
-            /// <summary>상태가 풀렸다 · 방이 끝났다.</summary>
+            /// <summary>가면을 부쉈다(맞는 가면 · 잘못된 가면) · 방이 끝났다 — 더 보여 줄 것이 없다.</summary>
             Cleared,
         }
 
@@ -47,7 +49,7 @@ namespace TWChatOverlay.Services
             @"즐거움의\s*감정이\s*(?<seconds>\d+)\s*초\s*뒤\s*폭발", RegexOptions.Compiled);
 
         private static readonly Regex ClearedRegex = new(
-            @"파훼\s*성공|상태가\s*해제되고|감정의\s*잔재가\s*진정되었습니다", RegexOptions.Compiled);
+            @"파훼\s*성공|상태가\s*해제되고|잘못된\s*가면을\s*파괴하여|감정의\s*잔재가\s*진정되었습니다", RegexOptions.Compiled);
 
         public static Line Parse(string? text)
         {

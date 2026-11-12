@@ -10,7 +10,8 @@ namespace TWChatOverlay.Services
     /// (2026-11-12 사용자: 슬픔 → 기쁨 가면, 기쁨 → 슬픔 가면, 즐거움(폭발) → 분노 가면, 분노 → 즐거움 가면 보여주기).
     ///
     /// 어느 가면을 부술지는 채팅 로그에 그대로 적혀 나오므로 화면을 찍지 않는다 (<see cref="MaskGimmickLogParser"/>).
-    /// "파훼 성공" 줄이 오면 닫고, 줄이 안 와도(오답 · 폭발) 유지 시간이 지나면 닫힌다. 즐거움은 로그의 폭발까지 남은 초를 같이 센다.
+    /// 가면을 부수면 닫는다 — 맞는 가면("파훼 성공")이든 잘못된 가면("잘못된 가면을 파괴하여…")이든 (2026-11-12 사용자: 오답 줄이 나와도, 성공해도 사라지게).
+    /// 어느 줄도 안 오면(폭발) 유지 시간이 지나 닫힌다. 즐거움은 로그의 폭발까지 남은 초를 같이 센다.
     /// 실시간 줄만 넘겨받는다 (MainWindow.LogProcessing).
     /// </summary>
     public sealed class MaskGimmickService
@@ -104,7 +105,7 @@ namespace TWChatOverlay.Services
         {
             Application.Current.Dispatcher.BeginInvoke(new Action(() =>
             {
-                // 잠금 해제 미리보기는 로그 줄("파훼 성공")로 닫지 않는다
+                // 잠금 해제 미리보기는 로그 줄("파훼 성공" · 오답)로 닫지 않는다
                 if (_window is { IsPreviewMode: true })
                     return;
                 CloseWindow();
