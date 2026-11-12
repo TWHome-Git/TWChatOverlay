@@ -29,7 +29,7 @@ namespace TWChatOverlay.Services
         // 창 목록에서 숨긴 창의 키. 잠금 해제 동안만 유지한다 (설정에 쓰지 않는다)
         private readonly HashSet<string> _hiddenKeys = new(StringComparer.Ordinal);
         // 실제로 가려 둔 창. 다시 보이게 할 때 풀어야 한다
-        private readonly HashSet<Window> _cloaked = new();
+        private readonly HashSet<Window> _concealed = new();
 
         public bool IsUnlocked { get; private set; }
 
@@ -191,10 +191,14 @@ namespace TWChatOverlay.Services
         /// <summary>창 목록의 한 줄. 같은 종류의 창이 여러 개면(알림 여러 장) 한 줄로 묶는다.</summary>
         internal readonly record struct ListedWindow(string Key, string Name, bool IsHidden, bool IsSelected);
 
-        /// <summary>창 목록에 올릴 창인지: 지금 떠 있고, 잠금 해제 모드에서 옮길 수 있는 오버레이 창.</summary>
+        /// <summary>
+        /// 창 목록에 올릴 창인지: 지금 떠 있고, 잠금 해제 모드에서 옮길 수 있는 오버레이 창.
+        /// 일일/주간 컨텐츠 창과 디버그 로그 테스트 창은 뺀다 (디버그 창은 Release 빌드에 없어 이름으로 가린다).
+        /// </summary>
         private static bool IsListable(Window window)
             => window.IsVisible
                && !IsUnlockChrome(window)
+               && window.GetType().Name is not ("DailyWeeklyContentWindow" or "DebugLogTestWindow")
                && (window is TWChatOverlay.Views.OverlayWindowBase
                    || window is TWChatOverlay.Views.MainWindow
                    || window is TWChatOverlay.Views.SubAddonWindow
@@ -284,12 +288,12 @@ namespace TWChatOverlay.Services
 
                 string key = GetListKey(window);
                 bool shouldHide = _hiddenKeys.Contains(key);
-                bool isCloaked = _cloaked.Contains(window);
-                if (shouldHide && !isCloaked)
+                bool isConcealed = _concealed.Contains(window);
+                if (shouldHide && !isConcealed)
                 {
-                    if (SetCloak(window, true))
+                    if (SetConcealed(window, true))
                     {
-                        _cloaked.Add(window);
+                        _concealed.Add(window);
                         if (ReferenceEquals(window, _selected))
                             ClearSelection();
                     }
@@ -299,15 +303,16 @@ namespace TWChatOverlay.Services
                         _hiddenKeys.Remove(key);
                     }
                 }
-                else if (!shouldHide && isCloaked)
+                else if (!shouldHide && isConcealed)
                 {
-                    SetCloak(window, false);
-                    _cloaked.Remove(window);
+                    // 못 풀었으면 다음 주기에 다시 시도한다
+                    if (SetConcealed(window, false))
+                        _concealed.Remove(window);
                 }
             }
 
             // 가려 둔 채 닫힌 창은 잊는다
-            _cloaked.RemoveWhere(window => new WindowInteropHelper(window).Handle == IntPtr.Zero);
+            _concealed.RemoveWhere(window => new WindowInteropHelper(window).Handle == IntPtr.Zero);
         }
 
         /// <summary>
@@ -366,21 +371,25 @@ namespace TWChatOverlay.Services
         }
 
         /// <summary>창 목록에서 숨겨 둔 창인지 — 보이지 않는 창에 자석 스냅이 붙지 않게 한다.</summary>
-        public bool IsHiddenInUnlock(Window window) => _cloaked.Contains(window);
+        public bool IsHiddenInUnlock(Window window) => _concealed.Contains(window);
 
         private void RestoreHiddenWindows()
         {
             _hiddenKeys.Clear();
-            foreach (Window window in _cloaked)
-                SetCloak(window, false);
-            _cloaked.Clear();
+            foreach (Window window in _concealed)
+                SetConcealed(window, false);
+            _concealed.Clear();
         }
 
         /// <summary>
-        /// 창을 화면에서만 가리거나 다시 보인다. Hide()를 쓰지 않는 이유: 메모·컨텐츠 창처럼 보임 상태가 바뀌면
-        /// "닫았다"고 설정에 적는 창이 있어, 잠깐 숨긴 것이 설정을 끄게 된다.
+        /// 창을 화면에서만 가리거나 다시 보인다 — 창 영역을 비워서 그리지도 클릭을 받지도 않게 한다.
+        ///  - Hide()를 쓰지 않는 이유: 메모·컨텐츠 창처럼 보임 상태가 바뀌면 "닫았다"고 설정에 적는 창이 있어,
+        ///    잠깐 숨긴 것이 설정을 끄게 된다.
+        ///  - DWM 가림(DWMWA_CLOAK)을 쓰지 않는 이유: 주인 창(채팅창)을 가리면 딸린 창(서브 채팅·경험치 추적·어밴던)이
+        ///    같이 가려지고, 주인 창이 가려진 동안에는 딸린 창만 따로 풀 수 없다 (0x80070057).
+        /// 창 영역은 창마다 따로라 서로 영향을 주지 않는다.
         /// </summary>
-        private static bool SetCloak(Window window, bool cloak)
+        private static bool SetConcealed(Window window, bool conceal)
         {
             try
             {
@@ -388,18 +397,20 @@ namespace TWChatOverlay.Services
                 if (handle == IntPtr.Zero)
                     return false;
 
-                int value = cloak ? 1 : 0;
-                int result = NativeMethods.DwmSetWindowAttribute(handle, NativeMethods.DWMWA_CLOAK, ref value, sizeof(int));
-                if (result != 0)
+                IntPtr region = conceal ? NativeMethods.CreateRectRgn(0, 0, 0, 0) : IntPtr.Zero;
+                if (NativeMethods.SetWindowRgn(handle, region, true) == 0)
                 {
-                    AppLogger.Warn($"Unlock window cloak({cloak}) failed for {GetFriendlyName(window)}: 0x{result:X8}.");
+                    // 실패하면 영역 핸들은 아직 우리 것이다
+                    if (region != IntPtr.Zero)
+                        NativeMethods.DeleteObject(region);
+                    AppLogger.Warn($"Unlock window conceal({conceal}) failed for {GetFriendlyName(window)}.");
                     return false;
                 }
                 return true;
             }
             catch (Exception ex)
             {
-                AppLogger.Warn("Unlock window cloak failed.", ex);
+                AppLogger.Warn("Unlock window conceal failed.", ex);
                 return false;
             }
         }
