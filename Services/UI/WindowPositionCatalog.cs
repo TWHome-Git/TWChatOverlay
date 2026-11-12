@@ -134,7 +134,7 @@ namespace TWChatOverlay.Services
                 s => (s.RecaptureSupplyPadOrderWindowLeft, s.RecaptureSupplyPadOrderWindowTop),
                 (s, l, t) => { s.RecaptureSupplyPadOrderWindowLeft = l; s.RecaptureSupplyPadOrderWindowTop = t; },
                 (s, l, t) => MoveStored<RecaptureSupplyPadOrderWindow>(s)),
-            new("운명 선고 캡처", WindowPositionScope.Always,
+            new("운명 선고 순서", WindowPositionScope.Always,
                 s => (s.DoomSentenceCaptureWindowLeft, s.DoomSentenceCaptureWindowTop),
                 (s, l, t) => { s.DoomSentenceCaptureWindowLeft = l; s.DoomSentenceCaptureWindowTop = t; },
                 (s, l, t) => MoveStored<DoomSentenceCaptureWindow>(s)),
