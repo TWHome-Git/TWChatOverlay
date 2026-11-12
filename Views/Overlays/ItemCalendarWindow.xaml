@@ -63,6 +63,86 @@
                 </Setter.Value>
             </Setter>
         </Style>
+
+        <!-- 날짜 칸의 아이템 — 텍스트 모드: 이름과 개수를 한 줄에 -->
+        <DataTemplate x:Key="CalendarEntryTextTemplate">
+            <Border Background="{DynamicResource OverlayCardBackgroundBrush}"
+                    BorderBrush="{Binding BorderBrush}"
+                    BorderThickness="1"
+                    CornerRadius="5"
+                    Padding="4,3"
+                    Margin="0,0,4,4"
+                    ToolTip="{Binding DisplayText}">
+                <TextBlock Text="{Binding DisplayText}"
+                           Foreground="{DynamicResource TextBrush}"
+                           FontSize="12"
+                           FontWeight="SemiBold"
+                           TextWrapping="NoWrap"
+                           TextTrimming="CharacterEllipsis"
+                           VerticalAlignment="Center"/>
+            </Border>
+        </DataTemplate>
+
+        <!-- 날짜 칸의 아이템 — 그림 모드: 아이콘만 네모 칸으로. 개수는 2개 이상일 때만 오른쪽 아래에 겹친다.
+             칸 크기는 CalendarIconPanel이 정한다 (칸이 작으면 개수 글자도 줄인다). 이미지가 없는 아이템은 이름 첫 글자. -->
+        <DataTemplate x:Key="CalendarEntryIconTemplate">
+            <Border Background="{DynamicResource OverlayCardBackgroundBrush}"
+                    BorderBrush="{Binding BorderBrush}"
+                    BorderThickness="1"
+                    CornerRadius="4"
+                    SnapsToDevicePixels="True"
+                    ToolTip="{Binding DisplayText}">
+                <Grid>
+                    <Image Source="{Binding IconUri}"
+                           Stretch="Uniform"
+                           Margin="1"
+                           RenderOptions.BitmapScalingMode="HighQuality">
+                        <Image.Style>
+                            <Style TargetType="Image">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding HasIcon}" Value="False">
+                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Image.Style>
+                    </Image>
+                    <Viewbox Margin="3">
+                        <Viewbox.Style>
+                            <Style TargetType="Viewbox">
+                                <Setter Property="Visibility" Value="Collapsed"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding HasIcon}" Value="False">
+                                        <Setter Property="Visibility" Value="Visible"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Viewbox.Style>
+                        <TextBlock Text="{Binding SlotGlyph}"
+                                   Foreground="{DynamicResource TextBrush}"
+                                   FontWeight="Bold"/>
+                    </Viewbox>
+                    <Border HorizontalAlignment="Right"
+                            VerticalAlignment="Bottom"
+                            Margin="0,0,-1,-1"
+                            Padding="2,0"
+                            CornerRadius="3"
+                            Background="#E60D1210"
+                            Visibility="{Binding ShowStackCount, Converter={StaticResource BooleanToVisibilityConverter}}">
+                        <TextBlock x:Name="StackCount"
+                                   Text="{Binding StackCountText}"
+                                   Foreground="{DynamicResource TextBrush}"
+                                   FontSize="9.5"
+                                   FontWeight="Bold"/>
+                    </Border>
+                </Grid>
+            </Border>
+            <DataTemplate.Triggers>
+                <DataTrigger Binding="{Binding Path=(views:CalendarIconPanel.IsCompact), RelativeSource={RelativeSource AncestorType=ContentPresenter}}" Value="True">
+                    <Setter TargetName="StackCount" Property="FontSize" Value="8.5"/>
+                </DataTrigger>
+            </DataTemplate.Triggers>
+        </DataTemplate>
     </ov:OverlayWindowBase.Resources>
 
     <Border Background="{DynamicResource OverlayWindowBackgroundBrush}"
@@ -236,18 +316,38 @@
                                                            VerticalAlignment="Center"/>
                                             </Border>
 
+                                            <!-- 텍스트 모드: 한 줄에 하나씩, 넘치면 휠로 넘긴다 (스크롤 막대는 숨김).
+                                                 그림 모드: 넘기지 않고 칸 안에 전부 보이게 아이콘 칸 크기를 맞춘다 (CalendarIconPanel). -->
                                             <ScrollViewer Grid.Row="1"
                                                           Margin="0,6,0,0"
-                                                          VerticalScrollBarVisibility="Hidden"
                                                           HorizontalScrollBarVisibility="Disabled"
                                                           CanContentScroll="False"
-                                                          VerticalAlignment="Stretch"
-                                                          Padding="0,0,0,14">
-                                                <!-- Top 고정: 스크롤 영역이 세로로 늘려도 항목 높이가 커지지 않게 -->
+                                                          VerticalAlignment="Stretch">
+                                                <ScrollViewer.Style>
+                                                    <Style TargetType="ScrollViewer" BasedOn="{StaticResource {x:Type ScrollViewer}}">
+                                                        <Setter Property="VerticalScrollBarVisibility" Value="Hidden"/>
+                                                        <Setter Property="Padding" Value="0,0,0,14"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding DataContext.UseIconDisplay, RelativeSource={RelativeSource AncestorType=Window}}" Value="True">
+                                                                <Setter Property="VerticalScrollBarVisibility" Value="Disabled"/>
+                                                                <Setter Property="Padding" Value="0"/>
+                                                            </DataTrigger>
+                                                            <!-- 경험의 정수 표시가 있는 날은 그 줄만큼 아래를 비운다 -->
+                                                            <MultiDataTrigger>
+                                                                <MultiDataTrigger.Conditions>
+                                                                    <Condition Binding="{Binding DataContext.UseIconDisplay, RelativeSource={RelativeSource AncestorType=Window}}" Value="True"/>
+                                                                    <Condition Binding="{Binding HasExperienceEssence}" Value="True"/>
+                                                                </MultiDataTrigger.Conditions>
+                                                                <Setter Property="Padding" Value="0,0,0,20"/>
+                                                            </MultiDataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </ScrollViewer.Style>
+                                                <!-- Top 고정: 영역을 세로로 늘려도 항목 높이가 커지지 않게 -->
                                                 <ItemsControl ItemsSource="{Binding Entries}" VerticalAlignment="Top">
                                                     <ItemsControl.Style>
                                                         <Style TargetType="ItemsControl">
-                                                            <!-- 텍스트 모드: 한 줄에 1개 -->
+                                                            <Setter Property="ItemTemplate" Value="{StaticResource CalendarEntryTextTemplate}"/>
                                                             <Setter Property="ItemsPanel">
                                                                 <Setter.Value>
                                                                     <ItemsPanelTemplate>
@@ -256,12 +356,12 @@
                                                                 </Setter.Value>
                                                             </Setter>
                                                             <Style.Triggers>
-                                                                <!-- 그림 모드: 한 줄에 2개 -->
                                                                 <DataTrigger Binding="{Binding DataContext.UseIconDisplay, RelativeSource={RelativeSource AncestorType=Window}}" Value="True">
+                                                                    <Setter Property="ItemTemplate" Value="{StaticResource CalendarEntryIconTemplate}"/>
                                                                     <Setter Property="ItemsPanel">
                                                                         <Setter.Value>
                                                                             <ItemsPanelTemplate>
-                                                                                <UniformGrid Columns="2"/>
+                                                                                <views:CalendarIconPanel/>
                                                                             </ItemsPanelTemplate>
                                                                         </Setter.Value>
                                                                     </Setter>
@@ -269,114 +369,6 @@
                                                             </Style.Triggers>
                                                         </Style>
                                                     </ItemsControl.Style>
-                                                    <ItemsControl.ItemTemplate>
-                                                        <!-- 아이콘이 있는 아이템은 이미지(+개수), 없는 아이템은 기존 텍스트 -->
-                                                        <DataTemplate>
-                                                            <Border Background="{DynamicResource OverlayCardBackgroundBrush}"
-                                                                    BorderBrush="{Binding BorderBrush}"
-                                                                    BorderThickness="1"
-                                                                    CornerRadius="5"
-                                                                    Padding="4,3"
-                                                                    Margin="0,0,4,4"
-                                                                    ToolTip="{Binding DisplayText}">
-                                                                <!-- 표시 우선순위(그림 모드): 아이콘 > 글자 대체([테]) > 텍스트.
-                                                                     텍스트 모드(UseIconDisplay=false)에서는 항상 텍스트만.
-                                                                     가시성은 로컬 값 우선순위 문제를 피하려고 전부 Style 트리거로 제어. -->
-                                                                <DockPanel LastChildFill="True">
-                                                                    <TextBlock x:Name="EntryCount"
-                                                                               DockPanel.Dock="Right"
-                                                                               Text="{Binding CountBadgeText}"
-                                                                               Foreground="{DynamicResource TextBrush}"
-                                                                               FontSize="12"
-                                                                               FontWeight="SemiBold"
-                                                                               VerticalAlignment="Center"
-                                                                               Margin="3,0,0,0">
-                                                                        <TextBlock.Style>
-                                                                            <Style TargetType="TextBlock">
-                                                                                <Setter Property="Visibility" Value="Visible"/>
-                                                                                <Style.Triggers>
-                                                                                    <DataTrigger Binding="{Binding ShowCountBadge}" Value="False">
-                                                                                        <Setter Property="Visibility" Value="Collapsed"/>
-                                                                                    </DataTrigger>
-                                                                                    <DataTrigger Binding="{Binding DataContext.UseIconDisplay, RelativeSource={RelativeSource AncestorType=Window}}" Value="False">
-                                                                                        <Setter Property="Visibility" Value="Collapsed"/>
-                                                                                    </DataTrigger>
-                                                                                </Style.Triggers>
-                                                                            </Style>
-                                                                        </TextBlock.Style>
-                                                                    </TextBlock>
-                                                                    <TextBlock x:Name="EntryText"
-                                                                               Text="{Binding DisplayText}"
-                                                                               Foreground="{DynamicResource TextBrush}"
-                                                                               FontSize="12"
-                                                                               FontWeight="SemiBold"
-                                                                               TextWrapping="NoWrap"
-                                                                               TextTrimming="CharacterEllipsis"
-                                                                               VerticalAlignment="Center">
-                                                                        <TextBlock.Style>
-                                                                            <Style TargetType="TextBlock">
-                                                                                <Setter Property="Visibility" Value="Collapsed"/>
-                                                                                <Style.Triggers>
-                                                                                    <DataTrigger Binding="{Binding HasIcon}" Value="False">
-                                                                                        <Setter Property="Visibility" Value="Visible"/>
-                                                                                    </DataTrigger>
-                                                                                    <DataTrigger Binding="{Binding HasGlyph}" Value="True">
-                                                                                        <Setter Property="Visibility" Value="Collapsed"/>
-                                                                                    </DataTrigger>
-                                                                                    <DataTrigger Binding="{Binding DataContext.UseIconDisplay, RelativeSource={RelativeSource AncestorType=Window}}" Value="False">
-                                                                                        <Setter Property="Visibility" Value="Visible"/>
-                                                                                    </DataTrigger>
-                                                                                </Style.Triggers>
-                                                                            </Style>
-                                                                        </TextBlock.Style>
-                                                                    </TextBlock>
-                                                                    <!-- 높이 고정: 모든 아이콘 칩이 동일한 크기로 표시 -->
-                                                                    <Grid>
-                                                                        <Image x:Name="EntryIcon"
-                                                                               Source="{Binding IconUri}"
-                                                                               Stretch="Uniform"
-                                                                               Height="30"
-                                                                               VerticalAlignment="Center">
-                                                                            <Image.Style>
-                                                                                <Style TargetType="Image">
-                                                                                    <Setter Property="Visibility" Value="Visible"/>
-                                                                                    <Style.Triggers>
-                                                                                        <DataTrigger Binding="{Binding HasIcon}" Value="False">
-                                                                                            <Setter Property="Visibility" Value="Collapsed"/>
-                                                                                        </DataTrigger>
-                                                                                        <DataTrigger Binding="{Binding DataContext.UseIconDisplay, RelativeSource={RelativeSource AncestorType=Window}}" Value="False">
-                                                                                            <Setter Property="Visibility" Value="Collapsed"/>
-                                                                                        </DataTrigger>
-                                                                                    </Style.Triggers>
-                                                                                </Style>
-                                                                            </Image.Style>
-                                                                        </Image>
-                                                                        <TextBlock x:Name="EntryGlyph"
-                                                                                   Text="{Binding FallbackGlyph}"
-                                                                                   Foreground="{DynamicResource TextBrush}"
-                                                                                   FontSize="20"
-                                                                                   FontWeight="Bold"
-                                                                                   HorizontalAlignment="Center"
-                                                                                   VerticalAlignment="Center">
-                                                                            <TextBlock.Style>
-                                                                                <Style TargetType="TextBlock">
-                                                                                    <Setter Property="Visibility" Value="Collapsed"/>
-                                                                                    <Style.Triggers>
-                                                                                        <DataTrigger Binding="{Binding HasGlyph}" Value="True">
-                                                                                            <Setter Property="Visibility" Value="Visible"/>
-                                                                                        </DataTrigger>
-                                                                                        <DataTrigger Binding="{Binding DataContext.UseIconDisplay, RelativeSource={RelativeSource AncestorType=Window}}" Value="False">
-                                                                                            <Setter Property="Visibility" Value="Collapsed"/>
-                                                                                        </DataTrigger>
-                                                                                    </Style.Triggers>
-                                                                                </Style>
-                                                                            </TextBlock.Style>
-                                                                        </TextBlock>
-                                                                    </Grid>
-                                                                </DockPanel>
-                                                            </Border>
-                                                        </DataTemplate>
-                                                    </ItemsControl.ItemTemplate>
                                                 </ItemsControl>
                                             </ScrollViewer>
                                             <StackPanel Grid.Row="1"

@@ -497,11 +497,16 @@ namespace TWChatOverlay.Views
                     SetButtonActive(BtnShoutReplay, false);
                 };
             }
-            _shoutReplayWindow.Show();
-            _shoutReplayWindow.Dispatcher.BeginInvoke(new Action(() =>
+            // 아래 예약 작업이 돌기 전에 창이 닫히면(버튼을 연달아 눌렀을 때) 필드가 null이 되므로 창을 따로 잡아 둔다
+            ShoutReplayWindow window = _shoutReplayWindow;
+            window.Show();
+            window.Dispatcher.BeginInvoke(new Action(() =>
             {
-                _shoutReplayWindow.Activate();
-                _shoutReplayWindow.Focus();
+                if (!ReferenceEquals(_shoutReplayWindow, window) || !window.IsLoaded)
+                    return;
+
+                window.Activate();
+                window.Focus();
                 SetButtonActive(BtnShoutReplay, true);
             }), System.Windows.Threading.DispatcherPriority.Input);
         }

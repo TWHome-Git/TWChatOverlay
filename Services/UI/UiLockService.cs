@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -12,7 +14,8 @@ namespace TWChatOverlay.Services
     /// 잠금 해제 모드(Unlock Mode): 오버레이 창 이동은 이 모드에서만 허용됩니다.
     /// 모드가 켜지면 화면 전체가 살짝 어두워지며 격자가 표시되고(클릭 통과),
     /// 주 모니터 상단 중앙에 안내/완료 배너가 뜹니다. 모드를 끝내면 모든 창이 잠깁니다.
-    /// 보조 창(격자·배너·하이라이트·인스펙터)은 Views/Overlays/Unlock에 있고, 이 서비스는 상태·선택·z-순서만 든다.
+    /// 보조 창(격자·배너·창 목록·하이라이트·인스펙터)은 Views/Overlays/Unlock에 있고, 이 서비스는 상태·선택·z-순서만 든다.
+    /// 창 목록에서 체크를 푼 창은 잠금 해제 동안만 화면에서 가린다 — 설정은 바꾸지 않고, 잠그면 전부 다시 보인다.
     /// </summary>
     public sealed class UiLockService
     {
@@ -20,7 +23,13 @@ namespace TWChatOverlay.Services
         private BannerWindow? _banner;
         private HighlightWindow? _highlight;
         private InspectorWindow? _inspector;
+        private WindowListWindow? _windowList;
         private Window? _selected;
+
+        // 창 목록에서 숨긴 창의 키. 잠금 해제 동안만 유지한다 (설정에 쓰지 않는다)
+        private readonly HashSet<string> _hiddenKeys = new(StringComparer.Ordinal);
+        // 실제로 가려 둔 창. 다시 보이게 할 때 풀어야 한다
+        private readonly HashSet<Window> _concealed = new();
 
         public bool IsUnlocked { get; private set; }
 
@@ -30,9 +39,12 @@ namespace TWChatOverlay.Services
         private bool _isAdjustingSelected; // 인스펙터發 이동/크기 변경 중 (스냅 제외)
         private bool _isSnappingSelected;  // 스냅 적용 중 재진입 방지
 
-        /// <summary>잠금 해제 모드의 보조 UI(격자/배너/하이라이트/인스펙터)인지 — 스냅 대상에서 제외.</summary>
+        /// <summary>잠금 해제 모드의 보조 UI(격자/배너/창 목록/하이라이트/인스펙터)인지 — 스냅 대상에서 제외.</summary>
         public static bool IsUnlockChrome(Window window)
-            => window is BackdropWindow or BannerWindow or HighlightWindow or InspectorWindow;
+            => window is BackdropWindow or BannerWindow or WindowListWindow or HighlightWindow or InspectorWindow;
+
+        /// <summary>선택한 창이 바뀌었다 (창 목록의 선택 표시용).</summary>
+        internal event Action? SelectionChanged;
 
         /// <summary>모드 변경 시 발생. 인자 = 새 잠금 해제 상태.</summary>
         public event Action<bool>? UnlockChanged;
@@ -66,11 +78,16 @@ namespace TWChatOverlay.Services
                     _banner ??= new BannerWindow();
                     _backdrop.Show();
                     _banner.Show();
+                    _windowList ??= new WindowListWindow();
+                    _windowList.Show();
                     RaiseOverlaysAboveBackdrop();
                 }
                 else
                 {
                     ClearSelection();
+                    // 창 목록에서 숨겨 둔 창을 전부 다시 보이게 한다
+                    RestoreHiddenWindows();
+                    CloseQuietly(ref _windowList);
                     // 격자 백드롭은 가상 화면 전체 크기의 투명 창이라 숨겨두면 그만큼 메모리를 계속 차지한다.
                     // 잠금 해제가 끝나면 닫고, 다음 진입 때 새로 만든다.
                     CloseQuietly(ref _banner);
@@ -124,6 +141,8 @@ namespace TWChatOverlay.Services
             {
                 AppLogger.Warn("Unlock selection UI failed.", ex);
             }
+
+            SelectionChanged?.Invoke();
         }
 
         private void Selected_Closed(object? sender, EventArgs e) => ClearSelection();
@@ -164,7 +183,270 @@ namespace TWChatOverlay.Services
             // 선택 UI도 대기시키지 않고 닫는다 — 다음 선택 때 새로 만든다
             CloseQuietly(ref _highlight);
             CloseQuietly(ref _inspector);
+            SelectionChanged?.Invoke();
         }
+
+        #region 창 목록 (배치하는 동안만 숨기기)
+
+        /// <summary>창 목록의 한 줄. 같은 종류의 창이 여러 개면(알림 여러 장) 한 줄로 묶는다.</summary>
+        internal readonly record struct ListedWindow(string Key, string Name, bool IsHidden, bool IsSelected);
+
+        /// <summary>
+        /// 창 목록에 올릴 창인지: 지금 떠 있고, 잠금 해제 모드에서만 옮길 수 있는 오버레이 창.
+        /// 잠금 상태에서도 언제든 끌 수 있는 창(달력·메모·일일/주간 컨텐츠·외치기 다시 보기·사냥 기록·주간 득템 통계·
+        /// 던전 타이머·디버그 로그 테스트)은 배치하려고 잠금을 풀 필요가 없으므로 뺀다.
+        /// </summary>
+        private static bool IsListable(Window window)
+            => window.IsVisible
+               && !IsUnlockChrome(window)
+               && (window is TWChatOverlay.Views.OverlayWindowBase { MovesOnlyWhenUnlocked: true }
+                   || window is TWChatOverlay.Views.MainWindow
+                   || window is TWChatOverlay.Views.SubAddonWindow
+                   || window.GetType().Name == "ToastStackPreviewWindow");
+
+        private static string GetListKey(Window window)
+            => window is TWChatOverlay.Views.ChatCloneWindow clone
+                ? $"ChatCloneWindow{clone.Slot}"
+                : $"{window.GetType().Name}|{GetFriendlyName(window)}";
+
+        /// <summary>채팅창을 먼저, 나머지는 이름순.</summary>
+        private static int GetListRank(Window window)
+            => window is TWChatOverlay.Views.MainWindow ? 0 : window is TWChatOverlay.Views.ChatCloneWindow ? 1 : 2;
+
+        /// <summary>지금 떠 있는 창을 목록 줄로 만든다.</summary>
+        internal IReadOnlyList<ListedWindow> GetListedWindows()
+        {
+            var rows = new Dictionary<string, (int Rank, string Name, bool Selected)>(StringComparer.Ordinal);
+            var app = Application.Current;
+            if (app != null)
+            {
+                foreach (Window window in app.Windows)
+                {
+                    if (!IsListable(window))
+                        continue;
+
+                    string key = GetListKey(window);
+                    bool selected = ReferenceEquals(window, _selected);
+                    rows[key] = rows.TryGetValue(key, out var row)
+                        ? (row.Rank, row.Name, row.Selected || selected)
+                        : (GetListRank(window), GetFriendlyName(window), selected);
+                }
+            }
+
+            return rows
+                .OrderBy(pair => pair.Value.Rank)
+                .ThenBy(pair => pair.Value.Name, StringComparer.CurrentCulture)
+                .Select(pair => new ListedWindow(pair.Key, pair.Value.Name, _hiddenKeys.Contains(pair.Key), pair.Value.Selected))
+                .ToList();
+        }
+
+        /// <summary>목록의 한 줄을 숨기거나 다시 보인다 (잠금 해제 동안만).</summary>
+        internal void SetListedHidden(string key, bool hidden)
+        {
+            if (!IsUnlocked)
+                return;
+
+            if (hidden)
+                _hiddenKeys.Add(key);
+            else
+                _hiddenKeys.Remove(key);
+            ApplyHiddenState();
+        }
+
+        /// <summary>목록의 창을 전부 숨기거나 전부 보인다.</summary>
+        internal void SetAllListedHidden(bool hidden)
+        {
+            if (!IsUnlocked)
+                return;
+
+            if (hidden)
+            {
+                foreach (ListedWindow row in GetListedWindows())
+                    _hiddenKeys.Add(row.Key);
+            }
+            else
+            {
+                _hiddenKeys.Clear();
+            }
+            ApplyHiddenState();
+        }
+
+        /// <summary>
+        /// 숨긴 줄에 해당하는 창은 가리고 아닌 창은 푼다. 잠금 해제 중 새로 뜬 창(미리보기를 다시 만드는 경우)도
+        /// 여기서 걸리도록 창 목록이 주기적으로 부른다.
+        /// </summary>
+        internal void ApplyHiddenState()
+        {
+            var app = Application.Current;
+            if (app == null)
+                return;
+
+            foreach (Window window in app.Windows)
+            {
+                if (!IsListable(window))
+                    continue;
+
+                string key = GetListKey(window);
+                bool shouldHide = _hiddenKeys.Contains(key);
+                bool isConcealed = _concealed.Contains(window);
+                if (shouldHide && !isConcealed)
+                {
+                    if (SetConcealed(window, true))
+                    {
+                        _concealed.Add(window);
+                        if (ReferenceEquals(window, _selected))
+                            ClearSelection();
+                    }
+                    else
+                    {
+                        // 가리지 못했으면 목록도 보이는 상태로 되돌린다
+                        _hiddenKeys.Remove(key);
+                    }
+                }
+                else if (!shouldHide && isConcealed)
+                {
+                    // 못 풀었으면 다음 주기에 다시 시도한다
+                    if (SetConcealed(window, false))
+                        _concealed.Remove(window);
+                }
+            }
+
+            // 가려 둔 채 닫힌 창은 잊는다
+            _concealed.RemoveWhere(window => new WindowInteropHelper(window).Handle == IntPtr.Zero);
+        }
+
+        /// <summary>
+        /// 목록에서 이름을 눌렀을 때: 숨겨 둔 창이면 다시 보이고, 화면 밖으로 나가 있으면 보이는 곳으로 끌어온 뒤,
+        /// 다른 창 위로 올려 선택한다.
+        /// </summary>
+        internal void SelectListed(string key)
+        {
+            if (!IsUnlocked)
+                return;
+
+            if (_hiddenKeys.Remove(key))
+                ApplyHiddenState();
+
+            Window? target = null;
+            var app = Application.Current;
+            if (app != null)
+            {
+                foreach (Window window in app.Windows)
+                {
+                    if (IsListable(window) && GetListKey(window) == key)
+                    {
+                        target = window;
+                        break;
+                    }
+                }
+            }
+            if (target == null)
+                return;
+
+            try
+            {
+                var (left, top) = ScreenBoundsHelper.ClampToVirtualScreen(target.Left, target.Top, target.ActualWidth, target.ActualHeight);
+                if (Math.Abs(left - target.Left) > 0.5 || Math.Abs(top - target.Top) > 0.5)
+                {
+                    target.Left = left;
+                    target.Top = top;
+                    WindowAdjusted?.Invoke(target);
+                }
+
+                RaiseToTopmost(target);
+            }
+            catch (Exception ex)
+            {
+                AppLogger.Warn("Unlock list selection failed.", ex);
+            }
+
+            Select(target);
+
+            // 올린 창이 배너·창 목록을 덮지 않게 다시 올린다. 조절 패널은 그보다도 위.
+            if (_banner?.IsVisible == true)
+                RaiseToTopmost(_banner);
+            if (_windowList?.IsVisible == true)
+                RaiseToTopmost(_windowList);
+            _inspector?.BringToFront();
+        }
+
+        /// <summary>
+        /// 목록의 한 줄을 눌렀을 때: 숨겨 둔 창이거나 아직 선택되지 않은 창이면 보이게 하고 선택한다.
+        /// 이미 선택된 창의 줄을 한 번 더 누르면 배치하는 동안 숨긴다.
+        /// </summary>
+        internal void ToggleListed(string key)
+        {
+            if (!IsUnlocked)
+                return;
+
+            foreach (ListedWindow row in GetListedWindows())
+            {
+                if (row.Key != key)
+                    continue;
+
+                if (!row.IsHidden && row.IsSelected)
+                    SetListedHidden(key, true);
+                else
+                    SelectListed(key);
+                return;
+            }
+        }
+
+        /// <summary>창 목록에서 숨겨 둔 창인지 — 보이지 않는 창에 자석 스냅이 붙지 않게 한다.</summary>
+        public bool IsHiddenInUnlock(Window window) => _concealed.Contains(window);
+
+        private void RestoreHiddenWindows()
+        {
+            _hiddenKeys.Clear();
+            foreach (Window window in _concealed)
+                SetConcealed(window, false);
+            _concealed.Clear();
+        }
+
+        /// <summary>
+        /// 창을 화면에서만 가리거나 다시 보인다 — 창 영역을 비워서 그리지도 클릭을 받지도 않게 한다.
+        ///  - Hide()를 쓰지 않는 이유: 메모·컨텐츠 창처럼 보임 상태가 바뀌면 "닫았다"고 설정에 적는 창이 있어,
+        ///    잠깐 숨긴 것이 설정을 끄게 된다.
+        ///  - DWM 가림(DWMWA_CLOAK)을 쓰지 않는 이유: 주인 창(채팅창)을 가리면 딸린 창(서브 채팅·경험치 추적·어밴던)이
+        ///    같이 가려지고, 주인 창이 가려진 동안에는 딸린 창만 따로 풀 수 없다 (0x80070057).
+        /// 창 영역은 창마다 따로라 서로 영향을 주지 않는다.
+        /// </summary>
+        private static bool SetConcealed(Window window, bool conceal)
+        {
+            try
+            {
+                IntPtr handle = new WindowInteropHelper(window).Handle;
+                if (handle == IntPtr.Zero)
+                    return false;
+
+                IntPtr region = conceal ? NativeMethods.CreateRectRgn(0, 0, 0, 0) : IntPtr.Zero;
+                if (NativeMethods.SetWindowRgn(handle, region, true) == 0)
+                {
+                    // 실패하면 영역 핸들은 아직 우리 것이다
+                    if (region != IntPtr.Zero)
+                        NativeMethods.DeleteObject(region);
+                    AppLogger.Warn($"Unlock window conceal({conceal}) failed for {GetFriendlyName(window)}.");
+                    return false;
+                }
+                return true;
+            }
+            catch (Exception ex)
+            {
+                AppLogger.Warn("Unlock window conceal failed.", ex);
+                return false;
+            }
+        }
+
+        private static void RaiseToTopmost(Window window)
+        {
+            IntPtr handle = new WindowInteropHelper(window).Handle;
+            if (handle == IntPtr.Zero)
+                return;
+            NativeMethods.SetWindowPos(handle, NativeMethods.HWND_TOPMOST, 0, 0, 0, 0,
+                NativeMethods.SWP_NOMOVE | NativeMethods.SWP_NOSIZE | NativeMethods.SWP_NOACTIVATE);
+        }
+
+        #endregion
 
         /// <summary>보조 창을 닫고 참조를 비운다. 이미 닫혔거나 예외가 나도 무시.</summary>
         private void CloseQuietly<T>(ref T? window) where T : Window

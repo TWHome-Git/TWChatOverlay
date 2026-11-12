@@ -595,19 +595,7 @@ namespace TWChatOverlay.Views
             _startupLoadingWindow.Show();
             _startupLoadingWindow.SetCancelEnabled(true);
             _startupLoadingWindow.UpdateProgress(5, "초기화 진행 중...");
-            if (LogDisplay != null)
-            {
-                LogDisplay.BeginChange();
-                try
-                {
-                    LogDisplay.Document.Blocks.Clear();
-                }
-                finally
-                {
-                    LogDisplay.EndChange();
-                    LogDisplay.UpdateLayout();
-                }
-            }
+            LogDisplay?.Clear();
         }
 
         private void UpdateStartupLoadingProgress(double value, string statusText)

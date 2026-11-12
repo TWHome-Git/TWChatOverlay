@@ -34,11 +34,7 @@ namespace TWChatOverlay.Views
             this.CurrentFont = nextFont;
             this.CurrentFontSize = _settings.FontSize;
 
-            if (LogDisplay != null)
-            {
-                LogDisplay.FontFamily = nextFont;
-                LogDisplay.FontSize = _settings.FontSize;
-            }
+            // 채팅 표시는 CurrentFont·CurrentFontSize에 묶여 있어 값이 바뀌면 스스로 다시 배치한다
 
             foreach (Window window in Application.Current.Windows)
             {

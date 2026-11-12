@@ -80,6 +80,21 @@ namespace TWChatOverlay
         [DllImport("user32.dll", SetLastError = true)]
         public static extern bool UnregisterHotKey(IntPtr hWnd, int id);
 
+        // ----- 창 가림 (잠금 해제 모드 창 목록) -----
+
+        /// <summary>
+        /// 창이 그려지고 클릭을 받는 영역을 정한다. 빈 영역을 주면 화면에서 사라지고, 0을 주면 원래대로 돌아온다.
+        /// 앱이 보는 상태(IsVisible)와 위치는 그대로다. 성공하면 영역 핸들은 시스템 것이 된다.
+        /// </summary>
+        [DllImport("user32.dll")]
+        public static extern int SetWindowRgn(IntPtr hWnd, IntPtr hRgn, bool bRedraw);
+
+        [DllImport("gdi32.dll")]
+        public static extern IntPtr CreateRectRgn(int left, int top, int right, int bottom);
+
+        [DllImport("gdi32.dll")]
+        public static extern bool DeleteObject(IntPtr handle);
+
         // ----- 모니터 열거 (ScreenBoundsHelper) -----
 
         public const int SM_XVIRTUALSCREEN = 76;

@@ -127,6 +127,7 @@ namespace TWChatOverlay.Models
             // 장비류는 표시명이 묶음이라 대표 아이콘(소드) 사용
             ["어비스장비"] = "어비스_소드.png",
             ["이클립스장비"] = "이클립스_소드.png",
+            ["테네브리스장비"] = "테네브리스_소드.png",
 
             // 어비스/이클립스 개별 장비 — 실제 아이템명으로 표시 (자동 생성 매핑)
             ["어비스건틀렛"] = "어비스_건틀렛.png",
@@ -233,6 +234,46 @@ namespace TWChatOverlay.Models
             ["이클립스핸드벨"] = "이클립스_핸드벨.png",
             ["이클립스헬름"] = "이클립스_헬름.png",
             ["이클립스휩"] = "이클립스_휩.png",
+
+            // 테네브리스 개별 장비 — 장비 표에 있는 38종 전부 (무기 31, 손목 2, 장비 세트 5). 로브·메일·방패 등은 테네브리스에 없다
+            ["테네브리스건틀렛"] = "테네브리스_건틀렛.png",
+            ["테네브리스글라디우스(sub)"] = "테네브리스_글라디우스(sub).png",
+            ["테네브리스글라디우스"] = "테네브리스_글라디우스.png",
+            ["테네브리스나이프"] = "테네브리스_나이프.png",
+            ["테네브리스대거"] = "테네브리스_대거.png",
+            ["테네브리스레이피어"] = "테네브리스_레이피어.png",
+            ["테네브리스로드"] = "테네브리스_로드.png",
+            ["테네브리스마나피스톨"] = "테네브리스_마나피스톨.png",
+            ["테네브리스망토"] = "테네브리스_망토.png",
+            ["테네브리스메이스"] = "테네브리스_메이스.png",
+            ["테네브리스부츠"] = "테네브리스_부츠.png",
+            ["테네브리스블레이드"] = "테네브리스_블레이드.png",
+            ["테네브리스사이드"] = "테네브리스_사이드.png",
+            ["테네브리스셉터"] = "테네브리스_셉터.png",
+            ["테네브리스소드"] = "테네브리스_소드.png",
+            ["테네브리스소드셰이프"] = "테네브리스_소드셰이프.png",
+            ["테네브리스스몰소드"] = "테네브리스_스몰소드.png",
+            ["테네브리스스태프"] = "테네브리스_스태프.png",
+            ["테네브리스스틱"] = "테네브리스_스틱.png",
+            ["테네브리스스피어"] = "테네브리스_스피어.png",
+            ["테네브리스시미터"] = "테네브리스_시미터.png",
+            ["테네브리스아뮬렛"] = "테네브리스_아뮬렛.png",
+            ["테네브리스아밍소드"] = "테네브리스_아밍소드.png",
+            ["테네브리스액스"] = "테네브리스_액스.png",
+            ["테네브리스완드"] = "테네브리스_완드.png",
+            ["테네브리스카라"] = "테네브리스_카라.png",
+            ["테네브리스크리스(sub)"] = "테네브리스_크리스(sub).png",
+            ["테네브리스크리스"] = "테네브리스_크리스.png",
+            ["테네브리스클로"] = "테네브리스_클로.png",
+            ["테네브리스토템"] = "테네브리스_토템.png",
+            ["테네브리스페이크소드"] = "테네브리스_페이크소드.png",
+            ["테네브리스플레일"] = "테네브리스_플레일.png",
+            ["테네브리스피스톨"] = "테네브리스_피스톨.png",
+            ["테네브리스해머"] = "테네브리스_해머.png",
+            ["테네브리스핸드런처"] = "테네브리스_핸드런처.png",
+            ["테네브리스핸드벨"] = "테네브리스_핸드벨.png",
+            ["테네브리스헬름"] = "테네브리스_헬름.png",
+            ["테네브리스휩"] = "테네브리스_휩.png",
             ["아크론문양"] = "아크론_요새의_문양.png",
             ["변환장비"] = "아크론_요새의_변환_장치.png",
 
@@ -338,7 +379,6 @@ namespace TWChatOverlay.Models
             Grade = grade;
             Count = Math.Max(1, count);
             IconUri = ResolveIconUri(displayName);
-            FallbackGlyph = ResolveFallbackGlyph(displayName);
         }
 
         public string DisplayName { get; }
@@ -351,21 +391,15 @@ namespace TWChatOverlay.Models
         public string? IconUri { get; }
         public bool HasIcon => IconUri != null;
 
-        /// <summary>이미지가 없는 아이템의 한 글자 대체 표기 (예: 테네브리스 → "테").</summary>
-        public string? FallbackGlyph { get; }
-        public bool HasGlyph => !HasIcon && FallbackGlyph != null;
+        /// <summary>그림 모드의 네모 칸에 아이콘 대신 쓸 글자 — 이미지가 없는 아이템은 이름 첫 글자.</summary>
+        public string SlotGlyph => DisplayName.Length > 0 ? DisplayName.Substring(0, char.IsSurrogatePair(DisplayName, 0) ? 2 : 1) : "?";
 
-        public bool ShowCountBadge => HasIcon || HasGlyph;
-        public string CountBadgeText => $"x{Count:N0}";
-
-        private static string? ResolveFallbackGlyph(string displayName)
-        {
-            // 테네브리스 장비: 아직 이미지를 구할 수 없어 임시로 [테] 글자 표기
-            if (!string.IsNullOrEmpty(displayName) && displayName.StartsWith("테네브리스", StringComparison.Ordinal))
-                return "테";
-
-            return null;
-        }
+        /// <summary>그림 모드에서 개수를 아이콘 위에 겹쳐 보일지 — 2개 이상일 때만.</summary>
+        public bool ShowStackCount => Count >= 2;
+        // 작은 칸에 들어가게 1000 이상은 천 단위로 줄인다 (정확한 수는 도구 설명에 나온다)
+        public string StackCountText => Count >= 1000
+            ? (Count / 1000).ToString(CultureInfo.InvariantCulture) + "k"
+            : Count.ToString(CultureInfo.InvariantCulture);
 
         private static string? ResolveIconUri(string displayName)
         {

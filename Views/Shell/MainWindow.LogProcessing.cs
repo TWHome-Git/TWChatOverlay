@@ -66,7 +66,6 @@ namespace TWChatOverlay.Views
         // 이번 배치에서 탭 버퍼에 줄이 들어갔는지 — 서브 창 알림은 배치 끝에 한 번만 보낸다
         private bool _buffersChangedInBatch;
 
-        private readonly LogDocumentRenderer _logDocumentRenderer = new(200);
         private readonly object _reflectionEndAlertTimerLock = new();
         private readonly HashSet<DispatcherTimer> _reflectionEndAlertTimers = new();
 
@@ -78,10 +77,8 @@ namespace TWChatOverlay.Views
 
             bool shouldAutoScroll = ChatDisplay?.IsAutoScrollEnabled == true;
 
-            if (LogDisplay != null)
-            {
-                LogDisplay.BeginChange();
-            }
+            // 배치 동안 스크롤 계산을 한 번으로 모은다
+            LogDisplay?.BeginUpdate();
 
             try
             {
@@ -122,10 +119,9 @@ namespace TWChatOverlay.Views
             {
                 if (LogDisplay != null)
                 {
-                    // EndChange 이후 레이아웃은 WPF가 다음 렌더 틱에 알아서 수행한다 — 동기 강제 패스 불필요
-                    LogDisplay.EndChange();
+                    LogDisplay.EndUpdate();
                     if (shouldAutoScroll)
-                        ScrollLogDisplayToEndAfterLayout();
+                        LogDisplay.ScrollToEnd();
                 }
 
                 if (_buffersChangedInBatch)
@@ -636,39 +632,19 @@ namespace TWChatOverlay.Views
             _buffersChangedInBatch = true;
         }
 
-        /// <summary>문단 하나를 채팅 문서에 더한다. 스크롤은 하지 않는다 — 호출자가 배치 끝에서 <see cref="ScrollLogDisplayToEndAfterLayout"/>를 부른다.</summary>
+        /// <summary>줄 하나를 채팅 표시에 더한다. 스크롤은 하지 않는다 — 호출자가 배치 끝에서 맨 아래로 내린다.</summary>
         private void AddToUI(LogParser.ParseResult log, bool isRealTime = false)
         {
             if (LogDisplay == null) return;
 
-            FontFamily safeFont = this.CurrentFont ?? FontService.GetFont(_settings.FontFamily);
-            if (safeFont == null)
-                safeFont = new FontFamily("Malgun Gothic");
-
-            // 서브 채팅창과 같은 렌더러 — 메인 창만 마법진 배경·Wave.wav를 쓰고, 소리는 경험치 서비스 준비 뒤에만
-            _logDocumentRenderer.AddLog(
-                LogDisplay.Document,
+            // 서브 채팅창과 같은 규칙으로 그린다 — 메인 창만 마법진 배경·Wave.wav를 쓰고, 소리는 경험치 서비스 준비 뒤에만
+            ChatLineRenderer.AddLog(
+                LogDisplay,
                 log,
                 _settings,
-                safeFont,
-                _settings.FontSize,
                 isRealTime,
                 canPlayAlertSound: _expService.IsReady,
                 useMagicCircleAlert: true);
-        }
-
-        private void ScrollLogDisplayToEndAfterLayout()
-        {
-            var logDisplay = LogDisplay;
-            if (logDisplay == null) return;
-
-            logDisplay.ScrollToEnd();
-
-            // 새 문단의 레이아웃이 끝난 뒤(ContextIdle) 진짜 끝으로 한 번 더 — UpdateLayout 강제는 불필요
-            Dispatcher.BeginInvoke(new Action(() =>
-            {
-                LogDisplay?.ScrollToEnd();
-            }), DispatcherPriority.ContextIdle);
         }
 
         private void RequestRefreshLogDisplay(bool force = false)
@@ -692,10 +668,10 @@ namespace TWChatOverlay.Views
                 bool shouldAutoScroll = ChatDisplay?.IsAutoScrollEnabled == true;
 
                 ResetHiddenChatContinuationState();
-                LogDisplay.BeginChange();
+                LogDisplay.BeginUpdate();
                 try
                 {
-                    LogDisplay.Document.Blocks.Clear();
+                    LogDisplay.Clear();
 
                     var logs = _logTabBufferStore.GetLogs(_currentTabTag);
                     foreach (var log in logs)
@@ -709,12 +685,9 @@ namespace TWChatOverlay.Views
                 }
                 finally
                 {
-                    LogDisplay.EndChange();
-                    LogDisplay.InvalidateMeasure();
-                    LogDisplay.InvalidateVisual();
-                    LogDisplay.UpdateLayout();
+                    LogDisplay.EndUpdate();
                     if (shouldAutoScroll)
-                        ScrollLogDisplayToEndAfterLayout();
+                        LogDisplay.ScrollToEnd();
                 }
             }), DispatcherPriority.Background);
         }

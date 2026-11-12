@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
-using System.Windows.Documents;
 using System.Windows.Media;
 using TWChatOverlay.Models;
 
@@ -111,35 +110,19 @@ namespace TWChatOverlay.Services
             return segments;
         }
 
-        /// <summary>조각들을 Run으로 만들어 문단에 넣는다. 색상 동기화가 켜져 있으면 전부 기본 색.</summary>
-        public static void AppendRuns(Paragraph paragraph, IReadOnlyList<ChatSegment> segments, Brush baseBrush, ChatSettings settings)
+        /// <summary>
+        /// 조각의 개별 색. 항목별 색상 동기화가 꺼진 항목만 색을 돌려주고, 나머지는 null(줄 색을 따른다).
+        /// </summary>
+        public static Brush? ResolveSegmentBrush(ChatSegment segment, ChatSettings settings) => segment.Kind switch
         {
-            foreach (var segment in segments)
-            {
-                if (segment.Text.Length == 0)
-                    continue;
-
-                var run = new Run(segment.Text);
-                // 항목별 색상 동기화: 꺼진 항목만 개별 색을 칠하고, 나머지는 줄 색을 따른다
-                Brush? brush = segment.Kind switch
-                {
-                    ChatSegmentKind.SenderId when !settings.SenderIdColorSync => ChatBrushResolver.ToBrush(settings.SenderIdColor),
-                    ChatSegmentKind.Timestamp when !settings.TimestampColorSync => ChatBrushResolver.ToBrush(settings.TimestampColor),
-                    // 에타 레벨: 동기화 해제 시 구간(레벨별) 색을 사용한다
-                    ChatSegmentKind.EtaLevel when !settings.EtaLevelColorSync => EtaLevelRangeBrush(segment.Text, settings),
-                    ChatSegmentKind.Character when !settings.EtaCharacterColorSync => ChatBrushResolver.ToBrush(settings.EtaCharacterColor),
-                    ChatSegmentKind.IdTag when !settings.IdTagColorSync => ChatBrushResolver.ToBrush(settings.IdTagColor),
-                    _ => null,
-                };
-                if (brush != null)
-                    run.Foreground = brush;
-
-                paragraph.Inlines.Add(run);
-            }
-
-            // 기본 색은 문단 단위로 — 지정하지 않은 조각은 이 색을 물려받는다
-            paragraph.Foreground = baseBrush;
-        }
+            ChatSegmentKind.SenderId when !settings.SenderIdColorSync => ChatBrushResolver.ToBrush(settings.SenderIdColor),
+            ChatSegmentKind.Timestamp when !settings.TimestampColorSync => ChatBrushResolver.ToBrush(settings.TimestampColor),
+            // 에타 레벨: 동기화 해제 시 구간(레벨별) 색을 사용한다
+            ChatSegmentKind.EtaLevel when !settings.EtaLevelColorSync => EtaLevelRangeBrush(segment.Text, settings),
+            ChatSegmentKind.Character when !settings.EtaCharacterColorSync => ChatBrushResolver.ToBrush(settings.EtaCharacterColor),
+            ChatSegmentKind.IdTag when !settings.IdTagColorSync => ChatBrushResolver.ToBrush(settings.IdTagColor),
+            _ => null,
+        };
 
         /// <summary>"[N]" 형태의 레벨 텍스트에서 숫자를 읽어 구간(1~20/21~40/41~60/61~80/81~90/91~) 색을 고른다.</summary>
         private static Brush? EtaLevelRangeBrush(string text, ChatSettings settings)

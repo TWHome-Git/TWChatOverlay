@@ -1,7 +1,5 @@
-﻿using System;
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Media;
 
 namespace TWChatOverlay.Views
 {
@@ -10,75 +8,33 @@ namespace TWChatOverlay.Views
     /// </summary>
     public partial class ChatView : UserControl
     {
-        private ScrollViewer? _scrollViewer;
-
         public static readonly DependencyProperty IsAutoScrollEnabledProperty =
             DependencyProperty.Register(nameof(IsAutoScrollEnabled), typeof(bool), typeof(ChatView), new PropertyMetadata(true));
 
         public ChatView()
         {
             InitializeComponent();
-            Loaded += ChatView_Loaded;
+            // 스크롤 막대는 스크롤 뷰어가 맞춘다. 여기서는 맨 아래를 보고 있는지만 따라간다 (▼ 버튼 표시, 새 줄 따라가기)
+            LogDisplay.ScrollMetricsChanged += (_, _) =>
+            {
+                bool atEnd = LogDisplay.IsAtEnd;
+                if (IsAutoScrollEnabled != atEnd)
+                    IsAutoScrollEnabled = atEnd;
+            };
         }
 
+        /// <summary>맨 아래를 보고 있는지. 위로 올려 보는 중이면 새 줄이 와도 따라 내려가지 않는다.</summary>
         public bool IsAutoScrollEnabled
         {
             get => (bool)GetValue(IsAutoScrollEnabledProperty);
             private set => SetValue(IsAutoScrollEnabledProperty, value);
         }
 
-        public RichTextBox LogDisplayControl => LogDisplay;
-
-        private void ChatView_Loaded(object sender, RoutedEventArgs e)
-        {
-            if (_scrollViewer != null) return;
-
-            _scrollViewer = FindDescendant<ScrollViewer>(LogDisplay);
-            if (_scrollViewer == null) return;
-
-            _scrollViewer.ScrollChanged += ScrollViewer_ScrollChanged;
-            UpdateAutoScrollState();
-        }
-
-        private void ScrollViewer_ScrollChanged(object sender, ScrollChangedEventArgs e)
-        {
-            UpdateAutoScrollState();
-        }
-
-        private void UpdateAutoScrollState()
-        {
-            if (_scrollViewer == null) return;
-
-            if (_scrollViewer.ScrollableHeight <= 0)
-            {
-                IsAutoScrollEnabled = true;
-                return;
-            }
-
-            IsAutoScrollEnabled = Math.Abs(_scrollViewer.VerticalOffset - _scrollViewer.ScrollableHeight) < 1.0;
-        }
+        public ChatLineDisplay LogDisplayControl => LogDisplay;
 
         private void ScrollToBottom_Click(object sender, RoutedEventArgs e)
         {
             LogDisplay.ScrollToEnd();
-            UpdateAutoScrollState();
-        }
-
-        private static T? FindDescendant<T>(DependencyObject root) where T : DependencyObject
-        {
-            int count = VisualTreeHelper.GetChildrenCount(root);
-            for (int i = 0; i < count; i++)
-            {
-                var child = VisualTreeHelper.GetChild(root, i);
-                if (child is T typed)
-                    return typed;
-
-                var result = FindDescendant<T>(child);
-                if (result != null)
-                    return result;
-            }
-
-            return null;
         }
     }
 }

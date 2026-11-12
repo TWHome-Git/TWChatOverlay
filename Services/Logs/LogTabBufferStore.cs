@@ -149,7 +149,7 @@ namespace TWChatOverlay.Services
                         log.Brush = brushFactory(log);
                     }
 
-                    // 이미 그려진 문단은 옛 브러시를 물고 있으므로 소비자가 전체를 다시 그리게 한다
+                    // 이미 그려진 줄은 옛 브러시를 물고 있으므로 소비자가 전체를 다시 그리게 한다
                     _generation[pair.Key] = _generation.GetValueOrDefault(pair.Key) + 1;
                 }
             }
