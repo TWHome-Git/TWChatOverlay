@@ -199,8 +199,11 @@ namespace TWChatOverlay.Models
         public int DoomSentenceCaptureBurstFrames { get; set; } = 6;
         /// <summary>이어 찍는 간격(ms). 공지는 3초쯤 떠 있으니 지연 + (장 수 - 1) × 간격이 그 안에 들어야 한다.</summary>
         public int DoomSentenceCaptureBurstIntervalMilliseconds { get; set; } = 350;
-        /// <summary>찍은 원본 화면을 Logs/DoomSentence 에 PNG로 남길지 (최근 20장). 자를 자리를 맞출 때 본다.</summary>
-        public bool SaveDoomSentenceCapture { get; set; } = true;
+        /// <summary>
+        /// 찍은 화면과 인식 기록을 Logs/DoomSentence 에 남길지. 기본은 끔 — 평소에는 읽고 버린다 (2026-11-12 사용자).
+        /// 자를 자리를 맞추거나 인식이 틀릴 때만 켜서 살펴본다.
+        /// </summary>
+        public bool SaveDoomSentenceCapture { get; set; } = false;
         /// <summary>놀라움의 격리실 가면 기믹: 보스가 감정 가면을 쓰면 부술 상성 가면을 그림으로 표시.</summary>
         public bool ShowMaskGimmickAlert { get; set; } = true;
         /// <summary>가면 창 유지 시간(초). "파훼 성공" 줄이 오면 그 전에 닫힌다.</summary>

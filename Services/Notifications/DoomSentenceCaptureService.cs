@@ -27,7 +27,9 @@ namespace TWChatOverlay.Services
     /// 같을 때만 보여 주고, 두 번 이어 같은 순서가 나오거나 마지막 장까지 가면 "확인 중" 표시를 뗀다.
     /// 끝내 못 읽으면(또는 한글 인식기가 없으면) 찍은 화면을 대신 보여 준다.
     ///
-    /// 찍은 그림(원본 한 장 · 잘라 낸 장들 · 합친 그림)과 인식 기록(_ocr.txt)은 Logs/DoomSentence 에 남긴다.
+    /// 순서 창은 이어 찍는 2초쯤만 화면 캡처에서 빼고(자기 자신이 찍혀 공지를 가리지 않게) 다 읽으면 다시 찍히게 돌려놓는다.
+    /// 찍은 그림은 읽고 나면 버린다. 설정에서 '캡처 원본 저장'을 켰을 때만(영역을 맞추거나 인식이 틀릴 때 살펴보는 용도)
+    /// 원본 한 장 · 잘라 낸 장들 · 합친 그림과 인식 기록(_ocr.txt)을 Logs/DoomSentence 에 남긴다 (2026-11-12 사용자: 실제 동작에서는 저장하지 않는다).
     /// 줄 판독은 <see cref="DoomSentenceLogParser"/>, 화면 찍기는 <see cref="ScreenCaptureHelper"/>가 한다.
     /// 실시간 줄만 넘겨받는다 (MainWindow.LogProcessing) — 시작할 때 지난 로그를 다시 읽으며 찍지 않게.
     /// </summary>
@@ -116,7 +118,7 @@ namespace TWChatOverlay.Services
                 var options = new CaptureOptions(
                     settings?.DoomSentenceCaptureDelayMilliseconds ?? DefaultDelayMilliseconds,
                     settings?.DoomSentenceCaptureRegion ?? DefaultRegionText,
-                    settings?.SaveDoomSentenceCapture ?? true,
+                    settings?.SaveDoomSentenceCapture ?? false,
                     settings?.TopmostGuardProcessNames,
                     settings?.DoomSentenceCaptureBurstFrames ?? 1,
                     settings?.DoomSentenceCaptureBurstIntervalMilliseconds ?? 350);
@@ -158,6 +160,8 @@ namespace TWChatOverlay.Services
                 DoomSentenceCaptureWindow window = EnsureWindow(settings);
                 string status = first.Shown == null ? first.Note ?? "화면을 찍지 못했습니다" : "순서 읽는 중…";
                 window.ShowRound(round, total, deadlineUtc, settings?.DoomSentenceCaptureScalePercent ?? 100, status);
+                // 이어 찍는 동안에는 이 창이 찍히지 않게 캡처에서 뺀다 (새 창은 만들 때 이미 빠져 있다). 다 읽은 뒤 RestoreCaptureAsync 가 돌려놓는다
+                window.SetCaptureExcluded(true);
 
                 if (first.Shown != null && !canRead)
                     window.ShowFallbackImage(first.Shown, "한글 글자 인식기가 없어 찍은 화면을 보여 줍니다 (Windows 설정 > 언어에 한국어 추가)");
@@ -167,7 +171,10 @@ namespace TWChatOverlay.Services
             }));
 
             if (!canRead || !IsCurrent(generation))
+            {
+                await RestoreCaptureAsync().ConfigureAwait(false);
                 return;
+            }
 
             var recognition = new Recognition();
             try
@@ -202,6 +209,28 @@ namespace TWChatOverlay.Services
                 {
                     try { File.WriteAllText(first.FilePrefix + "_ocr.txt", recognition.Log.ToString(), Encoding.UTF8); } catch { }
                 }
+            }
+
+            await RestoreCaptureAsync().ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// 이어 찍기가 끝났다: 순서 창을 다시 화면 캡처에 나오게 돌려놓는다. 빼 둔 채로 두면 스크린샷 · 녹화에 화살표가 안 찍힌다.
+        /// </summary>
+        private async Task RestoreCaptureAsync()
+        {
+            try
+            {
+                await Application.Current.Dispatcher.BeginInvoke(new Action(() =>
+                {
+                    var window = _window;
+                    if (window != null && window.IsLoaded)
+                        window.SetCaptureExcluded(false);
+                }));
+            }
+            catch (Exception ex)
+            {
+                AppLogger.Warn("Failed to restore capture visibility of doom sentence window.", ex);
             }
         }
 

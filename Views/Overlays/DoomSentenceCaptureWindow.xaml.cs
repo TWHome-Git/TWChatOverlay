@@ -46,10 +46,25 @@ namespace TWChatOverlay.Views
         public bool IsPreviewMode { get; private set; }
 
         /// <summary>
-        /// 이 창이 화면 캡처에서 빠져 있는지 (창을 만들 때 시도한다). 빠져 있으면 공지 자리 위에 놓여 있어도
-        /// 이어 찍는 장에 이 창이 찍히지 않는다. 다른 캡처 도구(녹화·스크린샷)에도 이 창은 안 나온다.
+        /// 이 창이 지금 화면 캡처에서 빠져 있는지. 빠져 있으면 공지 자리 위에 놓여 있어도 이어 찍는 장에 이 창이 찍히지 않는다.
+        /// 빠져 있는 동안에는 다른 캡처 도구(녹화·스크린샷)에도 안 나오므로, 서비스가 순서를 읽는 2초쯤만 빼고 다시 돌려놓는다
+        /// (2026-11-12 사용자: 화살표가 왜 스샷에 안 찍히나).
         /// </summary>
         public bool IsExcludedFromCapture { get; private set; }
+
+        /// <summary>이 창을 화면 캡처에서 빼거나(true) 다시 찍히게(false) 한다. 창 핸들이 아직 없으면 아무것도 하지 않는다.</summary>
+        public void SetCaptureExcluded(bool excluded)
+        {
+            IntPtr hwnd = new WindowInteropHelper(this).Handle;
+            if (hwnd == IntPtr.Zero)
+                return;
+
+            bool ok = ScreenCaptureHelper.SetCaptureExclusion(hwnd, excluded);
+            if (ok)
+                IsExcludedFromCapture = excluded;
+            else if (excluded)
+                IsExcludedFromCapture = false; // 빼지 못했다: 서비스가 겹침을 보고 이어 찍을지 정한다
+        }
 
         public DoomSentenceCaptureWindow(ChatSettings? settings)
         {

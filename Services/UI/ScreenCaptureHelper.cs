@@ -89,17 +89,21 @@ namespace TWChatOverlay.Services
         [DllImport("user32.dll", SetLastError = true)]
         private static extern bool SetWindowDisplayAffinity(IntPtr hWnd, uint dwAffinity);
 
+        private const uint WDA_NONE = 0x00000000;
         private const uint WDA_EXCLUDEFROMCAPTURE = 0x00000011;
 
         /// <summary>
         /// 그 창을 화면 캡처에서 뺀다 (Windows 10 2004 이상). 성공하면 이 앱이 화면을 찍을 때도, 다른 캡처 도구가 찍을 때도 그 창은 안 나온다.
         /// 실패(옛 Windows 등)하면 false — 그때는 창이 찍힐 자리를 가리는지 직접 봐야 한다.
         /// </summary>
-        public static bool ExcludeFromCapture(IntPtr hwnd)
+        public static bool ExcludeFromCapture(IntPtr hwnd) => SetCaptureExclusion(hwnd, true);
+
+        /// <summary>그 창을 화면 캡처에서 빼거나(true) 다시 찍히게(false) 한다. 돌려주는 값은 호출이 성공했는지.</summary>
+        public static bool SetCaptureExclusion(IntPtr hwnd, bool exclude)
         {
             try
             {
-                return hwnd != IntPtr.Zero && SetWindowDisplayAffinity(hwnd, WDA_EXCLUDEFROMCAPTURE);
+                return hwnd != IntPtr.Zero && SetWindowDisplayAffinity(hwnd, exclude ? WDA_EXCLUDEFROMCAPTURE : WDA_NONE);
             }
             catch
             {
