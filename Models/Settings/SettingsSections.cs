@@ -156,6 +156,8 @@ namespace TWChatOverlay.Models
         public bool EtosDirectionAlert { get; set; } = true;
         public bool ShowEtosHelperWindow { get; set; } = false;
         public bool ReflectionPatternAlert { get; set; } = true;
+        /// <summary>신뢰의 격리실: 배신(반사) 구간 시작 · 끝에 반사 알림 소리. 볼륨은 반사 패턴 알림과 같이 쓴다.</summary>
+        public bool TrustReflectionAlert { get; set; } = true;
         /// <summary>감전 패턴: 방전에 걸린 동안 알림 창을 띄운다.</summary>
         public bool DischargeAlert { get; set; } = true;
         /// <summary>사냥 기록 창 글자 크기.</summary>

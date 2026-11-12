@@ -245,6 +245,7 @@ namespace TWChatOverlay.Views
                     case "DungeonTabRune": _dungeonSubTab = 0; break;
                     case "DungeonTabAbyss": _dungeonSubTab = 1; break;
                     case "DungeonTabEclipse": _dungeonSubTab = 2; break;
+                    case "DungeonTabRubicona": _dungeonSubTab = 6; break; // 이클립스와 어밴던로드 사이에 놓이지만 번호는 뒤에 붙였다 (기존 번호 유지)
                     case "DungeonTabAbandon": _dungeonSubTab = 3; break;
                     case "DungeonTabCraving": _dungeonSubTab = 4; break;
                     case "DungeonTabTimer": _dungeonSubTab = 5; break;

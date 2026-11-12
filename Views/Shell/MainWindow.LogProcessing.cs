@@ -53,6 +53,7 @@ namespace TWChatOverlay.Views
         private RecaptureSupplyPadOrderService? _recaptureSupplyPadOrderServiceCache;
         private DoomSentenceCaptureService? _doomSentenceCaptureServiceCache;
         private MaskGimmickService? _maskGimmickServiceCache;
+        private TrustGimmickAlertService? _trustGimmickAlertServiceCache;
         private ContentTimerService? _contentTimerServiceCache;
         private ItemDropToastService? _itemDropToastServiceCache;
         private ShoutToastService? _shoutToastServiceCache;
@@ -63,6 +64,7 @@ namespace TWChatOverlay.Views
         private RecaptureSupplyPadOrderService RecaptureSupplyPadOrderServiceInstance => _recaptureSupplyPadOrderServiceCache ??= AppServices.Get<RecaptureSupplyPadOrderService>();
         private DoomSentenceCaptureService DoomSentenceCaptureServiceInstance => _doomSentenceCaptureServiceCache ??= AppServices.Get<DoomSentenceCaptureService>();
         private MaskGimmickService MaskGimmickServiceInstance => _maskGimmickServiceCache ??= AppServices.Get<MaskGimmickService>();
+        private TrustGimmickAlertService TrustGimmickAlertServiceInstance => _trustGimmickAlertServiceCache ??= AppServices.Get<TrustGimmickAlertService>();
         private ContentTimerService ContentTimerServiceInstance => _contentTimerServiceCache ??= AppServices.Get<ContentTimerService>();
         private ItemDropToastService ItemDropToastServiceInstance => _itemDropToastServiceCache ??= AppServices.Get<ItemDropToastService>();
         private ShoutToastService ShoutToastServiceInstance => _shoutToastServiceCache ??= AppServices.Get<ShoutToastService>();
@@ -338,6 +340,10 @@ namespace TWChatOverlay.Views
             // 놀라움의 격리실 가면 기믹: 부술 상성 가면을 띄운다 (실시간 시스템 줄만)
             if (shouldRunLiveUiEffects && analysis.IsSystemLog)
                 GuardSideEffect("mask-gimmick", () => MaskGimmickServiceInstance.Observe(parseResult.FormattedText));
+
+            // 신뢰의 격리실: 배신(반사) 구간 시작 · 끝 소리 (실시간 시스템 줄만)
+            if (shouldRunLiveUiEffects && analysis.IsSystemLog)
+                GuardSideEffect("trust-gimmick", () => TrustGimmickAlertServiceInstance.Observe(parseResult.FormattedText));
 
             // 던전 타이머: 시스템 줄과 보스 대사(일반 흰 글, 분류표에 없는 색은 Unknown)만 본다 — 팀·클럽·외치기에 같은 말이 섞여도 반응하지 않는다.
             // 실시간 줄만 본다 — 시작 시 과거 로그를 다시 읽으며 타이머가 도는 것을 막는다.

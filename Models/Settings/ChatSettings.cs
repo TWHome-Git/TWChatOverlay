@@ -531,6 +531,9 @@ namespace TWChatOverlay.Models
         public bool ShowEtosHelperWindow { get => Alerts.Dungeon.ShowEtosHelperWindow; set { Alerts.Dungeon.ShowEtosHelperWindow = value; OnPropertyChanged(); } }
         [JsonIgnore]
         public bool EnableReflectionPatternAlert { get => Alerts.Dungeon.ReflectionPatternAlert; set { Alerts.Dungeon.ReflectionPatternAlert = value; OnPropertyChanged(); } }
+        /// <summary>신뢰의 격리실: 배신(반사) 구간 시작 · 끝에 반사 알림 소리.</summary>
+        [JsonIgnore]
+        public bool EnableTrustReflectionAlert { get => Alerts.Dungeon.TrustReflectionAlert; set { if (Alerts.Dungeon.TrustReflectionAlert == value) return; Alerts.Dungeon.TrustReflectionAlert = value; OnPropertyChanged(); } }
         [JsonIgnore]
         public bool EnableDischargeAlert { get => Alerts.Dungeon.DischargeAlert; set { Alerts.Dungeon.DischargeAlert = value; OnPropertyChanged(); } }
         [JsonIgnore]

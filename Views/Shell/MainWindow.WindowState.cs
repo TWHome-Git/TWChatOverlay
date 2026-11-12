@@ -249,6 +249,8 @@ namespace TWChatOverlay.Views
                                 AppServices.Get<RecaptureSupplyAlertService>().ShowPositionPreview(_settings, force: true);
                             if (_settings.ShowRecaptureSupplyPadOrder)
                                 AppServices.Get<RecaptureSupplyPadOrderService>().ShowPositionPreview(_settings);
+                            break;
+                        case 6: // 루비코나(감정 격리실): 운명 선고 순서 + 가면 안내
                             if (_settings.ShowDoomSentenceCapture)
                                 AppServices.Get<DoomSentenceCaptureService>().ShowPositionPreview(_settings);
                             if (_settings.ShowMaskGimmickAlert)

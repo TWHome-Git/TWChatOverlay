@@ -1094,6 +1094,8 @@
                                      ToolTip="룬 경험치 던전 및 테시스 코어 던전"/>
                         <RadioButton x:Name="DungeonTabAbyss" Content="어비스" GroupName="DungeonTabs" Checked="AddonSubTab_Checked" Style="{StaticResource SettingsTabStyle}"/>
                         <RadioButton x:Name="DungeonTabEclipse" Content="이클립스" GroupName="DungeonTabs" Checked="AddonSubTab_Checked" Style="{StaticResource SettingsTabStyle}"/>
+                        <RadioButton x:Name="DungeonTabRubicona" Content="루비코나" GroupName="DungeonTabs" Checked="AddonSubTab_Checked" Style="{StaticResource SettingsTabStyle}"
+                                     ToolTip="감정 격리실"/>
                         <RadioButton x:Name="DungeonTabAbandon" Content="어밴던로드" GroupName="DungeonTabs" Checked="AddonSubTab_Checked" Style="{StaticResource SettingsTabStyle}"/>
                         <RadioButton x:Name="DungeonTabCraving" Content="갈망하는 즐거움" GroupName="DungeonTabs" Checked="AddonSubTab_Checked" Style="{StaticResource SettingsTabStyle}"/>
                         <RadioButton x:Name="DungeonTabTimer" Content="던전 타이머" GroupName="DungeonTabs" Checked="AddonSubTab_Checked" Style="{StaticResource SettingsTabStyle}"/>
@@ -1255,6 +1257,22 @@
                     </Border>
                     <Border Style="{StaticResource SettingsRowStyle}">
                         <DockPanel>
+                            <CheckBox DockPanel.Dock="Right" IsChecked="{Binding Settings.ShowRecaptureSupplyMap, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                <TextBlock Text="보급품 탈환 미니 지도" Style="{StaticResource SettingsRowLabelStyle}"/>
+                                <Button Style="{StaticResource HelpButtonStyle}" Tag="dungeon.recapture_map" Click="Help_Click"/>
+                            </StackPanel>
+                        </DockPanel>
+                    </Border>
+                </WrapPanel>
+                </StackPanel>
+
+                <!-- 루비코나: 감정 격리실 (설계자의 잔재) — 운명 선고 순서 · 가면 안내 · 신뢰 반사 알림 -->
+                <StackPanel Visibility="{Binding IsChecked, ElementName=DungeonTabRubicona, Converter={StaticResource BooleanToVisibilityConverter}}">
+                <TextBlock Text="감정 격리실" Style="{StaticResource SettingsSectionLabelStyle}" Margin="0,0,0,6"/>
+                <WrapPanel>
+                    <Border Style="{StaticResource SettingsRowStyle}">
+                        <DockPanel>
                             <CheckBox DockPanel.Dock="Right" IsChecked="{Binding Settings.ShowDoomSentenceCapture, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
                             <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                                 <TextBlock Text="운명 선고 순서 표시" Style="{StaticResource SettingsRowLabelStyle}"/>
@@ -1310,10 +1328,10 @@
                     </Border>
                     <Border Style="{StaticResource SettingsRowStyle}">
                         <DockPanel>
-                            <CheckBox DockPanel.Dock="Right" IsChecked="{Binding Settings.ShowRecaptureSupplyMap, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
+                            <CheckBox DockPanel.Dock="Right" IsChecked="{Binding Settings.EnableTrustReflectionAlert, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
                             <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                <TextBlock Text="보급품 탈환 미니 지도" Style="{StaticResource SettingsRowLabelStyle}"/>
-                                <Button Style="{StaticResource HelpButtonStyle}" Tag="dungeon.recapture_map" Click="Help_Click"/>
+                                <TextBlock Text="신뢰의 격리실 반사 알림" Style="{StaticResource SettingsRowLabelStyle}"/>
+                                <Button Style="{StaticResource HelpButtonStyle}" Tag="dungeon.trust_reflection" Click="Help_Click"/>
                             </StackPanel>
                         </DockPanel>
                     </Border>

@@ -51,6 +51,7 @@ namespace TWChatOverlay.Services
         private DoomSentenceCaptureWindow? _window;
         private int _generation;        // 회차마다 올린다: 늦게 끝난 캡처가 다음 회차 창을 덮지 않게
         private volatile bool _roundActive;
+        private volatile int _roundTotal;   // 이번 회차의 발판 수 (다 밟았을 때 n / n 으로 채운다)
 
         /// <summary>한 회차의 캡처 설정 (UI 스레드에서 읽어 백그라운드로 넘긴다).</summary>
         private sealed record CaptureOptions(int DelayMilliseconds, string RegionText, bool Save, string? ProcessNames, int BurstFrames, int BurstIntervalMilliseconds);
@@ -79,6 +80,10 @@ namespace TWChatOverlay.Services
                 case DoomSentenceLogParser.LineKind.Triggered when _roundActive:
                     EndRound();
                     break;
+                case DoomSentenceLogParser.LineKind.Completed when _roundActive:
+                    // 마지막 발판은 "밟았습니다 (n / n)" 줄이 없다 — 이 줄이 완료 신호다 (2026-11-12 사용자)
+                    OnStep(_roundTotal, _roundTotal);
+                    break;
             }
         }
 
@@ -88,6 +93,7 @@ namespace TWChatOverlay.Services
             DateTime startedUtc = DateTime.UtcNow;
             // 바로 켜 둔다: 같은 묶음으로 들어온 다음 줄(밟음 · 발동)이 아래 예약보다 먼저 판독될 수 있다
             _roundActive = true;
+            _roundTotal = total;
 
             Application.Current.Dispatcher.BeginInvoke(new Action(() =>
             {
