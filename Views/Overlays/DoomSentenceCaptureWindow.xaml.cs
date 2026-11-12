@@ -30,9 +30,8 @@ namespace TWChatOverlay.Views
         // 제한 시간이 지난 뒤에도 "발동" 줄이 늦게 올 수 있어 조금 더 둔다. 줄이 오면 서비스가 바로 닫는다
         private static readonly TimeSpan LingerAfterDeadline = TimeSpan.FromSeconds(3);
 
-        // 표시 배율 100%일 때 아이콘 지름(DIP)과 한 줄에 놓는 수 (게임 공지도 넷씩 끊어 적는다)
-        private const double BaseIconSize = 84;
-        private const int IconsPerRow = 4;
+        // 표시 배율 100%일 때 아이콘 한 칸 크기(DIP). 여덟 개까지 한 줄로 늘어놓는다 (2026-11-12 사용자: 한 줄로, 조금 작게)
+        private const double BaseIconSize = 58;
 
         private readonly ChatSettings? _settings;
         private readonly DispatcherTimer _countdownTimer;
@@ -228,7 +227,6 @@ namespace TWChatOverlay.Views
             double gap = Math.Round(size * 0.1);
 
             OrderPanel.Children.Clear();
-            OrderPanel.MaxWidth = IconsPerRow * (size + gap * 2);
             for (int i = 0; i < _order.Count; i++)
             {
                 bool done = i < _done;

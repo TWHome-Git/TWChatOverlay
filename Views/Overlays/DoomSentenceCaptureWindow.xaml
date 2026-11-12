@@ -66,13 +66,13 @@
                            Margin="10,0,0,0"/>
             </Grid>
 
-            <!-- 밟을 순서: 둥근 색 버튼 위에 흰 화살표, 왼쪽에서 오른쪽으로 (한 줄에 넷, 게임 공지와 같은 줄바꿈).
-                 아이콘은 코드(BuildOrderIcons)가 만든다. 밟은 것은 흐리게, 다음에 밟을 것은 금색 테로 강조한다 -->
-            <WrapPanel x:Name="OrderPanel"
-                       Grid.Row="1"
-                       Orientation="Horizontal"
-                       HorizontalAlignment="Left"
-                       Visibility="Collapsed"/>
+            <!-- 밟을 순서: 색 화살표를 왼쪽에서 오른쪽으로 한 줄에 늘어놓는다 (여덟 개까지).
+                 아이콘은 코드(BuildOrderIcons)가 만든다. 밟은 것은 흐리게, 다음에 밟을 것은 금색 고리로 강조한다 -->
+            <StackPanel x:Name="OrderPanel"
+                        Grid.Row="1"
+                        Orientation="Horizontal"
+                        HorizontalAlignment="Left"
+                        Visibility="Collapsed"/>
 
             <!-- 읽는 중 · 못 읽음 같은 한 줄 안내 -->
             <TextBlock x:Name="StatusText"
