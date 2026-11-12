@@ -5,6 +5,10 @@ VisualStudioVersion = 17.14.37012.4
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TWChatOverlay", "TWChatOverlay.csproj", "{192DDF71-FDE2-4755-A872-B149FF45374F}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{0AB3BF05-4346-4AA6-1389-037BE0695223}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TWChatOverlay.Tests", "Tests\TWChatOverlay.Tests\TWChatOverlay.Tests.csproj", "{B7AFE1E8-62D8-4FF8-BA38-9A1E0F45D50B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,9 +31,24 @@ Global
 		{192DDF71-FDE2-4755-A872-B149FF45374F}.Release|x64.Build.0 = Release|Any CPU
 		{192DDF71-FDE2-4755-A872-B149FF45374F}.Release|x86.ActiveCfg = Release|Any CPU
 		{192DDF71-FDE2-4755-A872-B149FF45374F}.Release|x86.Build.0 = Release|Any CPU
+		{B7AFE1E8-62D8-4FF8-BA38-9A1E0F45D50B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B7AFE1E8-62D8-4FF8-BA38-9A1E0F45D50B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B7AFE1E8-62D8-4FF8-BA38-9A1E0F45D50B}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{B7AFE1E8-62D8-4FF8-BA38-9A1E0F45D50B}.Debug|x64.Build.0 = Debug|Any CPU
+		{B7AFE1E8-62D8-4FF8-BA38-9A1E0F45D50B}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{B7AFE1E8-62D8-4FF8-BA38-9A1E0F45D50B}.Debug|x86.Build.0 = Debug|Any CPU
+		{B7AFE1E8-62D8-4FF8-BA38-9A1E0F45D50B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B7AFE1E8-62D8-4FF8-BA38-9A1E0F45D50B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B7AFE1E8-62D8-4FF8-BA38-9A1E0F45D50B}.Release|x64.ActiveCfg = Release|Any CPU
+		{B7AFE1E8-62D8-4FF8-BA38-9A1E0F45D50B}.Release|x64.Build.0 = Release|Any CPU
+		{B7AFE1E8-62D8-4FF8-BA38-9A1E0F45D50B}.Release|x86.ActiveCfg = Release|Any CPU
+		{B7AFE1E8-62D8-4FF8-BA38-9A1E0F45D50B}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{B7AFE1E8-62D8-4FF8-BA38-9A1E0F45D50B} = {0AB3BF05-4346-4AA6-1389-037BE0695223}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {89B1EFBE-194C-4D98-B8D8-E64604D578D7}

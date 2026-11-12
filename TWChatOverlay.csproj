@@ -15,6 +15,14 @@
     <InformationalVersion>$(Version)</InformationalVersion>
   </PropertyGroup>
 
+  <!-- 테스트 프로젝트(Tests\)는 같은 저장소에 있지만 앱 빌드에는 섞이지 않게 뺀다. 테스트는 앱의 internal 멤버를 볼 수 있다 -->
+  <PropertyGroup>
+    <DefaultItemExcludes>$(DefaultItemExcludes);Tests\**</DefaultItemExcludes>
+  </PropertyGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="TWChatOverlay.Tests" />
+  </ItemGroup>
+
   <!-- 디버그 전용 코드는 Release 빌드에서 제외 (XAML은 #if를 못 쓰므로 빌드 조건으로) -->
   <ItemGroup Condition="'$(Configuration)' == 'Release'">
     <Page Remove="Views\Overlays\DebugLogTestWindow.xaml" />

@@ -169,6 +169,8 @@ namespace TWChatOverlay.Views
         }
 
         public int LineCount => _lines.Count;
+        /// <summary>첫 줄의 문서 좌표. 좌표를 앞으로 당기는 동작(RebaseIfNeeded)을 테스트에서 확인하는 용도.</summary>
+        internal double DocumentOrigin => _contentTop;
         /// <summary>스크롤할 수 있는 최대 거리.</summary>
         public double ScrollableHeight => Math.Max(0, ExtentHeight - ViewportHeight);
         /// <summary>맨 아래를 보고 있는지 (내용이 화면보다 짧으면 항상 true).</summary>
@@ -702,7 +704,37 @@ namespace TWChatOverlay.Views
             return Math.Max(0, Math.Min(line.Text.Length, hit.FirstCharacterIndex + hit.TrailingLength));
         }
 
-        private void ExtendSelectionTo(Point point)
+        /// <summary>점(화면 좌표)에서 선택을 시작한다. <paramref name="extend"/>면 기존 시작점은 두고 끝만 옮긴다 (Shift+클릭).</summary>
+        internal bool BeginSelection(Point point, bool extend)
+        {
+            TextPosition? position = HitTestPosition(point);
+            if (!position.HasValue)
+                return false;
+
+            if (extend && _selectionAnchor.HasValue)
+                _selectionActive = position;
+            else
+                _selectionAnchor = _selectionActive = position;
+            UpdateSelectionVisual();
+            return true;
+        }
+
+        /// <summary>점(화면 좌표)이 놓인 줄 전체를 선택한다 (두 번 누르기).</summary>
+        internal bool SelectLineAt(Point point)
+        {
+            TextPosition? position = HitTestPosition(point);
+            if (!position.HasValue)
+                return false;
+
+            Line line = position.Value.Line;
+            _selectionAnchor = new TextPosition(line, 0);
+            _selectionActive = new TextPosition(line, line.Text.Length);
+            UpdateSelectionVisual();
+            return true;
+        }
+
+        /// <summary>선택 끝을 점(화면 좌표)으로 옮긴다 (끌기).</summary>
+        internal void ExtendSelectionTo(Point point)
         {
             TextPosition? position = HitTestPosition(point);
             if (!position.HasValue)
@@ -731,7 +763,7 @@ namespace TWChatOverlay.Views
         /// 끌어서 선택하는 중 마우스가 영역 위·아래로 나가 있으면 그쪽으로 넘기고 선택 끝도 따라 옮긴다.
         /// 마우스를 멈추고 있어도 계속 넘어가도록 타이머가 부른다. 멀리 끌수록 빨리 넘긴다.
         /// </summary>
-        private void AutoScrollSelection(Point point)
+        internal void AutoScrollSelection(Point point)
         {
             double distance = point.Y < 0 ? point.Y : point.Y > ActualHeight ? point.Y - ActualHeight : 0;
             if (distance == 0)
@@ -747,30 +779,23 @@ namespace TWChatOverlay.Views
         {
             base.OnMouseLeftButtonDown(e);
             Focus();
-            TextPosition? position = HitTestPosition(e.GetPosition(this));
-            if (!position.HasValue)
-                return;
-
+            Point point = e.GetPosition(this);
             if (e.ClickCount >= 2)
             {
                 // 두 번 누르면 그 줄 전체
-                Line line = position.Value.Line;
-                _selectionAnchor = new TextPosition(line, 0);
-                _selectionActive = new TextPosition(line, line.Text.Length);
+                if (!SelectLineAt(point))
+                    return;
                 StopSelecting();
             }
             else
             {
-                if ((Keyboard.Modifiers & ModifierKeys.Shift) != 0 && _selectionAnchor.HasValue)
-                    _selectionActive = position;
-                else
-                    _selectionAnchor = _selectionActive = position;
+                if (!BeginSelection(point, extend: (Keyboard.Modifiers & ModifierKeys.Shift) != 0))
+                    return;
                 _isSelecting = true;
                 CaptureMouse();
                 _dragScrollTimer.Start();
             }
 
-            UpdateSelectionVisual();
             e.Handled = true;
         }
 
