@@ -82,11 +82,18 @@ namespace TWChatOverlay
 
         // ----- 창 가림 (잠금 해제 모드 창 목록) -----
 
-        /// <summary>창을 화면에서만 가린다. 앱이 보는 상태(IsVisible)는 그대로라 창별 표시 설정을 건드리지 않는다.</summary>
-        public const int DWMWA_CLOAK = 13;
+        /// <summary>
+        /// 창이 그려지고 클릭을 받는 영역을 정한다. 빈 영역을 주면 화면에서 사라지고, 0을 주면 원래대로 돌아온다.
+        /// 앱이 보는 상태(IsVisible)와 위치는 그대로다. 성공하면 영역 핸들은 시스템 것이 된다.
+        /// </summary>
+        [DllImport("user32.dll")]
+        public static extern int SetWindowRgn(IntPtr hWnd, IntPtr hRgn, bool bRedraw);
 
-        [DllImport("dwmapi.dll")]
-        public static extern int DwmSetWindowAttribute(IntPtr hwnd, int attribute, ref int value, int size);
+        [DllImport("gdi32.dll")]
+        public static extern IntPtr CreateRectRgn(int left, int top, int right, int bottom);
+
+        [DllImport("gdi32.dll")]
+        public static extern bool DeleteObject(IntPtr handle);
 
         // ----- 모니터 열거 (ScreenBoundsHelper) -----
 
