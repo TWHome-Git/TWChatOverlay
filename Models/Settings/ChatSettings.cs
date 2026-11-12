@@ -676,6 +676,32 @@ namespace TWChatOverlay.Models
                 OnPropertyChanged();
             }
         }
+        /// <summary>공지가 떠 있는 동안 이어 찍을 장 수 (1~12, 1이면 한 장만). 옛 설정 파일에 없으면 6.</summary>
+        [JsonIgnore]
+        public int DoomSentenceCaptureBurstFrames
+        {
+            get => Alerts.Dungeon.DoomSentenceCaptureBurstFrames < 1 ? 6 : Math.Min(12, Alerts.Dungeon.DoomSentenceCaptureBurstFrames);
+            set
+            {
+                int clamped = Math.Max(1, Math.Min(12, value));
+                if (Alerts.Dungeon.DoomSentenceCaptureBurstFrames == clamped) return;
+                Alerts.Dungeon.DoomSentenceCaptureBurstFrames = clamped;
+                OnPropertyChanged();
+            }
+        }
+        /// <summary>이어 찍는 간격(ms, 100~1000). 옛 설정 파일에 없으면 350.</summary>
+        [JsonIgnore]
+        public int DoomSentenceCaptureBurstIntervalMilliseconds
+        {
+            get => Alerts.Dungeon.DoomSentenceCaptureBurstIntervalMilliseconds < 1 ? 350 : Math.Max(100, Math.Min(1000, Alerts.Dungeon.DoomSentenceCaptureBurstIntervalMilliseconds));
+            set
+            {
+                int clamped = Math.Max(100, Math.Min(1000, value));
+                if (Alerts.Dungeon.DoomSentenceCaptureBurstIntervalMilliseconds == clamped) return;
+                Alerts.Dungeon.DoomSentenceCaptureBurstIntervalMilliseconds = clamped;
+                OnPropertyChanged();
+            }
+        }
         /// <summary>찍은 원본 화면을 Logs/DoomSentence 에 PNG로 남길지.</summary>
         [JsonIgnore]
         public bool SaveDoomSentenceCapture { get => Alerts.Dungeon.SaveDoomSentenceCapture; set { if (Alerts.Dungeon.SaveDoomSentenceCapture == value) return; Alerts.Dungeon.SaveDoomSentenceCapture = value; OnPropertyChanged(); } }

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Windows;
 using System.Windows.Input;
+using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Threading;
@@ -33,6 +34,12 @@ namespace TWChatOverlay.Views
         /// <summary>위치·크기 조정 미리보기로 떠 있는지. 미리보기는 저절로 닫히지 않는다.</summary>
         public bool IsPreviewMode { get; private set; }
 
+        /// <summary>
+        /// 이 창이 화면 캡처에서 빠져 있는지 (창을 만들 때 시도한다). 빠져 있으면 공지 자리 위에 놓여 있어도
+        /// 이어 찍는 장에 이 창이 찍히지 않는다. 다른 캡처 도구(녹화·스크린샷)에도 이 창은 안 나온다.
+        /// </summary>
+        public bool IsExcludedFromCapture { get; private set; }
+
         public DoomSentenceCaptureWindow(ChatSettings? settings)
         {
             _settings = settings;
@@ -50,6 +57,27 @@ namespace TWChatOverlay.Views
         protected override bool PersistBoundsOnChange => true;
         protected override bool PersistBoundsOnClose => true;
         protected override bool PassthroughWhenLocked => true;
+
+        protected override void OnSourceInitialized(EventArgs e)
+        {
+            base.OnSourceInitialized(e);
+            IsExcludedFromCapture = ScreenCaptureHelper.ExcludeFromCapture(new WindowInteropHelper(this).Handle);
+            if (!IsExcludedFromCapture)
+                AppLogger.Debug("Doom sentence window could not be excluded from capture; burst capture runs only when it does not cover the notice.");
+        }
+
+        /// <summary>이 창이 화면의 그 자리(픽셀)와 겹치는지. 겹치면 그 자리를 찍을 때 이 창이 같이 찍힌다.</summary>
+        public bool OverlapsScreenRect(ScreenCaptureHelper.PixelRect rect)
+        {
+            IntPtr hwnd = new WindowInteropHelper(this).Handle;
+            if (hwnd == IntPtr.Zero || !IsVisible || rect.IsEmpty)
+                return false;
+            if (!NativeMethods.GetWindowRect(hwnd, out NativeMethods.RECT own))
+                return true; // 모르면 겹친다고 보고 이어 찍지 않는다
+
+            return own.Left < rect.X + rect.Width && own.Right > rect.X &&
+                   own.Top < rect.Y + rect.Height && own.Bottom > rect.Y;
+        }
 
         /// <summary>찍은 그림과 회차 정보를 채우고 제한 시간이 끝날 때까지 띄운다. 이미 떠 있으면 내용만 바꾼다.</summary>
         /// <param name="image">잘라 낸 화면. 못 찍었으면 null (그때는 <paramref name="note"/>를 보여 준다).</param>
@@ -70,6 +98,17 @@ namespace TWChatOverlay.Views
 
             TimeSpan lifetime = deadlineUtc - DateTime.UtcNow + LingerAfterDeadline;
             StartAutoClose(lifetime < LingerAfterDeadline ? LingerAfterDeadline : lifetime);
+        }
+
+        /// <summary>그림만 바꾼다 (이어 찍은 장들을 합친 그림이 나올 때마다). 제목줄·남은 시간은 그대로 둔다.</summary>
+        public void UpdateImage(BitmapSource image)
+        {
+            if (IsPreviewMode || image == null)
+                return;
+
+            _image = image;
+            CaptureImage.Source = image;
+            ApplyImageSize();
         }
 
         /// <summary>밟은 수를 고친다 (로그의 "발판을 밟았습니다. (done / total)").</summary>

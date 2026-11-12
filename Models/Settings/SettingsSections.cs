@@ -190,6 +190,13 @@ namespace TWChatOverlay.Models
         public string DoomSentenceCaptureRegion { get; set; } = "34,17,32,15";
         /// <summary>잘라 낸 그림을 보여 주는 배율(%). 100이면 찍힌 픽셀 그대로의 크기이고 창이 거기에 맞춰진다.</summary>
         public int DoomSentenceCaptureScalePercent { get; set; } = 100;
+        /// <summary>
+        /// 공지가 떠 있는 동안 이어 찍을 장 수 (첫 장 포함, 1이면 한 장만). 여러 장을 픽셀별 중앙값으로 합쳐
+        /// 공지 글을 덮는 대미지 숫자를 덜어 낸다 (시험 중 — 설정 화면에는 없고 설정 파일에서만 바꾼다).
+        /// </summary>
+        public int DoomSentenceCaptureBurstFrames { get; set; } = 6;
+        /// <summary>이어 찍는 간격(ms). 공지는 3초쯤 떠 있으니 지연 + (장 수 - 1) × 간격이 그 안에 들어야 한다.</summary>
+        public int DoomSentenceCaptureBurstIntervalMilliseconds { get; set; } = 350;
         /// <summary>찍은 원본 화면을 Logs/DoomSentence 에 PNG로 남길지 (최근 20장). 자를 자리를 맞출 때 본다.</summary>
         public bool SaveDoomSentenceCapture { get; set; } = true;
         /// <summary>컨텐츠 타이머 창 표시 (아페티리아 입장~클리어 소요 시간).</summary>

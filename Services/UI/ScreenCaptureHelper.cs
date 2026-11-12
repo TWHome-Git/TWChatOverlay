@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
@@ -84,6 +85,27 @@ namespace TWChatOverlay.Services
 
         [DllImport("user32.dll")]
         private static extern bool IsIconic(IntPtr hWnd);
+
+        [DllImport("user32.dll", SetLastError = true)]
+        private static extern bool SetWindowDisplayAffinity(IntPtr hWnd, uint dwAffinity);
+
+        private const uint WDA_EXCLUDEFROMCAPTURE = 0x00000011;
+
+        /// <summary>
+        /// 그 창을 화면 캡처에서 뺀다 (Windows 10 2004 이상). 성공하면 이 앱이 화면을 찍을 때도, 다른 캡처 도구가 찍을 때도 그 창은 안 나온다.
+        /// 실패(옛 Windows 등)하면 false — 그때는 창이 찍힐 자리를 가리는지 직접 봐야 한다.
+        /// </summary>
+        public static bool ExcludeFromCapture(IntPtr hwnd)
+        {
+            try
+            {
+                return hwnd != IntPtr.Zero && SetWindowDisplayAffinity(hwnd, WDA_EXCLUDEFROMCAPTURE);
+            }
+            catch
+            {
+                return false;
+            }
+        }
 
         [DllImport("gdi32.dll")]
         private static extern IntPtr CreateCompatibleDC(IntPtr hdc);
@@ -242,24 +264,92 @@ namespace TWChatOverlay.Services
             }
         }
 
+        /// <summary>
+        /// 너비·높이가 주어진 그림 안에서 퍼센트 영역이 차지하는 픽셀 자리 (그림 왼쪽 위 기준).
+        /// <see cref="Crop"/>과 화면에서 그 자리만 바로 찍을 때가 같은 자리를 쓰도록 계산을 한 곳에 둔다.
+        /// </summary>
+        public static PixelRect RegionRect(int imageWidth, int imageHeight, PercentRegion region)
+        {
+            int x = (int)Math.Round(imageWidth * region.Left / 100.0);
+            int y = (int)Math.Round(imageHeight * region.Top / 100.0);
+            int width = (int)Math.Round(imageWidth * region.Width / 100.0);
+            int height = (int)Math.Round(imageHeight * region.Height / 100.0);
+
+            x = Math.Clamp(x, 0, Math.Max(0, imageWidth - 1));
+            y = Math.Clamp(y, 0, Math.Max(0, imageHeight - 1));
+            width = Math.Min(width, imageWidth - x);
+            height = Math.Min(height, imageHeight - y);
+            return new PixelRect(x, y, width, height);
+        }
+
         /// <summary>그림에서 퍼센트로 적은 자리를 잘라 얼린 그림으로 돌려준다. 자를 자리가 1픽셀도 안 되면 원본 그대로.</summary>
         public static BitmapSource Crop(BitmapSource image, PercentRegion region)
         {
-            int x = (int)Math.Round(image.PixelWidth * region.Left / 100.0);
-            int y = (int)Math.Round(image.PixelHeight * region.Top / 100.0);
-            int width = (int)Math.Round(image.PixelWidth * region.Width / 100.0);
-            int height = (int)Math.Round(image.PixelHeight * region.Height / 100.0);
-
-            x = Math.Clamp(x, 0, Math.Max(0, image.PixelWidth - 1));
-            y = Math.Clamp(y, 0, Math.Max(0, image.PixelHeight - 1));
-            width = Math.Min(width, image.PixelWidth - x);
-            height = Math.Min(height, image.PixelHeight - y);
-            if (width < 1 || height < 1)
+            PixelRect rect = RegionRect(image.PixelWidth, image.PixelHeight, region);
+            if (rect.IsEmpty)
                 return image;
 
-            var cropped = new CroppedBitmap(image, new Int32Rect(x, y, width, height));
+            var cropped = new CroppedBitmap(image, new Int32Rect(rect.X, rect.Y, rect.Width, rect.Height));
             cropped.Freeze();
             return cropped;
+        }
+
+        /// <summary>
+        /// 같은 자리를 이어 찍은 그림들을 픽셀(색 칸)마다 중앙값으로 합친다. 제자리에 있는 것(공지 글·배경)은 남고,
+        /// 장마다 자리가 바뀌는 것(떠오르는 대미지 숫자·이펙트)은 절반 넘는 장에서 그 픽셀을 덮지 않는 한 빠진다.
+        /// 크기가 첫 장과 다른 그림은 건너뛴다. 한 장뿐이면 그 장을 그대로 돌려준다.
+        /// </summary>
+        public static BitmapSource MedianComposite(IReadOnlyList<BitmapSource> frames)
+        {
+            if (frames == null || frames.Count == 0)
+                throw new ArgumentException("합칠 그림이 없습니다.", nameof(frames));
+
+            int width = frames[0].PixelWidth;
+            int height = frames[0].PixelHeight;
+            int stride = width * 3;
+            var buffers = new List<byte[]>(frames.Count);
+            foreach (BitmapSource frame in frames)
+            {
+                if (frame.PixelWidth != width || frame.PixelHeight != height)
+                    continue;
+                BitmapSource bgr = frame.Format == PixelFormats.Bgr24 ? frame : new FormatConvertedBitmap(frame, PixelFormats.Bgr24, null, 0);
+                var pixels = new byte[stride * height];
+                bgr.CopyPixels(pixels, stride, 0);
+                buffers.Add(pixels);
+            }
+
+            if (buffers.Count == 1)
+                return frames[0];
+
+            int count = buffers.Count;
+            var result = new byte[stride * height];
+            Span<byte> values = count <= 64 ? stackalloc byte[count] : new byte[count];
+            for (int i = 0; i < result.Length; i++)
+            {
+                for (int f = 0; f < count; f++)
+                    values[f] = buffers[f][i];
+
+                // 장 수가 적어 삽입 정렬이면 충분하다
+                for (int a = 1; a < count; a++)
+                {
+                    byte key = values[a];
+                    int b = a - 1;
+                    while (b >= 0 && values[b] > key)
+                    {
+                        values[b + 1] = values[b];
+                        b--;
+                    }
+                    values[b + 1] = key;
+                }
+
+                result[i] = (count & 1) == 1
+                    ? values[count / 2]
+                    : (byte)((values[count / 2 - 1] + values[count / 2] + 1) / 2);
+            }
+
+            BitmapSource composite = BitmapSource.Create(width, height, 96, 96, PixelFormats.Bgr24, null, result, stride);
+            composite.Freeze();
+            return composite;
         }
 
         /// <summary>그림을 PNG 파일로 쓴다. 폴더가 없으면 만든다.</summary>
