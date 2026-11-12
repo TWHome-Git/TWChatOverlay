@@ -21,7 +21,8 @@ namespace TWChatOverlay.Services
     }
 
     /// <summary>시작 시점에만 알 수 있는 사실. 설정 파일이 없었는지(진짜 최초 실행)는 Load가 파일을 만들기 전에 잡아야 한다.</summary>
-    public sealed record StartupState(bool SettingsFileMissing);
+    /// <summary>SoftwareRenderForced: 실행 인자(--software-render)나 환경 변수로 소프트웨어 렌더를 강제했는지 — 설정보다 우선한다.</summary>
+    public sealed record StartupState(bool SettingsFileMissing, bool SoftwareRenderForced = false);
 
     /// <summary>
     /// 경량 DI 컨테이너의 컴포지션 루트. App.OnStartup에서 설정을 읽은 뒤 초기화한다.

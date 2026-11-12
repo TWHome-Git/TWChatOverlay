@@ -1262,6 +1262,9 @@ namespace TWChatOverlay.Models
         /// <summary>오버레이 항상 위. 끄면 처음 실행 때만 위에 두고, 이후에는 일반 창처럼 동작.</summary>
         [JsonIgnore]
         public bool OverlaysAlwaysOnTop { get => Ui.OverlaysAlwaysOnTop; set { Ui.OverlaysAlwaysOnTop = value; OnPropertyChanged(); } }
+        /// <summary>창을 그래픽 카드(GPU)로 그릴지. 끄면 CPU로만 그린다. 바꾸면 떠 있는 창에도 바로 적용된다.</summary>
+        [JsonIgnore]
+        public bool UseHardwareRendering { get => Ui.HardwareRendering; set { Ui.HardwareRendering = value; OnPropertyChanged(); } }
         /// <summary>항상 위를 다시 올릴 대상 프로세스 이름(쉼표 구분). 이 앱이 전경일 때만 오버레이를 재승격한다.</summary>
         [JsonIgnore]
         public string TopmostGuardProcessNames { get => Ui.TopmostGuardProcessNames; set { Ui.TopmostGuardProcessNames = value ?? string.Empty; OnPropertyChanged(); } }

@@ -764,6 +764,16 @@
                     </Border>
                     <Border Style="{StaticResource SettingsRowStyle}">
                         <DockPanel>
+                            <CheckBox DockPanel.Dock="Right" IsChecked="{Binding Settings.UseHardwareRendering}" Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                <TextBlock Text="그래픽 카드로 그리기" Style="{StaticResource SettingsRowLabelStyle}"
+                                           ToolTip="켜면 창을 그래픽 카드(GPU)로, 끄면 CPU로 그립니다. 바꾸면 바로 적용됩니다"/>
+                                <Button Style="{StaticResource HelpButtonStyle}" Tag="display.hardware_render" Click="Help_Click"/>
+                            </StackPanel>
+                        </DockPanel>
+                    </Border>
+                    <Border Style="{StaticResource SettingsRowStyle}">
+                        <DockPanel>
                             <CheckBox DockPanel.Dock="Right" IsChecked="{Binding UnifiedToastStack}" Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
                             <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                                 <TextBlock Text="알림 표시 위치 통합" Style="{StaticResource SettingsRowLabelStyle}"

@@ -93,9 +93,14 @@ namespace TWChatOverlay.Views
         /// (프로필 불러오기·설정 초기화·마법사 기본값)는 이름 없는 알림 하나만 오므로 그 경로가 이 함수를 쓴다.
         /// 값만 바뀌고 창은 이전 상태로 남는 것(설정은 켜짐인데 창은 안 뜨는 상태)을 막는다.
         /// </summary>
+        /// <summary>렌더링 방식(그래픽 카드 / CPU)을 지금 설정대로 맞춘다. 떠 있는 창에도 바로 적용된다.</summary>
+        private void ApplyRenderMode()
+            => RenderModeSwitch.Apply(_settings.UseHardwareRendering, AppServices.Get<StartupState>().SoftwareRenderForced);
+
         private void ApplyAllSettingsToWindows()
         {
             ApplyInitialSettings();
+            ApplyRenderMode();
             _stickyService?.UpdatePositionImmediately();
             OnMainWindowChatTabTagChanged();
 
@@ -205,6 +210,7 @@ namespace TWChatOverlay.Views
             Map(() => _stickyService?.UpdatePositionImmediately(),
                 nameof(ChatSettings.LineMargin), nameof(ChatSettings.LineMarginLeft));
             Map(OnMainWindowChatTabTagChanged, nameof(ChatSettings.MainWindowChatTabTag));
+            Map(ApplyRenderMode, nameof(ChatSettings.UseHardwareRendering));
 
             // 부속 창 표시
             Map(ApplyDailyWeeklyWindowVisibility, nameof(ChatSettings.ShowDailyWeeklyContentOverlay));

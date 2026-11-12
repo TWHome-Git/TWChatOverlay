@@ -189,6 +189,14 @@ namespace TWChatOverlay.Services
                 "메뉴 바는 이 설정과 무관하게 항상 맨 위에 유지됩니다.",
                 new[] { "display_ontop_off.png", "display_ontop_on.png" }),
 
+            ["display.hardware_render"] = (
+                "그래픽 카드로 그리기",
+                "창을 그리는 방식을 고릅니다. 바꾸면 떠 있는 창에도 바로 적용됩니다.\n" +
+                "켜면 그래픽 카드(GPU)로, 끄면 CPU로만 그립니다.\n" +
+                "컴퓨터에 따라 어느 쪽이 가벼운지 다릅니다 — 켜면 메모리를 수십 MB 더 쓰고, 움직이는 표시가 많을 때는 CPU도 더 쓸 수 있습니다.\n" +
+                "화면이 깨지거나 녹화·확대 프로그램과 함께 쓸 때 문제가 있으면 꺼 보세요.",
+                null),
+
             // ===== 키워드 알림 =====
 
             ["keyword.color"] = (

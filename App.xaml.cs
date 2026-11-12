@@ -38,20 +38,10 @@ namespace TWChatOverlay
             }
 #endif
 
-            // 렌더링 모드: 기본은 하드웨어(GPU). 채팅 표시를 직접 그리는 방식으로 바꾼 뒤 남은 비용은 창을 화면에 그려 넣는 쪽인데,
-            // 하드웨어 경로가 그 CPU 비용을 더 줄인다(측정: 갱신당 3.4ms → 2.3ms). 대신 D3D 드라이버가 창마다 잡는 네이티브 메모리가 늘어난다.
-            // 소프트웨어로 돌리려면 --software-render 인자 또는 TWCHAT_SOFTWARE_RENDER=1.
-            bool softwareRender = Array.Exists(e.Args, a => string.Equals(a, "--software-render", StringComparison.OrdinalIgnoreCase))
+            // 렌더링 방식은 설정(화면 > 오버레이 > 그래픽 카드로 그리기)에서 고른다 — 설정을 읽은 뒤 아래에서 적용한다.
+            // 실행 인자 --software-render 또는 환경 변수 TWCHAT_SOFTWARE_RENDER=1 은 설정과 상관없이 소프트웨어로 돌린다 (화면이 안 나올 때의 비상구).
+            bool softwareRenderForced = Array.Exists(e.Args, a => string.Equals(a, "--software-render", StringComparison.OrdinalIgnoreCase))
                 || string.Equals(Environment.GetEnvironmentVariable("TWCHAT_SOFTWARE_RENDER"), "1", StringComparison.Ordinal);
-            if (softwareRender)
-            {
-                System.Windows.Media.RenderOptions.ProcessRenderMode = System.Windows.Interop.RenderMode.SoftwareOnly;
-                AppLogger.Info("Render mode: SoftwareOnly (requested).");
-            }
-            else
-            {
-                AppLogger.Info("Render mode: hardware (default).");
-            }
 
             _mutex = new Mutex(true, "TWChatOverlay_SingleInstance", out bool isNewInstance);
 
@@ -106,7 +96,7 @@ namespace TWChatOverlay
             Models.ChatSettings settings = ConfigService.Load();
             AppServices.Initialize(services =>
             {
-                services.AddSingleton(new StartupState(settingsFileMissing));
+                services.AddSingleton(new StartupState(settingsFileMissing, softwareRenderForced));
                 services.AddSingleton(settings);
                 services.AddSingleton<IIdTagService, IdTagService>();
                 services.AddSingleton<IOverlayOpacityService, OverlayOpacityService>();
@@ -142,6 +132,8 @@ namespace TWChatOverlay
                 services.AddSingleton<MessengerEtaToastService>();
                 services.AddSingleton<UiHangWatchdog>();
             });
+
+            RenderModeSwitch.Apply(settings.UseHardwareRendering, softwareRenderForced);
 
             EtaProfileResolver.InitializeAsync();
             AppServices.Get<BlacklistService>().Initialize();

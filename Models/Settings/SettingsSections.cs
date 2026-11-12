@@ -322,6 +322,8 @@ namespace TWChatOverlay.Models
         public double OverlayOpacityPercent { get; set; } = 100.0;
         /// <summary>오버레이 항상 위. 끄면 처음 실행 때만 위에 두고, 이후에는 일반 창처럼 다른 앱 뒤로 내려간다.</summary>
         public bool OverlaysAlwaysOnTop { get; set; } = false;
+        /// <summary>창을 그래픽 카드(GPU)로 그릴지. 끄면 CPU로만 그린다 (소프트웨어 렌더).</summary>
+        public bool HardwareRendering { get; set; } = true;
         /// <summary>
         /// 항상 위를 다시 올릴 대상 프로세스 이름(쉼표 구분, .exe 없이). 이 프로그램이 전경이 될 때만 오버레이를 최상단으로 재승격한다.
         /// 캡처 도구 같은 다른 앱이 전경이 될 때는 손대지 않아 그 위로 올라가지 않는다. 게임 클라이언트는 InphaseNXD로 뜬다.
