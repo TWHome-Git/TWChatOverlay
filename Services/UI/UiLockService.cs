@@ -370,6 +370,28 @@ namespace TWChatOverlay.Services
             _inspector?.BringToFront();
         }
 
+        /// <summary>
+        /// 목록의 한 줄을 눌렀을 때: 숨겨 둔 창이거나 아직 선택되지 않은 창이면 보이게 하고 선택한다.
+        /// 이미 선택된 창의 줄을 한 번 더 누르면 배치하는 동안 숨긴다.
+        /// </summary>
+        internal void ToggleListed(string key)
+        {
+            if (!IsUnlocked)
+                return;
+
+            foreach (ListedWindow row in GetListedWindows())
+            {
+                if (row.Key != key)
+                    continue;
+
+                if (!row.IsHidden && row.IsSelected)
+                    SetListedHidden(key, true);
+                else
+                    SelectListed(key);
+                return;
+            }
+        }
+
         /// <summary>창 목록에서 숨겨 둔 창인지 — 보이지 않는 창에 자석 스냅이 붙지 않게 한다.</summary>
         public bool IsHiddenInUnlock(Window window) => _concealed.Contains(window);
 
