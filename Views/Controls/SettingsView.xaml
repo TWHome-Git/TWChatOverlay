@@ -1289,6 +1289,27 @@
                     </Border>
                     <Border Style="{StaticResource SettingsRowStyle}">
                         <DockPanel>
+                            <CheckBox DockPanel.Dock="Right" IsChecked="{Binding Settings.ShowMaskGimmickAlert, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                <TextBlock Text="격리실 가면 안내" Style="{StaticResource SettingsRowLabelStyle}"/>
+                                <Button Style="{StaticResource HelpButtonStyle}" Tag="dungeon.mask_gimmick" Click="Help_Click"/>
+                            </StackPanel>
+                        </DockPanel>
+                    </Border>
+                    <Border Style="{StaticResource SettingsRowStyle}">
+                        <DockPanel>
+                            <TextBox DockPanel.Dock="Right" Width="70" Text="{Binding Settings.MaskGimmickDurationSeconds, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource SettingsRowInputStyle}"/>
+                            <TextBlock Text="가면 창 유지 시간(초)" Style="{StaticResource SettingsRowLabelStyle}" ToolTip="1~300초. 파훼 성공 줄이 오면 그 전에 닫힙니다"/>
+                        </DockPanel>
+                    </Border>
+                    <Border Style="{StaticResource SettingsRowStyle}">
+                        <DockPanel>
+                            <TextBox DockPanel.Dock="Right" Width="70" Text="{Binding Settings.MaskGimmickScalePercent, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" Style="{StaticResource SettingsRowInputStyle}"/>
+                            <TextBlock Text="가면 표시 배율(%)" Style="{StaticResource SettingsRowLabelStyle}" ToolTip="가면 그림과 글자 크기. 100이 기본이고 50~300"/>
+                        </DockPanel>
+                    </Border>
+                    <Border Style="{StaticResource SettingsRowStyle}">
+                        <DockPanel>
                             <CheckBox DockPanel.Dock="Right" IsChecked="{Binding Settings.ShowRecaptureSupplyMap, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
                             <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                                 <TextBlock Text="보급품 탈환 미니 지도" Style="{StaticResource SettingsRowLabelStyle}"/>

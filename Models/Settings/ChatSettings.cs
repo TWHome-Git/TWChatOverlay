@@ -702,6 +702,35 @@ namespace TWChatOverlay.Models
                 OnPropertyChanged();
             }
         }
+        /// <summary>놀라움의 격리실 가면 기믹: 부술 상성 가면을 그림으로 표시.</summary>
+        [JsonIgnore]
+        public bool ShowMaskGimmickAlert { get => Alerts.Dungeon.ShowMaskGimmickAlert; set { if (Alerts.Dungeon.ShowMaskGimmickAlert == value) return; Alerts.Dungeon.ShowMaskGimmickAlert = value; OnPropertyChanged(); } }
+        /// <summary>가면 창 유지 시간(초, 1~300). 옛 설정 파일에 없으면 20.</summary>
+        [JsonIgnore]
+        public int MaskGimmickDurationSeconds
+        {
+            get => Alerts.Dungeon.MaskGimmickDurationSeconds < 1 ? 20 : Math.Min(300, Alerts.Dungeon.MaskGimmickDurationSeconds);
+            set
+            {
+                int clamped = Math.Max(1, Math.Min(300, value));
+                if (Alerts.Dungeon.MaskGimmickDurationSeconds == clamped) return;
+                Alerts.Dungeon.MaskGimmickDurationSeconds = clamped;
+                OnPropertyChanged();
+            }
+        }
+        /// <summary>가면 그림 · 글자 표시 배율(%, 50~300). 옛 설정 파일에 없으면 100.</summary>
+        [JsonIgnore]
+        public int MaskGimmickScalePercent
+        {
+            get => Alerts.Dungeon.MaskGimmickScalePercent < 1 ? 100 : Math.Max(50, Math.Min(300, Alerts.Dungeon.MaskGimmickScalePercent));
+            set
+            {
+                int clamped = Math.Max(50, Math.Min(300, value));
+                if (Alerts.Dungeon.MaskGimmickScalePercent == clamped) return;
+                Alerts.Dungeon.MaskGimmickScalePercent = clamped;
+                OnPropertyChanged();
+            }
+        }
         /// <summary>찍은 원본 화면을 Logs/DoomSentence 에 PNG로 남길지.</summary>
         [JsonIgnore]
         public bool SaveDoomSentenceCapture { get => Alerts.Dungeon.SaveDoomSentenceCapture; set { if (Alerts.Dungeon.SaveDoomSentenceCapture == value) return; Alerts.Dungeon.SaveDoomSentenceCapture = value; OnPropertyChanged(); } }
@@ -1070,6 +1099,18 @@ namespace TWChatOverlay.Models
         {
             get => Windows.RecaptureSupplyPadOrder.Height;
             set { if (Windows.RecaptureSupplyPadOrder.Height == value) return; Windows.RecaptureSupplyPadOrder.Height = value; OnPropertyChanged(); }
+        }
+        [JsonIgnore]
+        public double? MaskGimmickWindowLeft
+        {
+            get => Windows.MaskGimmick.Left;
+            set { if (Windows.MaskGimmick.Left == value) return; Windows.MaskGimmick.Left = value; OnPropertyChanged(); }
+        }
+        [JsonIgnore]
+        public double? MaskGimmickWindowTop
+        {
+            get => Windows.MaskGimmick.Top;
+            set { if (Windows.MaskGimmick.Top == value) return; Windows.MaskGimmick.Top = value; OnPropertyChanged(); }
         }
         [JsonIgnore]
         public double? DoomSentenceCaptureWindowLeft

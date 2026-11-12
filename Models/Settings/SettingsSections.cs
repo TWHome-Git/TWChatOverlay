@@ -199,6 +199,12 @@ namespace TWChatOverlay.Models
         public int DoomSentenceCaptureBurstIntervalMilliseconds { get; set; } = 350;
         /// <summary>찍은 원본 화면을 Logs/DoomSentence 에 PNG로 남길지 (최근 20장). 자를 자리를 맞출 때 본다.</summary>
         public bool SaveDoomSentenceCapture { get; set; } = true;
+        /// <summary>놀라움의 격리실 가면 기믹: 보스가 감정 가면을 쓰면 부술 상성 가면을 그림으로 표시.</summary>
+        public bool ShowMaskGimmickAlert { get; set; } = true;
+        /// <summary>가면 창 유지 시간(초). "파훼 성공" 줄이 오면 그 전에 닫힌다.</summary>
+        public int MaskGimmickDurationSeconds { get; set; } = 20;
+        /// <summary>가면 그림 · 글자 표시 배율(%).</summary>
+        public int MaskGimmickScalePercent { get; set; } = 100;
         /// <summary>컨텐츠 타이머 창 표시 (아페티리아 입장~클리어 소요 시간).</summary>
         public bool ShowContentTimer { get; set; } = true;
         /// <summary>컨텐츠 타이머 클리어 결과를 남겨 두는 시간(초). 지나면 창이 닫힌다.</summary>
@@ -270,6 +276,8 @@ namespace TWChatOverlay.Models
         public WindowRect RecaptureSupplyPadOrder { get; set; } = new();
         /// <summary>운명 선고 캡처 창 위치/크기 (미설정 시 화면 가운데).</summary>
         public WindowRect DoomSentenceCapture { get; set; } = new();
+        /// <summary>격리실 가면 창 위치 (미설정 시 화면 가운데). 크기는 표시 배율이 정한다.</summary>
+        public WindowRect MaskGimmick { get; set; } = new();
         /// <summary>컨텐츠 타이머 창 위치/크기 (미설정 시 화면 가운데).</summary>
         public WindowRect ContentTimer { get; set; } = new();
         public WindowRect ExperienceLimitAlert { get; set; } = new();
