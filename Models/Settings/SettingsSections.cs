@@ -156,8 +156,14 @@ namespace TWChatOverlay.Models
         public bool EtosDirectionAlert { get; set; } = true;
         public bool ShowEtosHelperWindow { get; set; } = false;
         public bool ReflectionPatternAlert { get; set; } = true;
-        /// <summary>신뢰의 격리실: 배신(반사) 구간 시작 · 끝에 반사 알림 소리. 볼륨은 반사 패턴 알림과 같이 쓴다.</summary>
+        /// <summary>감정 격리실 · 신뢰의 격리실: 배신(반사) 구간이 시작되면 "광선 피해" 음성.</summary>
         public bool TrustReflectionAlert { get; set; } = true;
+        /// <summary>감정 격리실 레이저 패턴(보스 대사 "그대들의 영혼까지 절단시켜주마!"): "전방 조심해" 음성.</summary>
+        public bool EmotionLaserAlert { get; set; } = true;
+        /// <summary>감정 격리실 자리 이동 패턴(보스 대사 "공간의 저편에 너의 죽음이 기다리고 있다!"): "바닥 조심해" 음성.</summary>
+        public bool EmotionFloorAlert { get; set; } = true;
+        /// <summary>감정 격리실 음성 볼륨 (0~1).</summary>
+        public double EmotionRoomVolume { get; set; } = 1.0;
         /// <summary>감전 패턴: 방전에 걸린 동안 알림 창을 띄운다.</summary>
         public bool DischargeAlert { get; set; } = true;
         /// <summary>사냥 기록 창 글자 크기.</summary>

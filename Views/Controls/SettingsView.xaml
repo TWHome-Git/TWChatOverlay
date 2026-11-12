@@ -1328,11 +1328,34 @@
                     </Border>
                     <Border Style="{StaticResource SettingsRowStyle}">
                         <DockPanel>
-                            <CheckBox DockPanel.Dock="Right" IsChecked="{Binding Settings.EnableTrustReflectionAlert, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
+                            <CheckBox DockPanel.Dock="Right" IsChecked="{Binding Settings.EnableEmotionLaserAlert, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
                             <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                <TextBlock Text="신뢰의 격리실 반사 알림" Style="{StaticResource SettingsRowLabelStyle}"/>
-                                <Button Style="{StaticResource HelpButtonStyle}" Tag="dungeon.trust_reflection" Click="Help_Click"/>
+                                <TextBlock Text="레이저 패턴 음성 (전방 조심해)" Style="{StaticResource SettingsRowLabelStyle}"/>
+                                <Button Style="{StaticResource HelpButtonStyle}" Tag="dungeon.emotion_voice" Click="Help_Click"/>
                             </StackPanel>
+                        </DockPanel>
+                    </Border>
+                    <Border Style="{StaticResource SettingsRowStyle}">
+                        <DockPanel>
+                            <CheckBox DockPanel.Dock="Right" IsChecked="{Binding Settings.EnableEmotionFloorAlert, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
+                            <TextBlock Text="자리 이동 패턴 음성 (바닥 조심해)" Style="{StaticResource SettingsRowLabelStyle}"/>
+                        </DockPanel>
+                    </Border>
+                    <Border Style="{StaticResource SettingsRowStyle}">
+                        <DockPanel>
+                            <CheckBox DockPanel.Dock="Right" IsChecked="{Binding Settings.EnableTrustReflectionAlert, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
+                            <TextBlock Text="반사 패턴 음성 (광선 피해)" Style="{StaticResource SettingsRowLabelStyle}" ToolTip="신뢰의 격리실에서 배신 구간이 시작될 때"/>
+                        </DockPanel>
+                    </Border>
+                    <Border Style="{StaticResource SettingsRowStyle}">
+                        <DockPanel>
+                            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                                <Slider Width="120" Minimum="0" Maximum="100" TickFrequency="10" IsSnapToTickEnabled="True" VerticalAlignment="Center"
+                                        Tag="EmotionFront.mp3" ValueChanged="PreviewSoundSlider_ValueChanged"
+                                        Value="{Binding Settings.EmotionRoomAlertVolumePercent, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                <TextBlock Text="{Binding Settings.EmotionRoomAlertVolumePercent, StringFormat={}{0:F0}%}" Foreground="{DynamicResource TextBrush}" Width="34" TextAlignment="Right" VerticalAlignment="Center" FontSize="12"/>
+                            </StackPanel>
+                            <TextBlock Text="감정 격리실 음성 볼륨" Style="{StaticResource SettingsRowLabelStyle}"/>
                         </DockPanel>
                     </Border>
                 </WrapPanel>

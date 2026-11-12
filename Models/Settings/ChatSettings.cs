@@ -531,9 +531,35 @@ namespace TWChatOverlay.Models
         public bool ShowEtosHelperWindow { get => Alerts.Dungeon.ShowEtosHelperWindow; set { Alerts.Dungeon.ShowEtosHelperWindow = value; OnPropertyChanged(); } }
         [JsonIgnore]
         public bool EnableReflectionPatternAlert { get => Alerts.Dungeon.ReflectionPatternAlert; set { Alerts.Dungeon.ReflectionPatternAlert = value; OnPropertyChanged(); } }
-        /// <summary>신뢰의 격리실: 배신(반사) 구간 시작 · 끝에 반사 알림 소리.</summary>
+        /// <summary>감정 격리실 · 신뢰의 격리실: 배신(반사) 구간이 시작되면 "광선 피해" 음성.</summary>
         [JsonIgnore]
         public bool EnableTrustReflectionAlert { get => Alerts.Dungeon.TrustReflectionAlert; set { if (Alerts.Dungeon.TrustReflectionAlert == value) return; Alerts.Dungeon.TrustReflectionAlert = value; OnPropertyChanged(); } }
+        /// <summary>감정 격리실 레이저 패턴: "전방 조심해" 음성.</summary>
+        [JsonIgnore]
+        public bool EnableEmotionLaserAlert { get => Alerts.Dungeon.EmotionLaserAlert; set { if (Alerts.Dungeon.EmotionLaserAlert == value) return; Alerts.Dungeon.EmotionLaserAlert = value; OnPropertyChanged(); } }
+        /// <summary>감정 격리실 자리 이동 패턴: "바닥 조심해" 음성.</summary>
+        [JsonIgnore]
+        public bool EnableEmotionFloorAlert { get => Alerts.Dungeon.EmotionFloorAlert; set { if (Alerts.Dungeon.EmotionFloorAlert == value) return; Alerts.Dungeon.EmotionFloorAlert = value; OnPropertyChanged(); } }
+        /// <summary>감정 격리실 음성 볼륨 (0~1).</summary>
+        [JsonIgnore]
+        public double EmotionRoomAlertVolume
+        {
+            get => Alerts.Dungeon.EmotionRoomVolume;
+            set
+            {
+                double clamped = ClampVolume(value);
+                if (Math.Abs(Alerts.Dungeon.EmotionRoomVolume - clamped) < 0.0001) return;
+                Alerts.Dungeon.EmotionRoomVolume = clamped;
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(EmotionRoomAlertVolumePercent));
+            }
+        }
+        [JsonIgnore]
+        public double EmotionRoomAlertVolumePercent
+        {
+            get => Math.Round(Alerts.Dungeon.EmotionRoomVolume * 100.0, 0);
+            set => EmotionRoomAlertVolume = Math.Max(0.0, Math.Min(100.0, value)) / 100.0;
+        }
         [JsonIgnore]
         public bool EnableDischargeAlert { get => Alerts.Dungeon.DischargeAlert; set { Alerts.Dungeon.DischargeAlert = value; OnPropertyChanged(); } }
         [JsonIgnore]

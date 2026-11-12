@@ -20,7 +20,9 @@ namespace TWChatOverlay.Services
         Reflection,
         ExpBuff,
         BuffTracker,
-        Boss
+        Boss,
+        /// <summary>감정 격리실 패턴 음성 (전방 조심해 · 바닥 조심해 · 광선 피해).</summary>
+        EmotionRoom
     }
 
     /// <summary>
@@ -44,6 +46,9 @@ namespace TWChatOverlay.Services
             ["wave"] = AlertChannel.MagicCircle,
             ["reflection"] = AlertChannel.Reflection,
             ["reflectionend"] = AlertChannel.Reflection,
+            ["emotionfront"] = AlertChannel.EmotionRoom,
+            ["emotionfloor"] = AlertChannel.EmotionRoom,
+            ["emotionbeam"] = AlertChannel.EmotionRoom,
             ["expbuffcheck"] = AlertChannel.ExpBuff,
             ["buffcheck"] = AlertChannel.BuffTracker,
             ["arkan"] = AlertChannel.Boss,
@@ -167,6 +172,7 @@ namespace TWChatOverlay.Services
                         AlertChannel.ExpBuff => Math.Clamp(settings.ExpBuffAlertVolume, 0.0, 1.0),
                         AlertChannel.BuffTracker => Math.Clamp(settings.BuffTrackerEndSoundVolume, 0.0, 1.0),
                         AlertChannel.Boss => Math.Clamp(settings.BossAlertVolume, 0.0, 1.0),
+                        AlertChannel.EmotionRoom => Math.Clamp(settings.EmotionRoomAlertVolume, 0.0, 1.0),
                         _ => 1.0
                     };
                 }
