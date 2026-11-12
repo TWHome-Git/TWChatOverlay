@@ -541,7 +541,8 @@ namespace TWChatOverlay.Services
         /// <summary>
         /// 합계를 구간 값으로 다시 맞춘다. 판 전체를 재는 구간이 있는 던전(렐릭 '전체')은 그 구간 값, 아니면 구간 합.
         /// 구간 합으로만 맞추면 렐릭은 '전체'에 그 안에서 잰 석상 시간이 한 번 더 더해져,
-        /// 석상을 건너뛴 판일수록 합계가 작아 최고 기록으로 뽑힌다 (그 판엔 건너뛴 석상이 없어 최고 열이 '–'로 남았다).
+        /// 석상을 건너뛴 판일수록 합계가 작아 최고 기록으로 뽑힌다.
+        /// (합계를 바로잡아도 가장 빠른 판은 대개 석상을 건너뛴 판이다 — 석상 줄의 최고 칸은 MergeIntoBest가 구간별로 채운다.)
         /// 기록을 넣을 때와 파일에서 읽을 때 모두 거친다 — 이미 저장된 기록의 합계도 읽는 순간 바로잡힌다.
         /// </summary>
         private static void NormalizeTotal(DungeonRunRecord record)
@@ -2224,14 +2225,8 @@ namespace TWChatOverlay.Services
             string file = Path.Combine(ArchiveDirectoryPath, monthKey + ".jsonl");
             foreach (DungeonRunRecord record in ReadArchiveFileUnlocked(file))
             {
-                // 상한 기록("30초 이하")은 실제 시간을 모르므로 최고 기록으로 삼지 않는다 — 전체 최고와 같은 규칙
-                if (record.Capped || record.TotalSeconds <= 0)
-                    continue;
-
-                string key = HistoryKey(record.DungeonKey, record.Difficulty ?? string.Empty);
-                if (map.TryGetValue(key, out var best) && best.TotalSeconds <= record.TotalSeconds)
-                    continue;
-                map[key] = record;
+                // 전체 최고와 같은 규칙: 상한 기록("30초 이하")은 빼고, 건너뛸 수 있는 구간은 구간별로 가장 빨랐던 값
+                MergeIntoBest(map, HistoryKey(record.DungeonKey, record.Difficulty ?? string.Empty), record);
             }
 
             _monthBest = map;
@@ -2273,13 +2268,69 @@ namespace TWChatOverlay.Services
         private void UpdateBestUnlocked(string key, DungeonRunRecord record)
         {
             EnsureBestLoaded();
-            if (record.Capped || record.TotalSeconds <= 0)
-                return;
-            if (_best!.TryGetValue(key, out var best) && best.TotalSeconds <= record.TotalSeconds)
-                return;
-            _best[key] = record;
-            _bestDirty = true;
+            if (MergeIntoBest(_best!, key, record))
+                _bestDirty = true;
         }
+
+        /// <summary>
+        /// 최고 기록 표에 판 하나를 반영한다. 바뀐 것이 있으면 true.
+        ///  - 더 빠른 판이면 그 판으로 바꾼다.
+        ///  - 건너뛸 수 있는 구간(렐릭의 석상)은 판과 상관없이 그 구간이 가장 빨랐던 값을 남긴다.
+        ///    가장 빠른 판은 대개 석상을 건너뛴 판이라, 그 판의 구간만 보여 주면 석상 줄의 최고 칸이 늘 '–'로 남는다.
+        /// 표에 넣는 기록은 복사본이다 — 구간 값을 고쳐 써도 판 이력에 든 원래 기록은 바뀌지 않는다.
+        /// </summary>
+        internal static bool MergeIntoBest(Dictionary<string, DungeonRunRecord> bests, string key, DungeonRunRecord record)
+        {
+            if (record.Capped || record.TotalSeconds <= 0)
+                return false;
+
+            if (!bests.TryGetValue(key, out DungeonRunRecord? best))
+            {
+                bests[key] = CloneRecord(record);
+                return true;
+            }
+
+            SegmentDefinition[] optional = RecordDefinitions
+                .FirstOrDefault(d => d.Key == record.DungeonKey)?
+                .Segments.Where(s => s.Optional).ToArray() ?? Array.Empty<SegmentDefinition>();
+
+            if (record.TotalSeconds < best.TotalSeconds)
+            {
+                // 더 빠른 판: 판은 바꾸되, 건너뛸 수 있는 구간은 지금까지의 최고와 이 판의 값 중 빠른 쪽
+                DungeonRunRecord next = CloneRecord(record);
+                foreach (SegmentDefinition segment in optional)
+                {
+                    if (best.Segments.TryGetValue(segment.Name, out double known) && known > 0 &&
+                        (!next.Segments.TryGetValue(segment.Name, out double now) || now <= 0 || known < now))
+                        next.Segments[segment.Name] = known;
+                }
+                bests[key] = next;
+                return true;
+            }
+
+            bool changed = false;
+            foreach (SegmentDefinition segment in optional)
+            {
+                if (record.Segments.TryGetValue(segment.Name, out double seconds) && seconds > 0 &&
+                    (!best.Segments.TryGetValue(segment.Name, out double known) || known <= 0 || seconds < known))
+                {
+                    best.Segments[segment.Name] = seconds;
+                    changed = true;
+                }
+            }
+            return changed;
+        }
+
+        private static DungeonRunRecord CloneRecord(DungeonRunRecord record) => new()
+        {
+            DungeonKey = record.DungeonKey,
+            StartedAt = record.StartedAt,
+            EndedAt = record.EndedAt,
+            Difficulty = record.Difficulty,
+            Segments = new Dictionary<string, double>(record.Segments),
+            TotalSeconds = record.TotalSeconds,
+            Capped = record.Capped,
+        };
 
         private void EnsureBestLoaded()
         {
