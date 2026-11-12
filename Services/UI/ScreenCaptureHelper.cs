@@ -27,38 +27,44 @@ namespace TWChatOverlay.Services
             public bool IsEmpty => Width <= 0 || Height <= 0;
         }
 
-        /// <summary>찍은 그림에서 잘라 낼 자리. 왼쪽·위·너비·높이를 그림 크기에 대한 퍼센트로 적는다.</summary>
-        public readonly record struct PercentRegion(double Left, double Top, double Width, double Height)
+        /// <summary>게임이 보이는 화면 자리와, 게임 해상도 1픽셀이 화면에서 몇 픽셀로 보이는지(확대 프로그램을 안 쓰면 1).</summary>
+        public readonly record struct GameView(PixelRect Area, double Scale);
+
+        /// <summary>
+        /// 게임 화면의 가로 가운데에 놓인 상자. 너비 · 위(화면 위에서부터) · 높이를 게임 해상도 픽셀로 적는다.
+        /// 게임의 공지 글은 해상도가 달라도 가로 가운데 · 위에서 같은 픽셀 거리에 뜨기 때문에 이렇게 잡는다
+        /// (2026-11-12: 1920x1080 과 1024x768 에서 모두 가운데 ±200px · 위 213~288px. 화면 크기의 퍼센트로 잡았더니
+        /// 1024x768 에서 순서 줄이 잘려 읽지 못했다).
+        /// </summary>
+        public readonly record struct TopCenterBox(double Width, double Top, double Height)
         {
-            /// <summary>"34,17,32,15" 같은 글을 읽는다. 숫자 넷이 아니거나 범위를 벗어나면 false.</summary>
-            public static bool TryParse(string? text, out PercentRegion region)
+            /// <summary>"500,200,105" 같은 글을 읽는다. 숫자 셋이 아니거나 0 이하가 있으면 false.</summary>
+            public static bool TryParse(string? text, out TopCenterBox box)
             {
-                region = default;
+                box = default;
                 if (string.IsNullOrWhiteSpace(text))
                     return false;
 
                 string[] parts = text.Split(new[] { ',', ';', ' ', '/' }, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-                if (parts.Length != 4)
+                if (parts.Length != 3)
                     return false;
 
-                var values = new double[4];
-                for (int i = 0; i < 4; i++)
+                var values = new double[3];
+                for (int i = 0; i < 3; i++)
                 {
-                    if (!double.TryParse(parts[i].TrimEnd('%'), NumberStyles.Float, CultureInfo.InvariantCulture, out values[i]))
+                    if (!double.TryParse(parts[i], NumberStyles.Float, CultureInfo.InvariantCulture, out values[i]))
                         return false;
                 }
 
-                if (values[0] < 0 || values[1] < 0 || values[2] <= 0 || values[3] <= 0)
-                    return false;
-                if (values[0] >= 100 || values[1] >= 100)
+                if (values[0] <= 0 || values[1] < 0 || values[2] <= 0)
                     return false;
 
-                region = new PercentRegion(values[0], values[1], Math.Min(values[2], 100 - values[0]), Math.Min(values[3], 100 - values[1]));
+                box = new TopCenterBox(values[0], values[1], values[2]);
                 return true;
             }
 
             public override string ToString()
-                => string.Create(CultureInfo.InvariantCulture, $"{Left:0.##},{Top:0.##},{Width:0.##},{Height:0.##}");
+                => string.Create(CultureInfo.InvariantCulture, $"{Width:0.##},{Top:0.##},{Height:0.##}");
         }
 
         private const int SRCCOPY = 0x00CC0020;
@@ -130,37 +136,63 @@ namespace TWChatOverlay.Services
         private static extern bool DeleteDC(IntPtr hdc);
 
         /// <summary>
-        /// 지금 게임이 보이는 화면 자리. 확대 프로그램(Magpie)이 켜져 있으면 눈에 보이는 것은 확대 화면이므로 그 창을,
-        /// 아니면 게임 창의 안쪽(제목줄·테두리 제외)을 돌려준다. 게임 창이 없거나 최소화돼 있으면 null.
+        /// 지금 게임이 보이는 화면 자리와 확대 배율. 확대 프로그램(Magpie)이 켜져 있으면 눈에 보이는 것은 확대 화면이므로
+        /// 그 창을 쓰고, 배율은 확대 화면 크기 ÷ 게임 창 안쪽 크기로 잰다 (화면비가 달라 여백이 생기면 가운데 놓인 안쪽만 게임 화면으로 본다).
+        /// 아니면 게임 창의 안쪽(제목줄·테두리 제외)이고 배율은 1. 게임 창이 없거나 최소화돼 있으면 null.
         /// </summary>
         /// <param name="processNames">게임 프로세스 이름 목록 (쉼표 구분, 설정의 TopmostGuardProcessNames).</param>
         /// <param name="scalerWindowClass">확대 화면 창 클래스 이름. 없으면 확대 화면은 보지 않는다.</param>
-        public static PixelRect? ResolveGameArea(string? processNames, string? scalerWindowClass)
+        public static GameView? ResolveGameView(string? processNames, string? scalerWindowClass)
         {
+            PixelRect? client = null;
+            IntPtr game = FindGameWindow(processNames);
+            if (game != IntPtr.Zero && !IsIconic(game) && GetClientRect(game, out NativeMethods.RECT cr))
+            {
+                var origin = new POINT { X = 0, Y = 0 };
+                if (ClientToScreen(game, ref origin))
+                {
+                    var rect = new PixelRect(origin.X, origin.Y, cr.Right - cr.Left, cr.Bottom - cr.Top);
+                    if (!rect.IsEmpty)
+                        client = rect;
+                }
+            }
+
             if (!string.IsNullOrEmpty(scalerWindowClass))
             {
                 IntPtr scaler = NativeMethods.FindWindow(scalerWindowClass, null);
                 if (scaler != IntPtr.Zero && NativeMethods.IsWindowVisible(scaler) &&
                     NativeMethods.GetWindowRect(scaler, out NativeMethods.RECT sr))
                 {
-                    var rect = new PixelRect(sr.Left, sr.Top, sr.Right - sr.Left, sr.Bottom - sr.Top);
-                    if (!rect.IsEmpty)
-                        return rect;
+                    var scaled = new PixelRect(sr.Left, sr.Top, sr.Right - sr.Left, sr.Bottom - sr.Top);
+                    if (!scaled.IsEmpty)
+                    {
+                        if (client == null)
+                            return new GameView(scaled, 1.0);
+
+                        double scale = Math.Min(scaled.Width / (double)client.Value.Width, scaled.Height / (double)client.Value.Height);
+                        int width = (int)Math.Round(client.Value.Width * scale);
+                        int height = (int)Math.Round(client.Value.Height * scale);
+                        var inner = new PixelRect(scaled.X + (scaled.Width - width) / 2, scaled.Y + (scaled.Height - height) / 2, width, height);
+                        return new GameView(inner, scale);
+                    }
                 }
             }
 
-            IntPtr game = FindGameWindow(processNames);
-            if (game == IntPtr.Zero || IsIconic(game))
-                return null;
-            if (!GetClientRect(game, out NativeMethods.RECT cr))
-                return null;
+            return client == null ? null : new GameView(client.Value, 1.0);
+        }
 
-            var origin = new POINT { X = 0, Y = 0 };
-            if (!ClientToScreen(game, ref origin))
-                return null;
+        /// <summary>지금 게임이 보이는 화면 자리 (<see cref="ResolveGameView"/>의 자리만).</summary>
+        public static PixelRect? ResolveGameArea(string? processNames, string? scalerWindowClass)
+            => ResolveGameView(processNames, scalerWindowClass)?.Area;
 
-            var area = new PixelRect(origin.X, origin.Y, cr.Right - cr.Left, cr.Bottom - cr.Top);
-            return area.IsEmpty ? null : area;
+        /// <summary>게임 화면 안에서 그 상자가 차지하는 화면 픽셀 자리 (확대 배율을 곱하고, 게임 화면 밖으로 나가는 부분은 잘라 낸다).</summary>
+        public static PixelRect BoxRect(GameView view, TopCenterBox box)
+        {
+            PixelRect area = view.Area;
+            int width = Math.Min(area.Width, (int)Math.Round(box.Width * view.Scale));
+            int top = Math.Min(Math.Max(0, area.Height - 1), (int)Math.Round(box.Top * view.Scale));
+            int height = Math.Min(area.Height - top, (int)Math.Round(box.Height * view.Scale));
+            return new PixelRect(area.X + (area.Width - width) / 2, area.Y + top, width, height);
         }
 
         /// <summary>게임 창. 지금 앞에 있는 창이 게임이면 그 창(클라를 여러 개 띄운 경우), 아니면 이름으로 찾은 첫 창.</summary>
@@ -266,36 +298,6 @@ namespace TWChatOverlay.Services
                 if (memDc != IntPtr.Zero) DeleteDC(memDc);
                 ReleaseDC(IntPtr.Zero, screenDc);
             }
-        }
-
-        /// <summary>
-        /// 너비·높이가 주어진 그림 안에서 퍼센트 영역이 차지하는 픽셀 자리 (그림 왼쪽 위 기준).
-        /// <see cref="Crop"/>과 화면에서 그 자리만 바로 찍을 때가 같은 자리를 쓰도록 계산을 한 곳에 둔다.
-        /// </summary>
-        public static PixelRect RegionRect(int imageWidth, int imageHeight, PercentRegion region)
-        {
-            int x = (int)Math.Round(imageWidth * region.Left / 100.0);
-            int y = (int)Math.Round(imageHeight * region.Top / 100.0);
-            int width = (int)Math.Round(imageWidth * region.Width / 100.0);
-            int height = (int)Math.Round(imageHeight * region.Height / 100.0);
-
-            x = Math.Clamp(x, 0, Math.Max(0, imageWidth - 1));
-            y = Math.Clamp(y, 0, Math.Max(0, imageHeight - 1));
-            width = Math.Min(width, imageWidth - x);
-            height = Math.Min(height, imageHeight - y);
-            return new PixelRect(x, y, width, height);
-        }
-
-        /// <summary>그림에서 퍼센트로 적은 자리를 잘라 얼린 그림으로 돌려준다. 자를 자리가 1픽셀도 안 되면 원본 그대로.</summary>
-        public static BitmapSource Crop(BitmapSource image, PercentRegion region)
-        {
-            PixelRect rect = RegionRect(image.PixelWidth, image.PixelHeight, region);
-            if (rect.IsEmpty)
-                return image;
-
-            var cropped = new CroppedBitmap(image, new Int32Rect(rect.X, rect.Y, rect.Width, rect.Height));
-            cropped.Freeze();
-            return cropped;
         }
 
         /// <summary>

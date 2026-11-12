@@ -678,16 +678,16 @@ namespace TWChatOverlay.Models
                 OnPropertyChanged();
             }
         }
-        /// <summary>찍은 게임 화면에서 잘라 보여 줄 자리: "왼쪽,위,너비,높이" (%). 잘못 적히면 서비스가 기본값으로 자른다.</summary>
+        /// <summary>순서 공지가 뜨는 자리: "너비,위,높이" (게임 해상도 픽셀, 가로 가운데 기준). 잘못 적히면 서비스가 기본값을 쓴다.</summary>
         [JsonIgnore]
-        public string DoomSentenceCaptureRegion
+        public string DoomSentenceNoticeBox
         {
-            get => string.IsNullOrWhiteSpace(Alerts.Dungeon.DoomSentenceCaptureRegion) ? "34,17,32,15" : Alerts.Dungeon.DoomSentenceCaptureRegion;
+            get => string.IsNullOrWhiteSpace(Alerts.Dungeon.DoomSentenceNoticeBox) ? "500,200,105" : Alerts.Dungeon.DoomSentenceNoticeBox;
             set
             {
                 string text = (value ?? string.Empty).Trim();
-                if (Alerts.Dungeon.DoomSentenceCaptureRegion == text) return;
-                Alerts.Dungeon.DoomSentenceCaptureRegion = text;
+                if (Alerts.Dungeon.DoomSentenceNoticeBox == text) return;
+                Alerts.Dungeon.DoomSentenceNoticeBox = text;
                 OnPropertyChanged();
             }
         }

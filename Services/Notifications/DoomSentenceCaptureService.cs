@@ -37,11 +37,12 @@ namespace TWChatOverlay.Services
     public sealed class DoomSentenceCaptureService
     {
         /// <summary>
-        /// 자를 영역 기본값 (왼쪽,위,너비,높이 %). 설정이 비었거나 잘못 적혔을 때도 이 값을 쓴다.
-        /// 2026-11-12 실제 1회차 캡처(게임 1920x1080, 확대 화면 2576x1449)로 잰 자리: 공지 글은 가로 40~60% · 세로 20~25%에 뜬다.
-        /// 발판 8개일 때는 순서가 두 줄이라 아래로 여유를 뒀다.
+        /// 공지 영역 기본값: 너비,위,높이 (게임 해상도 픽셀, 가로 가운데 기준). 설정이 비었거나 잘못 적혔을 때도 이 값을 쓴다.
+        /// 2026-11-12 실제 캡처로 잰 자리: 1920x1080(확대 1.34배)와 1024x768 모두 공지 글이 가운데 ±200px · 위 213~288px에 뜬다
+        /// (발판 6 · 8개는 순서가 두 줄). 앞뒤로 여유를 조금 뒀다. 처음엔 화면 크기의 퍼센트(34,17,32,15)로 잡았다가
+        /// 1024x768 에서 순서 줄이 잘려 못 읽었다.
         /// </summary>
-        public const string DefaultRegionText = "34,17,32,15";
+        public const string DefaultBoxText = "500,200,105";
         public const int DefaultDelayMilliseconds = 250;
 
         // 다 밟았을 때 창을 조금 더 보여 준 뒤 닫는다
@@ -57,10 +58,10 @@ namespace TWChatOverlay.Services
         private volatile int _roundTotal;   // 이번 회차의 발판 수 (다 밟았을 때 n / n 으로 채운다)
 
         /// <summary>한 회차의 캡처 설정 (UI 스레드에서 읽어 백그라운드로 넘긴다).</summary>
-        private sealed record CaptureOptions(int DelayMilliseconds, string RegionText, bool Save, string? ProcessNames, int BurstFrames, int BurstIntervalMilliseconds);
+        private sealed record CaptureOptions(int DelayMilliseconds, string BoxText, bool Save, string? ProcessNames, int BurstFrames, int BurstIntervalMilliseconds);
 
-        /// <summary>첫 장을 찍은 결과. Shown 이 null 이면 못 찍은 것이고 Note 에 까닭이 있다.</summary>
-        private sealed record FirstCapture(BitmapSource? Shown, string? Note, ScreenCaptureHelper.PixelRect CropRect, string? FilePrefix);
+        /// <summary>첫 장을 찍은 결과. Shown 이 null 이면 못 찍은 것이고 Note 에 까닭이 있다. Scale 은 그림이 게임 해상도의 몇 배로 찍혔는지.</summary>
+        private sealed record FirstCapture(BitmapSource? Shown, string? Note, ScreenCaptureHelper.PixelRect CropRect, string? FilePrefix, double Scale = 1.0);
 
         /// <summary>한 회차에서 글자 인식을 이어 가며 쌓는 것.</summary>
         private sealed class Recognition
@@ -118,7 +119,7 @@ namespace TWChatOverlay.Services
 
                 var options = new CaptureOptions(
                     settings?.DoomSentenceCaptureDelayMilliseconds ?? DefaultDelayMilliseconds,
-                    settings?.DoomSentenceCaptureRegion ?? DefaultRegionText,
+                    settings?.DoomSentenceNoticeBox ?? DefaultBoxText,
                     settings?.SaveDoomSentenceCapture ?? false,
                     settings?.TopmostGuardProcessNames,
                     settings?.DoomSentenceCaptureBurstFrames ?? 1,
@@ -181,7 +182,7 @@ namespace TWChatOverlay.Services
             try
             {
                 bool burst = canBurst && options.BurstFrames > 1;
-                await ReadAndShowAsync(generation, first.Shown!, total, "1장", recognition, isLast: !burst).ConfigureAwait(false);
+                await ReadAndShowAsync(generation, first.Shown!, first.Scale, total, "1장", recognition, isLast: !burst).ConfigureAwait(false);
 
                 BitmapSource best = first.Shown!;
                 if (burst)
@@ -322,7 +323,7 @@ namespace TWChatOverlay.Services
                 if (merged)
                     composite = latest;
 
-                await ReadAndShowAsync(generation, latest, total, merged ? $"{frames.Count}장 합침" : $"{frameNumber}번째 장", recognition,
+                await ReadAndShowAsync(generation, latest, first.Scale, total, merged ? $"{frames.Count}장 합침" : $"{frameNumber}번째 장", recognition,
                     isLast: index == options.BurstFrames).ConfigureAwait(false);
             }
 
@@ -337,9 +338,9 @@ namespace TWChatOverlay.Services
         /// <summary>
         /// 그림 하나를 읽어, 낱말 수가 발판 수와 같으면 창에 순서를 띄운다. 앞서 읽은 순서와 같거나 마지막 장이면 확정으로 본다.
         /// </summary>
-        private async Task ReadAndShowAsync(int generation, BitmapSource image, int total, string label, Recognition recognition, bool isLast)
+        private async Task ReadAndShowAsync(int generation, BitmapSource image, double captureScale, int total, string label, Recognition recognition, bool isLast)
         {
-            DoomSentenceOcr.Result? result = await Task.Run(() => DoomSentenceOcr.RecognizeAsync(image)).ConfigureAwait(false);
+            DoomSentenceOcr.Result? result = await Task.Run(() => DoomSentenceOcr.RecognizeAsync(image, captureScale)).ConfigureAwait(false);
             IReadOnlyList<DoomPad> order = result?.Order ?? Array.Empty<DoomPad>();
             bool valid = total > 0 && order.Count == total;
 
@@ -366,31 +367,30 @@ namespace TWChatOverlay.Services
 
         private static FirstCapture CaptureFirst(int round, CaptureOptions options)
         {
-            ScreenCaptureHelper.PixelRect? area = ScreenCaptureHelper.ResolveGameArea(options.ProcessNames, ScalerTopmostGuard.MagpieWindowClass);
-            if (area == null)
+            ScreenCaptureHelper.GameView? view = ScreenCaptureHelper.ResolveGameView(options.ProcessNames, ScalerTopmostGuard.MagpieWindowClass);
+            if (view == null)
                 return new FirstCapture(null, "게임 창을 찾지 못했습니다", default, null);
 
-            BitmapSource full = ScreenCaptureHelper.Capture(area.Value);
+            if (!ScreenCaptureHelper.TopCenterBox.TryParse(options.BoxText, out ScreenCaptureHelper.TopCenterBox box))
+                ScreenCaptureHelper.TopCenterBox.TryParse(DefaultBoxText, out box);
 
-            if (!ScreenCaptureHelper.PercentRegion.TryParse(options.RegionText, out ScreenCaptureHelper.PercentRegion region))
-                ScreenCaptureHelper.PercentRegion.TryParse(DefaultRegionText, out region);
-
-            // 이어 찍을 때는 화면에서 이 자리만 바로 찍는다 (전체를 찍으면 장마다 0.1초가 든다)
-            ScreenCaptureHelper.PixelRect inner = ScreenCaptureHelper.RegionRect(area.Value.Width, area.Value.Height, region);
-            var cropRect = new ScreenCaptureHelper.PixelRect(area.Value.X + inner.X, area.Value.Y + inner.Y, inner.Width, inner.Height);
-            BitmapSource cropped = ScreenCaptureHelper.Crop(full, region);
+            // 공지 자리만 화면에서 바로 찍는다 (수 ms). 게임 화면 전체는 '캡처 원본 저장'을 켰을 때만 따로 찍어 남긴다 (0.1초쯤 든다)
+            ScreenCaptureHelper.PixelRect cropRect = ScreenCaptureHelper.BoxRect(view.Value, box);
+            if (cropRect.IsEmpty)
+                return new FirstCapture(null, "공지 영역 설정이 게임 화면을 벗어납니다", default, null);
+            BitmapSource cropped = ScreenCaptureHelper.Capture(cropRect);
 
             string? prefix = null;
             if (options.Save)
             {
                 string directory = LogStoragePaths.DoomSentenceDirectory;
                 prefix = Path.Combine(directory, $"{DateTime.Now:yyyyMMdd-HHmmss}_r{round}");
-                TrySave(full, prefix + ".png");
                 TrySave(cropped, prefix + "_f1.png");
+                try { TrySave(ScreenCaptureHelper.Capture(view.Value.Area), prefix + ".png"); } catch { }
                 PruneOldCaptures(directory);
             }
 
-            return new FirstCapture(cropped, null, cropRect, prefix);
+            return new FirstCapture(cropped, null, cropRect, prefix, view.Value.Scale);
         }
 
         private static void TrySave(BitmapSource image, string path)

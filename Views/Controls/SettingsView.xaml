@@ -1288,8 +1288,8 @@
                     </Border>
                     <Border Style="{StaticResource SettingsRowStyle}">
                         <DockPanel>
-                            <TextBox DockPanel.Dock="Right" Width="110" Text="{Binding Settings.DoomSentenceCaptureRegion, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource SettingsRowInputStyle}"/>
-                            <TextBlock Text="운명 선고 자를 영역(%)" Style="{StaticResource SettingsRowLabelStyle}" ToolTip="게임 화면에서 순서 공지가 뜨는 자리(글자 인식에 쓸 부분): 왼쪽,위,너비,높이 (게임 화면 크기에 대한 %). 기본 34,17,32,15"/>
+                            <TextBox DockPanel.Dock="Right" Width="110" Text="{Binding Settings.DoomSentenceNoticeBox, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource SettingsRowInputStyle}"/>
+                            <TextBlock Text="운명 선고 공지 영역(px)" Style="{StaticResource SettingsRowLabelStyle}" ToolTip="순서 공지가 뜨는 자리(글자 인식에 쓸 부분): 너비,위,높이 — 게임 해상도 픽셀, 가로 가운데 기준. 확대 프로그램을 쓰면 배율만큼 늘려 찍습니다. 기본 500,200,105"/>
                         </DockPanel>
                     </Border>
                     <Border Style="{StaticResource SettingsRowStyle}">
