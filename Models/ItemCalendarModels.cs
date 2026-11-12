@@ -235,7 +235,7 @@ namespace TWChatOverlay.Models
             ["이클립스헬름"] = "이클립스_헬름.png",
             ["이클립스휩"] = "이클립스_휩.png",
 
-            // 테네브리스 개별 장비 (이미지가 있는 38종 — 없는 부위는 [테] 글자 표기로 남는다)
+            // 테네브리스 개별 장비 — 장비 표에 있는 38종 전부 (무기 31, 손목 2, 장비 세트 5). 로브·메일·방패 등은 테네브리스에 없다
             ["테네브리스건틀렛"] = "테네브리스_건틀렛.png",
             ["테네브리스글라디우스(sub)"] = "테네브리스_글라디우스(sub).png",
             ["테네브리스글라디우스"] = "테네브리스_글라디우스.png",
@@ -379,7 +379,6 @@ namespace TWChatOverlay.Models
             Grade = grade;
             Count = Math.Max(1, count);
             IconUri = ResolveIconUri(displayName);
-            FallbackGlyph = ResolveFallbackGlyph(displayName);
         }
 
         public string DisplayName { get; }
@@ -392,12 +391,8 @@ namespace TWChatOverlay.Models
         public string? IconUri { get; }
         public bool HasIcon => IconUri != null;
 
-        /// <summary>이미지가 없는 아이템의 한 글자 대체 표기 (예: 테네브리스 → "테").</summary>
-        public string? FallbackGlyph { get; }
-        public bool HasGlyph => !HasIcon && FallbackGlyph != null;
-
-        /// <summary>그림 모드의 네모 칸에 아이콘 대신 쓸 글자. 이미지가 없는 아이템은 이름 첫 글자.</summary>
-        public string SlotGlyph => FallbackGlyph ?? (DisplayName.Length > 0 ? DisplayName.Substring(0, char.IsSurrogatePair(DisplayName, 0) ? 2 : 1) : "?");
+        /// <summary>그림 모드의 네모 칸에 아이콘 대신 쓸 글자 — 이미지가 없는 아이템은 이름 첫 글자.</summary>
+        public string SlotGlyph => DisplayName.Length > 0 ? DisplayName.Substring(0, char.IsSurrogatePair(DisplayName, 0) ? 2 : 1) : "?";
 
         /// <summary>그림 모드에서 개수를 아이콘 위에 겹쳐 보일지 — 2개 이상일 때만.</summary>
         public bool ShowStackCount => Count >= 2;
@@ -405,15 +400,6 @@ namespace TWChatOverlay.Models
         public string StackCountText => Count >= 1000
             ? (Count / 1000).ToString(CultureInfo.InvariantCulture) + "k"
             : Count.ToString(CultureInfo.InvariantCulture);
-
-        private static string? ResolveFallbackGlyph(string displayName)
-        {
-            // 테네브리스 장비 중 이미지가 아직 없는 부위는 [테] 글자로 표기
-            if (!string.IsNullOrEmpty(displayName) && displayName.StartsWith("테네브리스", StringComparison.Ordinal))
-                return "테";
-
-            return null;
-        }
 
         private static string? ResolveIconUri(string displayName)
         {
