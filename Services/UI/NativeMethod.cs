@@ -80,6 +80,14 @@ namespace TWChatOverlay
         [DllImport("user32.dll", SetLastError = true)]
         public static extern bool UnregisterHotKey(IntPtr hWnd, int id);
 
+        // ----- 창 가림 (잠금 해제 모드 창 목록) -----
+
+        /// <summary>창을 화면에서만 가린다. 앱이 보는 상태(IsVisible)는 그대로라 창별 표시 설정을 건드리지 않는다.</summary>
+        public const int DWMWA_CLOAK = 13;
+
+        [DllImport("dwmapi.dll")]
+        public static extern int DwmSetWindowAttribute(IntPtr hwnd, int attribute, ref int value, int size);
+
         // ----- 모니터 열거 (ScreenBoundsHelper) -----
 
         public const int SM_XVIRTUALSCREEN = 76;

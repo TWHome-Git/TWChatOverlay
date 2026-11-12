@@ -186,6 +186,10 @@ namespace TWChatOverlay.Services
                 if (UiLockService.IsUnlockChrome(window))
                     continue;
 
+                // 잠금 해제 모드 창 목록에서 숨겨 둔 창에는 붙지 않는다
+                if (AppServices.Get<UiLockService>().IsHiddenInUnlock(window))
+                    continue;
+
                 yield return window;
             }
         }
