@@ -17,7 +17,8 @@ namespace TWChatOverlay.Views
             Segments = segments;
             Foreground = foreground;
             FontFamily = fontFamily;
-            FontSize = fontSize;
+            // 설정 파일이 깨져 크기가 0 이하로 들어오면 글자 배치가 예외를 던져 줄이 통째로 빠진다 — 기본 크기로 그린다
+            FontSize = double.IsFinite(fontSize) && fontSize > 0 ? Math.Min(fontSize, 500) : 12;
         }
 
         public IReadOnlyList<(string Text, Brush? Brush)> Segments { get; }
@@ -39,6 +40,9 @@ namespace TWChatOverlay.Views
     {
         /// <summary>줄 아래 간격. 예전 문단 Margin(0,0,0,1)과 같다.</summary>
         private const double LineGap = 1.0;
+        // 줄 자리는 문서 좌표로 계속 쌓인다. 값이 커지면 그리는 쪽(단정도 실수)에서 자리가 어긋나므로
+        // (약 1,677만 px부터 줄이 픽셀 단위로 밀린다) 이만큼 쌓일 때마다 좌표를 앞으로 당긴다.
+        private const double RebaseThreshold = 50_000;
 
         private sealed class Line
         {
@@ -182,7 +186,29 @@ namespace TWChatOverlay.Views
 
             if (selectionTouched)
                 ClampSelectionAfterTrim();
+            RebaseIfNeeded();
             OnContentChanged();
+        }
+
+        /// <summary>
+        /// 오래 켜 두면 좌표가 끝없이 커지지 않게, 지워진 줄만큼 쌓인 좌표를 앞으로 당긴다. 보이는 모습은 그대로다.
+        /// </summary>
+        private void RebaseIfNeeded()
+        {
+            if (_contentTop < RebaseThreshold)
+                return;
+
+            // 96의 배수만큼만 옮긴다 — 어떤 화면 배율에서도 화면 픽셀의 정수 배라서 줄마다 맞춰 둔 픽셀 자리가 그대로 유지된다
+            double shift = Math.Floor(_contentTop / 96) * 96;
+            foreach (Line line in _lines)
+            {
+                line.Top -= shift;
+                line.Visual.Offset = new Vector(0, SnapY(line.Top));
+            }
+            _contentTop -= shift;
+            _contentBottom -= shift;
+            _viewTop -= shift;
+            UpdateSelectionVisual();
         }
 
         public void Clear()
@@ -313,8 +339,12 @@ namespace TWChatOverlay.Views
                 ApplyView();
         }
 
-        /// <summary>문서 좌표를 화면 픽셀 경계에 맞춘다 — 글자가 반 픽셀에 걸려 번지지 않게.</summary>
-        private double SnapY(double y) => Math.Round(y * _pixelsPerDip) / _pixelsPerDip;
+        /// <summary>
+        /// 문서 좌표를 화면 픽셀 경계에 맞춘다 — 글자가 반 픽셀에 걸려 번지지 않게.
+        /// 딱 반 픽셀에 걸린 값은 계산 오차와 상관없이 늘 같은 쪽(아래)으로 간다. Math.Round는 그런 값을 짝수 쪽으로 보내서
+        /// 좌표를 통째로 옮기면(RebaseIfNeeded) 줄이 1픽셀 달라질 수 있다.
+        /// </summary>
+        private double SnapY(double y) => Math.Floor(y * _pixelsPerDip + 0.5 + 1e-7) / _pixelsPerDip;
 
         private void ApplyView()
         {
