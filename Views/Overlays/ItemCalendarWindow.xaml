@@ -330,12 +330,14 @@
                                                                             </Style>
                                                                         </TextBlock.Style>
                                                                     </TextBlock>
-                                                                    <!-- 높이 고정: 모든 아이콘 칩이 동일한 크기로 표시 -->
+                                                                    <!-- 높이 고정: 모든 아이콘 칩이 동일한 크기로 표시.
+                                                                         원본이 64px라 줄여 그려도 선명하다 — 줄일 때 계단이 지지 않게 고품질 축소를 쓴다 -->
                                                                     <Grid>
                                                                         <Image x:Name="EntryIcon"
                                                                                Source="{Binding IconUri}"
                                                                                Stretch="Uniform"
-                                                                               Height="30"
+                                                                               Height="24"
+                                                                               RenderOptions.BitmapScalingMode="HighQuality"
                                                                                VerticalAlignment="Center">
                                                                             <Image.Style>
                                                                                 <Style TargetType="Image">
@@ -354,7 +356,7 @@
                                                                         <TextBlock x:Name="EntryGlyph"
                                                                                    Text="{Binding FallbackGlyph}"
                                                                                    Foreground="{DynamicResource TextBrush}"
-                                                                                   FontSize="20"
+                                                                                   FontSize="16"
                                                                                    FontWeight="Bold"
                                                                                    HorizontalAlignment="Center"
                                                                                    VerticalAlignment="Center">
