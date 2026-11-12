@@ -9,8 +9,8 @@ using TWChatOverlay.Services;
 namespace TWChatOverlay.Views
 {
     /// <summary>
-    /// 운명 선고 발판 하나를 나타내는 그림: 둥근 색 버튼 위에 흰 화살표, 아래에 차례 번호
-    /// (2026-11-12 사용자가 보여 준 게임 그림 느낌 — 흰 테 · 색 버튼 · 굵은 흰 화살표).
+    /// 운명 선고 발판 하나를 나타내는 그림: 흰 둥근 바탕 위에 모서리가 둥근 색 화살표, 아래에 차례 번호
+    /// (2026-11-12 사용자: 게임의 둥근 버튼 느낌으로 시작해, 화살표에 색을 칠하고 바탕은 흰색 · 화살표는 둥글게).
     /// 방향과 색(게임의 가면 색): 기쁨 ← 핑크 · 슬픔 ↑ 보라 · 즐거움 ↓ 파랑 · 분노 → 빨강.
     /// 밟은 것은 흐리게, 다음에 밟을 것은 금색 테로 빛나게 그린다. <see cref="DoomSentenceCaptureWindow"/>가 순서대로 늘어놓는다.
     /// </summary>
@@ -42,7 +42,7 @@ namespace TWChatOverlay.Views
 
         private static Geometry CreateArrowGeometry()
         {
-            Geometry geometry = Geometry.Parse("M 12,37 L 52,37 L 52,14 L 92,50 L 52,86 L 52,63 L 12,63 Z");
+            Geometry geometry = Geometry.Parse("M 14,38 L 52,38 L 52,18 L 88,50 L 52,82 L 52,62 L 14,62 Z");
             geometry.Freeze();
             return geometry;
         }
@@ -53,49 +53,53 @@ namespace TWChatOverlay.Views
 
             var button = new Grid { Width = size, Height = size };
 
-            // 바깥 흰 테 (다음에 밟을 것은 금색으로 두껍게 빛난다)
+            // 다음에 밟을 것만 금색 테가 빛난다
+            if (current)
+            {
+                button.Children.Add(new Ellipse
+                {
+                    Fill = new SolidColorBrush(Color.FromRgb(0xFF, 0xD8, 0x3A)),
+                    Effect = new DropShadowEffect
+                    {
+                        Color = Color.FromRgb(0xFF, 0xE0, 0x60),
+                        BlurRadius = size * 0.28,
+                        ShadowDepth = 0,
+                        Opacity = 0.95,
+                    },
+                });
+            }
+
+            // 흰 바탕 (2026-11-12 사용자: 화살표에 색을 칠하고 바탕은 그냥 흰색으로). 어두운 게임 화면 위에서 떠 보이게 그림자만 준다
             button.Children.Add(new Ellipse
             {
-                Fill = current ? new SolidColorBrush(Color.FromRgb(0xFF, 0xD8, 0x3A)) : Brushes.White,
-                Effect = new DropShadowEffect
+                Margin = new Thickness(current ? size * 0.07 : 0),
+                Fill = Brushes.White,
+                Stroke = new SolidColorBrush(Color.FromArgb(0x40, 0, 0, 0)),
+                StrokeThickness = 1,
+                Effect = current ? null : new DropShadowEffect
                 {
-                    Color = current ? Color.FromRgb(0xFF, 0xE0, 0x60) : Colors.Black,
-                    BlurRadius = current ? size * 0.28 : size * 0.12,
-                    ShadowDepth = current ? 0 : size * 0.03,
-                    Opacity = current ? 0.95 : 0.55,
+                    Color = Colors.Black,
+                    BlurRadius = size * 0.12,
+                    ShadowDepth = size * 0.03,
+                    Opacity = 0.55,
                 },
             });
 
-            // 색 버튼: 위 왼쪽이 밝고 가장자리가 어두운 둥근 면
-            var face = new RadialGradientBrush
-            {
-                GradientOrigin = new Point(0.35, 0.28),
-                Center = new Point(0.5, 0.5),
-                RadiusX = 0.62,
-                RadiusY = 0.62,
-            };
-            face.GradientStops.Add(new GradientStop(Lighten(color, 0.45), 0.0));
-            face.GradientStops.Add(new GradientStop(color, 0.55));
-            face.GradientStops.Add(new GradientStop(Darken(color, 0.3), 1.0));
-            face.Freeze();
-            button.Children.Add(new Ellipse
-            {
-                Margin = new Thickness(size * (current ? 0.09 : 0.07)),
-                Fill = face,
-                Stroke = new SolidColorBrush(Darken(color, 0.4)),
-                StrokeThickness = Math.Max(1, size * 0.015),
-            });
-
-            // 흰 화살표
+            // 색 화살표. 같은 색의 굵은 둥근 테를 둘러 모서리를 둥글린다 (테 두께만큼 도형이 커지므로 여백을 그만큼 더 준다)
+            var arrowBrush = new SolidColorBrush(color);
+            arrowBrush.Freeze();
+            double round = size * 0.085;
             button.Children.Add(new Path
             {
                 Data = ArrowGeometry,
-                Fill = Brushes.White,
-                Stroke = new SolidColorBrush(Color.FromArgb(0x70, 0, 0, 0)),
-                StrokeThickness = 1.5,
+                Fill = arrowBrush,
+                Stroke = arrowBrush,
+                StrokeThickness = round,
                 StrokeLineJoin = PenLineJoin.Round,
+                StrokeStartLineCap = PenLineCap.Round,
+                StrokeEndLineCap = PenLineCap.Round,
                 Stretch = Stretch.Uniform,
-                Margin = new Thickness(size * 0.22),
+                Margin = new Thickness(size * (current ? 0.24 : 0.2)),
                 RenderTransformOrigin = new Point(0.5, 0.5),
                 RenderTransform = new RotateTransform(angle),
             });
@@ -122,14 +126,6 @@ namespace TWChatOverlay.Views
             return cell;
         }
 
-        private static Color Lighten(Color color, double amount) => Color.FromRgb(
-            (byte)(color.R + (255 - color.R) * amount),
-            (byte)(color.G + (255 - color.G) * amount),
-            (byte)(color.B + (255 - color.B) * amount));
 
-        private static Color Darken(Color color, double amount) => Color.FromRgb(
-            (byte)(color.R * (1 - amount)),
-            (byte)(color.G * (1 - amount)),
-            (byte)(color.B * (1 - amount)));
     }
 }
