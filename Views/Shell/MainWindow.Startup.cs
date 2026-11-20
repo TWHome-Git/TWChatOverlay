@@ -562,7 +562,8 @@ namespace TWChatOverlay.Views
 
                 var updateResult = await updateTask;
                 AppLogger.Info($"Startup data initialization: update check completed with result={updateResult}.");
-                if (updateResult == UpdateCheckResult.UpdateApplied)
+                // 업데이트를 적용했거나, 필수 업데이트를 하지 않아 앱을 끝내는 중이면 더 진행하지 않는다
+                if (updateResult is UpdateCheckResult.UpdateApplied or UpdateCheckResult.RequiredUpdateDeclined)
                 {
                     return;
                 }

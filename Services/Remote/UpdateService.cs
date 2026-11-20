@@ -19,7 +19,9 @@ namespace TWChatOverlay.Services
         NoUpdate,
         UpdateDeclined,
         UpdateApplied,
-        Failed
+        Failed,
+        /// <summary>필수 업데이트를 하지 않아 앱을 끝냈다.</summary>
+        RequiredUpdateDeclined
     }
 
     public static class UpdateService
@@ -34,7 +36,24 @@ namespace TWChatOverlay.Services
         private sealed record ReleaseInfo(string TagName, Version LatestVersion, string ReleaseBody, string? DownloadUrl, bool IsPrerelease = false);
 
         public static Version GetCurrentVersion()
-            => Assembly.GetExecutingAssembly().GetName().Version ?? new Version(0, 0, 0);
+            => Normalize(Assembly.GetExecutingAssembly().GetName().Version ?? new Version(0, 0, 0));
+
+        /// <summary>견주기 쉽게 네 자리를 다 채운다 (적지 않은 자리는 0). "5.1.12" 와 "5.1.12.0" 이 같은 버전이 된다.</summary>
+        internal static Version Normalize(Version version)
+            => new(version.Major, version.Minor, Math.Max(0, version.Build), Math.Max(0, version.Revision));
+
+        /// <summary>
+        /// 꼭 받아야 하는 업데이트인지: 기능 버전(앞 세 자리)은 같고 빌드 번호(넷째 자리)만 더 높을 때.
+        /// 같은 버전을 다시 빌드해 내보냈다는 뜻이라, 먼저 받은 빌드를 계속 쓰지 못하게 한다.
+        /// 기능 버전이 올라간 보통 업데이트는 지금처럼 미룰 수 있다.
+        /// </summary>
+        internal static bool IsRequiredUpdate(Version current, Version latest)
+        {
+            current = Normalize(current);
+            latest = Normalize(latest);
+            return latest.Major == current.Major && latest.Minor == current.Minor && latest.Build == current.Build
+                && latest.Revision > current.Revision;
+        }
 
         public static async Task<UpdateCheckResult> CheckForUpdateAsync(bool forceInstallLatest, bool showNoUpdateMessage)
         {
@@ -52,12 +71,14 @@ namespace TWChatOverlay.Services
 
                 Version currentVersion = GetCurrentVersion();
                 bool hasNewer = release.LatestVersion > currentVersion;
+                // 수동 업데이트(설정에서 직접 누른 것)는 필수로 다루지 않는다 — 자동 확인에서만 막는다
+                bool required = !forceInstallLatest && IsRequiredUpdate(currentVersion, release.LatestVersion);
                 bool shouldPrompt = forceInstallLatest || hasNewer;
 #if DEBUG
                 // 디버그 빌드: 창 디자인 확인용으로 최신 버전이어도 업데이트 창을 항상 띄운다
                 shouldPrompt = true;
 #endif
-                AppLogger.Info($"Update metadata loaded in {stopwatch.ElapsedMilliseconds} ms. Current={FormatVersion(currentVersion)}, Latest={release.TagName}, HasNewer={hasNewer}");
+                AppLogger.Info($"Update metadata loaded in {stopwatch.ElapsedMilliseconds} ms. Current={FormatVersion(currentVersion)}, Latest={release.TagName}, HasNewer={hasNewer}, Required={required}");
 
                 if (!shouldPrompt)
                 {
@@ -79,7 +100,19 @@ namespace TWChatOverlay.Services
                     return UpdateCheckResult.NoUpdate;
                 }
 
-                bool confirmed = await ShowUpdatePromptAsync(currentVersion, release, forceInstallLatest).ConfigureAwait(false);
+                bool confirmed = await ShowUpdatePromptAsync(currentVersion, release, forceInstallLatest, required).ConfigureAwait(false);
+                if (!confirmed && required)
+                {
+                    AppLogger.Warn($"Required update was declined; shutting down. Current={FormatVersion(currentVersion)}, Latest={release.TagName}");
+                    await InvokeOnUIAsync(() =>
+                    {
+                        AppServices.Get<ChatWindowHub>().BeginShutdown();
+                        Application.Current.Shutdown();
+                        return true;
+                    }).ConfigureAwait(false);
+                    return UpdateCheckResult.RequiredUpdateDeclined;
+                }
+
                 if (!confirmed)
                 {
                     AppLogger.Info($"Update prompt was declined after {stopwatch.ElapsedMilliseconds} ms.");
@@ -162,15 +195,17 @@ namespace TWChatOverlay.Services
             return client;
         }
 
-        private static Task<bool> ShowUpdatePromptAsync(Version currentVersion, ReleaseInfo release, bool forceInstallLatest)
+        private static Task<bool> ShowUpdatePromptAsync(Version currentVersion, ReleaseInfo release, bool forceInstallLatest, bool required)
         {
-            string windowTitle = forceInstallLatest ? "수동 업데이트" : "업데이트 알림";
+            string windowTitle = forceInstallLatest ? "수동 업데이트" : required ? "필수 업데이트" : "업데이트 알림";
             string headline = forceInstallLatest
                 ? (release.IsPrerelease ? "베타 버전을 설치합니다." : "최신 버전을 다시 설치합니다.")
-                : "업데이트 내역";
+                : required ? "같은 버전의 수정된 빌드가 나왔습니다. 업데이트해야 계속 쓸 수 있습니다." : "업데이트 내역";
             string footerHint = forceInstallLatest
                 ? "업데이트를 시작하면 앱이 잠시 종료되고 최신 파일이 다시 설치됩니다."
-                : "업데이트를 시작하면 앱이 잠시 종료되고 최신 파일이 적용됩니다.";
+                : required
+                    ? "업데이트하지 않으면 앱이 종료됩니다."
+                    : "업데이트를 시작하면 앱이 잠시 종료되고 최신 파일이 적용됩니다.";
             string confirmText = forceInstallLatest ? "다시 설치" : "업데이트";
             string currentText = $"v{FormatVersion(currentVersion)}";
             string latestText = release.TagName.StartsWith("v", StringComparison.OrdinalIgnoreCase)
@@ -188,7 +223,8 @@ namespace TWChatOverlay.Services
                     latestText,
                     release.ReleaseBody,
                     footerHint,
-                    confirmText);
+                    confirmText,
+                    cancelButtonText: required ? "앱 종료" : null);
 
                 Window? owner = ResolveOwnerWindow();
                 if (owner != null)
@@ -319,18 +355,22 @@ namespace TWChatOverlay.Services
             }
         }
 
-        private static Version ParseVersion(string tag)
+        internal static Version ParseVersion(string tag)
         {
-            string cleaned = tag.TrimStart('v', 'V');
+            string cleaned = tag.Trim().TrimStart('v', 'V');
             // 베타 태그(v5.1.0-beta 등)는 접미사를 떼고 버전만 파싱한다
             int suffixIndex = cleaned.IndexOf('-');
             if (suffixIndex > 0)
                 cleaned = cleaned[..suffixIndex];
-            return Version.TryParse(cleaned, out var version) ? version : new Version(0, 0, 0);
+            return Version.TryParse(cleaned, out var version) ? Normalize(version) : new Version(0, 0, 0, 0);
         }
 
-        private static string FormatVersion(Version version)
-            => version.Build >= 0 ? version.ToString(3) : version.ToString(2);
+        /// <summary>보여 줄 때는 빌드 번호(넷째 자리)가 0이면 세 자리만, 아니면 네 자리를 다 쓴다 (5.1.13 / 5.1.12.1).</summary>
+        internal static string FormatVersion(Version version)
+        {
+            version = Normalize(version);
+            return version.Revision > 0 ? version.ToString(4) : version.ToString(3);
+        }
 
         private static Window? ResolveOwnerWindow()
         {

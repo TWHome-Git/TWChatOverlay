@@ -13,7 +13,8 @@ namespace TWChatOverlay.Views
             string latestVersion,
             string releaseNotes,
             string footerHint,
-            string updateButtonText)
+            string updateButtonText,
+            string? cancelButtonText = null)
         {
             InitializeComponent();
             WindowFontService.Apply(this);
@@ -29,6 +30,9 @@ namespace TWChatOverlay.Views
                 : releaseNotes.Trim();
             FooterHintText.Text = footerHint;
             UpdateButton.Content = updateButtonText;
+            // 필수 업데이트에서는 "취소" 대신 무슨 일이 일어나는지 적는다 ("앱 종료")
+            if (!string.IsNullOrWhiteSpace(cancelButtonText))
+                CancelButton.Content = cancelButtonText;
         }
 
         private void TitleBar_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
