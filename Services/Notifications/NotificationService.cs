@@ -20,7 +20,9 @@ namespace TWChatOverlay.Services
         Reflection,
         ExpBuff,
         BuffTracker,
-        Boss
+        Boss,
+        /// <summary>설계자 패턴 음성 (전방 조심해 · 바닥 조심해).</summary>
+        Architect
     }
 
     /// <summary>
@@ -44,6 +46,8 @@ namespace TWChatOverlay.Services
             ["wave"] = AlertChannel.MagicCircle,
             ["reflection"] = AlertChannel.Reflection,
             ["reflectionend"] = AlertChannel.Reflection,
+            ["architectfront"] = AlertChannel.Architect,
+            ["architectfloor"] = AlertChannel.Architect,
             ["expbuffcheck"] = AlertChannel.ExpBuff,
             ["buffcheck"] = AlertChannel.BuffTracker,
             ["arkan"] = AlertChannel.Boss,
@@ -167,6 +171,7 @@ namespace TWChatOverlay.Services
                         AlertChannel.ExpBuff => Math.Clamp(settings.ExpBuffAlertVolume, 0.0, 1.0),
                         AlertChannel.BuffTracker => Math.Clamp(settings.BuffTrackerEndSoundVolume, 0.0, 1.0),
                         AlertChannel.Boss => Math.Clamp(settings.BossAlertVolume, 0.0, 1.0),
+                        AlertChannel.Architect => Math.Clamp(settings.ArchitectAlertVolume, 0.0, 1.0),
                         _ => 1.0
                     };
                 }

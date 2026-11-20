@@ -51,6 +51,7 @@ namespace TWChatOverlay.Views
         private NotificationService? _notificationServiceCache;
         private RecaptureSupplyAlertService? _recaptureSupplyAlertServiceCache;
         private RecaptureSupplyPadOrderService? _recaptureSupplyPadOrderServiceCache;
+        private ArchitectVoiceAlertService? _architectVoiceAlertServiceCache;
         private ContentTimerService? _contentTimerServiceCache;
         private ItemDropToastService? _itemDropToastServiceCache;
         private ShoutToastService? _shoutToastServiceCache;
@@ -59,6 +60,7 @@ namespace TWChatOverlay.Views
         private NotificationService NotificationServiceInstance => _notificationServiceCache ??= AppServices.Get<NotificationService>();
         private RecaptureSupplyAlertService RecaptureSupplyAlertServiceInstance => _recaptureSupplyAlertServiceCache ??= AppServices.Get<RecaptureSupplyAlertService>();
         private RecaptureSupplyPadOrderService RecaptureSupplyPadOrderServiceInstance => _recaptureSupplyPadOrderServiceCache ??= AppServices.Get<RecaptureSupplyPadOrderService>();
+        private ArchitectVoiceAlertService ArchitectVoiceAlertServiceInstance => _architectVoiceAlertServiceCache ??= AppServices.Get<ArchitectVoiceAlertService>();
         private ContentTimerService ContentTimerServiceInstance => _contentTimerServiceCache ??= AppServices.Get<ContentTimerService>();
         private ItemDropToastService ItemDropToastServiceInstance => _itemDropToastServiceCache ??= AppServices.Get<ItemDropToastService>();
         private ShoutToastService ShoutToastServiceInstance => _shoutToastServiceCache ??= AppServices.Get<ShoutToastService>();
@@ -321,6 +323,11 @@ namespace TWChatOverlay.Views
                         _itemCalendarWindow?.ApplyRealtimeExperienceEssenceLog(parseResult.FormattedText, DateTime.Today);
                 });
             }
+
+            // 설계자 패턴 음성: 보스 대사(일반 흰 글 — 분류표에 없는 색은 Unknown)와 시스템 줄만 본다. 팀 · 클럽 · 외치기에 같은 말이 섞여도 반응하지 않는다
+            if (shouldRunLiveUiEffects &&
+                (analysis.IsSystemLog || parseResult.Category is ChatCategory.Normal or ChatCategory.NormalSelf or ChatCategory.Unknown))
+                GuardSideEffect("architect-voice", () => ArchitectVoiceAlertServiceInstance.Observe(parseResult.FormattedText, analysis.IsSystemLog));
 
             // 던전 타이머: 시스템 줄과 보스 대사(일반 흰 글, 분류표에 없는 색은 Unknown)만 본다 — 팀·클럽·외치기에 같은 말이 섞여도 반응하지 않는다.
             // 실시간 줄만 본다 — 시작 시 과거 로그를 다시 읽으며 타이머가 도는 것을 막는다.

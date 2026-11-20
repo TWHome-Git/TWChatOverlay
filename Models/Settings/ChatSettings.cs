@@ -531,6 +531,32 @@ namespace TWChatOverlay.Models
         public bool ShowEtosHelperWindow { get => Alerts.Dungeon.ShowEtosHelperWindow; set { Alerts.Dungeon.ShowEtosHelperWindow = value; OnPropertyChanged(); } }
         [JsonIgnore]
         public bool EnableReflectionPatternAlert { get => Alerts.Dungeon.ReflectionPatternAlert; set { Alerts.Dungeon.ReflectionPatternAlert = value; OnPropertyChanged(); } }
+        /// <summary>설계자 레이저 패턴: "전방 조심해" 음성.</summary>
+        [JsonIgnore]
+        public bool EnableArchitectLaserAlert { get => Alerts.Dungeon.ArchitectLaserAlert; set { if (Alerts.Dungeon.ArchitectLaserAlert == value) return; Alerts.Dungeon.ArchitectLaserAlert = value; OnPropertyChanged(); } }
+        /// <summary>설계자 자리 이동 패턴: "바닥 조심해" 음성.</summary>
+        [JsonIgnore]
+        public bool EnableArchitectFloorAlert { get => Alerts.Dungeon.ArchitectFloorAlert; set { if (Alerts.Dungeon.ArchitectFloorAlert == value) return; Alerts.Dungeon.ArchitectFloorAlert = value; OnPropertyChanged(); } }
+        /// <summary>설계자 패턴 음성 볼륨 (0~1).</summary>
+        [JsonIgnore]
+        public double ArchitectAlertVolume
+        {
+            get => Alerts.Dungeon.ArchitectVoiceVolume;
+            set
+            {
+                double clamped = ClampVolume(value);
+                if (Math.Abs(Alerts.Dungeon.ArchitectVoiceVolume - clamped) < 0.0001) return;
+                Alerts.Dungeon.ArchitectVoiceVolume = clamped;
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(ArchitectAlertVolumePercent));
+            }
+        }
+        [JsonIgnore]
+        public double ArchitectAlertVolumePercent
+        {
+            get => Math.Round(Alerts.Dungeon.ArchitectVoiceVolume * 100.0, 0);
+            set => ArchitectAlertVolume = Math.Max(0.0, Math.Min(100.0, value)) / 100.0;
+        }
         [JsonIgnore]
         public bool EnableDischargeAlert { get => Alerts.Dungeon.DischargeAlert; set { Alerts.Dungeon.DischargeAlert = value; OnPropertyChanged(); } }
         [JsonIgnore]

@@ -156,6 +156,12 @@ namespace TWChatOverlay.Models
         public bool EtosDirectionAlert { get; set; } = true;
         public bool ShowEtosHelperWindow { get; set; } = false;
         public bool ReflectionPatternAlert { get; set; } = true;
+        /// <summary>설계자 레이저 패턴(보스 대사 "그대들의 영혼까지 절단시켜주마!"): "전방 조심해" 음성.</summary>
+        public bool ArchitectLaserAlert { get; set; } = true;
+        /// <summary>설계자 자리 이동 패턴(보스 대사 "공간의 저편에 너의 죽음이 기다리고 있다!"): "바닥 조심해" 음성.</summary>
+        public bool ArchitectFloorAlert { get; set; } = true;
+        /// <summary>설계자 패턴 음성 볼륨 (0~1).</summary>
+        public double ArchitectVoiceVolume { get; set; } = 1.0;
         /// <summary>감전 패턴: 방전에 걸린 동안 알림 창을 띄운다.</summary>
         public bool DischargeAlert { get; set; } = true;
         /// <summary>사냥 기록 창 글자 크기.</summary>

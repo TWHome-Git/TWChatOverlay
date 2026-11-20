@@ -1104,6 +1104,7 @@
                                      ToolTip="룬 경험치 던전 및 테시스 코어 던전"/>
                         <RadioButton x:Name="DungeonTabAbyss" Content="어비스" GroupName="DungeonTabs" Checked="AddonSubTab_Checked" Style="{StaticResource SettingsTabStyle}"/>
                         <RadioButton x:Name="DungeonTabEclipse" Content="이클립스" GroupName="DungeonTabs" Checked="AddonSubTab_Checked" Style="{StaticResource SettingsTabStyle}"/>
+                        <RadioButton x:Name="DungeonTabRubicona" Content="루비코나" GroupName="DungeonTabs" Checked="AddonSubTab_Checked" Style="{StaticResource SettingsTabStyle}"/>
                         <RadioButton x:Name="DungeonTabAbandon" Content="어밴던로드" GroupName="DungeonTabs" Checked="AddonSubTab_Checked" Style="{StaticResource SettingsTabStyle}"/>
                         <RadioButton x:Name="DungeonTabCraving" Content="갈망하는 즐거움" GroupName="DungeonTabs" Checked="AddonSubTab_Checked" Style="{StaticResource SettingsTabStyle}"/>
                         <RadioButton x:Name="DungeonTabTimer" Content="던전 타이머" GroupName="DungeonTabs" Checked="AddonSubTab_Checked" Style="{StaticResource SettingsTabStyle}"/>
@@ -1270,6 +1271,39 @@
                                 <TextBlock Text="보급품 탈환 미니 지도" Style="{StaticResource SettingsRowLabelStyle}"/>
                                 <Button Style="{StaticResource HelpButtonStyle}" Tag="dungeon.recapture_map" Click="Help_Click"/>
                             </StackPanel>
+                        </DockPanel>
+                    </Border>
+                </WrapPanel>
+                </StackPanel>
+
+                <!-- 루비코나: 설계자 패턴 음성 (레이저 · 자리 이동) -->
+                <StackPanel Visibility="{Binding IsChecked, ElementName=DungeonTabRubicona, Converter={StaticResource BooleanToVisibilityConverter}}">
+                <TextBlock Text="설계자" Style="{StaticResource SettingsSectionLabelStyle}" Margin="0,0,0,6"/>
+                <WrapPanel>
+                    <Border Style="{StaticResource SettingsRowStyle}">
+                        <DockPanel>
+                            <CheckBox DockPanel.Dock="Right" IsChecked="{Binding Settings.EnableArchitectLaserAlert, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                <TextBlock Text="설계자 레이저 패턴 음성 (전방 조심해)" Style="{StaticResource SettingsRowLabelStyle}"/>
+                                <Button Style="{StaticResource HelpButtonStyle}" Tag="dungeon.architect_voice" Click="Help_Click"/>
+                            </StackPanel>
+                        </DockPanel>
+                    </Border>
+                    <Border Style="{StaticResource SettingsRowStyle}">
+                        <DockPanel>
+                            <CheckBox DockPanel.Dock="Right" IsChecked="{Binding Settings.EnableArchitectFloorAlert, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
+                            <TextBlock Text="설계자 자리 이동 패턴 음성 (바닥 조심해)" Style="{StaticResource SettingsRowLabelStyle}"/>
+                        </DockPanel>
+                    </Border>
+                    <Border Style="{StaticResource SettingsRowStyle}">
+                        <DockPanel>
+                            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                                <Slider Width="120" Minimum="0" Maximum="100" TickFrequency="10" IsSnapToTickEnabled="True" VerticalAlignment="Center"
+                                        Tag="ArchitectFront.mp3" ValueChanged="PreviewSoundSlider_ValueChanged"
+                                        Value="{Binding Settings.ArchitectAlertVolumePercent, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                <TextBlock Text="{Binding Settings.ArchitectAlertVolumePercent, StringFormat={}{0:F0}%}" Foreground="{DynamicResource TextBrush}" Width="34" TextAlignment="Right" VerticalAlignment="Center" FontSize="12"/>
+                            </StackPanel>
+                            <TextBlock Text="설계자 패턴 음성 볼륨" Style="{StaticResource SettingsRowLabelStyle}"/>
                         </DockPanel>
                     </Border>
                 </WrapPanel>
