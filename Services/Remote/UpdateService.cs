@@ -7,6 +7,7 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Reflection;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
@@ -41,6 +42,27 @@ namespace TWChatOverlay.Services
         /// <summary>견주기 쉽게 네 자리를 다 채운다 (적지 않은 자리는 0). "5.1.12" 와 "5.1.12.0" 이 같은 버전이 된다.</summary>
         internal static Version Normalize(Version version)
             => new(version.Major, version.Minor, Math.Max(0, version.Build), Math.Max(0, version.Revision));
+
+        /// <summary>
+        /// 릴리스의 버전. 릴리스 이름(태그)은 기능 버전 세 자리만 쓰고("5.1.12"), 같은 릴리스에 다시 빌드한 파일을 올릴 때는
+        /// zip 파일 이름에 내부 빌드 번호까지 적는다("TWChatOverlay-5.1.12.2.zip"). 파일 이름의 앞 세 자리가 태그와 같으면
+        /// 그 넷째 자리를 빌드 번호로 쓴다. 파일 이름에 버전이 없거나 태그와 다르면 빌드 번호는 0이다.
+        /// </summary>
+        internal static Version ResolveReleaseVersion(string tag, string? zipAssetName)
+        {
+            Version tagVersion = ParseVersion(tag);
+            if (string.IsNullOrWhiteSpace(zipAssetName))
+                return tagVersion;
+
+            Match match = AssetVersionRegex.Match(zipAssetName);
+            if (!match.Success || !Version.TryParse(match.Value, out Version? assetVersion))
+                return tagVersion;
+
+            bool sameRelease = assetVersion.Major == tagVersion.Major && assetVersion.Minor == tagVersion.Minor && assetVersion.Build == tagVersion.Build;
+            return sameRelease && assetVersion.Revision > tagVersion.Revision ? Normalize(assetVersion) : tagVersion;
+        }
+
+        private static readonly Regex AssetVersionRegex = new(@"\d+\.\d+\.\d+\.\d+", RegexOptions.Compiled);
 
         /// <summary>
         /// 꼭 받아야 하는 업데이트인지: 기능 버전(앞 세 자리)은 같고 빌드 번호(넷째 자리)만 더 높을 때.
@@ -78,7 +100,7 @@ namespace TWChatOverlay.Services
                 // 디버그 빌드: 창 디자인 확인용으로 최신 버전이어도 업데이트 창을 항상 띄운다
                 shouldPrompt = true;
 #endif
-                AppLogger.Info($"Update metadata loaded in {stopwatch.ElapsedMilliseconds} ms. Current={FormatVersion(currentVersion)}, Latest={release.TagName}, HasNewer={hasNewer}, Required={required}");
+                AppLogger.Info($"Update metadata loaded in {stopwatch.ElapsedMilliseconds} ms. Current={FormatVersion(currentVersion)}, Latest={release.TagName} ({FormatVersion(release.LatestVersion)}), HasNewer={hasNewer}, Required={required}");
 
                 if (!shouldPrompt)
                 {
@@ -176,9 +198,9 @@ namespace TWChatOverlay.Services
             if (string.IsNullOrWhiteSpace(tagName))
                 return null;
 
-            Version latestVersion = ParseVersion(tagName);
+            (string? zipName, string? downloadUrl) = FindZipAsset(root);
+            Version latestVersion = ResolveReleaseVersion(tagName, zipName);
             string releaseBody = root.TryGetProperty("body", out var bodyEl) ? bodyEl.GetString() ?? string.Empty : string.Empty;
-            string? downloadUrl = FindZipAssetUrl(root);
             bool isPrerelease = root.TryGetProperty("prerelease", out var preEl) && preEl.GetBoolean();
 
             return new ReleaseInfo(tagName.Trim(), latestVersion, releaseBody.Trim(), downloadUrl, isPrerelease);
@@ -200,7 +222,7 @@ namespace TWChatOverlay.Services
             string windowTitle = forceInstallLatest ? "수동 업데이트" : required ? "필수 업데이트" : "업데이트 알림";
             string headline = forceInstallLatest
                 ? (release.IsPrerelease ? "베타 버전을 설치합니다." : "최신 버전을 다시 설치합니다.")
-                : required ? "같은 버전의 수정된 빌드가 나왔습니다. 업데이트해야 계속 쓸 수 있습니다." : "업데이트 내역";
+                : required ? "이 버전의 수정된 빌드가 나왔습니다. 업데이트해야 계속 쓸 수 있습니다." : "업데이트 내역";
             string footerHint = forceInstallLatest
                 ? "업데이트를 시작하면 앱이 잠시 종료되고 최신 파일이 다시 설치됩니다."
                 : required
@@ -211,6 +233,9 @@ namespace TWChatOverlay.Services
             string latestText = release.TagName.StartsWith("v", StringComparison.OrdinalIgnoreCase)
                 ? release.TagName
                 : $"v{release.TagName}";
+            // 같은 릴리스에 다시 올라온 빌드면 내부 빌드 번호까지 보여 준다 (v5.1.12.2)
+            if (release.LatestVersion.Revision > 0)
+                latestText = $"v{FormatVersion(release.LatestVersion)}";
             if (release.IsPrerelease)
                 latestText += " (베타)";
 
@@ -242,19 +267,19 @@ namespace TWChatOverlay.Services
             });
         }
 
-        private static string? FindZipAssetUrl(JsonElement root)
+        private static (string? Name, string? Url) FindZipAsset(JsonElement root)
         {
             if (!root.TryGetProperty("assets", out var assets))
-                return null;
+                return (null, null);
 
             foreach (var asset in assets.EnumerateArray())
             {
                 string name = asset.GetProperty("name").GetString() ?? string.Empty;
                 if (name.EndsWith(".zip", StringComparison.OrdinalIgnoreCase))
-                    return asset.GetProperty("browser_download_url").GetString();
+                    return (name, asset.GetProperty("browser_download_url").GetString());
             }
 
-            return null;
+            return (null, null);
         }
 
         private static async Task<bool> DownloadAndApplyUpdateAsync(HttpClient client, string downloadUrl)
