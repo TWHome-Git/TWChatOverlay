@@ -603,6 +603,20 @@ namespace TWChatOverlay.Views
             _midnightTimer.Start();
         }
 
+        protected override void OnClosed(EventArgs e)
+        {
+            // 돌고 있는 DispatcherTimer는 디스패처가 붙잡고 있어, 멈추지 않으면 닫힌 달력 창이 통째로 메모리에 남고
+            // 자정마다 그 창들이 저마다 한 달 치 아카이브를 다시 읽는다 (달력을 열 때마다 새 창을 만든다)
+            if (_midnightTimer != null)
+            {
+                _midnightTimer.Stop();
+                _midnightTimer.Tick -= MidnightTimer_Tick;
+                _midnightTimer = null;
+            }
+
+            base.OnClosed(e);
+        }
+
         private TimeSpan GetTimeUntilNextMidnight()
         {
             DateTime now = DateTime.Now;

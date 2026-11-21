@@ -233,8 +233,16 @@ namespace TWChatOverlay.Views
 
         private void ShowNextFrame()
         {
-            if (_frames == null || _frames.Length < 2 || !IsVisible)
+            if (_frames == null || _frames.Length < 2)
                 return;
+
+            // 창은 닫지 않고 숨기므로, 숨긴 뒤에도 타이머가 1.1초마다 깨지 않게 멈춘다.
+            // 다시 보이는 길은 ShowTopic뿐이고 거기서 SetFrames가 타이머를 다시 건다.
+            if (!IsVisible)
+            {
+                _frameTimer.Stop();
+                return;
+            }
 
             _frameIndex = (_frameIndex + 1) % _frames.Length;
             LoadFrame(_frameIndex);

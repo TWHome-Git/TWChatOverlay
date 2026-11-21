@@ -547,6 +547,8 @@ namespace TWChatOverlay.Views
         protected override void OnClosed(EventArgs e)
         {
             _resetTimer?.Stop();
+            // 접기 타이머가 돌던 중에 닫히면 닫힌 창에서 한 번 더 깨어나 접기를 시도한다
+            _autoCollapseTimer?.Stop();
             base.OnClosed(e);
         }
 
