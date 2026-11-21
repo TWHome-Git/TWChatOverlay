@@ -392,6 +392,8 @@ namespace TWChatOverlay.Views
 
             if (Directory.Exists(AbandonDirectoryPath))
             {
+                // 실시간 요약은 1초 모아 쓰므로 읽기 전에 내려 쓴다
+                AppServices.Get<ReadableLogArchiveService>().FlushAll();
                 foreach (DateTime day in EachDay(monthStart, monthEnd))
                 {
                     string summaryPath = Path.Combine(AbandonDirectoryPath, day.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture) + AbandonDaySummarySuffix);

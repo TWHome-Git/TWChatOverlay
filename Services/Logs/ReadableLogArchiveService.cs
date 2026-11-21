@@ -56,6 +56,9 @@ namespace TWChatOverlay.Services
         private const int CurrentLogsFolderResetVersion = 1;
         private const string AbandonDaySummarySuffix = ".summary.day.json";
         private static readonly Regex ArchiveDataDateRegex = new("data-date=\"(\\d{4}-\\d{2}-\\d{2})\"", RegexOptions.Compiled);
+        // 실시간 줄이 바꾼 어밴던로드 일별 요약. 줄마다 요약 파일을 읽고 다시 쓰지 않고(마정석 줄은 초당 수십 개씩 온다)
+        // 여기 모아 두었다가 실시간 아카이브와 같은 1초 플러시(FlushLiveWrites)에 쓴다.
+        // 요약 파일을 읽거나 지우는 곳은 먼저 버퍼를 내려 써서, 줄마다 바로 쓰던 때와 같은 파일을 본다.
         private readonly Dictionary<DateTime, AbandonMonthlySummarySnapshotEntry> _abandonDayBuffer = new();
 
         // 실시간 아카이브 쓰기는 줄마다 파일을 열지 않고 모아 두었다가 1초 뒤(또는 FlushAll)에 한 번 쓴다.
@@ -308,7 +311,7 @@ namespace TWChatOverlay.Services
             public void BeginScan(IReadOnlyList<RawLogFile> files)
             {
                 lock (_owner._syncRoot)
-                    _owner._abandonDayBuffer.Clear();
+                    _owner.FlushAbandonDayBufferOrDiscard();
             }
 
             public bool BeginFile(RawLogFile file, long fileLength)
@@ -367,7 +370,6 @@ namespace TWChatOverlay.Services
                             _writeContent,
                             _writeAbandon,
                             _pendingWrites,
-                            flushSummaryImmediately: false,
                             updateAbandonSummary: false);
                     }
                 }
@@ -452,7 +454,7 @@ namespace TWChatOverlay.Services
                     if (LoadMigrationVersion(LogsFolderResetMigrationKey) >= CurrentLogsFolderResetVersion)
                         return;
 
-                    _abandonDayBuffer.Clear();
+                    FlushAbandonDayBufferOrDiscard();
 
                     if (Directory.Exists(_rootDirectory))
                     {
@@ -545,6 +547,8 @@ namespace TWChatOverlay.Services
         {
             lock (_syncRoot)
             {
+                // 이어지는 누락 판정·삭제가 실시간 요약을 파일로 보도록 먼저 내려 쓴다
+                FlushAbandonDayBufferOrDiscard();
                 var days = LoadInProgressDays();
                 if (days.Count == 0)
                     return;
@@ -624,7 +628,7 @@ namespace TWChatOverlay.Services
                     if (LoadMigrationVersion(AbandonSummaryRebuildMigrationKey) >= CurrentAbandonSummaryRebuildVersion)
                         return;
 
-                    _abandonDayBuffer.Clear();
+                    FlushAbandonDayBufferOrDiscard();
                     int deleted = 0;
                     foreach (DateTime day in allSourceFiles.Select(f => f.Date.Date).Distinct())
                     {
@@ -766,7 +770,7 @@ namespace TWChatOverlay.Services
                 try
                 {
                     EnsureArchiveDirectoriesExist();
-                    _abandonDayBuffer.Clear();
+                    FlushAbandonDayBufferOrDiscard();
                     _liveWrites.DiscardAll(); // 아직 안 쓴 실시간 줄이 지운 파일을 되살리지 않게
 
                     var rawDays = new HashSet<string>(
@@ -852,8 +856,7 @@ namespace TWChatOverlay.Services
                     writeExp: true,
                     writeContent: true,
                     writeAbandon: true,
-                    _liveWrites,
-                    flushSummaryImmediately: true);
+                    _liveWrites);
 
                 if (!_liveFlushScheduled)
                 {
@@ -870,10 +873,12 @@ namespace TWChatOverlay.Services
                 _liveFlushScheduled = false;
                 try { _liveWrites.FlushAll(); }
                 catch (Exception ex) { AppLogger.Warn("Failed to flush pending realtime archive writes.", ex); }
+                try { FlushAbandonDayBuffer(); }
+                catch (Exception ex) { AppLogger.Warn("Failed to flush pending abandon day summaries.", ex); }
             }
         }
 
-        /// <summary>모아 둔 실시간 아카이브 줄을 지금 파일에 쓴다. 아카이브 파일을 읽는 쪽은 읽기 전에 이걸 불러 마지막 1초 줄을 놓치지 않게 한다.</summary>
+        /// <summary>모아 둔 실시간 아카이브 줄과 어밴던로드 일별 요약을 지금 파일에 쓴다. 아카이브 파일을 읽는 쪽은 읽기 전에 이걸 불러 마지막 1초 줄을 놓치지 않게 한다.</summary>
         public void FlushAll() => FlushLiveWrites();
 
         /// <summary>아카이브 파일을 읽는 공용 통로 — 대기 중인 실시간 줄을 먼저 내려 쓴 뒤 줄을 돌려준다. 파일이 없으면 빈 열거.</summary>
@@ -893,6 +898,7 @@ namespace TWChatOverlay.Services
         {
             lock (_syncRoot)
             {
+                FlushAbandonDayBuffer();
                 DateTime weekStart = GetIsoWeekStart(date);
                 DateTime weekEnd = weekStart.AddDays(6);
                 var weekly = new AbandonMonthlySummarySnapshotEntry { MonthStart = weekStart };
@@ -1088,7 +1094,6 @@ namespace TWChatOverlay.Services
             bool writeContent,
             bool writeAbandon,
             ArchiveWriteBatch pendingArchiveWrites,
-            bool flushSummaryImmediately,
             bool updateAbandonSummary = true)
         {
             var parsed = analysis.Parsed;
@@ -1134,7 +1139,7 @@ namespace TWChatOverlay.Services
                         }
                         NormalizeStoneConsistency(gainDelta);
                         if (updateAbandonSummary)
-                            UpdateAbandonDailySummary(logDate, gainDelta, flushImmediately: flushSummaryImmediately);
+                            UpdateAbandonDailySummary(logDate, gainDelta);
                         return;
                     }
                 }
@@ -1152,7 +1157,7 @@ namespace TWChatOverlay.Services
 
             if (writeAbandon && IsAbandonRelevantLog(text))
             {
-                AppendAbandonLog(logDate, text, pendingArchiveWrites, flushSummaryImmediately, updateAbandonSummary);
+                AppendAbandonLog(logDate, text, pendingArchiveWrites, updateAbandonSummary);
             }
         }
 
@@ -1225,7 +1230,7 @@ namespace TWChatOverlay.Services
             AppendHtmlLine(path, $"Exp {dateKey}", entry, pendingArchiveWrites);
         }
 
-        private void AppendAbandonLog(DateTime logDate, string text, ArchiveWriteBatch pendingArchiveWrites, bool flushSummaryImmediately, bool updateAbandonSummary = true)
+        private void AppendAbandonLog(DateTime logDate, string text, ArchiveWriteBatch pendingArchiveWrites, bool updateAbandonSummary = true)
         {
             string dateKey = logDate.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
             string path = Path.Combine(_AbandonDirectory, $"{dateKey}.html");
@@ -1233,7 +1238,7 @@ namespace TWChatOverlay.Services
             AppendHtmlLine(path, $"Abandon {dateKey}", entry, pendingArchiveWrites);
 
             if (updateAbandonSummary && TryBuildAbandonDelta(text, out AbandonMonthlySummarySnapshotEntry delta))
-                UpdateAbandonDailySummary(logDate, delta, flushImmediately: flushSummaryImmediately);
+                UpdateAbandonDailySummary(logDate, delta);
         }
 
         private static bool IsExperienceDecreaseLog(string text)
@@ -1265,7 +1270,8 @@ namespace TWChatOverlay.Services
             return AbandonSummaryCalculator.TryAccumulate(text, delta);
         }
 
-        private void UpdateAbandonDailySummary(DateTime logDate, AbandonMonthlySummarySnapshotEntry delta, bool flushImmediately = false)
+        /// <summary>요약에 몫을 더해 버퍼에 둔다. 파일에는 FlushAbandonDayBuffer가 쓴다. 반드시 _syncRoot를 보유한 상태에서 호출해야 한다.</summary>
+        private void UpdateAbandonDailySummary(DateTime logDate, AbandonMonthlySummarySnapshotEntry delta)
         {
             string dayKey = logDate.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
             string summaryPath = Path.Combine(_AbandonDirectory, $"{dayKey}{AbandonDaySummarySuffix}");
@@ -1293,16 +1299,14 @@ namespace TWChatOverlay.Services
             summary.TopLoss += delta.TopLoss;
             NormalizeStoneConsistency(summary);
             _abandonDayBuffer[logDate.Date] = summary;
-
-            if (flushImmediately)
-            {
-                string json = JsonSerializer.Serialize(summary, JsonOptions);
-                File.WriteAllText(summaryPath, json, Utf8BomEncoding);
-                _abandonDayBuffer.Remove(logDate.Date);
-            }
         }
+
+        /// <summary>버퍼의 일별 요약을 파일에 쓰고 비운다. 쓰다 실패하면 버퍼를 남겨 다음 플러시에 다시 쓴다. 반드시 _syncRoot를 보유한 상태에서 호출해야 한다.</summary>
         private void FlushAbandonDayBuffer()
         {
+            if (_abandonDayBuffer.Count == 0)
+                return;
+
             foreach (var kv in _abandonDayBuffer)
             {
                 DateTime day = kv.Key;
@@ -1313,6 +1317,18 @@ namespace TWChatOverlay.Services
             }
             _abandonDayBuffer.Clear();
         }
+
+        /// <summary>
+        /// 버퍼를 비우기 전에 먼저 내려 쓴다 — 줄마다 바로 쓰던 때는 이 시점에 이미 파일에 있었으므로 결과가 같다.
+        /// 쓰기가 실패해도(폴더가 없는 등) 부른 정리 작업을 막지 않고 버퍼만 비운다. 반드시 _syncRoot를 보유한 상태에서 호출해야 한다.
+        /// </summary>
+        private void FlushAbandonDayBufferOrDiscard()
+        {
+            try { FlushAbandonDayBuffer(); }
+            catch (Exception ex) { AppLogger.Warn("Failed to flush pending abandon day summaries.", ex); }
+            _abandonDayBuffer.Clear();
+        }
+
         private static void NormalizeStoneConsistency(AbandonMonthlySummarySnapshotEntry summary)
         {
             static (long net, long gain, long loss) NormalizeOne(long net, long gain, long loss)
