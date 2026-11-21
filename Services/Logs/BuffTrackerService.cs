@@ -88,7 +88,9 @@ namespace TWChatOverlay.Services
             // 버프 문구 토큰이 하나도 없으면 아래 정규식·정의 어느 것도 맞을 수 없다 — 표시 갱신만 한다
             if (!ContainsBuffToken(formattedText))
             {
-                RefreshActiveBuffs();
+                // 추적 중인 버프가 없고 표시도 비어 있으면 갱신해도 바뀌는 것이 없다 (시스템 줄마다 목록 · 정렬을 새로 만들지 않는다)
+                if (!IsIdle)
+                    RefreshActiveBuffs();
                 return;
             }
 
@@ -179,6 +181,18 @@ namespace TWChatOverlay.Services
         {
             _timer.Stop();
         }
+
+        /// <summary>
+        /// 추적 중인 버프도, 표시 중인 항목도 없고 틱도 멈춰 있는 상태 — 이때 <see cref="RefreshActiveBuffs"/>는 같은 값을 다시 넣을 뿐이다.
+        /// 사전이 비는 곳(만료 정리 · 마법의 눈 처리)은 모두 같은 흐름에서 RefreshActiveBuffs를 부르므로 표시가 비어 있지 않은 채로 남지 않는다.
+        /// </summary>
+        private bool IsIdle =>
+            _activeUntil.Count == 0 &&
+            _pausedRemaining.Count == 0 &&
+            ActiveRareBuffs.Count == 0 &&
+            ActiveExpBuffs.Count == 0 &&
+            !HasAnyActiveBuffs &&
+            !_timer.IsEnabled;
 
         private void RefreshActiveBuffs()
         {
