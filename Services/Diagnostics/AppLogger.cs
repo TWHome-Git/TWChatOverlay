@@ -24,8 +24,11 @@ namespace TWChatOverlay.Services
         private static readonly string LegacyLogFilePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Debug.log");
         private static readonly object _lock = new object();
         private static readonly ConcurrentQueue<string> _pendingLines = new();
-        // 읽는 곳은 없지만 지우면 안 된다: 플러시 타이머가 GC에 수거되지 않도록 참조를 붙잡아 둔다.
+        // 플러시 타이머. 쌓인 줄이 생길 때만 한 번 걸리는(one-shot) 타이머라 기록할 것이 없는 동안에는 깨지 않는다.
+        // 정적 필드로 붙잡아 GC에 수거되지 않게 한다.
         private static readonly Timer _flushTimer;
+        private static readonly TimeSpan FlushDelay = TimeSpan.FromMilliseconds(120);
+        private static int _flushArmed;
         private static readonly LogLevel _minimumLevel = LogLevel.DEBUG;
         private static bool _isEnabled = true;
         private const long MaxFileSizeBytes = 5 * 1024 * 1024;
@@ -42,7 +45,7 @@ namespace TWChatOverlay.Services
                 MigrateLegacyLogFile();
                 RotateIfNeeded();
                 WriteHeader();
-                _flushTimer = new Timer(_ => FlushPending(), null, TimeSpan.FromMilliseconds(120), TimeSpan.FromMilliseconds(120));
+                _flushTimer = new Timer(_ => OnFlushTimer(), null, Timeout.InfiniteTimeSpan, Timeout.InfiniteTimeSpan);
                 AppDomain.CurrentDomain.ProcessExit += (_, _) => FlushPending(force: true);
             }
             catch
@@ -130,10 +133,32 @@ namespace TWChatOverlay.Services
             // 치명적 오류는 바로 파일에 쓴다 — 프로그램이 곧 죽으면 모아 쓰는 타이머가 돌 기회가 없다
             if (level >= LogLevel.FATAL)
                 Flush();
+            else
+                ArmFlushTimer();
+        }
+
+        /// <summary>플러시 타이머가 아직 안 걸려 있으면 120ms 뒤 한 번으로 건다. 예전 120ms 주기 타이머와 같은 지연으로 파일에 쓴다.</summary>
+        private static void ArmFlushTimer()
+        {
+            if (Interlocked.CompareExchange(ref _flushArmed, 1, 0) != 0)
+                return;
+
+            try { _flushTimer?.Change(FlushDelay, Timeout.InfiniteTimeSpan); }
+            catch (ObjectDisposedException) { }
+        }
+
+        private static void OnFlushTimer()
+        {
+            // 플러시보다 먼저 풀어야 그사이 들어온 줄이 타이머를 다시 건다 (줄이 남은 채 타이머가 멈추지 않게)
+            Interlocked.Exchange(ref _flushArmed, 0);
+            FlushPending();
+            // Flush()가 동시에 쓰는 중이어서 이번에 못 쓴 줄이 남았으면 다시 건다
+            if (!_pendingLines.IsEmpty)
+                ArmFlushTimer();
         }
 
         /// <summary>
-        /// 쌓여 있는 줄을 지금 파일에 쓴다. 평소에는 타이머가 120ms마다 모아 쓰지만,
+        /// 쌓여 있는 줄을 지금 파일에 쓴다. 평소에는 타이머가 줄이 생긴 뒤 120ms에 모아 쓰지만,
         /// 프로그램이 죽거나 멈추기 직전의 기록은 기다리지 않고 남겨야 한다.
         /// </summary>
         public static void Flush()
