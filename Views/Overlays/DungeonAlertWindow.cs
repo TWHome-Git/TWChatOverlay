@@ -23,10 +23,12 @@ namespace TWChatOverlay.Views
         VestigeBoss,
         /// <summary>심연의 보물창고 자동 퇴장 예고.</summary>
         TreasuryExit,
+        /// <summary>고대 렐릭의 성소 숫자 맞추기: 남은 범위와 다음에 넣을 숫자. 맞히거나 미션이 바뀔 때까지 떠 있다.</summary>
+        NumberGuess,
     }
 
     /// <summary>
-    /// 던전 알림 창 (어비스 감전·반사, 오를리 남은 공격, 베스티지 빅테디 출현, 보물창고 종료).
+    /// 던전 알림 창 (어비스 감전·반사, 오를리 남은 공격, 베스티지 빅테디 출현, 보물창고 종료, 렐릭 숫자 맞추기).
     ///
     /// 종류마다 창을 따로 만들고, 자리 설정만 하나를 함께 쓴다 —
     /// 자리를 한 번 잡으면 어느 던전에서든 거기서부터 뜨고, 둘이 겹치면 아래로 쌓인다.
@@ -88,9 +90,14 @@ namespace TWChatOverlay.Views
             SizeToContent = SizeToContent.WidthAndHeight;
             MinWidth = DefaultWidth;
 
+            // 숫자 맞추기는 싸우는 중에 숫자를 읽고 받아 적어야 해서 다른 알림보다 크게 띄운다 (2026-11-21 사용자 요청)
+            bool large = source == DungeonAlertSource.NumberGuess;
+            if (large)
+                MinWidth = 280;
+
             _titleText = new TextBlock
             {
-                FontSize = 13,
+                FontSize = large ? 17 : 13,
                 FontWeight = FontWeights.SemiBold,
                 TextAlignment = TextAlignment.Center,
             };
@@ -98,10 +105,10 @@ namespace TWChatOverlay.Views
 
             _bodyText = new TextBlock
             {
-                FontSize = 18,
+                FontSize = large ? 28 : 18,
                 FontWeight = FontWeights.Bold,
                 TextAlignment = TextAlignment.Center,
-                Margin = new Thickness(0, 4, 0, 0),
+                Margin = new Thickness(0, large ? 6 : 4, 0, 0),
             };
 
             _bodyText.Foreground = DangerBrush;
@@ -114,7 +121,7 @@ namespace TWChatOverlay.Views
             {
                 BorderThickness = new Thickness(1.2),
                 CornerRadius = new CornerRadius(8),
-                Padding = new Thickness(18, 10, 18, 11),
+                Padding = large ? new Thickness(24, 13, 24, 15) : new Thickness(18, 10, 18, 11),
                 Child = stack,
             };
             root.SetResourceReference(Border.BackgroundProperty, "OverlayWindowBackgroundBrush");
@@ -250,12 +257,12 @@ namespace TWChatOverlay.Views
             }));
         }
 
-        /// <summary>경고(감전·반사·빅테디)는 붉은색, 세거나 알려 주는 값(오를리·보물창고 퇴장)은 다른 곳의 횟수와 같은 색. 자리 잡기 미리보기는 경고가 아니므로 평소 글자색.</summary>
+        /// <summary>경고(감전·반사·빅테디)는 붉은색, 세거나 알려 주는 값(오를리·보물창고 퇴장·숫자 맞추기)은 다른 곳의 횟수와 같은 색. 자리 잡기 미리보기는 경고가 아니므로 평소 글자색.</summary>
         private static void ApplyBodyColor(DungeonAlertWindow window, DungeonAlertSource source, bool isPreview)
         {
             if (isPreview)
                 window._bodyText.SetResourceReference(TextBlock.ForegroundProperty, "TextBrush");
-            else if (source is DungeonAlertSource.OrlyAttack or DungeonAlertSource.TreasuryExit)
+            else if (source is DungeonAlertSource.OrlyAttack or DungeonAlertSource.TreasuryExit or DungeonAlertSource.NumberGuess)
                 window._bodyText.SetResourceReference(TextBlock.ForegroundProperty, "OverlayRareAccentBrush");
             else
                 window._bodyText.Foreground = DangerBrush;

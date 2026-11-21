@@ -162,6 +162,8 @@ namespace TWChatOverlay.Models
         public bool ArchitectFloorAlert { get; set; } = true;
         /// <summary>고이티아(아페티리아 2보스) 대사 "불경한 것들, 한 줌의 재로 만들어주마!": "전방 조심해" 음성.</summary>
         public bool GoetiaFrontAlert { get; set; } = true;
+        /// <summary>고대 렐릭의 성소 숫자 맞추기: 힌트 줄로 남은 범위와 다음에 넣을 숫자를 띄운다.</summary>
+        public bool NumberGuessHelper { get; set; } = true;
         /// <summary>설계자 패턴 음성 볼륨 (0~1).</summary>
         public double ArchitectVoiceVolume { get; set; } = 1.0;
         /// <summary>감전 패턴: 방전에 걸린 동안 알림 창을 띄운다.</summary>

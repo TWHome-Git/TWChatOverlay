@@ -537,6 +537,9 @@ namespace TWChatOverlay.Models
         /// <summary>고이티아 패턴(대사 "불경한 것들, 한 줌의 재로 만들어주마!"): "전방 조심해" 음성.</summary>
         [JsonIgnore]
         public bool EnableGoetiaFrontAlert { get => Alerts.Dungeon.GoetiaFrontAlert; set { if (Alerts.Dungeon.GoetiaFrontAlert == value) return; Alerts.Dungeon.GoetiaFrontAlert = value; OnPropertyChanged(); } }
+        /// <summary>고대 렐릭의 성소 숫자 맞추기: 남은 범위와 다음에 넣을 숫자를 알림 창에 띄운다.</summary>
+        [JsonIgnore]
+        public bool ShowNumberGuessHelper { get => Alerts.Dungeon.NumberGuessHelper; set { if (Alerts.Dungeon.NumberGuessHelper == value) return; Alerts.Dungeon.NumberGuessHelper = value; OnPropertyChanged(); } }
         /// <summary>설계자 자리 이동 패턴: "바닥 조심해" 음성.</summary>
         [JsonIgnore]
         public bool EnableArchitectFloorAlert { get => Alerts.Dungeon.ArchitectFloorAlert; set { if (Alerts.Dungeon.ArchitectFloorAlert == value) return; Alerts.Dungeon.ArchitectFloorAlert = value; OnPropertyChanged(); } }

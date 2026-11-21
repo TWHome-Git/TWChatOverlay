@@ -249,6 +249,7 @@ namespace TWChatOverlay.Views
                     case "DungeonTabAbandon": _dungeonSubTab = 3; break;
                     case "DungeonTabCraving": _dungeonSubTab = 4; break;
                     case "DungeonTabTimer": _dungeonSubTab = 5; break;
+                    case "DungeonTabRelic": _dungeonSubTab = 7; break; // 알림 창 자리는 잠금 해제 모드에서 잡는다 (탭 미리보기 없음)
                     case "ItemTabAlert": _itemSubTab = 0; break;
                     case "ItemTabFilter": _itemSubTab = 1; break;
                 }

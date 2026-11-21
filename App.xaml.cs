@@ -124,6 +124,7 @@ namespace TWChatOverlay
                 services.AddSingleton<ChatWindowHub>();
                 services.AddSingleton<RecaptureSupplyPadOrderService>();
                 services.AddSingleton<ArchitectVoiceAlertService>();
+                services.AddSingleton<NumberGuessHelperService>();
                 services.AddSingleton<RecaptureSupplyAlertService>();
                 services.AddSingleton<ExperienceAlertWindowService>();
                 services.AddSingleton<TrayAllWindowsService>();

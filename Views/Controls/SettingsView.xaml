@@ -1107,6 +1107,8 @@
                         <RadioButton x:Name="DungeonTabRubicona" Content="루비코나" GroupName="DungeonTabs" Checked="AddonSubTab_Checked" Style="{StaticResource SettingsTabStyle}"/>
                         <RadioButton x:Name="DungeonTabAbandon" Content="어밴던로드" GroupName="DungeonTabs" Checked="AddonSubTab_Checked" Style="{StaticResource SettingsTabStyle}"/>
                         <RadioButton x:Name="DungeonTabCraving" Content="갈망하는 즐거움" GroupName="DungeonTabs" Checked="AddonSubTab_Checked" Style="{StaticResource SettingsTabStyle}"/>
+                        <RadioButton x:Name="DungeonTabRelic" Content="렐릭" GroupName="DungeonTabs" Checked="AddonSubTab_Checked" Style="{StaticResource SettingsTabStyle}"
+                                     ToolTip="고대 렐릭의 성소"/>
                         <RadioButton x:Name="DungeonTabTimer" Content="던전 타이머" GroupName="DungeonTabs" Checked="AddonSubTab_Checked" Style="{StaticResource SettingsTabStyle}"/>
                     </StackPanel>
                 </Border>
@@ -1153,6 +1155,21 @@
                             <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                                 <TextBlock Text="기록 재작성" Style="{StaticResource SettingsRowLabelStyle}"
                                            ToolTip="남아 있는 채팅 로그 전체를 다시 읽어 기록을 새로 만듭니다"/>
+                            </StackPanel>
+                        </DockPanel>
+                    </Border>
+                </WrapPanel>
+                </StackPanel>
+
+                <!-- 렐릭: 고대 렐릭의 성소 숫자 맞추기 -->
+                <StackPanel Visibility="{Binding IsChecked, ElementName=DungeonTabRelic, Converter={StaticResource BooleanToVisibilityConverter}}">
+                <WrapPanel>
+                    <Border Style="{StaticResource SettingsRowStyle}">
+                        <DockPanel>
+                            <CheckBox DockPanel.Dock="Right" IsChecked="{Binding Settings.ShowNumberGuessHelper, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ToggleSwitchCheckBoxStyle}"/>
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                <TextBlock Text="숫자 맞추기 도우미" Style="{StaticResource SettingsRowLabelStyle}"/>
+                                <Button Style="{StaticResource HelpButtonStyle}" Tag="dungeon.number_guess" Click="Help_Click"/>
                             </StackPanel>
                         </DockPanel>
                     </Border>
