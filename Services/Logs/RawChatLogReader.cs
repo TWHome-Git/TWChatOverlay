@@ -141,11 +141,26 @@ namespace TWChatOverlay.Services
             if (string.IsNullOrWhiteSpace(physicalLine))
                 yield break;
 
-            if (physicalLine.IndexOf("br", StringComparison.OrdinalIgnoreCase) < 0 &&
-                physicalLine.IndexOf('\n') < 0 && physicalLine.IndexOf('\r') < 0)
+            int brIndex = physicalLine.IndexOf("br", StringComparison.OrdinalIgnoreCase);
+            if (physicalLine.IndexOf('\n') < 0 && physicalLine.IndexOf('\r') < 0)
             {
-                yield return physicalLine;
-                yield break;
+                if (brIndex < 0)
+                {
+                    yield return physicalLine;
+                    yield break;
+                }
+
+                // 게임 로그는 물리적 줄마다 끝에 "</br>"이 붙는다. 줄 안의 "br"이 그 하나뿐이면 정규식이 찾을 수 있는 구분자도
+                // 그 꼬리뿐이라, 꼬리를 뗀 앞부분이 정규식 분리 결과와 같다 (뒤 조각은 빈 문자열이라 원래도 버려진다).
+                int len = physicalLine.Length;
+                if (len >= 5 && brIndex == len - 3 &&
+                    physicalLine[len - 5] == '<' && physicalLine[len - 4] == '/' && physicalLine[len - 1] == '>')
+                {
+                    string head = physicalLine.Substring(0, len - 5);
+                    if (!string.IsNullOrWhiteSpace(head))
+                        yield return head;
+                    yield break;
+                }
             }
 
             foreach (string piece in LineSplitRegex.Split(physicalLine))

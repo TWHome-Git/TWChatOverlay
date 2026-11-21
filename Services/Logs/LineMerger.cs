@@ -43,11 +43,15 @@ namespace TWChatOverlay.Services
         // 2단계(시스템): 이어붙이는 중인 머리 줄
         private string? _systemHead;
         private string _systemTime = string.Empty;
-        private string _systemTimeKey = string.Empty;
+        private string? _systemTimeKey;
         private string _systemColor = string.Empty;
         private string _systemContent = string.Empty;
-        private string _systemPlain = string.Empty;
+        private string? _systemPlain;
         private int _systemConsumed;
+
+        // 머리 줄의 정규화 시각 · 본문은 다음 줄이 같은 색 시스템 줄일 때만 쓰인다 — 그때 처음 만든다 (값은 늘 같다)
+        private string SystemTimeKey => _systemTimeKey ??= NormalizeWhitespace(WebUtility.HtmlDecode(_systemTime));
+        private string SystemPlain => _systemPlain ??= NormalizeWhitespace(WebUtility.HtmlDecode(_systemContent));
 
         public LineMerger(Action<string> sink)
         {
@@ -118,18 +122,19 @@ namespace TWChatOverlay.Services
 
             if (_systemHead != null)
             {
-                if (!EndsWithTerminator(_systemPlain) &&
+                // 조건은 모두 부수효과 없는 판정이라, 싼 것(매치 여부 · 색 · 횟수)을 먼저 보고 정규화가 드는 것은 뒤에 본다
+                if (m.Success &&
                     _systemConsumed < MaxMergeSegments &&
-                    m.Success &&
                     string.Equals(_systemColor, m.Groups["color"].Value, StringComparison.OrdinalIgnoreCase) &&
-                    string.Equals(_systemTimeKey, NormalizeWhitespace(WebUtility.HtmlDecode(m.Groups["time"].Value)), StringComparison.Ordinal))
+                    !EndsWithTerminator(SystemPlain) &&
+                    string.Equals(SystemTimeKey, NormalizeWhitespace(WebUtility.HtmlDecode(m.Groups["time"].Value)), StringComparison.Ordinal))
                 {
                     string nextPlain = NormalizeWhitespace(WebUtility.HtmlDecode(m.Groups["content"].Value));
                     // 이어붙일 조각은 짧고 공백이 없어야 한다(별개 메시지 오병합 방지).
                     if (nextPlain.Length > 0 && nextPlain.Length <= MaxContinuationLength && !nextPlain.Contains(' '))
                     {
                         _systemContent += m.Groups["content"].Value;
-                        _systemPlain = NormalizeWhitespace(WebUtility.HtmlDecode(_systemContent));
+                        _systemPlain = null;
                         _systemConsumed++;
                         return;
                     }
@@ -147,9 +152,9 @@ namespace TWChatOverlay.Services
             _systemHead = line;
             _systemTime = m.Groups["time"].Value;
             _systemColor = m.Groups["color"].Value;
-            _systemTimeKey = NormalizeWhitespace(WebUtility.HtmlDecode(_systemTime));
+            _systemTimeKey = null;
             _systemContent = m.Groups["content"].Value;
-            _systemPlain = NormalizeWhitespace(WebUtility.HtmlDecode(_systemContent));
+            _systemPlain = null;
             _systemConsumed = 0;
         }
 
