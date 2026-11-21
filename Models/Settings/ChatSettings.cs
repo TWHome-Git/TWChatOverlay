@@ -534,6 +534,9 @@ namespace TWChatOverlay.Models
         /// <summary>설계자 레이저 패턴: "전방 조심해" 음성.</summary>
         [JsonIgnore]
         public bool EnableArchitectLaserAlert { get => Alerts.Dungeon.ArchitectLaserAlert; set { if (Alerts.Dungeon.ArchitectLaserAlert == value) return; Alerts.Dungeon.ArchitectLaserAlert = value; OnPropertyChanged(); } }
+        /// <summary>고이티아 패턴(대사 "불경한 것들, 한 줌의 재로 만들어주마!"): "전방 조심해" 음성.</summary>
+        [JsonIgnore]
+        public bool EnableGoetiaFrontAlert { get => Alerts.Dungeon.GoetiaFrontAlert; set { if (Alerts.Dungeon.GoetiaFrontAlert == value) return; Alerts.Dungeon.GoetiaFrontAlert = value; OnPropertyChanged(); } }
         /// <summary>설계자 자리 이동 패턴: "바닥 조심해" 음성.</summary>
         [JsonIgnore]
         public bool EnableArchitectFloorAlert { get => Alerts.Dungeon.ArchitectFloorAlert; set { if (Alerts.Dungeon.ArchitectFloorAlert == value) return; Alerts.Dungeon.ArchitectFloorAlert = value; OnPropertyChanged(); } }
