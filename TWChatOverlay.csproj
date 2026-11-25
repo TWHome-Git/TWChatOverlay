@@ -14,7 +14,7 @@
          앱은 릴리스에 올라온 zip 파일 이름(TWChatOverlay-5.1.12.2.zip)에서 내부 빌드 번호를 읽어, 먼저 받은 빌드보다 새것이면
          필수 업데이트로 안내한다 (UpdateService.ResolveReleaseVersion / IsRequiredUpdate) — 그래서 zip 이름을 바꾸면 안 된다.
          기능 버전을 올릴 때는 넷째 자리를 0으로 돌린다 (5.1.13.0). -->
-    <Version>5.1.12.2</Version>
+    <Version>5.1.12.3</Version>
     <AssemblyVersion>$(Version)</AssemblyVersion>
     <FileVersion>$(Version)</FileVersion>
     <InformationalVersion>$(Version)</InformationalVersion>
