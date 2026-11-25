@@ -276,6 +276,15 @@ namespace TWChatOverlay.Views
                         withSound: true));
                 }
 
+                // 최상급 마정석: 게임 문구가 아이템 판정 꼴이 아니라 따로 판정한 것을 같은 토스트 · 소리로 띄운다 (MainLogPipelineCoordinator)
+                if (pipelineAnalysis.TopMagicStoneAlertGrade is ItemDropGrade topMagicStoneGrade)
+                {
+                    GuardSideEffect("top-magic-stone-toast", () => ItemDropToastServiceInstance.Show(
+                        "최상급 마정석",
+                        topMagicStoneGrade,
+                        withSound: true));
+                }
+
                 if (parseResult.Category == ChatCategory.Shout)
                 GuardSideEffect("shout-actions", () =>
                 {

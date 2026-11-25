@@ -49,7 +49,50 @@ namespace TWChatOverlay.Services
                 }
             }
 
-            return new MainLogPipelineAnalysis(primaryAnalysis, defaultItemDropAnalysis, toastAnalysis);
+            ItemDropGrade? topMagicStoneAlertGrade = isRealTime
+                ? ResolveTopMagicStoneAlertGrade(primaryAnalysis, toastAnalysis)
+                : null;
+
+            return new MainLogPipelineAnalysis(primaryAnalysis, defaultItemDropAnalysis, toastAnalysis, topMagicStoneAlertGrade);
+        }
+
+        private const string TopMagicStoneItemName = "최상급 마정석";
+
+        /// <summary>
+        /// 최상급 마정석을 얻은 실시간 줄이면 아이템 획득 알림과 같은 토스트를 띄울 등급을 준다 (2026-11-25 사용자: "최상급 마정석을 먹을 때, 알림이 있으면 좋겠음").
+        /// 드롭 목록(DropItem.Json)에 "최상급 마정석"(희귀)이 있지만 게임 문구가 "최상급 마정석 1개를 획득 하였습니다."(대괄호 없음)라
+        /// 아이템 판정(DropItemResolver, "[아이템]"으로 시작하는 줄)에 걸리지 않아 알림이 난 적이 없다 — 원본 로그 2025-12-19 ~ 2026-11-20에 42줄(30일).
+        /// 아이템 판정을 넓히지 않고 여기서 따로 본다: 넓히면 아이템 아카이브 · 어밴던 요약 경로까지 바뀐다.
+        /// 켜기는 아이템 획득 알림 설정, 대상 여부 · 등급은 그 알림이 쓰는 필터(사용자 정의를 켜면 그 목록, 아니면 기본 목록)를 그대로 따른다.
+        /// 바닥에서 주운 "[최상급 마정석] 1개를 입수했습니다."도 같이 본다(판정은 어밴던 요약과 같은 AbandonSummaryCalculator).
+        /// </summary>
+        private ItemDropGrade? ResolveTopMagicStoneAlertGrade(LogAnalysisResult primaryAnalysis, LogAnalysisResult? toastAnalysis)
+        {
+            if (!_settings.ShowItemDropAlert || !primaryAnalysis.IsSystemLog)
+                return null;
+
+            // 이미 아이템 획득 알림으로 잡힌 줄이면 그쪽이 띄운다 (같은 줄에 토스트 두 개 방지)
+            if (toastAnalysis is { HasTrackedItemDrop: true })
+                return null;
+
+            if (!AbandonSummaryCalculator.IsTopMagicStoneGain(primaryAnalysis.Parsed.FormattedText))
+                return null;
+
+            DropItemResolver.DropItemFilterSnapshot? filter = GetActiveToastFilterSnapshot();
+            return filter != null && filter.Items.TryGetValue(TopMagicStoneItemName, out ItemDropGrade grade)
+                ? grade
+                : null;
+        }
+
+        /// <summary>아이템 획득 토스트가 쓰는 필터와 같은 것 — 사용자 정의를 켰고 목록이 있으면 그것, 아니면 받아 둔 기본 목록(아직 없으면 null).</summary>
+        private DropItemResolver.DropItemFilterSnapshot? GetActiveToastFilterSnapshot()
+        {
+            var customFilterSnapshot = GetCustomFilterSnapshot();
+            if (_settings.UseCustomDropItemFilter && customFilterSnapshot != null)
+                return customFilterSnapshot;
+
+            var snapshotTask = _defaultDropItemFilterSnapshotTask;
+            return snapshotTask is { IsCompletedSuccessfully: true } ? snapshotTask.Result : null;
         }
 
         /// <summary>아이템 드롭 판정이 나올 수 있는 줄인지 — 시스템 로그이면서 "획득" 문구가 있는 경우만.</summary>
@@ -152,5 +195,6 @@ namespace TWChatOverlay.Services
     public sealed record MainLogPipelineAnalysis(
         LogAnalysisResult Primary,
         LogAnalysisResult? DefaultItemDrop,
-        LogAnalysisResult? Toast);
+        LogAnalysisResult? Toast,
+        ItemDropGrade? TopMagicStoneAlertGrade = null);
 }

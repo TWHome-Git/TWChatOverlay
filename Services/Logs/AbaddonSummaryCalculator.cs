@@ -51,6 +51,45 @@ namespace TWChatOverlay.Services
             @"(?<grade>하급)\s*마정석\s*(?<count>[\d,]+)\s*개를\s*빼앗겼습니다",
             RegexOptions.Compiled);
 
+        // 어밴던로드 스켈레톤이 바닥에 떨어뜨린 마정석을 주우면 "[하급 마정석] 1개를 입수했습니다." 꼴로 찍힌다
+        // (대괄호가 있고 "획득"이 없어 위 획득 정규식에 안 걸려 집계에서 빠졌다 — 2026-11-25 사용자: "그걸 먹는건 집계가 안되고 있어").
+        // 원본 로그 2025-12-20 ~ 2026-11-24에 하급 · 중급 · 상급 425줄, 모두 입장료 줄 30분 안이고, 같은 줍기가 획득 문구로 또 찍힌 줄은 없다(±1초 0건).
+        // 본문 맨 앞만 본다 — 남의 채팅은 "이름 : "으로 시작해 걸리지 않는다. ReadableLogArchiveService.TryExtractMagicStoneGain도 이 판정을 쓴다.
+        private static readonly Regex MagicStoneFloorPickupRegex = new(
+            @"^\[(?<grade>하급|중급|상급|최상급)\s*마정석\]\s*(?<count>[\d,]+)\s*개를\s*입수했습니다",
+            RegexOptions.Compiled);
+
+        /// <summary>바닥에서 주운 마정석 줄("[하급 마정석] 1개를 입수했습니다.")이면 등급과 개수를 준다. <paramref name="formattedText"/>는 시각이 붙은 줄.</summary>
+        public static bool TryParseFloorPickup(string? formattedText, out string grade, out long count)
+        {
+            grade = string.Empty;
+            count = 0;
+            if (string.IsNullOrEmpty(formattedText) || !formattedText.Contains("입수했습니다", StringComparison.Ordinal))
+                return false;
+
+            return TryParseFloorPickupBody(LeadingBracketRegex.Replace(formattedText, string.Empty), out grade, out count);
+        }
+
+        private static bool TryParseFloorPickupBody(string body, out string grade, out long count)
+        {
+            grade = string.Empty;
+            count = 0;
+            var match = MagicStoneFloorPickupRegex.Match(body);
+            if (!match.Success || !TryParseLong(match.Groups["count"].Value, out long parsed) || parsed <= 0)
+                return false;
+
+            grade = match.Groups["grade"].Value;
+            count = parsed;
+            return true;
+        }
+
+        /// <summary>최상급 마정석을 얻은 줄(획득 문구 · 바닥 줍기)인지. 요약에 더하는 판정과 같은 것을 써서, 요약에 최상급이 더해지는 줄과 늘 같다.</summary>
+        public static bool IsTopMagicStoneGain(string? formattedText)
+            => !string.IsNullOrEmpty(formattedText) &&
+               formattedText.Contains("최상급", StringComparison.Ordinal) &&
+               TryParseDelta(formattedText, out string kind, out string grade, out long value) &&
+               kind == "stone" && grade == "최상급" && value > 0;
+
         public static bool TryAccumulate(string formattedText, ref AbandonSummaryValue summary)
         {
             if (!TryParseDelta(formattedText, out string kind, out string grade, out long value))
@@ -155,6 +194,14 @@ namespace TWChatOverlay.Services
                 kind = "stone";
                 grade = gainMatch.Groups["grade"].Value;
                 value = gainCount;
+                return true;
+            }
+
+            if (TryParseFloorPickupBody(body, out string pickupGrade, out long pickupCount))
+            {
+                kind = "stone";
+                grade = pickupGrade;
+                value = pickupCount;
                 return true;
             }
 

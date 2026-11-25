@@ -51,7 +51,8 @@ namespace TWChatOverlay.Services
         // 컨텐츠 아카이브 판정 기준이 바뀐 뒤(어비스 입장·보상 줄 등 정규식 판정 포함) 예전 빌드가 쓴 주간 파일을 1회 재구축
         private const string ContentArchiveRebuildMigrationKey = "content-archive-rebuild";
         private const string AbandonSummaryRebuildMigrationKey = "abandon-summary-rebuild";
-        private const int CurrentAbandonSummaryRebuildVersion = 1;
+        // 2: 바닥에서 주운 마정석("… 입수했습니다.")을 획득에 더하게 된 뒤(2026-11-25) 원본 로그가 남은 날의 요약을 다시 센다
+        private const int CurrentAbandonSummaryRebuildVersion = 2;
         private const int CurrentContentArchiveRebuildVersion = 3;
         private const int CurrentLogsFolderResetVersion = 1;
         private const string AbandonDaySummarySuffix = ".summary.day.json";
@@ -207,6 +208,17 @@ namespace TWChatOverlay.Services
                     sourceFiles = earliestMissingDate.HasValue
                         ? allSourceFiles.Where(source => source.Date.Date >= earliestMissingDate.Value.Date).ToList()
                         : new List<RawLogFile>();
+                }
+                else if (missingAbandonSummaryDays.Count > 0)
+                {
+                    // 체크포인트 뒤 새 파일이 있어도 요약이 없는 날(재빌드 버전을 올려 지운 날 등)은 이번 패스에 함께 다시 센다.
+                    // 예전에는 새 파일만 읽어서, 지운 요약이 새 파일이 없는 날 다시 켤 때까지 비어 있었다
+                    // (2026-11-25 헤드리스 확인: 체크포인트 하루 전 + 오늘 파일 상태로 버전 2를 적용하면 요약 350개를 지우고 오늘 것 1개만 다시 만들었다).
+                    // 이 날짜들은 체크포인트 전이라 다른 아카이브는 '있는데 비어 있을 때'만 빠진 것으로 보므로 보통 요약만 다시 센다.
+                    var scheduledDates = new HashSet<DateTime>(sourceFiles.Select(source => source.Date.Date));
+                    sourceFiles = allSourceFiles
+                        .Where(source => scheduledDates.Contains(source.Date.Date) || missingAbandonSummaryDays.Contains(source.Date.Date))
+                        .ToList();
                 }
 
                 EnsureArchiveDirectoriesExist();
@@ -1409,8 +1421,20 @@ namespace TWChatOverlay.Services
             itemName = string.Empty;
             count = 0;
 
-            if (string.IsNullOrWhiteSpace(text) || !text.Contains("획득", StringComparison.Ordinal))
+            if (string.IsNullOrWhiteSpace(text))
                 return false;
+
+            if (!text.Contains("획득", StringComparison.Ordinal))
+            {
+                // 바닥에서 주운 마정석("[하급 마정석] 1개를 입수했습니다.")은 "획득"이 없지만 같은 획득으로 센다 (2026-11-25)
+                if (!AbandonSummaryCalculator.TryParseFloorPickup(text, out string pickupGrade, out long pickupCount) ||
+                    pickupCount > int.MaxValue)
+                    return false;
+
+                itemName = $"{pickupGrade} 마정석";
+                count = (int)pickupCount;
+                return true;
+            }
 
             // Ignore announcement lines that should not count as player's abandoned-road gains.
             if (text.Contains("누군가 어밴던로드에서 주문을 통해 하급 마정석 1000개를 획득 하였습니다.", StringComparison.Ordinal))

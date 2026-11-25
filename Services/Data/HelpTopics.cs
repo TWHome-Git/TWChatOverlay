@@ -347,6 +347,7 @@ namespace TWChatOverlay.Services
             ["item.drop_alert"] = (
                 "아이템 획득 알림",
                 "채팅 로그에서 아이템 획득을 감지해 알림을 띄웁니다.\n" +
+                "어밴던로드에서 최상급 마정석을 얻을 때(바닥에서 주울 때 포함)도 알립니다.\n" +
                 "'알림 필터' 탭에서 알림 받을 아이템을 고를 수 있습니다.",
                 new[] { "item_drop_off.png", "item_drop_on.png" }),
 
