@@ -110,15 +110,22 @@ namespace TWChatOverlay.Services
         {
             Application.Current.Dispatcher.BeginInvoke(new Action(() =>
             {
-                if (_window == null)
+                var window = _window;
+                _window = null;
+                if (window == null)
                     return;
 
-                if (_window.IsVisible)
+                // 보이지 않는 창도 닫는다. 트레이로 숨은 창을 참조만 버리면 복귀 때 옛 "누적 달성" 창이 다시 나오고
+                // 그 뒤로는 서비스가 닫을 수 없었다 (X로만 닫힘, 2026-11-22 조사).
+                try
                 {
-                    _window.Close();
+                    window.Close();
                 }
-
-                _window = null;
+                catch (InvalidOperationException ex)
+                {
+                    // 이미 닫히는 중인 창
+                    AppLogger.Debug($"Experience alert window close skipped: {ex.Message}");
+                }
             }));
         }
 

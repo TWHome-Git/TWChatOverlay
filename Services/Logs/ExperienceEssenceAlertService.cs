@@ -51,6 +51,14 @@ namespace TWChatOverlay.Services
                 if (_stateDirty)
                     SaveStateToSettings();
             };
+
+            // 트레이 최소화 중에는 Show가 무시되고, 복귀해도 다음 경험치 줄이 올 때까지 다시 띄우지 않았다
+            // (트레이 중 100억을 넘으면 사냥을 다시 할 때까지 안 뜸, 2026-11-22 조사). 복귀하면 지금 누적치로 다시 판단한다.
+            AppServices.Get<TrayAllWindowsService>().TrayStateChanged += trayed =>
+            {
+                if (!trayed)
+                    _showDelayTimer.Dispatcher.BeginInvoke(new Action(EvaluateAlert), DispatcherPriority.Background);
+            };
         }
 
         public void Process(LogAnalysisResult analysis)
@@ -87,8 +95,20 @@ namespace TWChatOverlay.Services
                 _persistTimer.Start();
 
             if (_trackedExp >= ThresholdExp)
-            {
                 SaveStateToSettings();
+
+            EvaluateAlert();
+
+            AppServices.Get<ExperienceAlertWindowService>().RefreshState(_settings);
+        }
+
+        /// <summary>
+        /// 지금 누적치로 알림을 띄울지 닫을지 정한다. 경험치 줄([Process]), 값 직접 입력([적용] · [수정]), 트레이 복귀가 모두 이 한 곳을 지난다.
+        /// </summary>
+        private void EvaluateAlert()
+        {
+            if (_trackedExp >= ThresholdExp)
+            {
                 // 1초 뒤에 띄운다 (곧 이어질 차감 줄을 기다리는 여유).
                 // 이미 기다리는 중이면 다시 걸지 않는다 — 사냥 중에는 경험치가 0.1초 간격으로 들어와
                 // 매번 타이머를 다시 시작하면 사냥을 멈출 때까지 영영 뜨지 않았다.
@@ -102,8 +122,6 @@ namespace TWChatOverlay.Services
                 _showDelayTimer.Stop();
                 AppServices.Get<ExperienceAlertWindowService>().Close();
             }
-
-            AppServices.Get<ExperienceAlertWindowService>().RefreshState(_settings);
         }
 
         /// <summary>아직 설정에 안 쓴 누적치를 지금 쓴다. 앱 종료(설정 저장 직전)에 부른다.</summary>
@@ -140,6 +158,8 @@ namespace TWChatOverlay.Services
 
             _isTracking = true;
             SaveStateToSettings();
+            // 예전에는 다음 경험치 줄이 와야 판단해서, 100억 이상을 넣어도 사냥을 다시 할 때까지 안 떴다 (2026-11-22).
+            EvaluateAlert();
             AppServices.Get<ExperienceAlertWindowService>().RefreshState(_settings);
             AppLogger.Info($"Experience essence tracker state overridden manually. Total={_trackedExp:N0}");
         }
